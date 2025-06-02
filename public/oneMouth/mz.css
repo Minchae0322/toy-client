@@ -70,7 +70,7 @@ input[type=file]::file-selector-button {
     border: none;
     border-radius: 5px;
     opacity: 0.8;
-    
+
 }
 
 .sumit_btn {
@@ -89,7 +89,7 @@ input[type=file]::file-selector-button {
 .title_input {
    font-size: 15px;
    margin-bottom: 20px;
-    
+
 }
 
 .title_input p{
@@ -109,7 +109,7 @@ input[type=file]::file-selector-button {
 .sub_input p {
     font-size: 18px;
     margin-bottom: 10px;
-} 
+}
 
 .sub_input textarea {
     width: 100%;
@@ -144,7 +144,7 @@ input[type=file]::file-selector-button {
     padding-left: 10px;
     font-size: 15px;
     margin-bottom: 20px;
-}   
+}
 
 .price_input label {
     font-size: 18px;
@@ -164,7 +164,7 @@ input[type=file]::file-selector-button {
     padding-left: 10px;
     font-size: 15px;
     margin-bottom: 20px;
-}   
+}
 
 .area_input label {
     font-size: 18px;
@@ -213,5 +213,5 @@ input[type=file]::file-selector-button {
     color: #fff;
     border: none;
     border-radius: 5px;
-    margin-left: 10px;  
+    margin-left: 10px;
 }

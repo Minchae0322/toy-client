@@ -1,9 +1,8 @@
 <!-- src/components/SellForm.vue -->
 <template>
+
   <div class="main_wrap">
-    <div class="title">
-      <h1>내 물건 팔기</h1>
-    </div>
+
 
     <div class="user_pic">
       <input type="file" multiple id="file" accept="image/*" />
