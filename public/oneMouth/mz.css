@@ -1,0 +1,217 @@
+@charset "UTF-8";
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'SUIT-Regular';
+}
+
+* a {
+    text-decoration: none;
+    color: inherit;
+}
+
+
+.main_wrap {
+    width: 1440px;
+    margin: 0 auto;
+    background-color: #fff;
+}
+
+.title h1 {
+    background-color: #1DCD9F;
+    font-size: 1.5rem;
+    color: #fff;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.title {
+    margin-bottom: 30px;
+}
+
+input[type=file]::file-selector-button {
+  width: 30%;
+  height: 30px;
+  background-color: #222222;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  opacity: 0.8;
+
+}
+
+.user_pic {
+    width: 100px;
+}
+.user_pic img {
+    width: 100%;
+    height: 100%;
+    padding: 15px;
+    border: 2px solid #cecece;
+    border-radius: 0.5rem;
+}
+
+.save {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-right: 30px;
+    margin-bottom: 30px
+
+}
+
+.save_btn {
+    width: 100px;
+    height: 30px;
+    background-color: #222222;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    opacity: 0.8;
+    
+}
+
+.sumit_btn {
+    width: 100px;
+    height: 30px;
+    background-color: #1DCD9F;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    margin-left: 10px;
+}
+
+.user_pic {
+    margin-bottom: 30px;
+}
+.title_input {
+   font-size: 15px;
+   margin-bottom: 20px;
+    
+}
+
+.title_input p{
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.title_input input {
+    width: 100%;
+    height: 30px;
+    border: 1px solid #cecece;
+    border-radius: 5px;
+    padding-left: 10px;
+    font-size: 15px;
+}
+
+.sub_input p {
+    font-size: 18px;
+    margin-bottom: 10px;
+} 
+
+.sub_input textarea {
+    width: 100%;
+    height: 300px;
+    font-size: 15px;
+    border: 1px solid #cecece;
+    border-radius: 5px;
+    padding-left: 10px;
+    margin-bottom: 20px;
+    font-size: 15px;
+}
+
+.count_input label {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.count_input p {
+    color: #5c5c5c;
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.count_input label{
+    margin-bottom: 10px;
+}
+
+.count_input input {
+    height: 30px;
+    border: 1px solid #cecece;
+    border-radius: 5px;
+    padding-left: 10px;
+    font-size: 15px;
+    margin-bottom: 20px;
+}   
+
+.price_input label {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.price_input p {
+    color: #5c5c5c;
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.price_input input {
+    height: 30px;
+    border: 1px solid #cecece;
+    border-radius: 5px;
+    padding-left: 10px;
+    font-size: 15px;
+    margin-bottom: 20px;
+}   
+
+.area_input label {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.area_input p {
+    color: #5c5c5c;
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.area_input select {
+    height: 30px;
+    border: 1px solid #cecece;
+    border-radius: 5px;
+    padding-left: 10px;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+.area_detail_input label {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.area_detail_input p {
+    color: #5c5c5c;
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.area_detail_input input {
+    height: 30px;
+    border: 1px solid #cecece;
+    border-radius: 5px;
+    padding-left: 10px;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+.submit_btn {
+    width: 100px;
+    height: 30px;
+    background-color: #1DCD9F;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    margin-left: 10px;  
+}

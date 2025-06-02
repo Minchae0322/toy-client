@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 물건 팔기</title>
+    <link rel="stylesheet" href="mz.css" type="text/css" />
+    <style>
+@font-face {
+    font-family: 'SUIT-Regular';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+    </style>
+</head>
+<body>
+        <header>
+            <!-- 타이틀 -->
+            <div class="title">
+                <h1>내 물건 팔기</h1>
+        </header>
+        <div class="main_wrap">
+            
+        <!-- 사진 업로드 -->
+        <div class="user_pic">
+            <input type=file multiple id="file" accept="image/*" />
+            <label for="file">
+                <img src="img/icon_camera.png" alt="사진 업로드 아이콘" />
+            </label>
+        </div>
+            <!-- 게시글 제목 -->
+            <div class="title_input">
+                <p>제목</p>
+                <input type="text" placeholder="게시물의 제목을 입력하세요." />
+            </div>
+            <!-- 게시글 설명 -->
+             <div class="sub_input">
+                <p>설명</p>
+                <textarea placeholder="판매할 물건에 대한 설명을 구체적으로 작성해주세요." rows="5" cols="50"></textarea>
+             </div>
+            <!-- 수량 -->
+             <div class="count_input">
+                <label for="count">판매 수량</label> <br>
+                <p>판매할 물건의 수량을 입력해주세요.</p>
+                <input type="number" id="count" name="count" min="1" max="100" value="1">
+                <label>개/입</label>
+                
+            </div>
+            <!-- 가격 -->
+            <div class="price_input">
+                <label for="price">가격</label> <br>
+                <p>판매할 물건의 가격을 입력해주세요.</p>
+                <input type="number" id="price" name="price" min="0" step="1000" placeholder="₩ 0">
+                <label>원</label>
+            </div>
+            <!-- 거래 희망 지역 -->
+            <div class="area_input">
+                <label for="area">거래 희망 지역</label> <br>
+                <p>거래를 희망하는 지역을 선택해주세요.</p>
+                <select id="area" name="area">
+                    <option value="서울">서울</option>
+                    <option value="경기">경기</option>
+                    <option value="인천">인천</option>
+                    <option value="부산">부산</option>
+                    <option value="대구">대구</option>
+                    <option value="광주">광주</option>
+                    <option value="대전">대전</option>
+                    <option value="울산">울산</option>
+                </select>
+            </div>
+            <!-- 거래 희망 지역 세부 -->
+            <div class="area_detail_input">
+                <label for="area_detail">거래 희망 지역 세부</label> <br>
+                <p>거래를 희망하는 지역의 세부 위치를 입력해주세요.</p>
+                <input type="text" id="area_detail" name="area_detail" placeholder="예: 역삼역 1번출구 근처">
+             </div>
+
+             <!-- 임시저장/등록하기 버튼 -->
+         <div class="save">
+                <button type="submit" class="save_btn">임시저장</button>
+                <button type="submit" class="sumit_btn">등록하기</button>
+            </div>
+</body>
+<footer></footer>
+</html>
