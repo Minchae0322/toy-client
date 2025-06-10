@@ -1,7 +1,6 @@
 <!-- DashboardView.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
-    <MZHeader />
     <MBTIRecommendationBanner />
     <NavigationTabs :active-tab="activeTab" @update-tab="setActiveTab" />
 
