@@ -1,0 +1,182 @@
+@charset "UTF-8";
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --size-pc: 1200px;
+}
+
+
+a {
+    text-decoration: none;
+    color: inherit;
+}   
+
+.header_content {
+    display: flex;
+    justify-content: space-between;
+     width: var(--size-pc);
+}
+
+.header_content__logo {
+    display: flex;
+}
+
+.logo {
+    display: inline-block;
+}
+
+.logo img{
+    height: 80px;
+    margin: 20px;
+}
+
+nav {
+    display: flex;
+}
+
+.gnb {
+    font-family: 'SEBANG_Gothic_Bold', serif;
+    display: flex;
+}
+
+.menu_bar {
+    display: flex;
+    align-items: center;
+}
+.gnb li {
+    display: inline-block;
+    margin-right: 40px;
+    color: #67442e;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    background-color: #fff;
+}
+
+.header_content__search {
+    display: flex;
+    margin-right: 30px
+}
+
+.search {
+    display: flex;
+    align-items: center;
+}
+
+.search img {
+    width: 15px;
+}
+
+.search input {
+    width: 180px;
+    border: none;
+    border-bottom: 1px solid #67442e;
+    font-family: 'SUIT-Regular', serif;
+    font-size: 16px;
+
+}
+
+.search button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.login {
+    display: flex;
+    align-items: center;
+    margin-left: 20px;
+}
+
+.login img {
+    width: 25px;
+}
+
+/* section */
+
+.main_content_txt {
+    /* width: 1897px;
+    height: 1085px; */
+    padding: 400px;
+    background-color:#fdf5e3
+}
+
+.main_content_txt p{
+    text-align: center;
+    font-family: 'SUIT-Regular', serif;
+    font-size: 20px;
+    line-height: 40px;
+}
+
+.main_content_txt span{
+    text-align: center;
+    font-family: 'SUIT-Regular', serif;
+    font-size: 30px;
+    
+}
+
+.main_content_txt {
+    display: flex;
+    align-items: flex-end; /* ✅ 자식 요소들을 아래 정렬 */
+}
+
+/* 헤이브레드 메뉴---------------------------- */
+
+h3 {
+    text-align: center;
+    font-family: 'SEBANG_Gothic_Bold', serif;
+    font-size: 25px;
+    margin-top: 80px;
+    margin-bottom: 50px;
+}
+
+.menu_sec {
+    width: 1600px;
+    margin: 0 auto;
+    text-align: center;
+    margin-bottom: 80px;
+}
+
+.menu_box_1 {
+    display: inline-block;
+    width: 200px;
+    height: 280px;
+    background-color: #fcfcfc;
+    border-radius: 20px;
+    box-shadow: 5px 5px 5px gray;
+    margin-left: 25px;
+}
+
+.menu_box_1 p {
+    text-align: center;
+    margin-top: 20px;
+    font-family: 'SEBANG_Gothic_Bold', serif;
+    font-size: 20px;
+    
+}
+
+.menu_box_2 {
+    display: inline-block;
+    width: 200px;
+    height: 210px;
+    background-color: #dfdfdf;
+    border-radius: 20px;
+    text-align: center;
+    align-content: center;
+    
+}
+
+.menu_box_2 img {
+    width: 130px;
+    height: 130px;
+    filter: drop-shadow(5px 0px 5px rgba(85, 85, 85, 0.2));
+}

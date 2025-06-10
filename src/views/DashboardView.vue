@@ -1,19 +1,103 @@
+<!-- DashboardView.vue -->
 <template>
-  <div class="dashboard">
-    <h1>대시보드</h1>
-    <p>로그인 후 접근 가능한 보호 페이지입니다.</p>
+  <div class="min-h-screen bg-gray-50">
+    <MZHeader />
+    <MBTIRecommendationBanner />
+    <NavigationTabs :active-tab="activeTab" @update-tab="setActiveTab" />
+
+    <main class="p-4 space-y-6">
+      <AIMemeGeneratorPromo />
+      <TrendingMemesSection :memes="trendingMemes" :liked-items="likedItems" @like="handleLike" />
+      <TrendingFoodsSection :foods="trendingFoods" />
+      <QuickActions />
+    </main>
+
+    <BottomNavigation />
   </div>
 </template>
 
-<script>
-export default {
-  name: 'DashboardView'
-}
-</script>
+<script setup>
+import { ref } from 'vue';
+import MZHeader from '@/components/MZLifestyle/MZHeader.vue';
+import MBTIRecommendationBanner from '@/components/MZLifestyle/MBTIRecommendationBanner.vue';
+import NavigationTabs from '@/components/MZLifestyle/NavigationTabs.vue';
+import AIMemeGeneratorPromo from '@/components/MZLifestyle/AIMemeGeneratorPromo.vue';
+import TrendingMemesSection from '@/components/MZLifestyle/TrendingMemesSection.vue';
+import TrendingFoodsSection from '@/components/MZLifestyle/TrendingFoodsSection.vue';
+import QuickActions from '@/components/MZLifestyle/QuickActions.vue';
+import BottomNavigation from '@/components/MZLifestyle/BottomNavigation.vue';
 
-<style scoped>
-.dashboard {
-  padding: 2rem;
-  text-align: center;
-}
-</style>
+const activeTab = ref('home');
+const likedItems = ref({});
+
+const setActiveTab = (tab) => {
+  activeTab.value = tab;
+};
+
+const handleLike = (id) => {
+  likedItems.value = {
+    ...likedItems.value,
+    [id]: !likedItems.value[id]
+  };
+};
+
+const trendingMemes = ref([
+  {
+    id: 1,
+    image: "https://via.placeholder.com/300x200/FF6B6B/FFFFFF?text=월요일+기분",
+    title: "월요일 아침 기분.jpg",
+    likes: 1247,
+    comments: 89,
+    tags: ["#월요병", "#직장인", "#공감"]
+  },
+  {
+    id: 2,
+    image: "https://via.placeholder.com/300x200/4ECDC4/FFFFFF?text=카페+대기",
+    title: "카페 대기줄 현실",
+    likes: 892,
+    comments: 156,
+    tags: ["#카페", "#대기", "#일상"]
+  },
+  {
+    id: 3,
+    image: "https://via.placeholder.com/300x200/45B7D1/FFFFFF?text=배달+고민",
+    title: "배달음식 고민하는 나",
+    likes: 2156,
+    comments: 234,
+    tags: ["#배달", "#선택장애", "#혼밥"]
+  }
+]);
+
+const trendingFoods = ref([
+  {
+    id: 1,
+    name: "딸기 크림 라떼",
+    brand: "스타벅스",
+    rating: 4.2,
+    reviews: 1890,
+    image: "https://via.placeholder.com/150x150/FF69B4/FFFFFF?text=딸기라떼",
+    price: "5,900원",
+    isHot: true
+  },
+  {
+    id: 2,
+    name: "허니버터 아몬드 케이크",
+    brand: "파리바게뜨",
+    rating: 4.5,
+    reviews: 756,
+    image: "https://via.placeholder.com/150x150/FFD700/FFFFFF?text=케이크",
+    price: "3,200원",
+    isNew: true
+  },
+  {
+    id: 3,
+    name: "매운 불닭볶음면 컵라면",
+    brand: "삼양",
+    rating: 4.1,
+    reviews: 2341,
+    image: "https://via.placeholder.com/150x150/FF4500/FFFFFF?text=불닭",
+    price: "1,800원",
+    isHot: true
+  }
+]);
+</script>
