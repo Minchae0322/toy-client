@@ -68,6 +68,34 @@ export default {
           stock: 3,
           category: 'snacks'
         },
+        {
+          id: 2,
+          name: 'CU 신상 초코바',
+          description: '진짜 맛있다는 소문의 그 초코바!',
+          emoji: '🍫',
+          rating: 4.8,
+          reviewCount: 127,
+          location: '강남구 역삼동',
+          trending: true,
+          selling: true,
+          price: 1500,
+          stock: 3,
+          category: 'snacks'
+        },
+        {
+          id: 3,
+          name: 'CU 신상 초코바',
+          description: '진짜 맛있다는 소문의 그 초코바!',
+          emoji: '🍫',
+          rating: 4.8,
+          reviewCount: 127,
+          location: '강남구 역삼동',
+          trending: true,
+          selling: true,
+          price: 1500,
+          stock: 3,
+          category: 'snacks'
+        },
         // 추가 데이터 계속...
       ],
 
@@ -146,7 +174,7 @@ export default {
 
 .main-content {
   display: flex;
-  max-width: 1200px;
+  max-width: 1800px;
   margin: 0 auto;
   gap: 40px;
   padding: 40px 60px;

@@ -46,7 +46,6 @@
           <h3 class="food-title">{{ food.name }}</h3>
           <p class="food-description">{{ food.description }}</p>
           <div class="food-stats">
-            <div class="rating">⭐ {{ food.rating }} ({{ food.reviewCount }})</div>
             <div class="location">📍 {{ food.location }}</div>
           </div>
           <div class="price-section" v-if="food.selling">
@@ -54,7 +53,6 @@
             <div class="stock-info">{{ food.stock }}개 남음</div>
           </div>
           <div class="action-buttons" v-if="food.selling">
-            <button class="btn btn-primary" @click.stop="$emit('request-share', food)">🛒 한입 나눔 요청</button>
             <button class="btn btn-secondary" @click.stop="$emit('start-chat', food)">💬 채팅하기</button>
           </div>
         </div>
@@ -135,10 +133,9 @@ export default {
 
 .food-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
-
 .food-card {
   background: white;
   border-radius: 16px;
@@ -187,21 +184,21 @@ export default {
 }
 
 .food-info {
-  padding: 20px;
+  padding: 12px;
 }
 
 .food-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   color: #222;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   line-height: 1.3;
 }
 
 .food-description {
-  font-size: 13px;
+  font-size: 11px;
   color: #666;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   line-height: 1.5;
 }
 
@@ -209,7 +206,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .rating {
@@ -230,20 +227,20 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid #f0f0f0;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .price {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: #169976;
 }
 
 .stock-info {
   font-size: 12px;
-  color: #ff6b6b;
+  color: #ffa500;
   font-weight: 500;
 }
 
@@ -296,6 +293,22 @@ export default {
   font-size: 72px;
   margin-bottom: 20px;
   opacity: 0.5;
+}
+
+@media (max-width: 1200px) {
+  .food-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .food-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .food-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 

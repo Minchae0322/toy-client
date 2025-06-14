@@ -4,7 +4,8 @@ import DashboardView from '@/views/DashboardView.vue'
 import HomeView from '@/views/HomeView.vue'
 import OAuthCallback from '@/views/OAuth2Callback.vue'
 import OneMouthView from '@/views/OneMouthView.vue'
-import OneMouthListView from "@/views/OneMouthListView.vue"; // ✅ 판매 글 작성
+import OneMouthListView from "@/views/OneMouthListView.vue";
+import OneMouthDetailView from "@/views/OneMouthDetailView.vue"
 
 const routes = [
   { path: '/login', component: LoginView },
@@ -12,7 +13,10 @@ const routes = [
   { path: '/home', component: HomeView, meta: { requiresAuth: true } },
   { path: '/oauth/callback', component: OAuthCallback }, // ✅ 소셜 로그인 콜백
   { path: '/sell', component: OneMouthView, meta: { requiresAuth: false } }, // ✅ 판매 페이지
-  { path: '/one-mouth/list', component: OneMouthListView, meta: { requiresAuth: false } }
+  { path: '/one-mouth/list', component: OneMouthListView, meta: { requiresAuth: false } },
+  { path: '/one-mouth/detail', component: OneMouthDetailView, meta: { requiresAuth: false },
+  }
+
 ]
 
 const router = createRouter({
