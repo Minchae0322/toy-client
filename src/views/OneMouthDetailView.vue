@@ -17,8 +17,9 @@
 
     <!-- Main content -->
     <main class="detail-main">
-      <!-- Food image section -->
-      <section class="food-image-section">
+      <!-- Food overview section with left image -->
+      <section class="food-overview-section">
+        <!-- Food image (left side) -->
         <div class="food-image-container">
           <div class="food-emoji">{{ food.emoji }}</div>
           <div class="badges">
@@ -26,101 +27,101 @@
             <div class="selling-badge" v-if="food.selling">💰 판매중</div>
           </div>
         </div>
+
+        <!-- Food info (right side) -->
+        <div class="food-info-container">
+          <div class="food-basic-info">
+            <h1 class="food-name">{{ food.name }}</h1>
+            <p class="food-description">{{ food.description }}</p>
+
+            <div class="food-meta">
+              <div class="rating-info">
+                <span class="rating">⭐ {{ food.rating }}</span>
+                <span class="review-count">({{ food.reviewCount }}개 리뷰)</span>
+              </div>
+              <div class="location-info">
+                <span class="location">📍 {{ food.location }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Price and stock info -->
+          <div class="price-stock-section" v-if="food.selling">
+            <div class="price-info">
+              <span class="price-label">가격</span>
+              <span class="price">{{ food.price.toLocaleString() }}원</span>
+            </div>
+            <div class="stock-info">
+              <span class="stock-label">재고</span>
+              <span class="stock" :class="{ 'low-stock': food.stock <= 5 }">
+                {{ food.stock }}개 남음
+              </span>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <!-- Food info section -->
-      <section class="food-info-section">
-        <div class="food-basic-info">
-          <h1 class="food-name">{{ food.name }}</h1>
-          <p class="food-description">{{ food.description }}</p>
-
-          <div class="food-meta">
-            <div class="rating-info">
-              <span class="rating">⭐ {{ food.rating }}</span>
-              <span class="review-count">({{ food.reviewCount }}개 리뷰)</span>
-            </div>
-            <div class="location-info">
-              <span class="location">📍 {{ food.location }}</span>
-            </div>
+      <!-- Seller info section -->
+      <section class="seller-section">
+        <div class="seller-info">
+          <div class="seller-avatar">👤</div>
+          <div class="seller-details">
+            <h3 class="seller-name">{{ food.seller.name }}</h3>
+            <p class="seller-rating">⭐ {{ food.seller.rating }} ({{ food.seller.reviewCount }})</p>
           </div>
         </div>
+        <button class="seller-profile-btn" @click="viewSellerProfile">
+          프로필 보기
+        </button>
+      </section>
 
-        <!-- Price and stock info -->
-        <div class="price-stock-section" v-if="food.selling">
-          <div class="price-info">
-            <span class="price-label">가격</span>
-            <span class="price">{{ food.price.toLocaleString() }}원</span>
+      <!-- Food details section -->
+      <section class="food-details-section">
+        <h3 class="section-title">상세 정보</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="detail-label">카테고리</span>
+            <span class="detail-value">{{ getCategoryName(food.category) }}</span>
           </div>
-          <div class="stock-info">
-            <span class="stock-label">재고</span>
-            <span class="stock" :class="{ 'low-stock': food.stock <= 5 }">
-              {{ food.stock }}개 남음
-            </span>
+          <div class="detail-item">
+            <span class="detail-label">등록일</span>
+            <span class="detail-value">{{ formatDate(food.createdAt) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">유통기한</span>
+            <span class="detail-value">{{ formatDate(food.expiryDate) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">상태</span>
+            <span class="detail-value">{{ food.condition }}</span>
           </div>
         </div>
+      </section>
 
-        <!-- Seller info -->
-        <div class="seller-section">
-          <div class="seller-info">
-            <div class="seller-avatar">👤</div>
-            <div class="seller-details">
-              <h3 class="seller-name">{{ food.seller.name }}</h3>
-              <p class="seller-rating">⭐ {{ food.seller.rating }} ({{ food.seller.reviewCount }})</p>
-            </div>
-          </div>
-          <button class="seller-profile-btn" @click="viewSellerProfile">
-            프로필 보기
+      <!-- Reviews section -->
+      <section class="reviews-section">
+        <div class="reviews-header">
+          <h3 class="section-title">리뷰 ({{ reviews.length }})</h3>
+          <button class="write-review-btn" @click="writeReview">
+            리뷰 쓰기
           </button>
         </div>
 
-        <!-- Food details -->
-        <div class="food-details-section">
-          <h3 class="section-title">상세 정보</h3>
-          <div class="details-grid">
-            <div class="detail-item">
-              <span class="detail-label">카테고리</span>
-              <span class="detail-value">{{ getCategoryName(food.category) }}</span>
+        <div class="reviews-list" v-if="reviews.length > 0">
+          <div class="review-item" v-for="review in reviews" :key="review.id">
+            <div class="review-header">
+              <div class="reviewer-info">
+                <span class="reviewer-name">{{ review.userName }}</span>
+                <span class="review-rating">⭐ {{ review.rating }}</span>
+              </div>
+              <span class="review-date">{{ formatDate(review.createdAt) }}</span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">등록일</span>
-              <span class="detail-value">{{ formatDate(food.createdAt) }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">유통기한</span>
-              <span class="detail-value">{{ formatDate(food.expiryDate) }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">상태</span>
-              <span class="detail-value">{{ food.condition }}</span>
-            </div>
+            <p class="review-content">{{ review.content }}</p>
           </div>
         </div>
 
-        <!-- Reviews section -->
-        <div class="reviews-section">
-          <div class="reviews-header">
-            <h3 class="section-title">리뷰 ({{ reviews.length }})</h3>
-            <button class="write-review-btn" @click="writeReview">
-              리뷰 쓰기
-            </button>
-          </div>
-
-          <div class="reviews-list" v-if="reviews.length > 0">
-            <div class="review-item" v-for="review in reviews" :key="review.id">
-              <div class="review-header">
-                <div class="reviewer-info">
-                  <span class="reviewer-name">{{ review.userName }}</span>
-                  <span class="review-rating">⭐ {{ review.rating }}</span>
-                </div>
-                <span class="review-date">{{ formatDate(review.createdAt) }}</span>
-              </div>
-              <p class="review-content">{{ review.content }}</p>
-            </div>
-          </div>
-
-          <div class="no-reviews" v-else>
-            <p>아직 리뷰가 없어요. 첫 번째 리뷰를 남겨보세요! 🌟</p>
-          </div>
+        <div class="no-reviews" v-else>
+          <p>아직 리뷰가 없어요. 첫 번째 리뷰를 남겨보세요! 🌟</p>
         </div>
       </section>
     </main>
@@ -234,7 +235,7 @@ export default {
 
 <style scoped>
 .detail-container {
-  max-width: 800px;
+  max-width: 1600px;
   margin: 0 auto;
   background: #f8f9fa;
   min-height: 100vh;
@@ -302,9 +303,15 @@ export default {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.food-image-section {
+/* Main overview section with left image layout */
+.food-overview-section {
+  display: flex;
+  min-height: 300px;
+}
+
+.food-image-container {
+  flex: 0 0 500px;
   position: relative;
-  height: 300px;
   background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
   display: flex;
   align-items: center;
@@ -312,7 +319,7 @@ export default {
 }
 
 .food-emoji {
-  font-size: 120px;
+  font-size: 180px;
 }
 
 .badges {
@@ -320,7 +327,8 @@ export default {
   top: 20px;
   left: 20px;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .trending-badge,
@@ -340,8 +348,12 @@ export default {
   background: #1DCD9F;
 }
 
-.food-info-section {
-  padding: 32px;
+.food-info-container {
+  flex: 1;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .food-basic-info {
@@ -349,44 +361,45 @@ export default {
 }
 
 .food-name {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
   color: #222;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .food-description {
-  font-size: 16px;
+  font-size: 18px;
   color: #666;
   line-height: 1.6;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .food-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 16px;
 }
 
 .rating-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .rating {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: #ffa500;
 }
 
 .review-count {
-  font-size: 14px;
+  font-size: 16px;
   color: #888;
 }
 
 .location {
-  font-size: 14px;
+  font-size: 16px;
   color: #888;
 }
 
@@ -394,10 +407,10 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px;
+  padding: 20px;
   background: #f8f9fa;
   border-radius: 12px;
-  margin-bottom: 32px;
+  margin-top: auto;
 }
 
 .price-info,
@@ -435,10 +448,9 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 24px 32px;
   background: #f8f9fa;
-  border-radius: 12px;
-  margin-bottom: 32px;
+  border-top: 1px solid #eee;
 }
 
 .seller-info {
@@ -488,7 +500,8 @@ export default {
 
 .food-details-section,
 .reviews-section {
-  margin-bottom: 32px;
+  padding: 32px;
+  border-top: 1px solid #eee;
 }
 
 .section-title {
@@ -549,15 +562,15 @@ export default {
 }
 
 .reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
 .review-item {
-  padding: 16px;
+  padding: 20px;
   background: #f8f9fa;
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .review-header {
@@ -608,18 +621,19 @@ export default {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 800px;
+  max-width: 1600px;
   background: white;
-  padding: 16px 20px;
+  padding: 20px 48px;
   border-top: 1px solid #eee;
   display: flex;
-  gap: 12px;
+  gap: 16px;
 }
 
 .chat-btn,
 .request-btn {
   flex: 1;
-  padding: 16px;
+  max-width: 300px;
+  padding: 18px;
   border: none;
   border-radius: 12px;
   font-size: 16px;
@@ -648,6 +662,17 @@ export default {
   transform: translateY(-1px);
 }
 
+/* Mobile and Tablet responsive */
+@media (max-width: 1200px) {
+  .details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .reviews-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .detail-container {
     margin: 0;
@@ -658,7 +683,17 @@ export default {
     border-radius: 0;
   }
 
-  .food-info-section {
+  .food-overview-section {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .food-image-container {
+    flex: none;
+    height: 250px;
+  }
+
+  .food-info-container {
     padding: 24px 20px;
   }
 
@@ -666,12 +701,29 @@ export default {
     font-size: 24px;
   }
 
+  .seller-section,
+  .food-details-section,
+  .reviews-section {
+    padding: 24px 20px;
+  }
+
   .details-grid {
     grid-template-columns: 1fr;
   }
 
   .price-stock-section {
-    padding: 20px;
+    padding: 16px;
+  }
+
+  .bottom-actions {
+    padding: 16px 20px;
+    gap: 12px;
+  }
+
+  .chat-btn,
+  .request-btn {
+    max-width: none;
+    padding: 16px;
   }
 }
 </style>
