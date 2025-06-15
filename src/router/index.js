@@ -13,7 +13,7 @@ const routes = [
   { path: '/home', component: HomeView, meta: { requiresAuth: true } },
   { path: '/oauth/callback', component: OAuthCallback }, // ✅ 소셜 로그인 콜백
   { path: '/sell', component: OneMouthView, meta: { requiresAuth: false } }, // ✅ 판매 페이지
-  { path: '/one-mouth/list', component: OneMouthListView, meta: { requiresAuth: false } },
+  { path: '/one-mouth/list', component: OneMouthListView, meta: { requiresAuth: true } },
   { path: '/one-mouth/detail', component: OneMouthDetailView, meta: { requiresAuth: false },
   }
 

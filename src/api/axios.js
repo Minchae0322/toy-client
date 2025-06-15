@@ -2,11 +2,18 @@ import axios from 'axios'
 
 // 환경변수에서 BASE_URL 가져오기
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8081'
+const CONTENT_BASE_URL = import.meta.env.VITE_CONTENT_BASE_URL || 'http://localhost:8082'
 
 const api = axios.create({
     baseURL: `${BASE_URL}/api`,
     timeout: 5000
 })
+
+const contentApi = axios.create({
+    baseURL: `${CONTENT_BASE_URL}/api`,
+    timeout: 5000
+})
+
 
 // access_token 자동 추가
 api.interceptors.request.use(config => {
