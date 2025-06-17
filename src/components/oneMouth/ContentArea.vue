@@ -67,113 +67,40 @@
   </main>
 </template>
 
-<script>
-import contentApi from '@/api/axios.js'; // 공통 axios 인스턴스 불러오기
+<script setup>
+import { computed } from 'vue';
 
-export default {
-  name: 'OneMouthListView',
-  data() {
-    return {
-      searchQuery: '',
-      activeFilter: 'all',
-      sortBy: 'latest',
-      filterOptions: [
-        { key: 'all', label: '전체', icon: '🍽️' },
-        { key: 'trending', label: '트렌딩', icon: '🌟' },
-        { key: 'selling', label: '판매중', icon: '💰' },
-        { key: 'drinks', label: '음료', icon: '🧋' },
-        { key: 'desserts', label: '디저트', icon: '🍰' },
-        { key: 'snacks', label: '간식', icon: '🥟' }
-      ],
-      foods: [],
-      filteredFoods: []
-    };
+// Props 정의
+const props = defineProps({
+  filteredFoods: {
+    type: Array,
+    required: true
   },
-  computed: {
-    totalFoods() {
-      return this.foods.length;
-    },
-    activeSellings() {
-      return this.foods.filter(food => food.selling).length;
-    },
-    totalUsers() {
-      return 1247;
-    }
+  sortBy: {
+    type: String,
+    required: true
   },
-  mounted() {
-    this.fetchFoods();
-  },
-  methods: {
-    async fetchFoods() {
-      try {
-        const res = await contentApi.get('/one-mouths'); // baseURL은 이미 내부에 설정됨
-        const contents = res.data.content;
-
-        this.foods = contents.map(item => ({
-          id: item.oneMouthId,
-          name: item.title,
-          description: item.description,
-          emoji: '🍱', // 기본값, 서버에서 지원할 경우 바꿔도 됨
-          rating: 4.5, // 임시 값, 나중에 서버에서 제공되면 반영
-          reviewCount: item.hits,
-          location: item.location,
-          trending: item.hits > 50,
-          selling: item.productStatus === 'FOR_SALE',
-          price: item.price,
-          stock: 1, // 서버에 수량 정보 있다면 반영
-          category: item.category?.categoryName || '기타'
-        }));
-
-        this.filteredFoods = this.foods;
-      } catch (error) {
-        console.error('🍽 음식 데이터 로딩 실패:', error);
-      }
-    },
-    setActiveFilter(filter) {
-      this.activeFilter = filter;
-      this.filterFoods();
-    },
-    setSortBy(sortBy) {
-      this.sortBy = sortBy;
-    },
-    updateSearchQuery(query) {
-      this.searchQuery = query;
-      this.filterFoods();
-    },
-    filterFoods() {
-      let filtered = this.foods;
-      if (this.searchQuery.trim()) {
-        const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(food =>
-            food.name.toLowerCase().includes(query) ||
-            food.description.toLowerCase().includes(query)
-        );
-      }
-      if (this.activeFilter !== 'all') {
-        if (this.activeFilter === 'trending') {
-          filtered = filtered.filter(food => food.trending);
-        } else if (this.activeFilter === 'selling') {
-          filtered = filtered.filter(food => food.selling);
-        } else {
-          filtered = filtered.filter(food => food.category === this.activeFilter);
-        }
-      }
-      this.filteredFoods = filtered;
-    },
-    viewDetail(food) {
-      alert(`${food.name} 상세페이지로 이동합니다!`);
-    },
-    requestShare(food) {
-      alert(`${food.name} 한입 나눔을 요청했습니다!`);
-    },
-    startChat(food) {
-      alert(`${food.name} 판매자와 채팅을 시작합니다!`);
-    },
-    addNewFood() {
-      alert('새로운 음식을 등록합니다!');
-    }
+  activeFilter: {
+    type: String,
+    required: true
   }
-};
+});
+
+// Emits 정의
+defineEmits(['set-sort', 'view-detail', 'request-share', 'start-chat']);
+
+// Computed properties
+const getCurrentTitle = computed(() => {
+  const filterMap = {
+    all: '전체 음식',
+    trending: '트렌딩 음식',
+    selling: '판매중 음식',
+    drinks: '음료',
+    desserts: '디저트',
+    snacks: '간식'
+  };
+  return filterMap[props.activeFilter] || '전체 음식';
+});
 </script>
 
 <style scoped>
@@ -221,6 +148,7 @@ export default {
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
+
 .food-card {
   background: white;
   border-radius: 16px;
@@ -385,16 +313,16 @@ export default {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
 @media (max-width: 768px) {
   .food-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
 @media (max-width: 480px) {
   .food-grid {
     grid-template-columns: 1fr;
   }
 }
-
-
 </style>

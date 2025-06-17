@@ -26,142 +26,127 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { contentService } from '@/api/axios.js'; // 서비스 함수 import
 import HeaderSection from '@/components/oneMouth/HeaderSection.vue';
 import SidebarSection from '@/components/oneMouth/SidebarSection.vue';
 import ContentArea from '@/components/oneMouth/ContentArea.vue';
 import FloatingButton from '@/components/oneMouth/FloatingButton.vue';
 
-export default {
-  name: 'OneMouthListView',
-  components: {
-    HeaderSection,
-    SidebarSection,
-    ContentArea,
-    FloatingButton
-  },
-  data() {
-    return {
-      searchQuery: '',
-      activeFilter: 'all',
-      sortBy: 'latest',
-      filterOptions: [
-        { key: 'all', label: '전체', icon: '🍽️' },
-        { key: 'trending', label: '트렌딩', icon: '🌟' },
-        { key: 'selling', label: '판매중', icon: '💰' },
-        { key: 'drinks', label: '음료', icon: '🧋' },
-        { key: 'desserts', label: '디저트', icon: '🍰' },
-        { key: 'snacks', label: '간식', icon: '🥟' }
-      ],
-      foods: [
-        {
-          id: 1,
-          name: 'CU 신상 초코바',
-          description: '진짜 맛있다는 소문의 그 초코바!',
-          emoji: '🍫',
-          rating: 4.8,
-          reviewCount: 127,
-          location: '강남구 역삼동',
-          trending: true,
-          selling: true,
-          price: 1500,
-          stock: 3,
-          category: 'snacks'
-        },
-        {
-          id: 2,
-          name: 'CU 신상 초코바',
-          description: '진짜 맛있다는 소문의 그 초코바!',
-          emoji: '🍫',
-          rating: 4.8,
-          reviewCount: 127,
-          location: '강남구 역삼동',
-          trending: true,
-          selling: true,
-          price: 1500,
-          stock: 3,
-          category: 'snacks'
-        },
-        {
-          id: 3,
-          name: 'CU 신상 초코바',
-          description: '진짜 맛있다는 소문의 그 초코바!',
-          emoji: '🍫',
-          rating: 4.8,
-          reviewCount: 127,
-          location: '강남구 역삼동',
-          trending: true,
-          selling: true,
-          price: 1500,
-          stock: 3,
-          category: 'snacks'
-        },
-        // 추가 데이터 계속...
-      ],
+// Reactive state
+const searchQuery = ref('');
+const activeFilter = ref('all');
+const sortBy = ref('latest');
+const filteredFoods = ref([]);
 
-      filteredFoods: []
-    }
-  },
-  computed: {
-    totalFoods() {
-      return this.foods.length;
-    },
-    activeSellings() {
-      return this.foods.filter(food => food.selling).length;
-    },
-    totalUsers() {
-      return 1247;
-    }
-  },
-  mounted() {
-    this.filteredFoods = this.foods;
-  },
-  methods: {
-    setActiveFilter(filter) {
-      this.activeFilter = filter;
-      this.filterFoods();
-    },
-    setSortBy(sortBy) {
-      this.sortBy = sortBy;
-    },
-    updateSearchQuery(query) {
-      this.searchQuery = query;
-      this.filterFoods();
-    },
-    filterFoods() {
-      let filtered = this.foods;
-      if (this.searchQuery.trim()) {
-        const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(food =>
-            food.name.toLowerCase().includes(query) ||
-            food.description.toLowerCase().includes(query)
-        );
-      }
-      if (this.activeFilter !== 'all') {
-        if (this.activeFilter === 'trending') {
-          filtered = filtered.filter(food => food.trending);
-        } else if (this.activeFilter === 'selling') {
-          filtered = filtered.filter(food => food.selling);
-        } else {
-          filtered = filtered.filter(food => food.category === this.activeFilter);
-        }
-      }
-      this.filteredFoods = filtered;
-    },
-    viewDetail(food) {
-      alert(`${food.name} 상세페이지로 이동합니다!`);
-    },
-    requestShare(food) {
-      alert(`${food.name} 한입 나눔을 요청했습니다!`);
-    },
-    startChat(food) {
-      alert(`${food.name} 판매자와 채팅을 시작합니다!`);
-    },
-    addNewFood() {
-      alert('새로운 음식을 등록합니다!');
-    }
+// Static data
+const filterOptions = [
+  {key: 'all', label: '전체', icon: '🍽️'},
+  {key: 'trending', label: '트렌딩', icon: '🌟'},
+  {key: 'selling', label: '판매중', icon: '💰'},
+  {key: 'drinks', label: '음료', icon: '🧋'},
+  {key: 'desserts', label: '디저트', icon: '🍰'},
+  {key: 'snacks', label: '간식', icon: '🥟'}
+];
+
+const foods = ref([]);
+
+// API 호출 함수
+const fetchFoods = async () => {
+  try {
+    const res = await contentService.getOneMouths(); // 서비스 함수 사용
+    const contents = res.data.content;
+
+    foods.value = contents.map(item => ({
+      id: item.oneMouthId,
+      name: item.title,
+      description: item.description,
+      emoji: '🍱', // 기본값, 서버에서 지원할 경우 바꿔도 됨
+      rating: 4.5, // 임시 값, 나중에 서버에서 제공되면 반영
+      reviewCount: item.hits,
+      location: item.location,
+      trending: item.hits > 50,
+      selling: item.productStatus === 'FOR_SALE',
+      price: item.price,
+      stock: 1, // 서버에 수량 정보 있다면 반영
+      category: item.category?.categoryName || '기타'
+    }));
+
+    filteredFoods.value = foods.value;
+  } catch (error) {
+    console.error('🍽 음식 데이터 로딩 실패:', error);
   }
 };
+
+// Computed properties
+const totalFoods = computed(() => foods.value.length);
+
+const activeSellings = computed(() =>
+    foods.value.filter(food => food.selling).length
+);
+
+const totalUsers = computed(() => 1247);
+
+// Methods
+const setActiveFilter = (filter) => {
+  activeFilter.value = filter;
+  filterFoods();
+};
+
+const setSortBy = (newSortBy) => {
+  sortBy.value = newSortBy;
+};
+
+const updateSearchQuery = (query) => {
+  searchQuery.value = query;
+  filterFoods();
+};
+
+const filterFoods = () => {
+  let filtered = foods.value;
+
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(food =>
+        food.name.toLowerCase().includes(query) ||
+        food.description.toLowerCase().includes(query)
+    );
+  }
+
+  if (activeFilter.value !== 'all') {
+    if (activeFilter.value === 'trending') {
+      filtered = filtered.filter(food => food.trending);
+    } else if (activeFilter.value === 'selling') {
+      filtered = filtered.filter(food => food.selling);
+    } else {
+      filtered = filtered.filter(food => food.category === activeFilter.value);
+    }
+  }
+
+  filteredFoods.value = filtered;
+};
+
+const viewDetail = (food) => {
+  alert(`${food.name} 상세페이지로 이동합니다!`);
+};
+
+const requestShare = (food) => {
+  alert(`${food.name} 한입 나눔을 요청했습니다!`);
+};
+
+const startChat = (food) => {
+  alert(`${food.name} 판매자와 채팅을 시작합니다!`);
+};
+
+const addNewFood = () => {
+  alert('새로운 음식을 등록합니다!');
+};
+
+// Lifecycle
+onMounted(() => {
+  fetchFoods();
+});
 </script>
 
 <style scoped>
