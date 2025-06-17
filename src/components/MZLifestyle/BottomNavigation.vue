@@ -5,6 +5,7 @@
           v-for="(item, index) in navItems"
           :key="index"
           class="nav-item-button"
+          @click="handleNavClick(item)"
       >
         <span class="nav-item-icon">{{ item.icon }}</span>
         <span class="nav-item-label">{{ item.label }}</span>
@@ -14,13 +15,23 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
 const navItems = [
-  { icon: '🏠', label: '홈' },
-  { icon: '😂', label: '밈/짤' },
-  { icon: '✨', label: '만들기' },
-  { icon: '🍔', label: '먹거리' },
-  { icon: '👤', label: '마이' }
+  { icon: '🏠', label: '홈', route: '/' },
+  { icon: '😂', label: '밈/짤', route: '/memes' },
+  { icon: '✨', label: '만들기', route: '/create' },
+  { icon: '🍔', label: '먹거리', route: '/one-mouth/list' },
+  { icon: '👤', label: '마이', route: '/profile' }
 ];
+
+const handleNavClick = (item) => {
+  if (item.route) {
+    router.push(item.route);
+  }
+};
 </script>
 
 <style scoped>
@@ -54,8 +65,17 @@ const navItems = [
   background-color: transparent; /* 버튼 기본 배경 제거 */
   border: none; /* 버튼 기본 테두리 제거 */
   cursor: pointer; /* 클릭 가능한 요소임을 표시 */
-  /* 필요에 따라 호버/포커스 스타일 추가 가능 */
+  transition: all 0.2s ease; /* 부드러운 전환 효과 */
   -webkit-tap-highlight-color: transparent; /* 모바일 탭 하이라이트 제거 */
+}
+
+.nav-item-button:hover {
+  background-color: #f3f4f6; /* hover:bg-gray-100 */
+  border-radius: 0.5rem; /* 호버 시 둥근 모서리 */
+}
+
+.nav-item-button:active {
+  transform: scale(0.95); /* 클릭 시 살짝 작아지는 효과 */
 }
 
 .nav-item-icon {
