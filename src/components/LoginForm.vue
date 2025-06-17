@@ -70,7 +70,7 @@ export default {
         localStorage.setItem('access_token', accessToken)
 
         // 로그인 성공 → 대시보드 이동
-        await router.push('/dashboard')
+        await router.push('/home')
       } catch (error) {
         this.errorMessage = '로그인 실패: 이메일 또는 비밀번호가 올바르지 않습니다.'
         console.error('로그인 오류:', error)

@@ -16,8 +16,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import MZHeader from '@/components/MZLifestyle/MZHeader.vue';
+import {ref} from 'vue';
 import MBTIRecommendationBanner from '@/components/MZLifestyle/MBTIRecommendationBanner.vue';
 import NavigationTabs from '@/components/MZLifestyle/NavigationTabs.vue';
 import AIMemeGeneratorPromo from '@/components/MZLifestyle/AIMemeGeneratorPromo.vue';

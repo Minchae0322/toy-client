@@ -13,7 +13,7 @@ export default {
 
     if (token) {
       localStorage.setItem('access_token', token)
-      router.replace('/dashboard') // ✅ 로그인 성공 → 대시보드로 이동
+      router.replace('/home') // ✅ 로그인 성공 → 대시보드로 이동
     } else {
       console.error('❌ 토큰 없음: 로그인 실패')
       router.replace('/login')
