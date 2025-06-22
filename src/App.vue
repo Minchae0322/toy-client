@@ -6,38 +6,105 @@ import {Menu} from "lucide-vue-next";
 const route = useRoute()
 const router = useRouter()
 
-// 로그인 상태 관리
+// 상태 관리
 const isLoggedIn = ref(false)
+const userInfo = ref(null)
+const isLoggingOut = ref(false)
+
+// 디버깅 모드 (개발할 때만 true)
+const showDebug = ref(false)
 
 // 인증 페이지 확인
 const isAuthPage = computed(() =>
     ['/login', '/register'].includes(route.path)
 )
 
-// 토큰 확인 함수
-const checkAuthStatus = () => {
-  const token = localStorage.getItem('access_token')
-  isLoggedIn.value = !!token
+// JWT 디코딩 함수
+const decodeJWTPayload = (token) => {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) {
+      throw new Error('Invalid JWT format')
+    }
+
+    // Base64 URL 디코딩
+    let payload = parts[1]
+    payload = payload.replace(/-/g, '+').replace(/_/g, '/')
+
+    // 패딩 추가
+    while (payload.length % 4) {
+      payload += '='
+    }
+
+    const jsonPayload = atob(payload)
+    return JSON.parse(jsonPayload)
+  } catch (error) {
+    console.error('JWT 디코딩 실패:', error)
+    return null
+  }
 }
 
-// 로그아웃 진행 중 상태
-const isLoggingOut = ref(false)
+// 토큰 확인 함수
+const checkAuthStatus = () => {
+  console.log('🔍 App.vue 인증 상태 확인 중...')
+
+  const token = localStorage.getItem('access_token')
+
+  if (!token) {
+    console.log('❌ 토큰 없음')
+    isLoggedIn.value = false
+    userInfo.value = null
+    return
+  }
+
+  console.log('✅ 토큰 발견:', token.substring(0, 50) + '...')
+  isLoggedIn.value = true
+
+  // JWT에서 사용자 정보 추출
+  const payload = decodeJWTPayload(token)
+  if (payload) {
+    userInfo.value = {
+      id: payload.userId || payload.sub,
+      username: payload.username || payload.sub,
+      role: payload.role || payload.auth,
+      provider: payload.provider
+    }
+    console.log('✅ App.vue 사용자 정보 추출 완료:', userInfo.value)
+  } else {
+    console.log('❌ JWT 디코딩 실패')
+  }
+}
+
+// 관리자 권한 확인 (computed로 반응성 보장)
+const isAdmin = computed(() => {
+  const role = userInfo.value?.role
+  const result = role === 'ADMIN'
+  console.log('🔵 App.vue isAdmin 계산:', { role, result })
+  return result
+})
+
+// 토큰 존재 여부
+const hasToken = computed(() => !!localStorage.getItem('access_token'))
 
 // 로그아웃 함수
 const handleLogout = async () => {
-  // 로그아웃 진행 중 상태로 변경
+  console.log('👋 App.vue 로그아웃 처리 중...')
   isLoggingOut.value = true
 
-  // 모든 토큰 제거 (refresh_token도 포함)
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('refresh_token')
-  isLoggedIn.value = false
+  try {
+    // 모든 토큰 제거
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    isLoggedIn.value = false
+    userInfo.value = null
 
-  // Vue Router를 사용하여 즉시 페이지 이동
-  await router.push('/login')
+    // Vue Router를 사용하여 즉시 페이지 이동
+    await router.push('/login')
 
-  // 로그아웃 진행 완료
-  isLoggingOut.value = false
+    console.log('✅ App.vue 로그아웃 완료')
+  } finally {
+    isLoggingOut.value = false
+  }
 }
 
 // localStorage 변경 감지 (다른 탭에서 로그아웃 시에도 반영)
@@ -53,6 +120,35 @@ onMounted(() => {
 
   // storage 이벤트 리스너 추가
   window.addEventListener('storage', handleStorageChange)
+
+  // 디버깅 정보 출력
+  console.log('=== App.vue 디버깅 ===')
+  console.log('isLoggedIn:', isLoggedIn.value)
+  console.log('isAdmin:', isAdmin.value)
+  console.log('userInfo:', userInfo.value)
+  console.log('hasToken:', hasToken.value)
+
+  // JWT 토큰 수동 확인
+  const token = localStorage.getItem('access_token')
+  if (token) {
+    console.log('토큰 일부:', token.substring(0, 50))
+    try {
+      const parts = token.split('.')
+      if (parts.length === 3) {
+        let payload = parts[1]
+        payload = payload.replace(/-/g, '+').replace(/_/g, '/')
+        while (payload.length % 4) {
+          payload += '='
+        }
+        const decodedPayload = JSON.parse(atob(payload))
+        console.log('App.vue JWT 페이로드:', decodedPayload)
+        console.log('App.vue JWT role:', decodedPayload.role)
+        console.log('App.vue JWT auth:', decodedPayload.auth)
+      }
+    } catch (e) {
+      console.error('App.vue JWT 디코딩 실패:', e)
+    }
+  }
 })
 
 // 라우트 변경 시 토큰 상태 확인
@@ -67,29 +163,62 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <!-- 🚨 디버깅 정보 (개발 중에만) -->
+  <div v-if="showDebug && !isAuthPage" class="debug-info">
+    <div>로그인: {{ isLoggedIn }}</div>
+    <div>관리자: {{ isAdmin }}</div>
+    <div>사용자: {{ userInfo?.username }}</div>
+    <div>역할: {{ userInfo?.role }}</div>
+    <div>토큰: {{ hasToken ? '있음' : '없음' }}</div>
+  </div>
+
   <header v-if="!isAuthPage" class="app-header">
-    <div class="logo">
-      <RouterLink to="/home" class="mz-title">MZ라이프</RouterLink>
+    <div class="header-container">
+      <div class="logo">
+        <RouterLink to="/home" class="mz-title">🍽️ 한입만</RouterLink>
+      </div>
+
+      <nav class="main-nav">
+        <!-- 로그아웃 진행 중이면 로딩 표시 -->
+        <template v-if="isLoggingOut">
+          <div class="loading">로그아웃 중...</div>
+        </template>
+
+        <!-- 로그인하지 않은 경우 로그인/회원가입 표시 -->
+        <template v-else-if="!isLoggedIn">
+          <RouterLink to="/login" class="nav-link">로그인</RouterLink>
+          <RouterLink to="/register" class="nav-link">회원가입</RouterLink>
+        </template>
+
+        <!-- 로그인한 경우 메뉴 표시 -->
+        <template v-else>
+          <RouterLink to="/home" class="nav-link">홈</RouterLink>
+          <RouterLink to="/dashboard" class="nav-link">대시보드</RouterLink>
+          <RouterLink to="/list" class="nav-link">한입거리</RouterLink>
+          <RouterLink to="/sell" class="nav-link">판매하기</RouterLink>
+
+          <!-- 🎯 관리자 메뉴 -->
+          <div v-if="isAdmin" class="admin-menu">
+            <RouterLink to="/admin" class="admin-link">
+              🛠️ 관리자
+            </RouterLink>
+            <RouterLink to="/admin/users" class="admin-link">
+              👥 사용자 관리
+            </RouterLink>
+            <RouterLink to="/admin/products" class="admin-link">
+              📦 상품 관리
+            </RouterLink>
+          </div>
+
+          <!-- 사용자 정보 및 로그아웃 -->
+          <div class="user-section">
+            <span class="username">{{ userInfo?.username || '사용자' }}</span>
+            <span v-if="isAdmin" class="admin-badge">관리자</span>
+            <button @click="handleLogout" class="logout-btn">로그아웃</button>
+          </div>
+        </template>
+      </nav>
     </div>
-
-    <nav class="main-nav">
-      <!-- 로그아웃 진행 중이면 아무것도 표시하지 않음 -->
-      <template v-if="isLoggingOut">
-        <!-- 빈 템플릿 또는 로딩 스피너 -->
-      </template>
-
-      <!-- 로그인하지 않은 경우 로그인/회원가입 표시 -->
-      <template v-else-if="!isLoggedIn">
-        <RouterLink to="/login">로그인</RouterLink>
-        <RouterLink to="/register">회원가입</RouterLink>
-      </template>
-
-      <!-- 로그인한 경우 대시보드/로그아웃 표시 -->
-      <template v-else>
-        <RouterLink to="/dashboard">대시보드</RouterLink>
-        <button @click="handleLogout" class="logout-btn">로그아웃</button>
-      </template>
-    </nav>
   </header>
 
   <main :class="['app-main', { 'no-padding': isAuthPage }]">
@@ -98,53 +227,143 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.debug-info {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  z-index: 9999;
+  line-height: 1.4;
+}
+
+.debug-info div {
+  margin: 2px 0;
+}
+
 .app-header {
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
+  height: 60px;
 }
 
-.logo a {
-  font-size: 1.2rem;
+.logo .mz-title {
+  font-size: 1.5rem;
   font-weight: bold;
   text-decoration: none;
-  color: #333;
+  background: linear-gradient(to right, #9333ea, #db2777);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
 }
 
 .main-nav {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 20px;
 }
 
-.main-nav a {
-  font-weight: bold;
+.nav-link {
   text-decoration: none;
   color: #333;
-  transition: color 0.2s;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s;
 }
 
-.main-nav a:hover {
-  color: #42b983;
+.nav-link:hover {
+  background: #f3f4f6;
+  color: #9333ea;
 }
 
-.main-nav a.router-link-exact-active {
-  color: #42b983;
+.nav-link.router-link-active {
+  background: #9333ea;
+  color: white;
+}
+
+.admin-menu {
+  display: flex;
+  gap: 10px;
+  padding: 0 15px;
+  border-left: 2px solid #e5e7eb;
+  border-right: 2px solid #e5e7eb;
+  margin: 0 10px;
+}
+
+.admin-link {
+  background: linear-gradient(135deg, #ff6b35, #f39c12) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  text-decoration: none !important;
+  transition: all 0.3s !important;
+  font-size: 0.9rem;
+}
+
+.admin-link:hover {
+  background: linear-gradient(135deg, #e55a2b, #e67e22) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 15px;
+  border-left: 1px solid #e5e7eb;
+}
+
+.username {
+  font-weight: 600;
+  color: #333;
+}
+
+.admin-badge {
+  background: linear-gradient(135deg, #ff6b35, #f39c12);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .logout-btn {
-  background: none;
+  background: #ef4444;
+  color: white;
   border: none;
-  font-weight: bold;
-  color: #333;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: background 0.3s;
 }
 
 .logout-btn:hover {
-  color: #e74c3c;
+  background: #dc2626;
+}
+
+.loading {
+  color: #6b7280;
+  font-style: italic;
 }
 
 .app-main {
@@ -155,72 +374,64 @@ onUnmounted(() => {
   padding: 0;
 }
 
+/* 기존 스타일 유지 */
 .mz-header {
-  /* bg-white shadow-sm sticky top-0 z-50 */
-  background-color: white; /* bg-white */
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-  position: sticky; /* sticky */
-  top: 0; /* top-0 */
-  z-index: 50; /* z-50 */
-  width: 100%; /* 전체 너비 */
+  background-color: white;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
 }
 
 .mz-header-content {
-  /* flex items-center justify-between px-4 py-3 */
-  display: flex; /* flex */
-  align-items: center; /* items-center */
-  justify-content: space-between; /* justify-between */
-  padding-left: 1rem; /* px-4 */
-  padding-right: 1rem; /* px-4 */
-  padding-top: 0.75rem; /* py-3 */
-  padding-bottom: 0.75rem; /* py-3 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
 }
 
 .mz-header-left,
 .mz-header-right {
-  /* flex items-center space-x-3 */
-  display: flex; /* flex */
-  align-items: center; /* items-center */
-  gap: 0.75rem; /* space-x-3 (Tailwind의 기본 간격 1단위 = 0.25rem이므로 3 * 0.25rem = 0.75rem) */
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .mz-icon-default {
-  /* w-6 h-6 text-gray-600 */
-  width: 1.5rem; /* w-6 (6 * 0.25rem = 1.5rem) */
-  height: 1.5rem; /* h-6 */
-  color: #4b5563; /* text-gray-600 */
-  flex-shrink: 0; /* 아이콘이 찌그러지지 않도록 */
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #4b5563;
+  flex-shrink: 0;
 }
 
 .mz-title {
-  /* text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent */
-  font-size: 1.25rem; /* text-xl */
-  font-weight: bold; /* font-bold */
-  /* 그라데이션 텍스트 효과는 일반 CSS로 구현하기 까다롭습니다.
-     아래는 Webkit 기반 브라우저(Chrome, Safari 등)에서 작동하는 방법입니다. */
-  background: linear-gradient(to right, #9333ea, #db2777); /* purple-600 to pink-600 */
-  -webkit-background-clip: text; /* 텍스트 클립 */
-  -webkit-text-fill-color: transparent; /* 텍스트 채우기 색상 투명 */
-  background-clip: text; /* 표준 속성 (아직 모든 브라우저 지원 아님) */
-  color: transparent; /* fallback for browsers that don't support text-fill-color */
+  font-size: 1.25rem;
+  font-weight: bold;
+  background: linear-gradient(to right, #9333ea, #db2777);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
 }
 
 .mz-user-icon-bg {
-  /* w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center */
-  width: 2rem; /* w-8 */
-  height: 2rem; /* h-8 */
-  background: linear-gradient(to right, #c084fc, #f472b6); /* purple-400 to pink-400 */
-  border-radius: 9999px; /* rounded-full (매우 큰 값으로 원형 만듬) */
-  display: flex; /* flex */
-  align-items: center; /* items-center */
-  justify-content: center; /* justify-center */
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(to right, #c084fc, #f472b6);
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mz-user-icon {
-  /* w-5 h-5 text-white */
-  width: 1.25rem; /* w-5 */
-  height: 1.25rem; /* h-5 */
-  color: white; /* text-white */
-  flex-shrink: 0; /* 아이콘이 찌그러지지 않도록 */
+  width: 1.25rem;
+  height: 1.25rem;
+  color: white;
+  flex-shrink: 0;
 }
 </style>

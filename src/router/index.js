@@ -1,22 +1,66 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { authGuard } from '@/router/guards/authGuard.js'
+
+// Views import
 import LoginView from '@/views/LoginView.vue'
-import DashboardView from '@/views/DashboardView.vue'
+
 import HomeView from '@/views/HomeView.vue'
 import OAuthCallback from '@/views/OAuth2Callback.vue'
 import OneMouthView from '@/views/OneMouthView.vue'
-import OneMouthListView from "@/views/OneMouthListView.vue";
+import OneMouthListView from "@/views/OneMouthListView.vue"
 import OneMouthDetailView from "@/views/OneMouthDetailView.vue"
+import CategoryAdminView from "@/views/CategoryAdminView.vue"
 
 const routes = [
-  { path: '/login', component: LoginView },
-  { path: '/dashboard', component: DashboardView, meta: { requiresAuth: true } },
-  { path: '/home', component: HomeView, meta: { requiresAuth: true } },
-  { path: '/oauth/callback', component: OAuthCallback }, // ✅ 소셜 로그인 콜백
-  { path: '/sell', component: OneMouthView, meta: { requiresAuth: false } }, // ✅ 판매 페이지
-  { path: '/one-mouth/list', component: OneMouthListView, meta: { requiresAuth: true } },
-  { path: '/one-mouth/detail', component: OneMouthDetailView, meta: { requiresAuth: false },
-  }
+  {
+    path: '/login',
+    name: 'Login',
+    component: LoginView
+  },
 
+  {
+    path: '/home',
+    name: 'Home',
+    component: HomeView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/oauth/callback',
+    name: 'OAuthCallback',
+    component: OAuthCallback
+  },
+  {
+    path: '/sell',
+    name: 'Sell',
+    component: OneMouthView,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/one-mouth/list',
+    name: 'OneMouthList',
+    component: OneMouthListView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/one-mouth/detail',
+    name: 'OneMouthDetail',
+    component: OneMouthDetailView,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/admin/category',
+    name: 'CategoryAdmin',
+    component: CategoryAdminView,
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: '카테고리 관리'
+    }
+  },
+  {
+    path: '/',
+    redirect: '/home'
+  }
 ]
 
 const router = createRouter({
@@ -24,13 +68,7 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('access_token')
-  if (to.meta.requiresAuth && !token) {
-    next('/login')
-  } else {
-    next()
-  }
-})
+// 가드 적용
+router.beforeEach(authGuard)
 
 export default router

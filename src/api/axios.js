@@ -229,7 +229,8 @@ export const contentService = {
     deleteMeme: (id) => contentApi.delete(`/memes/${id}`),
 
     // 카테고리 API
-    getCategories: () => contentApi.get('/categories'),
+    getCategories: (params) => contentApi.get('/categories', { params }),
+    getCategoryStats: () => contentApi.get('/categories/stats'),
 
     // 좋아요/북마크
     likeContent: (contentId, type) => contentApi.post(`/${type}/${contentId}/like`),
