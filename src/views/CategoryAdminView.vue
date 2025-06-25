@@ -1,4 +1,267 @@
-<template>
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { contentService } from '@/api/axios.js'; // API 서비스 import
+
+// 반응형 데이터
+const categories = ref([])
+const loading = ref(false)
+const editingId = ref(null)
+const showAddForm = ref(false)
+const draggedItem = ref(null)
+const notification = ref({ show: false, message: '', type: 'success' })
+
+// 새 카테고리 폼 데이터
+const newCategory = ref({
+  categoryKey: '',
+  categoryName: '',
+  categoryIcon: '🍽️',
+  categoryType: 'FOOD',
+  parentId: null,
+  isActive: true
+})
+
+// 카테고리 타입 옵션
+const categoryTypes = [
+  { value: 'SYSTEM', label: '시스템', color: '#6b7280' },
+  { value: 'TREND', label: '트렌드/신상', color: '#ef4444' },
+  { value: 'PLACE', label: '장소별', color: '#f59e0b' },
+  { value: 'FOOD', label: '음식별', color: '#10b981' },
+  { value: 'PRICE', label: '가격별', color: '#8b5cf6' },
+  { value: 'PURPOSE', label: '목적별', color: '#3b82f6' },
+  { value: 'LIFESTYLE', label: '라이프스타일', color: '#06b6d4' },
+  { value: 'TIME', label: '시간대별', color: '#84cc16' },
+  { value: 'SPECIAL', label: '특별태그', color: '#f97316' }
+]
+
+// 이모지 선택 옵션
+const emojiOptions = [
+  '🍽️', '🆕', '🌟', '🏷️', '📺', '🏪', '☕', '🍞', '🍕', '🍜',
+  '🍫', '🧋', '💸', '💵', '💴', '💎', '🤝', '👥', '⚡', '🎁',
+  '💪', '🎮', '📚', '🍺', '🌅', '🌙', '🔥', '👀', '⭐', '📸'
+]
+
+// 계산된 속성
+const activeCategories = computed(() =>
+    categories.value.filter(c => c.isActive).length
+)
+
+const inactiveCategories = computed(() =>
+    categories.value.filter(c => !c.isActive).length
+)
+
+const totalItems = computed(() =>
+    categories.value.reduce((sum, c) => sum + c.itemCount, 0)
+)
+
+// 알림 표시 함수
+const showNotification = (message, type = 'success') => {
+  notification.value = { show: true, message, type }
+  setTimeout(() => {
+    notification.value.show = false
+  }, 3000)
+}
+
+// contentService를 사용한 API 함수들
+const loadCategories = async () => {
+  loading.value = true
+  try {
+    const response = await contentService.getCategories()
+    categories.value = response.data?.data || response.data || []
+  } catch (error) {
+    console.error('카테고리 목록 조회 실패:', error)
+    showNotification('카테고리 목록을 불러오는데 실패했습니다.', 'error')
+
+    // API 실패 시 목 데이터 사용
+    categories.value = [
+      { categoryId: 1, categoryKey: 'all', categoryName: '전체', categoryIcon: '🍽️', categoryType: 'SYSTEM', displayOrder: 0, isActive: true, itemCount: 156 },
+      { categoryId: 2, categoryKey: 'new', categoryName: '이번주 신상', categoryIcon: '🆕', categoryType: 'TREND', displayOrder: 1, isActive: true, itemCount: 23 },
+      { categoryId: 3, categoryKey: 'trending', categoryName: '화제의 먹거리', categoryIcon: '🌟', categoryType: 'TREND', displayOrder: 2, isActive: true, itemCount: 45 },
+      { categoryId: 4, categoryKey: 'convenience', categoryName: '편의점 템', categoryIcon: '🏪', categoryType: 'PLACE', displayOrder: 3, isActive: true, itemCount: 67 },
+      { categoryId: 5, categoryKey: 'cafe', categoryName: '카페 음료', categoryIcon: '☕', categoryType: 'PLACE', displayOrder: 4, isActive: true, itemCount: 34 },
+      { categoryId: 6, categoryKey: 'snacks', categoryName: '간식/과자', categoryIcon: '🍫', categoryType: 'FOOD', displayOrder: 5, isActive: false, itemCount: 12 }
+    ]
+  } finally {
+    loading.value = false
+  }
+}
+
+// 카테고리 추가
+const handleAddCategory = async () => {
+  if (!newCategory.value.categoryKey || !newCategory.value.categoryName) {
+    showNotification('카테고리 키와 이름은 필수입니다.', 'error')
+    return
+  }
+
+  try {
+    const categoryData = {
+      categoryName: newCategory.value.categoryName,
+      categoryKey: newCategory.value.categoryKey,
+      categoryCode: newCategory.value.categoryKey.toUpperCase(),
+      description: '',
+      keywords: []
+    }
+
+    await contentService.createCategory(categoryData)
+
+    // 성공 시 목록 새로고침
+    await loadCategories()
+    closeAddForm()
+    showNotification('카테고리가 추가되었습니다.')
+  } catch (error) {
+    console.error('카테고리 추가 실패:', error)
+    showNotification('카테고리 추가에 실패했습니다.', 'error')
+  }
+}
+
+const closeAddForm = () => {
+  showAddForm.value = false
+  newCategory.value = {
+    categoryKey: '',
+    categoryName: '',
+    categoryIcon: '🍽️',
+    categoryType: 'FOOD',
+    parentId: null,
+    isActive: true
+  }
+}
+
+// 카테고리 수정
+const handleEditCategory = async (id, field, value) => {
+  const category = categories.value.find(cat => cat.categoryId === id)
+  if (category) {
+    // 즉시 UI 업데이트
+    const originalValue = category[field]
+    category[field] = value
+
+    try {
+      // API 호출
+      const updateData = {
+        categoryName: category.categoryName,
+        description: category.description || '',
+        keywords: [],
+        sortOrder: category.displayOrder || 0
+      }
+
+      await contentService.updateCategory(id, updateData)
+      showNotification('카테고리가 수정되었습니다.')
+    } catch (error) {
+      // 실패 시 원래 값으로 복구
+      category[field] = originalValue
+      console.error('카테고리 수정 실패:', error)
+      showNotification('카테고리 수정에 실패했습니다.', 'error')
+    }
+  }
+}
+
+const startEdit = (id) => {
+  editingId.value = id
+}
+
+const saveEdit = (id) => {
+  editingId.value = null
+}
+
+// 카테고리 삭제
+const handleDeleteCategory = async (id) => {
+  if (confirm('정말로 이 카테고리를 삭제하시겠습니까?')) {
+    try {
+      await contentService.deleteCategory(id)
+      await loadCategories()
+      showNotification('카테고리가 삭제되었습니다.')
+    } catch (error) {
+      console.error('카테고리 삭제 실패:', error)
+      showNotification('카테고리 삭제에 실패했습니다.', 'error')
+    }
+  }
+}
+
+// 카테고리 활성화/비활성화
+const toggleActive = async (id) => {
+  const category = categories.value.find(cat => cat.categoryId === id)
+  if (category) {
+    const originalStatus = category.isActive
+
+    // 즉시 UI 업데이트
+    category.isActive = !category.isActive
+    const status = category.isActive ? '활성화' : '비활성화'
+
+    try {
+      await contentService.toggleCategoryStatus(id)
+      showNotification(`카테고리가 ${status}되었습니다.`)
+    } catch (error) {
+      // 실패 시 원래 상태로 복구
+      category.isActive = originalStatus
+      console.error('상태 변경 실패:', error)
+      showNotification('상태 변경에 실패했습니다.', 'error')
+    }
+  }
+}
+
+// 드래그 앤 드롭
+const handleDragStart = (e, item) => {
+  draggedItem.value = item
+  e.dataTransfer.effectAllowed = 'move'
+}
+
+const handleDragOver = (e) => {
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'move'
+}
+
+const handleDrop = async (e, targetItem, targetIndex) => {
+  e.preventDefault()
+  if (!draggedItem.value || draggedItem.value.categoryId === targetItem.categoryId) return
+
+  const draggedCategoryId = draggedItem.value.categoryId
+  const targetPosition = targetIndex + 1 // API는 1부터 시작
+
+  // 원래 상태 백업
+  const originalCategories = [...categories.value]
+
+  try {
+    // 먼저 UI 업데이트 (낙관적 업데이트)
+    const draggedIndex = categories.value.findIndex(c => c.categoryId === draggedCategoryId)
+    const newCategories = [...categories.value]
+    const [removed] = newCategories.splice(draggedIndex, 1)
+    newCategories.splice(targetIndex, 0, removed)
+
+    // displayOrder 재정렬
+    const reorderedCategories = newCategories.map((cat, index) => ({
+      ...cat,
+      displayOrder: index
+    }))
+
+    categories.value = reorderedCategories
+
+    // API 호출
+    await contentService.reorderCategory(draggedCategoryId, targetPosition)
+    showNotification('카테고리 순서가 변경되었습니다.')
+
+  } catch (error) {
+    // 실패 시 원래 상태로 되돌리기
+    categories.value = originalCategories
+    console.error('순서 변경 실패:', error)
+    showNotification('순서 변경에 실패했습니다.', 'error')
+  }
+
+  draggedItem.value = null
+}
+
+const getTypeColor = (type) => {
+  const typeObj = categoryTypes.find(t => t.value === type)
+  return typeObj ? typeObj.color : '#6b7280'
+}
+
+const getTypeLabel = (type) => {
+  const typeObj = categoryTypes.find(t => t.value === type)
+  return typeObj ? typeObj.label : type
+}
+
+// 라이프사이클
+onMounted(() => {
+  loadCategories()
+})
+</script><template>
   <div class="admin-container">
     <!-- 헤더 -->
     <div class="header-section">
@@ -103,7 +366,7 @@
             draggable="true"
             @dragstart="handleDragStart($event, category)"
             @dragover="handleDragOver"
-            @drop="handleDrop($event, category)"
+            @drop="handleDrop($event, category, index)"
         >
           <div class="category-content">
             <!-- 드래그 핸들 -->
@@ -191,184 +454,15 @@
         </div>
       </div>
     </div>
+
+    <!-- 알림 메시지 -->
+    <div v-if="notification.show" class="notification" :class="notification.type">
+      {{ notification.message }}
+    </div>
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue';
 
-// 반응형 데이터
-const categories = ref([]);
-const loading = ref(false);
-const editingId = ref(null);
-const showAddForm = ref(false);
-const draggedItem = ref(null);
-
-// 새 카테고리 폼 데이터
-const newCategory = ref({
-  categoryKey: '',
-  categoryName: '',
-  categoryIcon: '🍽️',
-  categoryType: 'FOOD',
-  parentId: null,
-  isActive: true
-});
-
-// 카테고리 타입 옵션
-const categoryTypes = [
-  { value: 'SYSTEM', label: '시스템', color: '#6b7280' },
-  { value: 'TREND', label: '트렌드/신상', color: '#ef4444' },
-  { value: 'PLACE', label: '장소별', color: '#f59e0b' },
-  { value: 'FOOD', label: '음식별', color: '#10b981' },
-  { value: 'PRICE', label: '가격별', color: '#8b5cf6' },
-  { value: 'PURPOSE', label: '목적별', color: '#3b82f6' },
-  { value: 'LIFESTYLE', label: '라이프스타일', color: '#06b6d4' },
-  { value: 'TIME', label: '시간대별', color: '#84cc16' },
-  { value: 'SPECIAL', label: '특별태그', color: '#f97316' }
-];
-
-// 이모지 선택 옵션
-const emojiOptions = [
-  '🍽️', '🆕', '🌟', '🏷️', '📺', '🏪', '☕', '🍞', '🍕', '🍜',
-  '🍫', '🧋', '💸', '💵', '💴', '💎', '🤝', '👥', '⚡', '🎁',
-  '💪', '🎮', '📚', '🍺', '🌅', '🌙', '🔥', '👀', '⭐', '📸'
-];
-
-// 계산된 속성
-const activeCategories = computed(() =>
-    categories.value.filter(c => c.isActive).length
-);
-
-const inactiveCategories = computed(() =>
-    categories.value.filter(c => !c.isActive).length
-);
-
-const totalItems = computed(() =>
-    categories.value.reduce((sum, c) => sum + c.itemCount, 0)
-);
-
-// 메서드
-const loadCategories = async () => {
-  loading.value = true;
-  // Mock API 호출
-  setTimeout(() => {
-    categories.value = [
-      { categoryId: 1, categoryKey: 'all', categoryName: '전체', categoryIcon: '🍽️', categoryType: 'SYSTEM', displayOrder: 0, isActive: true, itemCount: 156 },
-      { categoryId: 2, categoryKey: 'new', categoryName: '이번주 신상', categoryIcon: '🆕', categoryType: 'TREND', displayOrder: 1, isActive: true, itemCount: 23 },
-      { categoryId: 3, categoryKey: 'trending', categoryName: '화제의 먹거리', categoryIcon: '🌟', categoryType: 'TREND', displayOrder: 2, isActive: true, itemCount: 45 },
-      { categoryId: 4, categoryKey: 'convenience', categoryName: '편의점 템', categoryIcon: '🏪', categoryType: 'PLACE', displayOrder: 3, isActive: true, itemCount: 67 },
-      { categoryId: 5, categoryKey: 'cafe', categoryName: '카페 음료', categoryIcon: '☕', categoryType: 'PLACE', displayOrder: 4, isActive: true, itemCount: 34 },
-      { categoryId: 6, categoryKey: 'snacks', categoryName: '간식/과자', categoryIcon: '🍫', categoryType: 'FOOD', displayOrder: 5, isActive: false, itemCount: 12 },
-    ];
-    loading.value = false;
-  }, 1000);
-};
-
-const handleAddCategory = () => {
-  if (!newCategory.value.categoryKey || !newCategory.value.categoryName) {
-    alert('카테고리 키와 이름은 필수입니다.');
-    return;
-  }
-
-  const newId = Math.max(...categories.value.map(c => c.categoryId)) + 1;
-  const categoryToAdd = {
-    ...newCategory.value,
-    categoryId: newId,
-    displayOrder: categories.value.length,
-    itemCount: 0
-  };
-
-  categories.value.push(categoryToAdd);
-  closeAddForm();
-};
-
-const closeAddForm = () => {
-  showAddForm.value = false;
-  newCategory.value = {
-    categoryKey: '',
-    categoryName: '',
-    categoryIcon: '🍽️',
-    categoryType: 'FOOD',
-    parentId: null,
-    isActive: true
-  };
-};
-
-const handleEditCategory = (id, field, value) => {
-  const category = categories.value.find(cat => cat.categoryId === id);
-  if (category) {
-    category[field] = value;
-  }
-};
-
-const startEdit = (id) => {
-  editingId.value = id;
-};
-
-const saveEdit = (id) => {
-  editingId.value = null;
-};
-
-const handleDeleteCategory = (id) => {
-  if (confirm('정말로 이 카테고리를 삭제하시겠습니까?')) {
-    categories.value = categories.value.filter(cat => cat.categoryId !== id);
-  }
-};
-
-const toggleActive = (id) => {
-  const category = categories.value.find(cat => cat.categoryId === id);
-  if (category) {
-    category.isActive = !category.isActive;
-  }
-};
-
-// 드래그 앤 드롭
-const handleDragStart = (e, item) => {
-  draggedItem.value = item;
-  e.dataTransfer.effectAllowed = 'move';
-};
-
-const handleDragOver = (e) => {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-};
-
-const handleDrop = (e, targetItem) => {
-  e.preventDefault();
-  if (!draggedItem.value || draggedItem.value.categoryId === targetItem.categoryId) return;
-
-  const draggedIndex = categories.value.findIndex(c => c.categoryId === draggedItem.value.categoryId);
-  const targetIndex = categories.value.findIndex(c => c.categoryId === targetItem.categoryId);
-
-  const newCategories = [...categories.value];
-  const [removed] = newCategories.splice(draggedIndex, 1);
-  newCategories.splice(targetIndex, 0, removed);
-
-  // displayOrder 재정렬
-  const reorderedCategories = newCategories.map((cat, index) => ({
-    ...cat,
-    displayOrder: index
-  }));
-
-  categories.value = reorderedCategories;
-  draggedItem.value = null;
-};
-
-const getTypeColor = (type) => {
-  const typeObj = categoryTypes.find(t => t.value === type);
-  return typeObj ? typeObj.color : '#6b7280';
-};
-
-const getTypeLabel = (type) => {
-  const typeObj = categoryTypes.find(t => t.value === type);
-  return typeObj ? typeObj.label : type;
-};
-
-// 라이프사이클
-onMounted(() => {
-  loadCategories();
-});
-</script>
 
 <style scoped>
 .admin-container {
@@ -640,7 +734,7 @@ onMounted(() => {
 .category-item {
   border-bottom: 1px solid #e5e7eb;
   padding: 16px 24px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   cursor: move;
 }
 
@@ -649,7 +743,13 @@ onMounted(() => {
 }
 
 .category-item.dragging {
-  opacity: 0.5;
+  opacity: 0.6;
+  transform: rotate(2deg);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.category-item:last-child {
+  border-bottom: none;
 }
 
 .category-content {
@@ -662,6 +762,7 @@ onMounted(() => {
   color: #9ca3af;
   font-size: 16px;
   cursor: move;
+  user-select: none;
 }
 
 .drag-handle:hover {
@@ -714,6 +815,12 @@ onMounted(() => {
   border: 1px solid #d1d5db;
   border-radius: 4px;
   padding: 4px 8px;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .category-type-badge {
@@ -796,6 +903,43 @@ onMounted(() => {
   background: #fecaca;
 }
 
+/* 알림 메시지 */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.notification.success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.notification.error {
+  background: #fecaca;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .admin-container {
@@ -828,6 +972,12 @@ onMounted(() => {
 
   .category-actions {
     order: 2;
+  }
+
+  .notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
   }
 }
 </style>

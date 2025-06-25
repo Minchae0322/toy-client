@@ -214,7 +214,6 @@ export const authService = {
 }
 
 export const contentService = {
-    // 한입거리 관련 API (토큰 검증만)
     getOneMouths: (params) => contentApi.get('/one-mouths', { params }),
     getOneMouthDetail: (id) => contentApi.get(`/one-mouths/${id}`),
     createOneMouth: (data) => contentApi.post('/one-mouths', data),
@@ -229,7 +228,35 @@ export const contentService = {
     deleteMeme: (id) => contentApi.delete(`/memes/${id}`),
 
     // 카테고리 API
-    getCategories: (params) => contentApi.get('/categories', { params }),
+    // 카테고리 목록 조회 (페이징)
+    getCategoriesPages: (pageable, condition) => contentApi.get('/categories', {
+        params: { ...pageable, ...condition }
+    }),
+
+    // 카테고리 전체 목록 조회
+    getCategories: (condition = {}) => contentApi.get('/categories/list', { params: condition }),
+
+    // 카테고리 상세 조회
+    getCategoryDetail: (categoryId) => contentApi.get(`/categories/${categoryId}`),
+
+    // 카테고리 생성
+    createCategory: (data) => contentApi.post('/categories', data),
+
+    // 카테고리 수정
+    updateCategory: (categoryId, data) => contentApi.put(`/categories/${categoryId}`, data),
+
+    // 카테고리 삭제
+    deleteCategory: (categoryId) => contentApi.delete(`/categories/${categoryId}`),
+
+    // 카테고리 활성화/비활성화 토글
+    toggleCategoryStatus: (categoryId) => contentApi.patch(`/categories/${categoryId}/toggle-status`),
+
+    // 카테고리 순서 변경
+    reorderCategory: (categoryId, targetPosition) => contentApi.put(`/categories/${categoryId}/reorder`, {
+        targetPosition
+    }),
+
+    // 카테고리 통계 (기존)
     getCategoryStats: () => contentApi.get('/categories/stats'),
 
     // 좋아요/북마크

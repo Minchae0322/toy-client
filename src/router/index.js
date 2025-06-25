@@ -52,8 +52,8 @@ const routes = [
     name: 'CategoryAdmin',
     component: CategoryAdminView,
     meta: {
-      requiresAuth: true,
-      requiresAdmin: true,
+      requiresAuth: false,
+      requiresAdmin: false,
       title: '카테고리 관리'
     }
   },
