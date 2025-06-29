@@ -24,7 +24,8 @@ const emit = defineEmits([
   'update-category',
   'delete-category',
   'reorder-categories',
-  'update-categories'
+  'update-categories',
+  'status-updated' // 🔥 status-updated 이벤트 추가
 ])
 
 const draggedItem = ref(null)
@@ -117,6 +118,12 @@ const handleDeleteCategory = (id) => {
 
 const handleAddCategory = () => {
   emit('add-category')
+}
+
+// 🔥 새로 추가: 상태 업데이트 이벤트 전달
+const handleStatusUpdated = (eventData) => {
+  console.log('📋 CategoryList에서 status-updated 이벤트 전달:', eventData)
+  emit('status-updated', eventData)
 }
 </script>
 

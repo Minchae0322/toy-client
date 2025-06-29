@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { computed, watch, ref } from 'vue'
+
+const props = defineProps({
   total: {
     type: Number,
     default: 0
@@ -11,7 +13,81 @@ defineProps({
   inactive: {
     type: Number,
     default: 0
+  },
+  // 자동 계산 여부
+  autoCalculate: {
+    type: Boolean,
+    default: false
+  },
+  // 데이터 소스 (배열이나 객체)
+  dataSource: {
+    type: Array,
+    default: () => []
   }
+})
+
+const emit = defineEmits(['stats-updated'])
+
+// 반응형 상태
+const stats = ref({
+  total: props.total,
+  active: props.active,
+  inactive: props.inactive
+})
+
+// 자동 계산된 통계
+const computedStats = computed(() => {
+  if (!props.autoCalculate || !props.dataSource.length) {
+    return {
+      total: props.total,
+      active: props.active,
+      inactive: props.inactive
+    }
+  }
+
+  const total = props.dataSource.length
+  const active = props.dataSource.filter(item =>
+      item.status === 'active' || item.active === true || item.isActive === true
+  ).length
+  const inactive = total - active
+
+  return { total, active, inactive }
+})
+
+// 최종 표시할 통계
+const displayStats = computed(() => {
+  return props.autoCalculate ? computedStats.value : stats.value
+})
+
+// props 변경 감지
+watch(() => [props.total, props.active, props.inactive],
+    ([newTotal, newActive, newInactive]) => {
+      stats.value = {
+        total: newTotal,
+        active: newActive,
+        inactive: newInactive
+      }
+    },
+    { immediate: true }
+)
+
+// 계산된 통계 변경 감지 및 이벤트 발생
+watch(computedStats, (newStats) => {
+  if (props.autoCalculate) {
+    emit('stats-updated', newStats)
+  }
+}, { deep: true })
+
+// 외부에서 호출 가능한 업데이트 함수
+const updateStats = (newStats) => {
+  stats.value = { ...stats.value, ...newStats }
+  emit('stats-updated', stats.value)
+}
+
+// 컴포넌트 인스턴스에 노출
+defineExpose({
+  updateStats,
+  currentStats: displayStats
 })
 </script>
 
@@ -21,7 +97,7 @@ defineProps({
       <div class="stat-icon">📊</div>
       <div class="stat-content">
         <div class="stat-label">전체 카테고리</div>
-        <div class="stat-value">{{ total }}</div>
+        <div class="stat-value">{{ displayStats.total }}</div>
       </div>
     </div>
 
@@ -29,7 +105,7 @@ defineProps({
       <div class="stat-icon">👁️</div>
       <div class="stat-content">
         <div class="stat-label">활성 카테고리</div>
-        <div class="stat-value active">{{ active }}</div>
+        <div class="stat-value active">{{ displayStats.active }}</div>
       </div>
     </div>
 
@@ -37,7 +113,7 @@ defineProps({
       <div class="stat-icon">🚫</div>
       <div class="stat-content">
         <div class="stat-label">비활성 카테고리</div>
-        <div class="stat-value inactive">{{ inactive }}</div>
+        <div class="stat-value inactive">{{ displayStats.inactive }}</div>
       </div>
     </div>
   </div>
@@ -63,6 +139,12 @@ defineProps({
   display: flex;
   align-items: center;
   gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 
 .stat-icon {
@@ -86,6 +168,7 @@ defineProps({
   font-size: 18px;
   font-weight: 700;
   color: #111827;
+  transition: color 0.2s ease;
 }
 
 .stat-value.active {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { contentService } from '@/api/axios.js'
 import CategoryHeader from '@/components/category/CategoryHeader.vue'
 import CategoryStats from '@/components/category/CategoryStats.vue'
@@ -13,7 +13,7 @@ const loading = ref(false)
 const showAddForm = ref(false)
 const notification = ref({ show: false, message: '', type: 'success' })
 
-// 계산된 속성
+// 계산된 속성 - 자동으로 반응성 가짐
 const activeCategories = computed(() =>
     categories.value.filter(c => c.isActive).length
 )
@@ -97,6 +97,44 @@ const handleReorderCategories = async (draggedId, targetOrder) => {
   }
 }
 
+// 🔥 새로 추가: 상태 업데이트 핸들러
+const handleStatusUpdated = ({ categoryId, updatedData, immediate, correction, reverted }) => {
+  console.log('📊 상태 업데이트 이벤트 수신:', { categoryId, updatedData, immediate, correction, reverted })
+
+  // 해당 카테고리 찾기
+  const categoryIndex = categories.value.findIndex(cat => cat.categoryId === categoryId)
+
+  if (categoryIndex !== -1) {
+    // 🔥 Vue의 반응성을 보장하기 위해 배열 전체를 새로 할당
+    const newCategories = [...categories.value]
+    newCategories[categoryIndex] = {
+      ...newCategories[categoryIndex],
+      ...updatedData
+    }
+    categories.value = newCategories
+
+    console.log('📊 카테고리 상태 업데이트 완료:', categories.value[categoryIndex])
+
+    // nextTick을 사용해서 DOM 업데이트 후 통계 확인
+    nextTick(() => {
+      console.log('📊 업데이트된 통계:', {
+        total: categories.value.length,
+        active: activeCategories.value,
+        inactive: inactiveCategories.value
+      })
+    })
+
+    // 상태 메시지 출력
+    if (immediate) {
+      console.log('⚡ 즉시 업데이트 완료')
+    } else if (correction) {
+      console.log('🔧 API 응답에 따른 수정 완료')
+    } else if (reverted) {
+      console.log('↩️ 실패로 인한 원복 완료')
+    }
+  }
+}
+
 // 이벤트 핸들러
 const openAddForm = () => {
   showAddForm.value = true
@@ -117,11 +155,11 @@ onMounted(() => {
     <!-- 헤더 -->
     <CategoryHeader @add-category="openAddForm" />
 
-    <!-- 통계 -->
+    <!-- 통계 - 자동 계산 방식으로 변경 -->
     <CategoryStats
-        :total="categories.length"
-        :active="activeCategories"
-        :inactive="inactiveCategories"
+        :data-source="categories"
+        :auto-calculate="true"
+        @stats-updated="(newStats) => console.log('📊 통계 업데이트:', newStats)"
     />
 
     <!-- 추가 폼 -->
@@ -141,6 +179,7 @@ onMounted(() => {
         @delete-category="handleDeleteCategory"
         @reorder-categories="handleReorderCategories"
         @update-categories="categories = $event"
+        @status-updated="handleStatusUpdated"
     />
 
     <!-- 알림 -->

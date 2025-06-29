@@ -36,6 +36,9 @@ const editingId = ref(null)
 const newKeyword = ref('')
 const editKeywords = ref([])
 
+// 🔥 확인창 상태 관리
+const showConfirmModal = ref(false)
+
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -69,9 +72,28 @@ watch(() => props.category?.isActive, (newValue) => {
   }
 })
 
-// 직접 API 호출하는 함수 - 최적화
-const toggleActive = async () => {
-  console.log('🔍 === toggleActive 시작 ===')
+// 🔥 상태 변경 요청 - 확인창 표시
+const requestToggleActive = () => {
+  console.log('🔍 상태 변경 요청 - 확인창 표시')
+  showConfirmModal.value = true
+}
+
+// 🔥 확인창에서 확인 클릭
+const confirmToggleActive = () => {
+  console.log('✅ 확인 버튼 클릭됨')
+  showConfirmModal.value = false
+  executeToggleActive()
+}
+
+// 🔥 확인창에서 취소 클릭
+const cancelToggleActive = () => {
+  console.log('❌ 취소 버튼 클릭됨')
+  showConfirmModal.value = false
+}
+
+// 실제 상태 변경 실행 함수
+const executeToggleActive = async () => {
+  console.log('🔍 === executeToggleActive 시작 ===')
   console.log('🔍 현재 localIsActive:', localIsActive.value)
   console.log('🔍 props.category.isActive:', props.category?.isActive)
 
@@ -86,6 +108,18 @@ const toggleActive = async () => {
   const previousValue = localIsActive.value
   localIsActive.value = !localIsActive.value
   console.log('🔄 낙관적 업데이트:', localIsActive.value)
+
+  // 🔥 즉시 부모 컴포넌트의 categories 배열도 업데이트
+  const updatedCategoryData = {
+    ...props.category,
+    isActive: localIsActive.value
+  }
+
+  emit('status-updated', {
+    categoryId: categoryId,
+    updatedData: updatedCategoryData,
+    immediate: true // 즉시 업데이트 플래그
+  })
 
   try {
     console.log('🚀 API 호출 시작 - toggleCategoryStatus:', categoryId)
@@ -108,21 +142,22 @@ const toggleActive = async () => {
         if (finalStatus !== localIsActive.value) {
           console.log('⚠️ API 응답과 낙관적 업데이트 불일치, 수정:', finalStatus)
           localIsActive.value = finalStatus
+
+          // 🔥 부모 컴포넌트에도 수정된 상태 다시 전달
+          const correctedData = {
+            ...updatedCategory,
+            isActive: finalStatus
+          }
+
+          emit('status-updated', {
+            categoryId: categoryId,
+            updatedData: correctedData,
+            correction: true // 수정 플래그
+          })
         }
 
         // DOM 업데이트 보장
         await nextTick()
-
-        // 부모 컴포넌트에 상태 전달
-        const correctedData = {
-          ...updatedCategory,
-          isActive: finalStatus
-        }
-
-        emit('status-updated', {
-          categoryId: categoryId,
-          updatedData: correctedData
-        })
 
         const statusText = finalStatus ? '활성화' : '비활성화'
         console.log(`✅ 카테고리가 ${statusText}되었습니다.`)
@@ -134,13 +169,26 @@ const toggleActive = async () => {
     }
 
   } catch (error) {
-    // 실패 시 원래 상태로 복구
+    // 🔥 실패 시 원래 상태로 복구하고 부모에게도 알림
     console.error('🚀 상태 변경 실패:', error)
     localIsActive.value = previousValue
+
+    // 부모 컴포넌트의 데이터도 원복
+    const revertedData = {
+      ...props.category,
+      isActive: previousValue
+    }
+
+    emit('status-updated', {
+      categoryId: categoryId,
+      updatedData: revertedData,
+      reverted: true // 원복 플래그
+    })
+
     alert('상태 변경에 실패했습니다.')
   }
 
-  console.log('🔍 === toggleActive 완료, 최종 상태:', localIsActive.value, '===')
+  console.log('🔍 === executeToggleActive 완료, 최종 상태:', localIsActive.value, '===')
 }
 
 const handleDragStart = (e) => {
@@ -343,7 +391,7 @@ onMounted(() => {
         <!-- 상태 -->
         <div class="category-status">
           <button
-              @click="toggleActive"
+              @click="requestToggleActive"
               class="status-button"
               :class="{ 'active': localIsActive, 'inactive': !localIsActive }"
               :key="`status-${localIsActive}`"
@@ -394,10 +442,81 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- 🔥 확인창 모달 (직접 구현) -->
+    <div
+        v-if="showConfirmModal"
+        class="modal-backdrop"
+        @click="cancelToggleActive"
+    >
+      <div
+          class="modal-container"
+          @click.stop
+      >
+        <div class="modal-content">
+          <!-- 헤더 -->
+          <div class="modal-header">
+            <div class="modal-icon">
+              {{ localIsActive ? '🚫' : '👁️' }}
+            </div>
+            <h3 class="modal-title">
+              카테고리 {{ localIsActive ? '비활성화' : '활성화' }}
+            </h3>
+          </div>
+
+          <!-- 본문 -->
+          <div class="modal-body">
+            <p class="modal-message">
+              <strong>"{{ category.categoryName }}"</strong> 카테고리를
+              <span :class="localIsActive ? 'deactivate-text' : 'activate-text'">
+                {{ localIsActive ? '비활성화' : '활성화' }}
+              </span>하시겠습니까?
+            </p>
+
+            <div class="modal-description">
+              <template v-if="localIsActive">
+                <p>비활성화하면:</p>
+                <ul>
+                  <li>이 카테고리가 목록에서 숨겨집니다</li>
+                  <li>새로운 컨텐츠 분류에 사용되지 않습니다</li>
+                  <li>기존 컨텐츠는 그대로 유지됩니다</li>
+                </ul>
+              </template>
+              <template v-else>
+                <p>활성화하면:</p>
+                <ul>
+                  <li>이 카테고리가 목록에 표시됩니다</li>
+                  <li>새로운 컨텐츠 분류에 사용할 수 있습니다</li>
+                  <li>컨텐츠 관리에서 선택 가능해집니다</li>
+                </ul>
+              </template>
+            </div>
+          </div>
+
+          <!-- 액션 버튼 -->
+          <div class="modal-actions">
+            <button
+                @click="cancelToggleActive"
+                class="btn btn-cancel"
+            >
+              취소
+            </button>
+            <button
+                @click="confirmToggleActive"
+                class="btn btn-confirm"
+                :class="localIsActive ? 'deactivate' : 'activate'"
+            >
+              {{ localIsActive ? '비활성화' : '활성화' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* 기존 스타일들... */
 .category-item {
   border-bottom: 1px solid #e5e7eb;
   padding: 12px;
@@ -669,7 +788,7 @@ onMounted(() => {
   letter-spacing: 0.025em;
 }
 
-/* 편집 모드 스타일 */
+/* 편집 모드 스타일 생략... */
 .edit-textarea {
   width: 100%;
   border: 1px solid #d1d5db;
@@ -687,6 +806,192 @@ onMounted(() => {
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
 }
 
+/* 🔥 모달 스타일 */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-container {
+  max-width: 450px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 24px 24px 16px 24px;
+  text-align: center;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.modal-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.modal-body {
+  padding: 16px 24px;
+}
+
+.modal-message {
+  font-size: 16px;
+  color: #374151;
+  margin: 0 0 16px 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.modal-message strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.activate-text {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.deactivate-text {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.modal-description {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.modal-description p {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.modal-description ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.modal-description li {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.modal-description li:last-child {
+  margin-bottom: 0;
+}
+
+.modal-actions {
+  padding: 16px 24px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  min-width: 80px;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-cancel {
+  background: #f9fafb;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.btn-cancel:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.btn-confirm {
+  color: white;
+  border: 1px solid transparent;
+}
+
+.btn-confirm.activate {
+  background: #10b981;
+}
+
+.btn-confirm.activate:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-confirm.deactivate {
+  background: #ef4444;
+}
+
+.btn-confirm.deactivate:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 기존 편집 관련 스타일들 */
 .edit-keywords {
   margin-top: 4px;
 }
@@ -834,6 +1139,42 @@ onMounted(() => {
 
   .add-keyword-btn {
     width: 100%;
+  }
+
+  /* 모바일 모달 최적화 */
+  .modal-container {
+    width: 95%;
+  }
+
+  .modal-header {
+    padding: 20px 20px 12px 20px;
+  }
+
+  .modal-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 12px 20px;
+  }
+
+  .modal-message {
+    font-size: 14px;
+  }
+
+  .modal-actions {
+    padding: 12px 20px 20px 20px;
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
   }
 }
 
