@@ -45,7 +45,7 @@ const routes = [
     path: '/one-mouth/detail',
     name: 'OneMouthDetail',
     component: OneMouthDetailView,
-    meta: { requiresAuth: false }
+    meta: { requiresAuth: true }
   },
   {
     path: '/admin/category',

@@ -194,7 +194,7 @@ onUnmounted(() => {
         <template v-else>
           <RouterLink to="/home" class="nav-link">홈</RouterLink>
           <RouterLink to="/dashboard" class="nav-link">대시보드</RouterLink>
-          <RouterLink to="/list" class="nav-link">한입거리</RouterLink>
+          <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
           <RouterLink to="/sell" class="nav-link">판매하기</RouterLink>
 
           <!-- 🎯 관리자 메뉴 -->
@@ -205,8 +205,8 @@ onUnmounted(() => {
             <RouterLink to="/admin/users" class="admin-link">
               👥 사용자 관리
             </RouterLink>
-            <RouterLink to="/admin/products" class="admin-link">
-              📦 상품 관리
+            <RouterLink to="/admin/category" class="admin-link">
+              카테고리 관리
             </RouterLink>
           </div>
 

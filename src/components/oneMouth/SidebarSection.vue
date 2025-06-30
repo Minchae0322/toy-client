@@ -1,4 +1,8 @@
-<template>
+data() {
+return {
+isDevelopment: process.env.NODE_ENV === 'development'
+};
+},<template>
   <aside class="sidebar">
     <div class="search-section">
       <h3>🔍 검색</h3>
@@ -14,6 +18,11 @@
     <div class="filter-section">
       <h3>📂 카테고리</h3>
 
+      <!-- 디버깅: filterOptions 확인 -->
+      <div v-if="$props.filterOptions" style="font-size: 12px; color: #999; margin-bottom: 8px;">
+        총 {{ $props.filterOptions.length }}개 카테고리 | 선택: {{ activeFilter }}
+      </div>
+
       <!-- 카테고리 로딩 중 -->
       <div v-if="categoriesLoading" class="categories-loading">
         <div class="loading-spinner"></div>
@@ -21,23 +30,30 @@
       </div>
 
       <!-- 카테고리 목록 -->
-      <div v-else class="filter-list">
+      <div v-else-if="filterOptions && filterOptions.length > 0" class="filter-list">
         <div
             class="filter-item"
-            :class="{ active: activeFilter === getFilterKey(filter) }"
-            v-for="filter in filterOptions"
-            :key="getFilterKey(filter)"
-            @click="$emit('set-filter', getFilterKey(filter))"
+            :class="{
+              active: isActiveFilter(filter)
+            }"
+            v-for="(filter, index) in filterOptions"
+            :key="`filter-${filter.categoryId || index}`"
+            @click="handleFilterClick(filter)"
         >
           <span class="filter-icon">{{ getFilterIcon(filter) }}</span>
           <span class="filter-label">{{ getFilterLabel(filter) }}</span>
           <span v-if="filter.itemCount > 0" class="item-count">({{ filter.itemCount }})</span>
+          <!-- 디버깅 정보 (개발 환경에서만 표시) -->
+          <span v-if="isDevelopment" class="debug-info" style="font-size: 10px; color: #999; margin-left: 8px;">
+            [{{ getFilterKey(filter) }}]
+          </span>
         </div>
       </div>
 
       <!-- 카테고리 로드 실패 시 -->
-      <div v-if="!categoriesLoading && filterOptions.length <= 1" class="categories-error">
+      <div v-else class="categories-error">
         <p>카테고리를 불러올 수 없습니다 😅</p>
+        <p style="font-size: 12px; color: #999;">filterOptions: {{ filterOptions }}</p>
         <button @click="$emit('retry-categories')" class="retry-btn">다시 시도</button>
       </div>
     </div>
@@ -54,7 +70,8 @@ export default {
     },
     filterOptions: {
       type: Array,
-      required: true
+      required: true,
+      default: () => []
     },
     activeFilter: {
       type: String,
@@ -66,24 +83,121 @@ export default {
     }
   },
   emits: ['update-query', 'set-filter', 'retry-categories'],
+  mounted() {
+    // 디버깅: props 확인
+    console.log('🎯 SidebarSection mounted');
+    console.log('📂 filterOptions:', this.filterOptions);
+    console.log('🔍 searchQuery:', this.searchQuery);
+    console.log('🏷️ activeFilter:', this.activeFilter);
+    console.log('⏳ categoriesLoading:', this.categoriesLoading);
+  },
+  watch: {
+    filterOptions: {
+      handler(newOptions) {
+        console.log('👀 filterOptions 변경:', newOptions);
+        this.checkForDuplicateKeys();
+      },
+      deep: true,
+      immediate: true
+    },
+    activeFilter: {
+      handler(newFilter, oldFilter) {
+        console.log('🎯 activeFilter 변경:', oldFilter, '→', newFilter);
+      },
+      immediate: true
+    }
+  },
   methods: {
-    // 백엔드/프론트엔드 카테고리 구조 통합 처리
+    // 중복 키 체크
+    checkForDuplicateKeys() {
+      const keys = this.filterOptions.map(filter => this.getFilterKey(filter));
+      const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
+      if (duplicates.length > 0) {
+        console.warn('⚠️ 중복된 카테고리 키 발견:', duplicates);
+        console.log('📋 전체 키 목록:', keys);
+      }
+    },
+
+    // 활성 필터 체크 (null 처리 포함)
+    isActiveFilter(filter) {
+      // activeFilter가 null이면 아무것도 활성화하지 않음
+      if (this.activeFilter === null || this.activeFilter === undefined) {
+        return false;
+      }
+
+      const filterKey = this.getFilterKey(filter);
+      const isActive = String(this.activeFilter) === String(filterKey);
+
+      // 디버깅 로그
+      if (isActive) {
+        console.log('✅ 활성 필터:', filterKey, '=', this.activeFilter);
+      }
+
+      return isActive;
+    },
+
+    // 백엔드/프론트엔드 카테고리 구조 통합 처리 (고유성 보장)
     getFilterKey(filter) {
-      // 백엔드 카테고리: categoryKey 사용
-      // 기존 프론트엔드 카테고리: key 사용
-      return filter.categoryKey || filter.key;
+      if (!filter) return 'unknown';
+
+      // 1순위: categoryKey (이미 고유하게 생성됨)
+      if (filter.categoryKey) {
+        return String(filter.categoryKey);
+      }
+
+      // 2순위: categoryId 기반 (고유성 보장)
+      if (filter.categoryId) {
+        return `cat_${filter.categoryId}`;
+      }
+
+      // 3순위: key (기존 호환성)
+      if (filter.key) {
+        return String(filter.key);
+      }
+
+      // 4순위: categoryName 기반 (fallback)
+      if (filter.categoryName) {
+        return `name_${filter.categoryName.toLowerCase().replace(/[^a-z0-9가-힣]/g, '_')}`;
+      }
+
+      // 최종 fallback
+      const key = `unknown_${Math.random().toString(36).substr(2, 9)}`;
+      console.warn('⚠️ 카테고리 키를 생성할 수 없어 랜덤 키 사용:', filter, '→', key);
+      return key;
     },
 
     getFilterIcon(filter) {
+      if (!filter) return '🍽️';
       // 백엔드 카테고리: categoryIcon 사용
       // 기존 프론트엔드 카테고리: icon 사용
-      return filter.categoryIcon || filter.icon || '🍽️';
+      const icon = filter.categoryIcon || filter.icon || '🍽️';
+      return icon;
     },
 
     getFilterLabel(filter) {
+      if (!filter) return '알 수 없음';
       // 백엔드 카테고리: categoryName 사용
       // 기존 프론트엔드 카테고리: label 사용
-      return filter.categoryName || filter.label;
+      const label = filter.categoryName || filter.label || '알 수 없음';
+      return label;
+    },
+
+    handleFilterClick(filter) {
+      const filterKey = this.getFilterKey(filter);
+      console.log('🖱️ 필터 클릭:', {
+        filter,
+        filterKey,
+        currentActive: this.activeFilter,
+        willBeActive: filterKey === this.activeFilter ? '이미 활성' : '새로 활성'
+      });
+
+      // 중복 클릭 방지 (null 체크 포함)
+      if (this.activeFilter !== null && String(this.activeFilter) === String(filterKey)) {
+        console.log('🚫 이미 활성화된 필터 클릭 무시:', filterKey);
+        return;
+      }
+
+      this.$emit('set-filter', filterKey);
     }
   }
 };
