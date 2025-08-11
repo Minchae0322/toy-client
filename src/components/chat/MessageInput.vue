@@ -1,123 +1,125 @@
-<!-- components/MessageInput.vue -->
 <template>
   <div class="message-input-container">
-    <!-- 답장 모드 표시 -->
-    <div v-if="replyMode" class="reply-preview">
-      <div class="reply-info">
-        <span class="reply-to">{{ replyMessage.senderName }}님에게 답장</span>
-        <p class="reply-content">{{ getPreviewText(replyMessage) }}</p>
-      </div>
-      <button class="reply-cancel" @click="cancelReply">✕</button>
-    </div>
+    <!-- 파일 미리보기 -->
+    <div v-if="selectedFiles.length > 0" class="files-preview">
+      <div
+          v-for="(file, index) in selectedFiles"
+          :key="index"
+          class="file-preview-item"
+      >
+        <!-- 이미지 미리보기 -->
+        <div v-if="file.type.startsWith('image/')" class="image-preview">
+          <img :src="file.preview" :alt="file.name" />
+          <div class="file-info">
+            <span class="file-name">{{ file.name }}</span>
+            <span class="file-size">{{ formatFileSize(file.size) }}</span>
+          </div>
+          <button @click="removeFile(index)" class="remove-file-btn">
+            <X :size="16" />
+          </button>
+        </div>
 
-    <!-- 파일 업로드 프리뷰 -->
-    <div v-if="uploadingFiles.length > 0" class="file-preview">
-      <div class="file-list">
-        <div v-for="(file, index) in uploadingFiles" :key="index" class="file-item">
-          <div v-if="isImageFile(file.file)" class="image-preview">
-            <img :src="file.preview" :alt="file.name" class="preview-image">
-            <div v-if="file.uploading" class="upload-overlay">
-              <div class="spinner-small"></div>
-              <span>{{ file.progress }}%</span>
-            </div>
+        <!-- 일반 파일 미리보기 -->
+        <div v-else class="file-preview">
+          <div class="file-icon">
+            <FileText v-if="isTextFile(file.type)" :size="20" />
+            <Film v-else-if="file.type.startsWith('video/')" :size="20" />
+            <Music v-else-if="file.type.startsWith('audio/')" :size="20" />
+            <File v-else :size="20" />
           </div>
-          <div v-else class="file-info">
-            <span class="file-icon">{{ getFileIcon(file.name) }}</span>
-            <div class="file-details">
-              <span class="file-name">{{ file.name }}</span>
-              <span class="file-size">{{ formatFileSize(file.file.size) }}</span>
-            </div>
-            <div v-if="file.uploading" class="upload-progress">
-              <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: file.progress + '%' }"></div>
-              </div>
-              <span class="progress-text">{{ file.progress }}%</span>
-            </div>
+          <div class="file-details">
+            <span class="file-name">{{ file.name }}</span>
+            <span class="file-size">{{ formatFileSize(file.size) }}</span>
           </div>
-          <button class="file-remove" @click="removeFile(index)">✕</button>
+          <button @click="removeFile(index)" class="remove-file-btn">
+            <X :size="16" />
+          </button>
         </div>
       </div>
     </div>
 
     <!-- 메인 입력 영역 -->
-    <div class="input-wrapper">
-      <button
-          class="attachment-button"
-          @click="toggleAttachmentMenu"
-          :disabled="disabled"
-      >
-        📎
-      </button>
-
-      <div class="input-field">
-        <textarea
-            ref="textInput"
-            v-model="inputText"
-            placeholder="메시지를 입력하세요..."
-            @keydown="handleKeydown"
-            @input="handleInput"
-            @focus="handleFocus"
-            @blur="handleBlur"
-            @paste="handlePaste"
-            rows="1"
-            class="text-input"
+    <div class="input-area">
+      <div class="input-row">
+        <!-- 파일 첨부 버튼 -->
+        <button
+            @click="openFileDialog"
             :disabled="disabled"
-        ></textarea>
+            class="action-btn attach-btn"
+            title="파일 첨부"
+        >
+          <Paperclip :size="20" />
+        </button>
 
         <!-- 이모지 버튼 -->
         <button
-            class="emoji-button"
             @click="toggleEmojiPicker"
             :disabled="disabled"
+            class="action-btn emoji-btn"
+            title="이모지"
         >
-          😊
+          <Smile :size="20" />
+        </button>
+
+        <!-- 텍스트 입력창 -->
+        <div class="text-input-wrapper">
+          <textarea
+              ref="textareaRef"
+              v-model="inputText"
+              :placeholder="placeholder"
+              :disabled="disabled"
+              class="text-input"
+              rows="1"
+              @keydown="handleKeyDown"
+              @input="handleInput"
+              @paste="handlePaste"
+              @focus="handleFocus"
+              @blur="handleBlur"
+          ></textarea>
+
+          <!-- 글자 수 제한 표시 -->
+          <div v-if="showCharCount && inputText.length > 0" class="char-count">
+            {{ inputText.length }}/{{ maxLength }}
+          </div>
+        </div>
+
+        <!-- 음성 메시지 버튼 -->
+        <button
+            @mousedown="startVoiceRecord"
+            @mouseup="stopVoiceRecord"
+            @mouseleave="cancelVoiceRecord"
+            @touchstart="startVoiceRecord"
+            @touchend="stopVoiceRecord"
+            :disabled="disabled"
+            class="action-btn voice-btn"
+            :class="{ 'recording': isRecording }"
+            title="음성 메시지 (길게 누르기)"
+        >
+          <Mic v-if="!isRecording" :size="20" />
+          <MicOff v-else :size="20" />
+        </button>
+
+        <!-- 전송 버튼 -->
+        <button
+            @click="handleSend"
+            :disabled="!canSend || disabled"
+            class="send-btn"
+            :class="{ 'can-send': canSend && !disabled }"
+            title="메시지 전송"
+        >
+          <Send :size="20" />
         </button>
       </div>
 
-      <button
-          class="send-button"
-          @click="sendMessage"
-          :disabled="!canSend || disabled"
-          :class="{ 'can-send': canSend }"
-      >
-        <span v-if="disabled">⏳</span>
-        <span v-else-if="canSend">🚀</span>
-        <span v-else>💬</span>
-      </button>
-    </div>
-
-    <!-- 첨부파일 메뉴 -->
-    <Transition name="slide-up">
-      <div v-if="showAttachmentMenu" class="attachment-menu">
-        <button @click="selectFile('image')" class="menu-item">
-          <span class="menu-icon">📷</span>
-          <span>사진</span>
-        </button>
-        <button @click="selectFile('video')" class="menu-item">
-          <span class="menu-icon">🎥</span>
-          <span>동영상</span>
-        </button>
-        <button @click="selectFile('file')" class="menu-item">
-          <span class="menu-icon">📁</span>
-          <span>파일</span>
-        </button>
-        <button @click="selectLocation" class="menu-item">
-          <span class="menu-icon">📍</span>
-          <span>위치</span>
-        </button>
-      </div>
-    </Transition>
-
-    <!-- 이모지 피커 -->
-    <Transition name="fade">
+      <!-- 이모지 피커 -->
       <div v-if="showEmojiPicker" class="emoji-picker">
         <div class="emoji-categories">
           <button
               v-for="category in emojiCategories"
               :key="category.name"
-              @click="selectedEmojiCategory = category.name"
-              :class="{ active: selectedEmojiCategory === category.name }"
-              class="emoji-category"
+              @click="activeEmojiCategory = category.name"
+              :class="{ active: activeEmojiCategory === category.name }"
+              class="emoji-category-btn"
           >
             {{ category.icon }}
           </button>
@@ -133,252 +135,150 @@
           </button>
         </div>
       </div>
-    </Transition>
+
+      <!-- 음성 녹음 상태 -->
+      <div v-if="isRecording" class="voice-recording">
+        <div class="recording-indicator">
+          <div class="recording-dot"></div>
+          <span>음성 메시지 녹음 중... ({{ recordingDuration }}s)</span>
+        </div>
+        <div class="recording-actions">
+          <button @click="cancelVoiceRecord" class="cancel-record">
+            <X :size="16" />
+            <span>취소</span>
+          </button>
+          <div class="recording-hint">
+            손을 떼면 전송됩니다
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- 숨겨진 파일 입력 -->
     <input
-        ref="fileInput"
+        ref="fileInputRef"
         type="file"
-        style="display: none"
-        @change="handleFileSelect"
-        :accept="fileAccept"
         multiple
-    >
+        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip,.rar"
+        @change="handleFileSelect"
+        class="hidden-file-input"
+    />
+
+    <!-- 이모지 피커 오버레이 -->
+    <div
+        v-if="showEmojiPicker"
+        class="emoji-overlay"
+        @click="showEmojiPicker = false"
+    ></div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import {
+  Paperclip,
+  Smile,
+  Mic,
+  MicOff,
+  Send,
+  X,
+  File,
+  FileText,
+  Film,
+  Music
+} from 'lucide-vue-next'
 
 const props = defineProps({
   disabled: {
     type: Boolean,
     default: false
+  },
+  placeholder: {
+    type: String,
+    default: '메시지를 입력하세요...'
+  },
+  maxLength: {
+    type: Number,
+    default: 1000
+  },
+  showCharCount: {
+    type: Boolean,
+    default: false
+  },
+  maxFileSize: {
+    type: Number,
+    default: 50 * 1024 * 1024 // 50MB
+  },
+  maxFiles: {
+    type: Number,
+    default: 10
   }
 })
 
-const emit = defineEmits(['send-message', 'typing-start', 'typing-stop'])
+const emit = defineEmits([
+  'send-message',
+  'typing-start',
+  'typing-stop',
+  'focus',
+  'blur'
+])
 
-// 기본 상태
+// 반응형 데이터
 const inputText = ref('')
-const showAttachmentMenu = ref(false)
+const selectedFiles = ref([])
+const isRecording = ref(false)
+const recordingDuration = ref(0)
 const showEmojiPicker = ref(false)
-const selectedEmojiCategory = ref('smileys')
-const textInput = ref(null)
-const fileInput = ref(null)
-const fileAccept = ref('*/*')
+const activeEmojiCategory = ref('faces')
 
-// 답장 모드
-const replyMode = ref(false)
-const replyMessage = ref(null)
+// 참조
+const textareaRef = ref(null)
+const fileInputRef = ref(null)
 
-// 파일 업로드
-const uploadingFiles = ref([])
-
-// 타이핑 관련
-const isTyping = ref(false)
+// 타이핑 상태 관리
 const typingTimer = ref(null)
+const isTyping = ref(false)
 
-// 전송 가능 여부
-const canSend = computed(() => {
-  return (inputText.value.trim().length > 0 || uploadingFiles.value.length > 0) && !props.disabled
-})
+// 음성 녹음 관련
+const mediaRecorder = ref(null)
+const audioChunks = ref([])
+const recordingTimer = ref(null)
 
-// 이모지 카테고리와 데이터
-const emojiCategories = [
+// 이모지 데이터
+const emojiCategories = ref([
   {
-    name: 'smileys',
-    icon: '😊',
-    emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥']
+    name: 'faces',
+    icon: '😀',
+    emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😶‍🌫️', '😏', '😒', '🙄', '😬', '😮‍💨', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '😵‍💫', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐', '😕', '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱']
   },
   {
-    name: 'people',
-    icon: '👋',
-    emojis: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤏', '✌', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝', '👍', '👎', '👊', '✊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍', '💅', '🤳', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🦷', '🦴', '👀', '👁', '👅', '👄']
-  },
-  {
-    name: 'nature',
-    icon: '🌱',
-    emojis: ['🌱', '🌿', '🍀', '🍃', '🍂', '🍁', '🌾', '🌴', '🌳', '🌲', '🌵', '🌷', '🌸', '🌹', '🥀', '🌺', '🌻', '🌼', '🌙', '🌛', '🌜', '🌚', '🌕', '🌖', '🌗', '🌘', '🌑', '🌒', '🌓', '🌔', '⭐', '🌟', '💫', '✨', '☄', '☀', '🌤', '⛅', '🌦', '🌧', '⛈', '🌩', '🌨', '❄', '☃', '⛄', '🌬', '💨', '🌪', '🌫', '☁']
+    name: 'gestures',
+    icon: '👍',
+    emojis: ['👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐️', '🖖', '👋', '🤏', '💪', '🦾', '🖕', '✍️', '🙏', '🦶', '🦵', '🦿', '💄', '💋', '👄', '🦷', '👅', '👂', '🦻', '👃', '👣', '👁️', '👀', '🧠', '🗣️', '👤', '👥']
   },
   {
     name: 'objects',
-    icon: '📱',
-    emojis: ['📱', '📲', '💻', '🖥', '🖨', '⌨', '🖱', '🖲', '💽', '💾', '💿', '📀', '🎥', '🎬', '📹', '📷', '📸', '📻', '🎙', '🎚', '🎛', '🎧', '📢', '📣', '📯', '🔔', '🔕', '🎵', '🎶', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '📝', '✏', '🖍', '🖊', '🖋', '✒', '📏', '📐', '📌', '📍', '🧭', '🗺']
+    icon: '❤️',
+    emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '♥️', '💌', '💤', '💢', '💣', '💥', '💦', '💨', '💫', '💬', '🗨️', '🗯️', '💭', '💮']
   }
-]
+])
 
-// 현재 선택된 카테고리의 이모지들
+// 계산된 값들
+const canSend = computed(() => {
+  return (inputText.value.trim().length > 0 || selectedFiles.value.length > 0) &&
+      inputText.value.length <= props.maxLength
+})
+
 const currentEmojis = computed(() => {
-  const category = emojiCategories.find(cat => cat.name === selectedEmojiCategory.value)
+  const category = emojiCategories.value.find(cat => cat.name === activeEmojiCategory.value)
   return category ? category.emojis : []
 })
 
-// 메시지 전송
-const sendMessage = async () => {
-  if (!canSend.value) return
-
-  try {
-    // 텍스트 메시지가 있는 경우
-    if (inputText.value.trim()) {
-      const messageData = {
-        content: inputText.value.trim(),
-        type: 'TEXT'
-      }
-
-      // 답장 모드인 경우
-      if (replyMode.value && replyMessage.value) {
-        messageData.type = 'REPLY'
-        messageData.metadata = {
-          originalMessageId: replyMessage.value.messageId,
-          originalSender: replyMessage.value.senderName,
-          originalContent: getPreviewText(replyMessage.value)
-        }
-      }
-
-      emit('send-message', messageData)
-    }
-
-    // 파일이 있는 경우
-    if (uploadingFiles.value.length > 0) {
-      for (const fileItem of uploadingFiles.value) {
-        if (!fileItem.uploading) {
-          await sendFileMessage(fileItem)
-        }
-      }
-    }
-
-    // 입력 초기화
-    resetInput()
-
-  } catch (error) {
-    console.error('메시지 전송 실패:', error)
-    alert('메시지 전송에 실패했습니다.')
-  }
-}
-
-// 파일 메시지 전송
-const sendFileMessage = async (fileItem) => {
-  try {
-    fileItem.uploading = true
-    fileItem.progress = 0
-
-    const messageData = {
-      file: fileItem.file,
-      type: getFileMessageType(fileItem.file),
-      metadata: {
-        fileName: fileItem.name,
-        fileSize: fileItem.file.size,
-        mimeType: fileItem.file.type
-      }
-    }
-
-    // 파일 업로드 진행률 시뮬레이션 (실제로는 API에서 제공)
-    const progressInterval = setInterval(() => {
-      if (fileItem.progress < 90) {
-        fileItem.progress += Math.random() * 10
-      }
-    }, 100)
-
-    emit('send-message', messageData)
-
-    // 업로드 완료
-    clearInterval(progressInterval)
-    fileItem.progress = 100
-    fileItem.uploading = false
-
-  } catch (error) {
-    fileItem.uploading = false
-    fileItem.progress = 0
-    console.error('파일 전송 실패:', error)
-    throw error
-  }
-}
-
-// 파일 메시지 타입 결정
-const getFileMessageType = (file) => {
-  if (file.type.startsWith('image/')) return 'IMAGE'
-  if (file.type.startsWith('video/')) return 'VIDEO'
-  return 'FILE'
-}
-
-// 입력 초기화
-const resetInput = () => {
-  inputText.value = ''
-  uploadingFiles.value = []
-  replyMode.value = false
-  replyMessage.value = null
-  showAttachmentMenu.value = false
-  showEmojiPicker.value = false
-  autoResize()
-  stopTyping()
-}
-
-// 키보드 이벤트 처리
-const handleKeydown = (event) => {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault()
-    sendMessage()
-  } else if (event.key === 'Escape') {
-    handleEscapeKey()
-  }
-}
-
-const handleEscapeKey = () => {
-  if (replyMode.value) {
-    cancelReply()
-  } else if (showAttachmentMenu.value) {
-    showAttachmentMenu.value = false
-  } else if (showEmojiPicker.value) {
-    showEmojiPicker.value = false
-  }
-}
-
-// 입력 이벤트 처리
+// 메서드들
 const handleInput = () => {
   autoResize()
-  handleTyping()
-}
 
-// 포커스/블러 처리
-const handleFocus = () => {
-  closeAllMenus()
-}
-
-const handleBlur = () => {
-  stopTyping()
-}
-
-// 붙여넣기 처리
-const handlePaste = (event) => {
-  const items = event.clipboardData?.items
-  if (!items) return
-
-  for (const item of items) {
-    if (item.type.indexOf('image') !== -1) {
-      event.preventDefault()
-      const file = item.getAsFile()
-      if (file) {
-        addFile(file)
-      }
-      break
-    }
-  }
-}
-
-// 자동 크기 조정
-const autoResize = async () => {
-  await nextTick()
-  if (textInput.value) {
-    textInput.value.style.height = 'auto'
-    const newHeight = Math.min(textInput.value.scrollHeight, 120)
-    textInput.value.style.height = newHeight + 'px'
-  }
-}
-
-// 타이핑 상태 처리
-const handleTyping = () => {
-  if (!isTyping.value && inputText.value.trim()) {
+  if (inputText.value.trim() && !isTyping.value) {
     isTyping.value = true
     emit('typing-start')
   }
@@ -389,419 +289,373 @@ const handleTyping = () => {
   }
 
   typingTimer.value = setTimeout(() => {
-    stopTyping()
+    if (isTyping.value) {
+      isTyping.value = false
+      emit('typing-stop')
+    }
   }, 2000)
 }
 
-const stopTyping = () => {
+const handleKeyDown = (event) => {
+  if (event.key === 'Enter') {
+    if (event.shiftKey) {
+      // Shift + Enter: 줄바꿈
+      return
+    } else {
+      // Enter: 메시지 전송
+      event.preventDefault()
+      handleSend()
+    }
+  }
+}
+
+const handleSend = () => {
+  if (!canSend.value || props.disabled) return
+
+  const messageData = {
+    content: inputText.value.trim(),
+    type: 'TEXT',
+    files: selectedFiles.value.length > 0 ? [...selectedFiles.value] : null
+  }
+
+  // 파일이 있으면 타입을 변경
+  if (selectedFiles.value.length > 0) {
+    const firstFile = selectedFiles.value[0]
+    if (firstFile.type.startsWith('image/')) {
+      messageData.type = 'IMAGE'
+    } else if (firstFile.type.startsWith('video/')) {
+      messageData.type = 'VIDEO'
+    } else if (firstFile.type.startsWith('audio/')) {
+      messageData.type = 'AUDIO'
+    } else {
+      messageData.type = 'FILE'
+    }
+  }
+
+  emit('send-message', messageData)
+
+  // 입력 내용 초기화
+  inputText.value = ''
+  selectedFiles.value = []
+
+  // 타이핑 상태 중지
   if (isTyping.value) {
     isTyping.value = false
     emit('typing-stop')
   }
 
-  if (typingTimer.value) {
-    clearTimeout(typingTimer.value)
-    typingTimer.value = null
+  // 텍스트 영역 크기 리셋
+  autoResize()
+
+  // 포커스 유지
+  nextTick(() => {
+    if (textareaRef.value) {
+      textareaRef.value.focus()
+    }
+  })
+}
+
+const autoResize = () => {
+  nextTick(() => {
+    if (textareaRef.value) {
+      textareaRef.value.style.height = 'auto'
+      const newHeight = Math.min(textareaRef.value.scrollHeight, 100) // 최대 100px
+      textareaRef.value.style.height = newHeight + 'px'
+    }
+  })
+}
+
+const handlePaste = (event) => {
+  const items = event.clipboardData?.items
+  if (!items) return
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+
+    if (item.type.indexOf('image') !== -1) {
+      const file = item.getAsFile()
+      if (file) {
+        addFile(file)
+        event.preventDefault()
+        break
+      }
+    }
   }
 }
 
-// 메뉴 토글 함수들
-const toggleAttachmentMenu = () => {
-  showAttachmentMenu.value = !showAttachmentMenu.value
-  if (showAttachmentMenu.value) {
-    showEmojiPicker.value = false
-  }
+const handleFocus = () => {
+  emit('focus')
 }
 
-const toggleEmojiPicker = () => {
-  showEmojiPicker.value = !showEmojiPicker.value
-  if (showEmojiPicker.value) {
-    showAttachmentMenu.value = false
-  }
+const handleBlur = () => {
+  emit('blur')
 }
 
-const closeAllMenus = () => {
-  showAttachmentMenu.value = false
-  showEmojiPicker.value = false
-}
-
-// 파일 관련 함수들
-const selectFile = (type) => {
-  switch (type) {
-    case 'image':
-      fileAccept.value = 'image/*'
-      break
-    case 'video':
-      fileAccept.value = 'video/*'
-      break
-    default:
-      fileAccept.value = '*/*'
+// 파일 관련 메서드
+const openFileDialog = () => {
+  if (fileInputRef.value) {
+    fileInputRef.value.click()
   }
-
-  fileInput.value?.click()
-  showAttachmentMenu.value = false
 }
 
 const handleFileSelect = (event) => {
   const files = Array.from(event.target.files || [])
   files.forEach(file => addFile(file))
-  event.target.value = '' // 같은 파일 선택 가능하도록 초기화
+
+  // 파일 입력 초기화
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
 }
 
 const addFile = (file) => {
-  // 파일 크기 제한 (10MB)
-  const maxSize = 10 * 1024 * 1024
-  if (file.size > maxSize) {
-    alert('파일 크기가 10MB를 초과합니다.')
+  // 파일 크기 검증
+  if (file.size > props.maxFileSize) {
+    alert(`파일 크기가 너무 큽니다. 최대 ${formatFileSize(props.maxFileSize)}까지 가능합니다.`)
     return
   }
 
-  const fileItem = {
-    file: file,
+  // 파일 개수 검증
+  if (selectedFiles.value.length >= props.maxFiles) {
+    alert(`최대 ${props.maxFiles}개의 파일만 첨부할 수 있습니다.`)
+    return
+  }
+
+  // 미리보기 생성
+  const fileData = {
+    file,
     name: file.name,
-    uploading: false,
-    progress: 0,
+    size: file.size,
+    type: file.type,
     preview: null
   }
 
-  // 이미지 파일인 경우 미리보기 생성
-  if (isImageFile(file)) {
+  // 이미지인 경우 미리보기 생성
+  if (file.type.startsWith('image/')) {
     const reader = new FileReader()
     reader.onload = (e) => {
-      fileItem.preview = e.target?.result
+      fileData.preview = e.target?.result
     }
     reader.readAsDataURL(file)
   }
 
-  uploadingFiles.value.push(fileItem)
+  selectedFiles.value.push(fileData)
 }
 
 const removeFile = (index) => {
-  uploadingFiles.value.splice(index, 1)
+  selectedFiles.value.splice(index, 1)
 }
 
-const isImageFile = (file) => {
-  return file.type?.startsWith('image/')
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 B'
+
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-// 답장 관련 함수들
-const setReplyMode = (message) => {
-  replyMode.value = true
-  replyMessage.value = message
-  textInput.value?.focus()
+const isTextFile = (type) => {
+  return type.includes('text/') ||
+      type.includes('application/pdf') ||
+      type.includes('application/msword') ||
+      type.includes('application/vnd.openxml')
 }
 
-const cancelReply = () => {
-  replyMode.value = false
-  replyMessage.value = null
+// 이모지 관련 메서드
+const toggleEmojiPicker = () => {
+  showEmojiPicker.value = !showEmojiPicker.value
 }
 
-const getPreviewText = (message) => {
-  if (!message) return ''
-
-  switch (message.type) {
-    case 'IMAGE':
-      return '📷 사진'
-    case 'VIDEO':
-      return '🎥 동영상'
-    case 'FILE':
-      return `📎 ${message.metadata?.fileName || '파일'}`
-    case 'LOCATION':
-      return '📍 위치'
-    default:
-      return message.content || ''
-  }
-}
-
-// 이모지 관련 함수들
 const insertEmoji = (emoji) => {
-  const cursorPos = textInput.value?.selectionStart || inputText.value.length
+  const cursorPos = textareaRef.value?.selectionStart || inputText.value.length
   const textBefore = inputText.value.substring(0, cursorPos)
   const textAfter = inputText.value.substring(cursorPos)
 
   inputText.value = textBefore + emoji + textAfter
 
+  // 커서 위치 조정
   nextTick(() => {
-    if (textInput.value) {
-      textInput.value.focus()
-      const newCursorPos = cursorPos + emoji.length
-      textInput.value.setSelectionRange(newCursorPos, newCursorPos)
+    if (textareaRef.value) {
+      const newPos = cursorPos + emoji.length
+      textareaRef.value.setSelectionRange(newPos, newPos)
+      textareaRef.value.focus()
     }
   })
 
   showEmojiPicker.value = false
-  handleTyping()
 }
 
-// 위치 공유
-const selectLocation = () => {
-  if ('geolocation' in navigator) {
-    showAttachmentMenu.value = false
+// 음성 녹음 관련 메서드
+const startVoiceRecord = async () => {
+  if (props.disabled) return
 
-    navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords
-
-          try {
-            // 역지오코딩으로 주소 가져오기 (선택사항)
-            const address = await getAddressFromCoords(latitude, longitude)
-
-            emit('send-message', {
-              type: 'LOCATION',
-              content: `위치: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-              metadata: {
-                latitude,
-                longitude,
-                address: address || '현재 위치'
-              }
-            })
-          } catch (error) {
-            console.error('위치 전송 실패:', error)
-          }
-        },
-        (error) => {
-          console.error('위치 정보 가져오기 실패:', error)
-          let message = '위치 정보를 가져올 수 없습니다.'
-
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              message = '위치 권한이 거부되었습니다.'
-              break
-            case error.POSITION_UNAVAILABLE:
-              message = '위치 정보를 사용할 수 없습니다.'
-              break
-            case error.TIMEOUT:
-              message = '위치 정보 요청 시간이 초과되었습니다.'
-              break
-          }
-
-          alert(message)
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
-        }
-    )
-  } else {
-    alert('이 브라우저는 위치 서비스를 지원하지 않습니다.')
-    showAttachmentMenu.value = false
-  }
-}
-
-// 좌표에서 주소 가져오기 (선택사항)
-const getAddressFromCoords = async (lat, lng) => {
   try {
-    // 실제 구현에서는 Google Maps API나 카카오 맵 API 사용
-    const response = await fetch(
-        `https://api.example.com/geocode?lat=${lat}&lng=${lng}`
-    )
-    const data = await response.json()
-    return data.address
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    mediaRecorder.value = new MediaRecorder(stream)
+    audioChunks.value = []
+
+    mediaRecorder.value.ondataavailable = (event) => {
+      audioChunks.value.push(event.data)
+    }
+
+    mediaRecorder.value.onstop = () => {
+      const audioBlob = new Blob(audioChunks.value, { type: 'audio/wav' })
+      const audioFile = new File([audioBlob], `voice_${Date.now()}.wav`, { type: 'audio/wav' })
+
+      emit('send-message', {
+        content: '',
+        type: 'AUDIO',
+        files: [{ file: audioFile, name: audioFile.name, size: audioFile.size, type: audioFile.type }]
+      })
+
+      // 스트림 정리
+      stream.getTracks().forEach(track => track.stop())
+    }
+
+    mediaRecorder.value.start()
+    isRecording.value = true
+    recordingDuration.value = 0
+
+    // 녹음 시간 카운터
+    recordingTimer.value = setInterval(() => {
+      recordingDuration.value++
+
+      // 최대 60초로 제한
+      if (recordingDuration.value >= 60) {
+        stopVoiceRecord()
+      }
+    }, 1000)
+
   } catch (error) {
-    console.warn('주소 변환 실패:', error)
-    return null
+    console.error('음성 녹음 시작 실패:', error)
+    alert('마이크에 접근할 수 없습니다. 권한을 확인해주세요.')
   }
 }
 
-// 유틸리티 함수들
-const formatFileSize = (bytes) => {
-  if (!bytes) return ''
+const stopVoiceRecord = () => {
+  if (mediaRecorder.value && isRecording.value) {
+    mediaRecorder.value.stop()
+    isRecording.value = false
 
-  const units = ['B', 'KB', 'MB', 'GB']
-  let size = bytes
-  let unitIndex = 0
-
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024
-    unitIndex++
-  }
-
-  return `${size.toFixed(1)} ${units[unitIndex]}`
-}
-
-const getFileIcon = (fileName) => {
-  if (!fileName) return '📄'
-
-  const extension = fileName.split('.').pop()?.toLowerCase()
-
-  const iconMap = {
-    // 문서
-    pdf: '📕',
-    doc: '📘', docx: '📘',
-    xls: '📗', xlsx: '📗',
-    ppt: '📙', pptx: '📙',
-    txt: '📄',
-
-    // 압축
-    zip: '🗜️', rar: '🗜️', '7z': '🗜️',
-
-    // 오디오
-    mp3: '🎵', wav: '🎵', flac: '🎵',
-
-    // 비디오
-    mp4: '🎬', avi: '🎬', mov: '🎬',
-
-    // 이미지
-    jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', svg: '🖼️'
-  }
-
-  return iconMap[extension] || '📄'
-}
-
-// 외부 클릭 처리
-const handleClickOutside = (event) => {
-  const inputContainer = event.target.closest('.message-input-container')
-  if (!inputContainer) {
-    closeAllMenus()
+    if (recordingTimer.value) {
+      clearInterval(recordingTimer.value)
+      recordingTimer.value = null
+    }
   }
 }
 
-// 외부에서 호출 가능한 함수들
-defineExpose({
-  setReplyMode,
-  focus: () => textInput.value?.focus(),
-  insertText: (text) => {
-    inputText.value += text
-    handleTyping()
+const cancelVoiceRecord = () => {
+  if (mediaRecorder.value && isRecording.value) {
+    mediaRecorder.value.stop()
+    isRecording.value = false
+
+    if (recordingTimer.value) {
+      clearInterval(recordingTimer.value)
+      recordingTimer.value = null
+    }
+
+    // 오디오 청크 초기화
+    audioChunks.value = []
   }
-})
+}
 
 // 라이프사이클
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
+  // 외부 클릭으로 이모지 피커 닫기
+  document.addEventListener('click', (event) => {
+    if (showEmojiPicker.value && !event.target.closest('.emoji-picker') && !event.target.closest('.emoji-btn')) {
+      showEmojiPicker.value = false
+    }
+  })
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-  stopTyping()
+  // 타이핑 타이머 정리
+  if (typingTimer.value) {
+    clearTimeout(typingTimer.value)
+  }
+
+  // 녹음 타이머 정리
+  if (recordingTimer.value) {
+    clearInterval(recordingTimer.value)
+  }
+
+  // 타이핑 상태 정리
+  if (isTyping.value) {
+    emit('typing-stop')
+  }
 })
 
-// 입력 감시
-watch(() => props.disabled, (newVal) => {
-  if (newVal) {
-    closeAllMenus()
-    stopTyping()
+// Watch
+watch(inputText, () => {
+  if (inputText.value.length === 0 && isTyping.value) {
+    isTyping.value = false
+    emit('typing-stop')
   }
 })
 </script>
 
 <style scoped>
 .message-input-container {
-  position: relative;
   background: white;
   border-top: 1px solid #e2e8f0;
-  z-index: 1;
+  position: relative;
 }
 
-.reply-preview {
+.files-preview {
+  padding: 12px 16px 0;
+  border-bottom: 1px solid #f1f5f9;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
-.reply-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.reply-to {
-  font-size: 12px;
-  color: #667eea;
-  font-weight: 600;
-}
-
-.reply-content {
-  font-size: 14px;
-  color: #64748b;
-  margin: 2px 0 0 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.reply-cancel {
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: #e2e8f0;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.reply-cancel:hover {
-  background: #cbd5e1;
-}
-
-.file-preview {
-  padding: 16px 20px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.file-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.file-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: white;
-  padding: 12px;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+.file-preview-item {
+  position: relative;
 }
 
 .image-preview {
   position: relative;
-  width: 60px;
-  height: 60px;
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
   border-radius: 8px;
-  overflow: hidden;
+  padding: 8px;
+  gap: 8px;
+  max-width: 200px;
 }
 
-.preview-image {
-  width: 100%;
-  height: 100%;
+.image-preview img {
+  width: 40px;
+  height: 40px;
   object-fit: cover;
+  border-radius: 4px;
 }
 
-.upload-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 12px;
-  gap: 4px;
-}
-
-.file-info {
+.file-preview {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex: 1;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 8px;
+  gap: 8px;
+  max-width: 200px;
 }
 
 .file-icon {
-  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  flex-shrink: 0;
 }
 
 .file-details {
@@ -811,8 +665,9 @@ watch(() => props.disabled, (newVal) => {
 
 .file-name {
   display: block;
+  font-size: 12px;
   font-weight: 500;
-  font-size: 14px;
+  color: #374151;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -820,107 +675,93 @@ watch(() => props.disabled, (newVal) => {
 
 .file-size {
   display: block;
-  font-size: 12px;
-  color: #64748b;
+  font-size: 11px;
+  color: #6b7280;
 }
 
-.upload-progress {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-width: 60px;
-}
-
-.progress-bar {
-  width: 50px;
-  height: 4px;
-  background: #e2e8f0;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #667eea;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  font-size: 10px;
-  color: #64748b;
-}
-
-.file-remove {
-  width: 24px;
-  height: 24px;
+.remove-file-btn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  background: #ef4444;
   border: none;
-  background: #fee2e2;
-  color: #dc2626;
   border-radius: 50%;
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  transition: all 0.2s;
 }
 
-.file-remove:hover {
-  background: #fecaca;
+.input-area {
+  position: relative;
 }
 
-.input-wrapper {
+.input-row {
   display: flex;
   align-items: flex-end;
-  gap: 12px;
-  padding: 16px 20px;
-  background: white;
+  gap: 8px;
+  padding: 12px 16px;
 }
 
-.attachment-button {
+.action-btn {
   width: 36px;
   height: 36px;
   border: none;
-  background: #f8fafc;
-  border-radius: 50%;
+  background: #f1f5f9;
+  border-radius: 18px;
+  color: #64748b;
   cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-  font-size: 16px;
+  flex-shrink: 0;
 }
 
-.attachment-button:hover:not(:disabled) {
+.action-btn:hover:not(:disabled) {
   background: #e2e8f0;
-  transform: scale(1.05);
+  color: #334155;
 }
 
-.attachment-button:disabled {
+.action-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.input-field {
+.voice-btn.recording {
+  background: #ef4444;
+  color: white;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.text-input-wrapper {
   flex: 1;
   position: relative;
   background: #f8fafc;
   border-radius: 20px;
-  border: 2px solid #e2e8f0;
-  transition: all 0.2s;
-  display: flex;
-  align-items: flex-end;
+  border: 1px solid #e2e8f0;
+  transition: border-color 0.2s;
 }
 
-.input-field:focus-within {
-  border-color: #667eea;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+.text-input-wrapper:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .text-input {
-  flex: 1;
+  width: 100%;
+  min-height: 36px;
+  max-height: 100px;
+  padding: 10px 16px;
   border: none;
   background: transparent;
   resize: none;
@@ -928,186 +769,131 @@ watch(() => props.disabled, (newVal) => {
   font-family: inherit;
   font-size: 14px;
   line-height: 1.4;
-  padding: 12px 16px;
-  max-height: 120px;
-  overflow-y: auto;
-  min-height: 20px;
+  color: #374151;
 }
 
 .text-input::placeholder {
-  color: #94a3b8;
+  color: #9ca3af;
 }
 
 .text-input:disabled {
-  opacity: 0.5;
+  color: #9ca3af;
   cursor: not-allowed;
 }
 
-.emoji-button {
+.char-count {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 11px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.send-btn {
   width: 36px;
   height: 36px;
   border: none;
-  background: transparent;
-  border-radius: 50%;
+  background: #e5e7eb;
+  border-radius: 18px;
+  color: #9ca3af;
   cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-  font-size: 16px;
-  margin-right: 4px;
-}
-
-.emoji-button:hover:not(:disabled) {
-  background: #e2e8f0;
-}
-
-.emoji-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.send-button {
-  width: 44px;
-  height: 44px;
-  border: none;
-  background: #e2e8f0;
-  color: #64748b;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  font-size: 18px;
   flex-shrink: 0;
 }
 
-.send-button.can-send {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+.send-btn.can-send {
+  background: #3b82f6;
   color: white;
-  transform: scale(1);
-}
-
-.send-button.can-send:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.send-button:disabled {
-  background: #cbd5e1;
+.send-btn:hover.can-send {
+  background: #2563eb;
+}
+
+.send-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
 
-.attachment-menu {
-  position: absolute;
-  bottom: 80px;
-  left: 20px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  min-width: 150px;
-  z-index: 10;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border: none;
+/* 이모지 피커 */
+.emoji-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: transparent;
-  text-align: left;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.menu-item:hover {
-  background: #f1f5f9;
-  transform: translateX(2px);
-}
-
-.menu-icon {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
+  z-index: 998;
 }
 
 .emoji-picker {
   position: absolute;
-  bottom: 80px;
-  right: 20px;
-  width: 300px;
-  height: 250px;
+  bottom: 100%;
+  right: 60px;
+  width: 320px;
+  max-height: 300px;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  z-index: 999;
   overflow: hidden;
 }
 
 .emoji-categories {
   display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
   padding: 8px;
   gap: 4px;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
 }
 
-.emoji-category {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  transition: all 0.2s;
-}
-
-.emoji-category:hover {
-  background: #e2e8f0;
-}
-
-.emoji-category.active {
-  background: #667eea;
-  color: white;
-}
-
-.emoji-grid {
-  flex: 1;
-  padding: 12px;
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 4px;
-  overflow-y: auto;
-  align-content: start;
-}
-
-.emoji-item {
-  width: 28px;
-  height: 28px;
+.emoji-category-btn {
+  width: 32px;
+  height: 32px;
   border: none;
   background: transparent;
   border-radius: 6px;
+  font-size: 16px;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+.emoji-category-btn:hover {
+  background: #e2e8f0;
+}
+
+.emoji-category-btn.active {
+  background: #3b82f6;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.emoji-item {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  transition: all 0.2s;
 }
 
 .emoji-item:hover {
@@ -1115,160 +901,205 @@ watch(() => props.disabled, (newVal) => {
   transform: scale(1.2);
 }
 
-.spinner-small {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top: 2px solid white;
+/* 음성 녹음 */
+.voice-recording {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #fef2f2;
+  border-bottom: 1px solid #fecaca;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  background: #dc2626;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: blink 1s infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
 }
 
-/* 트랜지션 */
-.slide-up-enter-active, .slide-up-leave-active {
-  transition: all 0.3s ease;
+.recording-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.slide-up-enter-from {
-  transform: translateY(20px);
+
+.cancel-record {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-record:hover {
+  background: #fef2f2;
+}
+
+.recording-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 숨겨진 파일 입력 */
+.hidden-file-input {
+  position: absolute;
+  left: -9999px;
   opacity: 0;
-}
-.slide-up-leave-to {
-  transform: translateY(20px);
-  opacity: 0;
+  pointer-events: none;
 }
 
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-/* 모바일 최적화 */
+/* 반응형 */
 @media (max-width: 768px) {
-  .input-wrapper {
-    padding: 12px 16px;
-    gap: 8px;
+  .input-row {
+    padding: 10px 12px;
+    gap: 6px;
   }
 
-  .attachment-button, .emoji-button {
+  .action-btn, .send-btn {
     width: 32px;
     height: 32px;
-    font-size: 14px;
-  }
-
-  .send-button {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
   }
 
   .text-input {
-    padding: 10px 12px;
     font-size: 16px; /* iOS 줌 방지 */
   }
 
   .emoji-picker {
-    width: calc(100vw - 40px);
-    max-width: 300px;
-    right: 20px;
-  }
-
-  .attachment-menu {
-    left: 16px;
-    bottom: 70px;
-  }
-
-  .file-item {
-    padding: 10px;
-  }
-
-  .image-preview {
-    width: 50px;
-    height: 50px;
-  }
-}
-
-/* 반응형 디자인 (태블릿) */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .emoji-picker {
-    width: 280px;
-    height: 220px;
+    width: calc(100vw - 24px);
+    right: 12px;
+    max-width: 320px;
   }
 
   .emoji-grid {
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .files-preview {
+    padding: 8px 12px 0;
+  }
+
+  .voice-recording {
+    padding: 8px 12px;
+  }
+
+  .recording-hint {
+    display: none;
   }
 }
 
-/* 스크롤바 스타일링 */
+/* 접근성 */
+.action-btn:focus,
+.send-btn:focus,
+.emoji-category-btn:focus,
+.emoji-item:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 스크롤바 스타일 */
+.files-preview::-webkit-scrollbar,
 .emoji-grid::-webkit-scrollbar {
-  width: 6px;
-}
-
-.emoji-grid::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.emoji-grid::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.emoji-grid::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.text-input::-webkit-scrollbar {
   width: 4px;
 }
 
-.text-input::-webkit-scrollbar-track {
-  background: transparent;
+.files-preview::-webkit-scrollbar-track,
+.emoji-grid::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 2px;
 }
 
-.text-input::-webkit-scrollbar-thumb {
+.files-preview::-webkit-scrollbar-thumb,
+.emoji-grid::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 2px;
+}
+
+.files-preview::-webkit-scrollbar-thumb:hover,
+.emoji-grid::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* 다크 모드 지원 */
 @media (prefers-color-scheme: dark) {
   .message-input-container {
-    background: #1e293b;
-    border-top-color: #374151;
+    background: #1f2937;
+    border-color: #374151;
   }
 
-  .reply-preview, .file-preview {
+  .text-input-wrapper {
     background: #374151;
-    border-bottom-color: #4b5563;
+    border-color: #4b5563;
   }
 
-  .reply-to {
-    color: #60a5fa;
+  .text-input {
+    color: #f9fafb;
   }
 
-  .reply-content {
+  .text-input::placeholder {
     color: #9ca3af;
   }
 
-  .reply-cancel {
+  .action-btn {
+    background: #374151;
+    color: #9ca3af;
+  }
+
+  .action-btn:hover:not(:disabled) {
     background: #4b5563;
     color: #f9fafb;
   }
 
-  .reply-cancel:hover {
-    background: #6b7280;
+  .emoji-picker {
+    background: #374151;
+    border-color: #4b5563;
   }
 
-  .file-item {
+  .emoji-categories {
+    background: #1f2937;
+    border-color: #4b5563;
+  }
+
+  .emoji-category-btn:hover {
+    background: #4b5563;
+  }
+
+  .emoji-item:hover {
+    background: #4b5563;
+  }
+
+  .file-preview,
+  .image-preview {
     background: #374151;
+  }
+
+  .file-icon {
+    background: #4b5563;
+    color: #9ca3af;
   }
 
   .file-name {
@@ -1279,138 +1110,54 @@ watch(() => props.disabled, (newVal) => {
     color: #9ca3af;
   }
 
-  .input-wrapper {
-    background: #1e293b;
+  .voice-recording {
+    background: #7f1d1d;
+    border-color: #b91c1c;
   }
 
-  .attachment-button {
+  .cancel-record {
     background: #374151;
-    color: #f9fafb;
+    border-color: #ef4444;
+    color: #ef4444;
   }
 
-  .attachment-button:hover:not(:disabled) {
-    background: #4b5563;
-  }
-
-  .input-field {
-    background: #374151;
-    border-color: #4b5563;
-  }
-
-  .input-field:focus-within {
-    border-color: #60a5fa;
-    background: #374151;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
-  }
-
-  .text-input {
-    color: #f9fafb;
-  }
-
-  .text-input::placeholder {
-    color: #6b7280;
-  }
-
-  .emoji-button {
-    color: #f9fafb;
-  }
-
-  .emoji-button:hover:not(:disabled) {
-    background: #4b5563;
-  }
-
-  .attachment-menu, .emoji-picker {
-    background: #374151;
-    border: 1px solid #4b5563;
-  }
-
-  .emoji-categories {
-    background: #4b5563;
-    border-bottom-color: #6b7280;
-  }
-
-  .emoji-category:hover {
-    background: #6b7280;
-  }
-
-  .emoji-category.active {
-    background: #60a5fa;
-  }
-
-  .emoji-item:hover {
-    background: #4b5563;
-  }
-
-  .menu-item {
-    color: #f9fafb;
-  }
-
-  .menu-item:hover {
-    background: #4b5563;
+  .cancel-record:hover {
+    background: #7f1d1d;
   }
 }
 
-/* 고대비 모드 지원 */
-@media (prefers-contrast: high) {
-  .input-field {
-    border-width: 3px;
-  }
+/* 애니메이션 */
+.files-preview {
+  animation: slideDown 0.3s ease-out;
+}
 
-  .attachment-button, .emoji-button, .send-button {
-    border: 2px solid currentColor;
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
   }
-
-  .emoji-category.active {
-    border: 2px solid white;
+  to {
+    max-height: 200px;
+    opacity: 1;
   }
 }
 
-/* 애니메이션 감소 모드 */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.emoji-picker {
+  animation: fadeInUp 0.2s ease-out;
+}
 
-  .emoji-item:hover {
-    transform: none;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-
-  .menu-item:hover {
-    transform: none;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* 포커스 접근성 개선 */
-.attachment-button:focus-visible,
-.emoji-button:focus-visible,
-.send-button:focus-visible,
-.emoji-category:focus-visible,
-.emoji-item:focus-visible,
-.menu-item:focus-visible {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
-}
-
-.text-input:focus-visible {
-  outline: none; /* input-field의 focus-within 스타일 사용 */
-}
-
-/* 터치 디바이스 최적화 */
-@media (hover: none) and (pointer: coarse) {
-  .attachment-button,
-  .emoji-button,
-  .send-button,
-  .emoji-category,
-  .emoji-item,
-  .menu-item {
-    min-height: 44px; /* 터치 타겟 최소 크기 */
-    min-width: 44px;
-  }
-
-  .emoji-item {
-    font-size: 20px; /* 터치 디바이스에서 더 큰 이모지 */
-  }
+.voice-recording {
+  animation: slideDown 0.3s ease-out;
 }
 </style>

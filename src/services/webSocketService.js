@@ -1,255 +1,701 @@
-// services/webSocketService.js
+// services/websocketService.js
+import { Client } from '@stomp/stompjs'
+import SockJS from 'sockjs-client'
+import { ref, reactive } from 'vue'
+
 class WebSocketService {
   constructor() {
-    this.socket = null
-    this.isConnected = false
-    this.reconnectAttempts = 0
-    this.maxReconnectAttempts = 5
-    this.reconnectDelay = 1000
-    this.userId = null
-    this.subscriptions = new Map() // roomId -> callback
-    this.globalMessageHandlers = []
-    this.heartbeatInterval = null
+    this.client = null
+    this.connected = ref(false)
+    this.connecting = ref(false)
+    this.connectionId = null
+    this.deviceInfo = this.generateDeviceInfo()
+
+    // 연결 상태 관리
+    this.connectionState = reactive({
+      status: 'disconnected', // disconnected, connecting, connected, error
+      error: null,
+      reconnectAttempts: 0,
+      maxReconnectAttempts: 5
+    })
+
+    // 채팅방 구독 관리
+    this.roomSubscriptions = new Map()
+    this.messageHandlers = new Map()
+    this.subscriptions = new Map()
+
+    // 재연결 설정
+    this.reconnectDelay = 3000
+    this.heartbeatIncoming = 4000
+    this.heartbeatOutgoing = 4000
+
+    console.log('🔧 WebSocket 서비스 초기화:', this.deviceInfo)
   }
 
-  // WebSocket 연결
-  async connect(userId) {
+  /**
+   * 디바이스 정보 생성 및 감지
+   */
+  generateDeviceInfo() {
+    const stored = localStorage.getItem('device_info')
+    if (stored) {
+      try {
+        const deviceInfo = JSON.parse(stored)
+        // 기존 정보가 있지만 디바이스 타입을 다시 확인
+        deviceInfo.deviceType = this.detectDeviceType()
+        deviceInfo.userAgent = navigator.userAgent
+        localStorage.setItem('device_info', JSON.stringify(deviceInfo))
+        return deviceInfo
+      } catch (error) {
+        console.warn('저장된 디바이스 정보 파싱 실패, 새로 생성합니다.')
+      }
+    }
+
+    // 새 디바이스 정보 생성
+    const deviceInfo = {
+      deviceId: this.generateDeviceId(),
+      deviceType: this.detectDeviceType(),
+      deviceName: this.getDeviceName(),
+      platform: this.getPlatform(),
+      browser: this.getBrowserInfo(),
+      userAgent: navigator.userAgent,
+      screenResolution: `${screen.width}x${screen.height}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      language: navigator.language || 'ko',
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString()
+    }
+
+    localStorage.setItem('device_info', JSON.stringify(deviceInfo))
+    return deviceInfo
+  }
+
+  /**
+   * 디바이스 ID 생성
+   */
+  generateDeviceId() {
+    const stored = localStorage.getItem('device_id')
+    if (stored) {
+      return stored
+    }
+
+    const deviceId = `web_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`
+    localStorage.setItem('device_id', deviceId)
+    return deviceId
+  }
+
+  /**
+   * 디바이스 타입 감지
+   */
+  detectDeviceType() {
+    const userAgent = navigator.userAgent.toLowerCase()
+
+    // 모바일 디바이스 감지
+    const mobileKeywords = [
+      'mobile', 'android', 'iphone', 'ipad', 'ipod',
+      'blackberry', 'opera mini', 'iemobile', 'wpdesktop'
+    ]
+
+    const isMobile = mobileKeywords.some(keyword => userAgent.includes(keyword))
+
+    // 태블릿 감지
+    const isTablet = userAgent.includes('tablet') ||
+        (userAgent.includes('ipad')) ||
+        (userAgent.includes('android') && !userAgent.includes('mobile'))
+
+    // 터치 지원 여부
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+
+    if (isTablet) {
+      return 'tablet'
+    } else if (isMobile) {
+      return 'mobile'
+    } else if (hasTouch) {
+      return 'desktop-touch'
+    } else {
+      return 'desktop'
+    }
+  }
+
+  /**
+   * 디바이스 이름 생성
+   */
+  getDeviceName() {
+    const userAgent = navigator.userAgent
+
+    // iOS 디바이스
+    if (/iPhone/.test(userAgent)) {
+      return 'iPhone'
+    } else if (/iPad/.test(userAgent)) {
+      return 'iPad'
+    } else if (/iPod/.test(userAgent)) {
+      return 'iPod'
+    }
+
+    // Android
+    else if (/Android/.test(userAgent)) {
+      const match = userAgent.match(/Android ([0-9.]+)/)
+      return match ? `Android ${match[1]}` : 'Android'
+    }
+
+    // Windows
+    else if (/Windows/.test(userAgent)) {
+      if (/Windows NT 10/.test(userAgent)) return 'Windows 10'
+      if (/Windows NT 6.3/.test(userAgent)) return 'Windows 8.1'
+      if (/Windows NT 6.2/.test(userAgent)) return 'Windows 8'
+      if (/Windows NT 6.1/.test(userAgent)) return 'Windows 7'
+      return 'Windows'
+    }
+
+    // macOS
+    else if (/Mac OS X/.test(userAgent)) {
+      const match = userAgent.match(/Mac OS X ([0-9_]+)/)
+      if (match) {
+        const version = match[1].replace(/_/g, '.')
+        return `macOS ${version}`
+      }
+      return 'macOS'
+    }
+
+    // Linux
+    else if (/Linux/.test(userAgent)) {
+      return 'Linux'
+    }
+
+    return 'Unknown Device'
+  }
+
+  /**
+   * 플랫폼 정보 반환
+   */
+  getPlatform() {
+    return navigator.platform || 'Unknown'
+  }
+
+  /**
+   * 브라우저 정보 감지
+   */
+  getBrowserInfo() {
+    const userAgent = navigator.userAgent
+
+    if (/Chrome/.test(userAgent) && !/Chromium/.test(userAgent)) {
+      const match = userAgent.match(/Chrome\/([0-9.]+)/)
+      return { name: 'Chrome', version: match ? match[1] : 'Unknown' }
+    } else if (/Firefox/.test(userAgent)) {
+      const match = userAgent.match(/Firefox\/([0-9.]+)/)
+      return { name: 'Firefox', version: match ? match[1] : 'Unknown' }
+    } else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
+      const match = userAgent.match(/Version\/([0-9.]+)/)
+      return { name: 'Safari', version: match ? match[1] : 'Unknown' }
+    } else if (/Edge/.test(userAgent)) {
+      const match = userAgent.match(/Edge\/([0-9.]+)/)
+      return { name: 'Edge', version: match ? match[1] : 'Unknown' }
+    }
+
+    return { name: 'Unknown', version: 'Unknown' }
+  }
+
+  /**
+   * WebSocket 연결 초기화
+   */
+  async connect() {
+    if (this.connecting.value || this.connected.value) {
+      console.log('🔄 이미 연결 중이거나 연결된 상태입니다')
+      return Promise.resolve()
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        this.connecting.value = true
+        this.connectionState.status = 'connecting'
+        this.connectionState.error = null
+
+        const token = localStorage.getItem('access_token')
+        if (!token) {
+          throw new Error('인증 토큰이 없습니다')
+        }
+
+        // STOMP 클라이언트 설정
+        this.client = new Client({
+          // SockJS를 사용한 WebSocket 연결 - MSA 채팅 서비스
+          webSocketFactory: () => {
+            // MSA 환경에서 채팅 서비스 WebSocket URL 사용
+            const wsUrl = import.meta.env.VITE_WS_URL || '/api/ws'
+            console.log('🔌 WebSocket 연결 시도:', wsUrl)
+            return new SockJS(wsUrl, null, {
+              transports: ['websocket', 'xhr-streaming', 'xhr-polling']
+            })
+          },
+
+          // 연결 헤더 (JWT 토큰 및 디바이스 정보 포함)
+          connectHeaders: {
+            'Authorization': `Bearer ${token}`,
+            'X-Device-ID': this.deviceInfo.deviceId,
+            'X-Device-Type': this.deviceInfo.deviceType,
+            'X-Device-Name': this.deviceInfo.deviceName,
+            'X-Platform': this.deviceInfo.platform,
+            'X-Browser': `${this.deviceInfo.browser.name}/${this.deviceInfo.browser.version}`,
+            'X-Client-Version': '1.0.0',
+            'X-Timezone': this.deviceInfo.timezone,
+            'X-Language': this.deviceInfo.language
+          },
+
+          // 하트비트 설정
+          heartbeatIncoming: this.heartbeatIncoming,
+          heartbeatOutgoing: this.heartbeatOutgoing,
+
+          // 재연결 설정
+          reconnectDelay: this.reconnectDelay,
+
+          // 디버그 설정 (개발환경에서만)
+          debug: process.env.NODE_ENV === 'development' ? (str) => {
+            console.log('🔌 STOMP:', str)
+          } : undefined,
+
+          // 연결 성공 콜백
+          onConnect: (frame) => {
+            console.log('✅ WebSocket 연결 성공:', frame)
+            this.connected.value = true
+            this.connecting.value = false
+            this.connectionState.status = 'connected'
+            this.connectionState.reconnectAttempts = 0
+            this.connectionId = frame.headers['connection-id']
+
+            // 기본 구독 설정
+            this.setupDefaultSubscriptions()
+            resolve(frame)
+          },
+
+          // 연결 실패 콜백
+          onStompError: (frame) => {
+            console.error('❌ STOMP 에러:', frame)
+            this.connecting.value = false
+            this.connected.value = false
+            this.connectionState.status = 'error'
+            this.connectionState.error = frame.headers['message'] || '연결 오류'
+            reject(new Error(frame.headers['message'] || 'STOMP 연결 실패'))
+          },
+
+          // WebSocket 에러 콜백
+          onWebSocketError: (error) => {
+            console.error('❌ WebSocket 에러:', error)
+            this.connectionState.error = '네트워크 연결 오류'
+            reject(error)
+          },
+
+          // 연결 종료 콜백
+          onDisconnect: (frame) => {
+            console.log('🔌 WebSocket 연결 종료:', frame)
+            this.connected.value = false
+            this.connectionState.status = 'disconnected'
+            this.cleanup()
+          }
+        })
+
+        // 연결 시작
+        this.client.activate()
+
+      } catch (error) {
+        console.error('❌ WebSocket 연결 초기화 실패:', error)
+        this.connecting.value = false
+        this.connectionState.status = 'error'
+        this.connectionState.error = error.message
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * 기본 구독 설정 (사용자별 디바이스별 개인 큐)
+   */
+  setupDefaultSubscriptions() {
+    const userId = this.getUserIdFromToken()
+    if (!userId) {
+      console.error('❌ 사용자 ID를 찾을 수 없습니다')
+      return
+    }
+
+    const deviceId = this.deviceInfo.deviceId
+    const baseDestination = `/user/${userId}/device/${deviceId}`
+
+    // 개인 메시지 구독
+    this.subscribe(`${baseDestination}/messages`, (message) => {
+      this.handlePrivateMessage(JSON.parse(message.body))
+    })
+
+    // 시스템 알림 구독
+    this.subscribe(`${baseDestination}/notifications`, (message) => {
+      this.handleSystemNotification(JSON.parse(message.body))
+    })
+
+    // 연결 상태 알림 구독
+    this.subscribe(`${baseDestination}/presence`, (message) => {
+      this.handlePresenceUpdate(JSON.parse(message.body))
+    })
+
+    // 채팅 메시지 구독 (디바이스별)
+    this.subscribe(`${baseDestination}/chat`, (message) => {
+      this.handleChatMessage(JSON.parse(message.body))
+    })
+
+    // 타이핑 상태 구독
+    this.subscribe(`${baseDestination}/typing`, (message) => {
+      this.handleTypingStatus(JSON.parse(message.body))
+    })
+
+    console.log(`📡 기본 구독 설정 완료 - User: ${userId}, Device: ${deviceId}`)
+  }
+
+  /**
+   * 채팅방 구독 (기존 코드와 호환)
+   */
+  subscribeToRoom(roomId, messageHandler) {
+    if (!this.connected.value) {
+      console.error('❌ WebSocket이 연결되지 않았습니다')
+      return
+    }
+
+    const destination = `/topic/chat/${roomId}`
+
     try {
-      this.userId = userId
+      const subscription = this.client.subscribe(destination, (message) => {
+        const parsedMessage = JSON.parse(message.body)
+        messageHandler(parsedMessage)
+      })
 
-      // WebSocket URL (실제 환경에 맞게 수정)
-      const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8080'}/ws/chat?userId=${userId}`
+      this.roomSubscriptions.set(roomId, {
+        subscription,
+        handler: messageHandler,
+        destination
+      })
 
-      this.socket = new WebSocket(wsUrl)
+      console.log(`📡 채팅방 구독 성공: ${roomId}`)
 
-      this.socket.onopen = () => {
-        console.log('WebSocket 연결 성공')
-        this.isConnected = true
-        this.reconnectAttempts = 0
-        this.startHeartbeat()
+      // 채팅방 입장 알림 전송
+      this.sendMessage('/app/chat/join', {
+        roomId: roomId,
+        deviceId: this.deviceInfo.deviceId,
+        deviceInfo: this.deviceInfo,
+        timestamp: Date.now()
+      })
 
-        // 연결 후 사용자 인증
-        this.send({
-          type: 'AUTH',
-          userId: this.userId,
+    } catch (error) {
+      console.error(`❌ 채팅방 구독 실패: ${roomId}`, error)
+    }
+  }
+
+  /**
+   * 채팅방 구독 해제
+   */
+  unsubscribeFromRoom(roomId) {
+    const roomSub = this.roomSubscriptions.get(roomId)
+    if (roomSub) {
+      roomSub.subscription.unsubscribe()
+      this.roomSubscriptions.delete(roomId)
+      console.log(`📡 채팅방 구독 해제: ${roomId}`)
+
+      // 채팅방 퇴장 알림 전송
+      if (this.connected.value) {
+        this.sendMessage('/app/chat/leave', {
+          roomId: roomId,
+          deviceId: this.deviceInfo.deviceId,
           timestamp: Date.now()
         })
       }
+    }
+  }
 
-      this.socket.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data)
-          this.handleMessage(message)
-        } catch (error) {
-          console.error('메시지 파싱 실패:', error)
-        }
+  /**
+   * 타이핑 상태 전송
+   */
+  sendTypingStatus(roomId, isTyping) {
+    if (!this.connected.value) {
+      console.warn('❌ WebSocket이 연결되지 않음 - 타이핑 상태 전송 실패')
+      return
+    }
+
+    try {
+      this.sendMessage('/app/chat/typing', {
+        roomId: roomId,
+        isTyping: isTyping,
+        deviceId: this.deviceInfo.deviceId,
+        timestamp: Date.now()
+      })
+    } catch (error) {
+      console.error('❌ 타이핑 상태 전송 실패:', error)
+    }
+  }
+
+  /**
+   * 일반 구독 (공통)
+   */
+  subscribe(destination, callback, headers = {}) {
+    if (!this.client || !this.connected.value) {
+      console.error('❌ WebSocket이 연결되지 않았습니다')
+      return null
+    }
+
+    try {
+      const subscription = this.client.subscribe(destination, callback, headers)
+      this.subscriptions.set(destination, subscription)
+      console.log(`📡 구독 성공: ${destination}`)
+      return subscription
+    } catch (error) {
+      console.error(`❌ 구독 실패: ${destination}`, error)
+      return null
+    }
+  }
+
+  /**
+   * 구독 해제
+   */
+  unsubscribe(destination) {
+    const subscription = this.subscriptions.get(destination)
+    if (subscription) {
+      subscription.unsubscribe()
+      this.subscriptions.delete(destination)
+      console.log(`📡 구독 해제: ${destination}`)
+    }
+  }
+
+  /**
+   * 메시지 전송 (공통)
+   */
+  sendMessage(destination, body, headers = {}) {
+    if (!this.client || !this.connected.value) {
+      throw new Error('WebSocket이 연결되지 않았습니다')
+    }
+
+    try {
+      const messageHeaders = {
+        'content-type': 'application/json',
+        'X-Device-ID': this.deviceInfo.deviceId,
+        'X-Device-Type': this.deviceInfo.deviceType,
+        ...headers
       }
 
-      this.socket.onclose = (event) => {
-        console.log('WebSocket 연결 종료:', event.code, event.reason)
-        this.isConnected = false
-        this.stopHeartbeat()
+      this.client.publish({
+        destination: destination,
+        body: JSON.stringify({
+          ...body,
+          deviceInfo: this.deviceInfo // 디바이스 정보 포함
+        }),
+        headers: messageHeaders
+      })
 
-        // 정상적인 종료가 아니면 재연결 시도
-        if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
-          this.scheduleReconnect()
-        }
-      }
-
-      this.socket.onerror = (error) => {
-        console.error('WebSocket 오류:', error)
-      }
+      console.log(`📤 메시지 전송: ${destination}`, body)
 
     } catch (error) {
-      console.error('WebSocket 연결 실패:', error)
+      console.error('❌ 메시지 전송 실패:', error)
       throw error
     }
   }
 
-  // WebSocket 연결 해제
-  disconnect() {
-    this.stopHeartbeat()
-
-    if (this.socket) {
-      this.socket.close(1000, 'Client disconnect')
-      this.socket = null
-    }
-
-    this.isConnected = false
-    this.subscriptions.clear()
-    this.globalMessageHandlers = []
+  /**
+   * 개인 메시지 처리
+   */
+  handlePrivateMessage(message) {
+    console.log('📨 개인 메시지 수신:', message)
+    this.emitMessage('private-message', message)
   }
 
-  // 메시지 전송
-  send(message) {
-    if (this.isConnected && this.socket) {
-      this.socket.send(JSON.stringify(message))
-    } else {
-      console.warn('WebSocket이 연결되지 않음')
-    }
-  }
-
-  // 메시지 처리
-  handleMessage(message) {
-    console.log('WebSocket 메시지 수신:', message)
-
-    switch (message.type) {
-      case 'CHAT_MESSAGE':
-        this.handleChatMessage(message)
-        break
-      case 'SYSTEM_MESSAGE':
-        this.handleSystemMessage(message)
-        break
-      case 'USER_STATUS':
-        this.handleUserStatus(message)
-        break
-      case 'HEARTBEAT':
-        // 하트비트 응답
-        break
-      case 'ERROR':
-        console.error('서버 오류:', message.error)
-        break
-      default:
-        console.log('알 수 없는 메시지 타입:', message.type)
-    }
-  }
-
-  // 채팅 메시지 처리
+  /**
+   * 채팅 메시지 처리
+   */
   handleChatMessage(message) {
-    const { roomId } = message
+    console.log('💬 채팅 메시지 수신:', message)
+    this.emitMessage('chat-message', message)
+  }
 
-    // 해당 채팅방을 구독 중인지 확인
-    if (this.subscriptions.has(roomId)) {
-      const callback = this.subscriptions.get(roomId)
-      callback(message)
+  /**
+   * 시스템 알림 처리
+   */
+  handleSystemNotification(notification) {
+    console.log('🔔 시스템 알림 수신:', notification)
+    this.emitMessage('system-notification', notification)
+  }
+
+  /**
+   * 접속 상태 업데이트 처리
+   */
+  handlePresenceUpdate(presence) {
+    console.log('👥 접속 상태 업데이트:', presence)
+    this.emitMessage('presence-update', presence)
+  }
+
+  /**
+   * 타이핑 상태 처리
+   */
+  handleTypingStatus(message) {
+    console.log('⌨️ 타이핑 상태 수신:', message)
+
+    // 타이핑 상태를 채팅방별로 관리
+    const roomId = message.roomId
+    const userId = message.userId
+
+    if (!this.typingStates) {
+      this.typingStates = new Map()
     }
 
-    // 전역 메시지 핸들러들에게도 전달 (Push 알림용)
-    this.globalMessageHandlers.forEach(handler => {
-      handler(message)
-    })
-  }
-
-  // 시스템 메시지 처리
-  handleSystemMessage(message) {
-    console.log('시스템 메시지:', message)
-
-    // 입장/퇴장 등의 시스템 메시지 처리
-    if (message.roomId && this.subscriptions.has(message.roomId)) {
-      const callback = this.subscriptions.get(message.roomId)
-      callback(message)
-    }
-  }
-
-  // 사용자 상태 처리
-  handleUserStatus(message) {
-    console.log('사용자 상태 변경:', message)
-    // 온라인/오프라인/타이핑 상태 처리
-  }
-
-  // 채팅방 구독
-  subscribeToRoom(roomId, callback) {
-    if (!this.isConnected) {
-      console.warn('WebSocket이 연결되지 않음')
-      return
+    if (!this.typingStates.has(roomId)) {
+      this.typingStates.set(roomId, new Map())
     }
 
-    this.subscriptions.set(roomId, callback)
+    const roomTypingUsers = this.typingStates.get(roomId)
 
-    // 서버에 채팅방 구독 요청
-    this.send({
-      type: 'SUBSCRIBE_ROOM',
-      roomId: roomId,
-      userId: this.userId,
-      timestamp: Date.now()
-    })
-
-    console.log(`채팅방 ${roomId} 구독 시작`)
-  }
-
-  // 채팅방 구독 해제
-  unsubscribeFromRoom(roomId) {
-    if (this.subscriptions.has(roomId)) {
-      this.subscriptions.delete(roomId)
-
-      // 서버에 구독 해제 요청
-      this.send({
-        type: 'UNSUBSCRIBE_ROOM',
-        roomId: roomId,
-        userId: this.userId,
+    if (message.isTyping) {
+      roomTypingUsers.set(userId, {
+        userId: userId,
+        userName: message.userName || `사용자${userId}`,
         timestamp: Date.now()
       })
-
-      console.log(`채팅방 ${roomId} 구독 해제`)
-    }
-  }
-
-  // 전역 메시지 핸들러 등록 (Push 알림용)
-  onGlobalMessage(handler) {
-    this.globalMessageHandlers.push(handler)
-  }
-
-  // 메시지 전송 (채팅방에서 사용)
-  sendChatMessage(roomId, content, messageType = 'TEXT', metadata = null) {
-    const message = {
-      type: 'SEND_MESSAGE',
-      roomId: roomId,
-      senderId: this.userId,
-      content: content,
-      messageType: messageType,
-      metadata: metadata,
-      timestamp: Date.now()
+    } else {
+      roomTypingUsers.delete(userId)
     }
 
-    this.send(message)
-  }
-
-  // 타이핑 상태 전송
-  sendTypingStatus(roomId, isTyping) {
-    this.send({
-      type: 'TYPING_STATUS',
-      roomId: roomId,
-      userId: this.userId,
-      isTyping: isTyping,
-      timestamp: Date.now()
+    this.emitMessage('typing-status', {
+      roomId,
+      typingUsers: Array.from(roomTypingUsers.values())
     })
   }
 
-  // 하트비트 시작
-  startHeartbeat() {
-    this.heartbeatInterval = setInterval(() => {
-      if (this.isConnected) {
-        this.send({
-          type: 'HEARTBEAT',
-          userId: this.userId,
-          timestamp: Date.now()
-        })
-      }
-    }, 30000) // 30초마다
-  }
-
-  // 하트비트 중지
-  stopHeartbeat() {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval)
-      this.heartbeatInterval = null
+  /**
+   * 메시지 이벤트 발생
+   */
+  emitMessage(type, data) {
+    const handlers = this.messageHandlers.get(type)
+    if (handlers) {
+      handlers.forEach(handler => {
+        try {
+          handler(data)
+        } catch (error) {
+          console.error(`❌ 메시지 핸들러 에러 (${type}):`, error)
+        }
+      })
     }
   }
 
-  // 재연결 스케줄링
-  scheduleReconnect() {
-    setTimeout(() => {
-      this.reconnectAttempts++
-      console.log(`WebSocket 재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`)
-      this.connect(this.userId)
-    }, this.reconnectDelay * this.reconnectAttempts)
+  /**
+   * 메시지 핸들러 등록
+   */
+  onMessage(type, handler) {
+    if (!this.messageHandlers.has(type)) {
+      this.messageHandlers.set(type, [])
+    }
+    this.messageHandlers.get(type).push(handler)
   }
 
-  // 연결 상태 확인
-  isSocketConnected() {
-    return this.isConnected && this.socket && this.socket.readyState === WebSocket.OPEN
+  /**
+   * 메시지 핸들러 제거
+   */
+  offMessage(type, handler) {
+    const handlers = this.messageHandlers.get(type)
+    if (handlers) {
+      const index = handlers.indexOf(handler)
+      if (index > -1) {
+        handlers.splice(index, 1)
+      }
+    }
+  }
+
+  /**
+   * JWT 토큰에서 사용자 ID 추출
+   */
+  getUserIdFromToken() {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token) return null
+
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.userId || payload.sub
+    } catch (error) {
+      console.error('❌ 토큰 파싱 실패:', error)
+      return null
+    }
+  }
+
+  /**
+   * 연결 종료
+   */
+  async disconnect() {
+    if (this.client) {
+      try {
+        // 모든 채팅방 구독 해제
+        this.roomSubscriptions.forEach((roomSub, roomId) => {
+          roomSub.subscription.unsubscribe()
+        })
+
+        // 모든 일반 구독 해제
+        this.subscriptions.forEach((subscription) => {
+          subscription.unsubscribe()
+        })
+
+        // 클라이언트 비활성화
+        this.client.deactivate()
+
+        console.log('🔌 WebSocket 연결 종료')
+      } catch (error) {
+        console.error('❌ WebSocket 연결 종료 실패:', error)
+      }
+    }
+  }
+
+  /**
+   * 정리 작업
+   */
+  cleanup() {
+    this.roomSubscriptions.clear()
+    this.subscriptions.clear()
+    this.messageHandlers.clear()
+    this.connectionId = null
+
+    // 타이핑 상태 정리
+    if (this.typingStates) {
+      this.typingStates.clear()
+    }
+  }
+
+  /**
+   * 연결 상태 확인
+   */
+  isConnected() {
+    return this.connected.value && this.client?.connected
+  }
+
+  /**
+   * 연결 상태 반환 (reactive)
+   */
+  getConnectionState() {
+    return {
+      connected: this.connected,
+      connecting: this.connecting,
+      connectionState: this.connectionState
+    }
+  }
+
+  /**
+   * 디바이스 정보 반환
+   */
+  getDeviceInfo() {
+    return this.deviceInfo
+  }
+
+  /**
+   * 디바이스 정보 업데이트
+   */
+  updateDeviceInfo() {
+    this.deviceInfo.lastUpdated = new Date().toISOString()
+    this.deviceInfo.deviceType = this.detectDeviceType()
+    localStorage.setItem('device_info', JSON.stringify(this.deviceInfo))
+    console.log('🔄 디바이스 정보 업데이트:', this.deviceInfo)
   }
 }
 
-// 싱글톤 인스턴스 생성 및 내보내기
-export const webSocketService = new WebSocketService()
+// 싱글톤 인스턴스
+export const websocketService = new WebSocketService()
+
+// 창 크기 변경 시 디바이스 타입 재감지
+window.addEventListener('resize', () => {
+  websocketService.updateDeviceInfo()
+})
+
+export default websocketService
