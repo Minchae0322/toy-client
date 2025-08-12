@@ -218,9 +218,13 @@ class WebSocketService {
         this.client = new Client({
           // SockJS를 사용한 WebSocket 연결 - MSA 채팅 서비스
           webSocketFactory: () => {
-            // MSA 환경에서 채팅 서비스 WebSocket URL 사용
-            const wsUrl = import.meta.env.VITE_WS_URL || '/api/ws'
-            console.log('🔌 WebSocket 연결 시도:', wsUrl)
+            // 환경변수에서 URL 가져오기
+            const wsUrl = 'http://localhost:9000/api/ws'
+
+            // 절대 URL인 경우 그대로 사용, 상대 경로인 경우 그대로 사용
+            console.log('🔌 WebSocket 연결 URL:', wsUrl)
+            console.log('🔌 환경변수 VITE_WS_URL:', import.meta.env.VITE_WS_URL)
+
             return new SockJS(wsUrl, null, {
               transports: ['websocket', 'xhr-streaming', 'xhr-polling']
             })
