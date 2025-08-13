@@ -33,10 +33,15 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { chatNavigation } from '@/router' // 라우터 헬퍼 함수 import
 import ChatRoomHeader from '@/components/chat/ChatRoomHeader.vue'
 import SearchBar from '@/components/chat/SearchBar.vue'
 import ChatRoomTabs from '@/components/chat/ChatRoomTabs.vue'
 import ChatRoomCard from '@/components/chat/ChatRoomCard.vue'
+
+// Vue Router 사용
+const router = useRouter()
 
 const activeTab = ref('all')
 const showSearch = ref(false)
@@ -143,10 +148,54 @@ const updateTab = (tab) => {
   activeTab.value = tab
 }
 
-const selectRoom = (roomId) => {
+// 채팅방 선택 시 실제 네비게이션 구현
+const selectRoom = async (roomId) => {
   console.log('채팅방 선택:', roomId)
-  // 실제 구현에서는 라우터로 이동하거나 이벤트를 발생시킴
-  // router.push(`/chat/${roomId}`)
+
+  try {
+    // 1. 채팅방 입장 API 호출
+    await joinChatRoom(roomId)
+
+    // 2. 라우터 헬퍼 함수 사용 또는 직접 라우팅
+    await chatNavigation.toChatRoom(roomId)
+
+    // 또는 직접 라우팅:
+    // await router.push({ name: 'ChatRoom', params: { roomId } })
+
+  } catch (error) {
+    console.error('채팅방 이동 실패:', error)
+    // 에러 처리 (토스트 메시지 등)
+    alert('채팅방 입장에 실패했습니다.')
+  }
+}
+
+// API 호출 함수 (필요시 구현)
+const joinChatRoom = async (roomId) => {
+  const deviceId = localStorage.getItem('deviceId') || generateDeviceId()
+
+  const response = await fetch(`/v1/chat/rooms/${roomId}/join?deviceId=${deviceId}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${getAuthToken()}`,
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('채팅방 입장에 실패했습니다')
+  }
+}
+
+// 디바이스 ID 생성
+const generateDeviceId = () => {
+  const deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+  localStorage.setItem('deviceId', deviceId)
+  return deviceId
+}
+
+// 인증 토큰 가져오기
+const getAuthToken = () => {
+  return localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
 }
 </script>
 
