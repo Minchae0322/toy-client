@@ -16,12 +16,20 @@
       </div>
     </div>
 
+    <!-- 디버깅 정보 (개발환경) -->
+    <div v-if="isDev" class="debug-panel">
+      <h4>🔧 디버그 정보</h4>
+      <p>현재 선택된 방: {{ selectedRoom || '없음' }}</p>
+      <p>WebSocket 연결: {{ connectionState.connected.value ? '✅ 연결됨' : '❌ 끊어짐' }}</p>
+      <p>사용자 ID: {{ currentUserId || '없음' }}</p>
+    </div>
+
     <!-- 메인 콘텐츠 -->
     <div class="chat-content" :class="{ 'connection-overlay': showConnectionOverlay }">
       <!-- 채팅방 목록 뷰 -->
       <ChatRoomView
           v-if="!selectedRoom"
-          @select-room="enterChatRoom"
+          @room-selected="handleRoomSelected"
           :connection-state="connectionState"
       />
 
@@ -29,7 +37,7 @@
       <ChatDetailView
           v-else
           :room-id="selectedRoom"
-          @back-to-list="leaveChatRoom"
+          @back-to-list="handleBackToList"
           @new-message="handleNewMessage"
       />
     </div>
@@ -55,11 +63,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { AlertCircle, X } from 'lucide-vue-next'
 import ChatRoomView from '@/views/ChatRoomView.vue'
 import ChatDetailView from '@/views/ChatDetailView.vue'
-import { chatApi } from '@/services/chatApi.js'
 import { websocketService } from '@/services/websocketService.js'
 
 // 상태 관리
@@ -68,6 +75,7 @@ const currentUserId = ref(null)
 const showNotificationToast = ref(false)
 const pendingNotification = ref(null)
 const toastTimeout = ref(null)
+const isDev = ref(import.meta.env.DEV)
 
 // WebSocket 상태
 const connectionState = computed(() => websocketService.getConnectionState())
@@ -92,6 +100,8 @@ const getCurrentUserId = () => {
 // WebSocket 연결 초기화
 const initializeWebSocket = async () => {
   try {
+    console.log('🔌 WebSocket 연결 초기화 시작...')
+
     if (!websocketService.isConnected()) {
       await websocketService.connect()
     }
@@ -108,8 +118,11 @@ const initializeWebSocket = async () => {
 
 // 전역 메시지 핸들러 설정
 const setupGlobalMessageHandlers = () => {
+  console.log('🎯 전역 메시지 핸들러 설정...')
+
   // 채팅 메시지 핸들러 (채팅방 밖에서)
   websocketService.onMessage('chat-message', (message) => {
+    console.log('📨 전역 채팅 메시지 수신:', message)
     // 현재 해당 채팅방에 있지 않으면 토스트 알림 표시
     if (!selectedRoom.value || selectedRoom.value !== message.roomId) {
       showMessageToast(message)
@@ -128,45 +141,51 @@ const setupGlobalMessageHandlers = () => {
   })
 }
 
-// 채팅방 입장
-const enterChatRoom = async (roomId) => {
+// 채팅방 선택 핸들러 (채팅방 목록에서 올라온 이벤트)
+const handleRoomSelected = async (roomId) => {
+  console.log('🎯 채팅방 선택 이벤트 수신:', roomId)
+
   try {
-    console.log(`🚪 채팅방 ${roomId} 입장 시도...`)
+    // 로딩 표시나 기타 필요한 처리
+    console.log(`🚪 채팅방 ${roomId} 입장 처리 중...`)
 
     // 토스트 알림 숨기기
     dismissToast()
 
     // WebSocket이 연결되어 있는지 확인
     if (!websocketService.isConnected()) {
+      console.log('🔌 WebSocket 재연결 중...')
       await initializeWebSocket()
     }
 
-    // 채팅방 입장 (REST API는 ChatDetailView에서 처리)
+    // 선택된 방 설정 (이렇게 하면 ChatDetailView가 마운트됨)
     selectedRoom.value = roomId
 
-    console.log(`✅ 채팅방 ${roomId}에 입장했습니다`)
+    console.log(`✅ 채팅방 ${roomId} 선택 완료`)
 
   } catch (error) {
-    console.error('❌ 채팅방 입장 실패:', error)
+    console.error('❌ 채팅방 선택 처리 실패:', error)
     alert('채팅방 입장에 실패했습니다. 다시 시도해주세요.')
   }
 }
 
-// 채팅방 퇴장
-const leaveChatRoom = async () => {
+// 채팅방 목록으로 돌아가기
+const handleBackToList = async () => {
+  console.log('🔙 채팅방 목록으로 돌아가기')
+
   if (selectedRoom.value) {
     const roomId = selectedRoom.value
     try {
       console.log(`🚪 채팅방 ${roomId}에서 퇴장 중...`)
 
-      // 채팅방 나가기 (WebSocket 구독 해제는 ChatDetailView에서 처리)
+      // 선택된 방 해제 (ChatDetailView가 unmount되면서 구독 해제됨)
       selectedRoom.value = null
 
-      console.log(`✅ 채팅방 ${roomId}에서 퇴장했습니다`)
+      console.log(`✅ 채팅방 ${roomId}에서 퇴장 완료`)
 
     } catch (error) {
-      console.error('❌ 채팅방 퇴장 실패:', error)
-      selectedRoom.value = null
+      console.error('❌ 채팅방 퇴장 처리 실패:', error)
+      selectedRoom.value = null // 에러가 나도 일단 화면은 돌아가게
     }
   }
 }
@@ -265,7 +284,7 @@ const formatMessageContent = (message) => {
 // 토스트 클릭 처리
 const handleToastClick = () => {
   if (pendingNotification.value?.roomId) {
-    enterChatRoom(pendingNotification.value.roomId)
+    handleRoomSelected(pendingNotification.value.roomId)
   }
   dismissToast()
 }
@@ -284,8 +303,10 @@ const dismissToast = () => {
 // WebSocket 재연결
 const reconnectWebSocket = async () => {
   try {
+    console.log('🔄 WebSocket 재연결 시도...')
     await websocketService.disconnect()
     await initializeWebSocket()
+    console.log('✅ WebSocket 재연결 완료')
   } catch (error) {
     console.error('❌ 재연결 실패:', error)
   }
@@ -350,7 +371,7 @@ onBeforeUnmount(async () => {
   dismissToast()
 
   // 채팅방 퇴장
-  await leaveChatRoom()
+  await handleBackToList()
 
   // 이벤트 리스너 제거
   document.removeEventListener('visibilitychange', handleVisibilityChange)
@@ -379,6 +400,31 @@ window.addEventListener('beforeunload', () => {
   color: #1e293b;
   min-height: 100vh;
   position: relative;
+}
+
+/* 디버그 패널 */
+.debug-panel {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: #1e293b;
+  color: #f1f5f9;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  z-index: 999;
+  border: 1px solid #334155;
+  min-width: 250px;
+}
+
+.debug-panel h4 {
+  margin-bottom: 8px;
+  color: #38bdf8;
+}
+
+.debug-panel p {
+  margin: 4px 0;
+  font-family: monospace;
 }
 
 /* 연결 상태 */
@@ -573,6 +619,14 @@ window.addEventListener('beforeunload', () => {
 
   .chat-content.connection-overlay {
     padding-top: 50px;
+  }
+
+  .debug-panel {
+    position: relative;
+    top: auto;
+    left: auto;
+    margin: 10px;
+    font-size: 11px;
   }
 }
 

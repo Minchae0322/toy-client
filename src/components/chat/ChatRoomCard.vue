@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-room" @click="$emit('select-room', room.id)">
+  <div class="chat-room" @click="handleRoomClick">
     <div class="room-avatar">
       <img v-if="room.type !== 'group'"
            :src="room.avatar"
@@ -43,8 +43,13 @@
 <script setup>
 import { defineProps, defineEmits } from 'vue'
 
-defineProps(['room'])
-defineEmits(['select-room'])
+const props = defineProps(['room'])
+const emit = defineEmits(['select-room'])
+
+const handleRoomClick = () => {
+  console.log('🖱️ ChatRoomCard 클릭됨:', props.room.id)
+  emit('select-room', props.room.id)
+}
 
 const formatTime = (timestamp) => {
   const now = new Date()

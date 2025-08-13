@@ -1,823 +1,578 @@
 // services/chatApi.js
-class ChatApiService {
+class ChatApi {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
-    this.timeout = 30000 // 30초 타임아웃
-    this.retryAttempts = 3
-    this.retryDelay = 1000
+    this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
   }
 
-  // HTTP 요청 헬퍼 함수 (재시도 로직 포함)
-  async request(endpoint, options = {}) {
-    let lastError
+  // 인증 토큰 가져오기
+  getAuthToken() {
+    return localStorage.getItem('access_token') ||
+        sessionStorage.getItem('access_token')
+  }
 
-    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+  // 디바이스 ID 가져오기
+  getDeviceId() {
+    let deviceId = localStorage.getItem('device_id')
+    if (!deviceId) {
+      deviceId = this.generateDeviceId()
+      localStorage.setItem('device_id', deviceId)
+    }
+    return deviceId
+  }
+
+  // 디바이스 ID 생성
+  generateDeviceId() {
+    return `web_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`
+  }
+
+  // 현재 사용자 ID 가져오기
+  getCurrentUserId() {
+    try {
+      const token = this.getAuthToken()
+      if (!token) return null
+
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.userId || payload.sub || payload.id
+    } catch (error) {
+      console.warn('사용자 ID 추출 실패:', error)
+      return null
+    }
+  }
+
+  // 공통 헤더 생성
+  getHeaders() {
+    const token = this.getAuthToken()
+    const deviceId = this.getDeviceId()
+
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+      'X-Device-ID': deviceId,
+      'X-User-Agent': navigator.userAgent,
+      'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+      'X-Language': navigator.language || 'ko'
+    }
+  }
+
+  // API 응답 처리
+  async handleResponse(response) {
+    if (!response.ok) {
+      let errorData = {}
       try {
-        return await this._makeRequest(endpoint, options)
-      } catch (error) {
-        lastError = error
-
-        // 재시도할 수 없는 에러들
-        if (error.status >= 400 && error.status < 500) {
-          throw error
-        }
-
-        // 마지막 시도가 아니면 재시도
-        if (attempt < this.retryAttempts) {
-          console.warn(`API 요청 실패, ${attempt}/${this.retryAttempts} 재시도 중...`, error.message)
-          await this._delay(this.retryDelay * attempt)
-        }
+        errorData = await response.json()
+      } catch (parseError) {
+        console.warn('에러 응답 파싱 실패:', parseError)
       }
-    }
 
-    throw lastError
+      const errorMessage = errorData.message ||
+          errorData.error ||
+          `HTTP ${response.status} ${response.statusText}`
+
+      const error = new Error(errorMessage)
+      error.status = response.status
+      error.data = errorData
+      throw error
+    }
+    return response.json()
   }
 
-  // 실제 HTTP 요청 수행
-  async _makeRequest(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`
+  // 요청 로깅
+  logRequest(method, url, data = null) {
+    console.log(`🌐 [${method}] ${url}`, data ? data : '')
+  }
 
-    const config = {
-      timeout: this.timeout,
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeaders(),
-        ...options.headers
-      },
-      ...options
+  // 응답 로깅
+  logResponse(method, url, response, error = null) {
+    if (error) {
+      console.error(`❌ [${method}] ${url} 실패:`, error.message)
+    } else {
+      console.log(`✅ [${method}] ${url} 성공:`, response)
     }
+  }
 
-    // body가 FormData가 아닌 경우에만 JSON으로 변환
-    if (config.body && !(config.body instanceof FormData) && typeof config.body === 'object') {
-      config.body = JSON.stringify(config.body)
-    }
+  // === 채팅방 관련 API ===
 
-    // FormData인 경우 Content-Type 헤더 제거 (브라우저가 자동 설정)
-    if (config.body instanceof FormData) {
-      delete config.headers['Content-Type']
-    }
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), config.timeout)
+  // 채팅방 목록 조회
+  async getChatRooms(searchCondition = {}) {
+    const url = `${this.baseURL}/api/chat/rooms`
+    this.logRequest('GET', url, searchCondition)
 
     try {
-      const response = await fetch(url, {
-        ...config,
-        signal: controller.signal
+      const queryParams = new URLSearchParams()
+      if (searchCondition.roomType) queryParams.append('roomType', searchCondition.roomType)
+      if (searchCondition.status) queryParams.append('status', searchCondition.status)
+      if (searchCondition.keyword) queryParams.append('keyword', searchCondition.keyword)
+
+      const requestUrl = `${url}${queryParams.toString() ? '?' + queryParams.toString() : ''}`
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: this.getHeaders()
       })
 
-      clearTimeout(timeoutId)
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('GET', url, apiResponse)
 
-      if (!response.ok) {
-        await this.handleErrorResponse(response)
+      // ApiResponse<List<ChatRoomResponse.List>> 구조
+      return {
+        success: apiResponse.success || true,
+        data: apiResponse.data || [], // List<ChatRoomResponse.List>
+        message: apiResponse.message || 'success'
       }
-
-      // 응답이 JSON인지 확인
-      const contentType = response.headers.get('content-type')
-      if (contentType && contentType.includes('application/json')) {
-        return await response.json()
-      }
-
-      return response
 
     } catch (error) {
-      clearTimeout(timeoutId)
-
-      if (error.name === 'AbortError') {
-        throw new Error('요청 시간이 초과되었습니다')
-      }
+      this.logResponse('GET', url, null, error)
       throw error
     }
   }
 
-  // 지연 함수
-  _delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-  }
-
-  // 인증 헤더 가져오기
-  getAuthHeaders() {
-    const token = this.getAccessToken()
-    return token ? { 'Authorization': `Bearer ${token}` } : {}
-  }
-
-  // 액세스 토큰 가져오기
-  getAccessToken() {
-    return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-  }
-
-  // 리프레시 토큰 가져오기
-  getRefreshToken() {
-    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
-  }
-
-  // 토큰 저장
-  setTokens(accessToken, refreshToken, remember = true) {
-    const storage = remember ? localStorage : sessionStorage
-
-    if (accessToken) {
-      storage.setItem('accessToken', accessToken)
-    }
-    if (refreshToken) {
-      storage.setItem('refreshToken', refreshToken)
-    }
-  }
-
-  // 토큰 제거
-  clearTokens() {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    sessionStorage.removeItem('accessToken')
-    sessionStorage.removeItem('refreshToken')
-  }
-
-  // 에러 응답 처리
-  async handleErrorResponse(response) {
-    let errorMessage = `HTTP ${response.status}: ${response.statusText}`
-    let errorData = null
-
-    try {
-      errorData = await response.json()
-      if (errorData.message) {
-        errorMessage = errorData.message
-      } else if (errorData.error) {
-        errorMessage = errorData.error
-      }
-    } catch {
-      // JSON 파싱 실패 시 기본 메시지 사용
-    }
-
-    // 인증 에러 처리
-    if (response.status === 401) {
-      await this.handleUnauthorized()
-    }
-
-    const error = new Error(errorMessage)
-    error.status = response.status
-    error.response = response
-    error.data = errorData
-    throw error
-  }
-
-  // 인증 실패 처리
-  async handleUnauthorized() {
-    const refreshToken = this.getRefreshToken()
-
-    if (refreshToken) {
-      try {
-        // 토큰 갱신 시도
-        await this.refreshAccessToken()
-        return // 성공하면 종료
-      } catch (error) {
-        console.warn('토큰 갱신 실패:', error)
-      }
-    }
-
-    // 토큰 갱신 실패 또는 리프레시 토큰이 없는 경우
-    this.clearTokens()
-
-    // 로그인 페이지로 리다이렉트 (실제 구현에서는 라우터 사용)
-    if (typeof window !== 'undefined') {
-      console.warn('인증이 만료되었습니다. 다시 로그인해주세요.')
-      // 커스텀 이벤트 발행 (앱에서 처리)
-      window.dispatchEvent(new CustomEvent('auth:expired'))
-    }
-  }
-
-  // CRUD 메서드들
-  async get(endpoint, params = {}) {
-    const searchParams = new URLSearchParams()
-
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        if (Array.isArray(value)) {
-          value.forEach(item => searchParams.append(key, item))
-        } else {
-          searchParams.append(key, value)
-        }
-      }
-    })
-
-    const queryString = searchParams.toString()
-    const url = queryString ? `${endpoint}?${queryString}` : endpoint
-
-    return this.request(url, { method: 'GET' })
-  }
-
-  async post(endpoint, data = null) {
-    return this.request(endpoint, {
-      method: 'POST',
-      body: data
-    })
-  }
-
-  async put(endpoint, data = null) {
-    return this.request(endpoint, {
-      method: 'PUT',
-      body: data
-    })
-  }
-
-  async patch(endpoint, data = null) {
-    return this.request(endpoint, {
-      method: 'PATCH',
-      body: data
-    })
-  }
-
-  async delete(endpoint) {
-    return this.request(endpoint, { method: 'DELETE' })
-  }
-
-  // 파일 업로드 (진행률 추적 지원)
-  async uploadFile(endpoint, file, onProgress = null, metadata = {}) {
-    return new Promise((resolve, reject) => {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      // 메타데이터 추가
-      Object.entries(metadata).forEach(([key, value]) => {
-        formData.append(key, value)
-      })
-
-      const xhr = new XMLHttpRequest()
-
-      // 진행률 추적
-      if (onProgress) {
-        xhr.upload.addEventListener('progress', (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = Math.round((event.loaded / event.total) * 100)
-            onProgress(percentComplete)
-          }
-        })
-      }
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const response = JSON.parse(xhr.responseText)
-            resolve(response)
-          } catch {
-            resolve({ data: { fileUrl: xhr.responseText } })
-          }
-        } else {
-          reject(new Error(`업로드 실패: ${xhr.status} ${xhr.statusText}`))
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        reject(new Error('네트워크 오류가 발생했습니다'))
-      })
-
-      xhr.addEventListener('timeout', () => {
-        reject(new Error('업로드 시간이 초과되었습니다'))
-      })
-
-      xhr.open('POST', `${this.baseURL}${endpoint}`)
-      xhr.timeout = this.timeout
-
-      // 인증 헤더 추가
-      const authHeaders = this.getAuthHeaders()
-      Object.entries(authHeaders).forEach(([key, value]) => {
-        xhr.setRequestHeader(key, value)
-      })
-
-      xhr.send(formData)
-    })
-  }
-
-  // ===== 인증 관련 API =====
-
-  // 로그인
-  async login(credentials) {
-    const response = await this.post('/auth/login', credentials)
-
-    if (response.data?.accessToken) {
-      this.setTokens(
-          response.data.accessToken,
-          response.data.refreshToken,
-          credentials.remember
-      )
-    }
-
-    return response
-  }
-
-  // 로그아웃
-  async logout() {
-    try {
-      await this.post('/auth/logout', {
-        refreshToken: this.getRefreshToken()
-      })
-    } catch (error) {
-      console.warn('로그아웃 API 호출 실패:', error)
-    } finally {
-      this.clearTokens()
-    }
-  }
-
-  // 토큰 갱신
-  async refreshAccessToken() {
-    const refreshToken = this.getRefreshToken()
-    if (!refreshToken) {
-      throw new Error('Refresh token not found')
-    }
-
-    const response = await this.post('/auth/refresh', { refreshToken })
-
-    if (response.data?.accessToken) {
-      this.setTokens(
-          response.data.accessToken,
-          response.data.refreshToken || refreshToken,
-          true
-      )
-      return response.data.accessToken
-    }
-
-    throw new Error('Invalid refresh response')
-  }
-
-  // 현재 사용자 정보 조회
-  async getCurrentUser() {
-    return this.get('/v1/users/me')
-  }
-
-  // ===== 채팅방 관련 API =====
-
-  // 채팅방 목록 조회
-  async getChatRooms(searchCondition = {}) {
-    return this.get('/v1/chat/rooms', searchCondition)
-  }
-
-  // 채팅방 상세 조회
+  // 채팅방 정보 조회
   async getRoomDetail(roomId) {
-    return this.get(`/v1/chat/rooms/${roomId}`)
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}`
+    this.logRequest('GET', url)
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders()
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('GET', url, apiResponse)
+
+      // ApiResponse<ChatRoomResponse.Detail> 구조
+      return {
+        success: apiResponse.success || true,
+        data: apiResponse.data, // ChatRoomResponse.Detail
+        message: apiResponse.message || 'success'
+      }
+
+    } catch (error) {
+      this.logResponse('GET', url, null, error)
+      throw error
+    }
   }
 
   // 채팅방 생성
   async createRoom(roomData) {
-    return this.post('/v1/chat/rooms', roomData)
-  }
+    const url = `${this.baseURL}/api/chat/rooms`
+    this.logRequest('POST', url, roomData)
 
-  // 채팅방 수정
-  async updateRoom(roomId, updateData) {
-    return this.put(`/v1/chat/rooms/${roomId}`, updateData)
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(roomData)
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('POST', url, apiResponse)
+      return apiResponse
+
+    } catch (error) {
+      this.logResponse('POST', url, null, error)
+      throw error
+    }
   }
 
   // 채팅방 입장
   async joinRoom(roomId) {
-    return this.post(`/v1/chat/rooms/${roomId}/join`)
-  }
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}/join`
+    const requestData = {
+      deviceId: this.getDeviceId(),
+      userId: this.getCurrentUserId()
+    }
 
-  // 채팅방 퇴장
-  async leaveRoom(roomId) {
-    return this.post(`/v1/chat/rooms/${roomId}/leave`)
-  }
+    this.logRequest('POST', url, requestData)
 
-  // 채팅방 삭제
-  async deleteRoom(roomId) {
-    return this.delete(`/v1/chat/rooms/${roomId}`)
-  }
-
-  // ===== 메시지 관련 API =====
-
-  // 메시지 목록 조회
-  async getMessages(roomId, params = {}) {
-    return this.get(`/api/chat/${roomId}/messages`, params)
-  }
-
-  // 텍스트 메시지 전송
-  async sendMessage(roomId, messageData) {
-    return this.post(`/api/chat/rooms/${roomId}/messages`, messageData)
-  }
-
-  // 파일 메시지 전송
-  async sendFileMessage(roomId, file, messageType = 'FILE', metadata = {}, onProgress = null) {
     try {
-      // 1. 파일 업로드
-      const uploadResponse = await this.uploadFile(
-          '/api/files/upload',
-          file,
-          onProgress,
-          {
-            roomId: roomId,
-            messageType: messageType
-          }
-      )
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(requestData)
+      })
 
-      // 2. 메시지 전송
-      const messageData = {
-        content: uploadResponse.data.fileUrl,
-        type: messageType,
-        metadata: {
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-          fileId: uploadResponse.data.fileId,
-          ...metadata
-        }
-      }
-
-      return this.sendMessage(roomId, messageData)
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('POST', url, apiResponse)
+      return apiResponse
 
     } catch (error) {
-      console.error('파일 메시지 전송 실패:', error)
+      this.logResponse('POST', url, null, error)
+      throw error
+    }
+  }
+
+  // 채팅방 나가기
+  async leaveRoom(roomId) {
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}/leave`
+    const requestData = {
+      deviceId: this.getDeviceId(),
+      userId: this.getCurrentUserId()
+    }
+
+    this.logRequest('POST', url, requestData)
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(requestData)
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('POST', url, apiResponse)
+      return apiResponse
+
+    } catch (error) {
+      this.logResponse('POST', url, null, error)
+      throw error
+    }
+  }
+
+  // 온라인 사용자 조회
+  async getOnlineUsers(roomId) {
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}/online-users`
+    this.logRequest('GET', url)
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders()
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('GET', url, apiResponse)
+      return apiResponse
+
+    } catch (error) {
+      this.logResponse('GET', url, null, error)
+      throw error
+    }
+  }
+
+  // === 메시지 관련 API ===
+
+  // 메시지 목록 조회 (페이징 및 커서 기반)
+  async getMessages(roomId, params = {}) {
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages`
+    this.logRequest('GET', url, params)
+
+    try {
+      // Pageable 파라미터
+      const queryParams = new URLSearchParams({
+        page: params.page || 0,
+        size: params.size || 50,
+        sort: params.sort || 'createdAt,desc'
+      })
+
+      // 커서 페이징 파라미터가 있는 경우 추가
+      if (params.lastMessageId) {
+        queryParams.append('lastMessageId', params.lastMessageId)
+      }
+
+      // 사용자 ID 추가 (백엔드에서 필요한 경우)
+      const userId = this.getCurrentUserId()
+      if (userId) {
+        queryParams.append('userId', userId)
+      }
+
+      const requestUrl = `${url}?${queryParams}`
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: this.getHeaders()
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('GET', url, apiResponse)
+
+      // ApiResponse<Page<ChatDetail>> 구조
+      return {
+        success: apiResponse.success || true,
+        data: apiResponse.data, // Page<ChatDetail> - Spring Data의 Page 객체
+        message: apiResponse.message || 'success'
+      }
+
+    } catch (error) {
+      this.logResponse('GET', url, null, error)
+      throw error
+    }
+  }
+
+  // 메시지 전송
+  async sendMessage(roomId, messageData) {
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages`
+    const requestData = {
+      ...messageData,
+      senderId: this.getCurrentUserId(),
+      deviceId: this.getDeviceId(),
+      timestamp: new Date().toISOString()
+    }
+
+    this.logRequest('POST', url, requestData)
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(requestData)
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('POST', url, apiResponse)
+      return apiResponse
+
+    } catch (error) {
+      this.logResponse('POST', url, null, error)
       throw error
     }
   }
 
   // 메시지 수정
-  async updateMessage(roomId, messageId, content) {
-    return this.put(`/api/chat/rooms/${roomId}/messages/${messageId}`, { content })
+  async updateMessage(roomId, messageId, messageData) {
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages/${messageId}`
+    this.logRequest('PUT', url, messageData)
+
+    try {
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(messageData)
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('PUT', url, apiResponse)
+      return apiResponse
+
+    } catch (error) {
+      this.logResponse('PUT', url, null, error)
+      throw error
+    }
   }
 
   // 메시지 삭제
   async deleteMessage(roomId, messageId) {
-    return this.delete(`/api/chat/rooms/${roomId}/messages/${messageId}`)
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages/${messageId}`
+    this.logRequest('DELETE', url)
+
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: this.getHeaders()
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('DELETE', url, apiResponse)
+      return apiResponse
+
+    } catch (error) {
+      this.logResponse('DELETE', url, null, error)
+      throw error
+    }
   }
 
   // 메시지 읽음 처리
   async markAsRead(roomId, messageId) {
-    return this.post(`/api/chat/rooms/${roomId}/messages/${messageId}/read`)
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages/${messageId}/read`
+    const requestData = {
+      userId: this.getCurrentUserId(),
+      deviceId: this.getDeviceId(),
+      readAt: new Date().toISOString()
+    }
+
+    this.logRequest('POST', url, requestData)
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(requestData)
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('POST', url, apiResponse)
+      return apiResponse
+
+    } catch (error) {
+      this.logResponse('POST', url, null, error)
+      throw error
+    }
   }
+
+  // === 파일 업로드 관련 API ===
+
+  // 파일 업로드
+  async uploadFile(file, roomId = null) {
+    const url = `${this.baseURL}/api/chat/files/upload`
+    this.logRequest('POST', url, { fileName: file.name, fileSize: file.size, roomId })
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      if (roomId) formData.append('roomId', roomId)
+      formData.append('deviceId', this.getDeviceId())
+
+      // FormData 사용 시 Content-Type 헤더 제거 (브라우저가 자동 설정)
+      const headers = { ...this.getHeaders() }
+      delete headers['Content-Type']
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: formData
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('POST', url, apiResponse)
+      return apiResponse
+
+    } catch (error) {
+      this.logResponse('POST', url, null, error)
+      throw error
+    }
+  }
+
+  // === 검색 관련 API ===
 
   // 메시지 검색
   async searchMessages(roomId, query, params = {}) {
-    return this.get(`/api/chat/rooms/${roomId}/messages/search`, {
-      query,
-      ...params
-    })
-  }
+    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages/search`
+    const searchParams = { query, ...params }
+    this.logRequest('GET', url, searchParams)
 
-  // ===== 참여자 관련 API =====
-
-  // 채팅방 참여자 목록 조회
-  async getRoomParticipants(roomId) {
-    return this.get(`/v1/chat/rooms/${roomId}/participants`)
-  }
-
-  // 채팅방에 사용자 초대
-  async inviteUsers(roomId, userIds) {
-    return this.post(`/v1/chat/rooms/${roomId}/invite`, { userIds })
-  }
-
-  // 채팅방에서 사용자 제거
-  async removeUser(roomId, userId) {
-    return this.delete(`/v1/chat/rooms/${roomId}/participants/${userId}`)
-  }
-
-  // 채팅방 관리자 권한 부여
-  async grantAdminRole(roomId, userId) {
-    return this.post(`/v1/chat/rooms/${roomId}/participants/${userId}/admin`)
-  }
-
-  // 채팅방 관리자 권한 해제
-  async revokeAdminRole(roomId, userId) {
-    return this.delete(`/v1/chat/rooms/${roomId}/participants/${userId}/admin`)
-  }
-
-  // ===== 사용자 관련 API =====
-
-  // 사용자 검색
-  async searchUsers(query, params = {}) {
-    return this.get('/v1/users/search', { query, ...params })
-  }
-
-  // 친구 목록 조회
-  async getFriends() {
-    return this.get('/v1/users/friends')
-  }
-
-  // 친구 요청 전송
-  async sendFriendRequest(userId) {
-    return this.post(`/v1/users/${userId}/friend-request`)
-  }
-
-  // 친구 요청 수락
-  async acceptFriendRequest(requestId) {
-    return this.post(`/v1/users/friend-requests/${requestId}/accept`)
-  }
-
-  // 친구 요청 거절
-  async rejectFriendRequest(requestId) {
-    return this.post(`/v1/users/friend-requests/${requestId}/reject`)
-  }
-
-  // 사용자 프로필 조회
-  async getUserProfile(userId) {
-    return this.get(`/v1/users/${userId}/profile`)
-  }
-
-  // 내 프로필 수정
-  async updateMyProfile(profileData) {
-    return this.put('/v1/users/me/profile', profileData)
-  }
-
-  // ===== 알림 관련 API =====
-
-  // Push 알림 구독 등록
-  async subscribePushNotification(subscription) {
-    return this.post('/api/push/subscribe', {
-      subscription,
-      userId: await this.getCurrentUserId()
-    })
-  }
-
-  // Push 알림 구독 해제
-  async unsubscribePushNotification(subscription) {
-    return this.post('/api/push/unsubscribe', {
-      subscription,
-      userId: await this.getCurrentUserId()
-    })
-  }
-
-  // 알림 설정 조회
-  async getNotificationSettings() {
-    return this.get('/api/notifications/settings')
-  }
-
-  // 알림 설정 업데이트
-  async updateNotificationSettings(settings) {
-    return this.put('/api/notifications/settings', settings)
-  }
-
-  // 알림 목록 조회
-  async getNotifications(params = {}) {
-    return this.get('/api/notifications', params)
-  }
-
-  // 알림 읽음 처리
-  async markNotificationAsRead(notificationId) {
-    return this.post(`/api/notifications/${notificationId}/read`)
-  }
-
-  // ===== 파일 관련 API =====
-
-  // 파일 다운로드 URL 생성
-  getFileDownloadUrl(fileId) {
-    const token = this.getAccessToken()
-    const params = token ? `?token=${encodeURIComponent(token)}` : ''
-    return `${this.baseURL}/api/files/${fileId}/download${params}`
-  }
-
-  // 이미지 썸네일 URL 생성
-  getImageThumbnailUrl(fileId, size = 'medium') {
-    const token = this.getAccessToken()
-    const params = new URLSearchParams({ size })
-    if (token) params.append('token', token)
-    return `${this.baseURL}/api/files/${fileId}/thumbnail?${params.toString()}`
-  }
-
-  // 파일 정보 조회
-  async getFileInfo(fileId) {
-    return this.get(`/api/files/${fileId}`)
-  }
-
-  // 파일 삭제
-  async deleteFile(fileId) {
-    return this.delete(`/api/files/${fileId}`)
-  }
-
-  // ===== 유틸리티 메서드 =====
-
-  // 연결 상태 확인
-  async healthCheck() {
     try {
-      await this.get('/health')
+      const queryParams = new URLSearchParams({
+        q: query,
+        page: params.page || 0,
+        size: params.size || 20,
+        sort: params.sort || 'createdAt,desc'
+      })
+
+      const requestUrl = `${url}?${queryParams}`
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: this.getHeaders()
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('GET', url, apiResponse)
+      return apiResponse
+
+    } catch (error) {
+      this.logResponse('GET', url, null, error)
+      throw error
+    }
+  }
+
+  // === 유틸리티 메서드 ===
+
+  // 연결 테스트
+  async testConnection() {
+    const url = `${this.baseURL}/api/health`
+    this.logRequest('GET', url)
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders()
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('GET', url, apiResponse)
       return true
-    } catch {
+
+    } catch (error) {
+      this.logResponse('GET', url, null, error)
       return false
     }
   }
 
-  // 현재 사용자 ID 가져오기
-  async getCurrentUserId() {
+  // 인증 상태 확인
+  isAuthenticated() {
+    const token = this.getAuthToken()
+    if (!token) return false
+
     try {
-      const user = await this.getCurrentUser()
-      return user.data?.userId
-    } catch {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const currentTime = Date.now() / 1000
+      return payload.exp > currentTime
+    } catch (error) {
+      return false
+    }
+  }
+
+  // 토큰 만료 시간 확인
+  getTokenExpiryTime() {
+    const token = this.getAuthToken()
+    if (!token) return null
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return new Date(payload.exp * 1000)
+    } catch (error) {
       return null
     }
   }
-
-  // API 응답 래퍼 (성공/실패 처리)
-  async safeRequest(requestFn, fallbackValue = null) {
-    try {
-      return await requestFn()
-    } catch (error) {
-      console.warn('API 요청 실패:', error.message)
-      return fallbackValue
-    }
-  }
-
-  // 배치 요청 처리
-  async batchRequest(requests) {
-    const results = await Promise.allSettled(requests)
-
-    return results.map((result, index) => {
-      if (result.status === 'fulfilled') {
-        return { success: true, data: result.value, index }
-      } else {
-        return { success: false, error: result.reason, index }
-      }
-    })
-  }
-
-  // WebSocket 토큰 가져오기 (WebSocket 인증용)
-  async getWebSocketToken() {
-    try {
-      const response = await this.post('/auth/ws-token')
-      return response.data?.token
-    } catch (error) {
-      console.error('WebSocket 토큰 생성 실패:', error)
-      return null
-    }
-  }
-
-  // 디버깅용 로그
-  enableDebugMode() {
-    this._debugMode = true
-    console.log('Chat API Debug Mode 활성화')
-  }
-
-  disableDebugMode() {
-    this._debugMode = false
-  }
-
-  _debugLog(...args) {
-    if (this._debugMode) {
-      console.log('[ChatAPI]', ...args)
-    }
-  }
 }
 
-// 싱글톤 인스턴스 생성 및 내보내기
-export const chatApi = new ChatApiService()
+// 싱글톤 인스턴스 생성
+export const chatApi = new ChatApi()
 
-// 개별 API 함수들도 내보내기 (편의성)
-export const {
-  refreshAccessToken,
-  getCurrentUser,
-
-  // 채팅방
-  getChatRooms,
-  getRoomDetail,
-  createRoom,
-  updateRoom,
-  joinRoom,
-  leaveRoom,
-  deleteRoom,
-
-  // 메시지
-  getMessages,
-  sendMessage,
-  sendFileMessage,
-  updateMessage,
-  deleteMessage,
-  markAsRead,
-  searchMessages,
-
-  // 참여자
-  getRoomParticipants,
-  inviteUsers,
-  removeUser,
-  grantAdminRole,
-  revokeAdminRole,
-
-  // 사용자
-  searchUsers,
-  getFriends,
-  sendFriendRequest,
-  acceptFriendRequest,
-  rejectFriendRequest,
-  getUserProfile,
-  updateMyProfile,
-
-  // 알림
-  subscribePushNotification,
-  unsubscribePushNotification,
-  getNotificationSettings,
-  updateNotificationSettings,
-  getNotifications,
-  markNotificationAsRead,
-
-  // 파일
-  getFileDownloadUrl,
-  getImageThumbnailUrl,
-  getFileInfo,
-  deleteFile,
-
-  // 유틸리티
-  healthCheck,
-  getCurrentUserId,
-  safeRequest,
-  batchRequest,
-  getWebSocketToken
-} = chatApi
-
-// API 상태 관리
-export class ApiStatus {
-  static isOnline = navigator.onLine
-  static lastHealthCheck = null
-  static healthCheckInterval = null
-
-  static startHealthCheck(interval = 60000) {
-    this.stopHealthCheck()
-
-    this.healthCheckInterval = setInterval(async () => {
-      try {
-        const isHealthy = await chatApi.healthCheck()
-        this.lastHealthCheck = Date.now()
-
-        if (!isHealthy && this.isOnline) {
-          window.dispatchEvent(new CustomEvent('api:unhealthy'))
-        }
-      } catch (error) {
-        console.warn('Health check failed:', error)
-      }
-    }, interval)
-  }
-
-  static stopHealthCheck() {
-    if (this.healthCheckInterval) {
-      clearInterval(this.healthCheckInterval)
-      this.healthCheckInterval = null
-    }
-  }
-
-  static getStatus() {
-    return {
-      isOnline: this.isOnline,
-      lastHealthCheck: this.lastHealthCheck,
-      isHealthy: this.lastHealthCheck && (Date.now() - this.lastHealthCheck) < 120000
-    }
-  }
-}
-
-// 네트워크 상태 감지
-window.addEventListener('online', () => {
-  ApiStatus.isOnline = true
-  window.dispatchEvent(new CustomEvent('api:online'))
-})
-
-window.addEventListener('offline', () => {
-  ApiStatus.isOnline = false
-  window.dispatchEvent(new CustomEvent('api:offline'))
-})
-
-// API 에러 타입 정의
-export class ApiError extends Error {
-  constructor(message, status, response, data) {
-    super(message)
-    this.name = 'ApiError'
-    this.status = status
-    this.response = response
-    this.data = data
-  }
-}
-
-// 특수 에러 타입들
-export class NetworkError extends ApiError {
-  constructor(message = '네트워크 연결을 확인해주세요') {
-    super(message, 0, null, null)
-    this.name = 'NetworkError'
-  }
-}
-
-export class TimeoutError extends ApiError {
-  constructor(message = '요청 시간이 초과되었습니다') {
-    super(message, 408, null, null)
-    this.name = 'TimeoutError'
-  }
-}
-
-export class AuthError extends ApiError {
-  constructor(message = '인증이 필요합니다') {
-    super(message, 401, null, null)
-    this.name = 'AuthError'
-  }
-}
-
-export class ForbiddenError extends ApiError {
-  constructor(message = '권한이 없습니다') {
-    super(message, 403, null, null)
-    this.name = 'ForbiddenError'
-  }
-}
-
-export class NotFoundError extends ApiError {
-  constructor(message = '요청한 리소스를 찾을 수 없습니다') {
-    super(message, 404, null, null)
-    this.name = 'NotFoundError'
-  }
-}
-
-export class ServerError extends ApiError {
-  constructor(message = '서버 오류가 발생했습니다') {
-    super(message, 500, null, null)
-    this.name = 'ServerError'
-  }
-}
-
-
+// 기본 내보내기
 export default chatApi
+
+// 추가 유틸리티 함수들
+export const chatApiUtils = {
+  // 메시지 타입 검증
+  isValidMessageType(type) {
+    const validTypes = ['TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'FILE', 'LOCATION', 'SYSTEM']
+    return validTypes.includes(type?.toUpperCase())
+  },
+
+  // 채팅방 타입 검증
+  isValidRoomType(type) {
+    const validTypes = ['ONE_TO_ONE', 'GROUP', 'CHANNEL']
+    return validTypes.includes(type?.toUpperCase())
+  },
+
+  // 파일 크기 검증 (10MB 제한)
+  isValidFileSize(file, maxSizeMB = 10) {
+    const maxSizeBytes = maxSizeMB * 1024 * 1024
+    return file.size <= maxSizeBytes
+  },
+
+  // 지원되는 파일 타입 검증
+  isValidFileType(file) {
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'video/mp4', 'video/webm',
+      'audio/mp3', 'audio/wav', 'audio/ogg',
+      'application/pdf', 'text/plain',
+      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ]
+    return allowedTypes.includes(file.type)
+  },
+
+  // 메시지 내용 검증
+  isValidMessageContent(content, type = 'TEXT') {
+    if (type === 'TEXT') {
+      return content && content.trim().length > 0 && content.length <= 1000
+    }
+    return true // 다른 타입은 별도 검증
+  },
+
+  // 에러 메시지 포맷팅
+  formatErrorMessage(error) {
+    if (error.status === 401) {
+      return '인증이 필요합니다. 다시 로그인해주세요.'
+    } else if (error.status === 403) {
+      return '권한이 없습니다.'
+    } else if (error.status === 404) {
+      return '요청한 리소스를 찾을 수 없습니다.'
+    } else if (error.status === 429) {
+      return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
+    } else if (error.status >= 500) {
+      return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+    } else {
+      return error.message || '알 수 없는 오류가 발생했습니다.'
+    }
+  }
+}
