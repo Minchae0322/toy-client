@@ -60,7 +60,7 @@
       <!-- 초기 로딩 -->
       <div v-if="loading && messages.length === 0" class="loading-state">
         <div class="spinner"></div>
-        <p>메시지를 불러오는 중...</p>
+        <p>채팅방을 준비하는 중...</p>
       </div>
 
       <!-- 메시지 목록 -->
@@ -184,15 +184,74 @@ const currentPage = ref(0)
 const hasMoreMessages = ref(true)
 const pageSize = 50
 
-// WebSocket 연결 초기화
-const initializeWebSocket = async () => {
+// 채팅방 초기화 (채팅방 구독만 처리, Redis는 백엔드에서 자동 관리)
+const initializeChatRoom = async () => {
   try {
+    loading.value = true
+    console.log('🏠 채팅방 초기화 시작:', props.roomId)
+
+    // 1. WebSocket이 연결되어 있는지 확인 (이미 연결된 상태여야 함)
     if (!websocketService.isConnected()) {
-      await websocketService.connect()
+      throw new Error('WebSocket이 연결되지 않았습니다')
     }
-    console.log('✅ WebSocket 연결 완료')
+
+    // 2. 채팅방 구독 (백엔드에서 Redis 온라인 상태 자동 업데이트)
+    await subscribeToRoom()
+
+    // 3. 병렬로 채팅방 정보와 메시지 목록 가져오기
+    const [roomData, messagesData] = await Promise.all([
+      fetchRoomInfo(),
+      fetchMessages()
+    ])
+
+    roomInfo.value = roomData
+    messages.value = messagesData
+
+    console.log('✅ 채팅방 초기화 완료')
+
   } catch (error) {
-    console.error('❌ WebSocket 연결 실패:', error)
+    console.error('❌ 채팅방 초기화 실패:', error)
+    alert('채팅방 접속에 실패했습니다.')
+    emit('back-to-list')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 채팅방 구독 (백엔드에서 Redis 온라인 상태 자동 관리)
+const subscribeToRoom = async () => {
+  try {
+    // WebSocket 핸들러가 아직 설정되지 않았다면 설정
+    if (!websocketService.hasHandlers()) {
+      setupWebSocketHandlers()
+    }
+
+    // 채팅방 구독 (백엔드에서 Redis 온라인 상태 자동 업데이트)
+    await websocketService.subscribeToRoom(props.roomId, {
+      onSubscribed: () => {
+        console.log('📡 채팅방 구독 완료:', props.roomId)
+        console.log('🟢 백엔드에서 Redis 온라인 상태 자동 업데이트')
+      },
+      onError: (error) => {
+        console.error('❌ 채팅방 구독 실패:', error)
+        throw error
+      }
+    })
+
+  } catch (error) {
+    console.error('채팅방 구독 실패:', error)
+    throw error
+  }
+}
+
+// 채팅방 정보 조회
+const fetchRoomInfo = async () => {
+  try {
+    const response = await chatApi.getRoomDetail(props.roomId)
+    return response.data
+  } catch (error) {
+    console.error('채팅방 정보 조회 실패:', error)
+    throw error
   }
 }
 
@@ -225,9 +284,9 @@ const fetchMessages = async (page = 0, append = false) => {
       }
     } else {
       // 새로운 메시지로 교체
-      messages.value = newMessages
       await nextTick()
       scrollToBottom()
+      return newMessages
     }
 
     // 더 불러올 메시지가 있는지 확인
@@ -236,19 +295,9 @@ const fetchMessages = async (page = 0, append = false) => {
 
   } catch (error) {
     console.error('메시지 조회 실패:', error)
+    throw error
   } finally {
-    loading.value = false
-    loadingMore.value = false
-  }
-}
-
-// 채팅방 정보 조회
-const fetchRoomInfo = async () => {
-  try {
-    const response = await chatApi.getRoomDetail(props.roomId)
-    roomInfo.value = response.data
-  } catch (error) {
-    console.error('채팅방 정보 조회 실패:', error)
+    if (page > 0) loadingMore.value = false
   }
 }
 
@@ -524,18 +573,25 @@ const toggleDeviceInfo = () => {
 const reconnectWebSocket = async () => {
   showRoomMenu.value = false
   try {
-    await websocketService.disconnect()
-    await initializeWebSocket()
+    // WebSocket 재연결은 전역에서 처리
+    if (!websocketService.isConnected()) {
+      await websocketService.reconnect()
+    }
+
     // 채팅방 재구독
-    websocketService.subscribeToRoom(props.roomId, () => {
-    }) // 핸들러는 이미 등록됨
+    await subscribeToRoom()
   } catch (error) {
     console.error('재연결 실패:', error)
+    alert('연결 재시도에 실패했습니다.')
   }
 }
 
 const leaveRoom = async () => {
   if (confirm('정말 채팅방을 나가시겠습니까?')) {
+    // 채팅방 구독 해제 (백엔드에서 Redis 오프라인 상태 자동 처리)
+    websocketService.unsubscribeFromRoom(props.roomId)
+    console.log('🔴 채팅방 구독 해제 - 백엔드에서 Redis 오프라인 상태 자동 처리')
+
     emit('back-to-list')
   }
   showRoomMenu.value = false
@@ -543,35 +599,20 @@ const leaveRoom = async () => {
 
 // 라이프사이클
 onMounted(async () => {
-  try {
-    // WebSocket 연결 및 핸들러 설정
-    await initializeWebSocket()
-    setupWebSocketHandlers()
-
-    // 채팅방 데이터 로드
-    await Promise.all([
-      fetchRoomInfo(),
-      fetchMessages()
-    ])
-
-    // WebSocket 채팅방 구독
-    websocketService.subscribeToRoom(props.roomId, () => {
-      // 메시지 핸들러는 이미 등록되어 있음
-    })
-
-  } catch (error) {
-    console.error('채팅방 초기화 실패:', error)
-  }
+  await initializeChatRoom()
 })
 
 onUnmounted(() => {
+  console.log('🔌 채팅방 컴포넌트 해제')
+
   // 타이핑 중지
   if (typingTimer.value) {
     handleTypingStop()
   }
 
-  // WebSocket 구독 해제
+  // 채팅방 구독 해제 (백엔드에서 Redis 오프라인 상태 자동 처리)
   websocketService.unsubscribeFromRoom(props.roomId)
+  console.log('🔴 채팅방 구독 해제 - 백엔드에서 Redis 오프라인 상태 자동 처리')
 
   // 메시지 핸들러 정리
   websocketService.offMessage('chat-message', handleNewMessage)
@@ -583,14 +624,17 @@ onUnmounted(() => {
 // roomId 변경 감지
 watch(() => props.roomId, async (newRoomId, oldRoomId) => {
   if (newRoomId && newRoomId !== oldRoomId) {
+    console.log('🔄 채팅방 변경:', oldRoomId, '=>', newRoomId)
+
     // 타이핑 중지
     if (typingTimer.value) {
       handleTypingStop()
     }
 
-    // 이전 채팅방 구독 해제
+    // 이전 채팅방 구독 해제 (백엔드에서 Redis 상태 자동 처리)
     if (oldRoomId) {
       websocketService.unsubscribeFromRoom(oldRoomId)
+      console.log('🔴 이전 채팅방 구독 해제:', oldRoomId)
     }
 
     // 상태 초기화
@@ -600,20 +644,14 @@ watch(() => props.roomId, async (newRoomId, oldRoomId) => {
     currentPage.value = 0
     hasMoreMessages.value = true
 
-    // 새 채팅방 데이터 로드
-    await Promise.all([
-      fetchRoomInfo(),
-      fetchMessages()
-    ])
-
-    // 새 채팅방 구독
-    websocketService.subscribeToRoom(newRoomId, () => {
-    })
+    // 새 채팅방 초기화
+    await initializeChatRoom()
   }
 })
 </script>
 
 <style scoped>
+/* 기존 스타일은 그대로 유지 */
 .chat-detail-container {
   display: flex;
   flex-direction: column;
@@ -695,6 +733,11 @@ watch(() => props.roomId, async (newRoomId, oldRoomId) => {
 .connection-status.disconnected {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
+}
+
+/* 나머지 스타일은 동일하므로 생략... */
+.loading-state p {
+  margin-top: 16px;
 }
 
 /* 디바이스 정보 배너 */
