@@ -18,6 +18,8 @@
       <p>필터된 채팅방: {{ filteredRooms.length }}개</p>
       <p>현재 탭: {{ activeTab }}</p>
       <p>검색어: "{{ searchQuery }}"</p>
+      <p>WebSocket 연결: {{ wsConnected ? '✅' : '❌' }}</p>
+      <p>현재 구독한 채팅방: {{ subscribedRooms.join(', ') || '없음' }}</p>
     </div>
 
     <div class="chat-list">
@@ -45,19 +47,25 @@
         <div class="empty-message">새로운 채팅을 시작해보세요!</div>
       </div>
     </div>
+
+    <!-- WebSocket 연결 상태 표시 -->
+    <div v-if="showConnectionStatus" class="connection-status" :class="wsConnected ? 'connected' : 'disconnected'">
+      {{ wsConnected ? '🟢 연결됨' : '🔴 연결 끊김' }}
+    </div>
   </div>
 </template>
 
 <script setup>
-import {ref, computed, onMounted, watch} from 'vue'
+import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import ChatRoomHeader from '@/components/chat/ChatRoomHeader.vue'
 import SearchBar from '@/components/chat/SearchBar.vue'
 import ChatRoomTabs from '@/components/chat/ChatRoomTabs.vue'
 import ChatRoomCard from '@/components/chat/ChatRoomCard.vue'
 import {chatApi} from '@/services/chatApi.js'
+import {webSocketService} from '@/services/webSocketService.js'
 
 // 이벤트 정의
-const emit = defineEmits(['room-selected'])
+const emit = defineEmits(['room-selected', 'message-received'])
 
 // 반응형 데이터
 const activeTab = ref('all')
@@ -65,6 +73,11 @@ const showSearch = ref(false)
 const searchQuery = ref('')
 const loading = ref(false)
 const isDev = ref(import.meta.env.DEV)
+const showConnectionStatus = ref(true)
+
+// WebSocket 관련 상태
+const wsConnected = ref(false)
+const subscribedRooms = ref([])
 
 // 채팅방 목록 데이터
 const chatRooms = ref([])
@@ -109,9 +122,82 @@ const updateTab = (tab) => {
 }
 
 // 채팅방 선택 핸들러
-const handleRoomSelect = (roomId) => {
+const handleRoomSelect = async (roomId) => {
   console.log('📋 ChatRoomView - 채팅방 선택 이벤트 수신:', roomId)
-  emit('room-selected', roomId)
+
+  try {
+    // 1. 기존 구독 해제 (다른 채팅방으로 이동하는 경우)
+    if (subscribedRooms.value.length > 0) {
+      subscribedRooms.value.forEach(room => {
+        webSocketService.unsubscribeFromChatRoom(room)
+      })
+      subscribedRooms.value = []
+    }
+
+    // 2. WebSocket 연결 확인 및 연결
+    if (!wsConnected.value) {
+      console.log('🔌 WebSocket 연결 시도...')
+      await connectWebSocket()
+    }
+
+    // 3. 선택된 채팅방 구독
+    if (wsConnected.value) {
+      console.log(`📨 채팅방 구독 시작: ${roomId}`)
+      await webSocketService.subscribeToChatRoom(roomId, handleMessageReceived)
+      subscribedRooms.value.push(roomId)
+      console.log(`✅ 채팅방 구독 완료: ${roomId}`)
+    }
+
+    // 4. 부모 컴포넌트에 이벤트 전달
+    emit('room-selected', roomId)
+
+  } catch (error) {
+    console.error('❌ 채팅방 선택 중 오류 발생:', error)
+    // 사용자에게 오류 알림 (예: 토스트 메시지)
+  }
+}
+
+// WebSocket 메시지 수신 핸들러
+const handleMessageReceived = (messageData) => {
+  console.log('📨 새 메시지 수신:', messageData)
+
+  // 채팅방 목록의 마지막 메시지 업데이트
+  const roomIndex = chatRooms.value.findIndex(room => room.id === messageData.roomId)
+  if (roomIndex !== -1) {
+    chatRooms.value[roomIndex] = {
+      ...chatRooms.value[roomIndex],
+      lastMessage: messageData.content || messageData.message,
+      lastMessageAt: Date.now(),
+      lastMessageSender: messageData.senderName,
+      lastMessageType: messageData.type?.toLowerCase() || 'text',
+      unreadCount: chatRooms.value[roomIndex].unreadCount + 1
+    }
+  }
+
+  // 부모 컴포넌트에 메시지 전달
+  emit('message-received', messageData)
+}
+
+// WebSocket 연결
+const connectWebSocket = async () => {
+  try {
+    console.log('🔌 WebSocket 연결 시작...')
+    await webSocketService.connect()
+    wsConnected.value = true
+    console.log('✅ WebSocket 연결 완료')
+  } catch (error) {
+    console.error('❌ WebSocket 연결 실패:', error)
+    wsConnected.value = false
+    throw error
+  }
+}
+
+// WebSocket 연결 해제
+const disconnectWebSocket = () => {
+  console.log('🔌 WebSocket 연결 해제...')
+  webSocketService.disconnect()
+  wsConnected.value = false
+  subscribedRooms.value = []
 }
 
 // 유틸리티 함수들
@@ -262,9 +348,29 @@ watch(searchQuery, (newQuery) => {
 })
 
 // 컴포넌트 마운트 시 데이터 로드
-onMounted(() => {
+onMounted(async () => {
   console.log('🏠 ChatRoomView 컴포넌트 마운트됨')
-  loadChatRooms()
+
+  // 1. 채팅방 목록 로드
+  await loadChatRooms()
+
+  // 2. WebSocket 연결 시도 (토큰이 있는 경우만)
+  const token = getAuthToken()
+  if (token) {
+    try {
+      await connectWebSocket()
+    } catch (error) {
+      console.warn('⚠️ WebSocket 초기 연결 실패 (나중에 재시도)', error)
+    }
+  } else {
+    console.warn('⚠️ 인증 토큰이 없어 WebSocket 연결을 건너뜁니다')
+  }
+})
+
+// 컴포넌트 언마운트 시 정리
+onUnmounted(() => {
+  console.log('🏠 ChatRoomView 컴포넌트 언마운트됨')
+  disconnectWebSocket()
 })
 </script>
 
@@ -275,6 +381,7 @@ onMounted(() => {
   min-height: 100vh;
   background: white;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .debug-info {
@@ -360,6 +467,30 @@ onMounted(() => {
   font-size: 14px;
 }
 
+.connection-status {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.connection-status.connected {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.connection-status.disconnected {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
 /* 트랜지션 */
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -376,6 +507,12 @@ onMounted(() => {
 
   .debug-info {
     margin: 5px;
+    font-size: 11px;
+  }
+
+  .connection-status {
+    bottom: 10px;
+    right: 10px;
     font-size: 11px;
   }
 }
