@@ -13,7 +13,7 @@ class WebSocketService {
 
     // 연결 상태 관리
     this.connectionState = reactive({
-      status: 'disconnected', // disconnected, connecting, connected, error
+      status: 'disconnected', // disconnected, connecting, connected, error, auth-required
       error: null,
       reconnectAttempts: 0,
       maxReconnectAttempts: 5
@@ -195,6 +195,112 @@ class WebSocketService {
   }
 
   /**
+   * JWT 토큰 만료 확인
+   */
+  isTokenExpired(token) {
+    if (!token) return true
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const currentTime = Date.now() / 1000
+      // 30초 여유를 두고 만료 체크 (토큰 갱신을 위해)
+      return payload.exp < (currentTime + 30)
+    } catch (error) {
+      console.error('토큰 파싱 실패:', error)
+      return true
+    }
+  }
+
+  /**
+   * 토큰 갱신 시도
+   */
+  async refreshToken() {
+    try {
+      const refreshTokenValue = localStorage.getItem('refresh_token')
+      if (!refreshTokenValue) {
+        throw new Error('리프레시 토큰이 없습니다')
+      }
+
+      console.log('🔄 토큰 갱신 시도 중...')
+
+      // authUtils 사용하여 토큰 갱신 (있다면)
+      try {
+        const authUtils = await import('@/utils/auth.js')
+        if (authUtils.refreshToken) {
+          const newToken = await authUtils.refreshToken()
+          console.log('✅ authUtils로 토큰 갱신 성공')
+          return newToken
+        }
+      } catch (importError) {
+        console.log('authUtils 없음, 직접 API 호출로 진행')
+      }
+
+      // 직접 토큰 갱신 API 호출
+      const AUTH_BASE_URL = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8081'
+
+      const response = await fetch(`${AUTH_BASE_URL}/api/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          refreshToken: refreshTokenValue
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`토큰 갱신 실패: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const { accessToken, refreshToken: newRefreshToken } = data
+
+      // 새 토큰들 저장
+      localStorage.setItem('access_token', accessToken)
+      if (newRefreshToken) {
+        localStorage.setItem('refresh_token', newRefreshToken)
+      }
+
+      console.log('✅ 토큰 갱신 성공')
+      return accessToken
+    } catch (error) {
+      console.error('❌ 토큰 갱신 실패:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 인증 필요 상황 처리
+   */
+  handleAuthRequired(reason = '인증이 필요합니다') {
+    console.warn('🔐 인증 필요:', reason)
+
+    this.connectionState.status = 'auth-required'
+    this.connectionState.error = reason
+    this.connected.value = false
+    this.connecting.value = false
+
+    // 토큰 정리
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('user_profile')
+
+    // 인증 필요 이벤트 발생
+    window.dispatchEvent(new CustomEvent('auth-required', {
+      detail: { reason }
+    }))
+
+    // Storage 이벤트 발생 (App.vue에서 감지용)
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'access_token',
+      newValue: null
+    }))
+
+    // 연결 정리
+    this.cleanup()
+  }
+
+  /**
    * WebSocket 연결 초기화
    */
   async connect() {
@@ -203,25 +309,58 @@ class WebSocketService {
       return Promise.resolve()
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
         this.connecting.value = true
         this.connectionState.status = 'connecting'
         this.connectionState.error = null
 
-        const token = localStorage.getItem('access_token')
+        // 1. 토큰 존재 여부 확인
+        let token = localStorage.getItem('access_token')
         if (!token) {
-          throw new Error('인증 토큰이 없습니다')
+          console.warn('❌ JWT 토큰이 없습니다')
+          this.handleAuthRequired('로그인이 필요합니다')
+          reject(new Error('인증 토큰이 없습니다'))
+          return
         }
 
-        // STOMP 클라이언트 설정
+        // 2. 토큰 만료 확인 및 갱신
+        if (this.isTokenExpired(token)) {
+          console.warn('⚠️ JWT 토큰이 만료되었습니다. 갱신을 시도합니다.')
+
+          try {
+            await this.refreshToken()
+            token = localStorage.getItem('access_token') // 갱신된 토큰 재조회
+
+            if (!token || this.isTokenExpired(token)) {
+              throw new Error('토큰 갱신 후에도 유효하지 않습니다')
+            }
+          } catch (refreshError) {
+            console.error('❌ 토큰 갱신 실패:', refreshError)
+            this.handleAuthRequired('토큰 갱신에 실패했습니다. 다시 로그인해주세요.')
+            reject(refreshError)
+            return
+          }
+        }
+
+        // 3. 토큰 유효성 최종 확인
+        const userId = this.getUserIdFromToken()
+        if (!userId) {
+          console.error('❌ 토큰에서 사용자 ID를 추출할 수 없습니다')
+          this.handleAuthRequired('유효하지 않은 토큰입니다')
+          reject(new Error('유효하지 않은 토큰'))
+          return
+        }
+
+        console.log('✅ 토큰 검증 완료. 사용자 ID:', userId)
+
+        // 4. STOMP 클라이언트 설정
         this.client = new Client({
           // SockJS를 사용한 WebSocket 연결 - MSA 채팅 서비스
           webSocketFactory: () => {
             // 환경변수에서 URL 가져오기
-            const wsUrl = 'http://localhost:9000/api/ws'
+            const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:9000/api/ws'
 
-            // 절대 URL인 경우 그대로 사용, 상대 경로인 경우 그대로 사용
             console.log('🔌 WebSocket 연결 URL:', wsUrl)
             console.log('🔌 환경변수 VITE_WS_URL:', import.meta.env.VITE_WS_URL)
 
@@ -240,7 +379,8 @@ class WebSocketService {
             'X-Browser': `${this.deviceInfo.browser.name}/${this.deviceInfo.browser.version}`,
             'X-Client-Version': '1.0.0',
             'X-Timezone': this.deviceInfo.timezone,
-            'X-Language': this.deviceInfo.language
+            'X-Language': this.deviceInfo.language,
+            'X-User-ID': userId
           },
 
           // 하트비트 설정
@@ -251,7 +391,7 @@ class WebSocketService {
           reconnectDelay: this.reconnectDelay,
 
           // 디버그 설정 (개발환경에서만)
-          debug: process.env.NODE_ENV === 'development' ? (str) => {
+          debug: import.meta.env.DEV ? (str) => {
             console.log('🔌 STOMP:', str)
           } : undefined,
 
@@ -274,14 +414,26 @@ class WebSocketService {
             console.error('❌ STOMP 에러:', frame)
             this.connecting.value = false
             this.connected.value = false
-            this.connectionState.status = 'error'
-            this.connectionState.error = frame.headers['message'] || '연결 오류'
-            reject(new Error(frame.headers['message'] || 'STOMP 연결 실패'))
+
+            const errorMessage = frame.headers['message'] || 'STOMP 연결 실패'
+
+            // 인증 관련 에러 처리
+            if (errorMessage.includes('Unauthorized') || errorMessage.includes('401') ||
+                errorMessage.includes('Authentication') || errorMessage.includes('Token')) {
+              this.handleAuthRequired('인증에 실패했습니다. 다시 로그인해주세요.')
+            } else {
+              this.connectionState.status = 'error'
+              this.connectionState.error = errorMessage
+            }
+
+            reject(new Error(errorMessage))
           },
 
           // WebSocket 에러 콜백
           onWebSocketError: (error) => {
             console.error('❌ WebSocket 에러:', error)
+            this.connecting.value = false
+            this.connectionState.status = 'error'
             this.connectionState.error = '네트워크 연결 오류'
             reject(error)
           },
@@ -610,10 +762,31 @@ class WebSocketService {
       if (!token) return null
 
       const payload = JSON.parse(atob(token.split('.')[1]))
-      return payload.userId || payload.sub
+      return payload.userId || payload.sub || payload.id
     } catch (error) {
       console.error('❌ 토큰 파싱 실패:', error)
       return null
+    }
+  }
+
+  /**
+   * 연결 상태 확인 및 자동 재연결
+   */
+  async ensureConnection() {
+    if (this.connected.value) {
+      return true
+    }
+
+    if (this.connecting.value) {
+      return false
+    }
+
+    try {
+      await this.connect()
+      return true
+    } catch (error) {
+      console.error('❌ 자동 재연결 실패:', error)
+      return false
     }
   }
 
@@ -666,6 +839,14 @@ class WebSocketService {
   }
 
   /**
+   * 인증 상태 확인
+   */
+  isAuthenticated() {
+    const token = localStorage.getItem('access_token')
+    return token && !this.isTokenExpired(token)
+  }
+
+  /**
    * 연결 상태 반환 (reactive)
    */
   getConnectionState() {
@@ -700,6 +881,17 @@ export const websocketService = new WebSocketService()
 // 창 크기 변경 시 디바이스 타입 재감지
 window.addEventListener('resize', () => {
   websocketService.updateDeviceInfo()
+})
+
+// 토큰 변경 감지 (다른 탭에서 로그인/로그아웃 시)
+window.addEventListener('storage', (event) => {
+  if (event.key === 'access_token') {
+    if (!event.newValue && websocketService.connected.value) {
+      // 토큰이 삭제된 경우 연결 종료
+      console.log('🔐 토큰 삭제 감지, WebSocket 연결 종료')
+      websocketService.disconnect()
+    }
+  }
 })
 
 export default websocketService
