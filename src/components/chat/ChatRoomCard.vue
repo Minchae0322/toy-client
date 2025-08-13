@@ -1,39 +1,41 @@
 <template>
-  <div class="chat-room" @click="handleRoomClick">
+  <div class="chat-room-card" @click="$emit('select-room', room.id)">
     <div class="room-avatar">
-      <img v-if="room.type !== 'group'"
-           :src="room.avatar"
-           :alt="room.name"
-           class="avatar-img">
-      <div v-else class="group-avatar">👥</div>
-
-      <div v-if="room.type !== 'group'"
-           :class="['status-dot', getStatusClass(room.status)]">
+      <img
+          v-if="room.avatar"
+          :src="room.avatar"
+          :alt="room.name"
+          class="avatar-image"
+      />
+      <div v-else class="avatar-placeholder">
+        {{ getAvatarText(room.name) }}
       </div>
+      <div v-if="room.status === 'online'" class="online-indicator"></div>
     </div>
 
     <div class="room-content">
       <div class="room-header">
-        <div class="room-name">
-          {{ room.name }}
-          <span v-if="room.participantCount" class="participant-count">
-            {{ room.participantCount }}
-          </span>
-        </div>
+        <h3 class="room-name">{{ room.name }}</h3>
         <span class="room-time">{{ formatTime(room.lastMessageAt) }}</span>
       </div>
 
       <div class="room-footer">
         <div class="last-message">
-          <span v-if="room.lastMessageSender" class="message-sender">
+          <span v-if="room.lastMessageSender && room.type === 'group'" class="message-sender">
             {{ room.lastMessageSender }}:
           </span>
-          <span :class="{ 'message-type': room.lastMessageType !== 'text' }">
-            {{ getMessagePreview(room) }}
+          <span class="message-content">
+            {{ formatLastMessage(room) }}
           </span>
         </div>
-        <div v-if="room.unreadCount" class="unread-badge">
-          {{ room.unreadCount > 99 ? '99+' : room.unreadCount }}
+
+        <div class="room-meta">
+          <span v-if="room.unreadCount > 0" class="unread-badge">
+            {{ room.unreadCount > 99 ? '99+' : room.unreadCount }}
+          </span>
+          <span v-if="room.type === 'group'" class="participant-count">
+            {{ room.participantCount }}명
+          </span>
         </div>
       </div>
     </div>
@@ -41,105 +43,118 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps(['room'])
 const emit = defineEmits(['select-room'])
 
-const handleRoomClick = () => {
-  console.log('🖱️ ChatRoomCard 클릭됨:', props.room.id)
-  emit('select-room', props.room.id)
+const getAvatarText = (name) => {
+  return name.charAt(0).toUpperCase()
 }
 
 const formatTime = (timestamp) => {
+  if (!timestamp) return ''
+
   const now = new Date()
-  const time = new Date(timestamp)
-  const diff = now - time
+  const messageTime = new Date(timestamp)
+  const diffInMs = now - messageTime
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
 
-  if (diff < 60000) return '방금 전'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}분 전`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}시간 전`
-  return time.toLocaleDateString()
+  if (diffInMinutes < 1) {
+    return '방금'
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}분`
+  } else if (diffInHours < 24) {
+    return `${diffInHours}시간`
+  } else if (diffInDays < 7) {
+    return `${diffInDays}일`
+  } else {
+    return messageTime.toLocaleDateString('ko-KR', {
+      month: 'short',
+      day: 'numeric'
+    })
+  }
 }
 
-const getStatusClass = (status) => {
-  return `status-${status}`
-}
+const formatLastMessage = (room) => {
+  if (!room.lastMessage) return '메시지가 없습니다'
 
-const getMessagePreview = (room) => {
   switch (room.lastMessageType) {
     case 'image':
       return '📷 사진'
     case 'video':
       return '🎥 동영상'
+    case 'audio':
+      return '🎵 음성메시지'
     case 'file':
       return '📎 파일'
     case 'location':
       return '📍 위치'
     default:
-      return room.lastMessage
+      return room.lastMessage.length > 30
+          ? room.lastMessage.substring(0, 30) + '...'
+          : room.lastMessage
   }
 }
 </script>
 
 <style scoped>
-.chat-room {
+.chat-room-card {
   display: flex;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f3f4f6;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   background: white;
 }
 
-.chat-room:hover {
+.chat-room-card:hover {
   background: #f8fafc;
-  transform: translateX(4px);
 }
 
-.chat-room:active {
-  transform: translateX(2px);
+.chat-room-card:active {
+  background: #f1f5f9;
 }
 
 .room-avatar {
   position: relative;
-  margin-right: 16px;
+  margin-right: 12px;
   flex-shrink: 0;
 }
 
-.avatar-img {
+.avatar-image {
   width: 48px;
   height: 48px;
-  border-radius: 50%;
+  border-radius: 24px;
   object-fit: cover;
 }
 
-.group-avatar {
+.avatar-placeholder {
   width: 48px;
   height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 20px;
+  font-weight: 600;
+  font-size: 18px;
 }
 
-.status-dot {
+.online-indicator {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background: #10b981;
   border: 2px solid white;
+  border-radius: 50%;
 }
-
-.status-online { background: #10b981; }
-.status-away { background: #f59e0b; }
-.status-offline { background: #6b7280; }
 
 .room-content {
   flex: 1;
@@ -148,80 +163,103 @@ const getMessagePreview = (room) => {
 
 .room-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 4px;
 }
 
 .room-name {
-  font-weight: 600;
   font-size: 16px;
-  color: #1e293b;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.participant-count {
-  font-size: 12px;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 2px 6px;
-  border-radius: 8px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
 }
 
 .room-time {
   font-size: 12px;
-  color: #94a3b8;
+  color: #9ca3af;
+  margin-left: 8px;
   flex-shrink: 0;
 }
 
 .room-footer {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .last-message {
   flex: 1;
-  font-size: 14px;
-  color: #64748b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-right: 12px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .message-sender {
+  font-size: 13px;
+  color: #6b7280;
   font-weight: 500;
-  margin-right: 4px;
+  flex-shrink: 0;
 }
 
-.message-type {
-  color: #667eea;
-  font-weight: 500;
+.message-content {
+  font-size: 14px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
 }
 
 .unread-badge {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: #ef4444;
   color: white;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 12px;
-  min-width: 20px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
   text-align: center;
-  animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+.participant-count {
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 @media (max-width: 768px) {
-  .chat-room {
+  .chat-room-card {
     padding: 12px 16px;
+  }
+
+  .avatar-image,
+  .avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+  }
+
+  .avatar-placeholder {
+    font-size: 16px;
+  }
+
+  .room-name {
+    font-size: 15px;
+  }
+
+  .message-content {
+    font-size: 13px;
   }
 }
 </style>

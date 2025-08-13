@@ -67,6 +67,19 @@ import {webSocketService} from '@/services/webSocketService.js'
 // 이벤트 정의
 const emit = defineEmits(['room-selected', 'message-received'])
 
+// Props
+const props = defineProps({
+  connectionState: {
+    type: Object,
+    default: () => ({
+      connected: false,
+      connecting: false,
+      status: 'disconnected',
+      error: null
+    })
+  }
+})
+
 // 반응형 데이터
 const activeTab = ref('all')
 const showSearch = ref(false)

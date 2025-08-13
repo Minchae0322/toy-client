@@ -1,17 +1,17 @@
 <template>
   <div class="chat-app">
     <!-- 연결 상태 표시 -->
-    <div v-if="connectionState.connecting.value" class="connection-status connecting">
+    <div v-if="connectionState.connecting" class="connection-status connecting">
       <div class="status-content">
         <div class="spinner"></div>
         <span>채팅 서버에 연결 중...</span>
       </div>
     </div>
 
-    <div v-else-if="connectionState.connectionState.status === 'error'" class="connection-status error">
+    <div v-else-if="connectionState.status === 'error'" class="connection-status error">
       <div class="status-content">
         <AlertCircle :size="20" />
-        <span>연결 실패: {{ connectionState.connectionState.error }}</span>
+        <span>연결 실패: {{ connectionState.error }}</span>
         <button @click="reconnectWebSocket" class="retry-btn">재연결</button>
       </div>
     </div>
@@ -20,7 +20,7 @@
     <div v-if="isDev" class="debug-panel">
       <h4>🔧 디버그 정보</h4>
       <p>현재 선택된 방: {{ selectedRoom || '없음' }}</p>
-      <p>WebSocket 연결: {{ connectionState.connected.value ? '✅ 연결됨' : '❌ 끊어짐' }}</p>
+      <p>WebSocket 연결: {{ connectionState.connected ? '✅ 연결됨' : '❌ 끊어짐' }}</p>
       <p>사용자 ID: {{ currentUserId || '없음' }}</p>
     </div>
 
@@ -63,11 +63,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { AlertCircle, X } from 'lucide-vue-next'
+import {ref, computed, onMounted, onBeforeUnmount} from 'vue'
+import {AlertCircle, X} from 'lucide-vue-next'
 import ChatRoomView from '@/views/ChatRoomView.vue'
 import ChatDetailView from '@/views/ChatDetailView.vue'
-import { websocketService } from '@/services/websocketService.js'
+import {webSocketService} from '@/services/webSocketService.js'
 
 // 상태 관리
 const selectedRoom = ref(null)
@@ -78,10 +78,16 @@ const toastTimeout = ref(null)
 const isDev = ref(import.meta.env.DEV)
 
 // WebSocket 상태
-const connectionState = computed(() => websocketService.getConnectionState())
+const connectionState = ref({
+  connected: false,
+  connecting: false,
+  status: 'disconnected',
+  error: null
+})
+
 const showConnectionOverlay = computed(() =>
-    connectionState.value.connecting.value ||
-    connectionState.value.connectionState.status === 'error'
+    connectionState.value.connecting ||
+    connectionState.value.status === 'error'
 )
 
 // 사용자 ID 가져오기
@@ -101,17 +107,28 @@ const getCurrentUserId = () => {
 const initializeWebSocket = async () => {
   try {
     console.log('🔌 WebSocket 연결 초기화 시작...')
+    connectionState.value.connecting = true
+    connectionState.value.status = 'connecting'
 
-    if (!websocketService.isConnected()) {
-      await websocketService.connect()
+    if (!webSocketService.isConnected()) {
+      await webSocketService.connect()
     }
 
     // 전역 메시지 핸들러 설정
     setupGlobalMessageHandlers()
 
+    connectionState.value.connected = true
+    connectionState.value.connecting = false
+    connectionState.value.status = 'connected'
+    connectionState.value.error = null
+
     console.log('✅ WebSocket 연결 및 핸들러 설정 완료')
   } catch (error) {
     console.error('❌ WebSocket 초기화 실패:', error)
+    connectionState.value.connected = false
+    connectionState.value.connecting = false
+    connectionState.value.status = 'error'
+    connectionState.value.error = error.message
     throw error
   }
 }
@@ -121,7 +138,7 @@ const setupGlobalMessageHandlers = () => {
   console.log('🎯 전역 메시지 핸들러 설정...')
 
   // 채팅 메시지 핸들러 (채팅방 밖에서)
-  websocketService.onMessage('chat-message', (message) => {
+  webSocketService.onMessage('chat-message', (message) => {
     console.log('📨 전역 채팅 메시지 수신:', message)
     // 현재 해당 채팅방에 있지 않으면 토스트 알림 표시
     if (!selectedRoom.value || selectedRoom.value !== message.roomId) {
@@ -130,13 +147,13 @@ const setupGlobalMessageHandlers = () => {
   })
 
   // 시스템 알림 핸들러
-  websocketService.onMessage('system-notification', (notification) => {
+  webSocketService.onMessage('system-notification', (notification) => {
     console.log('🔔 시스템 알림:', notification)
     showSystemToast(notification)
   })
 
   // 접속 상태 업데이트 핸들러
-  websocketService.onMessage('presence-update', (presence) => {
+  webSocketService.onMessage('presence-update', (presence) => {
     console.log('👥 전역 접속 상태 업데이트:', presence)
   })
 }
@@ -153,7 +170,7 @@ const handleRoomSelected = async (roomId) => {
     dismissToast()
 
     // WebSocket이 연결되어 있는지 확인
-    if (!websocketService.isConnected()) {
+    if (!webSocketService.isConnected()) {
       console.log('🔌 WebSocket 재연결 중...')
       await initializeWebSocket()
     }
@@ -193,9 +210,7 @@ const handleBackToList = async () => {
 // 새 메시지 처리 (ChatDetailView에서 올라온 이벤트)
 const handleNewMessage = (message) => {
   console.log('📨 새 메시지 처리:', message)
-
   // 필요시 추가 처리 (읽음 상태 업데이트, 알림 설정 등)
-  // 예: 채팅방 목록의 마지막 메시지 업데이트, 읽지 않은 메시지 수 업데이트
 }
 
 // 메시지 토스트 표시
@@ -304,7 +319,7 @@ const dismissToast = () => {
 const reconnectWebSocket = async () => {
   try {
     console.log('🔄 WebSocket 재연결 시도...')
-    await websocketService.disconnect()
+    await webSocketService.disconnect()
     await initializeWebSocket()
     console.log('✅ WebSocket 재연결 완료')
   } catch (error) {
@@ -376,8 +391,8 @@ onBeforeUnmount(async () => {
   // 이벤트 리스너 제거
   document.removeEventListener('visibilitychange', handleVisibilityChange)
 
-  // WebSocket 연결 해제 (필요시)
-  // websocketService.disconnect()
+  // WebSocket 연결 해제
+  webSocketService.disconnect()
 })
 
 // 브라우저 종료/새로고침 시 정리
@@ -469,8 +484,12 @@ window.addEventListener('beforeunload', () => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .retry-btn {
@@ -506,7 +525,7 @@ window.addEventListener('beforeunload', () => {
   max-width: 350px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   border: 1px solid #e2e8f0;
   cursor: pointer;
   z-index: 999;
@@ -516,7 +535,7 @@ window.addEventListener('beforeunload', () => {
 
 .notification-toast:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
 .toast-content {

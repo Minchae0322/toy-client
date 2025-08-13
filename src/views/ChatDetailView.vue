@@ -14,10 +14,10 @@
             • {{ onlineUsers.length }}명 온라인
           </span>
           <!-- 연결 상태 표시 -->
-          <span v-if="connectionState.connected.value" class="connection-status connected">
+          <span v-if="connectionState.connected" class="connection-status connected">
             📶 연결됨
           </span>
-          <span v-else-if="connectionState.connecting.value" class="connection-status connecting">
+          <span v-else-if="connectionState.connecting" class="connection-status connecting">
             ⏳ 연결 중...
           </span>
           <span v-else class="connection-status disconnected">
@@ -43,9 +43,9 @@
     </div>
 
     <!-- 연결 오류 알림 -->
-    <div v-if="connectionState.connectionState.status === 'error'" class="connection-error">
+    <div v-if="connectionState.status === 'error'" class="connection-error">
       <AlertCircle :size="16" />
-      <span>연결 오류: {{ connectionState.connectionState.error }}</span>
+      <span>연결 오류: {{ connectionState.error }}</span>
       <button @click="reconnectWebSocket" class="retry-btn">재연결</button>
     </div>
 
@@ -98,8 +98,8 @@
         @send-message="sendMessage"
         @typing-start="handleTypingStart"
         @typing-stop="handleTypingStop"
-        :disabled="sending || !connectionState.connected.value"
-        :placeholder="connectionState.connected.value ? '메시지를 입력하세요...' : '연결을 기다리는 중...'"
+        :disabled="sending || !connectionState.connected"
+        :placeholder="connectionState.connected ? '메시지를 입력하세요...' : '연결을 기다리는 중...'"
     />
 
     <!-- 채팅방 메뉴 -->
@@ -154,7 +154,7 @@ import {
 import ChatMessage from '@/components/chat/ChatMessage.vue'
 import MessageInput from '@/components/chat/MessageInput.vue'
 import {chatApi} from '@/services/chatApi.js'
-import {websocketService} from '@/services/websocketService.js'
+import {webSocketService} from '@/services/webSocketService.js'
 
 const props = defineProps(['roomId'])
 const emit = defineEmits(['back-to-list', 'new-message'])
@@ -177,8 +177,18 @@ const typingUsers = ref([])
 const typingTimer = ref(null)
 
 // WebSocket 상태
-const connectionState = computed(() => websocketService.getConnectionState())
-const deviceInfo = computed(() => websocketService.getDeviceInfo())
+const connectionState = ref({
+  connected: false,
+  connecting: false,
+  status: 'disconnected',
+  error: null
+})
+
+const deviceInfo = ref({
+  deviceType: 'Desktop',
+  browser: { name: 'Chrome' },
+  deviceName: 'Web Browser'
+})
 
 // 페이징 관련
 const currentPage = ref(0)
@@ -206,13 +216,20 @@ const initializeChatRoom = async () => {
     console.log('🏠 채팅방 초기화 시작:', props.roomId)
 
     // 1. WebSocket 연결 상태 확인
-    if (!websocketService.isConnected()) {
+    if (!webSocketService.isConnected()) {
       console.log('🔌 WebSocket 연결 시도...')
       try {
-        await websocketService.connect()
+        connectionState.value.connecting = true
+        await webSocketService.connect()
+        connectionState.value.connected = true
+        connectionState.value.connecting = false
+        connectionState.value.status = 'connected'
         console.log('✅ WebSocket 연결 완료')
       } catch (error) {
         console.error('❌ WebSocket 연결 실패:', error)
+        connectionState.value.connecting = false
+        connectionState.value.status = 'error'
+        connectionState.value.error = error.message
         throw new Error('실시간 연결에 실패했습니다')
       }
     }
@@ -224,15 +241,8 @@ const initializeChatRoom = async () => {
     // 3. 채팅방 구독
     console.log('📡 채팅방 구독 시작:', props.roomId)
     try {
-      await websocketService.subscribeToRoom(props.roomId, {
-        onSubscribed: () => {
-          console.log('✅ 채팅방 구독 완료:', props.roomId)
-        },
-        onError: (error) => {
-          console.error('❌ 채팅방 구독 실패:', error)
-          throw error
-        }
-      })
+      await webSocketService.subscribeToChatRoom(props.roomId, handleNewMessage)
+      console.log('✅ 채팅방 구독 완료:', props.roomId)
     } catch (error) {
       console.error('❌ 채팅방 구독 오류:', error)
       throw new Error('채팅방 구독에 실패했습니다')
@@ -243,7 +253,6 @@ const initializeChatRoom = async () => {
       await chatApi.joinRoom(props.roomId)
     } catch (error) {
       console.warn('⚠️ 채팅방 입장 API 실패 (계속 진행):', error)
-      // 입장 API 실패해도 계속 진행
     }
 
     // 5. 병렬로 채팅방 정보와 메시지 목록 가져오기
@@ -284,8 +293,7 @@ const initializeChatRoom = async () => {
         })
       ])
 
-      // 6. 데이터 설정 (백엔드 응답 구조에 맞춤)
-      // ChatRoomResponse.Detail 구조
+      // 6. 데이터 설정
       roomInfo.value = {
         title: roomDataResponse.data.title,
         participantCount: roomDataResponse.data.participantCount || 0,
@@ -295,14 +303,12 @@ const initializeChatRoom = async () => {
         status: roomDataResponse.data.status
       }
 
-      // Spring Data Page<ChatDetail> 구조
+      // 메시지 목록 설정
       const messagesPage = messagesResponse.data
       const messagesList = messagesPage.content || []
-
-      // 메시지 목록 설정 (최신순으로 정렬된 것을 시간순으로 뒤집기)
       messages.value = messagesList.reverse() // 오래된 메시지부터 표시
 
-      // 페이징 정보 설정 (Spring Data Page 구조)
+      // 페이징 정보 설정
       hasMoreMessages.value = !messagesPage.last
       currentPage.value = messagesPage.number || 0
 
@@ -310,7 +316,6 @@ const initializeChatRoom = async () => {
       console.log('- 채팅방 정보:', roomInfo.value)
       console.log('- 메시지 수:', messages.value.length)
       console.log('- 더 불러올 메시지:', hasMoreMessages.value)
-      console.log('- 현재 페이지:', currentPage.value)
 
       // 7. 스크롤을 맨 아래로 이동
       await nextTick()
@@ -324,9 +329,7 @@ const initializeChatRoom = async () => {
   } catch (error) {
     console.error('❌ 채팅방 초기화 실패:', error)
 
-    // 사용자에게 친화적인 오류 메시지 표시
     let errorMessage = '채팅방 접속에 실패했습니다.'
-
     if (error.message.includes('네트워크') || error.message.includes('Network')) {
       errorMessage = '네트워크 연결을 확인해주세요.'
     } else if (error.message.includes('권한') || error.message.includes('Unauthorized')) {
@@ -342,20 +345,18 @@ const initializeChatRoom = async () => {
   }
 }
 
-// 메시지 목록 조회 (커서 페이징 지원)
+// 메시지 목록 조회
 const fetchMessages = async (page = 0, append = false) => {
   try {
     if (page === 0) loading.value = true
     else loadingMore.value = true
 
-    // 커서 기반 페이징 지원
     const params = {
       page,
       size: pageSize,
       sort: 'createdAt,desc'
     }
 
-    // 이전 메시지를 불러올 때는 마지막 메시지 ID 사용 (커서 페이징)
     if (append && messages.value.length > 0) {
       params.lastMessageId = messages.value[0].messageId
     }
@@ -365,26 +366,20 @@ const fetchMessages = async (page = 0, append = false) => {
     const newMessages = messagesPage.content.reverse()
 
     if (append) {
-      // 스크롤 위치 보존을 위한 높이 저장
       const previousScrollHeight = messagesContainer.value?.scrollHeight || 0
-
-      // 이전 메시지를 앞에 추가
       messages.value = [...newMessages, ...messages.value]
 
-      // 스크롤 위치 복원
       await nextTick()
       if (messagesContainer.value) {
         const newScrollHeight = messagesContainer.value.scrollHeight
         messagesContainer.value.scrollTop = newScrollHeight - previousScrollHeight
       }
     } else {
-      // 새로운 메시지로 교체
+      messages.value = newMessages
       await nextTick()
       scrollToBottom()
-      return newMessages
     }
 
-    // 더 불러올 메시지가 있는지 확인 (Spring Data Page 구조)
     hasMoreMessages.value = !messagesPage.last
     currentPage.value = messagesPage.number
 
@@ -399,7 +394,7 @@ const fetchMessages = async (page = 0, append = false) => {
 // 메시지 전송
 const sendMessage = async (messageData) => {
   if (!messageData.content?.trim() && !messageData.file) return
-  if (!connectionState.value.connected.value) {
+  if (!connectionState.value.connected) {
     alert('연결이 끊어진 상태입니다. 잠시 후 다시 시도해주세요.')
     return
   }
@@ -407,7 +402,7 @@ const sendMessage = async (messageData) => {
   try {
     sending.value = true
 
-    // 임시 메시지 생성 (즉시 화면에 표시)
+    // 임시 메시지 생성
     const tempMessage = {
       messageId: `temp-${Date.now()}`,
       roomId: props.roomId,
@@ -423,15 +418,14 @@ const sendMessage = async (messageData) => {
     await nextTick()
     scrollToBottom()
 
-    // WebSocket을 통한 메시지 전송 (즉시 전송)
-    await websocketService.sendMessage('/app/chat/send', {
-      roomId: props.roomId,
+    // WebSocket을 통한 메시지 전송
+    webSocketService.sendMessage(props.roomId, {
       content: messageData.content,
       type: messageData.type || 'TEXT',
       metadata: messageData.metadata
     })
 
-    // REST API 호출 (영속성 보장)
+    // REST API 호출
     const response = await chatApi.sendMessage(props.roomId, {
       content: messageData.content,
       type: messageData.type || 'TEXT',
@@ -451,13 +445,10 @@ const sendMessage = async (messageData) => {
 
   } catch (error) {
     console.error('메시지 전송 실패:', error)
-
-    // 실패한 메시지 표시
     const tempIndex = messages.value.findIndex(m => m.messageId === tempMessage.messageId)
     if (tempIndex !== -1) {
       messages.value[tempIndex].status = 'FAILED'
     }
-
     alert('메시지 전송에 실패했습니다')
   } finally {
     sending.value = false
@@ -467,33 +458,14 @@ const sendMessage = async (messageData) => {
 // WebSocket 메시지 처리 함수들
 const setupWebSocketHandlers = () => {
   console.log('🎯 WebSocket 핸들러 설정 시작')
-
-  // 기존 핸들러 제거 (중복 방지)
-  websocketService.offMessage('chat-message', handleNewMessage)
-  websocketService.offMessage('system-notification', handleSystemMessage)
-  websocketService.offMessage('presence-update', handleUserStatus)
-  websocketService.offMessage('typing-status', handleTypingStatusUpdate)
-
-  // 새 핸들러 등록
-  websocketService.onMessage('chat-message', handleNewMessage)
-  websocketService.onMessage('system-notification', handleSystemMessage)
-  websocketService.onMessage('presence-update', handleUserStatus)
-  websocketService.onMessage('typing-status', handleTypingStatusUpdate)
-
-  console.log('✅ WebSocket 핸들러 설정 완료')
+  // 핸들러는 이미 subscribeToChatRoom에서 설정됨
 }
 
 // 새 메시지 처리
 const handleNewMessage = (message) => {
   console.log('📨 새 채팅 메시지 수신:', message)
-  console.log('- 현재 채팅방:', props.roomId)
-  console.log('- 메시지 채팅방:', message.roomId)
-  console.log('- 발신자:', message.senderId)
-  console.log('- 현재 사용자:', currentUserId.value)
 
-  // 자신이 보낸 메시지가 아니고, 현재 채팅방의 메시지인 경우만 처리
   if (message.senderId !== currentUserId.value && message.roomId === props.roomId) {
-    // 이미 있는 메시지인지 확인 (중복 방지)
     const existingMessage = messages.value.find(m =>
         m.messageId === message.messageId ||
         (m.content === message.content && m.senderId === message.senderId &&
@@ -509,69 +481,28 @@ const handleNewMessage = (message) => {
     messages.value.push(message)
 
     nextTick(() => {
-      // 스크롤이 맨 아래에 있었다면 자동 스크롤
       if (isAtBottom()) {
         scrollToBottom()
       }
     })
 
     emit('new-message', message)
-  } else {
-    console.log('⚠️ 메시지 무시 (자신의 메시지이거나 다른 채팅방)')
-  }
-}
-
-// 시스템 메시지 처리
-const handleSystemMessage = (message) => {
-  if (message.roomId === props.roomId) {
-    messages.value.push({
-      ...message,
-      messageId: `system-${Date.now()}`,
-      isSystem: true,
-      type: 'SYSTEM'
-    })
-
-    nextTick(() => {
-      if (isAtBottom()) {
-        scrollToBottom()
-      }
-    })
-  }
-}
-
-// 사용자 상태 처리
-const handleUserStatus = (presence) => {
-  if (presence.roomId === props.roomId) {
-    onlineUsers.value = presence.onlineUsers || []
-  }
-}
-
-// 타이핑 상태 업데이트 처리
-const handleTypingStatusUpdate = (data) => {
-  if (data.roomId === props.roomId) {
-    // 자신을 제외한 타이핑 사용자들만 표시
-    typingUsers.value = data.typingUsers.filter(user => user.userId !== currentUserId.value)
   }
 }
 
 // 타이핑 시작
 const handleTypingStart = () => {
-  websocketService.sendTypingStatus(props.roomId, true)
-
-  // 타이핑 타이머 리셋
   if (typingTimer.value) {
     clearTimeout(typingTimer.value)
   }
 
   typingTimer.value = setTimeout(() => {
     handleTypingStop()
-  }, 3000) // 3초 후 자동으로 타이핑 중지
+  }, 3000)
 }
 
 // 타이핑 중지
 const handleTypingStop = () => {
-  websocketService.sendTypingStatus(props.roomId, false)
-
   if (typingTimer.value) {
     clearTimeout(typingTimer.value)
     typingTimer.value = null
@@ -584,7 +515,6 @@ const handleScroll = () => {
 
   const {scrollTop} = messagesContainer.value
 
-  // 맨 위에 도달하면 이전 메시지 로드
   if (scrollTop === 0 && hasMoreMessages.value && !loadingMore.value) {
     loadMoreMessages()
   }
@@ -609,7 +539,7 @@ const isAtBottom = () => {
   if (!messagesContainer.value) return false
 
   const {scrollTop, scrollHeight, clientHeight} = messagesContainer.value
-  return scrollTop + clientHeight >= scrollHeight - 50 // 50px 여유
+  return scrollTop + clientHeight >= scrollHeight - 50
 }
 
 // 발신자 표시 여부 결정
@@ -620,7 +550,6 @@ const shouldShowSender = (message) => {
   const prevMessage = messages.value[messageIndex - 1]
   if (!prevMessage) return true
 
-  // 이전 메시지와 발신자가 다르거나, 시간 차이가 5분 이상이면 표시
   const timeDiff = new Date(message.createdAt) - new Date(prevMessage.createdAt)
   return prevMessage.senderId !== message.senderId || timeDiff > 5 * 60 * 1000
 }
@@ -628,12 +557,11 @@ const shouldShowSender = (message) => {
 // 시간 표시 여부 결정
 const shouldShowTime = (message) => {
   const messageIndex = messages.value.findIndex(m => m.messageId === message.messageId)
-  if (messageIndex === messages.value.length - 1) return true // 마지막 메시지는 항상 표시
+  if (messageIndex === messages.value.length - 1) return true
 
   const nextMessage = messages.value[messageIndex + 1]
   if (!nextMessage) return true
 
-  // 다음 메시지와 시간 차이가 5분 이상이면 표시
   const timeDiff = new Date(nextMessage.createdAt) - new Date(message.createdAt)
   return timeDiff > 5 * 60 * 1000
 }
@@ -657,12 +585,10 @@ const handleMessageClick = (message) => {
 
 const retryMessage = (messageId) => {
   console.log('메시지 재전송:', messageId)
-  // 실패한 메시지 재전송 로직
 }
 
 const deleteMessage = (messageId) => {
   console.log('메시지 삭제:', messageId)
-  // 메시지 삭제 로직
 }
 
 // 채팅방 메뉴 기능들
@@ -689,34 +615,29 @@ const toggleDeviceInfo = () => {
 const reconnectWebSocket = async () => {
   showRoomMenu.value = false
   try {
-    // WebSocket 재연결
-    if (!websocketService.isConnected()) {
-      await websocketService.reconnect()
+    if (!webSocketService.isConnected()) {
+      connectionState.value.connecting = true
+      await webSocketService.connect()
+      connectionState.value.connected = true
+      connectionState.value.connecting = false
+      connectionState.value.status = 'connected'
     }
 
-    // 채팅방 재구독
-    await websocketService.subscribeToRoom(props.roomId, {
-      onSubscribed: () => {
-        console.log('✅ 채팅방 재구독 완료:', props.roomId)
-      },
-      onError: (error) => {
-        console.error('❌ 채팅방 재구독 실패:', error)
-        throw error
-      }
-    })
+    await webSocketService.subscribeToChatRoom(props.roomId, handleNewMessage)
   } catch (error) {
     console.error('재연결 실패:', error)
+    connectionState.value.connecting = false
+    connectionState.value.status = 'error'
+    connectionState.value.error = error.message
     alert('연결 재시도에 실패했습니다.')
   }
 }
 
 const leaveRoom = async () => {
   if (confirm('정말 채팅방을 나가시겠습니까?')) {
-    // 채팅방 구독 해제
-    websocketService.unsubscribeFromRoom(props.roomId)
+    webSocketService.unsubscribeFromChatRoom(props.roomId)
     console.log('🔴 채팅방 구독 해제:', props.roomId)
 
-    // 채팅방 나가기 API 호출
     try {
       await chatApi.leaveRoom(props.roomId)
     } catch (error) {
@@ -730,31 +651,20 @@ const leaveRoom = async () => {
 
 // 라이프사이클
 onMounted(async () => {
-  // 사용자 ID 설정
   currentUserId.value = getCurrentUserId()
   console.log('👤 현재 사용자 ID:', currentUserId.value)
-
-  // 채팅방 초기화
   await initializeChatRoom()
 })
 
 onUnmounted(() => {
   console.log('🔌 채팅방 컴포넌트 해제')
 
-  // 타이핑 중지
   if (typingTimer.value) {
     handleTypingStop()
   }
 
-  // 채팅방 구독 해제
-  websocketService.unsubscribeFromRoom(props.roomId)
+  webSocketService.unsubscribeFromChatRoom(props.roomId)
   console.log('🔴 채팅방 구독 해제:', props.roomId)
-
-  // 메시지 핸들러 정리
-  websocketService.offMessage('chat-message', handleNewMessage)
-  websocketService.offMessage('system-notification', handleSystemMessage)
-  websocketService.offMessage('presence-update', handleUserStatus)
-  websocketService.offMessage('typing-status', handleTypingStatusUpdate)
 })
 
 // roomId 변경 감지
@@ -762,25 +672,21 @@ watch(() => props.roomId, async (newRoomId, oldRoomId) => {
   if (newRoomId && newRoomId !== oldRoomId) {
     console.log('🔄 채팅방 변경:', oldRoomId, '=>', newRoomId)
 
-    // 타이핑 중지
     if (typingTimer.value) {
       handleTypingStop()
     }
 
-    // 이전 채팅방 구독 해제
     if (oldRoomId) {
-      websocketService.unsubscribeFromRoom(oldRoomId)
+      webSocketService.unsubscribeFromChatRoom(oldRoomId)
       console.log('🔴 이전 채팅방 구독 해제:', oldRoomId)
     }
 
-    // 상태 초기화
     messages.value = []
     onlineUsers.value = []
     typingUsers.value = []
     currentPage.value = 0
     hasMoreMessages.value = true
 
-    // 새 채팅방 초기화
     await initializeChatRoom()
   }
 })
@@ -967,12 +873,8 @@ watch(() => props.roomId, async (newRoomId, oldRoomId) => {
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .messages-list {
@@ -1006,13 +908,8 @@ watch(() => props.roomId, async (newRoomId, oldRoomId) => {
   animation: typing 1.4s ease-in-out infinite both;
 }
 
-.typing-animation span:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.typing-animation span:nth-child(2) {
-  animation-delay: -0.16s;
-}
+.typing-animation span:nth-child(1) { animation-delay: -0.32s; }
+.typing-animation span:nth-child(2) { animation-delay: -0.16s; }
 
 @keyframes typing {
   0%, 80%, 100% {
@@ -1202,6 +1099,74 @@ watch(() => props.roomId, async (newRoomId, oldRoomId) => {
     background: #7f1d1d;
     border-color: #b91c1c;
     color: #fca5a5;
+  }
+
+  .typing-indicator {
+    background: #374151;
+  }
+}
+
+/* 키보드 내비게이션 지원 */
+.room-menu button:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+  background: #f1f5f9;
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  .back-button,
+  .menu-button,
+  .room-menu button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .close-device-info {
+    min-height: 32px;
+    min-width: 32px;
+  }
+}
+
+/* 고해상도 디스플레이 지원 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .spinner,
+  .spinner-small {
+    border-width: 1px;
+  }
+}
+
+/* 프린트 스타일 */
+@media print {
+  .chat-detail-header,
+  .room-menu-overlay,
+  .device-info-banner,
+  .connection-error {
+    display: none !important;
+  }
+
+  .messages-container {
+    overflow: visible !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+
+  .typing-indicator {
+    display: none !important;
+  }
+}
+
+/* 애니메이션 감소 설정 지원 */
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .spinner-small,
+  .typing-animation span,
+  .message-enter-active,
+  .message-leave-active,
+  .fade-enter-active,
+  .fade-leave-active {
+    animation: none !important;
+    transition: none !important;
   }
 }
 </style>
