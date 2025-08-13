@@ -219,7 +219,7 @@ class WebSocketService {
           // SockJS를 사용한 WebSocket 연결 - MSA 채팅 서비스
           webSocketFactory: () => {
             // 환경변수에서 URL 가져오기
-            const wsUrl = 'http://localhost:9000/api/ws'
+            const wsUrl = 'http://localhost:8084/api/ws'
 
             // 절대 URL인 경우 그대로 사용, 상대 경로인 경우 그대로 사용
             console.log('🔌 WebSocket 연결 URL:', wsUrl)
