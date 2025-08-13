@@ -359,7 +359,7 @@ class WebSocketService {
           // SockJS를 사용한 WebSocket 연결 - MSA 채팅 서비스
           webSocketFactory: () => {
             // 환경변수에서 URL 가져오기
-            const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:9000/api/ws'
+            const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:8084/api/ws'
 
             console.log('🔌 WebSocket 연결 URL:', wsUrl)
             console.log('🔌 환경변수 VITE_WS_URL:', import.meta.env.VITE_WS_URL)
@@ -502,29 +502,51 @@ class WebSocketService {
   }
 
   /**
-   * 채팅방 구독 (기존 코드와 호환)
+   * 채팅방 구독 (ChatDetail 컴포넌트와 호환되는 방식)
    */
-  subscribeToRoom(roomId, messageHandler) {
+  async subscribeToRoom(roomId, options = {}) {
     if (!this.connected.value) {
-      console.error('❌ WebSocket이 연결되지 않았습니다')
-      return
+      console.error('❌ WebSocket이 연결되지 않았습니다');
+      throw new Error('WebSocket이 연결되지 않았습니다');
     }
 
-    const destination = `/topic/chat/${roomId}`
-
     try {
-      const subscription = this.client.subscribe(destination, (message) => {
-        const parsedMessage = JSON.parse(message.body)
-        messageHandler(parsedMessage)
-      })
+      console.log('🔔 채팅방 구독 시작:', roomId);
 
+      // 백엔드의 토픽 형식에 맞춤: /topic/chatroom/{roomId}
+      const destination = `/topic/chatroom/${roomId}`;
+
+      // 이미 구독 중인지 확인
+      if (this.roomSubscriptions.has(roomId)) {
+        console.log('⚠️ 이미 구독 중인 채팅방:', roomId);
+        if (options.onSubscribed) {
+          options.onSubscribed();
+        }
+        return this.roomSubscriptions.get(roomId);
+      }
+
+      // STOMP 구독
+      const subscription = this.client.subscribe(destination, (message) => {
+        try {
+          const data = JSON.parse(message.body);
+          console.log('📨 채팅방 메시지 수신:', data);
+
+          // 메시지 타입별 처리
+          this.handleReceivedMessage(data, roomId);
+
+        } catch (error) {
+          console.error('❌ 메시지 파싱 오류:', error);
+        }
+      });
+
+      // 구독 정보 저장
       this.roomSubscriptions.set(roomId, {
         subscription,
-        handler: messageHandler,
-        destination
-      })
+        destination,
+        roomId
+      });
 
-      console.log(`📡 채팅방 구독 성공: ${roomId}`)
+      console.log('✅ 채팅방 구독 완료:', roomId);
 
       // 채팅방 입장 알림 전송
       this.sendMessage('/app/chat/join', {
@@ -532,10 +554,50 @@ class WebSocketService {
         deviceId: this.deviceInfo.deviceId,
         deviceInfo: this.deviceInfo,
         timestamp: Date.now()
-      })
+      });
+
+      // 구독 성공 콜백
+      if (options.onSubscribed) {
+        options.onSubscribed();
+      }
+
+      return subscription;
 
     } catch (error) {
-      console.error(`❌ 채팅방 구독 실패: ${roomId}`, error)
+      console.error('❌ 채팅방 구독 실패:', error);
+      if (options.onError) {
+        options.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * 수신된 메시지 처리 (ChatDetail 컴포넌트와 호환)
+   */
+  handleReceivedMessage(data, roomId) {
+    // 메시지 타입별 핸들러 호출
+    switch (data.type) {
+      case 'CHAT_MESSAGE':
+      case 'TEXT':
+      case 'IMAGE':
+      case 'FILE':
+        this.emitMessage('chat-message', { ...data, roomId });
+        break;
+      case 'SYSTEM_NOTIFICATION':
+      case 'SYSTEM':
+        this.emitMessage('system-notification', { ...data, roomId });
+        break;
+      case 'PRESENCE_UPDATE':
+        this.emitMessage('presence-update', { ...data, roomId });
+        break;
+      case 'TYPING_STATUS':
+        this.handleTypingStatus({ ...data, roomId });
+        break;
+      default:
+        console.log('알 수 없는 메시지 타입:', data.type);
+        // 기본적으로 chat-message로 처리
+        this.emitMessage('chat-message', { ...data, roomId });
     }
   }
 
@@ -766,6 +828,38 @@ class WebSocketService {
     } catch (error) {
       console.error('❌ 토큰 파싱 실패:', error)
       return null
+    }
+  }
+
+  /**
+   * 핸들러 존재 여부 확인
+   */
+  hasHandlers() {
+    return this.messageHandlers.size > 0;
+  }
+
+  /**
+   * 재연결 메서드
+   */
+  async reconnect() {
+    console.log('🔄 WebSocket 재연결 시도...');
+
+    try {
+      // 기존 연결 정리
+      await this.disconnect();
+
+      // 잠시 대기
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 재연결
+      await this.connect();
+
+      console.log('✅ WebSocket 재연결 완료');
+      return true;
+
+    } catch (error) {
+      console.error('❌ WebSocket 재연결 실패:', error);
+      throw error;
     }
   }
 
