@@ -17,6 +17,9 @@ class WebSocketService {
       status: 'disconnected',
       error: null
     }
+    this.reconnectAttempts = 0
+    this.maxReconnectAttempts = 5
+    this.reconnectDelay = 1000
   }
 
   // 연결 상태 반환
@@ -105,11 +108,44 @@ class WebSocketService {
     }
   }
 
+  // WebSocket 연결 상태 확인 (개선된 버전)
+  isConnected() {
+    return this.connected &&
+        this.client &&
+        this.client.connected &&
+        this.client.webSocket &&
+        this.client.webSocket.readyState === WebSocket.OPEN
+  }
+
   // WebSocket 연결
   connect() {
     return new Promise((resolve, reject) => {
-      if (this.connected) {
+      // 이미 연결되어 있으면 바로 성공 처리
+      if (this.isConnected()) {
+        console.log('🔌 [WebSocket] 이미 연결되어 있음')
         resolve()
+        return
+      }
+
+      // 연결 중이면 기존 연결 프로세스 대기
+      if (this.connecting) {
+        console.log('🔌 [WebSocket] 연결 중... 대기')
+        // 연결 완료까지 최대 10초 대기
+        const checkConnection = () => {
+          if (this.isConnected()) {
+            resolve()
+          } else if (!this.connecting) {
+            reject(new Error('연결 실패'))
+          } else {
+            setTimeout(checkConnection, 100)
+          }
+        }
+        setTimeout(() => {
+          if (this.connecting) {
+            reject(new Error('연결 시간 초과'))
+          }
+        }, 10000)
+        checkConnection()
         return
       }
 
@@ -122,7 +158,18 @@ class WebSocketService {
       }
 
       try {
+        console.log('🔌 [WebSocket] 새로운 연결 시작...')
+        this.connecting = true
         this.updateConnectionState('connecting')
+
+        // 기존 클라이언트가 있으면 정리
+        if (this.client) {
+          try {
+            this.client.deactivate()
+          } catch (e) {
+            console.warn('기존 클라이언트 정리 중 오류:', e)
+          }
+        }
 
         // SockJS를 사용한 WebSocket 연결 설정
         const socket = new SockJS(`${this.baseURL}/api/ws`)
@@ -132,26 +179,33 @@ class WebSocketService {
           connectHeaders: {
             'Authorization': `Bearer ${token}`,
             'X-Device-ID': this.getDeviceId(),
-            'X-User-ID': this.getCurrentUserId()?.toString()
+            'X-User-ID': this.getCurrentUserId()?.toString() || 'unknown'
           },
           debug: (str) => {
-            console.log('🔌 [WebSocket Debug]', str)
+            if (import.meta.env.DEV) {
+              console.log('🔌 [WebSocket Debug]', str)
+            }
           },
-          reconnectDelay: 5000,
-          heartbeatIncoming: 4000,
-          heartbeatOutgoing: 4000,
+          reconnectDelay: this.reconnectDelay,
+          heartbeatIncoming: 10000,
+          heartbeatOutgoing: 10000,
           onConnect: (frame) => {
             console.log('✅ [WebSocket] 연결 성공:', frame)
             this.connected = true
             this.connecting = false
+            this.reconnectAttempts = 0
             this.updateConnectionState('connected')
+
+            // 연결 후 기존 구독 복원
+            this.restoreSubscriptions()
+
             resolve()
           },
           onStompError: (frame) => {
             console.error('❌ [WebSocket] STOMP 에러:', frame)
             this.connected = false
             this.connecting = false
-            const error = `STOMP Error: ${frame.body}`
+            const error = `STOMP Error: ${frame.body || frame.headers?.message || 'Unknown error'}`
             this.updateConnectionState('error', error)
             reject(new Error(error))
           },
@@ -159,17 +213,44 @@ class WebSocketService {
             console.error('❌ [WebSocket] WebSocket 에러:', error)
             this.connected = false
             this.connecting = false
-            this.updateConnectionState('error', error.message)
+            this.updateConnectionState('error', error.message || 'WebSocket connection error')
             reject(error)
           },
-          onDisconnect: () => {
-            console.log('🔌 [WebSocket] 연결 해제됨')
+          onWebSocketClose: (event) => {
+            console.log('🔌 [WebSocket] 연결 종료:', event)
             this.connected = false
             this.connecting = false
             this.updateConnectionState('disconnected')
-            this.subscriptions.clear()
+
+            // 자동 재연결 시도 (정상 종료가 아닌 경우)
+            if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
+              this.attemptReconnect()
+            }
+          },
+          onDisconnect: (receipt) => {
+            console.log('🔌 [WebSocket] 연결 해제됨:', receipt)
+            this.connected = false
+            this.connecting = false
+            this.updateConnectionState('disconnected')
           }
         })
+
+        // 연결 시간 초과 처리
+        const connectionTimeout = setTimeout(() => {
+          if (this.connecting) {
+            console.error('❌ [WebSocket] 연결 시간 초과')
+            this.connecting = false
+            this.updateConnectionState('error', '연결 시간 초과')
+            reject(new Error('연결 시간 초과'))
+          }
+        }, 15000) // 15초 타임아웃
+
+        // 연결 성공 시 타임아웃 해제
+        const originalOnConnect = this.client.onConnect
+        this.client.onConnect = (frame) => {
+          clearTimeout(connectionTimeout)
+          originalOnConnect.call(this.client, frame)
+        }
 
         this.client.activate()
 
@@ -178,6 +259,62 @@ class WebSocketService {
         this.connecting = false
         this.updateConnectionState('error', error.message)
         reject(error)
+      }
+    })
+  }
+
+  // 자동 재연결 시도
+  attemptReconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('❌ [WebSocket] 최대 재연결 시도 횟수 초과')
+      return
+    }
+
+    this.reconnectAttempts++
+    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1) // 지수 백오프
+
+    console.log(`🔄 [WebSocket] ${delay}ms 후 재연결 시도 (${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
+
+    setTimeout(() => {
+      if (!this.isConnected()) {
+        this.connect()
+        .then(() => {
+          console.log('✅ [WebSocket] 재연결 성공')
+        })
+        .catch((error) => {
+          console.error('❌ [WebSocket] 재연결 실패:', error)
+          this.attemptReconnect()
+        })
+      }
+    }, delay)
+  }
+
+  // 기존 구독 복원
+  restoreSubscriptions() {
+    console.log('🔄 [WebSocket] 구독 복원 중...')
+    const subscriptionsToRestore = new Map(this.subscriptions)
+    this.subscriptions.clear()
+
+    subscriptionsToRestore.forEach((subscription, key) => {
+      if (key.includes('-')) {
+        // 특수 구독 (presence, typing 등)
+        const [roomId, type] = key.split('-')
+        if (type === 'presence' || type === 'typing') {
+          // 특수 구독은 subscribeToRoom을 통해 복원
+          return
+        }
+      } else {
+        // 일반 채팅방 구독 복원
+        const handler = this.messageHandlers.get(key)
+        if (handler) {
+          this.subscribeToChatRoom(key, handler)
+          .then(() => {
+            console.log(`✅ [WebSocket] 채팅방 ${key} 구독 복원 완료`)
+          })
+          .catch((error) => {
+            console.error(`❌ [WebSocket] 채팅방 ${key} 구독 복원 실패:`, error)
+          })
+        }
       }
     })
   }
@@ -194,25 +331,45 @@ class WebSocketService {
 
   // WebSocket 연결 해제
   disconnect() {
+    console.log('🔌 [WebSocket] 연결 해제 시작...')
+
+    this.connecting = false
+    this.connected = false
+
     if (this.client) {
-      this.subscriptions.clear()
-      this.messageHandlers.clear()
-      this.globalHandlers.clear()
-      this.client.deactivate()
-      this.connected = false
-      this.connecting = false
-      this.updateConnectionState('disconnected')
-      console.log('🔌 [WebSocket] 연결 해제 완료')
+      try {
+        // 모든 구독 해제
+        this.subscriptions.forEach((subscription, key) => {
+          try {
+            subscription.unsubscribe()
+          } catch (error) {
+            console.warn(`구독 해제 실패 (${key}):`, error)
+          }
+        })
+
+        this.subscriptions.clear()
+        this.messageHandlers.clear()
+        this.globalHandlers.clear()
+
+        // STOMP 클라이언트 비활성화
+        this.client.deactivate()
+      } catch (error) {
+        console.warn('클라이언트 해제 중 오류:', error)
+      }
+
+      this.client = null
     }
+
+    this.updateConnectionState('disconnected')
+    console.log('✅ [WebSocket] 연결 해제 완료')
   }
 
   // 재연결
   async reconnect() {
-    console.log('🔄 [WebSocket] 재연결 시작...')
-    if (this.client) {
-      this.disconnect()
-    }
-    await this.connect()
+    console.log('🔄 [WebSocket] 수동 재연결 시작...')
+    this.disconnect()
+    await new Promise(resolve => setTimeout(resolve, 1000)) // 1초 대기
+    return this.connect()
   }
 
   // 전역 메시지 핸들러 등록
@@ -222,295 +379,170 @@ class WebSocketService {
   }
 
   // 전역 메시지 핸들러 해제
-  offMessage(type, handler) {
+  offMessage(type) {
     this.globalHandlers.delete(type)
     console.log(`📨 [WebSocket] 전역 메시지 핸들러 해제: ${type}`)
   }
 
-  // 채팅방 구독
-  subscribeToChatRoom(roomId, messageHandler) {
-    return new Promise((resolve, reject) => {
-      if (!this.connected) {
-        reject(new Error('WebSocket이 연결되지 않았습니다'))
-        return
-      }
+  // 연결 보장 메서드
+  async ensureConnection() {
+    if (this.isConnected()) {
+      return Promise.resolve()
+    }
 
-      try {
-        const destination = `/topic/chat/rooms/${roomId}`
-
-        // 이미 구독 중인지 확인
-        if (this.subscriptions.has(roomId)) {
-          console.log(`📨 [WebSocket] 이미 구독 중인 채팅방: ${roomId}`)
-          resolve()
-          return
-        }
-
-        // 메시지 핸들러 등록
-        if (messageHandler) {
-          this.messageHandlers.set(roomId, messageHandler)
-        }
-
-        console.log(`📨 [WebSocket] 채팅방 구독 시작: ${destination}`)
-
-        const subscription = this.client.subscribe(destination, (message) => {
-          try {
-            const messageData = JSON.parse(message.body)
-            console.log(`📨 [WebSocket] 메시지 수신 (Room: ${roomId}):`, messageData)
-
-            // 등록된 핸들러가 있으면 호출
-            const handler = this.messageHandlers.get(roomId)
-            if (handler) {
-              handler(messageData)
-            }
-
-            // 전역 핸들러도 호출
-            const globalHandler = this.globalHandlers.get('chat-message')
-            if (globalHandler) {
-              globalHandler(messageData)
-            }
-          } catch (error) {
-            console.error('❌ [WebSocket] 메시지 파싱 에러:', error)
+    if (this.connecting) {
+      // 연결 중이면 완료까지 대기
+      return new Promise((resolve, reject) => {
+        const checkConnection = () => {
+          if (this.isConnected()) {
+            resolve()
+          } else if (!this.connecting) {
+            reject(new Error('연결 실패'))
+          } else {
+            setTimeout(checkConnection, 100)
           }
-        })
+        }
 
-        this.subscriptions.set(roomId, subscription)
-        console.log(`✅ [WebSocket] 채팅방 구독 완료: ${roomId}`)
-        resolve()
+        setTimeout(() => {
+          if (this.connecting) {
+            reject(new Error('연결 시간 초과'))
+          }
+        }, 15000)
 
-      } catch (error) {
-        console.error(`❌ [WebSocket] 채팅방 구독 실패 (Room: ${roomId}):`, error)
-        reject(error)
+        checkConnection()
+      })
+    }
+
+    // 연결되지 않았으면 새로 연결
+    return this.connect()
+  }
+
+  // 채팅방 구독 (개선된 버전)
+  async subscribeToChatRoom(roomId, messageHandler) {
+    try {
+      console.log(`📨 [WebSocket] 채팅방 구독 시작: ${roomId}`)
+
+      // 연결 상태 확인 및 보장
+      await this.ensureConnection()
+
+      const destination = `/topic/chat/rooms/${roomId}`
+
+      // 이미 구독 중인지 확인
+      if (this.subscriptions.has(roomId)) {
+        console.log(`📨 [WebSocket] 이미 구독 중인 채팅방: ${roomId}`)
+        return Promise.resolve()
       }
-    })
+
+      // 메시지 핸들러 등록
+      if (messageHandler) {
+        this.messageHandlers.set(roomId, messageHandler)
+      }
+
+      console.log(`📨 [WebSocket] 채팅방 구독 요청: ${destination}`)
+
+      const subscription = this.client.subscribe(destination, (message) => {
+        try {
+          const messageData = JSON.parse(message.body)
+          console.log(`📨 [WebSocket] 메시지 수신 (Room: ${roomId}):`, messageData)
+
+          // 등록된 핸들러가 있으면 호출
+          const handler = this.messageHandlers.get(roomId)
+          if (handler) {
+            handler(messageData)
+          }
+
+          // 전역 핸들러도 호출
+          const globalHandler = this.globalHandlers.get('chat-message')
+          if (globalHandler) {
+            globalHandler(messageData)
+          }
+        } catch (error) {
+          console.error('❌ [WebSocket] 메시지 파싱 에러:', error, message.body)
+        }
+      })
+
+      this.subscriptions.set(roomId, subscription)
+      console.log(`✅ [WebSocket] 채팅방 구독 완료: ${roomId}`)
+
+      return Promise.resolve()
+
+    } catch (error) {
+      console.error(`❌ [WebSocket] 채팅방 구독 실패 (Room: ${roomId}):`, error)
+      throw error
+    }
   }
 
   // 채팅방 구독 해제
   unsubscribeFromChatRoom(roomId) {
-    const subscription = this.subscriptions.get(roomId)
-    if (subscription) {
-      subscription.unsubscribe()
-      this.subscriptions.delete(roomId)
-      this.messageHandlers.delete(roomId)
-      console.log(`📨 [WebSocket] 채팅방 구독 해제: ${roomId}`)
+    try {
+      const subscription = this.subscriptions.get(roomId)
+      if (subscription) {
+        subscription.unsubscribe()
+        this.subscriptions.delete(roomId)
+        this.messageHandlers.delete(roomId)
+        console.log(`📨 [WebSocket] 채팅방 구독 해제: ${roomId}`)
+      } else {
+        console.warn(`⚠️ [WebSocket] 구독하지 않은 채팅방: ${roomId}`)
+      }
+    } catch (error) {
+      console.error(`❌ [WebSocket] 채팅방 구독 해제 실패 (Room: ${roomId}):`, error)
     }
   }
 
-  // 채팅방 입장 (새로운 API)
-  subscribeToRoom(roomId, options = {}) {
-    return new Promise((resolve, reject) => {
-      if (!this.connected) {
-        reject(new Error('WebSocket이 연결되지 않았습니다'))
-        return
+  // 메시지 전송 (개선된 버전)
+  async sendMessage(roomId, messageData) {
+    try {
+      // 연결 상태 확인 및 보장
+      await this.ensureConnection()
+
+      const destination = `/app/chat/rooms/${roomId}/messages`
+      const message = {
+        ...messageData,
+        senderId: this.getCurrentUserId(),
+        deviceId: this.getDeviceId(),
+        timestamp: new Date().toISOString()
       }
 
-      try {
-        // 채팅방 메시지 구독
-        this.subscribeToChatRoom(roomId, options.onMessage || ((message) => {
-          const globalHandler = this.globalHandlers.get('chat-message')
-          if (globalHandler) {
-            globalHandler(message)
-          }
-        }))
+      console.log(`📤 [WebSocket] 메시지 전송 (${destination}):`, message)
 
-        // 온라인 사용자 구독
-        const presenceDestination = `/topic/chat/rooms/${roomId}/presence`
-        const presenceSubscription = this.client.subscribe(presenceDestination, (message) => {
-          try {
-            const presenceData = JSON.parse(message.body)
-            console.log(`👥 [WebSocket] 접속 상태 업데이트 (Room: ${roomId}):`, presenceData)
+      this.client.publish({
+        destination: destination,
+        body: JSON.stringify(message)
+      })
 
-            const globalHandler = this.globalHandlers.get('presence-update')
-            if (globalHandler) {
-              globalHandler(presenceData)
-            }
-          } catch (error) {
-            console.error('❌ [WebSocket] 접속 상태 파싱 에러:', error)
-          }
-        })
+      return Promise.resolve()
 
-        // 타이핑 상태 구독
-        const typingDestination = `/topic/chat/rooms/${roomId}/typing`
-        const typingSubscription = this.client.subscribe(typingDestination, (message) => {
-          try {
-            const typingData = JSON.parse(message.body)
-            console.log(`⌨️ [WebSocket] 타이핑 상태 업데이트 (Room: ${roomId}):`, typingData)
-
-            const globalHandler = this.globalHandlers.get('typing-status')
-            if (globalHandler) {
-              globalHandler(typingData)
-            }
-          } catch (error) {
-            console.error('❌ [WebSocket] 타이핑 상태 파싱 에러:', error)
-          }
-        })
-
-        // 추가 구독 정보 저장
-        this.subscriptions.set(`${roomId}-presence`, presenceSubscription)
-        this.subscriptions.set(`${roomId}-typing`, typingSubscription)
-
-        if (options.onSubscribed) {
-          options.onSubscribed()
-        }
-
-        resolve()
-
-      } catch (error) {
-        console.error(`❌ [WebSocket] 채팅방 구독 실패 (Room: ${roomId}):`, error)
-        if (options.onError) {
-          options.onError(error)
-        }
-        reject(error)
-      }
-    })
-  }
-
-  // 채팅방 구독 해제 (새로운 API)
-  unsubscribeFromRoom(roomId) {
-    // 메인 채팅방 구독 해제
-    this.unsubscribeFromChatRoom(roomId)
-
-    // 추가 구독들 해제
-    const presenceSubscription = this.subscriptions.get(`${roomId}-presence`)
-    if (presenceSubscription) {
-      presenceSubscription.unsubscribe()
-      this.subscriptions.delete(`${roomId}-presence`)
+    } catch (error) {
+      console.error(`❌ [WebSocket] 메시지 전송 실패 (Room: ${roomId}):`, error)
+      throw error
     }
-
-    const typingSubscription = this.subscriptions.get(`${roomId}-typing`)
-    if (typingSubscription) {
-      typingSubscription.unsubscribe()
-      this.subscriptions.delete(`${roomId}-typing`)
-    }
-
-    console.log(`📨 [WebSocket] 채팅방 전체 구독 해제: ${roomId}`)
-  }
-
-  // 메시지 전송
-  sendMessage(destination, messageData) {
-    if (!this.connected) {
-      throw new Error('WebSocket이 연결되지 않았습니다')
-    }
-
-    const message = {
-      ...messageData,
-      senderId: this.getCurrentUserId(),
-      deviceId: this.getDeviceId(),
-      timestamp: new Date().toISOString()
-    }
-
-    console.log(`📤 [WebSocket] 메시지 전송 (${destination}):`, message)
-
-    this.client.publish({
-      destination: destination,
-      body: JSON.stringify(message)
-    })
-  }
-
-  // 채팅방에 메시지 전송
-  sendMessage(roomId, messageData) {
-    const destination = `/app/chat/rooms/${roomId}/messages`
-    return this.sendMessage(destination, messageData)
   }
 
   // 타이핑 상태 전송
-  sendTypingStatus(roomId, isTyping) {
-    if (!this.connected) {
-      console.warn('⚠️ [WebSocket] 연결되지 않아 타이핑 상태를 전송할 수 없습니다')
-      return
-    }
-
-    const destination = `/app/chat/rooms/${roomId}/typing`
-    const message = {
-      roomId: roomId,
-      userId: this.getCurrentUserId(),
-      isTyping: isTyping,
-      timestamp: new Date().toISOString()
-    }
-
-    console.log(`⌨️ [WebSocket] 타이핑 상태 전송:`, message)
-
-    this.client.publish({
-      destination: destination,
-      body: JSON.stringify(message)
-    })
-  }
-
-  // 온라인 사용자 구독
-  subscribeToOnlineUsers(roomId, userHandler) {
-    if (!this.connected) {
-      throw new Error('WebSocket이 연결되지 않았습니다')
-    }
-
-    const destination = `/topic/chat/rooms/${roomId}/users`
-
-    return this.client.subscribe(destination, (message) => {
-      try {
-        const userData = JSON.parse(message.body)
-        console.log(`👥 [WebSocket] 온라인 사용자 정보 (Room: ${roomId}):`, userData)
-
-        if (userHandler) {
-          userHandler(userData)
-        }
-      } catch (error) {
-        console.error('❌ [WebSocket] 온라인 사용자 정보 파싱 에러:', error)
+  async sendTypingStatus(roomId, isTyping) {
+    try {
+      if (!this.isConnected()) {
+        console.warn('⚠️ [WebSocket] 연결되지 않아 타이핑 상태를 전송할 수 없습니다')
+        return
       }
-    })
-  }
 
-  // 시스템 알림 구독
-  subscribeToSystemNotifications() {
-    if (!this.connected) {
-      throw new Error('WebSocket이 연결되지 않았습니다')
-    }
-
-    const destination = `/topic/notifications/system`
-
-    return this.client.subscribe(destination, (message) => {
-      try {
-        const notificationData = JSON.parse(message.body)
-        console.log(`🔔 [WebSocket] 시스템 알림:`, notificationData)
-
-        const globalHandler = this.globalHandlers.get('system-notification')
-        if (globalHandler) {
-          globalHandler(notificationData)
-        }
-      } catch (error) {
-        console.error('❌ [WebSocket] 시스템 알림 파싱 에러:', error)
+      const destination = `/app/chat/rooms/${roomId}/typing`
+      const message = {
+        roomId: roomId,
+        userId: this.getCurrentUserId(),
+        isTyping: isTyping,
+        timestamp: new Date().toISOString()
       }
-    })
-  }
 
-  // 개인 알림 구독
-  subscribeToPersonalNotifications() {
-    if (!this.connected) {
-      throw new Error('WebSocket이 연결되지 않았습니다')
+      console.log(`⌨️ [WebSocket] 타이핑 상태 전송:`, message)
+
+      this.client.publish({
+        destination: destination,
+        body: JSON.stringify(message)
+      })
+    } catch (error) {
+      console.error('❌ [WebSocket] 타이핑 상태 전송 실패:', error)
     }
-
-    const userId = this.getCurrentUserId()
-    if (!userId) {
-      throw new Error('사용자 ID를 찾을 수 없습니다')
-    }
-
-    const destination = `/topic/notifications/user/${userId}`
-
-    return this.client.subscribe(destination, (message) => {
-      try {
-        const notificationData = JSON.parse(message.body)
-        console.log(`🔔 [WebSocket] 개인 알림:`, notificationData)
-
-        const globalHandler = this.globalHandlers.get('personal-notification')
-        if (globalHandler) {
-          globalHandler(notificationData)
-        }
-      } catch (error) {
-        console.error('❌ [WebSocket] 개인 알림 파싱 에러:', error)
-      }
-    })
-  }
-
-  // 연결 상태 확인
-  isConnected() {
-    return this.connected && this.client?.connected
   }
 
   // 구독 상태 확인
@@ -520,9 +552,14 @@ class WebSocketService {
 
   // 모든 구독 해제
   unsubscribeAll() {
+    console.log('📨 [WebSocket] 모든 구독 해제 중...')
     this.subscriptions.forEach((subscription, key) => {
-      subscription.unsubscribe()
-      console.log(`📨 [WebSocket] 구독 해제: ${key}`)
+      try {
+        subscription.unsubscribe()
+        console.log(`📨 [WebSocket] 구독 해제: ${key}`)
+      } catch (error) {
+        console.warn(`구독 해제 실패 (${key}):`, error)
+      }
     })
     this.subscriptions.clear()
     this.messageHandlers.clear()
@@ -531,29 +568,29 @@ class WebSocketService {
   // 연결 상태 모니터링
   startConnectionMonitoring() {
     setInterval(() => {
-      if (this.connected && this.client?.connected) {
-        // 연결 상태 양호
-        if (this.connectionState.status !== 'connected') {
+      const wasConnected = this.connectionState.connected
+      const isNowConnected = this.isConnected()
+
+      if (wasConnected !== isNowConnected) {
+        if (isNowConnected) {
           this.updateConnectionState('connected')
-        }
-      } else if (this.connecting) {
-        // 연결 중
-        if (this.connectionState.status !== 'connecting') {
-          this.updateConnectionState('connecting')
-        }
-      } else {
-        // 연결 끊김
-        if (this.connectionState.status !== 'disconnected') {
+        } else {
           this.updateConnectionState('disconnected')
+
+          // 예상치 못한 연결 끊김 감지 시 재연결 시도
+          if (wasConnected && this.reconnectAttempts < this.maxReconnectAttempts) {
+            console.warn('⚠️ [WebSocket] 예상치 못한 연결 끊김 감지, 재연결 시도')
+            this.attemptReconnect()
+          }
         }
       }
-    }, 1000)
+    }, 5000) // 5초마다 체크
   }
 
   // 디버그 정보 출력
   getDebugInfo() {
     return {
-      connected: this.connected,
+      connected: this.isConnected(),
       connecting: this.connecting,
       subscriptionsCount: this.subscriptions.size,
       handlersCount: this.messageHandlers.size,
@@ -561,7 +598,12 @@ class WebSocketService {
       connectionState: this.connectionState,
       deviceInfo: this.getDeviceInfo(),
       userId: this.getCurrentUserId(),
-      deviceId: this.getDeviceId()
+      deviceId: this.getDeviceId(),
+      reconnectAttempts: this.reconnectAttempts,
+      clientState: this.client ? {
+        connected: this.client.connected,
+        webSocketState: this.client.webSocket?.readyState
+      } : null
     }
   }
 
@@ -571,7 +613,40 @@ class WebSocketService {
       totalSubscriptions: this.subscriptions.size,
       totalHandlers: this.messageHandlers.size + this.globalHandlers.size,
       uptime: this.connected ? Date.now() - this.connectTime : 0,
-      reconnectCount: this.reconnectCount || 0
+      reconnectCount: this.reconnectAttempts || 0,
+      isHealthy: this.isConnected()
+    }
+  }
+
+  // 헬스체크
+  async healthCheck() {
+    if (!this.isConnected()) {
+      return {
+        healthy: false,
+        status: 'disconnected',
+        message: 'WebSocket이 연결되지 않았습니다'
+      }
+    }
+
+    try {
+      // 간단한 핑 메시지 전송으로 연결 상태 확인
+      const testDestination = '/app/ping'
+      this.client.publish({
+        destination: testDestination,
+        body: JSON.stringify({ type: 'ping', timestamp: Date.now() })
+      })
+
+      return {
+        healthy: true,
+        status: 'connected',
+        message: 'WebSocket 연결 정상'
+      }
+    } catch (error) {
+      return {
+        healthy: false,
+        status: 'error',
+        message: `헬스체크 실패: ${error.message}`
+      }
     }
   }
 }

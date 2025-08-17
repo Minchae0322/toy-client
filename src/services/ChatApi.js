@@ -92,16 +92,23 @@ class ChatApi {
 
   // === 채팅방 관련 API ===
 
-  // 채팅방 목록 조회
+  // 채팅방 목록 조회 (백엔드 API 연동)
   async getChatRooms(searchCondition = {}) {
-    const url = `${this.baseURL}/api/chat/rooms`
+    const url = `${this.baseURL}/v1/chat/rooms`
     this.logRequest('GET', url, searchCondition)
 
     try {
       const queryParams = new URLSearchParams()
+
+      // 백엔드 ChatRoomSearchCondition에 맞는 파라미터 설정
       if (searchCondition.roomType) queryParams.append('roomType', searchCondition.roomType)
       if (searchCondition.status) queryParams.append('status', searchCondition.status)
       if (searchCondition.keyword) queryParams.append('keyword', searchCondition.keyword)
+
+      // 페이징 파라미터 추가 (필요한 경우)
+      if (searchCondition.page !== undefined) queryParams.append('page', searchCondition.page)
+      if (searchCondition.size !== undefined) queryParams.append('size', searchCondition.size)
+      if (searchCondition.sort) queryParams.append('sort', searchCondition.sort)
 
       const requestUrl = `${url}${queryParams.toString() ? '?' + queryParams.toString() : ''}`
       const response = await fetch(requestUrl, {
@@ -112,7 +119,7 @@ class ChatApi {
       const apiResponse = await this.handleResponse(response)
       this.logResponse('GET', url, apiResponse)
 
-      // ApiResponse<List<ChatRoomResponse.List>> 구조
+      // 백엔드 ApiResponse<List<ChatRoomResponse.List>> 구조에 맞게 처리
       return {
         success: apiResponse.success || true,
         data: apiResponse.data || [], // List<ChatRoomResponse.List>
@@ -132,7 +139,48 @@ class ChatApi {
     }
   }
 
-  // 샘플 채팅방 데이터
+  // 채팅방 생성 (백엔드 API 연동)
+  async createChatRoom(roomData) {
+    const url = `${this.baseURL}/v1/chat/rooms`
+
+    // 백엔드 ChatRoomRequest.Create 구조에 맞게 요청 데이터 변환
+    const requestData = {
+      title: roomData.title,
+      description: roomData.description || null,
+      roomType: roomData.roomType || 'GROUP', // GROUP, ONE_TO_ONE, CHANNEL
+      participantUserIds: roomData.participantUserIds || [],
+      isPrivate: roomData.isPrivate || false,
+      maxParticipants: roomData.maxParticipants || null,
+      thumbnailUrl: roomData.thumbnailUrl || null,
+      // creatorId는 백엔드에서 @AuthenticationPrincipal로 자동 설정됨
+    }
+
+    this.logRequest('POST', url, requestData)
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(requestData)
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('POST', url, apiResponse)
+
+      // 백엔드 ApiResponse<ChatRoomResponse.CreateResult> 구조 처리
+      return {
+        success: apiResponse.success || true,
+        data: apiResponse.data, // ChatRoomResponse.CreateResult
+        message: apiResponse.message || '채팅방이 성공적으로 생성되었습니다'
+      }
+
+    } catch (error) {
+      this.logResponse('POST', url, null, error)
+      throw error
+    }
+  }
+
+  // 샘플 채팅방 데이터 (API 실패 시 사용)
   getSampleChatRooms() {
     return {
       success: true,
@@ -146,7 +194,8 @@ class ChatApi {
           lastMessageType: 'TEXT',
           lastMessageAt: new Date(Date.now() - 300000).toISOString(),
           unreadCount: 3,
-          thumbnailUrl: null
+          thumbnailUrl: null,
+          status: 'ACTIVE'
         },
         {
           roomId: '2',
@@ -157,7 +206,8 @@ class ChatApi {
           lastMessageType: 'TEXT',
           lastMessageAt: new Date(Date.now() - 600000).toISOString(),
           unreadCount: 1,
-          thumbnailUrl: 'https://via.placeholder.com/48/FF6B6B/FFFFFF?text=이'
+          thumbnailUrl: 'https://via.placeholder.com/48/FF6B6B/FFFFFF?text=이',
+          status: 'ACTIVE'
         },
         {
           roomId: '3',
@@ -168,7 +218,8 @@ class ChatApi {
           lastMessageType: 'IMAGE',
           lastMessageAt: new Date(Date.now() - 1800000).toISOString(),
           unreadCount: 7,
-          thumbnailUrl: null
+          thumbnailUrl: null,
+          status: 'ACTIVE'
         },
         {
           roomId: '4',
@@ -179,7 +230,8 @@ class ChatApi {
           lastMessageType: 'TEXT',
           lastMessageAt: new Date(Date.now() - 3600000).toISOString(),
           unreadCount: 0,
-          thumbnailUrl: 'https://via.placeholder.com/48/4ECDC4/FFFFFF?text=최'
+          thumbnailUrl: 'https://via.placeholder.com/48/4ECDC4/FFFFFF?text=최',
+          status: 'ACTIVE'
         },
         {
           roomId: '5',
@@ -190,16 +242,17 @@ class ChatApi {
           lastMessageType: 'LOCATION',
           lastMessageAt: new Date(Date.now() - 7200000).toISOString(),
           unreadCount: 0,
-          thumbnailUrl: null
+          thumbnailUrl: null,
+          status: 'ACTIVE'
         }
       ],
       message: 'sample data'
     }
   }
 
-  // 채팅방 정보 조회
+  // 채팅방 상세 정보 조회
   async getRoomDetail(roomId) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}`
+    const url = `${this.baseURL}/v1/chat/rooms/${roomId}`
     this.logRequest('GET', url)
 
     try {
@@ -211,7 +264,7 @@ class ChatApi {
       const apiResponse = await this.handleResponse(response)
       this.logResponse('GET', url, apiResponse)
 
-      // ApiResponse<ChatRoomResponse.Detail> 구조
+      // 백엔드 ApiResponse<ChatRoomResponse.Detail> 구조 처리
       return {
         success: apiResponse.success || true,
         data: apiResponse.data, // ChatRoomResponse.Detail
@@ -232,7 +285,12 @@ class ChatApi {
             description: null,
             roomType: 'GROUP',
             status: 'ACTIVE',
-            participantCount: 1
+            participantCount: 1,
+            createdAt: new Date().toISOString(),
+            lastMessageAt: null,
+            lastMessage: null,
+            lastMessageType: null,
+            thumbnailUrl: null
           },
           message: 'default data'
         }
@@ -242,31 +300,9 @@ class ChatApi {
     }
   }
 
-  // 채팅방 생성
-  async createRoom(roomData) {
-    const url = `${this.baseURL}/api/chat/rooms`
-    this.logRequest('POST', url, roomData)
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(roomData)
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('POST', url, apiResponse)
-      return apiResponse
-
-    } catch (error) {
-      this.logResponse('POST', url, null, error)
-      throw error
-    }
-  }
-
   // 채팅방 입장
   async joinRoom(roomId) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}/join`
+    const url = `${this.baseURL}/v1/chat/rooms/${roomId}/join`
     const requestData = {
       deviceId: this.getDeviceId(),
       userId: this.getCurrentUserId()
@@ -303,7 +339,7 @@ class ChatApi {
 
   // 채팅방 나가기
   async leaveRoom(roomId) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}/leave`
+    const url = `${this.baseURL}/v1/chat/rooms/${roomId}/leave`
     const requestData = {
       deviceId: this.getDeviceId(),
       userId: this.getCurrentUserId()
@@ -340,7 +376,7 @@ class ChatApi {
 
   // 온라인 사용자 조회
   async getOnlineUsers(roomId) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}/online-users`
+    const url = `${this.baseURL}/v1/chat/rooms/${roomId}/online-users`
     this.logRequest('GET', url)
 
     try {
@@ -363,7 +399,7 @@ class ChatApi {
 
   // 메시지 목록 조회 (페이징 및 커서 기반)
   async getMessages(roomId, params = {}) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages`
+    const url = `${this.baseURL}/v1/chat/rooms/${roomId}/messages`
     this.logRequest('GET', url, params)
 
     try {
@@ -394,7 +430,7 @@ class ChatApi {
       const apiResponse = await this.handleResponse(response)
       this.logResponse('GET', url, apiResponse)
 
-      // ApiResponse<Page<ChatDetail>> 구조
+      // 백엔드 ApiResponse<Page<ChatDetail>> 구조
       return {
         success: apiResponse.success || true,
         data: apiResponse.data, // Page<ChatDetail>
@@ -467,7 +503,7 @@ class ChatApi {
 
   // 메시지 전송
   async sendMessage(roomId, messageData) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages`
+    const url = `${this.baseURL}/v1/chat/rooms/${roomId}/messages`
     const requestData = {
       ...messageData,
       senderId: this.getCurrentUserId(),
@@ -516,147 +552,11 @@ class ChatApi {
     }
   }
 
-  // 메시지 수정
-  async updateMessage(roomId, messageId, messageData) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages/${messageId}`
-    this.logRequest('PUT', url, messageData)
-
-    try {
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: this.getHeaders(),
-        body: JSON.stringify(messageData)
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('PUT', url, apiResponse)
-      return apiResponse
-
-    } catch (error) {
-      this.logResponse('PUT', url, null, error)
-      throw error
-    }
-  }
-
-  // 메시지 삭제
-  async deleteMessage(roomId, messageId) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages/${messageId}`
-    this.logRequest('DELETE', url)
-
-    try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: this.getHeaders()
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('DELETE', url, apiResponse)
-      return apiResponse
-
-    } catch (error) {
-      this.logResponse('DELETE', url, null, error)
-      throw error
-    }
-  }
-
-  // 메시지 읽음 처리
-  async markAsRead(roomId, messageId) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages/${messageId}/read`
-    const requestData = {
-      userId: this.getCurrentUserId(),
-      deviceId: this.getDeviceId(),
-      readAt: new Date().toISOString()
-    }
-
-    this.logRequest('POST', url, requestData)
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(requestData)
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('POST', url, apiResponse)
-      return apiResponse
-
-    } catch (error) {
-      this.logResponse('POST', url, null, error)
-      throw error
-    }
-  }
-
-  // === 파일 업로드 관련 API ===
-
-  // 파일 업로드
-  async uploadFile(file, roomId = null) {
-    const url = `${this.baseURL}/api/chat/files/upload`
-    this.logRequest('POST', url, { fileName: file.name, fileSize: file.size, roomId })
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      if (roomId) formData.append('roomId', roomId)
-      formData.append('deviceId', this.getDeviceId())
-
-      // FormData 사용 시 Content-Type 헤더 제거 (브라우저가 자동 설정)
-      const headers = { ...this.getHeaders() }
-      delete headers['Content-Type']
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: headers,
-        body: formData
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('POST', url, apiResponse)
-      return apiResponse
-
-    } catch (error) {
-      this.logResponse('POST', url, null, error)
-      throw error
-    }
-  }
-
-  // === 검색 관련 API ===
-
-  // 메시지 검색
-  async searchMessages(roomId, query, params = {}) {
-    const url = `${this.baseURL}/api/chat/rooms/${roomId}/messages/search`
-    const searchParams = { query, ...params }
-    this.logRequest('GET', url, searchParams)
-
-    try {
-      const queryParams = new URLSearchParams({
-        q: query,
-        page: params.page || 0,
-        size: params.size || 20,
-        sort: params.sort || 'createdAt,desc'
-      })
-
-      const requestUrl = `${url}?${queryParams}`
-      const response = await fetch(requestUrl, {
-        method: 'GET',
-        headers: this.getHeaders()
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('GET', url, apiResponse)
-      return apiResponse
-
-    } catch (error) {
-      this.logResponse('GET', url, null, error)
-      throw error
-    }
-  }
-
   // === 유틸리티 메서드 ===
 
   // 연결 테스트
   async testConnection() {
-    const url = `${this.baseURL}/api/health`
+    const url = `${this.baseURL}/health`
     this.logRequest('GET', url)
 
     try {
@@ -709,7 +609,7 @@ class ChatApi {
     }
 
     try {
-      const response = await fetch(`${this.baseURL}/api/health`, {
+      const response = await fetch(`${this.baseURL}/health`, {
         method: 'HEAD',
         cache: 'no-cache'
       })
@@ -729,125 +629,96 @@ export const chatApi = new ChatApi()
 // 기본 내보내기
 export default chatApi
 
-// 추가 유틸리티 함수들
-export const chatApiUtils = {
-  // 메시지 타입 검증
-  isValidMessageType(type) {
-    const validTypes = ['TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'FILE', 'LOCATION', 'SYSTEM']
-    return validTypes.includes(type?.toUpperCase())
-  },
-
-  // 채팅방 타입 검증
-  isValidRoomType(type) {
-    const validTypes = ['ONE_TO_ONE', 'GROUP', 'CHANNEL']
-    return validTypes.includes(type?.toUpperCase())
-  },
-
-  // 파일 크기 검증 (10MB 제한)
-  isValidFileSize(file, maxSizeMB = 10) {
-    const maxSizeBytes = maxSizeMB * 1024 * 1024
-    return file.size <= maxSizeBytes
-  },
-
-  // 지원되는 파일 타입 검증
-  isValidFileType(file) {
-    const allowedTypes = [
-      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-      'video/mp4', 'video/webm',
-      'audio/mp3', 'audio/wav', 'audio/ogg',
-      'application/pdf', 'text/plain',
-      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ]
-    return allowedTypes.includes(file.type)
-  },
-
-  // 메시지 내용 검증
-  isValidMessageContent(content, type = 'TEXT') {
-    if (type === 'TEXT') {
-      return content && content.trim().length > 0 && content.length <= 1000
+// 채팅방 관련 유틸리티 함수들
+export const chatRoomUtils = {
+  // 채팅방 타입 변환 (백엔드 -> 프론트엔드)
+  convertRoomType(backendType) {
+    const typeMap = {
+      'ONE_TO_ONE': 'dm',
+      'GROUP': 'group',
+      'CHANNEL': 'channel'
     }
-    return true // 다른 타입은 별도 검증
+    return typeMap[backendType] || 'group'
   },
 
-  // 에러 메시지 포맷팅
-  formatErrorMessage(error) {
-    if (error.status === 401) {
-      return '인증이 필요합니다. 다시 로그인해주세요.'
-    } else if (error.status === 403) {
-      return '권한이 없습니다.'
-    } else if (error.status === 404) {
-      return '요청한 리소스를 찾을 수 없습니다.'
-    } else if (error.status === 429) {
-      return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
-    } else if (error.status >= 500) {
-      return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
-    } else {
-      return error.message || '알 수 없는 오류가 발생했습니다.'
+  // 채팅방 타입 변환 (프론트엔드 -> 백엔드)
+  convertRoomTypeToBackend(frontendType) {
+    const typeMap = {
+      'dm': 'ONE_TO_ONE',
+      'group': 'GROUP',
+      'channel': 'CHANNEL'
+    }
+    return typeMap[frontendType] || 'GROUP'
+  },
+
+  // 백엔드 응답을 프론트엔드 형식으로 변환
+  transformChatRoomResponse(backendRoom) {
+    return {
+      id: backendRoom.roomId,
+      name: backendRoom.title,
+      type: this.convertRoomType(backendRoom.roomType),
+      participantCount: backendRoom.participantCount,
+      lastMessage: backendRoom.lastMessage || '메시지가 없습니다',
+      lastMessageSender: null,
+      lastMessageType: backendRoom.lastMessageType ? backendRoom.lastMessageType.toLowerCase() : 'text',
+      lastMessageAt: backendRoom.lastMessageAt ? new Date(backendRoom.lastMessageAt).getTime() : Date.now(),
+      unreadCount: backendRoom.unreadCount || 0,
+      status: backendRoom.status === 'ACTIVE' ? 'online' : 'offline',
+      avatar: backendRoom.thumbnailUrl
     }
   },
 
-  // 시간 포맷팅
-  formatMessageTime(timestamp) {
-    const now = new Date()
-    const messageTime = new Date(timestamp)
-    const diffInMs = now - messageTime
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
+  // 채팅방 생성 요청 데이터 검증
+  validateCreateRoomData(roomData) {
+    const errors = []
 
-    if (diffInMinutes < 1) {
-      return '방금 전'
-    } else if (diffInMinutes < 60) {
-      return `${diffInMinutes}분 전`
-    } else if (diffInHours < 24) {
-      return `${diffInHours}시간 전`
-    } else if (diffInDays < 7) {
-      return `${diffInDays}일 전`
-    } else {
-      return messageTime.toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      })
+    if (!roomData.title || roomData.title.trim().length === 0) {
+      errors.push('채팅방 제목은 필수입니다.')
+    }
+
+    if (roomData.title && roomData.title.length > 50) {
+      errors.push('채팅방 제목은 50자 이하여야 합니다.')
+    }
+
+    if (!['GROUP', 'ONE_TO_ONE', 'CHANNEL'].includes(roomData.roomType)) {
+      errors.push('올바른 채팅방 타입을 선택해주세요.')
+    }
+
+    if (roomData.roomType === 'ONE_TO_ONE' && (!roomData.participantUserIds || roomData.participantUserIds.length !== 1)) {
+      errors.push('1:1 채팅방은 상대방 1명을 선택해야 합니다.')
+    }
+
+    if (roomData.roomType === 'GROUP' && roomData.maxParticipants && roomData.maxParticipants < 2) {
+      errors.push('그룹 채팅방은 최소 2명 이상이어야 합니다.')
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors
     }
   },
 
-  // 메시지 내용 미리보기 생성
-  generateMessagePreview(message) {
-    switch (message.type?.toUpperCase()) {
-      case 'TEXT':
-        return message.content?.length > 50
-            ? message.content.substring(0, 50) + '...'
-            : message.content
-      case 'IMAGE':
-        return '📷 사진'
-      case 'VIDEO':
-        return '🎥 동영상'
-      case 'AUDIO':
-        return '🎵 음성메시지'
-      case 'FILE':
-        return '📎 파일'
-      case 'LOCATION':
-        return '📍 위치'
-      case 'SYSTEM':
-        return message.content || '시스템 메시지'
-      default:
-        return '메시지'
+  // 검색 조건 검증
+  validateSearchCondition(searchCondition) {
+    const validRoomTypes = ['GROUP', 'ONE_TO_ONE', 'CHANNEL']
+    const validStatuses = ['ACTIVE', 'INACTIVE', 'DELETED']
+
+    if (searchCondition.roomType && !validRoomTypes.includes(searchCondition.roomType)) {
+      searchCondition.roomType = null
     }
+
+    if (searchCondition.status && !validStatuses.includes(searchCondition.status)) {
+      searchCondition.status = 'ACTIVE'
+    }
+
+    if (searchCondition.keyword && searchCondition.keyword.length > 100) {
+      searchCondition.keyword = searchCondition.keyword.substring(0, 100)
+    }
+
+    return searchCondition
   },
 
-  // 읽지 않은 메시지 수 계산
-  calculateUnreadCount(messages, lastReadMessageId, currentUserId) {
-    if (!lastReadMessageId || !messages.length) return 0
-
-    const lastReadIndex = messages.findIndex(msg => msg.messageId === lastReadMessageId)
-    if (lastReadIndex === -1) return messages.length
-
-    return messages.slice(lastReadIndex + 1)
-    .filter(msg => msg.senderId !== currentUserId).length
-  },
-
-  // 채팅방 정렬
+  // 채팅방 목록 정렬
   sortChatRooms(rooms, sortBy = 'lastMessage') {
     return [...rooms].sort((a, b) => {
       switch (sortBy) {
@@ -865,63 +736,27 @@ export const chatApiUtils = {
     })
   },
 
-  // 메시지 그룹화 (날짜별)
-  groupMessagesByDate(messages) {
-    const groups = {}
-
-    messages.forEach(message => {
-      const date = new Date(message.createdAt).toDateString()
-      if (!groups[date]) {
-        groups[date] = []
+  // 채팅방 필터링
+  filterChatRooms(rooms, filters) {
+    return rooms.filter(room => {
+      // 타입 필터
+      if (filters.type && room.type !== filters.type) {
+        return false
       }
-      groups[date].push(message)
+
+      // 읽지 않은 메시지 필터
+      if (filters.unreadOnly && room.unreadCount === 0) {
+        return false
+      }
+
+      // 검색 키워드 필터
+      if (filters.keyword) {
+        const keyword = filters.keyword.toLowerCase()
+        return room.name.toLowerCase().includes(keyword) ||
+            (room.lastMessage && room.lastMessage.toLowerCase().includes(keyword))
+      }
+
+      return true
     })
-
-    return groups
-  },
-
-  // 온라인 상태 확인
-  isUserOnline(lastSeen, thresholdMinutes = 5) {
-    if (!lastSeen) return false
-
-    const now = new Date()
-    const lastSeenTime = new Date(lastSeen)
-    const diffInMinutes = (now - lastSeenTime) / (1000 * 60)
-
-    return diffInMinutes <= thresholdMinutes
-  },
-
-  // 디바이스 타입 감지
-  getDeviceType() {
-    const userAgent = navigator.userAgent
-    if (/tablet|ipad|playbook|silk/i.test(userAgent)) {
-      return 'tablet'
-    }
-    if (/mobile|iphone|ipod|android|blackberry|opera|mini|windows\sce|palm|smartphone|iemobile/i.test(userAgent)) {
-      return 'mobile'
-    }
-    return 'desktop'
-  },
-
-  // 알림 권한 확인
-  checkNotificationPermission() {
-    if (!('Notification' in window)) {
-      return 'not-supported'
-    }
-    return Notification.permission
-  },
-
-  // 브라우저 알림 표시
-  showBrowserNotification(title, options = {}) {
-    if (this.checkNotificationPermission() === 'granted') {
-      return new Notification(title, {
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        tag: 'chat-notification',
-        renotify: true,
-        ...options
-      })
-    }
-    return null
   }
 }
