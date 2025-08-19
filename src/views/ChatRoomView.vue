@@ -1,4 +1,112 @@
-<template>
+// 채팅방 목록 로드 (백엔드 API 연동)
+const loadChatRooms = async (showLoadingIndicator = true) => {
+try {
+if (showLoadingIndicator) {
+loading.value = true
+}
+error.value = ''
+
+console.log('📋 채팅방 목록 로드 시작 (백엔드 API)')
+lastApiCall.value = new Date().toLocaleTimeString()
+
+// 🔑 인증 상태 확인 (Pinia 스토어 사용)
+console.group('🔑 인증 상태 확인')
+
+// Pinia 스토어에서 인증 상태 확인
+console.log('Pinia 인증 상태:', authStore.isAuthenticated)
+console.log('Pinia 사용자 정보:', authStore.user)
+
+// ChatApi에서 토큰 상태 확인
+const token = chatApi.getAuthToken()
+const isAuth = chatApi.isAuthenticated()
+
+console.log('토큰 존재:', !!token)
+console.log('ChatApi 인증 상태:', isAuth)
+
+if (!authStore.isAuthenticated || !token) {
+console.warn('⚠️ 인증되지 않은 상태입니다.')
+console.warn('💡 해결방법:')
+console.warn('1. 로그인을 다시 시도하세요')
+console.warn('2. Pinia 스토어 상태를 확인하세요')
+console.warn('3. authUtils의 토큰 저장을 확인하세요')
+
+// 디버깅 정보 출력
+chatApi.debugTokenStatus()
+
+console.groupEnd()
+
+// 인증이 안된 경우 샘플 데이터 사용 (개발용)
+loadSampleData()
+return
+}
+
+console.log('✅ 인증 확인 완료')
+console.groupEnd()
+
+try {
+// API 연결 상태 확인
+const isApiConnected = await testApiConnection()
+if (!isApiConnected) {
+throw new Error('API 서버에 연결할 수 없습니다')
+}
+
+// 백엔드 API 호출 - ChatRoomSearchCondition 사용
+const searchCondition = chatRoomUtils.validateSearchCondition({
+status: 'ACTIVE', // 활성 채팅방만
+keyword: null,    // 전체 조회
+roomType: null    // 모든 타입
+})
+
+console.log('📤 API 요청:', searchCondition)
+const response = await chatApi.getChatRooms(searchCondition)
+
+if (response.success && response.data) {
+// 백엔드 ChatRoomResponse.ChatRoomList 배열을 프론트엔드 형식으로 변환
+const backendRooms = Array.isArray(response.data) ? response.data : []
+allChatRooms.value = backendRooms.map(chatRoomUtils.transformChatRoomResponse)
+
+console.log('✅ 백엔드에서 채팅방 목록 로드 완료:', allChatRooms.value.length, '개')
+apiConnected.value = true
+} else {
+throw new Error(response.message || 'API 응답이 실패했습니다')
+}
+
+} catch (apiError) {
+console.error('❌ 백엔드 API 호출 실패:', apiError)
+apiConnected.value = false
+
+// 401 에러인 경우 인증 문제
+if (apiError.status === 401) {
+console.error('🚨 인증 오류: 토큰이 유효하지 않거나 만료되었습니다.')
+console.error('💡 해결방법:')
+console.error('1. 다시 로그인하세요')
+console.error('2. 토큰 갱신을 시도하세요')
+
+// Pinia 스토어 상태 초기화 (선택사항)
+// authStore.logout()
+
+error.value = '인증이 만료되었습니다. 다시 로그인해주세요.'
+return
+}
+
+// 네트워크 오류인 경우 샘플 데이터 사용
+if (apiError.status >= 500 || !apiError.status) {
+console.warn('⚠️ 서버 오류로 인해 샘플 데이터를 사용합니다.')
+loadSampleData()
+} else {
+// 기타 오류
+error.value = apiError.message || '채팅방 목록을 불러올 수 없습니다'
+}
+}
+
+} catch (generalError) {
+console.error('❌ 채팅방 목록 로드 실패:', generalError)
+error.value = generalError.message || '알 수 없는 오류가 발생했습니다'
+apiConnected.value = false
+} finally {
+loading.value = false
+}
+}<template>
   <div class="chat-container">
     <ChatRoomHeader
         @toggle-search="toggleSearch"
@@ -26,6 +134,7 @@
       <p>WebSocket 연결: {{ wsConnected ? '✅' : '❌' }}</p>
       <p>현재 구독한 채팅방: {{ subscribedRooms.join(', ') || '없음' }}</p>
       <p>마지막 API 호출: {{ lastApiCall || '없음' }}</p>
+      <p>API 연동 상태: {{ apiConnected ? '✅' : '❌' }}</p>
     </div>
 
     <div class="chat-list">
@@ -85,9 +194,14 @@
       <Plus :size="24" />
     </button>
 
-    <!-- WebSocket 연결 상태 표시 -->
-    <div v-if="showConnectionStatus" class="connection-status" :class="wsConnected ? 'connected' : 'disconnected'">
-      {{ wsConnected ? '🟢 연결됨' : '🔴 연결 끊김' }}
+    <!-- 연결 상태 표시 -->
+    <div v-if="showConnectionStatus" class="connection-status-container">
+      <div class="connection-status" :class="wsConnected ? 'connected' : 'disconnected'">
+        {{ wsConnected ? '🟢 실시간 연결됨' : '🔴 실시간 연결 끊김' }}
+      </div>
+      <div class="connection-status api-status" :class="apiConnected ? 'connected' : 'disconnected'">
+        {{ apiConnected ? '🟢 API 연결됨' : '🔴 API 연결 끊김' }}
+      </div>
     </div>
 
     <!-- 채팅방 생성 모달 -->
@@ -114,6 +228,7 @@
 <script setup>
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import { Plus, Check } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/auth.js'
 import ChatRoomHeader from '@/components/chat/ChatRoomHeader.vue'
 import SearchBar from '@/components/chat/SearchBar.vue'
 import ChatRoomTabs from '@/components/chat/ChatRoomTabs.vue'
@@ -121,6 +236,9 @@ import ChatRoomCard from '@/components/chat/ChatRoomCard.vue'
 import CreateChatRoomModal from '@/components/chat/CreateChatRoomModal.vue'
 import {chatApi, chatRoomUtils} from '@/services/chatApi.js'
 import {webSocketService} from '@/services/webSocketService.js'
+
+// Pinia 스토어 사용
+const authStore = useAuthStore()
 
 // 이벤트 정의
 const emit = defineEmits(['room-selected', 'message-received'])
@@ -151,8 +269,9 @@ const showSuccessToast = ref(false)
 const successMessage = ref('')
 const lastApiCall = ref('')
 
-// WebSocket 관련 상태
+// 연결 상태 관리
 const wsConnected = ref(false)
+const apiConnected = ref(false)
 const subscribedRooms = ref([])
 
 // 채팅방 목록 데이터
@@ -244,7 +363,20 @@ const getEmptyStateMessage = () => {
   }
 }
 
-// WebSocket 연결 (개선된 버전)
+// API 연결 테스트
+const testApiConnection = async () => {
+  try {
+    const isConnected = await chatApi.testConnection()
+    apiConnected.value = isConnected
+    return isConnected
+  } catch (error) {
+    console.error('API 연결 테스트 실패:', error)
+    apiConnected.value = false
+    return false
+  }
+}
+
+// WebSocket 연결
 const connectWebSocket = async () => {
   try {
     console.log('🔌 WebSocket 연결 시작...')
@@ -346,7 +478,7 @@ const handleRoomSelect = async (roomId) => {
   }
 }
 
-// 검색 핸들러
+// 검색 핸들러 (백엔드 API 연동)
 const handleSearch = (query) => {
   if (searchTimer) {
     clearTimeout(searchTimer)
@@ -367,14 +499,17 @@ const handleSearch = (query) => {
           (room.lastMessage && room.lastMessage.toLowerCase().includes(query.toLowerCase()))
       )
 
-      // 서버 검색 (추가 검색이 필요한 경우)
+      // 백엔드 검색 API 호출
       try {
-        const serverResults = await chatApi.getChatRooms({
+        const searchCondition = chatRoomUtils.validateSearchCondition({
           keyword: query.trim(),
           status: 'ACTIVE'
         })
 
-        if (serverResults.success) {
+        const serverResults = await chatApi.getChatRooms(searchCondition)
+
+        if (serverResults.success && serverResults.data) {
+          // 백엔드 응답을 프론트엔드 형식으로 변환
           const transformedResults = serverResults.data.map(chatRoomUtils.transformChatRoomResponse)
 
           // 로컬 결과와 서버 결과를 합치고 중복 제거
@@ -387,10 +522,11 @@ const handleSearch = (query) => {
 
           searchResults.value = combinedResults
         } else {
+          console.warn('서버 검색 응답 실패, 로컬 검색 결과만 사용')
           searchResults.value = localResults
         }
-      } catch (error) {
-        console.warn('서버 검색 실패, 로컬 검색 결과만 사용:', error)
+      } catch (searchError) {
+        console.warn('백엔드 검색 API 실패, 로컬 검색 결과만 사용:', searchError)
         searchResults.value = localResults
       }
 
@@ -484,6 +620,16 @@ const startWebSocketMonitoring = () => {
   }, 2000) // 2초마다 체크
 }
 
+// API 연결 상태 모니터링
+const startApiMonitoring = () => {
+  setInterval(async () => {
+    const isConnected = await testApiConnection()
+    if (apiConnected.value !== isConnected) {
+      console.log(`🌐 API 연결 상태 변경: ${isConnected ? '연결됨' : '끊어짐'}`)
+    }
+  }, 10000) // 10초마다 체크
+}
+
 // 유틸리티 함수들
 const getDeviceId = () => {
   let deviceId = localStorage.getItem('device_id')
@@ -505,13 +651,10 @@ const getAuthToken = () => {
       sessionStorage.getItem('authToken')
 }
 
-// 에러 토스트 표시 함수 개선
+// 에러 토스트 표시 함수
 const showErrorToast = (message) => {
-  // 실제 구현에서는 전역 토스트 시스템을 사용하는 것이 좋습니다
-  // 여기서는 간단한 알림으로 대체
   console.error('🚨 Error Toast:', message)
 
-  // 브라우저 알림 대신 더 나은 UX를 위한 토스트 구현
   if (window.confirm(`${message}\n\n다시 시도하시겠습니까?`)) {
     // 재시도 로직
     if (message.includes('WebSocket') || message.includes('실시간')) {
@@ -536,7 +679,7 @@ const loadChatRooms = async (showLoadingIndicator = true) => {
     }
     error.value = ''
 
-    console.log('📋 채팅방 목록 로드 시작')
+    console.log('📋 채팅방 목록 로드 시작 (백엔드 API)')
     lastApiCall.value = new Date().toLocaleTimeString()
 
     // 인증 토큰 확인
@@ -548,26 +691,35 @@ const loadChatRooms = async (showLoadingIndicator = true) => {
     }
 
     try {
-      // 실제 백엔드 API 호출
-      const searchCondition = {
-        status: 'ACTIVE', // 활성 채팅방만
-        keyword: null // 전체 조회
+      // API 연결 상태 확인
+      const isApiConnected = await testApiConnection()
+      if (!isApiConnected) {
+        throw new Error('API 서버에 연결할 수 없습니다')
       }
+
+      // 백엔드 API 호출 - ChatRoomSearchCondition 사용
+      const searchCondition = chatRoomUtils.validateSearchCondition({
+        status: 'ACTIVE', // 활성 채팅방만
+        keyword: null,    // 전체 조회
+        roomType: null    // 모든 타입
+      })
 
       const response = await chatApi.getChatRooms(searchCondition)
 
-      if (response.success) {
-        // 백엔드 응답을 프론트엔드 형식으로 변환
-        const backendRooms = response.data || []
+      if (response.success && response.data) {
+        // 백엔드 ChatRoomResponse.ChatRoomList 배열을 프론트엔드 형식으로 변환
+        const backendRooms = Array.isArray(response.data) ? response.data : []
         allChatRooms.value = backendRooms.map(chatRoomUtils.transformChatRoomResponse)
 
-        console.log('✅ 채팅방 목록 로드 완료:', allChatRooms.value.length, '개')
+        console.log('✅ 백엔드에서 채팅방 목록 로드 완료:', allChatRooms.value.length, '개')
+        apiConnected.value = true
       } else {
         throw new Error(response.message || 'API 응답이 실패했습니다')
       }
 
     } catch (apiError) {
-      console.error('❌ API 호출 실패:', apiError)
+      console.error('❌ 백엔드 API 호출 실패:', apiError)
+      apiConnected.value = false
 
       // 네트워크 오류인 경우 샘플 데이터 사용
       if (apiError.status >= 500 || !apiError.status) {
@@ -579,9 +731,10 @@ const loadChatRooms = async (showLoadingIndicator = true) => {
       }
     }
 
-  } catch (error) {
-    console.error('❌ 채팅방 목록 로드 실패:', error)
-    error.value = error.message || '알 수 없는 오류가 발생했습니다'
+  } catch (generalError) {
+    console.error('❌ 채팅방 목록 로드 실패:', generalError)
+    error.value = generalError.message || '알 수 없는 오류가 발생했습니다'
+    apiConnected.value = false
   } finally {
     loading.value = false
   }
@@ -589,65 +742,75 @@ const loadChatRooms = async (showLoadingIndicator = true) => {
 
 // 샘플 데이터 로드 (API 실패 시 사용)
 const loadSampleData = () => {
-  console.log('📋 샘플 데이터 로드')
-  allChatRooms.value = [
+  console.log('📋 샘플 데이터 로드 (백엔드 API 형식)')
+
+  // 백엔드 ChatRoomResponse.ChatRoomList 형식의 샘플 데이터
+  const sampleBackendData = [
     {
-      id: '1',
-      name: '개발팀 프로젝트',
-      type: 'group',
+      roomId: '1',
+      title: '개발팀 프로젝트',
+      roomType: 'GROUP',
       participantCount: 8,
       lastMessage: '내일 회의 시간 확정했습니다',
-      lastMessageSender: '김팀장',
-      lastMessageType: 'text',
-      lastMessageAt: Date.now() - 300000,
+      lastMessageType: 'TEXT',
+      lastMessageAt: new Date(Date.now() - 300000).toISOString(),
       unreadCount: 3,
-      status: 'online'
+      thumbnailUrl: null,
+      status: 'ACTIVE'
     },
     {
-      id: '2',
-      name: '이지수',
-      type: 'dm',
-      avatar: 'https://via.placeholder.com/48/FF6B6B/FFFFFF?text=이',
+      roomId: '2',
+      title: '이지수',
+      roomType: 'ONE_TO_ONE',
+      participantCount: 2,
       lastMessage: '점심 뭐 먹을까요?',
-      lastMessageType: 'text',
-      lastMessageAt: Date.now() - 600000,
+      lastMessageType: 'TEXT',
+      lastMessageAt: new Date(Date.now() - 600000).toISOString(),
       unreadCount: 1,
-      status: 'online'
+      thumbnailUrl: 'https://via.placeholder.com/48/FF6B6B/FFFFFF?text=이',
+      status: 'ACTIVE'
     },
     {
-      id: '3',
-      name: '주말 모임 💻',
-      type: 'group',
+      roomId: '3',
+      title: '주말 모임 💻',
+      roomType: 'GROUP',
       participantCount: 12,
-      lastMessage: '📷 사진',
-      lastMessageSender: '박성호',
-      lastMessageType: 'image',
-      lastMessageAt: Date.now() - 1800000,
+      lastMessage: '사진',
+      lastMessageType: 'IMAGE',
+      lastMessageAt: new Date(Date.now() - 1800000).toISOString(),
       unreadCount: 7,
-      status: 'online'
+      thumbnailUrl: null,
+      status: 'ACTIVE'
     },
     {
-      id: '4',
-      name: '최민재',
-      type: 'dm',
-      avatar: 'https://via.placeholder.com/48/4ECDC4/FFFFFF?text=최',
-      lastMessageAt: Date.now() - 3600000,
+      roomId: '4',
+      title: '최민재',
+      roomType: 'ONE_TO_ONE',
+      participantCount: 2,
+      lastMessage: null,
+      lastMessageType: null,
+      lastMessageAt: new Date(Date.now() - 3600000).toISOString(),
       unreadCount: 0,
-      status: 'away'
+      thumbnailUrl: 'https://via.placeholder.com/48/4ECDC4/FFFFFF?text=최',
+      status: 'ACTIVE'
     },
     {
-      id: '5',
-      name: '가족 단톡방',
-      type: 'group',
+      roomId: '5',
+      title: '가족 단톡방',
+      roomType: 'GROUP',
       participantCount: 4,
-      lastMessage: '📍 위치',
-      lastMessageSender: '엄마',
-      lastMessageType: 'location',
-      lastMessageAt: Date.now() - 7200000,
+      lastMessage: '위치',
+      lastMessageType: 'LOCATION',
+      lastMessageAt: new Date(Date.now() - 7200000).toISOString(),
       unreadCount: 0,
-      status: 'online'
+      thumbnailUrl: null,
+      status: 'ACTIVE'
     }
   ]
+
+  // 백엔드 형식을 프론트엔드 형식으로 변환
+  allChatRooms.value = sampleBackendData.map(chatRoomUtils.transformChatRoomResponse)
+  apiConnected.value = false // 샘플 데이터이므로 API 연결 상태는 false
 }
 
 // 검색어 변경 감시
@@ -667,7 +830,12 @@ watch(wsConnected, (newValue) => {
   }
 })
 
-// 페이지 가시성 변경 감지 (백그라운드에서 돌아왔을 때 연결 상태 확인)
+// API 연결 상태 감시
+watch(apiConnected, (newValue) => {
+  console.log(`🌐 API 연결 상태 변경: ${newValue ? '연결됨' : '끊어짐'}`)
+})
+
+// 페이지 가시성 변경 감지
 const handleVisibilityChange = () => {
   if (document.visibilityState === 'visible') {
     console.log('📱 페이지가 다시 활성화됨 - 연결 상태 확인')
@@ -686,9 +854,13 @@ const handleVisibilityChange = () => {
       }
     }
 
-    // 채팅방 목록 새로고침 (백그라운드에서 변경사항이 있을 수 있음)
+    // API 연결 상태 확인 및 채팅방 목록 새로고침
     if (!loading.value && !error.value) {
-      loadChatRooms(false)
+      testApiConnection().then(isConnected => {
+        if (isConnected) {
+          loadChatRooms(false)
+        }
+      })
     }
   }
 }
@@ -698,17 +870,20 @@ const handleOnlineStatusChange = () => {
   if (navigator.onLine) {
     console.log('🌐 네트워크 연결 복구됨')
 
-    // 온라인 상태로 복구되면 WebSocket 재연결 시도
-    if (!wsConnected.value && getAuthToken()) {
-      setTimeout(() => {
+    // 온라인 상태로 복구되면 API 및 WebSocket 재연결 시도
+    setTimeout(async () => {
+      await testApiConnection()
+
+      if (!wsConnected.value && getAuthToken()) {
         connectWebSocket().catch(error => {
           console.warn('네트워크 복구 후 재연결 실패:', error)
         })
-      }, 1000)
-    }
+      }
+    }, 1000)
   } else {
     console.log('🌐 네트워크 연결 끊어짐')
     wsConnected.value = false
+    apiConnected.value = false
   }
 }
 
@@ -721,7 +896,7 @@ const startAutoRefresh = () => {
   }
 
   refreshInterval = setInterval(() => {
-    if (!loading.value && !error.value) {
+    if (!loading.value && !error.value && apiConnected.value) {
       loadChatRooms(false) // 로딩 인디케이터 없이 백그라운드에서 새로고침
     }
   }, 30000) // 30초
@@ -736,19 +911,22 @@ const stopAutoRefresh = () => {
 
 // 컴포넌트 마운트 시 데이터 로드
 onMounted(async () => {
-  console.log('🏠 ChatRoomView 컴포넌트 마운트됨')
+  console.log('🏠 ChatRoomView 컴포넌트 마운트됨 (백엔드 연동)')
 
   // 이벤트 리스너 등록
   document.addEventListener('visibilitychange', handleVisibilityChange)
   window.addEventListener('online', handleOnlineStatusChange)
   window.addEventListener('offline', handleOnlineStatusChange)
 
-  // 1. 채팅방 목록 로드
+  // 1. API 연결 테스트
+  await testApiConnection()
+
+  // 2. 채팅방 목록 로드 (백엔드 API)
   await loadChatRooms()
 
-  // 2. WebSocket 연결 시도 (토큰이 있고 API 로드가 성공한 경우만)
+  // 3. WebSocket 연결 시도 (토큰이 있고 API 로드가 성공한 경우만)
   const token = getAuthToken()
-  if (token && !error.value) {
+  if (token && !error.value && apiConnected.value) {
     try {
       await connectWebSocket()
     } catch (error) {
@@ -759,11 +937,12 @@ onMounted(async () => {
     console.warn('⚠️ 인증 토큰이 없어 WebSocket 연결을 건너뜁니다')
   }
 
-  // 3. 자동 새로고침 시작
+  // 4. 자동 새로고침 시작
   startAutoRefresh()
 
-  // 4. WebSocket 상태 모니터링 시작
+  // 5. 상태 모니터링 시작
   startWebSocketMonitoring()
+  startApiMonitoring()
 })
 
 // 컴포넌트 언마운트 시 정리
@@ -965,28 +1144,39 @@ onUnmounted(() => {
   transform: translateY(-1px) scale(0.98);
 }
 
-.connection-status {
+.connection-status-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.connection-status {
   padding: 8px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  z-index: 1000;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .connection-status.connected {
-  background: #dcfce7;
+  background: rgba(220, 252, 231, 0.9);
   color: #166534;
   border: 1px solid #bbf7d0;
 }
 
 .connection-status.disconnected {
-  background: #fef2f2;
+  background: rgba(254, 242, 242, 0.9);
   color: #991b1b;
   border: 1px solid #fecaca;
+}
+
+.api-status {
+  font-size: 11px;
 }
 
 .success-toast {
@@ -1066,10 +1256,18 @@ onUnmounted(() => {
     font-size: 11px;
   }
 
-  .connection-status {
+  .connection-status-container {
     bottom: 10px;
     right: 10px;
+  }
+
+  .connection-status {
     font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .api-status {
+    font-size: 10px;
   }
 
   .floating-create-button {
@@ -1151,6 +1349,18 @@ onUnmounted(() => {
   .toast-content span {
     color: #f9fafb;
   }
+
+  .connection-status.connected {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    border-color: #22c55e;
+  }
+
+  .connection-status.disconnected {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: #ef4444;
+  }
 }
 
 /* 접근성 개선 */
@@ -1198,6 +1408,48 @@ onUnmounted(() => {
   .create-room-button:hover,
   .success-toast:hover {
     transform: none !important;
+  }
+}
+
+/* 연결 상태 표시 개선 */
+.connection-status-container .connection-status:first-child {
+  margin-bottom: 4px;
+}
+
+.connection-status {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.connection-status.connected {
+  animation: pulse-green 2s infinite;
+}
+
+.connection-status.disconnected {
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    background: rgba(220, 252, 231, 0.9);
+  }
+  50% {
+    background: rgba(220, 252, 231, 0.7);
+  }
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    background: rgba(254, 242, 242, 0.9);
+  }
+  50% {
+    background: rgba(254, 242, 242, 0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connection-status.connected,
+  .connection-status.disconnected {
+    animation: none !important;
   }
 }
 </style>
