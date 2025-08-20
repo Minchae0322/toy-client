@@ -288,7 +288,7 @@ let searchTimer = null
 
 // 계산된 속성
 const titlePlaceholder = computed(() => {
-  return formData.value.roomType === 'ONE_TO_ONE'
+  return formData.value.roomType === 'NORMAL'
       ? '상대방과의 대화방'
       : '채팅방 제목을 입력하세요'
 })
@@ -300,7 +300,7 @@ const filteredSearchResults = computed(() => {
 const isFormValid = computed(() => {
   const hasTitle = formData.value.title.trim().length > 0
   const hasValidParticipants = formData.value.roomType === 'GROUP' ||
-      (formData.value.roomType === 'ONE_TO_ONE' && selectedUsers.value.length === 1)
+      (formData.value.roomType === 'NORMAL' && selectedUsers.value.length === 1)
 
   return hasTitle && hasValidParticipants && Object.keys(validationErrors.value).length === 0
 })
@@ -321,7 +321,7 @@ const validateForm = () => {
   }
 
   // 참여자 검증
-  if (formData.value.roomType === 'ONE_TO_ONE') {
+  if (formData.value.roomType === 'NORMAL') {
     if (selectedUsers.value.length !== 1) {
       errors.participants = '1:1 채팅방은 상대방 1명을 선택해야 합니다'
     }
@@ -376,7 +376,7 @@ const getSampleUsers = () => {
 const selectUser = (user) => {
   if (isUserSelected(user.id)) return
 
-  if (formData.value.roomType === 'ONE_TO_ONE') {
+  if (formData.value.roomType === 'NORMAL') {
     selectedUsers.value = [user]
   } else {
     selectedUsers.value.push(user)
@@ -437,7 +437,7 @@ const handleSubmit = async () => {
 // 감시자
 watch(() => formData.value.roomType, (newType) => {
   // 타입 변경 시 선택된 사용자 초기화
-  if (newType === 'ONE_TO_ONE' && selectedUsers.value.length > 1) {
+  if (newType === 'NORMAL' && selectedUsers.value.length > 1) {
     selectedUsers.value = selectedUsers.value.slice(0, 1)
     formData.value.participantUserIds = selectedUsers.value.map(u => u.id)
   }
