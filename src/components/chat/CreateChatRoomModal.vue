@@ -256,7 +256,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { X, Search, Check, ChevronDown } from 'lucide-vue-next'
-import { chatApi, chatRoomUtils } from '@/services/chatApi.js'
+import { chatApi, chatRoomUtils } from '@/services/chatService.js'
 
 const emit = defineEmits(['close', 'created'])
 

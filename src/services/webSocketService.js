@@ -1,6 +1,7 @@
 // services/webSocketService.js
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
+import * as authUtils from '@/utils/auth.js'
 
 class WebSocketService {
   constructor() {
@@ -22,9 +23,62 @@ class WebSocketService {
     this.reconnectDelay = 1000
   }
 
+  // 인증 토큰 가져오기
+  getAuthToken() {
+    return authUtils.getAccessToken()
+  }
+
+  // 디바이스 ID 가져오기
+  getDeviceId() {
+    return authUtils.getDeviceId()
+  }
+
+  // 현재 사용자 ID 가져오기
+  getCurrentUserId() {
+    return authUtils.getUserId()
+  }
+
   // 연결 상태 반환
   getConnectionState() {
     return this.connectionState
+  }
+
+  // 연결 상태 업데이트
+  updateConnectionState(status, error = null) {
+    this.connectionState = {
+      connected: status === 'connected',
+      connecting: status === 'connecting',
+      status: status,
+      error: error
+    }
+
+    // 연결 상태 변화 알림
+    this.notifyConnectionChange(status === 'connected')
+  }
+
+  // 연결 상태 변화 리스너 등록
+  onConnectionChange(callback) {
+    this.globalHandlers.set('connection-change', callback)
+  }
+
+  // 연결 상태 변화 알림
+  notifyConnectionChange(connected) {
+    const callback = this.globalHandlers.get('connection-change')
+    if (callback) {
+      callback(connected)
+    }
+  }
+
+  // 전역 메시지 핸들러 등록
+  onMessage(type, handler) {
+    this.globalHandlers.set(type, handler)
+    console.log(`📨 [WebSocket] 전역 메시지 핸들러 등록: ${type}`)
+  }
+
+  // 전역 메시지 핸들러 해제
+  offMessage(type) {
+    this.globalHandlers.delete(type)
+    console.log(`📨 [WebSocket] 전역 메시지 핸들러 해제: ${type}`)
   }
 
   // 디바이스 정보 반환
@@ -73,42 +127,7 @@ class WebSocketService {
     return `${this.getBrowserInfo().name} on ${this.getDeviceType()}`
   }
 
-  // 인증 토큰 가져오기
-  getAuthToken() {
-    return localStorage.getItem('access_token') ||
-        sessionStorage.getItem('access_token')
-  }
-
-  // 디바이스 ID 가져오기
-  getDeviceId() {
-    let deviceId = localStorage.getItem('device_id')
-    if (!deviceId) {
-      deviceId = this.generateDeviceId()
-      localStorage.setItem('device_id', deviceId)
-    }
-    return deviceId
-  }
-
-  // 디바이스 ID 생성
-  generateDeviceId() {
-    return `web_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`
-  }
-
-  // 현재 사용자 ID 가져오기
-  getCurrentUserId() {
-    try {
-      const token = this.getAuthToken()
-      if (!token) return null
-
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      return payload.userId || payload.sub || payload.id
-    } catch (error) {
-      console.warn('사용자 ID 추출 실패:', error)
-      return null
-    }
-  }
-
-  // WebSocket 연결 상태 확인 (개선된 버전)
+  // WebSocket 연결 상태 확인
   isConnected() {
     return this.connected &&
         this.client &&
@@ -130,7 +149,6 @@ class WebSocketService {
       // 연결 중이면 기존 연결 프로세스 대기
       if (this.connecting) {
         console.log('🔌 [WebSocket] 연결 중... 대기')
-        // 연결 완료까지 최대 10초 대기
         const checkConnection = () => {
           if (this.isConnected()) {
             resolve()
@@ -243,7 +261,7 @@ class WebSocketService {
             this.updateConnectionState('error', '연결 시간 초과')
             reject(new Error('연결 시간 초과'))
           }
-        }, 15000) // 15초 타임아웃
+        }, 15000)
 
         // 연결 성공 시 타임아웃 해제
         const originalOnConnect = this.client.onConnect
@@ -319,16 +337,6 @@ class WebSocketService {
     })
   }
 
-  // 연결 상태 업데이트
-  updateConnectionState(status, error = null) {
-    this.connectionState = {
-      connected: status === 'connected',
-      connecting: status === 'connecting',
-      status: status,
-      error: error
-    }
-  }
-
   // WebSocket 연결 해제
   disconnect() {
     console.log('🔌 [WebSocket] 연결 해제 시작...')
@@ -349,7 +357,7 @@ class WebSocketService {
 
         this.subscriptions.clear()
         this.messageHandlers.clear()
-        this.globalHandlers.clear()
+        // globalHandlers는 유지 (재연결 시 필요)
 
         // STOMP 클라이언트 비활성화
         this.client.deactivate()
@@ -370,18 +378,6 @@ class WebSocketService {
     this.disconnect()
     await new Promise(resolve => setTimeout(resolve, 1000)) // 1초 대기
     return this.connect()
-  }
-
-  // 전역 메시지 핸들러 등록
-  onMessage(type, handler) {
-    this.globalHandlers.set(type, handler)
-    console.log(`📨 [WebSocket] 전역 메시지 핸들러 등록: ${type}`)
-  }
-
-  // 전역 메시지 핸들러 해제
-  offMessage(type) {
-    this.globalHandlers.delete(type)
-    console.log(`📨 [WebSocket] 전역 메시지 핸들러 해제: ${type}`)
   }
 
   // 연결 보장 메서드
@@ -417,7 +413,7 @@ class WebSocketService {
     return this.connect()
   }
 
-  // 채팅방 구독 (개선된 버전)
+  // 채팅방 구독
   async subscribeToChatRoom(roomId, messageHandler) {
     try {
       console.log(`📨 [WebSocket] 채팅방 구독 시작: ${roomId}`)
@@ -489,7 +485,7 @@ class WebSocketService {
     }
   }
 
-  // 메시지 전송 (개선된 버전)
+  // 메시지 전송
   async sendMessage(roomId, messageData) {
     try {
       // 연결 상태 확인 및 보장
@@ -565,28 +561,6 @@ class WebSocketService {
     this.messageHandlers.clear()
   }
 
-  // 연결 상태 모니터링
-  startConnectionMonitoring() {
-    setInterval(() => {
-      const wasConnected = this.connectionState.connected
-      const isNowConnected = this.isConnected()
-
-      if (wasConnected !== isNowConnected) {
-        if (isNowConnected) {
-          this.updateConnectionState('connected')
-        } else {
-          this.updateConnectionState('disconnected')
-
-          // 예상치 못한 연결 끊김 감지 시 재연결 시도
-          if (wasConnected && this.reconnectAttempts < this.maxReconnectAttempts) {
-            console.warn('⚠️ [WebSocket] 예상치 못한 연결 끊김 감지, 재연결 시도')
-            this.attemptReconnect()
-          }
-        }
-      }
-    }, 5000) // 5초마다 체크
-  }
-
   // 디버그 정보 출력
   getDebugInfo() {
     return {
@@ -604,17 +578,6 @@ class WebSocketService {
         connected: this.client.connected,
         webSocketState: this.client.webSocket?.readyState
       } : null
-    }
-  }
-
-  // 통계 정보
-  getStats() {
-    return {
-      totalSubscriptions: this.subscriptions.size,
-      totalHandlers: this.messageHandlers.size + this.globalHandlers.size,
-      uptime: this.connected ? Date.now() - this.connectTime : 0,
-      reconnectCount: this.reconnectAttempts || 0,
-      isHealthy: this.isConnected()
     }
   }
 
@@ -648,6 +611,28 @@ class WebSocketService {
         message: `헬스체크 실패: ${error.message}`
       }
     }
+  }
+
+  // 연결 상태 모니터링
+  startConnectionMonitoring() {
+    setInterval(() => {
+      const wasConnected = this.connectionState.connected
+      const isNowConnected = this.isConnected()
+
+      if (wasConnected !== isNowConnected) {
+        if (isNowConnected) {
+          this.updateConnectionState('connected')
+        } else {
+          this.updateConnectionState('disconnected')
+
+          // 예상치 못한 연결 끊김 감지 시 재연결 시도
+          if (wasConnected && this.reconnectAttempts < this.maxReconnectAttempts) {
+            console.warn('⚠️ [WebSocket] 예상치 못한 연결 끊김 감지, 재연결 시도')
+            this.attemptReconnect()
+          }
+        }
+      }
+    }, 5000) // 5초마다 체크
   }
 }
 

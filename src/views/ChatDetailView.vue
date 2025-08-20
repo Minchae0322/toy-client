@@ -153,7 +153,7 @@ import {
 } from 'lucide-vue-next'
 import ChatMessage from '@/components/chat/ChatMessage.vue'
 import MessageInput from '@/components/chat/MessageInput.vue'
-import {chatApi} from '@/services/chatApi.js'
+import {chatApi} from '@/services/chatService.js'
 import {webSocketService} from '@/services/webSocketService.js'
 
 const props = defineProps(['roomId'])

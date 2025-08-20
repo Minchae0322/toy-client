@@ -1,7 +1,8 @@
 <script setup>
 import {RouterLink, RouterView, useRoute, useRouter} from 'vue-router'
 import {computed, ref, onMounted, onUnmounted, watch} from 'vue'
-import {Menu} from "lucide-vue-next";
+import {Menu} from "lucide-vue-next"
+import { webSocketService } from '@/services/webSocketService.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -10,11 +11,10 @@ const router = useRouter()
 const isLoggedIn = ref(false)
 const userInfo = ref(null)
 const isLoggingOut = ref(false)
+const wsConnected = ref(false) // ✅ WebSocket 연결 상태
+const showDebug = ref(false)   // 디버깅 모드
 
-// 디버깅 모드 (개발할 때만 true)
-const showDebug = ref(false)
-
-// 인증 페이지 확인
+// 인증 페이지 여부
 const isAuthPage = computed(() =>
     ['/login', '/register'].includes(route.path)
 )
@@ -26,16 +26,11 @@ const decodeJWTPayload = (token) => {
     if (parts.length !== 3) {
       throw new Error('Invalid JWT format')
     }
-
-    // Base64 URL 디코딩
     let payload = parts[1]
     payload = payload.replace(/-/g, '+').replace(/_/g, '/')
-
-    // 패딩 추가
     while (payload.length % 4) {
       payload += '='
     }
-
     const jsonPayload = atob(payload)
     return JSON.parse(jsonPayload)
   } catch (error) {
@@ -44,10 +39,29 @@ const decodeJWTPayload = (token) => {
   }
 }
 
-// 토큰 확인 함수
+// ✅ WebSocket 상태 감시
+const monitorWebSocketStatus = () => {
+  wsConnected.value = webSocketService.isConnected()
+  webSocketService.onConnectionChange((connected) => {
+    console.log('🔌 [App.vue] WebSocket 연결 상태 변경:', connected)
+    wsConnected.value = connected
+  })
+}
+
+// ✅ WebSocket 해제 (로그아웃 시에만)
+const disconnectWebSocket = () => {
+  try {
+    console.log('🔌 [App.vue] 로그아웃으로 인한 WebSocket 연결 해제...')
+    webSocketService.disconnect()
+    wsConnected.value = false
+  } catch (error) {
+    console.error('❌ [App.vue] WebSocket 해제 실패:', error)
+  }
+}
+
+// 인증 상태 확인
 const checkAuthStatus = () => {
   console.log('🔍 App.vue 인증 상태 확인 중...')
-
   const token = localStorage.getItem('access_token')
 
   if (!token) {
@@ -60,7 +74,6 @@ const checkAuthStatus = () => {
   console.log('✅ 토큰 발견:', token.substring(0, 50) + '...')
   isLoggedIn.value = true
 
-  // JWT에서 사용자 정보 추출
   const payload = decodeJWTPayload(token)
   if (payload) {
     userInfo.value = {
@@ -75,7 +88,7 @@ const checkAuthStatus = () => {
   }
 }
 
-// 관리자 권한 확인 (computed로 반응성 보장)
+// 관리자 여부
 const isAdmin = computed(() => {
   const role = userInfo.value?.role
   const result = role === 'ADMIN'
@@ -86,90 +99,53 @@ const isAdmin = computed(() => {
 // 토큰 존재 여부
 const hasToken = computed(() => !!localStorage.getItem('access_token'))
 
-// 로그아웃 함수
+// 로그아웃
 const handleLogout = async () => {
   console.log('👋 App.vue 로그아웃 처리 중...')
   isLoggingOut.value = true
 
   try {
-    // 모든 토큰 제거
+    disconnectWebSocket() // ✅ 로그아웃 시 WebSocket 해제
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     isLoggedIn.value = false
     userInfo.value = null
-
-    // Vue Router를 사용하여 즉시 페이지 이동
     await router.push('/login')
-
     console.log('✅ App.vue 로그아웃 완료')
   } finally {
     isLoggingOut.value = false
   }
 }
 
-// localStorage 변경 감지 (다른 탭에서 로그아웃 시에도 반영)
+// localStorage 변경 감지 (다른 탭 반영)
 const handleStorageChange = (e) => {
   if (e.key === 'access_token') {
     checkAuthStatus()
   }
 }
 
-// 컴포넌트 마운트 시 토큰 확인
+// 마운트 시 실행
 onMounted(() => {
   checkAuthStatus()
-
-  // storage 이벤트 리스너 추가
+  monitorWebSocketStatus() // ✅ WebSocket 상태 감시 시작
   window.addEventListener('storage', handleStorageChange)
-
-  // 디버깅 정보 출력
-  console.log('=== App.vue 디버깅 ===')
-  console.log('isLoggedIn:', isLoggedIn.value)
-  console.log('isAdmin:', isAdmin.value)
-  console.log('userInfo:', userInfo.value)
-  console.log('hasToken:', hasToken.value)
-
-  // JWT 토큰 수동 확인
-  const token = localStorage.getItem('access_token')
-  if (token) {
-    console.log('토큰 일부:', token.substring(0, 50))
-    try {
-      const parts = token.split('.')
-      if (parts.length === 3) {
-        let payload = parts[1]
-        payload = payload.replace(/-/g, '+').replace(/_/g, '/')
-        while (payload.length % 4) {
-          payload += '='
-        }
-        const decodedPayload = JSON.parse(atob(payload))
-        console.log('App.vue JWT 페이로드:', decodedPayload)
-        console.log('App.vue JWT role:', decodedPayload.role)
-        console.log('App.vue JWT auth:', decodedPayload.auth)
-      }
-    } catch (e) {
-      console.error('App.vue JWT 디코딩 실패:', e)
-    }
-  }
 })
 
-// 라우트 변경 시 토큰 상태 확인
-watch(route, () => {
-  checkAuthStatus()
-})
-
-// 컴포넌트 언마운트 시 이벤트 리스너 제거
+// 언마운트 시 정리
 onUnmounted(() => {
   window.removeEventListener('storage', handleStorageChange)
 })
 </script>
 
 <template>
-  <!-- 🚨 디버깅 정보 (개발 중에만) -->
+  <!-- ✅ 디버깅 정보 -->
   <div v-if="showDebug && !isAuthPage" class="debug-info">
     <div>로그인: {{ isLoggedIn }}</div>
     <div>관리자: {{ isAdmin }}</div>
     <div>사용자: {{ userInfo?.username }}</div>
     <div>역할: {{ userInfo?.role }}</div>
     <div>토큰: {{ hasToken ? '있음' : '없음' }}</div>
+    <div>WebSocket: {{ wsConnected ? '🟢 연결됨' : '🔴 끊김' }}</div>
   </div>
 
   <header v-if="!isAuthPage" class="app-header">
@@ -179,38 +155,25 @@ onUnmounted(() => {
       </div>
 
       <nav class="main-nav">
-        <!-- 로그아웃 진행 중이면 로딩 표시 -->
         <template v-if="isLoggingOut">
           <div class="loading">로그아웃 중...</div>
         </template>
-
-        <!-- 로그인하지 않은 경우 로그인/회원가입 표시 -->
         <template v-else-if="!isLoggedIn">
           <RouterLink to="/login" class="nav-link">로그인</RouterLink>
           <RouterLink to="/register" class="nav-link">회원가입</RouterLink>
         </template>
-
-        <!-- 로그인한 경우 메뉴 표시 -->
         <template v-else>
           <RouterLink to="/home" class="nav-link">홈</RouterLink>
           <RouterLink to="/dashboard" class="nav-link">대시보드</RouterLink>
           <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
           <RouterLink to="/sell" class="nav-link">판매하기</RouterLink>
 
-          <!-- 🎯 관리자 메뉴 -->
           <div v-if="isAdmin" class="admin-menu">
-            <RouterLink to="/admin" class="admin-link">
-              🛠️ 관리자
-            </RouterLink>
-            <RouterLink to="/admin/users" class="admin-link">
-              👥 사용자 관리
-            </RouterLink>
-            <RouterLink to="/admin/category" class="admin-link">
-              카테고리 관리
-            </RouterLink>
+            <RouterLink to="/admin" class="admin-link">🛠️ 관리자</RouterLink>
+            <RouterLink to="/admin/users" class="admin-link">👥 사용자 관리</RouterLink>
+            <RouterLink to="/admin/category" class="admin-link">카테고리 관리</RouterLink>
           </div>
 
-          <!-- 사용자 정보 및 로그아웃 -->
           <div class="user-section">
             <span class="username">{{ userInfo?.username || '사용자' }}</span>
             <span v-if="isAdmin" class="admin-badge">관리자</span>
@@ -225,7 +188,6 @@ onUnmounted(() => {
     <RouterView/>
   </main>
 </template>
-
 <style scoped>
 .debug-info {
   position: fixed;

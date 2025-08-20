@@ -32,7 +32,7 @@
 
         <button type="submit" class="submit-button" :disabled="loading">
           <span v-if="loading" class="loading-spinner"></span>
-          {{ loading ? '로그인 중...' : '로그인' }}
+          {{ loading ? getLoadingText() : '로그인' }}
         </button>
 
         <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
@@ -60,6 +60,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { authService } from '@/api/axios.js'
+import { webSocketService } from '@/services/webSocketService.js' // ✅ WebSocket 서비스 추가
 
 const router = useRouter()
 const route = useRoute()
@@ -70,11 +71,42 @@ const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
 const loading = ref(false)
+const wsConnecting = ref(false) // ✅ WebSocket 연결 상태
 
 // 컴퓨티드 속성
 const redirectPath = computed(() => route.query.redirect || '/home')
 
-// 로그인 처리
+// ✅ 로딩 텍스트 동적 변경
+const getLoadingText = () => {
+  if (wsConnecting.value) {
+    return '실시간 연결 중...'
+  }
+  return '로그인 중...'
+}
+
+// ✅ WebSocket 연결 함수
+const connectWebSocket = async () => {
+  try {
+    wsConnecting.value = true
+    console.log('🔌 [Login] WebSocket 연결 시작...')
+
+    await webSocketService.connect()
+
+    // 전역 메시지 핸들러 등록
+    webSocketService.onMessage('chat-message', (message) => {
+      console.log('📨 [Login] WebSocket 연결 완료, 메시지 수신 가능')
+    })
+
+    console.log('✅ [Login] WebSocket 연결 완료')
+  } catch (error) {
+    console.error('❌ [Login] WebSocket 연결 실패:', error)
+    // WebSocket 연결 실패해도 로그인은 계속 진행
+  } finally {
+    wsConnecting.value = false
+  }
+}
+
+// 로그인 처리 (수정됨)
 const handleLogin = async () => {
   if (loading.value) return
 
@@ -82,6 +114,8 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
+    console.log('🔑 [Login] 로그인 시작...')
+
     const response = await authService.login({
       email: email.value,
       password: password.value
@@ -103,8 +137,17 @@ const handleLogin = async () => {
       profileImage: null
     }
 
-    // useAuth를 통한 로그인 처리
+    console.log('✅ [Login] 로그인 성공, 토큰 저장 중...')
+
+    // useAuth를 통한 로그인 처리 (토큰 저장)
     login({ accessToken, refreshToken }, userInfo)
+
+    console.log('🔌 [Login] WebSocket 연결 시작...')
+
+    // ✅ 로그인 성공 후 WebSocket 연결
+    await connectWebSocket()
+
+    console.log('🚀 [Login] 로그인 및 실시간 연결 완료, 리다이렉트 중...')
 
     // 로딩 상태 먼저 해제
     loading.value = false
@@ -118,7 +161,7 @@ const handleLogin = async () => {
     }
 
   } catch (error) {
-    console.error('로그인 오류:', error)
+    console.error('❌ [Login] 로그인 오류:', error)
 
     if (error.response?.status === 401) {
       errorMessage.value = '이메일 또는 비밀번호가 올바르지 않습니다.'
@@ -131,10 +174,11 @@ const handleLogin = async () => {
     }
 
     loading.value = false
+    wsConnecting.value = false
   }
 }
 
-// 소셜 로그인
+// 소셜 로그인 (기존과 동일)
 const handleSocialLogin = (provider) => {
   if (loading.value) return
 
