@@ -288,7 +288,115 @@ export const logout = () => {
     clearUserInfo()
     // 디바이스 ID는 유지 (재로그인 시 같은 디바이스로 인식)
 
-    console.log('✅ [Auth] 로그아웃 완료')
+    console.log('✅ [Auth] 로컬 로그아웃 완료')
+}
+
+/**
+ * 백엔드 로그아웃 API 호출
+ */
+export const logoutWithBackend = async () => {
+    try {
+        console.log('🌐 [Auth] 백엔드 로그아웃 API 호출 중...')
+
+        const authServerUrl = import.meta.env.DEV
+            ? 'http://localhost:8081'
+            : (import.meta.env.VITE_AUTH_SERVER_URL || 'https://your-auth-server.com')
+
+        const response = await fetch(`${authServerUrl}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader() // Authorization 헤더 포함
+            },
+            credentials: 'include' // RefreshToken 쿠키를 함께 전송
+        })
+
+        console.log(`📡 [Auth] 로그아웃 응답 상태: ${response.status}`)
+
+        if (response.ok) {
+            const result = await response.json()
+            console.log('✅ [Auth] 백엔드 로그아웃 성공:', result.message)
+
+            // 로컬 인증 정보 정리
+            logout()
+
+            return {
+                success: true,
+                message: result.message || '로그아웃되었습니다'
+            }
+        } else {
+            console.warn('⚠️ [Auth] 백엔드 로그아웃 실패, 로컬 정리만 진행')
+
+            // 백엔드 실패해도 로컬은 정리
+            logout()
+
+            return {
+                success: false,
+                error: '서버 로그아웃 실패',
+                localCleared: true
+            }
+        }
+
+    } catch (error) {
+        console.error('❌ [Auth] 로그아웃 API 호출 중 오류:', error)
+
+        // 네트워크 오류 등 발생해도 로컬은 정리
+        logout()
+
+        return {
+            success: false,
+            error: error.message,
+            localCleared: true
+        }
+    }
+}
+
+/**
+ * 강제 로그아웃 (모든 기기에서)
+ */
+export const forceLogoutAllDevices = async () => {
+    try {
+        console.log('🔒 [Auth] 모든 기기에서 강제 로그아웃 요청...')
+
+        const authServerUrl = import.meta.env.DEV
+            ? 'http://localhost:8081'
+            : (import.meta.env.VITE_AUTH_SERVER_URL || 'https://your-auth-server.com')
+
+        const response = await fetch(`${authServerUrl}/api/auth/logout/all`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader()
+            },
+            credentials: 'include'
+        })
+
+        if (response.ok) {
+            const result = await response.json()
+            console.log('✅ [Auth] 모든 기기 로그아웃 성공')
+
+            logout()
+
+            return {
+                success: true,
+                message: result.message || '모든 기기에서 로그아웃되었습니다'
+            }
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+    } catch (error) {
+        console.error('❌ [Auth] 강제 로그아웃 실패:', error)
+
+        // 실패해도 현재 기기는 로그아웃
+        logout()
+
+        return {
+            success: false,
+            error: error.message,
+            localCleared: true
+        }
+    }
 }
 
 // ==================== 백엔드 토큰 갱신 ====================
@@ -504,6 +612,8 @@ export default {
 
     // 로그아웃
     logout,
+    logoutWithBackend,
+    forceLogoutAllDevices,
 
     // 백엔드 연동
     refreshTokenWithBackend,

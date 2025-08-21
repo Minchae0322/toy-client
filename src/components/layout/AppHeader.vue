@@ -17,7 +17,10 @@
       <nav class="main-nav">
         <!-- 로그아웃 진행 중이면 로딩 표시 -->
         <template v-if="isLoggingOut">
-          <div class="loading">로그아웃 중...</div>
+          <div class="loading">
+            <span class="loading-spinner">⏳</span>
+            로그아웃 중...
+          </div>
         </template>
 
         <!-- 로그인하지 않은 경우 -->
@@ -51,35 +54,161 @@
               <span class="username">{{ userInfo?.username }}</span>
               <span v-if="isAdmin" class="admin-badge">관리자</span>
             </div>
-            <button @click="handleLogout" class="logout-btn">로그아웃</button>
+
+            <!-- 🚪 로그아웃 버튼들 -->
+            <div class="logout-menu">
+              <button
+                  @click="handleLogout"
+                  :disabled="isLoggingOut"
+                  class="logout-btn"
+              >
+                <span v-if="isLoggingOut">⏳</span>
+                <span v-else>🚪</span>
+                로그아웃
+              </button>
+
+              <!-- 강제 로그아웃 버튼 (옵션) -->
+              <button
+                  @click="handleForceLogoutAll"
+                  :disabled="isLoggingOut"
+                  class="force-logout-btn"
+                  title="모든 기기에서 로그아웃"
+              >
+                🔒 전체 로그아웃
+              </button>
+            </div>
           </div>
         </template>
       </nav>
+    </div>
+
+    <!-- 로그아웃 결과 토스트 -->
+    <div v-if="logoutMessage" class="logout-toast" :class="logoutMessageType">
+      {{ logoutMessage }}
     </div>
   </header>
 </template>
 
 <script setup>
-import {RouterLink} from 'vue-router'
-import {ref, computed, onMounted} from 'vue'
-import {useAuth} from '@/composables/useAuth'
+import { RouterLink, useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useAuth } from '@/composables/useAuth'
+import { logoutWithBackend, forceLogoutAllDevices } from '@/utils/auth'
 
 // 디버깅 모드 (개발 중에만 true로 설정)
 const showDebug = ref(true) // 배포 시 false로 변경
 
-const {userInfo, isLoggedIn, isAdmin, logout, checkAuthStatus} = useAuth()
+const router = useRouter()
+const { userInfo, isLoggedIn, isAdmin, logout: localLogout, checkAuthStatus } = useAuth()
 
 // 로그아웃 진행 상태
 const isLoggingOut = ref(false)
 
+// 로그아웃 메시지
+const logoutMessage = ref('')
+const logoutMessageType = ref('success') // 'success' | 'warning' | 'error'
+
 // 토큰 존재 여부
 const hasToken = computed(() => !!localStorage.getItem('access_token'))
 
-// 로그아웃 처리
+// 🚪 일반 로그아웃 (백엔드 API 호출)
 const handleLogout = async () => {
+  if (isLoggingOut.value) return
+
   isLoggingOut.value = true
+  logoutMessage.value = ''
+
   try {
-    await logout()
+    console.log('🚪 [AppHeader] 로그아웃 시작...')
+
+    const result = await logoutWithBackend()
+
+    if (result.success) {
+      logoutMessage.value = result.message || '로그아웃되었습니다'
+      logoutMessageType.value = 'success'
+      console.log('✅ [AppHeader] 백엔드 로그아웃 성공')
+    } else {
+      logoutMessage.value = result.localCleared
+          ? '서버 오류가 있었지만 로그아웃되었습니다'
+          : '로그아웃 처리 중 오류가 발생했습니다'
+      logoutMessageType.value = result.localCleared ? 'warning' : 'error'
+      console.warn('⚠️ [AppHeader] 백엔드 로그아웃 부분 실패:', result.error)
+    }
+
+    // useAuth의 로컬 상태도 업데이트
+    await localLogout()
+
+    // 3초 후 토스트 메시지 제거
+    setTimeout(() => {
+      logoutMessage.value = ''
+    }, 3000)
+
+    // 로그인 페이지로 리다이렉트
+    router.push('/login')
+
+  } catch (error) {
+    console.error('❌ [AppHeader] 로그아웃 처리 중 예외:', error)
+
+    logoutMessage.value = '로그아웃 중 예상치 못한 오류가 발생했습니다'
+    logoutMessageType.value = 'error'
+
+    // 예외 발생해도 로컬 로그아웃은 수행
+    await localLogout()
+    router.push('/login')
+
+  } finally {
+    isLoggingOut.value = false
+  }
+}
+
+// 🔒 강제 로그아웃 (모든 기기에서)
+const handleForceLogoutAll = async () => {
+  if (isLoggingOut.value) return
+
+  const confirmed = confirm('모든 기기에서 로그아웃하시겠습니까?\n다른 기기에서도 자동으로 로그아웃됩니다.')
+  if (!confirmed) return
+
+  isLoggingOut.value = true
+  logoutMessage.value = ''
+
+  try {
+    console.log('🔒 [AppHeader] 모든 기기 로그아웃 시작...')
+
+    const result = await forceLogoutAllDevices()
+
+    if (result.success) {
+      logoutMessage.value = result.message || '모든 기기에서 로그아웃되었습니다'
+      logoutMessageType.value = 'success'
+      console.log('✅ [AppHeader] 강제 로그아웃 성공')
+    } else {
+      logoutMessage.value = result.localCleared
+          ? '일부 기기에서 오류가 있었지만 현재 기기는 로그아웃되었습니다'
+          : '강제 로그아웃 처리 중 오류가 발생했습니다'
+      logoutMessageType.value = result.localCleared ? 'warning' : 'error'
+      console.warn('⚠️ [AppHeader] 강제 로그아웃 부분 실패:', result.error)
+    }
+
+    // useAuth의 로컬 상태도 업데이트
+    await localLogout()
+
+    // 3초 후 토스트 메시지 제거
+    setTimeout(() => {
+      logoutMessage.value = ''
+    }, 3000)
+
+    // 로그인 페이지로 리다이렉트
+    router.push('/login')
+
+  } catch (error) {
+    console.error('❌ [AppHeader] 강제 로그아웃 처리 중 예외:', error)
+
+    logoutMessage.value = '강제 로그아웃 중 예상치 못한 오류가 발생했습니다'
+    logoutMessageType.value = 'error'
+
+    // 예외 발생해도 로컬 로그아웃은 수행
+    await localLogout()
+    router.push('/login')
+
   } finally {
     isLoggingOut.value = false
   }
@@ -243,6 +372,13 @@ onMounted(() => {
   font-weight: 600;
 }
 
+/* 로그아웃 메뉴 스타일 */
+.logout-menu {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .logout-btn {
   background: #ef4444;
   color: white;
@@ -251,15 +387,98 @@ onMounted(() => {
   border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.logout-btn:hover {
+.logout-btn:hover:not(:disabled) {
   background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.logout-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.force-logout-btn {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.force-logout-btn:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+.force-logout-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .loading {
   color: #6b7280;
   font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 토스트 메시지 스타일 */
+.logout-toast {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.logout-toast.success {
+  background: #10b981;
+  color: white;
+}
+
+.logout-toast.warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.logout-toast.error {
+  background: #ef4444;
+  color: white;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 </style>
