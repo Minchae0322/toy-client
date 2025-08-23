@@ -105,17 +105,31 @@ const handleLogout = async () => {
   isLoggingOut.value = true
 
   try {
-    disconnectWebSocket() // ✅ 로그아웃 시 WebSocket 해제
+    // ✅ WebSocket 안전 해제
+    try {
+      disconnectWebSocket()
+      console.log('🔌 WebSocket 연결 해제 완료')
+    } catch (wsError) {
+      console.error('⚠️ WebSocket 해제 중 에러:', wsError)
+    }
+
+    // ✅ 토큰 제거 & 상태 초기화
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     isLoggedIn.value = false
     userInfo.value = null
+    console.log('🗑️ 토큰 및 상태 초기화 완료')
+
+    // ✅ 라우팅 처리
     await router.push('/login')
     console.log('✅ App.vue 로그아웃 완료')
+  } catch (err) {
+    console.error('❌ 로그아웃 중 오류 발생:', err)
   } finally {
     isLoggingOut.value = false
   }
 }
+
 
 // localStorage 변경 감지 (다른 탭 반영)
 const handleStorageChange = (e) => {

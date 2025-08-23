@@ -7,6 +7,9 @@
       <div>사용자: {{ userInfo?.username }}</div>
       <div>역할: {{ userInfo?.role }}</div>
       <div>토큰: {{ hasToken ? '있음' : '없음' }}</div>
+      <div>WebSocket: {{ wsConnected ? '🟢 연결됨' : '🔴 끊김' }}</div>
+      <div>WS Service: {{ wsServiceExists ? '✅ 존재' : '❌ 없음' }}</div>
+      <div>WS 초기화: {{ wsInitialized ? '✅ 완료' : '❌ 미완료' }}</div>
     </div>
 
     <div class="header-container">
@@ -17,14 +20,11 @@
       <nav class="main-nav">
         <!-- 로그아웃 진행 중이면 로딩 표시 -->
         <template v-if="isLoggingOut">
-          <div class="loading">
-            <span class="loading-spinner">⏳</span>
-            로그아웃 중...
-          </div>
+          <div class="loading">로그아웃 중...</div>
         </template>
 
         <!-- 로그인하지 않은 경우 -->
-        <template v-else-if="!isLoggedIn">
+        <template v-else-if="!displayIsLoggedIn">
           <RouterLink to="/login" class="nav-link">로그인</RouterLink>
           <RouterLink to="/register" class="nav-link">회원가입</RouterLink>
         </template>
@@ -36,7 +36,7 @@
           <RouterLink to="/sell" class="nav-link">판매하기</RouterLink>
 
           <!-- 🎯 관리자 메뉴 -->
-          <div v-if="isAdmin" class="admin-menu">
+          <div v-if="displayIsAdmin" class="admin-menu">
             <RouterLink to="/admin" class="nav-link admin-link">
               🛠️ 관리자
             </RouterLink>
@@ -50,165 +50,200 @@
 
           <!-- 사용자 메뉴 -->
           <div class="user-menu">
+            <!-- ✅ WebSocket 연결 상태 표시 (항상 표시) -->
+            <div
+                class="connection-status"
+                :class="{
+                'connected': wsConnected,
+                'disconnected': !wsConnected,
+                'error': wsError
+              }"
+                @click="debugWebSocketStatus"
+                :title="`WebSocket: ${wsConnected ? '연결됨' : '끊어짐'} (클릭으로 디버그)`"
+            >
+              <div class="status-dot"></div>
+              <span class="status-text">{{ getConnectionText() }}</span>
+            </div>
+
             <div class="user-info">
-              <span class="username">{{ userInfo?.username }}</span>
-              <span v-if="isAdmin" class="admin-badge">관리자</span>
+              <span class="username">{{ displayUserInfo?.username }}</span>
+              <span v-if="displayIsAdmin" class="admin-badge">관리자</span>
             </div>
-
-            <!-- 🚪 로그아웃 버튼들 -->
-            <div class="logout-menu">
-              <button
-                  @click="handleLogout"
-                  :disabled="isLoggingOut"
-                  class="logout-btn"
-              >
-                <span v-if="isLoggingOut">⏳</span>
-                <span v-else>🚪</span>
-                로그아웃
-              </button>
-
-              <!-- 강제 로그아웃 버튼 (옵션) -->
-              <button
-                  @click="handleForceLogoutAll"
-                  :disabled="isLoggingOut"
-                  class="force-logout-btn"
-                  title="모든 기기에서 로그아웃"
-              >
-                🔒 전체 로그아웃
-              </button>
-            </div>
+            <button @click="handleLogout" class="logout-btn">로그아웃</button>
           </div>
         </template>
       </nav>
-    </div>
-
-    <!-- 로그아웃 결과 토스트 -->
-    <div v-if="logoutMessage" class="logout-toast" :class="logoutMessageType">
-      {{ logoutMessage }}
     </div>
   </header>
 </template>
 
 <script setup>
-import { RouterLink, useRouter } from 'vue-router'
-import { ref, computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAuth } from '@/composables/useAuth'
-import { logoutWithBackend, forceLogoutAllDevices } from '@/utils/auth'
+import { webSocketService } from '@/services/webSocketService.js'
+import * as authUtils from '@/utils/auth.js'
 
 // 디버깅 모드 (개발 중에만 true로 설정)
-const showDebug = ref(true) // 배포 시 false로 변경
+const showDebug = ref(import.meta.env.DEV) // 개발환경에서만 디버그 정보 표시
 
-const router = useRouter()
-const { userInfo, isLoggedIn, isAdmin, logout: localLogout, checkAuthStatus } = useAuth()
+const { userInfo, isLoggedIn, isAdmin, logout, checkAuthStatus } = useAuth()
 
 // 로그아웃 진행 상태
 const isLoggingOut = ref(false)
 
-// 로그아웃 메시지
-const logoutMessage = ref('')
-const logoutMessageType = ref('success') // 'success' | 'warning' | 'error'
+// ✅ WebSocket 연결 상태 (더 상세한 상태 관리)
+const wsConnected = ref(false)
+const wsError = ref(false)
+const wsServiceExists = ref(false)
+const wsInitialized = ref(false)
+
+// ✅ 로컬 인증 상태 (useAuth와 별도로 관리)
+const localIsLoggedIn = ref(false)
+const localUserInfo = ref(null)
 
 // 토큰 존재 여부
 const hasToken = computed(() => !!localStorage.getItem('access_token'))
 
-// 🚪 일반 로그아웃 (백엔드 API 호출)
-const handleLogout = async () => {
-  if (isLoggingOut.value) return
+// ✅ 실제 표시할 로그인 상태 (두 상태를 조합)
+const displayIsLoggedIn = computed(() => {
+  const authResult = isLoggedIn.value
+  const localResult = localIsLoggedIn.value
+  const tokenExists = hasToken.value
 
-  isLoggingOut.value = true
-  logoutMessage.value = ''
+  console.log('🔍 [AppHeader] 로그인 상태 계산:', {
+    authResult,
+    localResult,
+    tokenExists,
+    final: authResult || localResult || tokenExists
+  })
+
+  return authResult || localResult || tokenExists
+})
+
+// ✅ 실제 표시할 사용자 정보
+const displayUserInfo = computed(() => {
+  return userInfo.value || localUserInfo.value
+})
+
+// ✅ 실제 표시할 관리자 여부
+const displayIsAdmin = computed(() => {
+  const user = displayUserInfo.value
+  return user?.role === 'ADMIN'
+})
+
+// WebSocket 연결 텍스트 계산
+const getConnectionText = () => {
+  if (wsError.value) return '오류'
+  if (wsConnected.value) return '온라인'
+  return '오프라인'
+}
+
+// ✅ WebSocket 상태 디버깅 함수
+const debugWebSocketStatus = () => {
+  console.group('🔍 WebSocket 디버깅 정보')
+
+  // WebSocket 서비스 존재 여부
+  console.log('webSocketService 존재:', !!webSocketService)
+
+  if (webSocketService) {
+    // 서비스 메서드들 확인
+    console.log('isConnected 메서드:', typeof webSocketService.isConnected)
+    console.log('onConnectionChange 메서드:', typeof webSocketService.onConnectionChange)
+    console.log('getConnectionState 메서드:', typeof webSocketService.getConnectionState)
+
+    // 실제 상태 확인
+    try {
+      const isConnected = webSocketService.isConnected()
+      console.log('실제 연결 상태:', isConnected)
+
+      const connectionState = webSocketService.getConnectionState()
+      console.log('연결 상태 객체:', connectionState)
+
+      const debugInfo = webSocketService.getDebugInfo()
+      console.log('디버그 정보:', debugInfo)
+    } catch (error) {
+      console.error('WebSocket 메서드 호출 오류:', error)
+    }
+  }
+
+  // 컴포넌트 상태
+  console.log('컴포넌트 상태:', {
+    wsConnected: wsConnected.value,
+    wsError: wsError.value,
+    wsServiceExists: wsServiceExists.value,
+    wsInitialized: wsInitialized.value,
+    isLoggedIn: isLoggedIn.value
+  })
+
+  console.groupEnd()
+}
+
+// ✅ WebSocket 상태 모니터링 설정 (강화된 버전)
+const setupWebSocketStatusMonitoring = () => {
+  console.log('📶 [AppHeader] WebSocket 상태 모니터링 설정 시작...')
 
   try {
-    console.log('🚪 [AppHeader] 로그아웃 시작...')
+    // WebSocket 서비스 존재 확인
+    wsServiceExists.value = !!webSocketService
+    console.log('📶 [AppHeader] WebSocket 서비스 존재:', wsServiceExists.value)
 
-    const result = await logoutWithBackend()
-
-    if (result.success) {
-      logoutMessage.value = result.message || '로그아웃되었습니다'
-      logoutMessageType.value = 'success'
-      console.log('✅ [AppHeader] 백엔드 로그아웃 성공')
-    } else {
-      logoutMessage.value = result.localCleared
-          ? '서버 오류가 있었지만 로그아웃되었습니다'
-          : '로그아웃 처리 중 오류가 발생했습니다'
-      logoutMessageType.value = result.localCleared ? 'warning' : 'error'
-      console.warn('⚠️ [AppHeader] 백엔드 로그아웃 부분 실패:', result.error)
+    if (!webSocketService) {
+      console.error('❌ [AppHeader] webSocketService가 존재하지 않습니다!')
+      wsError.value = true
+      return
     }
 
-    // useAuth의 로컬 상태도 업데이트
-    await localLogout()
+    // WebSocket 서비스 메서드 존재 확인
+    if (typeof webSocketService.isConnected !== 'function') {
+      console.error('❌ [AppHeader] webSocketService.isConnected가 함수가 아닙니다!')
+      wsError.value = true
+      return
+    }
 
-    // 3초 후 토스트 메시지 제거
-    setTimeout(() => {
-      logoutMessage.value = ''
-    }, 3000)
+    if (typeof webSocketService.onConnectionChange !== 'function') {
+      console.error('❌ [AppHeader] webSocketService.onConnectionChange가 함수가 아닙니다!')
+      wsError.value = true
+      return
+    }
 
-    // 로그인 페이지로 리다이렉트
-    router.push('/login')
+    // 초기 상태 설정
+    try {
+      wsConnected.value = webSocketService.isConnected()
+      console.log('📶 [AppHeader] 초기 WebSocket 상태:', wsConnected.value)
+    } catch (error) {
+      console.error('❌ [AppHeader] 초기 상태 확인 오류:', error)
+      wsError.value = true
+      wsConnected.value = false
+    }
 
-  } catch (error) {
-    console.error('❌ [AppHeader] 로그아웃 처리 중 예외:', error)
+    // 연결 상태 변화 리스너 등록
+    try {
+      webSocketService.onConnectionChange((connected) => {
+        console.log('📶 [AppHeader] WebSocket 연결 상태 변경:', connected)
+        wsConnected.value = connected
+        wsError.value = false // 상태 변경이 오면 오류 해제
+      })
 
-    logoutMessage.value = '로그아웃 중 예상치 못한 오류가 발생했습니다'
-    logoutMessageType.value = 'error'
+      wsInitialized.value = true
+      console.log('✅ [AppHeader] WebSocket 모니터링 설정 완료')
+    } catch (error) {
+      console.error('❌ [AppHeader] 리스너 등록 오류:', error)
+      wsError.value = true
+    }
 
-    // 예외 발생해도 로컬 로그아웃은 수행
-    await localLogout()
-    router.push('/login')
-
-  } finally {
-    isLoggingOut.value = false
+  } catch (generalError) {
+    console.error('❌ [AppHeader] WebSocket 모니터링 설정 전체 오류:', generalError)
+    wsError.value = true
+    wsServiceExists.value = false
   }
 }
 
-// 🔒 강제 로그아웃 (모든 기기에서)
-const handleForceLogoutAll = async () => {
-  if (isLoggingOut.value) return
-
-  const confirmed = confirm('모든 기기에서 로그아웃하시겠습니까?\n다른 기기에서도 자동으로 로그아웃됩니다.')
-  if (!confirmed) return
-
+// 로그아웃 처리
+const handleLogout = async () => {
   isLoggingOut.value = true
-  logoutMessage.value = ''
-
   try {
-    console.log('🔒 [AppHeader] 모든 기기 로그아웃 시작...')
-
-    const result = await forceLogoutAllDevices()
-
-    if (result.success) {
-      logoutMessage.value = result.message || '모든 기기에서 로그아웃되었습니다'
-      logoutMessageType.value = 'success'
-      console.log('✅ [AppHeader] 강제 로그아웃 성공')
-    } else {
-      logoutMessage.value = result.localCleared
-          ? '일부 기기에서 오류가 있었지만 현재 기기는 로그아웃되었습니다'
-          : '강제 로그아웃 처리 중 오류가 발생했습니다'
-      logoutMessageType.value = result.localCleared ? 'warning' : 'error'
-      console.warn('⚠️ [AppHeader] 강제 로그아웃 부분 실패:', result.error)
-    }
-
-    // useAuth의 로컬 상태도 업데이트
-    await localLogout()
-
-    // 3초 후 토스트 메시지 제거
-    setTimeout(() => {
-      logoutMessage.value = ''
-    }, 3000)
-
-    // 로그인 페이지로 리다이렉트
-    router.push('/login')
-
-  } catch (error) {
-    console.error('❌ [AppHeader] 강제 로그아웃 처리 중 예외:', error)
-
-    logoutMessage.value = '강제 로그아웃 중 예상치 못한 오류가 발생했습니다'
-    logoutMessageType.value = 'error'
-
-    // 예외 발생해도 로컬 로그아웃은 수행
-    await localLogout()
-    router.push('/login')
-
+    await logout()
   } finally {
     isLoggingOut.value = false
   }
@@ -217,13 +252,51 @@ const handleForceLogoutAll = async () => {
 // 컴포넌트 마운트 시 디버깅 정보 출력
 onMounted(() => {
   console.log('=== AppHeader 디버깅 ===')
-  console.log('isLoggedIn:', isLoggedIn.value)
-  console.log('isAdmin:', isAdmin.value)
-  console.log('userInfo:', userInfo.value)
+  console.log('useAuth isLoggedIn:', isLoggedIn.value)
+  console.log('useAuth isAdmin:', isAdmin.value)
+  console.log('useAuth userInfo:', userInfo.value)
   console.log('hasToken:', hasToken.value)
 
-  // 강제 인증 상태 체크
+  // ✅ 로컬 인증 상태 체크
+  checkLocalAuthStatus()
+
+  // 강제 인증 상태 체크 (useAuth)
   checkAuthStatus()
+
+  // ✅ WebSocket 상태 모니터링 설정
+  setupWebSocketStatusMonitoring()
+
+  // ✅ localStorage 변화 감지 리스너 추가
+  const handleStorageChange = (e) => {
+    console.log('📦 [AppHeader] Storage 변화 감지:', e.key, e.newValue ? '토큰 추가' : '토큰 제거')
+
+    if (e.key === 'access_token') {
+      // 토큰 변화 시 인증 상태 재확인
+      setTimeout(async () => {
+        checkAuthStatus() // useAuth 상태 갱신
+        checkLocalAuthStatus() // 로컬 상태 갱신
+
+        console.log('🔄 [AppHeader] 인증 상태 재확인 후:', {
+          useAuthLoggedIn: isLoggedIn.value,
+          localLoggedIn: localIsLoggedIn.value,
+          displayLoggedIn: displayIsLoggedIn.value,
+          hasToken: hasToken.value
+        })
+
+        // WebSocket 재연결 시도
+        if (displayIsLoggedIn.value) {
+          await forceWebSocketCheck()
+        }
+      }, 100)
+    }
+  }
+
+  window.addEventListener('storage', handleStorageChange)
+
+  // 컴포넌트 언마운트 시 리스너 제거
+  onUnmounted(() => {
+    window.removeEventListener('storage', handleStorageChange)
+  })
 
   // JWT 토큰 수동 확인
   const token = localStorage.getItem('access_token')
@@ -246,6 +319,103 @@ onMounted(() => {
     } catch (e) {
       console.error('JWT 디코딩 실패:', e)
     }
+  }
+})
+
+// ✅ 로컬 인증 상태 확인 함수 추가
+const checkLocalAuthStatus = () => {
+  console.log('🔍 [AppHeader] 로컬 인증 상태 확인 중...')
+
+  try {
+    const token = authUtils.getAccessToken()
+
+    if (!token) {
+      console.log('❌ [AppHeader] 토큰 없음')
+      localIsLoggedIn.value = false
+      localUserInfo.value = null
+      return false
+    }
+
+    if (!authUtils.isTokenValid(token)) {
+      console.log('❌ [AppHeader] 토큰 만료')
+      authUtils.clearTokens()
+      localIsLoggedIn.value = false
+      localUserInfo.value = null
+      return false
+    }
+
+    // 사용자 정보 추출
+    const extractedUserInfo = authUtils.extractUserInfoFromToken(token)
+    if (extractedUserInfo) {
+      localIsLoggedIn.value = true
+      localUserInfo.value = extractedUserInfo
+      console.log('✅ [AppHeader] 로컬 인증 상태 확인 완료:', extractedUserInfo)
+      return true
+    } else {
+      console.log('❌ [AppHeader] 사용자 정보 추출 실패')
+      localIsLoggedIn.value = false
+      localUserInfo.value = null
+      return false
+    }
+  } catch (error) {
+    console.error('❌ [AppHeader] 로컬 인증 상태 확인 오류:', error)
+    localIsLoggedIn.value = false
+    localUserInfo.value = null
+    return false
+  }
+}
+
+// ✅ 로그인 상태 변화 감지 - 추가된 부분
+watch(displayIsLoggedIn, async (newValue, oldValue) => {
+  console.log(`🔑 [AppHeader] 표시 로그인 상태 변화: ${oldValue} -> ${newValue}`)
+
+  if (newValue) {
+    // 로그인되면 WebSocket 모니터링 재설정 및 연결 시도
+    console.log('🔌 [AppHeader] 로그인 감지 - WebSocket 모니터링 재시작')
+    setupWebSocketStatusMonitoring()
+
+    // 추가로 WebSocket 연결 강제 시도
+    setTimeout(async () => {
+      await forceWebSocketCheck()
+    }, 2000) // 2초 딜레이
+  } else {
+    // 로그아웃되면 WebSocket 상태 초기화
+    console.log('🔌 [AppHeader] 로그아웃 감지 - WebSocket 상태 초기화')
+    wsConnected.value = false
+    wsError.value = false
+    wsInitialized.value = false
+  }
+}, { immediate: false })
+
+// ✅ 토큰 변화 감지 - 추가된 부분
+watch(hasToken, async (newValue, oldValue) => {
+  console.log(`🎫 [AppHeader] 토큰 상태 변화: ${oldValue} -> ${newValue}`)
+
+  if (newValue && !oldValue) {
+    // 토큰이 새로 생겼을 때 (로그인)
+    console.log('🔌 [AppHeader] 토큰 감지 - 로컬 상태 갱신')
+    checkLocalAuthStatus()
+
+    setTimeout(async () => {
+      setupWebSocketStatusMonitoring()
+      await forceWebSocketCheck()
+    }, 1000) // 1초 딜레이를 두어 다른 초기화가 완료되기를 기다림
+  } else if (!newValue && oldValue) {
+    // 토큰이 사라졌을 때 (로그아웃)
+    localIsLoggedIn.value = false
+    localUserInfo.value = null
+  }
+}, { immediate: false })
+
+// ✅ 컴포넌트 언마운트 시 리스너 해제
+onUnmounted(() => {
+  console.log('🧹 [AppHeader] WebSocket 리스너 해제')
+  try {
+    if (webSocketService && typeof webSocketService.offMessage === 'function') {
+      webSocketService.offMessage('connection-change')
+    }
+  } catch (error) {
+    console.error('❌ [AppHeader] 리스너 해제 오류:', error)
   }
 })
 </script>
@@ -352,6 +522,93 @@ onMounted(() => {
   gap: 15px;
 }
 
+/* ✅ WebSocket 연결 상태 스타일 (강화된 버전) */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.connection-status:hover {
+  transform: scale(1.02);
+}
+
+.connection-status.connected {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.connection-status.disconnected {
+  background: rgba(156, 163, 175, 0.1);
+  color: #6b7280;
+  border: 1px solid rgba(156, 163, 175, 0.2);
+}
+
+.connection-status.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.connection-status.connected .status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.connection-status.connected .status-dot::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 2s infinite;
+}
+
+.connection-status.disconnected .status-dot {
+  background: #9ca3af;
+}
+
+.connection-status.error .status-dot {
+  background: #ef4444;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.status-text {
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -372,13 +629,6 @@ onMounted(() => {
   font-weight: 600;
 }
 
-/* 로그아웃 메뉴 스타일 */
-.logout-menu {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
 .logout-btn {
   background: #ef4444;
   color: white;
@@ -387,98 +637,49 @@ onMounted(() => {
   border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  transition: background 0.3s;
 }
 
-.logout-btn:hover:not(:disabled) {
+.logout-btn:hover {
   background: #dc2626;
-  transform: translateY(-1px);
-}
-
-.logout-btn:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.force-logout-btn {
-  background: #f59e0b;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.force-logout-btn:hover:not(:disabled) {
-  background: #d97706;
-  transform: translateY(-1px);
-}
-
-.force-logout-btn:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-  transform: none;
 }
 
 .loading {
   color: #6b7280;
   font-style: italic;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-.loading-spinner {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* 토스트 메시지 스타일 */
-.logout-toast {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  z-index: 1000;
-  animation: slideIn 0.3s ease-out;
-}
-
-.logout-toast.success {
-  background: #10b981;
-  color: white;
-}
-
-.logout-toast.warning {
-  background: #f59e0b;
-  color: white;
-}
-
-.logout-toast.error {
-  background: #ef4444;
-  color: white;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .connection-status {
+    padding: 3px 6px;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+
+  .status-text {
+    display: none; /* 모바일에서는 텍스트 숨김 */
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .connection-status.connected {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+  }
+
+  .connection-status.disconnected {
+    background: rgba(156, 163, 175, 0.15);
+    color: #9ca3af;
+  }
+
+  .connection-status.error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
   }
 }
 </style>

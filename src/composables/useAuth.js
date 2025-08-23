@@ -22,7 +22,7 @@ export function useAuth() {
             // user_info가 없거나 role이 없으면 JWT에서 추출
             if (!user || !user.role) {
                 console.log('🔵 JWT에서 사용자 정보 추출 시도')
-                const extractedUser = authUtils.extractUserFromToken()
+                const extractedUser = extractUserFromToken()
 
                 if (extractedUser) {
                     // 기존 user 정보와 JWT 정보 병합
@@ -62,6 +62,29 @@ export function useAuth() {
         }
     }
 
+    // JWT에서 사용자 정보 추출하는 헬퍼 함수
+    const extractUserFromToken = () => {
+        try {
+            const token = authUtils.getAccessToken()
+            if (!token) return null
+
+            const payload = authUtils.parseJwtToken(token)
+            if (!payload) return null
+
+            return {
+                id: payload.userId || payload.sub,
+                username: payload.username || payload.sub,
+                email: payload.email,
+                nickname: payload.nickname || payload.username,
+                role: payload.auth || payload.role || 'USER',
+                provider: payload.provider
+            }
+        } catch (error) {
+            console.error('🔴 JWT에서 사용자 정보 추출 실패:', error)
+            return null
+        }
+    }
+
     // 로그인 처리 - JWT 정보 완전 추출
     const login = (tokens, user) => {
         console.log('🔵 login 호출:', { tokens, user })
@@ -74,7 +97,7 @@ export function useAuth() {
 
         if (tokens.accessToken) {
             try {
-                const payload = authUtils.decodeJWTPayload(tokens.accessToken)
+                const payload = authUtils.parseJwtToken(tokens.accessToken) // 수정된 부분
                 console.log('🔵 로그인 시 JWT 페이로드:', payload)
 
                 if (payload) {
@@ -135,7 +158,7 @@ export function useAuth() {
         const token = authUtils.getAccessToken()
         if (token && !result) {
             try {
-                const payload = authUtils.decodeJWTPayload(token)
+                const payload = authUtils.parseJwtToken(token) // 수정된 부분
                 const jwtRole = payload?.auth || payload?.role
                 const isAdminFromJWT = jwtRole === 'ADMIN'
                 console.log('🔵 JWT에서 직접 확인:', { jwtRole, isAdminFromJWT })
@@ -156,7 +179,7 @@ export function useAuth() {
     })
 
     const isUser = computed(() => {
-        return userInfo.value?.role === 'USER' || authUtils.isUser()
+        return userInfo.value?.role === 'USER' || authUtils.hasRole('USER')
     })
 
     const userId = computed(() => {
@@ -188,7 +211,7 @@ export function useAuth() {
         const token = authUtils.getAccessToken()
         if (token) {
             try {
-                const payload = authUtils.decodeJWTPayload(token)
+                const payload = authUtils.parseJwtToken(token) // 수정된 부분
                 console.log('🔵 새로고침 시 JWT 페이로드:', payload)
 
                 if (payload && userInfo.value) {
@@ -220,7 +243,7 @@ export function useAuth() {
                 console.log('isLoggedIn:', isLoggedIn.value)
                 console.log('isAdmin:', isAdmin.value)
                 console.log('userRole:', userRole.value)
-                authUtils.debugAuthState()
+                authUtils.debugAuthStatus()
                 return {
                     userInfo: userInfo.value,
                     isLoggedIn: isLoggedIn.value,
@@ -259,6 +282,7 @@ export function useAuth() {
         loadUserInfo,
         hasRole,
         refreshAuth, // 디버깅용
+        extractUserFromToken, // 새로 추가된 헬퍼 함수
 
         // 유틸리티
         utils: authUtils

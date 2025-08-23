@@ -16,14 +16,6 @@
       </div>
     </div>
 
-    <!-- 디버깅 정보 (개발환경) -->
-    <div v-if="isDev" class="debug-panel">
-      <h4>🔧 디버그 정보</h4>
-      <p>현재 선택된 방: {{ selectedRoom || '없음' }}</p>
-      <p>WebSocket 연결: {{ connectionState.connected ? '✅ 연결됨' : '❌ 끊어짐' }}</p>
-      <p>사용자 ID: {{ currentUserId || '없음' }}</p>
-    </div>
-
     <!-- 메인 콘텐츠 -->
     <div class="chat-content" :class="{ 'connection-overlay': showConnectionOverlay }">
       <!-- 채팅방 목록 뷰 -->

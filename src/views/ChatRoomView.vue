@@ -18,30 +18,18 @@
         :unread-count="unreadCount"
     />
 
-    <!-- 디버깅용 정보 표시 (개발환경에서만) -->
+    <!-- 디버깅용 정보 표시 (개발환경에서만) - 간소화됨 -->
     <div v-if="isDev" class="debug-info">
       <p>총 채팅방: {{ allChatRooms.length }}개</p>
-      <p>필터된 채팅방: {{ filteredRooms.length }}개</p>
       <p>현재 탭: {{ activeTab }}</p>
-      <p>검색어: "{{ searchQuery }}"</p>
-      <p>WebSocket 연결: {{ wsConnected ? '✅' : '❌' }}</p>
-      <p>현재 구독한 채팅방: {{ subscribedRooms.join(', ') || '없음' }}</p>
+      <p>API 연동: {{ apiConnected ? '✅' : '❌' }}</p>
       <p>마지막 API 호출: {{ lastApiCall || '없음' }}</p>
-      <p>API 연동 상태: {{ apiConnected ? '✅' : '❌' }}</p>
-      <p>토큰 갱신 중: {{ authStore.refreshing ? '🔄' : '✅' }}</p>
-      <p>Auth Server: http://localhost:8081</p>
-      <p>Chat Server: http://localhost:8084</p>
-      <div class="stats-info">
-        <p>통계: 전체({{ getChatRoomStats.total }}) | 1:1({{ getChatRoomStats.normal }}) | 채널({{ getChatRoomStats.channel }}) | 지원({{ getChatRoomStats.support }}) | 보관({{ getChatRoomStats.archived }})</p>
-      </div>
 
-      <!-- 디버깅 버튼들 -->
+      <!-- 간소화된 디버깅 버튼들 -->
       <div class="debug-controls" style="margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap;">
-        <button @click="debugAllAuthInfo" class="debug-button">인증 정보 확인</button>
-        <button @click="forceTokenRefresh" class="debug-button">강제 토큰 갱신</button>
-        <button @click="testApiWithoutAuth" class="debug-button">인증 없이 API 테스트</button>
-        <button @click="clearAuthDataAndReload" class="debug-button">인증 데이터 삭제</button>
-        <button @click="testBackendRefresh" class="debug-button">백엔드 토큰 갱신 테스트</button>
+        <button @click="debugAllAuthInfo" class="debug-button">인증 정보</button>
+        <button @click="forceTokenRefresh" class="debug-button">토큰 갱신</button>
+        <button @click="loadChatRooms" class="debug-button">채팅방 새로고침</button>
       </div>
     </div>
 
@@ -127,19 +115,6 @@
       <Plus :size="24" />
     </button>
 
-    <!-- 연결 상태 표시 -->
-    <div v-if="showConnectionStatus" class="connection-status-container">
-      <div class="connection-status" :class="wsConnected ? 'connected' : 'disconnected'">
-        {{ wsConnected ? '🟢 실시간 연결됨' : '🔴 실시간 연결 끊김' }}
-      </div>
-      <div class="connection-status api-status" :class="apiConnected ? 'connected' : 'disconnected'">
-        {{ apiConnected ? '🟢 API 연결됨' : '🔴 API 연결 끊김' }}
-      </div>
-      <div class="connection-status auth-status" :class="getAuthStatusClass()">
-        {{ getAuthStatusText() }}
-      </div>
-    </div>
-
     <!-- 채팅방 생성 모달 -->
     <Teleport to="body">
       <CreateChatRoomModal
@@ -171,7 +146,6 @@ import ChatRoomTabs from '@/components/chat/ChatRoomTabs.vue'
 import ChatRoomCard from '@/components/chat/ChatRoomCard.vue'
 import CreateChatRoomModal from '@/components/chat/CreateChatRoomModal.vue'
 import { chatService, chatRoomUtils } from '@/services/chatService.js'
-import { webSocketService } from '@/services/webSocketService.js'
 import * as authUtils from '@/utils/auth.js'
 
 // Pinia 스토어 사용
@@ -214,16 +188,13 @@ const searchQuery = ref('')
 const loading = ref(false)
 const error = ref('')
 const isDev = ref(import.meta.env.DEV)
-const showConnectionStatus = ref(true)
 const showCreateModal = ref(false)
 const showSuccessToast = ref(false)
 const successMessage = ref('')
 const lastApiCall = ref('')
 
-// 연결 상태 관리
-const wsConnected = ref(false)
+// 연결 상태 관리 (간소화됨)
 const apiConnected = ref(false)
-const subscribedRooms = ref([])
 
 // 채팅방 목록 데이터
 const allChatRooms = ref([])
@@ -343,20 +314,6 @@ const filteredRooms = computed(() => {
 const unreadCount = computed(() => {
   return allChatRooms.value.reduce((total, room) => total + (room.unreadCount || 0), 0)
 })
-
-// 인증 상태 클래스 계산
-const getAuthStatusClass = () => {
-  if (authStore.refreshing) return 'refreshing'
-  if (authStore.hasValidToken) return 'connected'
-  return 'disconnected'
-}
-
-// 인증 상태 텍스트 계산
-const getAuthStatusText = () => {
-  if (authStore.refreshing) return '🔄 토큰 갱신 중'
-  if (authStore.hasValidToken) return '🟢 토큰 유효'
-  return '🔴 토큰 만료'
-}
 
 // 메서드
 const filterByTab = (rooms) => {
@@ -600,7 +557,7 @@ const loadSampleData = () => {
   apiConnected.value = false
 }
 
-// 디버깅 함수들
+// 디버깅 함수들 (간소화됨)
 const debugAllAuthInfo = () => {
   console.group('🔍 전체 인증 정보 디버깅')
 
@@ -642,53 +599,6 @@ const forceTokenRefresh = async () => {
     console.error('강제 토큰 갱신 실패:', error)
     showErrorToast('토큰 갱신 중 오류가 발생했습니다.')
   }
-}
-
-const testApiWithoutAuth = async () => {
-  console.log('🧪 인증 없이 Chat API 테스트...')
-  try {
-    const response = await fetch('http://localhost:8084/api/v1/chat/rooms', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    })
-    console.log('Chat API 응답 상태:', response.status)
-  } catch (error) {
-    console.error('Chat API 테스트 실패:', error)
-  }
-}
-
-const testBackendRefresh = async () => {
-  console.log('🧪 백엔드 RefreshJwtFilter 테스트...')
-  try {
-    const refreshToken = authUtils.getRefreshToken()
-    if (!refreshToken) {
-      console.error('❌ Refresh Token이 없습니다.')
-      return
-    }
-
-    const response = await fetch('http://localhost:8081/api/v1/auth/verify', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${refreshToken}`
-      }
-    })
-
-    console.log('Auth Server 응답 상태:', response.status)
-    const newToken = response.headers.get('Authorization')
-    if (newToken) {
-      console.log('✅ 새로운 Access Token 수신')
-    }
-  } catch (error) {
-    console.error('백엔드 RefreshJwtFilter 테스트 실패:', error)
-  }
-}
-
-const clearAuthDataAndReload = () => {
-  console.log('🧹 인증 데이터 초기화 및 새로고침...')
-  authUtils.logout()
-  authStore.logout()
-  setTimeout(() => window.location.reload(), 100)
 }
 
 const showErrorToast = (message) => {
@@ -783,62 +693,6 @@ const updateChatRoomStatus = async (roomId, newStatus) => {
   }
 }
 
-// WebSocket 연결 관리 - App.vue에서 전역 관리로 이동
-const initializeWebSocket = () => {
-  console.warn('⚠️ WebSocket 연결은 App.vue에서 전역적으로 관리됩니다.')
-  // App.vue에서 이미 연결되어 있으므로 별도 처리 불필요
-}
-
-const disconnectWebSocket = () => {
-  console.warn('⚠️ WebSocket 해제는 App.vue에서 전역적으로 관리됩니다.')
-  // App.vue에서 관리하므로 여기서는 구독만 정리
-  if (webSocketService) {
-    // 현재 채팅방 관련 구독만 해제
-    subscribedRooms.value.forEach(roomId => {
-      webSocketService.unsubscribeFromChatRoom(roomId)
-    })
-    subscribedRooms.value = []
-  }
-}
-
-// WebSocket 상태를 주기적으로 확인하는 함수 (fallback)
-let wsStatusCheckInterval = null
-
-const startWebSocketStatusCheck = () => {
-  if (wsStatusCheckInterval) {
-    clearInterval(wsStatusCheckInterval)
-  }
-
-  wsStatusCheckInterval = setInterval(() => {
-    if (webSocketService) {
-      // WebSocket 연결 상태 확인 (다양한 속성명 시도)
-      let isConnected = false
-
-      if (typeof webSocketService.isConnected === 'function') {
-        isConnected = webSocketService.isConnected()
-      } else if (typeof webSocketService.connected === 'boolean') {
-        isConnected = webSocketService.connected
-      } else if (webSocketService.readyState !== undefined) {
-        isConnected = webSocketService.readyState === 1 // WebSocket.OPEN
-      } else if (webSocketService.socket && webSocketService.socket.readyState !== undefined) {
-        isConnected = webSocketService.socket.readyState === 1
-      }
-
-      if (wsConnected.value !== isConnected) {
-        console.log('🔌 WebSocket 상태 변경 감지:', isConnected)
-        wsConnected.value = isConnected
-      }
-    }
-  }, 5000) // 5초마다 확인
-}
-
-const stopWebSocketStatusCheck = () => {
-  if (wsStatusCheckInterval) {
-    clearInterval(wsStatusCheckInterval)
-    wsStatusCheckInterval = null
-  }
-}
-
 // 자동 새로고침
 let refreshInterval = null
 
@@ -870,12 +724,6 @@ watch(searchQuery, (newQuery) => {
 
 watch(() => authStore.isAuthenticated, (newValue) => {
   console.log(`🔑 인증 상태 변경: ${newValue ? '인증됨' : '인증 해제'}`)
-  if (!newValue) {
-    apiConnected.value = false
-    disconnectWebSocket()
-  } else {
-    initializeWebSocket()
-  }
 })
 
 watch(() => authStore.refreshing, (newValue) => {
@@ -902,19 +750,13 @@ onMounted(async () => {
   }
 
   await loadChatRooms()
-
-  if (authStore.isAuthenticated) {
-    initializeWebSocket()
-  }
-
   startAutoRefresh()
 })
 
 onUnmounted(() => {
   console.log('🏠 ChatRoomView 컴포넌트 언마운트됨')
   stopAutoRefresh()
-  disconnectWebSocket()
-  stopWebSocketStatusCheck() // WebSocket 상태 체크 정리
+
   if (searchTimer) {
     clearTimeout(searchTimer)
   }
@@ -943,12 +785,6 @@ onUnmounted(() => {
 
 .debug-info p {
   margin: 4px 0;
-}
-
-.stats-info {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #bae6fd;
 }
 
 .debug-button {
@@ -1144,58 +980,6 @@ onUnmounted(() => {
   transform: translateY(-1px) scale(0.98);
 }
 
-.connection-status-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  z-index: 1000;
-}
-
-.connection-status {
-  padding: 6px 10px;
-  border-radius: 16px;
-  font-size: 11px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  border: 1px solid transparent;
-}
-
-.connection-status.connected {
-  background: rgba(220, 252, 231, 0.9);
-  color: #166534;
-  border-color: #bbf7d0;
-}
-
-.connection-status.disconnected {
-  background: rgba(254, 242, 242, 0.9);
-  color: #991b1b;
-  border-color: #fecaca;
-}
-
-.connection-status.refreshing {
-  background: rgba(254, 243, 199, 0.9);
-  color: #92400e;
-  border-color: #fcd34d;
-  animation: pulse-refresh 1.5s infinite;
-}
-
-@keyframes pulse-refresh {
-  0%, 100% { background: rgba(254, 243, 199, 0.9); }
-  50% { background: rgba(254, 243, 199, 0.7); }
-}
-
-.api-status {
-  font-size: 10px;
-}
-
-.auth-status {
-  font-size: 10px;
-}
-
 .success-toast {
   position: fixed;
   top: 80px;
@@ -1278,20 +1062,6 @@ onUnmounted(() => {
     font-size: 10px;
   }
 
-  .connection-status-container {
-    bottom: 10px;
-    right: 10px;
-  }
-
-  .connection-status {
-    font-size: 10px;
-    padding: 5px 8px;
-  }
-
-  .api-status, .auth-status {
-    font-size: 9px;
-  }
-
   .floating-create-button {
     bottom: 20px;
     right: 20px;
@@ -1326,24 +1096,6 @@ onUnmounted(() => {
   .debug-button:hover {
     background: #1d4ed8;
   }
-
-  .connection-status.connected {
-    background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
-    border-color: #22c55e;
-  }
-
-  .connection-status.disconnected {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border-color: #ef4444;
-  }
-
-  .connection-status.refreshing {
-    background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
-    border-color: #f59e0b;
-  }
 }
 
 /* 채팅방 타입별 스타일 */
@@ -1371,36 +1123,9 @@ onUnmounted(() => {
   .spinner,
   .room-card,
   .floating-create-button,
-  .success-toast,
-  .connection-status.refreshing {
+  .success-toast {
     animation: none !important;
     transition: none !important;
   }
-}
-
-/* 백엔드 연동 상태 표시 */
-.backend-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: 500;
-}
-
-.backend-status.connected {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.backend-status.disconnected {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.backend-status.refreshing {
-  background: #fef3c7;
-  color: #92400e;
 }
 </style>

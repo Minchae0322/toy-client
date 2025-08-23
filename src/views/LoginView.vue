@@ -56,22 +56,22 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { authService } from '@/api/axios.js'
-import { webSocketService } from '@/services/webSocketService.js' // ✅ WebSocket 서비스 추가
+import { webSocketService } from '@/services/webSocketService.js'
 
 const router = useRouter()
 const route = useRoute()
-const { login, isLoggedIn } = useAuth()
+const { login, isLoggedIn, checkAuthStatus } = useAuth() // checkAuthStatus 추가
 
 // 반응형 데이터
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
 const loading = ref(false)
-const wsConnecting = ref(false) // ✅ WebSocket 연결 상태
+const wsConnecting = ref(false)
 
 // 컴퓨티드 속성
 const redirectPath = computed(() => route.query.redirect || '/home')
@@ -106,7 +106,33 @@ const connectWebSocket = async () => {
   }
 }
 
-// 로그인 처리 (수정됨)
+// ✅ 강제 상태 동기화 함수
+const forceSyncAuthState = async () => {
+  console.log('🔄 [Login] 인증 상태 강제 동기화 중...')
+
+  try {
+    // localStorage 변화 이벤트 강제 발생
+    const token = localStorage.getItem('access_token')
+    if (token) {
+      // storage 이벤트 강제 트리거
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'access_token',
+        newValue: token,
+        storageArea: localStorage
+      }))
+
+      // useAuth의 checkAuthStatus 강제 실행
+      await nextTick()
+      checkAuthStatus()
+
+      console.log('✅ [Login] 인증 상태 동기화 완료')
+    }
+  } catch (error) {
+    console.error('❌ [Login] 인증 상태 동기화 실패:', error)
+  }
+}
+
+// 로그인 처리 (개선된 버전)
 const handleLogin = async () => {
   if (loading.value) return
 
@@ -140,7 +166,11 @@ const handleLogin = async () => {
     console.log('✅ [Login] 로그인 성공, 토큰 저장 중...')
 
     // useAuth를 통한 로그인 처리 (토큰 저장)
-    login({ accessToken, refreshToken }, userInfo)
+    const loginResult = login({ accessToken, refreshToken }, userInfo)
+    console.log('🔑 [Login] useAuth.login 결과:', loginResult)
+
+    // ✅ 상태 동기화 강제 실행
+    await forceSyncAuthState()
 
     console.log('🔌 [Login] WebSocket 연결 시작...')
 
@@ -149,13 +179,23 @@ const handleLogin = async () => {
 
     console.log('🚀 [Login] 로그인 및 실시간 연결 완료, 리다이렉트 중...')
 
-    // 로딩 상태 먼저 해제
+    // ✅ 추가 딜레이를 주어 모든 상태가 동기화되도록 함
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // 로딩 상태 해제
     loading.value = false
 
-    // 즉시 리다이렉트
+    // 리다이렉트 전에 한 번 더 상태 확인
+    console.log('🔍 [Login] 리다이렉트 전 최종 상태 확인:', {
+      isLoggedIn: isLoggedIn.value,
+      hasToken: !!localStorage.getItem('access_token')
+    })
+
+    // 리다이렉트
     try {
       await router.push(redirectPath.value)
     } catch (routerError) {
+      console.warn('❌ [Login] 라우터 실패, 강제 리다이렉트:', routerError)
       // 라우터 실패 시 강제 리다이렉트
       window.location.href = redirectPath.value
     }
@@ -192,11 +232,15 @@ const handleSocialLogin = (provider) => {
 
 // 마운트 시 로그인 상태 확인
 onMounted(async () => {
+  console.log('🔍 [Login] 마운트 시 로그인 상태 확인:', isLoggedIn.value)
+
   // 이미 로그인되어 있으면 리다이렉트
   if (isLoggedIn.value) {
     try {
+      console.log('✅ [Login] 이미 로그인됨, 리다이렉트:', redirectPath.value)
       await router.replace(redirectPath.value)
     } catch (error) {
+      console.warn('❌ [Login] 리다이렉트 실패, 강제 이동:', error)
       window.location.href = redirectPath.value
     }
   }
