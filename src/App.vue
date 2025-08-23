@@ -1,6 +1,7 @@
 <script setup>
+
 import {RouterLink, RouterView, useRoute} from 'vue-router'
-import {ref, computed, onMounted, onUnmounted} from 'vue'
+import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {webSocketService} from '@/services/webSocketService.js'
 import {useAuth} from '@/composables/useAuth'
 
@@ -34,8 +35,19 @@ const handleLogout = async () => {
   await logout()
   isLoggingOut.value = false
 }
+onMounted(() => {
+  if (isLoggedIn.value) {
+    webSocketService.connect().catch(console.error)
+  }
+})
 
-onMounted(monitorWebSocketStatus)
+watch(isLoggedIn, (newVal) => {
+  if (newVal) {
+    webSocketService.connect().catch(console.error)
+  } else {
+    webSocketService.disconnect()
+  }
+})
 onUnmounted(() => webSocketService.disconnect())
 </script>
 
