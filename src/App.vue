@@ -1,173 +1,60 @@
 <script setup>
-import {RouterLink, RouterView, useRoute, useRouter} from 'vue-router'
-import {computed, ref, onMounted, onUnmounted, watch} from 'vue'
-import {Menu} from "lucide-vue-next"
-import { webSocketService } from '@/services/webSocketService.js'
+import {RouterLink, RouterView, useRoute} from 'vue-router'
+import {ref, computed, onMounted, onUnmounted} from 'vue'
+import {webSocketService} from '@/services/webSocketService.js'
+import {useAuth} from '@/composables/useAuth'
 
 const route = useRoute()
-const router = useRouter()
+const {userInfo, isLoggedIn, isAdmin, logout} = useAuth()
 
-// 상태 관리
-const isLoggedIn = ref(false)
-const userInfo = ref(null)
 const isLoggingOut = ref(false)
-const wsConnected = ref(false) // ✅ WebSocket 연결 상태
-const showDebug = ref(false)   // 디버깅 모드
+const wsConnected = ref(false)
+const showDebug = ref(import.meta.env.DEV) // 개발환경에서만 디버깅 정보 표시
 
-// 인증 페이지 여부
+// 인증(로그인/회원가입/콜백) 전용 페이지 여부
 const isAuthPage = computed(() =>
-    ['/login', '/register'].includes(route.path)
+    ['/login', '/register', '/oauth/callback'].includes(route.path)
 )
 
-// JWT 디코딩 함수
-const decodeJWTPayload = (token) => {
-  try {
-    const parts = token.split('.')
-    if (parts.length !== 3) {
-      throw new Error('Invalid JWT format')
-    }
-    let payload = parts[1]
-    payload = payload.replace(/-/g, '+').replace(/_/g, '/')
-    while (payload.length % 4) {
-      payload += '='
-    }
-    const jsonPayload = atob(payload)
-    return JSON.parse(jsonPayload)
-  } catch (error) {
-    console.error('JWT 디코딩 실패:', error)
-    return null
-  }
-}
-
-// ✅ WebSocket 상태 감시
+// WebSocket 연결 상태 감시
 const monitorWebSocketStatus = () => {
   wsConnected.value = webSocketService.isConnected()
   webSocketService.onConnectionChange((connected) => {
-    console.log('🔌 [App.vue] WebSocket 연결 상태 변경:', connected)
     wsConnected.value = connected
   })
 }
 
-// ✅ WebSocket 해제 (로그아웃 시에만)
-const disconnectWebSocket = () => {
-  try {
-    console.log('🔌 [App.vue] 로그아웃으로 인한 WebSocket 연결 해제...')
-    webSocketService.disconnect()
-    wsConnected.value = false
-  } catch (error) {
-    console.error('❌ [App.vue] WebSocket 해제 실패:', error)
-  }
-}
-
-// 인증 상태 확인
-const checkAuthStatus = () => {
-  console.log('🔍 App.vue 인증 상태 확인 중...')
-  const token = localStorage.getItem('access_token')
-
-  if (!token) {
-    console.log('❌ 토큰 없음')
-    isLoggedIn.value = false
-    userInfo.value = null
-    return
-  }
-
-  console.log('✅ 토큰 발견:', token.substring(0, 50) + '...')
-  isLoggedIn.value = true
-
-  const payload = decodeJWTPayload(token)
-  if (payload) {
-    userInfo.value = {
-      id: payload.userId || payload.sub,
-      username: payload.username || payload.sub,
-      role: payload.role || payload.auth,
-      provider: payload.provider
-    }
-    console.log('✅ App.vue 사용자 정보 추출 완료:', userInfo.value)
-  } else {
-    console.log('❌ JWT 디코딩 실패')
-  }
-}
-
-// 관리자 여부
-const isAdmin = computed(() => {
-  const role = userInfo.value?.role
-  const result = role === 'ADMIN'
-  console.log('🔵 App.vue isAdmin 계산:', { role, result })
-  return result
-})
-
-// 토큰 존재 여부
-const hasToken = computed(() => !!localStorage.getItem('access_token'))
-
-// 로그아웃
+// 로그아웃 처리
 const handleLogout = async () => {
-  console.log('👋 App.vue 로그아웃 처리 중...')
   isLoggingOut.value = true
-
   try {
-    // ✅ WebSocket 안전 해제
-    try {
-      disconnectWebSocket()
-      console.log('🔌 WebSocket 연결 해제 완료')
-    } catch (wsError) {
-      console.error('⚠️ WebSocket 해제 중 에러:', wsError)
-    }
-
-    // ✅ 토큰 제거 & 상태 초기화
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    isLoggedIn.value = false
-    userInfo.value = null
-    console.log('🗑️ 토큰 및 상태 초기화 완료')
-
-    // ✅ 라우팅 처리
-    await router.push('/login')
-    console.log('✅ App.vue 로그아웃 완료')
-  } catch (err) {
-    console.error('❌ 로그아웃 중 오류 발생:', err)
-  } finally {
-    isLoggingOut.value = false
+    webSocketService.disconnect()
+  } catch {
   }
+  await logout()
+  isLoggingOut.value = false
 }
 
-
-// localStorage 변경 감지 (다른 탭 반영)
-const handleStorageChange = (e) => {
-  if (e.key === 'access_token') {
-    checkAuthStatus()
-  }
-}
-
-// 마운트 시 실행
-onMounted(() => {
-  checkAuthStatus()
-  monitorWebSocketStatus() // ✅ WebSocket 상태 감시 시작
-  window.addEventListener('storage', handleStorageChange)
-})
-
-// 언마운트 시 정리
-onUnmounted(() => {
-  window.removeEventListener('storage', handleStorageChange)
-})
+onMounted(monitorWebSocketStatus)
+onUnmounted(() => webSocketService.disconnect())
 </script>
 
 <template>
-  <!-- ✅ 디버깅 정보 -->
+  <!-- 디버그 정보 (개발환경에서만 보임) -->
   <div v-if="showDebug && !isAuthPage" class="debug-info">
     <div>로그인: {{ isLoggedIn }}</div>
     <div>관리자: {{ isAdmin }}</div>
     <div>사용자: {{ userInfo?.username }}</div>
     <div>역할: {{ userInfo?.role }}</div>
-    <div>토큰: {{ hasToken ? '있음' : '없음' }}</div>
     <div>WebSocket: {{ wsConnected ? '🟢 연결됨' : '🔴 끊김' }}</div>
   </div>
 
+  <!-- 헤더 -->
   <header v-if="!isAuthPage" class="app-header">
     <div class="header-container">
       <div class="logo">
         <RouterLink to="/home" class="mz-title">🍽️ 한입만</RouterLink>
       </div>
-
       <nav class="main-nav">
         <template v-if="isLoggingOut">
           <div class="loading">로그아웃 중...</div>
@@ -181,13 +68,11 @@ onUnmounted(() => {
           <RouterLink to="/dashboard" class="nav-link">대시보드</RouterLink>
           <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
           <RouterLink to="/sell" class="nav-link">판매하기</RouterLink>
-
           <div v-if="isAdmin" class="admin-menu">
             <RouterLink to="/admin" class="admin-link">🛠️ 관리자</RouterLink>
             <RouterLink to="/admin/users" class="admin-link">👥 사용자 관리</RouterLink>
             <RouterLink to="/admin/category" class="admin-link">카테고리 관리</RouterLink>
           </div>
-
           <div class="user-section">
             <span class="username">{{ userInfo?.username || '사용자' }}</span>
             <span v-if="isAdmin" class="admin-badge">관리자</span>
@@ -198,10 +83,12 @@ onUnmounted(() => {
     </div>
   </header>
 
+  <!-- 메인 라우터 뷰 -->
   <main :class="['app-main', { 'no-padding': isAuthPage }]">
     <RouterView/>
   </main>
 </template>
+
 <style scoped>
 .debug-info {
   position: fixed;
@@ -348,66 +235,5 @@ onUnmounted(() => {
 
 .app-main.no-padding {
   padding: 0;
-}
-
-/* 기존 스타일 유지 */
-.mz-header {
-  background-color: white;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  width: 100%;
-}
-
-.mz-header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-}
-
-.mz-header-left,
-.mz-header-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.mz-icon-default {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: #4b5563;
-  flex-shrink: 0;
-}
-
-.mz-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  background: linear-gradient(to right, #9333ea, #db2777);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-}
-
-.mz-user-icon-bg {
-  width: 2rem;
-  height: 2rem;
-  background: linear-gradient(to right, #c084fc, #f472b6);
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mz-user-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: white;
-  flex-shrink: 0;
 }
 </style>
