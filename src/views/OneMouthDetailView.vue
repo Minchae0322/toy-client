@@ -45,12 +45,43 @@
           @load-more-reviews="loadMoreReviews"
       />
 
-      <BottomActions
-          v-if="food.selling"
-          :food="food"
-          @start-chat="startChat"
-          @request-share="requestShare"
-      />
+      <!-- 하단 액션 버튼들 -->
+      <div class="bottom-actions" v-if="food.selling">
+        <div class="actions-container">
+          <!-- 관심 추가 버튼 -->
+          <button
+              @click="toggleFavorite"
+              :class="['action-btn', 'favorite-btn', { 'active': isFavorited }]"
+              :disabled="processing"
+          >
+            <Heart :size="20" :fill="isFavorited ? 'currentColor' : 'none'" />
+            <span>{{ isFavorited ? '관심취소' : '관심추가' }}</span>
+          </button>
+
+          <!-- 나눔 요청 버튼 -->
+          <button
+              @click="handleRequestShare"
+              class="action-btn share-btn"
+              :disabled="processing"
+          >
+            <Share2 :size="20" />
+            <span>나눔요청</span>
+          </button>
+
+          <!-- 채팅하기 버튼 -->
+          <button
+              @click="handleStartChat"
+              class="action-btn chat-btn primary"
+              :disabled="chatLoading"
+          >
+            <div v-if="chatLoading" class="loading-spinner-small">
+              <div class="spinner-small"></div>
+            </div>
+            <MessageCircle v-else :size="20" />
+            <span>{{ chatLoading ? '연결중...' : '채팅하기' }}</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -58,12 +89,13 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { contentService, tokenUtils } from '@/api/axios.js';
+import { Heart, Share2, MessageCircle } from 'lucide-vue-next';
+import { contentService, tokenUtils, chatService } from '@/api/axios.js';
+import { chatNavigation } from '@/router/index.js';
 import FoodOverviewCard from '@/components/oneMouth/detail/FoodOverviewCard.vue';
 import SellerCard from '@/components/oneMouth/detail/SellerCard.vue';
 import FoodDetailsCard from '@/components/oneMouth/detail/FoodDetailsCard.vue';
 import ReviewsCard from '@/components/oneMouth/detail/ReviewsCard.vue';
-import BottomActions from '@/components/oneMouth/detail/BottomActions.vue';
 
 // 라우터 관련
 const route = useRoute();
@@ -85,6 +117,8 @@ const reviewsLoading = ref(false);
 const error = ref(null);
 const isLiked = ref(false);
 const isFavorited = ref(false);
+const processing = ref(false);
+const chatLoading = ref(false);
 
 // 리뷰 페이지네이션
 const reviewsPage = ref(0);
@@ -111,6 +145,16 @@ const fetchFoodDetail = async (id) => {
       throw new Error('상품 정보를 찾을 수 없습니다.');
     }
 
+    // productStatus 객체 처리
+    const productStatusValue = apiData.productStatus?.title || apiData.productStatus || 'FOR_SALE';
+    const isForSale = productStatusValue === 'FOR_SALE';
+
+    console.log('📊 상품 상태 분석:', {
+      raw: apiData.productStatus,
+      extracted: productStatusValue,
+      isForSale: isForSale
+    });
+
     // 백엔드 데이터를 프론트엔드 형식으로 변환
     food.value = {
       id: apiData.oneMouthId || apiData.id,
@@ -121,7 +165,9 @@ const fetchFoodDetail = async (id) => {
       reviewCount: apiData.hits || 0,
       location: apiData.location || '',
       trending: apiData.trending || false,
-      selling: apiData.productStatus === 'FOR_SALE',
+
+      // 판매 상태 처리 수정
+      selling: isForSale,
       price: apiData.price || 0,
       stock: apiData.stock || 0,
       category: apiData.category?.categoryName || '기타',
@@ -133,7 +179,8 @@ const fetchFoodDetail = async (id) => {
       quantity: apiData.quantity,
       unit: apiData.unit,
       productType: apiData.productType,
-      productStatus: apiData.productStatus,
+      productStatus: productStatusValue, // 문자열로 저장
+      productStatusObj: apiData.productStatus, // 원본 객체도 보관
       imageUrl: apiData.imageUrl || '',
       attachments: apiData.oneMouthAttachmentFiles || [],
 
@@ -152,6 +199,14 @@ const fetchFoodDetail = async (id) => {
       favoritesCount: apiData.favoritesCount || 0
     };
 
+    console.log('✅ 변환된 food 객체:', {
+      id: food.value.id,
+      name: food.value.name,
+      selling: food.value.selling,
+      productStatus: food.value.productStatus,
+      productStatusDescription: apiData.productStatus?.description
+    });
+
     // 로그인된 사용자의 좋아요/관심 상태 확인
     if (tokenUtils.isLoggedIn()) {
       await Promise.all([
@@ -163,7 +218,7 @@ const fetchFoodDetail = async (id) => {
     // 리뷰 데이터 로드
     await fetchReviews();
 
-    console.log('✅ 상세 정보 로드 완료:', food.value);
+    console.log('✅ 상세 정보 로드 완료');
 
   } catch (err) {
     console.error('❌ 상세 정보 로드 실패:', err);
@@ -306,10 +361,11 @@ const goBack = () => {
   if (window.history.length > 1) {
     router.back();
   } else {
-    router.push('/one-mouth');
+    router.push('/one-mouth/list');
   }
 };
 
+// 좋아요 토글
 const toggleLike = async () => {
   if (!tokenUtils.isLoggedIn()) {
     alert('로그인이 필요합니다.');
@@ -349,6 +405,267 @@ const toggleLike = async () => {
   }
 };
 
+// 관심 상품 토글
+const toggleFavorite = async () => {
+  if (!tokenUtils.isLoggedIn()) {
+    alert('로그인이 필요합니다.');
+    router.push('/login');
+    return;
+  }
+
+  try {
+    processing.value = true;
+
+    if (isFavorited.value) {
+      // 관심 취소
+      // await contentService.removeFromFavorites(foodId.value, 'one-mouths');
+
+      // 임시로 로컬 스토리지에서 제거
+      const favoritedItems = JSON.parse(localStorage.getItem('favorited_items') || '[]');
+      const updatedItems = favoritedItems.filter(id => id !== String(foodId.value));
+      localStorage.setItem('favorited_items', JSON.stringify(updatedItems));
+
+      isFavorited.value = false;
+      console.log('관심 상품에서 제거됨');
+
+    } else {
+      // 관심 추가
+      // await contentService.addToFavorites(foodId.value, 'one-mouths');
+
+      // 임시로 로컬 스토리지에 추가
+      const favoritedItems = JSON.parse(localStorage.getItem('favorited_items') || '[]');
+      favoritedItems.push(String(foodId.value));
+      localStorage.setItem('favorited_items', JSON.stringify(favoritedItems));
+
+      isFavorited.value = true;
+      console.log('관심 상품에 추가됨');
+    }
+
+  } catch (err) {
+    console.error('관심 상품 처리 실패:', err);
+    alert('관심 상품 처리에 실패했습니다.');
+  } finally {
+    processing.value = false;
+  }
+};
+
+// 나눔 요청
+const handleRequestShare = () => {
+  if (!tokenUtils.isLoggedIn()) {
+    alert('로그인이 필요합니다.');
+    router.push('/login');
+    return;
+  }
+
+  // 본인 상품인지 확인
+  const currentUser = tokenUtils.getCurrentUser();
+  if (currentUser && String(currentUser.id) === String(food.value.sellerId)) {
+    alert('본인의 상품입니다.');
+    return;
+  }
+
+  // 나눔 요청 처리 (실제 API 호출)
+  alert(`${food.value.name} 한입 나눔을 요청했습니다!`);
+};
+
+// 채팅하기 핸들러 (핵심 로직)
+const handleStartChat = async () => {
+  if (!tokenUtils.isLoggedIn()) {
+    alert('로그인이 필요합니다.');
+    router.push('/login');
+    return;
+  }
+
+  // 본인 상품인지 확인
+  const currentUser = tokenUtils.getCurrentUser();
+  if (currentUser && String(currentUser.id) === String(food.value.sellerId)) {
+    alert('본인의 상품입니다.');
+    return;
+  }
+
+  try {
+    chatLoading.value = true;
+
+    console.log('🔍 채팅방 조회/생성 시작:', {
+      buyerId: currentUser.id,
+      sellerId: food.value.sellerId,
+      productId: food.value.id,
+      productName: food.value.name
+    });
+
+    // 1. 기존 채팅방 조회
+    const existingRoom = await findExistingChatRoom(currentUser.id, food.value.sellerId);
+
+    if (existingRoom) {
+      console.log('✅ 기존 채팅방 발견:', existingRoom.id);
+
+      // 기존 채팅방으로 바로 이동
+      chatNavigation.toChatRoom(existingRoom.id);
+    } else {
+      console.log('🆕 새 채팅방 자동 생성');
+
+      // 2. 새 채팅방 자동 생성
+      const newRoom = await createDirectChatRoom(currentUser.id, food.value.sellerId, food.value);
+
+      console.log('✅ 새 채팅방 생성 완료:', newRoom.id);
+
+      // 새 채팅방으로 바로 이동
+      chatNavigation.toChatRoom(newRoom.id);
+    }
+
+  } catch (error) {
+    console.error('❌ 채팅방 처리 실패:', error);
+
+    // 구체적인 에러 메시지 제공
+    if (error.response?.status === 404) {
+      alert('판매자를 찾을 수 없습니다.');
+    } else if (error.response?.status === 403) {
+      alert('채팅 권한이 없습니다.');
+    } else if (error.response?.status === 409) {
+      alert('이미 진행 중인 채팅이 있습니다.');
+    } else if (error.message?.includes('NETWORK_ERROR')) {
+      alert('네트워크 연결을 확인해주세요.');
+    } else {
+      alert('채팅방 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    }
+  } finally {
+    chatLoading.value = false;
+  }
+};
+
+/**
+ * 두 사용자 간 기존 1:1 채팅방 조회
+ */
+const findExistingChatRoom = async (buyerId, sellerId) => {
+  try {
+    // 1:1 채팅방 조회 API 호출
+    const response = await chatService.getChatRooms({
+      roomType: 'ONE_TO_ONE',
+      participantId: sellerId, // 상대방 ID로 검색
+      isActive: true,
+      limit: 10
+    });
+
+    const rooms = response.data?.data || response.data?.content || [];
+
+    console.log('📡 기존 채팅방 조회 결과:', rooms);
+
+    // 정확히 두 명의 참여자(구매자, 판매자)가 있는 방 찾기
+    const existingRoom = rooms.find(room => {
+      const participants = room.participants || [];
+      const participantIds = participants.map(p => String(p.userId));
+
+      return participants.length === 2 &&
+          participantIds.includes(String(buyerId)) &&
+          participantIds.includes(String(sellerId));
+    });
+
+    return existingRoom || null;
+
+  } catch (error) {
+    console.error('기존 채팅방 조회 실패:', error);
+
+    // 조회 실패 시 null 반환 (새로 생성하도록)
+    if (error.response?.status === 404) {
+      return null; // 채팅방이 없음
+    }
+
+    throw error; // 다른 에러는 상위로 전파
+  }
+};
+
+/**
+ * 새 1:1 채팅방 자동 생성
+ */
+const createDirectChatRoom = async (buyerId, sellerId, product) => {
+  try {
+    const roomData = {
+      title: `${product.name} 문의`, // 상품명 기반 제목
+      description: `${product.name}(${formatPrice(product.price)})에 대한 문의`,
+      roomType: 'NORMAL',
+      participantIds: [String(sellerId)],
+      creatorId: 5, // 1:1은 항상 비공개
+      deviceId: 2,
+
+      // 상품 관련 메타데이터
+      metadata: {
+        relatedProductId: product.id,
+        relatedProductType: 'ONE_MOUTH',
+        productName: product.name,
+        productPrice: product.price,
+        sellerId: sellerId,
+        buyerId: buyerId
+      }
+    };
+
+    console.log('📡 새 채팅방 생성 요청:', roomData);
+
+    const response = await chatService.createChatRoom(roomData);
+    const newRoom = response.data?.data || response.data;
+
+    if (!newRoom || !newRoom.id) {
+      throw new Error('채팅방 생성 응답이 유효하지 않습니다.');
+    }
+
+    // 환영 메시지 자동 전송
+    try {
+      await sendWelcomeMessage(newRoom.id, product);
+    } catch (msgError) {
+      console.warn('환영 메시지 전송 실패:', msgError);
+      // 메시지 실패해도 채팅방은 생성됨
+    }
+
+    return newRoom;
+
+  } catch (error) {
+    console.error('새 채팅방 생성 실패:', error);
+
+    if (error.response?.status === 409) {
+      // 동시 생성으로 인한 충돌 - 다시 조회 시도
+      console.log('🔄 동시 생성 감지, 재조회 시도');
+      const existingRoom = await findExistingChatRoom(buyerId, sellerId);
+      if (existingRoom) {
+        return existingRoom;
+      }
+    }
+
+    throw error;
+  }
+};
+
+/**
+ * 환영 메시지 전송
+ */
+const sendWelcomeMessage = async (roomId, product) => {
+  try {
+    const welcomeMessage = {
+      content: `안녕하세요! "${product.name}"(${formatPrice(product.price)}) 상품에 관심이 있어서 연락드립니다. 😊`,
+      messageType: 'TEXT',
+      isSystemMessage: false,
+      metadata: {
+        relatedProductId: product.id,
+        productName: product.name,
+        isWelcomeMessage: true
+      }
+    };
+
+    await chatService.sendMessage(roomId, welcomeMessage);
+    console.log('✅ 환영 메시지 전송 완료');
+
+  } catch (error) {
+    console.error('환영 메시지 전송 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 가격 포맷팅 유틸리티
+ */
+const formatPrice = (price) => {
+  if (!price || price === 0) return '무료';
+  return new Intl.NumberFormat('ko-KR').format(price) + '원';
+};
+
 const shareFood = () => {
   const shareData = {
     title: food.value.name,
@@ -377,49 +694,6 @@ const viewSellerProfile = () => {
   } else {
     alert('판매자 정보를 찾을 수 없습니다.');
   }
-};
-
-const startChat = () => {
-  if (!tokenUtils.isLoggedIn()) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
-    return;
-  }
-
-  // 본인 상품인지 확인
-  const currentUser = tokenUtils.getCurrentUser();
-  if (currentUser && String(currentUser.id) === String(food.value.sellerId)) {
-    alert('본인의 상품입니다.');
-    return;
-  }
-
-  // 채팅 페이지로 이동
-  router.push({
-    name: 'Chat',
-    query: {
-      sellerId: food.value.sellerId,
-      productId: foodId.value,
-      productName: food.value.name
-    }
-  });
-};
-
-const requestShare = () => {
-  if (!tokenUtils.isLoggedIn()) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
-    return;
-  }
-
-  // 본인 상품인지 확인
-  const currentUser = tokenUtils.getCurrentUser();
-  if (currentUser && String(currentUser.id) === String(food.value.sellerId)) {
-    alert('본인의 상품입니다.');
-    return;
-  }
-
-  // 나눔 요청 처리 (실제 API 호출)
-  alert(`${food.value.name} 한입 나눔을 요청했습니다!`);
 };
 
 const writeReview = () => {
@@ -521,61 +795,5 @@ watch(food, (newFood) => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   max-width: 500px;
   width: 100%;
-}
-
-.error-card h2 {
-  color: #e74c3c;
-  margin-bottom: 16px;
-  font-size: 1.5em;
-}
-
-.error-card p {
-  color: #666;
-  margin-bottom: 24px;
-  line-height: 1.5;
-}
-
-.go-back-btn,
-.retry-btn {
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 0 8px;
-  font-size: 14px;
-  transition: background 0.2s;
-}
-
-.go-back-btn:hover,
-.retry-btn:hover {
-  background: #2980b9;
-}
-
-.retry-btn {
-  background: #27ae60;
-}
-
-.retry-btn:hover {
-  background: #219a52;
-}
-
-@media (max-width: 768px) {
-  .detail-container {
-    padding: 16px 16px 100px;
-  }
-
-  .error-card {
-    margin: 16px;
-    padding: 24px;
-  }
-
-  .go-back-btn,
-  .retry-btn {
-    display: block;
-    width: 100%;
-    margin: 8px 0;
-  }
 }
 </style>

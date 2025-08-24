@@ -447,10 +447,10 @@ export const userService = {
  */
 export const chatService = {
     // 채팅방 관련
-    getChatRooms: (params = {}) => chatApi.get('/chat/rooms', { params }),
-    getChatRoom: (roomId) => chatApi.get(`/chat/rooms/${roomId}`),
-    createChatRoom: (data) => chatApi.post('/chat/rooms', data),
-    updateChatRoom: (roomId, data) => chatApi.put(`/chat/rooms/${roomId}`, data),
+    getChatRooms: (params = {}) => chatApi.get('/v1/chat/rooms', { params }),
+    getChatRoom: (roomId) => chatApi.get(`/v1/chat/rooms/${roomId}`),
+    createChatRoom: (data) => chatApi.post('/v1/chat/rooms', data),
+    updateChatRoom: (roomId, data) => chatApi.put(`/v1/chat/rooms/${roomId}`, data),
     leaveChatRoom: (roomId) => chatApi.delete(`/chat/rooms/${roomId}/leave`),
     inviteToRoom: (roomId, userIds) => chatApi.post(`/chat/rooms/${roomId}/invite`, { userIds }),
 
