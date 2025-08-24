@@ -1,7 +1,9 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { authGuard } from '@/router/guards/authGuard.js'
+import * as authUtils from '@/utils/auth.js'
 
-// Views import
+// Views import (기존 구조 유지)
 import LoginView from '@/views/LoginView.vue'
 import HomeView from '@/views/HomeView.vue'
 import OAuthCallback from '@/views/OAuth2Callback.vue'
@@ -10,43 +12,37 @@ import OneMouthListView from "@/views/OneMouthListView.vue"
 import OneMouthDetailView from "@/views/OneMouthDetailView.vue"
 import CategoryAdminView from "@/views/CategoryAdminView.vue"
 
-// Chat Views import (수정된 구조)
+// Chat Views import
 import ChatApp from '@/views/ChatApp.vue'
 
 const routes = [
+  // ==================== 🌍 공개 페이지 (인증 불필요) ====================
   {
     path: '/login',
     name: 'Login',
-    component: LoginView
-  },
-  {
-    path: '/home',
-    name: 'Home',
-    component: HomeView,
-    meta: { requiresAuth: true }
+    component: LoginView,
+    meta: {
+      requiresAuth: false,
+      public: true
+    }
   },
   {
     path: '/oauth/callback',
     name: 'OAuthCallback',
-    component: OAuthCallback
+    component: OAuthCallback,
+    meta: {
+      requiresAuth: false,
+      public: true
+    }
   },
   {
     path: '/sell',
     name: 'Sell',
     component: OneMouthView,
-    meta: { requiresAuth: false }
-  },
-  {
-    path: '/one-mouth/list',
-    name: 'OneMouthList',
-    component: OneMouthListView,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/one-mouth/:id',
-    name: 'OneMouthDetail',
-    component: OneMouthDetailView,
-    props: true
+    meta: {
+      requiresAuth: false,
+      public: true
+    }
   },
   {
     path: '/admin/category',
@@ -55,11 +51,39 @@ const routes = [
     meta: {
       requiresAuth: false,
       requiresAdmin: false,
-      title: '카테고리 관리'
+      title: '카테고리 관리',
+      public: true
     }
   },
 
-  // ===== 채팅 관련 라우트 (단순화된 구조) =====
+  // ==================== 🔒 보호된 페이지 (인증 필요) ====================
+  {
+    path: '/home',
+    name: 'Home',
+    component: HomeView,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/one-mouth/list',
+    name: 'OneMouthList',
+    component: OneMouthListView,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/one-mouth/:id',
+    name: 'OneMouthDetail',
+    component: OneMouthDetailView,
+    props: true,
+    meta: {
+      requiresAuth: false // 상세 페이지는 공개
+    }
+  },
+
+  // ===== 🔒 채팅 관련 라우트 (인증 필요) =====
   {
     path: '/chat',
     name: 'Chat',
@@ -69,8 +93,6 @@ const routes = [
       title: '채팅'
     }
   },
-
-  // 채팅방 직접 접근을 위한 쿼리 파라미터 지원
   {
     path: '/chat/:roomId',
     name: 'ChatWithRoom',
@@ -81,7 +103,6 @@ const routes = [
       title: '채팅방'
     },
     beforeEnter: (to, from, next) => {
-      // 채팅방 ID 유효성 검사
       if (!to.params.roomId || to.params.roomId.trim() === '') {
         next({ name: 'Chat' })
       } else {
@@ -90,115 +111,189 @@ const routes = [
     }
   },
 
-  // 기본 리다이렉트
+  // ==================== 🔀 리다이렉트 ====================
   {
     path: '/',
     redirect: '/home'
   },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/home'
+  }
 ]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    // 뒤로가기 시 스크롤 위치 복원
     if (savedPosition) {
       return savedPosition
     }
-    // 채팅 관련 페이지는 스크롤 위치 유지
     if (to.path.startsWith('/chat')) {
       return false
     }
-    // 기본적으로 맨 위로 스크롤
     return { top: 0 }
   }
 })
 
-// 가드 적용
-router.beforeEach(authGuard)
+// ==================== 🛡️ 개선된 인증 가드 (OAuth 호환) ====================
 
-// 채팅 관련 네비게이션 가드
-router.beforeEach(async (to, from, next) => {
-  // 채팅방 접근 시 추가 검증
-  if (to.name === 'ChatWithRoom') {
-    try {
-      // 채팅방 존재 여부 및 접근 권한 확인 (선택사항)
-      const roomId = to.params.roomId
+/**
+ * 🔥 OAuth 호환 인증 체크 함수
+ */
+const checkAuthenticationStatus = () => {
+  const accessToken = authUtils.getAccessToken()
+  const userInfo = authUtils.getUserInfo()
 
-      // 채팅방 ID 형식 검증
-      if (!isValidRoomId(roomId)) {
-        console.warn('유효하지 않은 채팅방 ID:', roomId)
-        next({ name: 'Chat' })
-        return
-      }
-
-      // 필요시 API 호출로 채팅방 존재 여부 확인
-      // const hasAccess = await checkChatRoomAccess(roomId)
-      // if (!hasAccess) {
-      //   next({ name: 'Chat' })
-      //   return
-      // }
-
-    } catch (error) {
-      console.error('채팅방 접근 검증 실패:', error)
-      next({ name: 'Chat' })
-      return
-    }
+  // 기본 정보 확인
+  if (!accessToken || !userInfo) {
+    console.log('❌ [AuthCheck] 기본 인증 정보 없음')
+    return false
   }
 
-  next()
+  // AccessToken 만료 확인
+  if (authUtils.isTokenExpired(accessToken)) {
+    console.log('⏰ [AuthCheck] AccessToken 만료됨')
+
+    // RefreshToken 확인
+    const refreshToken = authUtils.getRefreshToken()
+
+    if (!refreshToken) {
+      // 🔥 OAuth의 경우 RefreshToken이 없을 수 있음
+      console.log('⚠️ [AuthCheck] RefreshToken 없음 - OAuth 로그인으로 추정')
+
+      // AccessToken이 최근에 발급되었으면 유효한 것으로 간주 (1시간 이내)
+      const tokenPayload = authUtils.parseJwtToken(accessToken)
+      if (tokenPayload && tokenPayload.iat) {
+        const tokenAge = Date.now() / 1000 - tokenPayload.iat
+        const oneHour = 60 * 60
+
+        if (tokenAge < oneHour) {
+          console.log('✅ [AuthCheck] OAuth AccessToken이 최근 발급됨 - 유효한 것으로 간주')
+          return true
+        }
+      }
+
+      console.log('❌ [AuthCheck] AccessToken도 오래됨 - 재로그인 필요')
+      return false
+    }
+
+    // RefreshToken이 있으면 만료 확인
+    if (authUtils.isTokenExpired(refreshToken)) {
+      console.log('❌ [AuthCheck] RefreshToken도 만료됨')
+      return false
+    }
+
+    console.log('✅ [AuthCheck] RefreshToken 유효 - 인터셉터가 갱신 처리할 예정')
+    return true
+  }
+
+  console.log('✅ [AuthCheck] AccessToken 유효')
+  return true
+}
+
+/**
+ * 🔥 스마트 인증 가드 - OAuth 호환 버전
+ */
+router.beforeEach(async (to, from, next) => {
+  console.log(`🧭 [Router] 라우트 이동: ${from.path} → ${to.path}`)
+
+  // 🌍 1단계: 공개 페이지 체크
+  if (to.meta.requiresAuth === false || to.meta.public === true) {
+    console.log('🌍 [Router] 공개 페이지 접근 허용:', to.path)
+    next()
+    return
+  }
+
+  // 🔒 2단계: 보호된 페이지 - OAuth 호환 인증 체크
+  if (to.meta.requiresAuth === true) {
+    console.log('🛡️ [Router] 보호된 페이지 - 인증 확인:', to.path)
+
+    try {
+      // 🔥 OAuth 호환 인증 체크
+      const isAuthenticated = checkAuthenticationStatus()
+
+      if (isAuthenticated) {
+        // 관리자 권한 체크 (필요한 경우)
+        if (to.meta.requiresAdmin === true) {
+          const userRole = authUtils.getUserRole()
+          if (userRole !== 'ADMIN') {
+            console.log('🚫 [Router] 관리자 권한 부족')
+            next({
+              name: 'Home',
+              query: { error: '관리자 권한이 필요합니다' }
+            })
+            return
+          }
+        }
+
+        console.log('✅ [Router] 인증 확인 완료 - 페이지 접근 허용')
+        next()
+      } else {
+        console.log('🚫 [Router] 인증 실패 - Login 페이지로')
+
+        // 기존 인증 정보 정리
+        authUtils.logout()
+
+        next({
+          name: 'Login',
+          query: {
+            redirect: to.fullPath,
+            reason: 'auth_required'
+          }
+        })
+      }
+
+    } catch (error) {
+      console.error('❌ [Router] 인증 확인 중 오류:', error)
+      next({
+        name: 'Login',
+        query: {
+          redirect: to.fullPath,
+          reason: 'auth_error'
+        }
+      })
+    }
+  } else {
+    // 🤷 3단계: requiresAuth가 undefined인 경우 기본 처리
+    console.log('❓ [Router] requiresAuth 미지정 - 공개 페이지로 처리:', to.path)
+    next()
+  }
 })
 
 // 페이지 타이틀 설정
 router.afterEach((to) => {
-  // 동적 타이틀 설정
   let title = 'ToyChat'
 
   if (to.meta.title) {
     title = `${to.meta.title} | ToyChat`
   } else if (to.name === 'ChatWithRoom') {
-    // 채팅방 이름을 타이틀로 설정
     title = `채팅방 ${to.params.roomId} | ToyChat`
   }
 
   document.title = title
+  console.log(`✅ [Router] 라우트 이동 완료: ${to.path}`)
 })
 
-// 채팅방 ID 유효성 검사 함수
-function isValidRoomId(roomId) {
-  if (!roomId || typeof roomId !== 'string') return false
+// 라우트 에러 처리
+router.onError((error) => {
+  console.error('❌ [Router] 라우트 오류:', error)
 
-  // 기본적인 형식 검증 (필요에 따라 수정)
-  const roomIdPattern = /^[a-zA-Z0-9_-]+$/
-  return roomIdPattern.test(roomId) && roomId.length > 0 && roomId.length <= 50
-}
-
-// 채팅방 접근 권한 확인 함수 (필요시 구현)
-async function checkChatRoomAccess(roomId) {
-  try {
-    // chatApi를 사용하여 채팅방 정보 확인
-    // const { chatApi } = await import('@/services/chatApi.js')
-    // const response = await chatApi.getRoomDetail(roomId)
-    // return response.success
-
-    // 현재는 항상 true 반환 (모든 채팅방 접근 허용)
-    return true
-  } catch (error) {
-    console.error('채팅방 접근 권한 확인 실패:', error)
-    return false
+  if (error.message.includes('Loading chunk') || error.message.includes('fetch')) {
+    if (confirm('페이지 로드 중 오류가 발생했습니다. 새로고침하시겠습니까?')) {
+      window.location.reload()
+    }
   }
-}
+})
 
 export default router
 
-// 채팅 관련 네비게이션 헬퍼 함수들 (수정된 구조에 맞춤)
+// ==================== 채팅 네비게이션 헬퍼 ====================
 export const chatNavigation = {
-  // 채팅 메인으로 이동 (채팅방 목록)
   toChat() {
     return router.push({ name: 'Chat' })
   },
 
-  // 특정 채팅방으로 이동
   toChatRoom(roomId) {
     if (!roomId) {
       console.warn('채팅방 ID가 없습니다')
@@ -207,117 +302,18 @@ export const chatNavigation = {
     return router.push({ name: 'ChatWithRoom', params: { roomId } })
   },
 
-  // 현재 채팅방 ID 가져오기
   getCurrentRoomId() {
     const route = router.currentRoute.value
     return route.name === 'ChatWithRoom' ? route.params.roomId : null
   },
 
-  // 초기 채팅방 ID 가져오기 (props로 전달된)
-  getInitialRoomId() {
-    const route = router.currentRoute.value
-    return route.name === 'ChatWithRoom' ? route.params.roomId : null
-  },
-
-  // 채팅 관련 페이지인지 확인
   isChatPage() {
     const route = router.currentRoute.value
     return route.name === 'Chat' || route.name === 'ChatWithRoom'
   },
 
-  // 채팅방 상세 페이지인지 확인
-  isChatRoomPage() {
-    return router.currentRoute.value.name === 'ChatWithRoom'
-  },
-
-  // 채팅방 URL 생성 (공유용)
   getChatRoomUrl(roomId) {
     const route = router.resolve({ name: 'ChatWithRoom', params: { roomId } })
     return window.location.origin + route.href
-  },
-
-  // 브라우저 히스토리 관리
-  replaceToChatRoom(roomId) {
-    // push 대신 replace 사용 (뒤로가기 히스토리에 남지 않음)
-    return router.replace({ name: 'ChatWithRoom', params: { roomId } })
-  }
-}
-
-// 전역 네비게이션 이벤트 설정
-export const setupChatNavigation = () => {
-  // 브라우저 뒤로가기 처리
-  window.addEventListener('popstate', (event) => {
-    const currentRoute = router.currentRoute.value
-
-    // 채팅방에서 뒤로가기 시 WebSocket 정리
-    if (currentRoute.name === 'ChatWithRoom') {
-      // WebSocket 연결 해제 등의 정리 작업
-      window.dispatchEvent(new CustomEvent('chat:cleanup', {
-        detail: { roomId: currentRoute.params.roomId }
-      }))
-    }
-  })
-
-  // 페이지 새로고침/종료 시 정리
-  window.addEventListener('beforeunload', (event) => {
-    const currentRoute = router.currentRoute.value
-
-    if (currentRoute.name === 'ChatWithRoom') {
-      // 채팅방 퇴장 처리 (동기적으로)
-      window.dispatchEvent(new CustomEvent('chat:beforeunload', {
-        detail: { roomId: currentRoute.params.roomId }
-      }))
-    }
-  })
-
-  // 페이지 포커스 이벤트 (채팅방 활성화/비활성화)
-  document.addEventListener('visibilitychange', () => {
-    const currentRoute = router.currentRoute.value
-
-    if (currentRoute.name === 'ChatWithRoom') {
-      const event = document.hidden ? 'chat:blur' : 'chat:focus'
-      window.dispatchEvent(new CustomEvent(event, {
-        detail: { roomId: currentRoute.params.roomId }
-      }))
-    }
-  })
-}
-
-// 라우터 이벤트 리스너 (채팅 앱에서 사용)
-export const chatRouterEvents = {
-  // 채팅방 변경 감지
-  onRoomChange(callback) {
-    const unwatch = router.afterEach((to, from) => {
-      if (to.name === 'ChatWithRoom' && from.name === 'ChatWithRoom') {
-        const oldRoomId = from.params.roomId
-        const newRoomId = to.params.roomId
-
-        if (oldRoomId !== newRoomId) {
-          callback(newRoomId, oldRoomId)
-        }
-      } else if (to.name === 'ChatWithRoom' && from.name !== 'ChatWithRoom') {
-        // 채팅방으로 처음 진입
-        callback(to.params.roomId, null)
-      } else if (to.name !== 'ChatWithRoom' && from.name === 'ChatWithRoom') {
-        // 채팅방에서 나감
-        callback(null, from.params.roomId)
-      }
-    })
-
-    return unwatch
-  },
-
-  // 채팅 페이지 진입/이탈 감지
-  onChatPageChange(callback) {
-    const unwatch = router.afterEach((to, from) => {
-      const toChatPage = chatNavigation.isChatPage()
-      const fromChatPage = from.name === 'Chat' || from.name === 'ChatWithRoom'
-
-      if (toChatPage !== fromChatPage) {
-        callback(toChatPage)
-      }
-    })
-
-    return unwatch
   }
 }

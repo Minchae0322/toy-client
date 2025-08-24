@@ -4,6 +4,24 @@
       <h1 class="title">로그인</h1>
       <p class="subtitle">계정에 로그인하세요</p>
 
+      <!-- 🚨 세션 만료 알림 -->
+      <div v-if="sessionExpired" class="alert alert-warning">
+        <div class="alert-icon">⏰</div>
+        <div>
+          <strong>세션이 만료되었습니다</strong>
+          <p>보안을 위해 다시 로그인해주세요.</p>
+        </div>
+      </div>
+
+      <!-- 🔄 토큰 갱신 실패 알림 -->
+      <div v-if="tokenRefreshFailed" class="alert alert-error">
+        <div class="alert-icon">🔒</div>
+        <div>
+          <strong>인증이 만료되었습니다</strong>
+          <p>다시 로그인해주세요.</p>
+        </div>
+      </div>
+
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
           <label for="email">이메일</label>
@@ -32,7 +50,7 @@
 
         <button type="submit" class="submit-button" :disabled="loading">
           <span v-if="loading" class="loading-spinner"></span>
-          {{ loading ? getLoadingText() : '로그인' }}
+          {{ getLoadingText() }}
         </button>
 
         <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
@@ -43,6 +61,7 @@
       <button class="google-login" @click="handleSocialLogin('google')" :disabled="loading">
         Google로 로그인
       </button>
+
       <button class="github-login" @click="handleSocialLogin('github')" :disabled="loading">
         GitHub로 로그인
       </button>
@@ -51,20 +70,26 @@
         계정이 없으신가요?
         <router-link to="/register" class="register-link">회원가입</router-link>
       </div>
+
+      <!-- 🔧 개발용 디버그 버튼 -->
+      <div v-if="isDev" class="debug-section">
+        <button @click="debugAuth" class="debug-btn">인증 상태 디버그</button>
+        <button @click="clearAuth" class="debug-btn">인증 정보 초기화</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { authService } from '@/api/axios.js'
-import { webSocketService } from '@/services/webSocketService.js'
+import * as authUtils from '@/utils/auth.js'
 
 const router = useRouter()
 const route = useRoute()
-const { login, isLoggedIn, checkAuthStatus } = useAuth() // checkAuthStatus 추가
+const { login, isLoggedIn } = useAuth()
 
 // 반응형 데이터
 const email = ref('')
@@ -76,63 +101,28 @@ const wsConnecting = ref(false)
 // 컴퓨티드 속성
 const redirectPath = computed(() => route.query.redirect || '/home')
 
+// 🚨 세션 만료 체크
+const sessionExpired = computed(() => {
+  return route.query.reason === 'session_expired'
+})
+
+// 🔒 토큰 갱신 실패 체크
+const tokenRefreshFailed = computed(() => {
+  return route.query.reason === 'refresh_failed'
+})
+
+// 개발 환경 확인
+const isDev = computed(() => import.meta.env.DEV)
+
 // ✅ 로딩 텍스트 동적 변경
 const getLoadingText = () => {
   if (wsConnecting.value) {
     return '실시간 연결 중...'
   }
-  return '로그인 중...'
+  return loading.value ? '로그인 중...' : '로그인'
 }
 
-// ✅ WebSocket 연결 함수
-const connectWebSocket = async () => {
-  try {
-    wsConnecting.value = true
-    console.log('🔌 [Login] WebSocket 연결 시작...')
-
-    await webSocketService.connect()
-
-    // 전역 메시지 핸들러 등록
-    webSocketService.onMessage('chat-message', (message) => {
-      console.log('📨 [Login] WebSocket 연결 완료, 메시지 수신 가능')
-    })
-
-    console.log('✅ [Login] WebSocket 연결 완료')
-  } catch (error) {
-    console.error('❌ [Login] WebSocket 연결 실패:', error)
-    // WebSocket 연결 실패해도 로그인은 계속 진행
-  } finally {
-    wsConnecting.value = false
-  }
-}
-
-// ✅ 강제 상태 동기화 함수
-const forceSyncAuthState = async () => {
-  console.log('🔄 [Login] 인증 상태 강제 동기화 중...')
-
-  try {
-    // localStorage 변화 이벤트 강제 발생
-    const token = localStorage.getItem('access_token')
-    if (token) {
-      // storage 이벤트 강제 트리거
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'access_token',
-        newValue: token,
-        storageArea: localStorage
-      }))
-
-      // useAuth의 checkAuthStatus 강제 실행
-      await nextTick()
-      checkAuthStatus()
-
-      console.log('✅ [Login] 인증 상태 동기화 완료')
-    }
-  } catch (error) {
-    console.error('❌ [Login] 인증 상태 동기화 실패:', error)
-  }
-}
-
-// 로그인 처리 (개선된 버전)
+// 로그인 처리 (단순화된 버전)
 const handleLogin = async () => {
   if (loading.value) return
 
@@ -165,40 +155,13 @@ const handleLogin = async () => {
 
     console.log('✅ [Login] 로그인 성공, 토큰 저장 중...')
 
-    // useAuth를 통한 로그인 처리 (토큰 저장)
-    const loginResult = login({ accessToken, refreshToken }, userInfo)
-    console.log('🔑 [Login] useAuth.login 결과:', loginResult)
+    // 🔥 useAuth를 통한 로그인 처리
+    login({ accessToken, refreshToken }, userInfo)
 
-    // ✅ 상태 동기화 강제 실행
-    await forceSyncAuthState()
+    console.log('🚀 [Login] 로그인 완료, 리다이렉트 중...')
 
-    console.log('🔌 [Login] WebSocket 연결 시작...')
-
-    // ✅ 로그인 성공 후 WebSocket 연결
-    await connectWebSocket()
-
-    console.log('🚀 [Login] 로그인 및 실시간 연결 완료, 리다이렉트 중...')
-
-    // ✅ 추가 딜레이를 주어 모든 상태가 동기화되도록 함
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    // 로딩 상태 해제
-    loading.value = false
-
-    // 리다이렉트 전에 한 번 더 상태 확인
-    console.log('🔍 [Login] 리다이렉트 전 최종 상태 확인:', {
-      isLoggedIn: isLoggedIn.value,
-      hasToken: !!localStorage.getItem('access_token')
-    })
-
-    // 리다이렉트
-    try {
-      await router.push(redirectPath.value)
-    } catch (routerError) {
-      console.warn('❌ [Login] 라우터 실패, 강제 리다이렉트:', routerError)
-      // 라우터 실패 시 강제 리다이렉트
-      window.location.href = redirectPath.value
-    }
+    // 🔥 즉시 리다이렉트 (WebSocket은 나중에)
+    await router.push(redirectPath.value)
 
   } catch (error) {
     console.error('❌ [Login] 로그인 오류:', error)
@@ -212,37 +175,74 @@ const handleLogin = async () => {
     } else {
       errorMessage.value = error.message || '로그인 중 오류가 발생했습니다.'
     }
-
+  } finally {
     loading.value = false
     wsConnecting.value = false
   }
 }
 
-// 소셜 로그인 (기존과 동일)
+// 소셜 로그인
 const handleSocialLogin = (provider) => {
   if (loading.value) return
+
+  console.log(`🔗 [Login] ${provider} 소셜 로그인 시작`)
 
   const AUTH_BASE_URL = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8081'
   const redirectUrl = `${AUTH_BASE_URL}/api/oauth2/authorization/${provider}`
 
   // 리다이렉트 경로 저장
   sessionStorage.setItem('oauth_redirect', redirectPath.value)
+
+  // 소셜 로그인 페이지로 이동
   window.location.href = redirectUrl
 }
 
-// 마운트 시 로그인 상태 확인
-onMounted(async () => {
-  console.log('🔍 [Login] 마운트 시 로그인 상태 확인:', isLoggedIn.value)
+// 🔧 개발용 디버깅 함수들
+const debugAuth = () => {
+  console.log('🔍 [Login] 인증 상태 디버그')
+  authUtils.debugAuthStatus()
+}
 
-  // 이미 로그인되어 있으면 리다이렉트
-  if (isLoggedIn.value) {
+const clearAuth = () => {
+  if (confirm('모든 인증 정보를 삭제하시겠습니까?')) {
+    authUtils.clearAllAuthData()
+    alert('인증 정보가 삭제되었습니다.')
+    window.location.reload() // 페이지 새로고침으로 상태 초기화
+  }
+}
+
+// 🔥 단순화된 마운트 처리 (무한루프 방지)
+onMounted(async () => {
+  console.log('🔍 [Login] 마운트 시 상태 확인')
+
+  // 🔥 단순한 토큰 체크만 수행 (loadUserInfo 호출 없음)
+  const hasValidTokens = () => {
+    const accessToken = authUtils.getAccessToken()
+    const refreshToken = authUtils.getRefreshToken()
+
+    if (!accessToken || !refreshToken) return false
+
+    // RefreshToken이 유효하면 로그인된 것으로 간주
+    return !authUtils.isTokenExpired(refreshToken)
+  }
+
+  // 유효한 토큰이 있으면 리다이렉트
+  if (hasValidTokens()) {
     try {
-      console.log('✅ [Login] 이미 로그인됨, 리다이렉트:', redirectPath.value)
+      console.log('✅ [Login] 유효한 토큰 존재, 리다이렉트:', redirectPath.value)
       await router.replace(redirectPath.value)
     } catch (error) {
-      console.warn('❌ [Login] 리다이렉트 실패, 강제 이동:', error)
-      window.location.href = redirectPath.value
+      console.warn('❌ [Login] 리다이렉트 실패:', error)
     }
+  }
+
+  // 알림 메시지 자동 제거
+  if (sessionExpired.value || tokenRefreshFailed.value) {
+    setTimeout(() => {
+      const newQuery = { ...route.query }
+      delete newQuery.reason
+      router.replace({ query: newQuery }).catch(() => {})
+    }, 5000)
   }
 })
 </script>
@@ -277,6 +277,47 @@ onMounted(async () => {
   font-size: 14px;
   color: #666;
   margin-bottom: 24px;
+}
+
+/* 🚨 알림 스타일 */
+.alert {
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+}
+
+.alert-warning {
+  background-color: #fffbeb;
+  border: 1px solid #fed7aa;
+  color: #92400e;
+}
+
+.alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.alert-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.alert strong {
+  display: block;
+  margin-bottom: 2px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.alert p {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.9;
 }
 
 .form-group {
@@ -397,10 +438,6 @@ input:disabled {
   cursor: not-allowed;
 }
 
-.github-login {
-  color: #444;
-}
-
 .footer {
   margin-top: 24px;
   font-size: 13px;
@@ -416,6 +453,30 @@ input:disabled {
 
 .register-link:hover {
   text-decoration: underline;
+}
+
+/* 🔧 개발용 디버그 섹션 */
+.debug-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 8px;
+}
+
+.debug-btn {
+  flex: 1;
+  padding: 6px 10px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #495057;
+  cursor: pointer;
+}
+
+.debug-btn:hover {
+  background-color: #e9ecef;
 }
 
 /* 반응형 */

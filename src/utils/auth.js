@@ -1,10 +1,10 @@
-// utils/auth.js
+// src/utils/auth.js
 // 전체 앱에서 사용하는 인증 관련 유틸리티
 
 /**
  * 토큰 저장소 키 상수
  */
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
     ACCESS_TOKEN: 'access_token',
     REFRESH_TOKEN: 'refresh_token',
     USER_INFO: 'user_info',
@@ -306,9 +306,9 @@ export const logoutWithBackend = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                ...getAuthHeader() // Authorization 헤더 포함
+                ...getAuthHeader()
             },
-            credentials: 'include' // RefreshToken 쿠키를 함께 전송
+            credentials: 'include'
         })
 
         console.log(`📡 [Auth] 로그아웃 응답 상태: ${response.status}`)
@@ -317,7 +317,6 @@ export const logoutWithBackend = async () => {
             const result = await response.json()
             console.log('✅ [Auth] 백엔드 로그아웃 성공:', result.message)
 
-            // 로컬 인증 정보 정리
             logout()
 
             return {
@@ -326,8 +325,6 @@ export const logoutWithBackend = async () => {
             }
         } else {
             console.warn('⚠️ [Auth] 백엔드 로그아웃 실패, 로컬 정리만 진행')
-
-            // 백엔드 실패해도 로컬은 정리
             logout()
 
             return {
@@ -339,8 +336,6 @@ export const logoutWithBackend = async () => {
 
     } catch (error) {
         console.error('❌ [Auth] 로그아웃 API 호출 중 오류:', error)
-
-        // 네트워크 오류 등 발생해도 로컬은 정리
         logout()
 
         return {
@@ -399,80 +394,31 @@ export const forceLogoutAllDevices = async () => {
     }
 }
 
-// ==================== 백엔드 토큰 갱신 ====================
+// ==================== 유틸리티 ====================
 
 /**
- * 백엔드 RefreshJwtFilter를 활용한 토큰 갱신
+ * 인증 헤더 생성
  */
-export const refreshTokenWithBackend = async () => {
-    const refreshToken = getRefreshToken()
-    if (!refreshToken) {
-        return { success: false, error: 'No refresh token' }
+export const getAuthHeader = () => {
+    const token = getAccessToken()
+    if (!token) return {}
+
+    return {
+        'Authorization': `Bearer ${token}`
     }
+}
 
-    try {
-        console.log('🔄 [Auth] 백엔드 RefreshJwtFilter를 통한 토큰 갱신...')
-
-        const authServerUrl = import.meta.env.DEV
-            ? 'http://localhost:8081'
-            : (import.meta.env.VITE_AUTH_SERVER_URL || 'https://your-auth-server.com')
-
-        // 백엔드의 보호된 엔드포인트들
-        const testEndpoints = [
-            `${authServerUrl}/api/v1/auth/verify`,
-            `${authServerUrl}/api/v1/users/profile`,
-            `${authServerUrl}/api/v1/test/protected`
-        ]
-
-        for (const endpoint of testEndpoints) {
-            try {
-                console.log(`🌐 [Auth] 토큰 갱신 요청: ${endpoint}`)
-
-                const response = await fetch(endpoint, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${refreshToken}`
-                    }
-                })
-
-                console.log(`📡 [Auth] 응답 상태: ${response.status}`)
-
-                // 200 OK 또는 404도 인증은 성공 (엔드포인트가 없을 수 있음)
-                if (response.ok || response.status === 404) {
-                    const newAccessToken = response.headers.get('Authorization')
-
-                    if (newAccessToken) {
-                        const cleanToken = newAccessToken.replace('Bearer ', '')
-                        setAccessToken(cleanToken)
-
-                        console.log('✅ [Auth] 백엔드 토큰 갱신 성공:', endpoint)
-                        return {
-                            success: true,
-                            accessToken: cleanToken,
-                            refreshToken: refreshToken
-                        }
-                    } else {
-                        console.warn('⚠️ [Auth] 응답 헤더에 새로운 토큰이 없습니다.')
-                    }
-                } else if (response.status === 401) {
-                    console.error('❌ [Auth] Refresh Token이 만료되었습니다.')
-                    logout()
-                    return { success: false, error: 'Refresh token expired' }
-                }
-
-            } catch (endpointError) {
-                console.warn(`⚠️ [Auth] ${endpoint} 요청 실패:`, endpointError.message)
-                continue
-            }
-        }
-
-        console.error('❌ [Auth] 모든 엔드포인트에서 토큰 갱신 실패')
-        return { success: false, error: 'All endpoints failed' }
-
-    } catch (error) {
-        console.error('❌ [Auth] 토큰 갱신 중 오류:', error)
-        return { success: false, error: error.message }
+/**
+ * API 요청용 공통 헤더 생성
+ */
+export const getApiHeaders = () => {
+    return {
+        'Content-Type': 'application/json',
+        'X-Device-ID': getDeviceId(),
+        'X-User-Agent': navigator.userAgent,
+        'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+        'X-Language': navigator.language || 'ko',
+        ...getAuthHeader()
     }
 }
 
@@ -532,7 +478,6 @@ export const debugAuthStatus = () => {
 export const clearAllAuthData = () => {
     console.log('🧹 [Auth] 모든 인증 데이터 삭제 중...')
 
-    // 모든 저장소에서 인증 관련 데이터 삭제
     const storages = [localStorage, sessionStorage]
     const keys = Object.values(STORAGE_KEYS)
 
@@ -545,40 +490,9 @@ export const clearAllAuthData = () => {
     console.log('✅ [Auth] 모든 인증 데이터 삭제 완료')
 }
 
-// ==================== 유틸리티 ====================
-
-/**
- * 인증 헤더 생성
- */
-export const getAuthHeader = () => {
-    const token = getAccessToken()
-    if (!token) return {}
-
-    return {
-        'Authorization': `Bearer ${token}`
-    }
-}
-
-/**
- * API 요청용 공통 헤더 생성
- */
-export const getApiHeaders = () => {
-    return {
-        'Content-Type': 'application/json',
-        'X-Device-ID': getDeviceId(),
-        'X-User-Agent': navigator.userAgent,
-        'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
-        'X-Language': navigator.language || 'ko',
-        ...getAuthHeader()
-    }
-}
-
 // ==================== 내보내기 ====================
 
-// 상수 내보내기
-export { STORAGE_KEYS }
-
-// 기본 객체로 모든 함수 내보내기 (기존 코드 호환성)
+// 기본 객체로 모든 함수 내보내기
 export default {
     // 토큰 관리
     setAccessToken,
@@ -614,9 +528,6 @@ export default {
     logout,
     logoutWithBackend,
     forceLogoutAllDevices,
-
-    // 백엔드 연동
-    refreshTokenWithBackend,
 
     // 디버깅
     debugAuthStatus,
