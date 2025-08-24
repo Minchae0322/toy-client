@@ -39,6 +39,7 @@ onMounted(() => {
   if (isLoggedIn.value) {
     webSocketService.connect().catch(console.error)
   }
+  monitorWebSocketStatus()
 })
 
 watch(isLoggedIn, (newVal) => {
@@ -47,7 +48,9 @@ watch(isLoggedIn, (newVal) => {
   } else {
     webSocketService.disconnect()
   }
+  monitorWebSocketStatus()
 })
+
 onUnmounted(() => webSocketService.disconnect())
 </script>
 

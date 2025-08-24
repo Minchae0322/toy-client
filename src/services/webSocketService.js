@@ -21,6 +21,34 @@ class WebSocketService {
     this.reconnectAttempts = 0
     this.maxReconnectAttempts = 5
     this.reconnectDelay = 1000
+
+    // 백엔드 토픽 구조에 맞춘 설정
+    this.topics = {
+      chatRoomPrefix: '/topic/chatroom',
+      userDevicePrefix: '/user',
+      systemNotification: '/topic/system/notifications',
+      onlineUsers: '/topic/online-users'
+    }
+
+    this.destinations = {
+      sendMessage: '/app/chat/send',
+      leaveRoom: '/app/chat/leave',
+      sendTyping: '/app/typing',
+      ping: '/app/ping'
+    }
+  }
+
+  // 토픽 생성 헬퍼 메서드들
+  getChatRoomTopic(roomId) {
+    return `${this.topics.chatRoomPrefix}/${roomId}`
+  }
+
+  getUserDeviceQueue(userId, deviceId, queueType) {
+    return `${this.topics.userDevicePrefix}/${userId}/device/${deviceId}/queue/${queueType}`
+  }
+
+  getUserNotificationTopic(userId) {
+    return `/topic/user/${userId}/notifications`
   }
 
   // 인증 토큰 가져오기
@@ -214,7 +242,10 @@ class WebSocketService {
             this.reconnectAttempts = 0
             this.updateConnectionState('connected')
 
-            // 연결 후 기존 구독 복원
+            // 연결 후 필수 구독 설정
+            this.subscribeToEssentialTopics()
+
+            // 기존 구독 복원
             this.restoreSubscriptions()
 
             resolve()
@@ -281,6 +312,169 @@ class WebSocketService {
     })
   }
 
+  // 필수 토픽 구독 (연결 직후)
+  async subscribeToEssentialTopics() {
+    const userId = this.getCurrentUserId()
+    const deviceId = this.getDeviceId()
+
+    if (!userId || !deviceId) {
+      console.warn('⚠️ [WebSocket] 사용자 ID 또는 디바이스 ID가 없어 필수 구독을 건너뜁니다')
+      return
+    }
+
+    try {
+      console.log('📨 [WebSocket] 필수 토픽 구독 시작...')
+
+      // 1. 개인 메시지 큐 구독
+      const messageQueue = this.getUserDeviceQueue(userId, deviceId, 'messages')
+      await this.subscribeToPersonalQueue('messages', messageQueue)
+
+      // 2. 헤드업 알림 큐 구독
+      const headsupQueue = this.getUserDeviceQueue(userId, deviceId, 'headsup')
+      await this.subscribeToPersonalQueue('headsup', headsupQueue)
+
+      // 3. 일반 알림 큐 구독
+      const notificationQueue = this.getUserDeviceQueue(userId, deviceId, 'notifications')
+      await this.subscribeToPersonalQueue('notifications', notificationQueue)
+
+      // 4. 상태 업데이트 큐 구독
+      const statusQueue = this.getUserDeviceQueue(userId, deviceId, 'status')
+      await this.subscribeToPersonalQueue('status', statusQueue)
+
+      // 5. 시스템 알림 토픽 구독
+      await this.subscribeToSystemNotifications()
+
+      // 6. 온라인 사용자 토픽 구독
+      await this.subscribeToOnlineUsers()
+
+      console.log('✅ [WebSocket] 필수 토픽 구독 완료')
+
+    } catch (error) {
+      console.error('❌ [WebSocket] 필수 토픽 구독 실패:', error)
+    }
+  }
+
+  // 개인 큐 구독
+  async subscribeToPersonalQueue(queueType, destination) {
+    try {
+      const subscription = this.client.subscribe(destination, (message) => {
+        try {
+          const messageData = JSON.parse(message.body)
+          console.log(`📨 [WebSocket] ${queueType} 메시지 수신:`, messageData)
+
+          // 전역 핸들러 호출
+          const globalHandler = this.globalHandlers.get(queueType)
+          if (globalHandler) {
+            globalHandler(messageData)
+          }
+
+          // 메시지 타입에 따른 특별 처리
+          switch (queueType) {
+            case 'messages':
+              this.handlePersonalMessage(messageData)
+              break
+            case 'headsup':
+              this.handleHeadsupNotification(messageData)
+              break
+            case 'notifications':
+              this.handleNotification(messageData)
+              break
+            case 'status':
+              this.handleStatusUpdate(messageData)
+              break
+          }
+        } catch (error) {
+          console.error(`❌ [WebSocket] ${queueType} 메시지 파싱 에러:`, error)
+        }
+      })
+
+      this.subscriptions.set(`personal-${queueType}`, subscription)
+      console.log(`✅ [WebSocket] ${queueType} 큐 구독 완료: ${destination}`)
+
+    } catch (error) {
+      console.error(`❌ [WebSocket] ${queueType} 큐 구독 실패:`, error)
+      throw error
+    }
+  }
+
+  // 시스템 알림 구독
+  async subscribeToSystemNotifications() {
+    try {
+      const destination = this.topics.systemNotification
+      const subscription = this.client.subscribe(destination, (message) => {
+        try {
+          const messageData = JSON.parse(message.body)
+          console.log('📨 [WebSocket] 시스템 알림 수신:', messageData)
+
+          const globalHandler = this.globalHandlers.get('system-notification')
+          if (globalHandler) {
+            globalHandler(messageData)
+          }
+        } catch (error) {
+          console.error('❌ [WebSocket] 시스템 알림 파싱 에러:', error)
+        }
+      })
+
+      this.subscriptions.set('system-notifications', subscription)
+      console.log(`✅ [WebSocket] 시스템 알림 구독 완료: ${destination}`)
+
+    } catch (error) {
+      console.error('❌ [WebSocket] 시스템 알림 구독 실패:', error)
+      throw error
+    }
+  }
+
+  // 온라인 사용자 토픽 구독
+  async subscribeToOnlineUsers() {
+    try {
+      const destination = this.topics.onlineUsers
+      const subscription = this.client.subscribe(destination, (message) => {
+        try {
+          const messageData = JSON.parse(message.body)
+          console.log('📨 [WebSocket] 온라인 사용자 업데이트:', messageData)
+
+          const globalHandler = this.globalHandlers.get('online-users')
+          if (globalHandler) {
+            globalHandler(messageData)
+          }
+        } catch (error) {
+          console.error('❌ [WebSocket] 온라인 사용자 메시지 파싱 에러:', error)
+        }
+      })
+
+      this.subscriptions.set('online-users', subscription)
+      console.log(`✅ [WebSocket] 온라인 사용자 토픽 구독 완료: ${destination}`)
+
+    } catch (error) {
+      console.error('❌ [WebSocket] 온라인 사용자 토픽 구독 실패:', error)
+      throw error
+    }
+  }
+
+  // 개인 메시지 처리
+  handlePersonalMessage(messageData) {
+    // 개인 메시지 특별 처리 로직
+    console.log('💬 개인 메시지 처리:', messageData)
+  }
+
+  // 헤드업 알림 처리
+  handleHeadsupNotification(messageData) {
+    // 헤드업 알림 특별 처리 로직 (긴급 알림 등)
+    console.log('🚨 헤드업 알림 처리:', messageData)
+  }
+
+  // 일반 알림 처리
+  handleNotification(messageData) {
+    // 일반 알림 처리 로직
+    console.log('🔔 알림 처리:', messageData)
+  }
+
+  // 상태 업데이트 처리
+  handleStatusUpdate(messageData) {
+    // 상태 업데이트 처리 로직
+    console.log('📊 상태 업데이트 처리:', messageData)
+  }
+
   // 자동 재연결 시도
   attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
@@ -311,26 +505,21 @@ class WebSocketService {
   restoreSubscriptions() {
     console.log('🔄 [WebSocket] 구독 복원 중...')
     const subscriptionsToRestore = new Map(this.subscriptions)
-    this.subscriptions.clear()
 
+    // 필수 구독을 제외한 채팅방 구독만 복원
     subscriptionsToRestore.forEach((subscription, key) => {
-      if (key.includes('-')) {
-        // 특수 구독 (presence, typing 등)
-        const [roomId, type] = key.split('-')
-        if (type === 'presence' || type === 'typing') {
-          // 특수 구독은 subscribeToRoom을 통해 복원
-          return
-        }
-      } else {
-        // 일반 채팅방 구독 복원
-        const handler = this.messageHandlers.get(key)
+      if (key.startsWith('chatroom-')) {
+        const roomId = key.replace('chatroom-', '')
+        const handler = this.messageHandlers.get(roomId)
         if (handler) {
-          this.subscribeToChatRoom(key, handler)
+          // 기존 구독 제거하고 새로 구독
+          this.subscriptions.delete(key)
+          this.subscribeToChatRoom(roomId, handler)
           .then(() => {
-            console.log(`✅ [WebSocket] 채팅방 ${key} 구독 복원 완료`)
+            console.log(`✅ [WebSocket] 채팅방 ${roomId} 구독 복원 완료`)
           })
           .catch((error) => {
-            console.error(`❌ [WebSocket] 채팅방 ${key} 구독 복원 실패:`, error)
+            console.error(`❌ [WebSocket] 채팅방 ${roomId} 구독 복원 실패:`, error)
           })
         }
       }
@@ -413,7 +602,7 @@ class WebSocketService {
     return this.connect()
   }
 
-  // 채팅방 구독
+  // 채팅방 구독 (백엔드 토픽 구조에 맞춘 버전)
   async subscribeToChatRoom(roomId, messageHandler) {
     try {
       console.log(`📨 [WebSocket] 채팅방 구독 시작: ${roomId}`)
@@ -421,10 +610,11 @@ class WebSocketService {
       // 연결 상태 확인 및 보장
       await this.ensureConnection()
 
-      const destination = `/topic/chat/rooms/${roomId}`
+      const destination = this.getChatRoomTopic(roomId) // /topic/chatroom/{roomId}
 
       // 이미 구독 중인지 확인
-      if (this.subscriptions.has(roomId)) {
+      const subscriptionKey = `chatroom-${roomId}`
+      if (this.subscriptions.has(subscriptionKey)) {
         console.log(`📨 [WebSocket] 이미 구독 중인 채팅방: ${roomId}`)
         return Promise.resolve()
       }
@@ -439,7 +629,7 @@ class WebSocketService {
       const subscription = this.client.subscribe(destination, (message) => {
         try {
           const messageData = JSON.parse(message.body)
-          console.log(`📨 [WebSocket] 메시지 수신 (Room: ${roomId}):`, messageData)
+          console.log(`📨 [WebSocket] 채팅방 메시지 수신 (Room: ${roomId}):`, messageData)
 
           // 등록된 핸들러가 있으면 호출
           const handler = this.messageHandlers.get(roomId)
@@ -450,14 +640,14 @@ class WebSocketService {
           // 전역 핸들러도 호출
           const globalHandler = this.globalHandlers.get('chat-message')
           if (globalHandler) {
-            globalHandler(messageData)
+            globalHandler(messageData, roomId)
           }
         } catch (error) {
-          console.error('❌ [WebSocket] 메시지 파싱 에러:', error, message.body)
+          console.error('❌ [WebSocket] 채팅방 메시지 파싱 에러:', error, message.body)
         }
       })
 
-      this.subscriptions.set(roomId, subscription)
+      this.subscriptions.set(subscriptionKey, subscription)
       console.log(`✅ [WebSocket] 채팅방 구독 완료: ${roomId}`)
 
       return Promise.resolve()
@@ -471,10 +661,11 @@ class WebSocketService {
   // 채팅방 구독 해제
   unsubscribeFromChatRoom(roomId) {
     try {
-      const subscription = this.subscriptions.get(roomId)
+      const subscriptionKey = `chatroom-${roomId}`
+      const subscription = this.subscriptions.get(subscriptionKey)
       if (subscription) {
         subscription.unsubscribe()
-        this.subscriptions.delete(roomId)
+        this.subscriptions.delete(subscriptionKey)
         this.messageHandlers.delete(roomId)
         console.log(`📨 [WebSocket] 채팅방 구독 해제: ${roomId}`)
       } else {
@@ -485,24 +676,60 @@ class WebSocketService {
     }
   }
 
-  // 메시지 전송
+  // 메시지 전송 (백엔드 ChatStompController에 맞춘 버전)
   async sendMessage(roomId, messageData) {
     try {
       // 연결 상태 확인 및 보장
       await this.ensureConnection()
 
-      const destination = `/app/chat/rooms/${roomId}/messages`
+      const destination = this.destinations.sendMessage // /app/chat/send
       const message = {
-        ...messageData,
-        senderId: this.getCurrentUserId(),
-        deviceId: this.getDeviceId(),
-        timestamp: new Date().toISOString()
+        roomId: roomId,
+        actionType: messageData.messageType || messageData.actionType || 'TEXT',
+        actorUserId: this.getCurrentUserId(),
+        messageContent: messageData.content || messageData.messageContent,
+        additionalData: messageData.additionalData || {},
+        // 파일 관련 필드들
+        ...(messageData.fileUrl && { fileUrl: messageData.fileUrl }),
+        ...(messageData.fileName && { fileName: messageData.fileName }),
+        ...(messageData.fileSize && { fileSize: messageData.fileSize }),
+        ...(messageData.mimeType && { mimeType: messageData.mimeType }),
+        ...(messageData.thumbnailUrl && { thumbnailUrl: messageData.thumbnailUrl }),
+        // 미디어 메타데이터
+        ...(messageData.width && { width: messageData.width }),
+        ...(messageData.height && { height: messageData.height }),
+        ...(messageData.duration && { duration: messageData.duration }),
+        // 위치 정보
+        ...(messageData.latitude && { latitude: messageData.latitude }),
+        ...(messageData.longitude && { longitude: messageData.longitude }),
+        ...(messageData.address && { address: messageData.address }),
+        ...(messageData.locationName && { locationName: messageData.locationName }),
+        // 답장 관련
+        ...(messageData.replyToMessageId && { replyToMessageId: messageData.replyToMessageId }),
+        ...(messageData.replyToContent && { replyToContent: messageData.replyToContent }),
+        ...(messageData.replyToSender && { replyToSender: messageData.replyToSender }),
+        // 전달 관련
+        isForwarded: messageData.isForwarded || false,
+        ...(messageData.originalMessageId && { originalMessageId: messageData.originalMessageId }),
+        forwardCount: messageData.forwardCount || 0,
+        // 링크 미리보기
+        ...(messageData.linkUrl && { linkUrl: messageData.linkUrl }),
+        ...(messageData.linkTitle && { linkTitle: messageData.linkTitle }),
+        ...(messageData.linkDescription && { linkDescription: messageData.linkDescription }),
+        ...(messageData.linkImageUrl && { linkImageUrl: messageData.linkImageUrl })
+      }
+
+      // STOMP 헤더 설정 (백엔드에서 Chat-Room-Id 헤더를 확인함)
+      const headers = {
+        'Chat-Room-Id': roomId
       }
 
       console.log(`📤 [WebSocket] 메시지 전송 (${destination}):`, message)
+      console.log(`📤 [WebSocket] 헤더:`, headers)
 
       this.client.publish({
         destination: destination,
+        headers: headers,
         body: JSON.stringify(message)
       })
 
@@ -510,6 +737,38 @@ class WebSocketService {
 
     } catch (error) {
       console.error(`❌ [WebSocket] 메시지 전송 실패 (Room: ${roomId}):`, error)
+      throw error
+    }
+  }
+
+  // 채팅방 나가기
+  async leaveChatRoom(roomId) {
+    try {
+      if (!this.isConnected()) {
+        console.warn('⚠️ [WebSocket] 연결되지 않아 채팅방을 나갈 수 없습니다')
+        return
+      }
+
+      const destination = this.destinations.leaveRoom // /app/chat/leave
+
+      // STOMP 헤더에 채팅방 ID 설정
+      const headers = {
+        'Chat-Room-Id': roomId
+      }
+
+      console.log(`🚪 [WebSocket] 채팅방 나가기 (${destination}):`, { roomId })
+
+      this.client.publish({
+        destination: destination,
+        headers: headers,
+        body: JSON.stringify({}) // 빈 본문
+      })
+
+      // 구독도 함께 해제
+      this.unsubscribeFromChatRoom(roomId)
+
+    } catch (error) {
+      console.error(`❌ [WebSocket] 채팅방 나가기 실패 (Room: ${roomId}):`, error)
       throw error
     }
   }
@@ -522,7 +781,7 @@ class WebSocketService {
         return
       }
 
-      const destination = `/app/chat/rooms/${roomId}/typing`
+      const destination = this.destinations.sendTyping // /app/typing
       const message = {
         roomId: roomId,
         userId: this.getCurrentUserId(),
@@ -543,7 +802,26 @@ class WebSocketService {
 
   // 구독 상태 확인
   isSubscribedTo(roomId) {
-    return this.subscriptions.has(roomId)
+    return this.subscriptions.has(`chatroom-${roomId}`)
+  }
+
+  // 채팅방 입장 (구독 + 백엔드 알림)
+  async enterChatRoom(roomId, messageHandler) {
+    try {
+      console.log(`🚪 [WebSocket] 채팅방 입장: ${roomId}`)
+
+      // 1. 채팅방 토픽 구독
+      await this.subscribeToChatRoom(roomId, messageHandler)
+
+      // 2. 백엔드에 입장 알림 (첫 메시지 전송 시 자동 처리됨)
+      // ChatStompController에서 Chat-Room-Id 헤더가 있으면 자동으로 enterChatRoom 호출
+
+      console.log(`✅ [WebSocket] 채팅방 입장 완료: ${roomId}`)
+
+    } catch (error) {
+      console.error(`❌ [WebSocket] 채팅방 입장 실패 (Room: ${roomId}):`, error)
+      throw error
+    }
   }
 
   // 모든 구독 해제
@@ -567,13 +845,18 @@ class WebSocketService {
       connected: this.isConnected(),
       connecting: this.connecting,
       subscriptionsCount: this.subscriptions.size,
+      subscriptions: Array.from(this.subscriptions.keys()),
       handlersCount: this.messageHandlers.size,
+      handlers: Array.from(this.messageHandlers.keys()),
       globalHandlersCount: this.globalHandlers.size,
+      globalHandlers: Array.from(this.globalHandlers.keys()),
       connectionState: this.connectionState,
       deviceInfo: this.getDeviceInfo(),
       userId: this.getCurrentUserId(),
       deviceId: this.getDeviceId(),
       reconnectAttempts: this.reconnectAttempts,
+      topics: this.topics,
+      destinations: this.destinations,
       clientState: this.client ? {
         connected: this.client.connected,
         webSocketState: this.client.webSocket?.readyState
@@ -593,10 +876,15 @@ class WebSocketService {
 
     try {
       // 간단한 핑 메시지 전송으로 연결 상태 확인
-      const testDestination = '/app/ping'
+      const testDestination = this.destinations.ping // /app/ping
       this.client.publish({
         destination: testDestination,
-        body: JSON.stringify({ type: 'ping', timestamp: Date.now() })
+        body: JSON.stringify({
+          type: 'ping',
+          timestamp: Date.now(),
+          userId: this.getCurrentUserId(),
+          deviceId: this.getDeviceId()
+        })
       })
 
       return {
@@ -633,6 +921,41 @@ class WebSocketService {
         }
       }
     }, 5000) // 5초마다 체크
+  }
+
+  // 백엔드 토픽 구조 확인용 디버그 메서드
+  debugTopicStructure() {
+    const userId = this.getCurrentUserId()
+    const deviceId = this.getDeviceId()
+
+    console.group('🔍 [WebSocket] 백엔드 토픽 구조 디버그')
+
+    console.log('=== 토픽 설정 ===')
+    console.log('채팅방 토픽 prefix:', this.topics.chatRoomPrefix)
+    console.log('개인 큐 prefix:', this.topics.userDevicePrefix)
+    console.log('시스템 알림 토픽:', this.topics.systemNotification)
+    console.log('온라인 사용자 토픽:', this.topics.onlineUsers)
+
+    console.log('=== Destination 설정 ===')
+    console.log('메시지 전송:', this.destinations.sendMessage)
+    console.log('채팅방 나가기:', this.destinations.leaveRoom)
+    console.log('타이핑 전송:', this.destinations.sendTyping)
+    console.log('핑 전송:', this.destinations.ping)
+
+    if (userId && deviceId) {
+      console.log('=== 사용자별 구독 토픽 ===')
+      console.log('메시지 큐:', this.getUserDeviceQueue(userId, deviceId, 'messages'))
+      console.log('헤드업 큐:', this.getUserDeviceQueue(userId, deviceId, 'headsup'))
+      console.log('알림 큐:', this.getUserDeviceQueue(userId, deviceId, 'notifications'))
+      console.log('상태 큐:', this.getUserDeviceQueue(userId, deviceId, 'status'))
+      console.log('사용자 알림 토픽:', this.getUserNotificationTopic(userId))
+    }
+
+    console.log('=== 예시 채팅방 토픽 ===')
+    console.log('채팅방 123:', this.getChatRoomTopic('123'))
+    console.log('채팅방 456:', this.getChatRoomTopic('456'))
+
+    console.groupEnd()
   }
 }
 

@@ -43,10 +43,10 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/one-mouth/detail',
+    path: '/one-mouth/:id',
     name: 'OneMouthDetail',
     component: OneMouthDetailView,
-    meta: { requiresAuth: true }
+    props: true
   },
   {
     path: '/admin/category',

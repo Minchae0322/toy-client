@@ -36,11 +36,15 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import { contentService } from '@/api/axios.js';
 import HeaderSection from '@/components/oneMouth/HeaderSection.vue';
 import SidebarSection from '@/components/oneMouth/SidebarSection.vue';
 import ContentArea from '@/components/oneMouth/ContentArea.vue';
 import FloatingButton from '@/components/oneMouth/FloatingButton.vue';
+
+// 라우터
+const router = useRouter();
 
 // Reactive state
 const searchQuery = ref('');
@@ -157,11 +161,11 @@ const generateCategoryKey = (categoryName, categoryId = null) => {
 
   // 한국어, 영어, 숫자만 허용하고 나머지는 언더스코어로 변환
   let baseKey = categoryName
-      .trim()
-      .replace(/[^\w가-힣]/g, '_') // 한국어, 영어, 숫자, 언더스코어만 허용
-      .replace(/_+/g, '_') // 연속된 언더스코어를 하나로
-      .replace(/^_|_$/g, '') // 앞뒤 언더스코어 제거
-      .toLowerCase();
+  .trim()
+  .replace(/[^\w가-힣]/g, '_') // 한국어, 영어, 숫자, 언더스코어만 허용
+  .replace(/_+/g, '_') // 연속된 언더스코어를 하나로
+  .replace(/^_|_$/g, '') // 앞뒤 언더스코어 제거
+  .toLowerCase();
 
   // categoryId가 있으면 고유성 보장을 위해 추가
   if (categoryId) {
@@ -187,23 +191,23 @@ const fetchCategories = async () => {
 
     // 백엔드 응답을 Vue 컴포넌트 형식으로 변환 (중복 키 방지)
     const mappedServerCategories = serverCategories
-        .filter(cat => cat.isActive === true) // 활성 카테고리만
-        .map(cat => ({
-          categoryId: cat.categoryId,
-          categoryKey: generateCategoryKey(cat.categoryName, cat.categoryId), // categoryId 포함하여 고유성 보장
-          categoryName: cat.categoryName, // SidebarSection에서 getFilterLabel()로 사용
-          categoryIcon: getCategoryIcon(cat.categoryName, cat.keywords), // SidebarSection에서 getFilterIcon()로 사용
-          categoryType: getCategoryType(cat.categoryName, cat.keywords), // 타입 결정
-          parentId: null,
-          displayOrder: cat.sortOrder, // 백엔드 sortOrder 그대로 사용
-          isActive: cat.isActive,
-          itemCount: 0, // TODO: 백엔드에서 실제 아이템 수를 제공하면 사용
-          description: cat.description || '',
-          keywords: cat.keywords || '',
-          createdAt: cat.createdAt,
-          updatedAt: cat.updatedAt
-        }))
-        .sort((a, b) => a.displayOrder - b.displayOrder); // sortOrder 기준 정렬
+    .filter(cat => cat.isActive === true) // 활성 카테고리만
+    .map(cat => ({
+      categoryId: cat.categoryId,
+      categoryKey: generateCategoryKey(cat.categoryName, cat.categoryId), // categoryId 포함하여 고유성 보장
+      categoryName: cat.categoryName, // SidebarSection에서 getFilterLabel()로 사용
+      categoryIcon: getCategoryIcon(cat.categoryName, cat.keywords), // SidebarSection에서 getFilterIcon()로 사용
+      categoryType: getCategoryType(cat.categoryName, cat.keywords), // 타입 결정
+      parentId: null,
+      displayOrder: cat.sortOrder, // 백엔드 sortOrder 그대로 사용
+      isActive: cat.isActive,
+      itemCount: 0, // TODO: 백엔드에서 실제 아이템 수를 제공하면 사용
+      description: cat.description || '',
+      keywords: cat.keywords || '',
+      createdAt: cat.createdAt,
+      updatedAt: cat.updatedAt
+    }))
+    .sort((a, b) => a.displayOrder - b.displayOrder); // sortOrder 기준 정렬
 
     console.log('🔄 매핑된 서버 카테고리:', mappedServerCategories);
 
@@ -477,10 +481,15 @@ const resetAndFetch = () => {
   fetchFoods(0, false);
 };
 
+// ===== 상세페이지 이동 함수 수정 =====
 const viewDetail = (food) => {
-  // 상세페이지로 라우팅
-  // this.$router.push(`/one-mouth/${food.id}`);
-  alert(`${food.name} 상세페이지로 이동합니다!`);
+  console.log('🔗 상세페이지로 이동:', food.id, food.name);
+
+  // Vue Router를 사용한 페이지 이동
+  router.push({
+    name: 'OneMouthDetail',
+    params: { id: food.id }
+  });
 };
 
 const requestShare = (food) => {
@@ -488,13 +497,36 @@ const requestShare = (food) => {
 };
 
 const startChat = (food) => {
-  alert(`${food.name} 판매자와 채팅을 시작합니다!`);
+  // 로그인 체크
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    alert('로그인이 필요합니다.');
+    router.push('/login');
+    return;
+  }
+
+  // 채팅 페이지로 이동
+  router.push({
+    name: 'Chat',
+    query: {
+      sellerId: food.sellerId || food.seller?.id,
+      productId: food.id,
+      productName: food.name
+    }
+  });
 };
 
 const addNewFood = () => {
-  // 새 음식 등록 페이지로 라우팅
-  // this.$router.push('/one-mouth/create');
-  alert('새로운 음식을 등록합니다!');
+  // 로그인 체크
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    alert('로그인이 필요합니다.');
+    router.push('/login');
+    return;
+  }
+
+  // 새 음식 등록 페이지로 이동
+  router.push('/one-mouth/create');
 };
 
 // Watchers (무한 루프 방지)
