@@ -55,9 +55,9 @@
             <span class="icon">👁️</span>
             <span class="count">{{ formatCount(food.reviewCount) }}</span>
           </div>
-          <div class="stat-item" v-if="food.rating > 0">
-            <span class="icon">⭐</span>
-            <span class="count">{{ food.rating.toFixed(1) }}</span>
+          <div class="stat-item" v-if="food.favoritesCount > 0">
+            <span class="icon">❤️</span>
+            <span class="count">{{ formatCount(food.favoritesCount) }}</span>
           </div>
         </div>
       </div>
@@ -66,26 +66,6 @@
         <span class="category">{{ getCategoryDisplay(food.category) }}</span>
         <span class="time">{{ formatTimeAgo(food.createdAt) }}</span>
       </div>
-    </div>
-
-    <!-- 액션 버튼들 -->
-    <div class="actions" @click.stop>
-      <button
-          class="action-btn chat-btn"
-          :disabled="!food.selling"
-          @click="handleStartChat"
-          title="채팅하기"
-      >
-        💬
-      </button>
-      <button
-          class="action-btn share-btn"
-          :disabled="!food.selling"
-          @click="handleRequestShare"
-          title="나눔 요청"
-      >
-        🤝
-      </button>
     </div>
 
     <!-- 호버 효과용 오버레이 -->
@@ -107,12 +87,6 @@ const props = defineProps({
   }
 });
 
-// Emits
-const emit = defineEmits([
-  'request-share',
-  'start-chat'
-]);
-
 // Computed
 const hasBadges = computed(() => {
   return props.food.trending || props.food.isLimited || !props.food.selling;
@@ -120,24 +94,13 @@ const hasBadges = computed(() => {
 
 // 이벤트 핸들러들
 const handleCardClick = () => {
-  // 카드 클릭은 부모 컴포넌트에서 @click으로 처리
+  // 카드 클릭은 부모 컴포넌트에서 @click으로 처리 (상세 페이지로 이동)
   console.log('카드 클릭:', props.food.name);
-};
-
-const handleStartChat = (event) => {
-  event.stopPropagation();
-  emit('start-chat', props.food);
-};
-
-const handleRequestShare = (event) => {
-  event.stopPropagation();
-  emit('request-share', props.food);
 };
 
 const handleImageError = (event) => {
   console.log('이미지 로드 실패:', props.food.name);
   event.target.style.display = 'none';
-  // 필요시 기본 이미지로 교체하거나 placeholder 표시
 };
 
 // 유틸리티 함수들
@@ -232,12 +195,11 @@ const formatTimeAgo = (dateString) => {
 
 .food-card.not-selling {
   opacity: 0.7;
-  cursor: not-allowed;
 }
 
 .food-card.not-selling:hover {
-  transform: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   border-color: #bdc3c7;
 }
 
@@ -413,60 +375,6 @@ const formatTimeAgo = (dateString) => {
   color: #bdc3c7;
 }
 
-/* 액션 버튼들 */
-.actions {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  display: flex;
-  gap: 8px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.3s;
-}
-
-.food-card:hover .actions {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.action-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.action-btn:hover:not(:disabled) {
-  transform: scale(1.1);
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.chat-btn:hover:not(:disabled) {
-  background: #3498db;
-  color: white;
-}
-
-.share-btn:hover:not(:disabled) {
-  background: #27ae60;
-  color: white;
-}
-
 /* 호버 효과 */
 .hover-overlay {
   position: absolute;
@@ -505,18 +413,6 @@ const formatTimeAgo = (dateString) => {
   .meta-info {
     margin-bottom: 8px;
   }
-
-  .actions {
-    position: static;
-    opacity: 1;
-    transform: none;
-    justify-content: center;
-    margin-top: 8px;
-  }
-
-  .action-btn {
-    position: static;
-  }
 }
 
 @media (max-width: 480px) {
@@ -543,4 +439,5 @@ const formatTimeAgo = (dateString) => {
   .price {
     font-size: 12px;
   }
-}</style>
+}
+</style>
