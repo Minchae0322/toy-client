@@ -68,7 +68,6 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { contentService, tokenUtils, chatService } from '@/api/axios.js';
-import { chatNavigation } from '@/router/index.js';
 
 // 컴포넌트 imports
 import LoadingState from '@/components/oneMouth/detail/LoadingState.vue';
@@ -332,78 +331,66 @@ const handleStartChat = async () => {
 
   try {
     chatLoading.value = true;
-    const existingRoom = await findExistingChatRoom(currentUser.id, food.value.sellerId);
 
-    if (existingRoom) {
-      chatNavigation.toChatRoom(existingRoom.id);
-    } else {
-      const newRoom = await createDirectChatRoom(currentUser.id, food.value.sellerId, food.value);
-      chatNavigation.toChatRoom(newRoom.id);
+    // 백엔드 채팅 시작 API 호출
+    const chatStartRequest = {
+      chatContext: 'PRODUCT_TRADE', // ChatContext.PRODUCT_TRADE 사용
+      chatContextId: Number(food.value.id), // 상품 ID - Long 타입으로 변환
+      creatorId: Number(food.value.sellerId), // 판매자 ID (컨텍스트 생성자) - Long 타입으로 변환
+      participantIds: [
+        Number(currentUser.id), // 현재 사용자 (구매자) - Long 타입으로 변환
+        Number(food.value.sellerId) // 판매자 - Long 타입으로 변환
+      ],
+      deviceId: tokenUtils.getDeviceId() || 'web-browser'
+    };
+
+    console.log('채팅 시작 요청:', chatStartRequest);
+
+    const response = await chatService.startChat(chatStartRequest);
+    const chatRoomData = response.data?.data || response.data;
+
+    console.log('채팅방 생성/조회 완료:', chatRoomData);
+
+    if (!chatRoomData?.roomId) {
+      throw new Error('채팅방 정보가 올바르지 않습니다.');
     }
+
+    // 채팅 페이지로 이동 (roomId 전달)
+    await router.push({
+      name: 'ChatRoom',
+      params: { roomId: chatRoomData.roomId },
+      query: {
+        from: 'product',
+        productId: food.value.id,
+        productName: food.value.name
+      }
+    });
+
   } catch (error) {
-    console.error('❌ 채팅방 처리 실패:', error);
-    alert('채팅방 연결에 실패했습니다.');
+    console.error('채팅 시작 실패:', error);
+
+    let errorMessage = '채팅 연결에 실패했습니다.';
+    if (error.response?.status === 404) {
+      errorMessage = '상품 정보를 찾을 수 없습니다.';
+    } else if (error.response?.status === 403) {
+      errorMessage = '채팅 권한이 없습니다.';
+    } else if (error.response?.status >= 500) {
+      errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    }
+
+    alert(errorMessage);
   } finally {
     chatLoading.value = false;
   }
 };
 
-const findExistingChatRoom = async (buyerId, sellerId) => {
-  try {
-    const response = await chatService.getChatRooms({
-      roomType: 'ONE_TO_ONE',
-      participantId: sellerId,
-      isActive: true,
-      limit: 10
-    });
-
-    const rooms = response.data?.data || response.data?.content || [];
-    const existingRoom = rooms.find(room => {
-      const participants = room.participants || [];
-      const participantIds = participants.map(p => String(p.userId));
-      return participants.length === 2 &&
-          participantIds.includes(String(buyerId)) &&
-          participantIds.includes(String(sellerId));
-    });
-
-    return existingRoom || null;
-  } catch (error) {
-    console.error('기존 채팅방 조회 실패:', error);
-    return null;
+const writeReview = () => {
+  if (!tokenUtils.isLoggedIn()) {
+    alert('로그인이 필요합니다.');
+    router.push('/login');
+    return;
   }
-};
-
-const createDirectChatRoom = async (buyerId, sellerId, product) => {
-  try {
-    const roomData = {
-      title: `${product.name} 문의`,
-      description: `${product.name}에 대한 문의`,
-      roomType: 'NORMAL',
-      participantIds: [String(sellerId)],
-      creatorId: buyerId,
-      deviceId: 2,
-      metadata: {
-        relatedProductId: product.id,
-        relatedProductType: 'ONE_MOUTH',
-        productName: product.name,
-        productPrice: product.price,
-        sellerId: sellerId,
-        buyerId: buyerId
-      }
-    };
-
-    const response = await chatService.createChatRoom(roomData);
-    const newRoom = response.data?.data || response.data;
-
-    if (!newRoom || !newRoom.id) {
-      throw new Error('채팅방 생성 응답이 유효하지 않습니다.');
-    }
-
-    return newRoom;
-  } catch (error) {
-    console.error('새 채팅방 생성 실패:', error);
-    throw error;
-  }
+  router.push(`/one-mouth/${foodId.value}/review`);
 };
 
 const shareFood = () => {
@@ -426,15 +413,6 @@ const viewSellerProfile = () => {
   if (food.value?.seller?.id) {
     router.push(`/users/${food.value.seller.id}`);
   }
-};
-
-const writeReview = () => {
-  if (!tokenUtils.isLoggedIn()) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
-    return;
-  }
-  router.push(`/one-mouth/${foodId.value}/review`);
 };
 
 const handleImageError = (e) => {
