@@ -2,25 +2,6 @@ import axios from 'axios'
 
 /**
  * 마이크로서비스 API 통합 관리 시스템
- *
- * 사용법:
- * // 로그인 (Auth 서버에서 토큰 발급)
- * const loginResponse = await authService.login({
- *   email: 'user@example.com',
- *   password: 'password123'
- * })
- *
- * // 토큰 자동 저장
- * tokenUtils.setTokens(
- *   loginResponse.data.accessToken,
- *   loginResponse.data.refreshToken
- * )
- *
- * // 컨텐츠 조회 (토큰 자동 첨부 + 갱신)
- * const foods = await contentService.getOneMouths()
- *
- * // 사용자 프로필 조회 (토큰 자동 갱신 처리)
- * const profile = await userService.getProfile()
  */
 
 // ==================== 환경 설정 ====================
@@ -304,6 +285,10 @@ export const contentService = {
     createOneMouth: (data) => contentApi.post('/one-mouths', data),
     updateOneMouth: (id, data) => contentApi.put(`/one-mouths/${id}`, data),
     deleteOneMouth: (id) => contentApi.delete(`/one-mouths/${id}`),
+
+    // 관심 상품 관련 (새로 추가)
+    toggleOneMouthFavorite: (id) => contentApi.post(`/one-mouths/${id}/favorite`),
+    removeOneMouthFavorite: (id) => contentApi.delete(`/one-mouths/${id}/favorite`),
 
     // 밈/짤 관련
     getMemes: (params = {}) => contentApi.get('/memes', { params }),
