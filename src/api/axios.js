@@ -2,25 +2,6 @@ import axios from 'axios'
 
 /**
  * 마이크로서비스 API 통합 관리 시스템
- *
- * 사용법:
- * // 로그인 (Auth 서버에서 토큰 발급)
- * const loginResponse = await authService.login({
- *   email: 'user@example.com',
- *   password: 'password123'
- * })
- *
- * // 토큰 자동 저장
- * tokenUtils.setTokens(
- *   loginResponse.data.accessToken,
- *   loginResponse.data.refreshToken
- * )
- *
- * // 컨텐츠 조회 (토큰 자동 첨부 + 갱신)
- * const foods = await contentService.getOneMouths()
- *
- * // 사용자 프로필 조회 (토큰 자동 갱신 처리)
- * const profile = await userService.getProfile()
  */
 
 // ==================== 환경 설정 ====================
@@ -305,6 +286,10 @@ export const contentService = {
     updateOneMouth: (id, data) => contentApi.put(`/one-mouths/${id}`, data),
     deleteOneMouth: (id) => contentApi.delete(`/one-mouths/${id}`),
 
+    // 관심 상품 관련 (새로 추가)
+    toggleOneMouthFavorite: (id) => contentApi.post(`/one-mouths/${id}/favorite`),
+    removeOneMouthFavorite: (id) => contentApi.delete(`/one-mouths/${id}/favorite`),
+
     // 밈/짤 관련
     getMemes: (params = {}) => contentApi.get('/memes', { params }),
     getMemeDetail: (id) => contentApi.get(`/memes/${id}`),
@@ -454,29 +439,32 @@ export const chatService = {
     leaveChatRoom: (roomId) => chatApi.delete(`/chat/rooms/${roomId}/leave`),
     inviteToRoom: (roomId, userIds) => chatApi.post(`/chat/rooms/${roomId}/invite`, { userIds }),
 
+    // 채팅 시작 API 추가
+    startChat: (data) => chatApi.post('/v1/chat/rooms/chat', data),
+
     // 메시지 관련
     getChatMessages: (roomId, params = {}) =>
-        chatApi.get(`/chat/rooms/${roomId}/messages`, { params }),
+        chatApi.get(`/v1/chat/rooms/${roomId}/messages`, { params }),
 
     sendMessage: (roomId, message) =>
-        chatApi.post(`/chat/rooms/${roomId}/messages`, message),
+        chatApi.post(`/v1/chat/rooms/${roomId}/messages`, message),
 
     updateMessage: (roomId, messageId, data) =>
-        chatApi.put(`/chat/rooms/${roomId}/messages/${messageId}`, data),
+        chatApi.put(`/v1/chat/rooms/${roomId}/messages/${messageId}`, data),
 
     deleteMessage: (roomId, messageId) =>
-        chatApi.delete(`/chat/rooms/${roomId}/messages/${messageId}`),
+        chatApi.delete(`/v1/chat/rooms/${roomId}/messages/${messageId}`),
 
     // 파일 업로드
     uploadFile: (roomId, formData) =>
-        chatApi.post(`/chat/rooms/${roomId}/upload`, formData, {
+        chatApi.post(`/v1/chat/rooms/${roomId}/upload`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         }),
 
     // 읽음 처리
-    markAsRead: (roomId) => chatApi.post(`/chat/rooms/${roomId}/read`),
+    markAsRead: (roomId) => chatApi.post(`/v1/chat/rooms/${roomId}/read`),
     getUnreadCount: () => chatApi.get('/chat/unread-count'),
-    getRoomUnreadCount: (roomId) => chatApi.get(`/chat/rooms/${roomId}/unread-count`),
+    getRoomUnreadCount: (roomId) => chatApi.get(`/v1/chat/rooms/${roomId}/unread-count`),
 
     // 채팅 설정
     updateChatSettings: (settings) => chatApi.put('/chat/settings', settings),
@@ -484,7 +472,7 @@ export const chatService = {
 
     // 온라인 상태
     updateOnlineStatus: (status) => chatApi.patch('/chat/online-status', { status }),
-    getRoomMembers: (roomId) => chatApi.get(`/chat/rooms/${roomId}/members`)
+    getRoomMembers: (roomId) => chatApi.get(`/v1/chat/rooms/${roomId}/members`)
 }
 
 // ==================== 토큰 관련 유틸리티 ====================
@@ -550,6 +538,26 @@ export const tokenUtils = {
     getCurrentUser: () => {
         const token = localStorage.getItem('access_token')
         return tokenUtils.getUserFromToken(token)
+    },
+
+    // 디바이스 ID 관련 함수들
+    getDeviceId: () => {
+        let deviceId = localStorage.getItem('device_id')
+        if (!deviceId) {
+            deviceId = 'web-' + Math.random().toString(36).substr(2, 9)
+            localStorage.setItem('device_id', deviceId)
+        }
+        return deviceId
+    },
+
+    setDeviceId: (deviceId) => {
+        localStorage.setItem('device_id', deviceId)
+    },
+
+    // 사용자 ID 추출 (WebSocket에서 사용)
+    getUserId: () => {
+        const user = tokenUtils.getCurrentUser()
+        return user ? user.id : null
     }
 }
 
