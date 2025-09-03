@@ -110,6 +110,34 @@ const reviewsHasMore = ref(true);
 // URL에서 ID 추출
 const foodId = computed(() => props.id || route.params.id);
 
+// 현재 사용자 정보 안전하게 가져오기
+const getCurrentUserId = () => {
+  // 1. tokenUtils에서 시도
+  const currentUser = tokenUtils.getCurrentUser();
+  if (currentUser?.id) {
+    console.log('tokenUtils에서 사용자 ID 가져옴:', currentUser.id);
+    return currentUser.id;
+  }
+
+  // 2. 직접 토큰 파싱 시도
+  const token = tokenUtils.getAccessToken();
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const userId = payload.sub || payload.userId || payload.id || payload.user_id;
+      if (userId) {
+        console.log('직접 토큰 파싱에서 사용자 ID 가져옴:', userId);
+        return userId;
+      }
+    } catch (err) {
+      console.error('토큰 파싱 실패:', err);
+    }
+  }
+
+  console.error('사용자 ID를 가져올 수 없음');
+  return null;
+};
+
 // 음식 상세 정보 로드
 const fetchFoodDetail = async (id) => {
   try {
@@ -315,7 +343,7 @@ const toggleFavorite = async () => {
   }
 };
 
-// 채팅하기 핸들러
+// 채팅하기 핸들러 - 완전 수정된 버전
 const handleStartChat = async () => {
   if (!tokenUtils.isLoggedIn()) {
     alert('로그인이 필요합니다.');
@@ -323,8 +351,18 @@ const handleStartChat = async () => {
     return;
   }
 
-  const currentUser = tokenUtils.getCurrentUser();
-  if (currentUser && String(currentUser.id) === String(food.value.sellerId)) {
+  // 현재 사용자 ID를 안전하게 가져오기
+  const currentUserId = getCurrentUserId();
+
+  if (!currentUserId) {
+    console.error('현재 사용자 ID를 가져올 수 없습니다.');
+    alert('사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
+    router.push('/login');
+    return;
+  }
+
+  // 본인 상품 확인
+  if (String(currentUserId) === String(food.value.sellerId)) {
     alert('본인의 상품입니다.');
     return;
   }
@@ -334,12 +372,12 @@ const handleStartChat = async () => {
 
     // 백엔드 채팅 시작 API 호출
     const chatStartRequest = {
-      chatContext: 'PRODUCT_TRADE', // ChatContext.PRODUCT_TRADE 사용
-      chatContextId: Number(food.value.id), // 상품 ID - Long 타입으로 변환
-      creatorId: Number(food.value.sellerId), // 판매자 ID (컨텍스트 생성자) - Long 타입으로 변환
+      chatContext: 'PRODUCT_TRADE',
+      chatContextId: Number(food.value.id),
+      creatorId: Number(food.value.id), // 게시물 ID로 수정
       participantIds: [
-        Number(currentUser.id), // 현재 사용자 (구매자) - Long 타입으로 변환
-        Number(food.value.sellerId) // 판매자 - Long 타입으로 변환
+        Number(currentUserId), // 현재 사용자 (구매자)
+        Number(food.value.sellerId) // 판매자
       ],
       deviceId: tokenUtils.getDeviceId() || 'web-browser'
     };
@@ -355,10 +393,9 @@ const handleStartChat = async () => {
       throw new Error('채팅방 정보가 올바르지 않습니다.');
     }
 
-    // 채팅 페이지로 이동 (roomId 전달)
+    // 채팅 페이지로 이동 - 경로 직접 사용
     await router.push({
-      name: 'ChatRoom',
-      params: { roomId: chatRoomData.roomId },
+      path: `/chat/rooms/${chatRoomData.roomId}`,
       query: {
         from: 'product',
         productId: food.value.id,
@@ -376,6 +413,10 @@ const handleStartChat = async () => {
       errorMessage = '채팅 권한이 없습니다.';
     } else if (error.response?.status >= 500) {
       errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    } else if (error.message && error.message.includes('No match')) {
+      errorMessage = '채팅 페이지를 찾을 수 없습니다. 라우터 설정을 확인해주세요.';
+    } else if (error.message) {
+      errorMessage = error.message;
     }
 
     alert(errorMessage);

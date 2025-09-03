@@ -27,13 +27,13 @@ const getStorage = () => {
  */
 export const setAccessToken = (token) => {
     if (!token) {
-        console.warn('⚠️ [Auth] 빈 Access Token을 저장하려고 시도했습니다.')
+        console.warn('빈 Access Token을 저장하려고 시도했습니다.')
         return
     }
 
     const cleanToken = token.replace('Bearer ', '').trim()
     getStorage().setItem(STORAGE_KEYS.ACCESS_TOKEN, cleanToken)
-    console.log('💾 [Auth] Access Token 저장 완료')
+    console.log('Access Token 저장 완료')
 }
 
 /**
@@ -49,13 +49,13 @@ export const getAccessToken = () => {
  */
 export const setRefreshToken = (token) => {
     if (!token) {
-        console.warn('⚠️ [Auth] 빈 Refresh Token을 저장하려고 시도했습니다.')
+        console.warn('빈 Refresh Token을 저장하려고 시도했습니다.')
         return
     }
 
     const cleanToken = token.replace('Bearer ', '').trim()
     getStorage().setItem(STORAGE_KEYS.REFRESH_TOKEN, cleanToken)
-    console.log('💾 [Auth] Refresh Token 저장 완료')
+    console.log('Refresh Token 저장 완료')
 }
 
 /**
@@ -72,7 +72,7 @@ export const getRefreshToken = () => {
 export const setTokens = (accessToken, refreshToken) => {
     if (accessToken) setAccessToken(accessToken)
     if (refreshToken) setRefreshToken(refreshToken)
-    console.log('💾 [Auth] 토큰 저장 완료 (Access + Refresh)')
+    console.log('토큰 저장 완료 (Access + Refresh)')
 }
 
 /**
@@ -81,7 +81,7 @@ export const setTokens = (accessToken, refreshToken) => {
 export const clearTokens = () => {
     getStorage().removeItem(STORAGE_KEYS.ACCESS_TOKEN)
     getStorage().removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-    console.log('🗑️ [Auth] 모든 토큰 삭제 완료')
+    console.log('모든 토큰 삭제 완료')
 }
 
 // ==================== 사용자 정보 관리 ====================
@@ -91,12 +91,12 @@ export const clearTokens = () => {
  */
 export const setUserInfo = (userInfo) => {
     if (!userInfo) {
-        console.warn('⚠️ [Auth] 빈 사용자 정보를 저장하려고 시도했습니다.')
+        console.warn('빈 사용자 정보를 저장하려고 시도했습니다.')
         return
     }
 
     getStorage().setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(userInfo))
-    console.log('💾 [Auth] 사용자 정보 저장 완료:', userInfo)
+    console.log('사용자 정보 저장 완료:', userInfo)
 }
 
 /**
@@ -110,17 +110,30 @@ export const getUserInfo = () => {
         const userInfo = JSON.parse(userInfoStr)
         return userInfo
     } catch (error) {
-        console.error('❌ [Auth] 사용자 정보 파싱 실패:', error)
+        console.error('사용자 정보 파싱 실패:', error)
         return null
     }
 }
 
 /**
- * 사용자 ID 조회
+ * 사용자 ID 조회 (개선된 버전)
  */
 export const getUserId = () => {
     const userInfo = getUserInfo()
-    return userInfo?.id || userInfo?.userId || null
+    if (userInfo?.id) return userInfo.id
+
+    // 토큰에서 직접 추출 시도
+    const token = getAccessToken()
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]))
+            return payload.sub || payload.userId || payload.id || payload.user_id || null
+        } catch (error) {
+            console.error('토큰에서 사용자 ID 추출 실패:', error)
+        }
+    }
+
+    return null
 }
 
 /**
@@ -136,7 +149,7 @@ export const getUserRole = () => {
  */
 export const clearUserInfo = () => {
     getStorage().removeItem(STORAGE_KEYS.USER_INFO)
-    console.log('🗑️ [Auth] 사용자 정보 삭제 완료')
+    console.log('사용자 정보 삭제 완료')
 }
 
 // ==================== 디바이스 관리 ====================
@@ -149,7 +162,7 @@ export const getDeviceId = () => {
     if (!deviceId) {
         deviceId = generateDeviceId()
         localStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId)
-        console.log('🆔 [Auth] 새 디바이스 ID 생성:', deviceId)
+        console.log('새 디바이스 ID 생성:', deviceId)
     }
     return deviceId
 }
@@ -182,7 +195,7 @@ export const parseJwtToken = (token) => {
         const payload = JSON.parse(atob(parts[1]))
         return payload
     } catch (error) {
-        console.error('❌ [Auth] JWT 토큰 파싱 실패:', error)
+        console.error('JWT 토큰 파싱 실패:', error)
         return null
     }
 }
@@ -282,13 +295,13 @@ export const hasRole = (role) => {
  * 완전 로그아웃 (모든 인증 정보 삭제)
  */
 export const logout = () => {
-    console.log('🚪 [Auth] 로그아웃 처리 중...')
+    console.log('로그아웃 처리 중...')
 
     clearTokens()
     clearUserInfo()
     // 디바이스 ID는 유지 (재로그인 시 같은 디바이스로 인식)
 
-    console.log('✅ [Auth] 로컬 로그아웃 완료')
+    console.log('로컬 로그아웃 완료')
 }
 
 /**
@@ -296,7 +309,7 @@ export const logout = () => {
  */
 export const logoutWithBackend = async () => {
     try {
-        console.log('🌐 [Auth] 백엔드 로그아웃 API 호출 중...')
+        console.log('백엔드 로그아웃 API 호출 중...')
 
         const authServerUrl = import.meta.env.DEV
             ? 'http://localhost:8081'
@@ -311,11 +324,11 @@ export const logoutWithBackend = async () => {
             credentials: 'include'
         })
 
-        console.log(`📡 [Auth] 로그아웃 응답 상태: ${response.status}`)
+        console.log(`로그아웃 응답 상태: ${response.status}`)
 
         if (response.ok) {
             const result = await response.json()
-            console.log('✅ [Auth] 백엔드 로그아웃 성공:', result.message)
+            console.log('백엔드 로그아웃 성공:', result.message)
 
             logout()
 
@@ -324,7 +337,7 @@ export const logoutWithBackend = async () => {
                 message: result.message || '로그아웃되었습니다'
             }
         } else {
-            console.warn('⚠️ [Auth] 백엔드 로그아웃 실패, 로컬 정리만 진행')
+            console.warn('백엔드 로그아웃 실패, 로컬 정리만 진행')
             logout()
 
             return {
@@ -335,7 +348,7 @@ export const logoutWithBackend = async () => {
         }
 
     } catch (error) {
-        console.error('❌ [Auth] 로그아웃 API 호출 중 오류:', error)
+        console.error('로그아웃 API 호출 중 오류:', error)
         logout()
 
         return {
@@ -351,7 +364,7 @@ export const logoutWithBackend = async () => {
  */
 export const forceLogoutAllDevices = async () => {
     try {
-        console.log('🔒 [Auth] 모든 기기에서 강제 로그아웃 요청...')
+        console.log('모든 기기에서 강제 로그아웃 요청...')
 
         const authServerUrl = import.meta.env.DEV
             ? 'http://localhost:8081'
@@ -368,7 +381,7 @@ export const forceLogoutAllDevices = async () => {
 
         if (response.ok) {
             const result = await response.json()
-            console.log('✅ [Auth] 모든 기기 로그아웃 성공')
+            console.log('모든 기기 로그아웃 성공')
 
             logout()
 
@@ -381,7 +394,7 @@ export const forceLogoutAllDevices = async () => {
         }
 
     } catch (error) {
-        console.error('❌ [Auth] 강제 로그아웃 실패:', error)
+        console.error('강제 로그아웃 실패:', error)
 
         // 실패해도 현재 기기는 로그아웃
         logout()
@@ -428,7 +441,7 @@ export const getApiHeaders = () => {
  * 인증 상태 디버깅
  */
 export const debugAuthStatus = () => {
-    console.group('🔍 [Auth] 인증 상태 디버깅')
+    console.group('인증 상태 디버깅')
 
     const accessToken = getAccessToken()
     const refreshToken = getRefreshToken()
@@ -476,7 +489,7 @@ export const debugAuthStatus = () => {
  * 저장소 정리 (개발용)
  */
 export const clearAllAuthData = () => {
-    console.log('🧹 [Auth] 모든 인증 데이터 삭제 중...')
+    console.log('모든 인증 데이터 삭제 중...')
 
     const storages = [localStorage, sessionStorage]
     const keys = Object.values(STORAGE_KEYS)
@@ -487,7 +500,7 @@ export const clearAllAuthData = () => {
         })
     })
 
-    console.log('✅ [Auth] 모든 인증 데이터 삭제 완료')
+    console.log('모든 인증 데이터 삭제 완료')
 }
 
 // ==================== 내보내기 ====================

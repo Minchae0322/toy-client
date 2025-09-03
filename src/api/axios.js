@@ -89,6 +89,7 @@ const handleLogout = () => {
     // 추가적인 사용자 데이터 제거
     localStorage.removeItem('user_profile')
     localStorage.removeItem('user_preferences')
+    localStorage.removeItem('user_info')
 
     // storage 이벤트 발생시켜서 App.vue에서 감지하도록
     window.dispatchEvent(new StorageEvent('storage', {
@@ -286,7 +287,7 @@ export const contentService = {
     updateOneMouth: (id, data) => contentApi.put(`/one-mouths/${id}`, data),
     deleteOneMouth: (id) => contentApi.delete(`/one-mouths/${id}`),
 
-    // 관심 상품 관련 (새로 추가)
+    // 관심 상품 관련
     toggleOneMouthFavorite: (id) => contentApi.post(`/one-mouths/${id}/favorite`),
     removeOneMouthFavorite: (id) => contentApi.delete(`/one-mouths/${id}/favorite`),
 
@@ -439,7 +440,7 @@ export const chatService = {
     leaveChatRoom: (roomId) => chatApi.delete(`/chat/rooms/${roomId}/leave`),
     inviteToRoom: (roomId, userIds) => chatApi.post(`/chat/rooms/${roomId}/invite`, { userIds }),
 
-    // 채팅 시작 API 추가
+    // 채팅 시작 API
     startChat: (data) => chatApi.post('/v1/chat/rooms/chat', data),
 
     // 메시지 관련
@@ -517,27 +518,52 @@ export const tokenUtils = {
     // 토큰 만료 확인
     isTokenExpired: (token) => isTokenExpired(token),
 
-    // 토큰에서 사용자 정보 추출
+    // 토큰에서 사용자 정보 추출 (수정된 버전)
     getUserFromToken: (token) => {
         if (!token) return null
 
         try {
             const payload = JSON.parse(atob(token.split('.')[1]))
             return {
-                id: payload.sub,
+                id: payload.sub || payload.userId || payload.id || payload.user_id,
                 email: payload.email,
-                roles: payload.roles || [],
-                exp: payload.exp
+                username: payload.username || payload.name,
+                roles: payload.roles || payload.authorities || [],
+                exp: payload.exp,
+                iat: payload.iat
             }
         } catch (error) {
+            console.error('토큰 파싱 실패:', error)
             return null
         }
     },
 
-    // 현재 사용자 정보 조회
+    // 현재 사용자 정보 조회 (개선된 버전)
     getCurrentUser: () => {
+        // 1. localStorage에서 저장된 사용자 정보 먼저 확인
+        const savedUserInfo = localStorage.getItem('user_info')
+        if (savedUserInfo) {
+            try {
+                const userInfo = JSON.parse(savedUserInfo)
+                if (userInfo?.id) {
+                    return userInfo
+                }
+            } catch (error) {
+                console.error('저장된 사용자 정보 파싱 실패:', error)
+            }
+        }
+
+        // 2. 토큰에서 사용자 정보 추출
         const token = localStorage.getItem('access_token')
-        return tokenUtils.getUserFromToken(token)
+        const userFromToken = tokenUtils.getUserFromToken(token)
+
+        if (userFromToken?.id) {
+            // 토큰에서 가져온 정보를 localStorage에 저장
+            localStorage.setItem('user_info', JSON.stringify(userFromToken))
+            return userFromToken
+        }
+
+        return null
     },
 
     // 디바이스 ID 관련 함수들
