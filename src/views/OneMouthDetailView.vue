@@ -196,7 +196,7 @@ const fetchFoodDetail = async (id) => {
     await fetchReviews();
 
   } catch (err) {
-    console.error('❌ 상세 정보 로드 실패:', err);
+    console.error('상세 정보 로드 실패:', err);
     error.value = err.response?.status === 404 ? '존재하지 않는 상품입니다.' : '상품 정보를 불러올 수 없습니다.';
   } finally {
     loading.value = false;
@@ -343,7 +343,7 @@ const toggleFavorite = async () => {
   }
 };
 
-// 채팅하기 핸들러 - 완전 수정된 버전
+// 채팅하기 핸들러 - 올바른 라우팅 적용
 const handleStartChat = async () => {
   if (!tokenUtils.isLoggedIn()) {
     alert('로그인이 필요합니다.');
@@ -374,10 +374,10 @@ const handleStartChat = async () => {
     const chatStartRequest = {
       chatContext: 'PRODUCT_TRADE',
       chatContextId: Number(food.value.id),
-      creatorId: Number(food.value.id), // 게시물 ID로 수정
+      creatorId: Number(food.value.id), // 게시물 ID 사용
       participantIds: [
-        Number(currentUserId), // 현재 사용자 (구매자)
-        Number(food.value.sellerId) // 판매자
+        Number(currentUserId),
+        Number(food.value.sellerId)
       ],
       deviceId: tokenUtils.getDeviceId() || 'web-browser'
     };
@@ -393,15 +393,25 @@ const handleStartChat = async () => {
       throw new Error('채팅방 정보가 올바르지 않습니다.');
     }
 
-    // 채팅 페이지로 이동 - 경로 직접 사용
+    // 라우터 설정에 맞는 채팅방으로 이동
     await router.push({
-      path: `/chat/rooms/${chatRoomData.roomId}`,
+      name: 'ChatWithRoom',
+      params: {
+        roomId: chatRoomData.roomId
+      },
       query: {
         from: 'product',
         productId: food.value.id,
-        productName: food.value.name
+        productName: food.value.name,
+        sellerId: food.value.sellerId,
+        sellerName: food.value.seller.name,
+        productPrice: food.value.price,
+        productImage: food.value.imageUrl,
+        productStatus: food.value.productStatus
       }
     });
+
+    console.log('채팅방으로 이동 완료:', chatRoomData.roomId);
 
   } catch (error) {
     console.error('채팅 시작 실패:', error);
@@ -413,8 +423,6 @@ const handleStartChat = async () => {
       errorMessage = '채팅 권한이 없습니다.';
     } else if (error.response?.status >= 500) {
       errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-    } else if (error.message && error.message.includes('No match')) {
-      errorMessage = '채팅 페이지를 찾을 수 없습니다. 라우터 설정을 확인해주세요.';
     } else if (error.message) {
       errorMessage = error.message;
     }

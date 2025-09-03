@@ -1,5 +1,12 @@
 <template>
   <div class="chat-detail-container">
+    <!-- 상품 정보 카드 (상품에서 온 경우만 표시) -->
+    <ProductInfoCard
+        v-if="productInfo.from === 'product' && productInfo.id"
+        :product="productInfo"
+        @view-product="viewProduct"
+    />
+
     <!-- 채팅방 헤더 -->
     <ChatHeader
         :room-info="roomInfo"
@@ -58,17 +65,23 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onUnmounted, nextTick, watch} from 'vue'
+import {ref, onMounted, onUnmounted, nextTick, watch, computed} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
 import {AlertCircle} from 'lucide-vue-next'
 import ChatHeader from '@/components/chat/detail/ChatHeader.vue'
 import MessagesArea from '@/components/chat/detail/MessagesArea.vue'
 import MessageInput from '@/components/chat/MessageInput.vue'
 import ChatRoomMenu from '@/components/chat/detail/ChatRoomMenu.vue'
+import ProductInfoCard from '@/components/chat/detail/ProductInfoCard.vue'
 import {chatApi} from '@/services/chatService.js'
 import {webSocketService} from '@/services/webSocketService.js'
 
-const props = defineProps(['roomId'])
+const props = defineProps(['roomId', 'initialRoomId'])
 const emit = defineEmits(['back-to-list', 'new-message'])
+
+// 라우터 관련
+const route = useRoute()
+const router = useRouter()
 
 // 반응형 데이터
 const messages = ref([])
@@ -106,6 +119,23 @@ const currentPage = ref(0)
 const hasMoreMessages = ref(true)
 const pageSize = 50
 
+// 상품 정보 (쿼리에서 추출)
+const productInfo = computed(() => ({
+  from: route.query.from || '',
+  id: route.query.productId || '',
+  name: route.query.productName || '',
+  sellerId: route.query.sellerId || '',
+  sellerName: route.query.sellerName || '',
+  price: Number(route.query.productPrice) || 0,
+  image: route.query.productImage || '',
+  status: route.query.productStatus || ''
+}))
+
+// 실제 roomId 계산 (props 또는 route에서)
+const actualRoomId = computed(() => {
+  return props.roomId || props.initialRoomId || route.params.roomId
+})
+
 // 현재 사용자 ID 가져오기
 const getCurrentUserId = () => {
   try {
@@ -113,7 +143,7 @@ const getCurrentUserId = () => {
     if (!token) return 1
 
     const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.userId || payload.sub || 1
+    return payload.userId || payload.sub || payload.id || payload.user_id || 1
   } catch (error) {
     console.warn('사용자 ID 추출 실패, 기본값 사용:', error)
     return 1
@@ -124,20 +154,24 @@ const getCurrentUserId = () => {
 const initializeChatRoom = async () => {
   try {
     loading.value = true
-    console.log('🏠 채팅방 초기화 시작:', props.roomId)
+    console.log('채팅방 초기화 시작:', actualRoomId.value)
+
+    if (!actualRoomId.value) {
+      throw new Error('채팅방 ID가 없습니다.')
+    }
 
     // WebSocket 연결
     if (!webSocketService.isConnected()) {
-      console.log('🔌 WebSocket 연결 시도...')
+      console.log('WebSocket 연결 시도...')
       try {
         connectionState.value.connecting = true
         await webSocketService.connect()
         connectionState.value.connected = true
         connectionState.value.connecting = false
         connectionState.value.status = 'connected'
-        console.log('✅ WebSocket 연결 완료')
+        console.log('WebSocket 연결 완료')
       } catch (error) {
-        console.error('❌ WebSocket 연결 실패:', error)
+        console.error('WebSocket 연결 실패:', error)
         connectionState.value.connecting = false
         connectionState.value.status = 'error'
         connectionState.value.error = error.message
@@ -146,45 +180,47 @@ const initializeChatRoom = async () => {
     }
 
     // 채팅방 구독
-    console.log('📡 채팅방 구독 시작:', props.roomId)
+    console.log('채팅방 구독 시작:', actualRoomId.value)
     try {
-      await webSocketService.subscribeToChatRoom(props.roomId, handleNewMessage)
-      console.log('✅ 채팅방 구독 완료:', props.roomId)
+      await webSocketService.subscribeToChatRoom(actualRoomId.value, handleNewMessage)
+      console.log('채팅방 구독 완료:', actualRoomId.value)
     } catch (error) {
-      console.error('❌ 채팅방 구독 오류:', error)
+      console.error('채팅방 구독 오류:', error)
       throw new Error('채팅방 구독에 실패했습니다')
     }
 
     // 채팅방 입장
     try {
-      await chatApi.joinRoom(props.roomId)
+      await chatApi.joinRoom(actualRoomId.value)
     } catch (error) {
-      console.warn('⚠️ 채팅방 입장 API 실패 (계속 진행):', error)
+      console.warn('채팅방 입장 API 실패 (계속 진행):', error)
     }
 
     // 데이터 로딩
-    console.log('📊 채팅방 데이터 로딩...')
+    console.log('채팅방 데이터 로딩...')
     try {
       const [roomDataResponse, messagesResponse] = await Promise.all([
-        chatApi.getRoomDetail(props.roomId).catch(error => {
-          console.warn('⚠️ 채팅방 정보 조회 실패, 기본값 사용:', error)
+        chatApi.getRoomDetail(actualRoomId.value).catch(error => {
+          console.warn('채팅방 정보 조회 실패, 기본값 사용:', error)
           return {
             success: true,
             data: {
-              title: `채팅방 ${props.roomId}`,
-              participantCount: 0,
-              roomId: props.roomId,
-              roomType: 'GROUP',
+              title: productInfo.value.name
+                  ? `${productInfo.value.name} 관련 채팅`
+                  : `채팅방 ${actualRoomId.value}`,
+              participantCount: 2,
+              roomId: actualRoomId.value,
+              roomType: 'NORMAL',
               status: 'ACTIVE'
             }
           }
         }),
-        chatApi.getMessages(props.roomId, {
+        chatApi.getMessages(actualRoomId.value, {
           page: 0,
           size: pageSize,
           sort: 'createdAt,desc'
         }).catch(error => {
-          console.warn('⚠️ 메시지 목록 조회 실패, 빈 목록 사용:', error)
+          console.warn('메시지 목록 조회 실패, 빈 목록 사용:', error)
           return {
             success: true,
             data: {
@@ -201,7 +237,7 @@ const initializeChatRoom = async () => {
       // 데이터 설정
       roomInfo.value = {
         title: roomDataResponse.data.title,
-        participantCount: roomDataResponse.data.participantCount || 0,
+        participantCount: roomDataResponse.data.participantCount || 2,
         roomId: roomDataResponse.data.roomId,
         description: roomDataResponse.data.description,
         roomType: roomDataResponse.data.roomType,
@@ -217,19 +253,19 @@ const initializeChatRoom = async () => {
       hasMoreMessages.value = !messagesPage.last
       currentPage.value = messagesPage.number || 0
 
-      console.log('✅ 채팅방 초기화 완료')
+      console.log('채팅방 초기화 완료')
 
       // 스크롤을 맨 아래로
       await nextTick()
       messagesContainer.value?.scrollToBottom()
 
     } catch (error) {
-      console.error('❌ 데이터 로딩 실패:', error)
+      console.error('데이터 로딩 실패:', error)
       throw error
     }
 
   } catch (error) {
-    console.error('❌ 채팅방 초기화 실패:', error)
+    console.error('채팅방 초기화 실패:', error)
 
     let errorMessage = '채팅방 접속에 실패했습니다.'
     if (error.message.includes('네트워크') || error.message.includes('Network')) {
@@ -261,7 +297,7 @@ const sendMessage = async (messageData) => {
     // 임시 메시지 생성
     const tempMessage = {
       messageId: `temp-${Date.now()}`,
-      roomId: props.roomId,
+      roomId: actualRoomId.value,
       senderId: currentUserId.value,
       senderName: '나',
       content: messageData.content,
@@ -275,14 +311,14 @@ const sendMessage = async (messageData) => {
     messagesContainer.value?.scrollToBottom()
 
     // WebSocket 전송
-    webSocketService.sendMessage(props.roomId, {
+    webSocketService.sendMessage(actualRoomId.value, {
       content: messageData.content,
       type: messageData.type || 'TEXT',
       metadata: messageData.metadata
     })
 
     // REST API 호출
-    const response = await chatApi.sendMessage(props.roomId, {
+    const response = await chatApi.sendMessage(actualRoomId.value, {
       content: messageData.content,
       type: messageData.type || 'TEXT',
       metadata: messageData.metadata
@@ -313,9 +349,9 @@ const sendMessage = async (messageData) => {
 
 // 새 메시지 처리
 const handleNewMessage = (message) => {
-  console.log('📨 새 채팅 메시지 수신:', message)
+  console.log('새 채팅 메시지 수신:', message)
 
-  if (message.senderId !== currentUserId.value && message.roomId === props.roomId) {
+  if (message.senderId !== currentUserId.value && message.roomId === actualRoomId.value) {
     const existingMessage = messages.value.find(m =>
         m.messageId === message.messageId ||
         (m.content === message.content && m.senderId === message.senderId &&
@@ -323,11 +359,11 @@ const handleNewMessage = (message) => {
     )
 
     if (existingMessage) {
-      console.log('⚠️ 중복 메시지 무시:', message.messageId)
+      console.log('중복 메시지 무시:', message.messageId)
       return
     }
 
-    console.log('✅ 새 메시지 추가:', message)
+    console.log('새 메시지 추가:', message)
     messages.value.push(message)
 
     nextTick(() => {
@@ -370,7 +406,7 @@ const fetchMessages = async (page = 0, append = false) => {
       params.lastMessageId = messages.value[0].messageId
     }
 
-    const response = await chatApi.getMessages(props.roomId, params)
+    const response = await chatApi.getMessages(actualRoomId.value, params)
     const messagesPage = response.data
     const newMessages = messagesPage.content.reverse()
 
@@ -428,6 +464,13 @@ const deleteMessage = (messageId) => {
   console.log('메시지 삭제:', messageId)
 }
 
+// 상품 보기 기능
+const viewProduct = () => {
+  if (productInfo.value.id) {
+    router.push(`/one-mouth/${productInfo.value.id}`)
+  }
+}
+
 // 채팅방 메뉴 기능들
 const showParticipants = () => {
   console.log('참여자 보기')
@@ -460,7 +503,7 @@ const reconnectWebSocket = async () => {
       connectionState.value.status = 'connected'
     }
 
-    await webSocketService.subscribeToChatRoom(props.roomId, handleNewMessage)
+    await webSocketService.subscribeToChatRoom(actualRoomId.value, handleNewMessage)
   } catch (error) {
     console.error('재연결 실패:', error)
     connectionState.value.connecting = false
@@ -472,13 +515,13 @@ const reconnectWebSocket = async () => {
 
 const leaveRoom = async () => {
   if (confirm('정말 채팅방을 나가시겠습니까?')) {
-    webSocketService.unsubscribeFromChatRoom(props.roomId)
-    console.log('🔴 채팅방 구독 해제:', props.roomId)
+    webSocketService.unsubscribeFromChatRoom(actualRoomId.value)
+    console.log('채팅방 구독 해제:', actualRoomId.value)
 
     try {
-      await chatApi.leaveRoom(props.roomId)
+      await chatApi.leaveRoom(actualRoomId.value)
     } catch (error) {
-      console.warn('⚠️ 채팅방 나가기 API 실패:', error)
+      console.warn('채팅방 나가기 API 실패:', error)
     }
 
     emit('back-to-list')
@@ -489,25 +532,28 @@ const leaveRoom = async () => {
 // 라이프사이클
 onMounted(async () => {
   currentUserId.value = getCurrentUserId()
-  console.log('👤 현재 사용자 ID:', currentUserId.value)
+  console.log('현재 사용자 ID:', currentUserId.value)
+  console.log('상품 정보:', productInfo.value)
   await initializeChatRoom()
 })
 
 onUnmounted(() => {
-  console.log('🔌 채팅방 컴포넌트 해제')
+  console.log('채팅방 컴포넌트 해제')
 
   if (typingTimer.value) {
     handleTypingStop()
   }
 
-  webSocketService.unsubscribeFromChatRoom(props.roomId)
-  console.log('🔴 채팅방 구독 해제:', props.roomId)
+  if (actualRoomId.value) {
+    webSocketService.unsubscribeFromChatRoom(actualRoomId.value)
+    console.log('채팅방 구독 해제:', actualRoomId.value)
+  }
 })
 
 // roomId 변경 감지
-watch(() => props.roomId, async (newRoomId, oldRoomId) => {
+watch(actualRoomId, async (newRoomId, oldRoomId) => {
   if (newRoomId && newRoomId !== oldRoomId) {
-    console.log('🔄 채팅방 변경:', oldRoomId, '=>', newRoomId)
+    console.log('채팅방 변경:', oldRoomId, '=>', newRoomId)
 
     if (typingTimer.value) {
       handleTypingStop()
@@ -515,7 +561,7 @@ watch(() => props.roomId, async (newRoomId, oldRoomId) => {
 
     if (oldRoomId) {
       webSocketService.unsubscribeFromChatRoom(oldRoomId)
-      console.log('🔴 이전 채팅방 구독 해제:', oldRoomId)
+      console.log('이전 채팅방 구독 해제:', oldRoomId)
     }
 
     messages.value = []
