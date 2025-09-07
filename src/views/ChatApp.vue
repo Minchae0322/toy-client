@@ -60,6 +60,7 @@ import {AlertCircle, X} from 'lucide-vue-next'
 import ChatRoomView from '@/views/ChatRoomView.vue'
 import ChatDetailView from '@/views/ChatDetailView.vue'
 import {webSocketService} from '@/services/webSocketService.js'
+import {tokenUtils} from '@/api/axios.js'
 
 // 상태 관리
 const selectedRoom = ref(null)
@@ -82,15 +83,25 @@ const showConnectionOverlay = computed(() =>
     connectionState.value.status === 'error'
 )
 
-// 사용자 ID 가져오기
+// 사용자 ID 가져오기 (안전한 방식)
 const getCurrentUserId = () => {
   try {
-    const token = localStorage.getItem('access_token')
-    if (!token) return null
+    // tokenUtils 사용
+    const user = tokenUtils.getCurrentUser()
+    if (user?.id) {
+      return user.id
+    }
 
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.userId || payload.sub
-  } catch {
+    // 직접 토큰 파싱
+    const token = tokenUtils.getAccessToken()
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.userId || payload.sub || payload.id || payload.user_id
+    }
+
+    return null
+  } catch (error) {
+    console.error('사용자 ID 추출 실패:', error)
     return null
   }
 }
@@ -409,31 +420,6 @@ window.addEventListener('beforeunload', () => {
   position: relative;
 }
 
-/* 디버그 패널 */
-.debug-panel {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  background: #1e293b;
-  color: #f1f5f9;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 12px;
-  z-index: 999;
-  border: 1px solid #334155;
-  min-width: 250px;
-}
-
-.debug-panel h4 {
-  margin-bottom: 8px;
-  color: #38bdf8;
-}
-
-.debug-panel p {
-  margin: 4px 0;
-  font-family: monospace;
-}
-
 /* 연결 상태 */
 .connection-status {
   position: fixed;
@@ -630,14 +616,6 @@ window.addEventListener('beforeunload', () => {
 
   .chat-content.connection-overlay {
     padding-top: 50px;
-  }
-
-  .debug-panel {
-    position: relative;
-    top: auto;
-    left: auto;
-    margin: 10px;
-    font-size: 11px;
   }
 }
 

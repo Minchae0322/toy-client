@@ -73,7 +73,7 @@ import MessagesArea from '@/components/chat/detail/MessagesArea.vue'
 import MessageInput from '@/components/chat/MessageInput.vue'
 import ChatRoomMenu from '@/components/chat/detail/ChatRoomMenu.vue'
 import ProductInfoCard from '@/components/chat/detail/ProductInfoCard.vue'
-import {chatApi} from '@/services/chatService.js'
+import {chatService} from '@/api/axios.js'
 import {webSocketService} from '@/services/webSocketService.js'
 
 const props = defineProps(['roomId', 'initialRoomId'])
@@ -117,7 +117,7 @@ const deviceInfo = ref({
 // 페이징 관련
 const currentPage = ref(0)
 const hasMoreMessages = ref(true)
-const pageSize = 50
+const pageSize = 20
 
 // 상품 정보 (쿼리에서 추출)
 const productInfo = computed(() => ({
@@ -147,6 +147,84 @@ const getCurrentUserId = () => {
   } catch (error) {
     console.warn('사용자 ID 추출 실패, 기본값 사용:', error)
     return 1
+  }
+}
+
+// 메시지 조회 함수 (백엔드 API 연동)
+const fetchMessages = async (lastMessageId = null, append = false) => {
+  try {
+    if (!append) loading.value = true
+    else loadingMore.value = true
+
+    // 백엔드 API 스펙에 맞는 파라미터 구성
+    const cursorPageRequest = {
+      size: pageSize,
+      lastMessageId: lastMessageId
+    }
+
+    console.log('메시지 조회 요청:', {
+      roomId: actualRoomId.value,
+      params: cursorPageRequest
+    })
+
+    // 백엔드 채팅 메시지 조회 API 호출
+    const response = await chatService.getChatMessages(actualRoomId.value, cursorPageRequest)
+
+    console.log('메시지 조회 응답:', response)
+
+    // API 응답 구조에 맞게 데이터 추출
+    const apiData = response.data?.data || response.data
+    const messagesList = Array.isArray(apiData) ? apiData : []
+
+    // 메시지 데이터 변환 (백엔드 응답을 프론트엔드 형식으로)
+    const transformedMessages = messagesList.map(msg => ({
+      messageId: msg.messageId || msg.id,
+      roomId: msg.roomId,
+      senderId: msg.senderId,
+      senderName: msg.senderName || msg.senderNickname || `사용자${msg.senderId}`,
+      content: msg.content,
+      type: msg.type || 'TEXT',
+      createdAt: msg.createdAt || msg.sentAt,
+      status: msg.status || 'SENT',
+      replyTo: msg.replyTo,
+      metadata: msg.metadata
+    }))
+
+    if (append) {
+      // 이전 메시지 추가 (역순으로 받아서 앞에 추가)
+      const previousScrollHeight = messagesContainer.value?.getScrollHeight() || 0
+      messages.value = [...transformedMessages.reverse(), ...messages.value]
+
+      await nextTick()
+      messagesContainer.value?.restoreScrollPosition(previousScrollHeight)
+    } else {
+      // 초기 로드 (최신 메시지부터 표시)
+      messages.value = transformedMessages.reverse()
+      await nextTick()
+      messagesContainer.value?.scrollToBottom()
+    }
+
+    // 더 가져올 메시지가 있는지 판단
+    hasMoreMessages.value = messagesList.length === pageSize
+
+  } catch (error) {
+    console.error('메시지 조회 실패:', error)
+
+    // 에러 상황에서 빈 메시지 표시하지 않고 재시도 옵션 제공
+    if (!append) {
+      const shouldRetry = confirm('메시지를 불러오는데 실패했습니다. 다시 시도하시겠습니까?')
+      if (shouldRetry) {
+        return fetchMessages(lastMessageId, append)
+      } else {
+        // 빈 메시지 목록으로 설정
+        messages.value = []
+      }
+    }
+
+    throw error
+  } finally {
+    if (append) loadingMore.value = false
+    else loading.value = false
   }
 }
 
@@ -189,80 +267,21 @@ const initializeChatRoom = async () => {
       throw new Error('채팅방 구독에 실패했습니다')
     }
 
-    // 채팅방 입장
-    try {
-      await chatApi.joinRoom(actualRoomId.value)
-    } catch (error) {
-      console.warn('채팅방 입장 API 실패 (계속 진행):', error)
+    // 채팅방 정보 설정
+    roomInfo.value = {
+      title: productInfo.value.name
+          ? `${productInfo.value.name} 관련 채팅`
+          : `채팅방 ${actualRoomId.value}`,
+      participantCount: 2,
+      roomId: actualRoomId.value,
+      roomType: 'NORMAL',
+      status: 'ACTIVE'
     }
 
-    // 데이터 로딩
-    console.log('채팅방 데이터 로딩...')
-    try {
-      const [roomDataResponse, messagesResponse] = await Promise.all([
-        chatApi.getRoomDetail(actualRoomId.value).catch(error => {
-          console.warn('채팅방 정보 조회 실패, 기본값 사용:', error)
-          return {
-            success: true,
-            data: {
-              title: productInfo.value.name
-                  ? `${productInfo.value.name} 관련 채팅`
-                  : `채팅방 ${actualRoomId.value}`,
-              participantCount: 2,
-              roomId: actualRoomId.value,
-              roomType: 'NORMAL',
-              status: 'ACTIVE'
-            }
-          }
-        }),
-        chatApi.getMessages(actualRoomId.value, {
-          page: 0,
-          size: pageSize,
-          sort: 'createdAt,desc'
-        }).catch(error => {
-          console.warn('메시지 목록 조회 실패, 빈 목록 사용:', error)
-          return {
-            success: true,
-            data: {
-              content: [],
-              last: true,
-              totalElements: 0,
-              size: pageSize,
-              number: 0
-            }
-          }
-        })
-      ])
+    // 메시지 로딩 (실제 백엔드 API 호출)
+    await fetchMessages(null, false)
 
-      // 데이터 설정
-      roomInfo.value = {
-        title: roomDataResponse.data.title,
-        participantCount: roomDataResponse.data.participantCount || 2,
-        roomId: roomDataResponse.data.roomId,
-        description: roomDataResponse.data.description,
-        roomType: roomDataResponse.data.roomType,
-        status: roomDataResponse.data.status
-      }
-
-      // 메시지 목록 설정
-      const messagesPage = messagesResponse.data
-      const messagesList = messagesPage.content || []
-      messages.value = messagesList.reverse()
-
-      // 페이징 정보 설정
-      hasMoreMessages.value = !messagesPage.last
-      currentPage.value = messagesPage.number || 0
-
-      console.log('채팅방 초기화 완료')
-
-      // 스크롤을 맨 아래로
-      await nextTick()
-      messagesContainer.value?.scrollToBottom()
-
-    } catch (error) {
-      console.error('데이터 로딩 실패:', error)
-      throw error
-    }
+    console.log('채팅방 초기화 완료, 메시지 수:', messages.value.length)
 
   } catch (error) {
     console.error('채팅방 초기화 실패:', error)
@@ -283,7 +302,7 @@ const initializeChatRoom = async () => {
   }
 }
 
-// 메시지 전송
+// 메시지 전송 (백엔드 API 연동)
 const sendMessage = async (messageData) => {
   if (!messageData.content?.trim() && !messageData.file) return
   if (!connectionState.value.connected) {
@@ -291,11 +310,13 @@ const sendMessage = async (messageData) => {
     return
   }
 
+  let tempMessage = null
+
   try {
     sending.value = true
 
     // 임시 메시지 생성
-    const tempMessage = {
+    tempMessage = {
       messageId: `temp-${Date.now()}`,
       roomId: actualRoomId.value,
       senderId: currentUserId.value,
@@ -310,38 +331,65 @@ const sendMessage = async (messageData) => {
     await nextTick()
     messagesContainer.value?.scrollToBottom()
 
-    // WebSocket 전송
-    webSocketService.sendMessage(actualRoomId.value, {
+    // 백엔드 채팅 메시지 전송 API 호출
+    const sendRequest = {
       content: messageData.content,
       type: messageData.type || 'TEXT',
-      metadata: messageData.metadata
-    })
+      replyToMessageId: messageData.replyToMessageId
+    }
 
-    // REST API 호출
-    const response = await chatApi.sendMessage(actualRoomId.value, {
-      content: messageData.content,
-      type: messageData.type || 'TEXT',
-      metadata: messageData.metadata
-    })
+    console.log('메시지 전송 요청:', sendRequest)
+
+    const response = await chatService.sendMessage(actualRoomId.value, sendRequest)
+
+    console.log('메시지 전송 완료:', response)
 
     // 임시 메시지를 실제 메시지로 교체
+    const sentMessage = response.data?.data || response.data
     const tempIndex = messages.value.findIndex(m => m.messageId === tempMessage.messageId)
+
     if (tempIndex !== -1) {
       messages.value[tempIndex] = {
-        ...response.data.message,
+        messageId: sentMessage.messageId || sentMessage.id,
+        roomId: sentMessage.roomId,
+        senderId: sentMessage.senderId,
+        senderName: sentMessage.senderName || sentMessage.senderNickname || '나',
+        content: sentMessage.content,
+        type: sentMessage.type || 'TEXT',
+        createdAt: sentMessage.createdAt || sentMessage.sentAt,
         status: 'SENT'
       }
     }
 
-    emit('new-message', response.data.message)
+    // WebSocket으로도 전송 (실시간 알림용)
+    if (webSocketService.isConnected()) {
+      webSocketService.sendMessage(actualRoomId.value, {
+        content: messageData.content,
+        type: messageData.type || 'TEXT',
+        metadata: messageData.metadata
+      })
+    }
+
+    emit('new-message', sentMessage)
 
   } catch (error) {
     console.error('메시지 전송 실패:', error)
-    const tempIndex = messages.value.findIndex(m => m.messageId === tempMessage.messageId)
-    if (tempIndex !== -1) {
-      messages.value[tempIndex].status = 'FAILED'
+
+    if (tempMessage) {
+      const tempIndex = messages.value.findIndex(m => m.messageId === tempMessage.messageId)
+      if (tempIndex !== -1) {
+        messages.value[tempIndex].status = 'FAILED'
+      }
     }
-    alert('메시지 전송에 실패했습니다')
+
+    let errorMessage = '메시지 전송에 실패했습니다.'
+    if (error.response?.status === 403) {
+      errorMessage = '메시지 전송 권한이 없습니다.'
+    } else if (error.response?.status === 404) {
+      errorMessage = '채팅방을 찾을 수 없습니다.'
+    }
+
+    alert(errorMessage)
   } finally {
     sending.value = false
   }
@@ -387,50 +435,8 @@ const handleScroll = () => {
 const loadMoreMessages = async () => {
   if (!hasMoreMessages.value || loadingMore.value) return
 
-  const nextPage = currentPage.value + 1
-  await fetchMessages(nextPage, true)
-}
-
-const fetchMessages = async (page = 0, append = false) => {
-  try {
-    if (page === 0) loading.value = true
-    else loadingMore.value = true
-
-    const params = {
-      page,
-      size: pageSize,
-      sort: 'createdAt,desc'
-    }
-
-    if (append && messages.value.length > 0) {
-      params.lastMessageId = messages.value[0].messageId
-    }
-
-    const response = await chatApi.getMessages(actualRoomId.value, params)
-    const messagesPage = response.data
-    const newMessages = messagesPage.content.reverse()
-
-    if (append) {
-      const previousScrollHeight = messagesContainer.value?.getScrollHeight() || 0
-      messages.value = [...newMessages, ...messages.value]
-
-      await nextTick()
-      messagesContainer.value?.restoreScrollPosition(previousScrollHeight)
-    } else {
-      messages.value = newMessages
-      await nextTick()
-      messagesContainer.value?.scrollToBottom()
-    }
-
-    hasMoreMessages.value = !messagesPage.last
-    currentPage.value = messagesPage.number
-
-  } catch (error) {
-    console.error('메시지 조회 실패:', error)
-    throw error
-  } finally {
-    if (page > 0) loadingMore.value = false
-  }
+  const lastMessageId = messages.value.length > 0 ? messages.value[0].messageId : null
+  await fetchMessages(lastMessageId, true)
 }
 
 // 타이핑 처리
@@ -519,7 +525,7 @@ const leaveRoom = async () => {
     console.log('채팅방 구독 해제:', actualRoomId.value)
 
     try {
-      await chatApi.leaveRoom(actualRoomId.value)
+      await chatService.leaveChatRoom(actualRoomId.value)
     } catch (error) {
       console.warn('채팅방 나가기 API 실패:', error)
     }

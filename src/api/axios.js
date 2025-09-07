@@ -39,13 +39,10 @@ const chatApi = axios.create({
     ...commonConfig
 })
 
-// 인증이 필요한 서비스들 (auth 제외)
-const protectedApis = [contentApi, userApi, chatApi]
-
 // ==================== 토큰 관리 함수들 ====================
 
 /**
- * 토큰 갱신 함수 (auth 서버에서만 처리)
+ * 토큰 갱신 함수
  */
 const refreshToken = async () => {
     try {
@@ -65,7 +62,6 @@ const refreshToken = async () => {
 
         const { accessToken, refreshToken: newRefreshToken } = response.data
 
-        // 새 토큰들 저장
         localStorage.setItem('access_token', accessToken)
         if (newRefreshToken) {
             localStorage.setItem('refresh_token', newRefreshToken)
@@ -82,22 +78,17 @@ const refreshToken = async () => {
  * 로그아웃 처리 함수
  */
 const handleLogout = () => {
-    // 모든 토큰 제거
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
-
-    // 추가적인 사용자 데이터 제거
     localStorage.removeItem('user_profile')
     localStorage.removeItem('user_preferences')
     localStorage.removeItem('user_info')
 
-    // storage 이벤트 발생시켜서 App.vue에서 감지하도록
     window.dispatchEvent(new StorageEvent('storage', {
         key: 'access_token',
         newValue: null
     }))
 
-    // 로그인 페이지로 리다이렉트
     window.location.href = '/login'
 }
 
@@ -118,17 +109,12 @@ const isTokenExpired = (token) => {
 
 // ==================== 인터셉터 설정 ====================
 
-/**
- * Auth API 인터셉터 (토큰 발급만 담당)
- */
+// Auth API 인터셉터
 authApi.interceptors.request.use(config => {
     const token = localStorage.getItem('access_token')
-
-    // 로그인/회원가입 요청이 아닌 경우에만 토큰 첨부
     if (token && !config.url?.includes('/auth/login') && !config.url?.includes('/auth/register')) {
         config.headers.Authorization = `Bearer ${token}`
     }
-
     return config
 }, error => {
     return Promise.reject(error)
@@ -144,69 +130,52 @@ authApi.interceptors.response.use(
     }
 )
 
-/**
- * 보호된 API들 인터셉터 (토큰 검증 및 자동 갱신)
- */
+// 보호된 API들 인터셉터
 const addProtectedApiInterceptor = (apiInstance) => {
-    // Request interceptor - access_token 자동 추가
-    apiInstance.interceptors.request.use(config => {
-        const token = localStorage.getItem('access_token')
-
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`
-        }
-
-        return config
-    }, error => {
-        return Promise.reject(error)
-    })
-
-    // Response interceptor - 401 시 토큰 갱신 시도
-    apiInstance.interceptors.response.use(
-        response => response,
-        async error => {
-            const originalRequest = error.config
-
-            if (
-                error.response?.status === 401 &&
-                !originalRequest._retry &&
-                localStorage.getItem('refresh_token')
-            ) {
-                originalRequest._retry = true
-
-                try {
-                    console.log('토큰 만료 감지, 갱신 시도 중...')
-
-                    // auth 서버에서 토큰 갱신
-                    const newToken = await refreshToken()
-
-                    console.log('토큰 갱신 성공')
-
-                    // 갱신된 토큰으로 원래 요청 재시도
-                    originalRequest.headers.Authorization = `Bearer ${newToken}`
-                    return apiInstance(originalRequest)
-                } catch (refreshError) {
-                    console.error('토큰 갱신 실패:', refreshError)
-                    handleLogout()
-                }
+        apiInstance.interceptors.request.use(config => {
+            const token = localStorage.getItem('access_token')
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`
             }
-
+            return config
+        }, error => {
             return Promise.reject(error)
-        }
-    )
-}
+        })
+
+        apiInstance.interceptors.response.use(
+            response => response,
+            async error => {
+                const originalRequest = error.config
+
+                if (
+                    error.response?.status === 401 &&
+                    !originalRequest._retry &&
+                    localStorage.getItem('refresh_token')
+                ) {
+                    originalRequest._retry = true
+
+                    try {
+                        const newToken = await refreshToken()
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`
+                        return apiInstance(originalRequest)
+                    } catch (refreshError) {
+                        handleLogout()
+                    }
+                }
+
+                return Promise.reject(error)
+            }
+        )
+    }
 
 // 보호된 API들에 인터셉터 적용
-protectedApis.forEach(api => addProtectedApiInterceptor(api))
+;[contentApi, userApi, chatApi].forEach(api => addProtectedApiInterceptor(api))
 
 // ==================== 개발 환경 로깅 ====================
 if (import.meta.env.DEV) {
     const addLoggingInterceptor = (apiInstance, serviceName) => {
         apiInstance.interceptors.request.use(config => {
             console.log(`📤 [${serviceName}] Request:`, config.method?.toUpperCase(), config.url)
-            if (config.data) {
-                console.log(`📤 [${serviceName}] Data:`, config.data)
-            }
             return config
         })
 
@@ -216,7 +185,7 @@ if (import.meta.env.DEV) {
                 return response
             },
             error => {
-                console.error(`❌ [${serviceName}] Error:`, error.response?.status, error.config?.url, error.response?.data)
+                console.error(`❌ [${serviceName}] Error:`, error.response?.status, error.config?.url)
                 return Promise.reject(error)
             }
         )
@@ -234,23 +203,12 @@ if (import.meta.env.DEV) {
  * 인증 관련 API 서비스
  */
 export const authService = {
-    // 인증 관련
     login: async (credentials) => {
-        try {
-            const response = await authApi.post('/auth/login', credentials)
-            return response
-        } catch (error) {
-            throw error
-        }
+        return await authApi.post('/auth/login', credentials)
     },
 
     register: async (userData) => {
-        try {
-            const response = await authApi.post('/auth/register', userData)
-            return response
-        } catch (error) {
-            throw error
-        }
+        return await authApi.post('/auth/register', userData)
     },
 
     logout: async () => {
@@ -267,12 +225,12 @@ export const authService = {
 
     verifyToken: () => authApi.get('/auth/verify'),
 
-    // 비밀번호 관련
     forgotPassword: (email) => authApi.post('/auth/forgot-password', { email }),
+
     resetPassword: (token, password) => authApi.post('/auth/reset-password', { token, password }),
 
-    // 이메일 인증
     verifyEmail: (token) => authApi.post('/auth/verify-email', { token }),
+
     resendVerification: (email) => authApi.post('/auth/resend-verification', { email })
 }
 
@@ -280,83 +238,47 @@ export const authService = {
  * 컨텐츠 관련 API 서비스
  */
 export const contentService = {
-    // 한입 거리 관련
     getOneMouths: (params = {}) => contentApi.get('/one-mouths', { params }),
     getOneMouthDetail: (id) => contentApi.get(`/one-mouths/${id}`),
     createOneMouth: (data) => contentApi.post('/one-mouths', data),
     updateOneMouth: (id, data) => contentApi.put(`/one-mouths/${id}`, data),
     deleteOneMouth: (id) => contentApi.delete(`/one-mouths/${id}`),
 
-    // 관심 상품 관련
     toggleOneMouthFavorite: (id) => contentApi.post(`/one-mouths/${id}/favorite`),
     removeOneMouthFavorite: (id) => contentApi.delete(`/one-mouths/${id}/favorite`),
 
-    // 밈/짤 관련
     getMemes: (params = {}) => contentApi.get('/memes', { params }),
     getMemeDetail: (id) => contentApi.get(`/memes/${id}`),
     createMeme: (data) => contentApi.post('/memes', data),
     updateMeme: (id, data) => contentApi.put(`/memes/${id}`, data),
     deleteMeme: (id) => contentApi.delete(`/memes/${id}`),
 
-    // 카테고리 관련
     getCategoriesPages: (pageable = {}, condition = {}) =>
         contentApi.get('/categories', { params: { ...pageable, ...condition } }),
 
     getCategories: (condition = {}) =>
         contentApi.get('/categories/list', { params: condition }),
 
-    getCategoryDetail: (categoryId) =>
-        contentApi.get(`/categories/${categoryId}`),
+    getCategoryDetail: (categoryId) => contentApi.get(`/categories/${categoryId}`),
+    createCategory: (data) => contentApi.post('/categories', data),
+    updateCategory: (categoryId, data) => contentApi.put(`/categories/${categoryId}`, data),
+    deleteCategory: (categoryId) => contentApi.delete(`/categories/${categoryId}`),
 
-    createCategory: (data) =>
-        contentApi.post('/categories', data),
+    likeContent: (contentId, type) => contentApi.post(`/${type}/${contentId}/like`),
+    unlikeContent: (contentId, type) => contentApi.delete(`/${type}/${contentId}/like`),
 
-    updateCategory: (categoryId, data) =>
-        contentApi.put(`/categories/${categoryId}`, data),
-
-    deleteCategory: (categoryId) =>
-        contentApi.delete(`/categories/${categoryId}`),
-
-    toggleCategoryStatus: (categoryId) =>
-        contentApi.patch(`/categories/${categoryId}/toggle-status`),
-
-    reorderCategory: (categoryId, targetPosition) =>
-        contentApi.put(`/categories/${categoryId}/reorder`, { targetPosition }),
-
-    getCategoryStats: () =>
-        contentApi.get('/categories/stats'),
-
-    // 좋아요/북마크 관련
-    likeContent: (contentId, type) =>
-        contentApi.post(`/${type}/${contentId}/like`),
-
-    unlikeContent: (contentId, type) =>
-        contentApi.delete(`/${type}/${contentId}/like`),
-
-    bookmarkContent: (contentId, type) =>
-        contentApi.post(`/${type}/${contentId}/bookmark`),
-
-    unbookmarkContent: (contentId, type) =>
-        contentApi.delete(`/${type}/${contentId}/bookmark`),
-
-    // 댓글 관련
     getComments: (contentId, type, params = {}) =>
         contentApi.get(`/${type}/${contentId}/comments`, { params }),
 
     createComment: (contentId, type, data) =>
         contentApi.post(`/${type}/${contentId}/comments`, data),
 
-    updateComment: (commentId, data) =>
-        contentApi.put(`/comments/${commentId}`, data),
+    updateComment: (commentId, data) => contentApi.put(`/comments/${commentId}`, data),
+    deleteComment: (commentId) => contentApi.delete(`/comments/${commentId}`),
 
-    deleteComment: (commentId) =>
-        contentApi.delete(`/comments/${commentId}`),
-
-    // 신고 관련
     reportContent: (contentId, type, reason) =>
         contentApi.post(`/${type}/${contentId}/report`, { reason }),
 
-    // 검색 관련
     searchContent: (query, filters = {}) =>
         contentApi.get('/search', { params: { query, ...filters } })
 }
@@ -365,160 +287,130 @@ export const contentService = {
  * 사용자 관련 API 서비스
  */
 export const userService = {
-    // 프로필 관련
     getProfile: () => userApi.get('/users/profile'),
     updateProfile: (data) => userApi.put('/users/profile', data),
     deleteAccount: () => userApi.delete('/users/profile'),
-    uploadAvatar: (formData) => userApi.post('/users/profile/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    }),
 
-    // 사용자 활동
-    getUserPosts: (userId, params = {}) =>
-        userApi.get(`/users/${userId}/posts`, { params }),
+    getUserPosts: (userId, params = {}) => userApi.get(`/users/${userId}/posts`, { params }),
+    getUserLikes: (userId, params = {}) => userApi.get(`/users/${userId}/likes`, { params }),
+    getUserBookmarks: (params = {}) => userApi.get('/users/bookmarks', { params }),
 
-    getUserLikes: (userId, params = {}) =>
-        userApi.get(`/users/${userId}/likes`, { params }),
-
-    getUserBookmarks: (params = {}) =>
-        userApi.get('/users/bookmarks', { params }),
-
-    getUserComments: (userId, params = {}) =>
-        userApi.get(`/users/${userId}/comments`, { params }),
-
-    // 팔로우 시스템
     followUser: (userId) => userApi.post(`/users/${userId}/follow`),
     unfollowUser: (userId) => userApi.delete(`/users/${userId}/follow`),
-    getFollowers: (userId, params = {}) =>
-        userApi.get(`/users/${userId}/followers`, { params }),
 
-    getFollowing: (userId, params = {}) =>
-        userApi.get(`/users/${userId}/following`, { params }),
-
-    checkFollowStatus: (userId) =>
-        userApi.get(`/users/${userId}/follow/status`),
-
-    // 알림 관련
-    getNotifications: (params = {}) =>
-        userApi.get('/users/notifications', { params }),
-
+    getNotifications: (params = {}) => userApi.get('/users/notifications', { params }),
     markNotificationAsRead: (notificationId) =>
         userApi.patch(`/users/notifications/${notificationId}/read`),
 
-    markAllNotificationsAsRead: () =>
-        userApi.patch('/users/notifications/read-all'),
-
-    getUnreadNotificationCount: () =>
-        userApi.get('/users/notifications/unread-count'),
-
-    // 알림 설정
-    getNotificationSettings: () =>
-        userApi.get('/users/notification-settings'),
-
-    updateNotificationSettings: (settings) =>
-        userApi.put('/users/notification-settings', settings),
-
-    // 사용자 검색
     searchUsers: (query, params = {}) =>
         userApi.get('/users/search', { params: { query, ...params } }),
 
-    // 차단 관련
     blockUser: (userId) => userApi.post(`/users/${userId}/block`),
-    unblockUser: (userId) => userApi.delete(`/users/${userId}/block`),
-    getBlockedUsers: (params = {}) => userApi.get('/users/blocked', { params })
+    unblockUser: (userId) => userApi.delete(`/users/${userId}/block`)
 }
 
 /**
  * 채팅 관련 API 서비스
  */
 export const chatService = {
-    // 채팅방 관련
     getChatRooms: (params = {}) => chatApi.get('/v1/chat/rooms', { params }),
     getChatRoom: (roomId) => chatApi.get(`/v1/chat/rooms/${roomId}`),
     createChatRoom: (data) => chatApi.post('/v1/chat/rooms', data),
-    updateChatRoom: (roomId, data) => chatApi.put(`/v1/chat/rooms/${roomId}`, data),
-    leaveChatRoom: (roomId) => chatApi.delete(`/chat/rooms/${roomId}/leave`),
-    inviteToRoom: (roomId, userIds) => chatApi.post(`/chat/rooms/${roomId}/invite`, { userIds }),
+    leaveChatRoom: (roomId) => chatApi.delete(`/v1/chat/rooms/${roomId}/leave`),
 
-    // 채팅 시작 API
-    startChat: (data) => chatApi.post('/v1/chat/rooms/chat', data),
+    startChat: (data) => {
+        console.log('채팅 시작 API 호출:', data)
+        return chatApi.post('/v1/chat/rooms/chat', data)
+    },
 
-    // 메시지 관련
-    getChatMessages: (roomId, params = {}) =>
-        chatApi.get(`/v1/chat/rooms/${roomId}/messages`, { params }),
+    getChatMessages: (roomId, params = {}) => {
+        console.log('메시지 조회 API 호출:', { roomId, params })
 
-    sendMessage: (roomId, message) =>
-        chatApi.post(`/v1/chat/rooms/${roomId}/messages`, message),
+        const queryParams = {}
+        if (params.size) queryParams.size = params.size
+        if (params.lastMessageId) queryParams.lastMessageId = params.lastMessageId
 
-    updateMessage: (roomId, messageId, data) =>
-        chatApi.put(`/v1/chat/rooms/${roomId}/messages/${messageId}`, data),
+        return chatApi.get(`/v1/chat/rooms/${roomId}/messages`, { params: queryParams })
+    },
 
-    deleteMessage: (roomId, messageId) =>
-        chatApi.delete(`/v1/chat/rooms/${roomId}/messages/${messageId}`),
+    sendMessage: (roomId, message) => {
+        console.log('메시지 전송 API 호출:', { roomId, message })
 
-    // 파일 업로드
+        const sendRequest = {
+            content: message.content,
+            type: message.type || 'TEXT',
+            replyToMessageId: message.replyToMessageId || null
+        }
+
+        return chatApi.post(`/v1/chat/rooms/${roomId}/messages`, sendRequest)
+    },
+
     uploadFile: (roomId, formData) =>
         chatApi.post(`/v1/chat/rooms/${roomId}/upload`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         }),
 
-    // 읽음 처리
     markAsRead: (roomId) => chatApi.post(`/v1/chat/rooms/${roomId}/read`),
-    getUnreadCount: () => chatApi.get('/chat/unread-count'),
-    getRoomUnreadCount: (roomId) => chatApi.get(`/v1/chat/rooms/${roomId}/unread-count`),
+    getUnreadCount: () => chatApi.get('/v1/chat/unread-count'),
 
-    // 채팅 설정
-    updateChatSettings: (settings) => chatApi.put('/chat/settings', settings),
-    getChatSettings: () => chatApi.get('/chat/settings'),
+    joinRoom: (roomId) => {
+        console.log('채팅방 입장 API 호출:', roomId)
+        return chatApi.post(`/v1/chat/rooms/${roomId}/join`)
+    },
 
-    // 온라인 상태
-    updateOnlineStatus: (status) => chatApi.patch('/chat/online-status', { status }),
-    getRoomMembers: (roomId) => chatApi.get(`/v1/chat/rooms/${roomId}/members`)
+    leaveRoom: (roomId) => {
+        console.log('채팅방 퇴장 API 호출:', roomId)
+        return chatApi.post(`/v1/chat/rooms/${roomId}/leave`)
+    },
+
+    getRoomDetail: (roomId) => {
+        console.log('채팅방 상세 정보 API 호출:', roomId)
+        return chatApi.get(`/v1/chat/rooms/${roomId}/detail`)
+    },
+
+    testConnection: async () => {
+        try {
+            const response = await chatApi.get('/v1/chat/health')
+            return response.status === 200
+        } catch (error) {
+            console.error('채팅 API 연결 테스트 실패:', error)
+            return false
+        }
+    }
 }
 
 // ==================== 토큰 관련 유틸리티 ====================
 
-/**
- * 토큰 관련 유틸리티 함수들
- */
 export const tokenUtils = {
-    // 토큰 조회
     getAccessToken: () => localStorage.getItem('access_token'),
     getRefreshToken: () => localStorage.getItem('refresh_token'),
 
-    // 토큰 설정
     setTokens: (accessToken, refreshToken) => {
         localStorage.setItem('access_token', accessToken)
         if (refreshToken) {
             localStorage.setItem('refresh_token', refreshToken)
         }
 
-        // 토큰 설정 시 이벤트 발생
         window.dispatchEvent(new StorageEvent('storage', {
             key: 'access_token',
             newValue: accessToken
         }))
     },
 
-    // 토큰 삭제
     clearTokens: () => {
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
 
-        // 토큰 삭제 시 이벤트 발생
         window.dispatchEvent(new StorageEvent('storage', {
             key: 'access_token',
             newValue: null
         }))
     },
 
-    // 로그인 상태 확인
     isLoggedIn: () => !!localStorage.getItem('access_token'),
 
-    // 토큰 만료 확인
     isTokenExpired: (token) => isTokenExpired(token),
 
-    // 토큰에서 사용자 정보 추출 (수정된 버전)
     getUserFromToken: (token) => {
         if (!token) return null
 
@@ -538,9 +430,7 @@ export const tokenUtils = {
         }
     },
 
-    // 현재 사용자 정보 조회 (개선된 버전)
     getCurrentUser: () => {
-        // 1. localStorage에서 저장된 사용자 정보 먼저 확인
         const savedUserInfo = localStorage.getItem('user_info')
         if (savedUserInfo) {
             try {
@@ -553,12 +443,10 @@ export const tokenUtils = {
             }
         }
 
-        // 2. 토큰에서 사용자 정보 추출
         const token = localStorage.getItem('access_token')
         const userFromToken = tokenUtils.getUserFromToken(token)
 
         if (userFromToken?.id) {
-            // 토큰에서 가져온 정보를 localStorage에 저장
             localStorage.setItem('user_info', JSON.stringify(userFromToken))
             return userFromToken
         }
@@ -566,7 +454,6 @@ export const tokenUtils = {
         return null
     },
 
-    // 디바이스 ID 관련 함수들
     getDeviceId: () => {
         let deviceId = localStorage.getItem('device_id')
         if (!deviceId) {
@@ -580,7 +467,6 @@ export const tokenUtils = {
         localStorage.setItem('device_id', deviceId)
     },
 
-    // 사용자 ID 추출 (WebSocket에서 사용)
     getUserId: () => {
         const user = tokenUtils.getCurrentUser()
         return user ? user.id : null
@@ -589,11 +475,7 @@ export const tokenUtils = {
 
 // ==================== 에러 처리 유틸리티 ====================
 
-/**
- * API 에러 처리 유틸리티
- */
 export const errorUtils = {
-    // 에러 메시지 추출
     getErrorMessage: (error) => {
         if (error.response?.data?.message) {
             return error.response.data.message
@@ -607,16 +489,13 @@ export const errorUtils = {
         return '알 수 없는 오류가 발생했습니다.'
     },
 
-    // 에러 상태 코드 확인
     isUnauthorized: (error) => error.response?.status === 401,
     isForbidden: (error) => error.response?.status === 403,
     isNotFound: (error) => error.response?.status === 404,
     isServerError: (error) => error.response?.status >= 500,
 
-    // 네트워크 에러 확인
     isNetworkError: (error) => !error.response && error.request,
 
-    // 에러 로깅
     logError: (error, context = '') => {
         console.error(`[API Error] ${context}:`, {
             message: errorUtils.getErrorMessage(error),
@@ -630,11 +509,8 @@ export const errorUtils = {
 
 // ==================== 기본 Export ====================
 
-// 기본 export (기존 코드 호환성을 위해)
 export default authApi
 
-// 모든 API 인스턴스들 export
 export { authApi, contentApi, userApi, chatApi }
 
-// 추가 유틸리티 export
 export { handleLogout, refreshToken, isTokenExpired }

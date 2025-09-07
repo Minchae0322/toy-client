@@ -343,7 +343,7 @@ const toggleFavorite = async () => {
   }
 };
 
-// 채팅하기 핸들러 - 올바른 라우팅 적용
+// 채팅하기 핸들러 - 백엔드 API 완전 연동
 const handleStartChat = async () => {
   if (!tokenUtils.isLoggedIn()) {
     alert('로그인이 필요합니다.');
@@ -374,7 +374,7 @@ const handleStartChat = async () => {
     const chatStartRequest = {
       chatContext: 'PRODUCT_TRADE',
       chatContextId: Number(food.value.id),
-      creatorId: Number(food.value.id), // 게시물 ID 사용
+      creatorId: Number(food.value.id),
       participantIds: [
         Number(currentUserId),
         Number(food.value.sellerId)
