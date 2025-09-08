@@ -313,24 +313,33 @@ export const userService = {
  * 채팅 관련 API 서비스
  */
 export const chatService = {
+    // 채팅방 관련
     getChatRooms: (params = {}) => chatApi.get('/v1/chat/rooms', { params }),
     getChatRoom: (roomId) => chatApi.get(`/v1/chat/rooms/${roomId}`),
     createChatRoom: (data) => chatApi.post('/v1/chat/rooms', data),
     leaveChatRoom: (roomId) => chatApi.delete(`/v1/chat/rooms/${roomId}/leave`),
 
+    // 채팅 시작 (한입만에서 채팅하기 클릭시)
     startChat: (data) => {
         console.log('채팅 시작 API 호출:', data)
         return chatApi.post('/v1/chat/rooms/chat', data)
     },
 
-    getChatMessages: (roomId, params = {}) => {
-        console.log('메시지 조회 API 호출:', { roomId, params })
+    // 채팅방 상세 정보
+    getChatRoomDetail: (roomId) => {
+        console.log('채팅방 상세 정보 API 호출:', roomId)
+        return chatApi.get(`/v1/chat/rooms/${roomId}`)
+    },
 
-        const queryParams = {}
-        if (params.size) queryParams.size = params.size
-        if (params.lastMessageId) queryParams.lastMessageId = params.lastMessageId
+    // 메시지 관련
+    getChatMessages: (roomId, cursorPageRequest = {}) => {
+        console.log('메시지 조회 API 호출:', { roomId, cursorPageRequest })
 
-        return chatApi.get(`/v1/chat/rooms/${roomId}/messages`, { params: queryParams })
+        const params = {}
+        if (cursorPageRequest.size) params.size = cursorPageRequest.size
+        if (cursorPageRequest.lastMessageId) params.lastMessageId = cursorPageRequest.lastMessageId
+
+        return chatApi.get(`/v1/chat/rooms/${roomId}/messages`, { params })
     },
 
     sendMessage: (roomId, message) => {
@@ -361,11 +370,6 @@ export const chatService = {
     leaveRoom: (roomId) => {
         console.log('채팅방 퇴장 API 호출:', roomId)
         return chatApi.post(`/v1/chat/rooms/${roomId}/leave`)
-    },
-
-    getRoomDetail: (roomId) => {
-        console.log('채팅방 상세 정보 API 호출:', roomId)
-        return chatApi.get(`/v1/chat/rooms/${roomId}/detail`)
     },
 
     testConnection: async () => {

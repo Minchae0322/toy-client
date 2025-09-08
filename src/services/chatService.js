@@ -77,6 +77,47 @@ class ChatService {
   // ==================== 채팅방 API ====================
 
   /**
+   * 채팅 시작 (한입만 상세에서 채팅하기 클릭시)
+   */
+  async startChat(chatData) {
+    const url = `${this.baseURL}/v1/chat/rooms/chat`
+
+    const requestData = {
+      chatContext: chatData.chatContext || 'PRODUCT_TRADE',
+      chatContextId: chatData.chatContextId,
+      creatorId: chatData.creatorId,
+      participantIds: chatData.participantIds,
+      deviceId: chatData.deviceId || authUtils.getDeviceId()
+    }
+
+    this.logRequest('POST', url, requestData)
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(requestData)
+      })
+
+      const apiResponse = await this.handleResponse(response)
+      this.logResponse('POST', url, apiResponse)
+
+      return {
+        success: apiResponse.success !== false,
+        data: apiResponse.data || apiResponse,
+        message: apiResponse.message || '채팅방이 성공적으로 생성되었습니다'
+      }
+
+    } catch (error) {
+      this.logResponse('POST', url, null, error)
+      if (error.status === 401) {
+        error.needsTokenRefresh = true
+      }
+      throw error
+    }
+  }
+
+  /**
    * 채팅방 목록 조회
    */
   async getChatRooms(searchCondition = {}) {
@@ -109,7 +150,6 @@ class ChatService {
     } catch (error) {
       this.logResponse('GET', url, null, error)
 
-      // 401 에러면 토큰 갱신 후 재시도 권장
       if (error.status === 401) {
         error.needsTokenRefresh = true
       }
@@ -257,21 +297,24 @@ class ChatService {
   // ==================== 메시지 API ====================
 
   /**
-   * 메시지 목록 조회
+   * 메시지 목록 조회 (커서 기반 페이징)
    */
-  async getMessages(roomId, params = {}) {
+  async getChatMessages(roomId, cursorPageRequest = {}) {
     const url = `${this.baseURL}/v1/chat/rooms/${roomId}/messages`
-    this.logRequest('GET', url, params)
+    this.logRequest('GET', url, cursorPageRequest)
 
     try {
-      const queryParams = new URLSearchParams({
-        page: params.page || 0,
-        size: params.size || 50,
-        sort: params.sort || 'createdAt,desc'
-      })
+      const queryParams = new URLSearchParams()
 
-      if (params.lastMessageId) {
-        queryParams.append('lastMessageId', params.lastMessageId)
+      // 백엔드 API 스펙에 맞는 파라미터 설정
+      if (cursorPageRequest.size) {
+        queryParams.append('size', cursorPageRequest.size.toString())
+      } else {
+        queryParams.append('size', '20') // 기본값
+      }
+
+      if (cursorPageRequest.lastMessageId) {
+        queryParams.append('lastMessageId', cursorPageRequest.lastMessageId)
       }
 
       const requestUrl = `${url}?${queryParams}`
@@ -285,7 +328,7 @@ class ChatService {
 
       return {
         success: apiResponse.success !== false,
-        data: apiResponse.data || apiResponse,
+        data: apiResponse.data || [],
         message: apiResponse.message || 'success'
       }
 
@@ -306,6 +349,7 @@ class ChatService {
     const requestData = {
       content: messageData.content,
       type: messageData.type || 'TEXT',
+      replyToMessageId: messageData.replyToMessageId || null,
       metadata: messageData.metadata || null,
       deviceId: authUtils.getDeviceId(),
       timestamp: new Date().toISOString()
@@ -374,88 +418,6 @@ class ChatService {
     return false
   }
 
-  // ==================== 샘플 데이터 ====================
-
-  /**
-   * 샘플 채팅방 데이터 생성
-   */
-  getSampleChatRooms() {
-    return {
-      success: true,
-      data: [
-        {
-          roomId: '1',
-          title: '개발팀 프로젝트',
-          roomType: 'CHANNEL',
-          participantCount: 8,
-          lastMessage: '내일 회의 시간 확정했습니다',
-          lastMessageType: 'TEXT',
-          lastMessageAt: new Date(Date.now() - 300000).toISOString(),
-          unreadCount: 3,
-          thumbnailUrl: null,
-          status: 'ACTIVE'
-        },
-        {
-          roomId: '2',
-          title: '이지수',
-          roomType: 'NORMAL',
-          participantCount: 2,
-          lastMessage: '점심 뭐 먹을까요?',
-          lastMessageType: 'TEXT',
-          lastMessageAt: new Date(Date.now() - 600000).toISOString(),
-          unreadCount: 1,
-          thumbnailUrl: 'https://via.placeholder.com/48/FF6B6B/FFFFFF?text=이',
-          status: 'ACTIVE'
-        },
-        {
-          roomId: '3',
-          title: '고객지원',
-          roomType: 'CUSTOMER_SUPPORT',
-          participantCount: 2,
-          lastMessage: '문의사항이 있으시면 언제든 연락주세요',
-          lastMessageType: 'TEXT',
-          lastMessageAt: new Date(Date.now() - 7200000).toISOString(),
-          unreadCount: 0,
-          thumbnailUrl: null,
-          status: 'ACTIVE'
-        }
-      ],
-      message: 'sample data'
-    }
-  }
-
-  /**
-   * 샘플 메시지 데이터 생성
-   */
-  getSampleMessages(roomId) {
-    const currentUserId = authUtils.getUserId() || '1'
-
-    return [
-      {
-        messageId: `sample-1-${roomId}`,
-        roomId: roomId,
-        senderId: currentUserId === '1' ? '2' : '1',
-        senderName: currentUserId === '1' ? '상대방' : '나',
-        content: '안녕하세요! 잘 지내시나요?',
-        type: 'TEXT',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        readCount: 1,
-        metadata: null
-      },
-      {
-        messageId: `sample-2-${roomId}`,
-        roomId: roomId,
-        senderId: currentUserId,
-        senderName: '나',
-        content: '네, 안녕하세요! 저도 잘 지내고 있어요.',
-        type: 'TEXT',
-        createdAt: new Date(Date.now() - 3000000).toISOString(),
-        readCount: 1,
-        metadata: null
-      }
-    ]
-  }
-
   // ==================== 디버깅 ====================
 
   /**
@@ -510,21 +472,54 @@ export const chatRoomUtils = {
   },
 
   /**
+   * 백엔드 메시지 응답을 프론트엔드 형식으로 변환
+   */
+  transformMessageResponse(backendMessage) {
+    return {
+      messageId: backendMessage.messageId,
+      roomId: backendMessage.roomId,
+      senderId: backendMessage.senderId,
+      senderName: backendMessage.senderName || `사용자${backendMessage.senderId}`,
+      content: backendMessage.content,
+      type: backendMessage.messageType || backendMessage.type || 'TEXT',
+      createdAt: backendMessage.sentAt || backendMessage.createdAt,
+      status: 'SENT',
+      isRead: backendMessage.isRead || false,
+      replyTo: backendMessage.replyTo,
+      metadata: backendMessage.metadata
+    }
+  },
+
+  /**
    * 백엔드 응답을 프론트엔드 형식으로 변환
    */
   transformChatRoomResponse(backendRoom) {
+    // roomType이 enum 객체인 경우 처리
+    let roomTypeValue = 'NORMAL';
+    if (backendRoom.roomType) {
+      if (typeof backendRoom.roomType === 'string') {
+        roomTypeValue = backendRoom.roomType;
+      } else if (backendRoom.roomType.name) {
+        roomTypeValue = backendRoom.roomType.name;
+      } else if (backendRoom.roomType.toString) {
+        roomTypeValue = backendRoom.roomType.toString();
+      }
+    }
+
     return {
       id: backendRoom.roomId,
       name: backendRoom.title,
-      type: this.convertRoomType(backendRoom.roomType),
-      participantCount: backendRoom.participantCount,
+      type: chatRoomUtils.convertRoomType(roomTypeValue),
+      participantCount: backendRoom.participantCount || 2,
       lastMessage: backendRoom.lastMessage || '메시지가 없습니다',
       lastMessageSender: null,
       lastMessageType: backendRoom.lastMessageType ? backendRoom.lastMessageType.toLowerCase() : 'text',
       lastMessageAt: backendRoom.lastMessageAt ? new Date(backendRoom.lastMessageAt).getTime() : Date.now(),
       unreadCount: backendRoom.unreadCount || 0,
       status: backendRoom.status || 'ACTIVE',
-      avatar: backendRoom.thumbnailUrl
+      avatar: backendRoom.thumbnailUrl,
+      description: backendRoom.description,
+      createdAt: backendRoom.createdAt
     }
   },
 

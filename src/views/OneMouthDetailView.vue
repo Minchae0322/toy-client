@@ -58,9 +58,31 @@
         :food="food"
         :is-favorited="isFavorited"
         :chat-loading="chatLoading"
+        :chat-error="chatError"
         @toggle-favorite="toggleFavorite"
         @start-chat="handleStartChat"
+        @clear-chat-error="clearChatError"
     />
+
+    <!-- 채팅 로딩 오버레이 -->
+    <div v-if="chatLoading" class="chat-loading-overlay">
+      <div class="chat-loading-content">
+        <div class="spinner"></div>
+        <p>채팅방을 준비하는 중...</p>
+      </div>
+    </div>
+
+    <!-- 채팅 에러 모달 -->
+    <div v-if="chatError" class="chat-error-modal" @click="clearChatError">
+      <div class="chat-error-content" @click.stop>
+        <h3>채팅 연결 실패</h3>
+        <p>{{ chatError }}</p>
+        <div class="error-actions">
+          <button @click="clearChatError" class="cancel-btn">확인</button>
+          <button @click="retryStartChat" class="retry-btn">다시 시도</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -68,6 +90,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { contentService, tokenUtils, chatService } from '@/api/axios.js';
+import { getChatErrorMessage, debugChatInfo } from '@/utils/chatUtils.js';
 
 // 컴포넌트 imports
 import LoadingState from '@/components/oneMouth/detail/LoadingState.vue';
@@ -102,6 +125,7 @@ const isLiked = ref(false);
 const isFavorited = ref(false);
 const processing = ref(false);
 const chatLoading = ref(false);
+const chatError = ref('');
 
 // 리뷰 페이지네이션
 const reviewsPage = ref(0);
@@ -112,31 +136,40 @@ const foodId = computed(() => props.id || route.params.id);
 
 // 현재 사용자 정보 안전하게 가져오기
 const getCurrentUserId = () => {
-  // 1. tokenUtils에서 시도
-  const currentUser = tokenUtils.getCurrentUser();
-  if (currentUser?.id) {
-    console.log('tokenUtils에서 사용자 ID 가져옴:', currentUser.id);
-    return currentUser.id;
-  }
+  try {
+    // 1. tokenUtils에서 시도
+    const currentUser = tokenUtils.getCurrentUser();
+    if (currentUser?.id) {
+      console.log('tokenUtils에서 사용자 ID 가져옴:', currentUser.id);
+      return currentUser.id;
+    }
 
-  // 2. 직접 토큰 파싱 시도
-  const token = tokenUtils.getAccessToken();
-  if (token) {
-    try {
+    // 2. 직접 토큰 파싱 시도
+    const token = tokenUtils.getAccessToken();
+    if (token) {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const userId = payload.sub || payload.userId || payload.id || payload.user_id;
       if (userId) {
         console.log('직접 토큰 파싱에서 사용자 ID 가져옴:', userId);
         return userId;
       }
-    } catch (err) {
-      console.error('토큰 파싱 실패:', err);
     }
+  } catch (err) {
+    console.error('사용자 ID 추출 중 오류:', err);
   }
 
   console.error('사용자 ID를 가져올 수 없음');
   return null;
 };
+
+// 현재 사용자 체크
+const canStartChat = computed(() => {
+  const currentUserId = getCurrentUserId();
+  return currentUserId &&
+      food.value?.sellerId &&
+      String(currentUserId) !== String(food.value.sellerId) &&
+      food.value.productStatus === 'FOR_SALE';
+});
 
 // 음식 상세 정보 로드
 const fetchFoodDetail = async (id) => {
@@ -194,6 +227,14 @@ const fetchFoodDetail = async (id) => {
     }
 
     await fetchReviews();
+
+    // 디버깅 정보 출력
+    debugChatInfo('상품 정보 로드 완료', {
+      productId: food.value.id,
+      sellerId: food.value.sellerId,
+      currentUserId: getCurrentUserId(),
+      canStartChat: canStartChat.value
+    });
 
   } catch (err) {
     console.error('상세 정보 로드 실패:', err);
@@ -343,7 +384,7 @@ const toggleFavorite = async () => {
   }
 };
 
-// 채팅하기 핸들러 - 백엔드 API 완전 연동
+// 채팅하기 핸들러 - 기존 백엔드 API 스펙에 맞게 연동
 const handleStartChat = async () => {
   if (!tokenUtils.isLoggedIn()) {
     alert('로그인이 필요합니다.');
@@ -351,9 +392,7 @@ const handleStartChat = async () => {
     return;
   }
 
-  // 현재 사용자 ID를 안전하게 가져오기
   const currentUserId = getCurrentUserId();
-
   if (!currentUserId) {
     console.error('현재 사용자 ID를 가져올 수 없습니다.');
     alert('사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
@@ -361,16 +400,28 @@ const handleStartChat = async () => {
     return;
   }
 
-  // 본인 상품 확인
-  if (String(currentUserId) === String(food.value.sellerId)) {
-    alert('본인의 상품입니다.');
+  if (!canStartChat.value) {
+    if (String(currentUserId) === String(food.value.sellerId)) {
+      alert('본인의 상품입니다.');
+    } else if (food.value.productStatus !== 'FOR_SALE') {
+      alert('현재 거래할 수 없는 상품입니다.');
+    } else {
+      alert('채팅을 시작할 수 없습니다.');
+    }
     return;
   }
 
   try {
     chatLoading.value = true;
+    chatError.value = '';
 
-    // 백엔드 채팅 시작 API 호출
+    debugChatInfo('채팅 시작 요청', {
+      productId: food.value.id,
+      sellerId: food.value.sellerId,
+      currentUserId: currentUserId
+    });
+
+    // 백엔드 채팅 시작 API 호출 (기존 API 스펙에 맞게)
     const chatStartRequest = {
       chatContext: 'PRODUCT_TRADE',
       chatContextId: Number(food.value.id),
@@ -393,44 +444,43 @@ const handleStartChat = async () => {
       throw new Error('채팅방 정보가 올바르지 않습니다.');
     }
 
-    // 라우터 설정에 맞는 채팅방으로 이동
+    // 채팅방으로 이동 (상품 정보 포함)
+    const chatQuery = {
+      from: 'product',
+      productId: food.value.id,
+      productName: food.value.name,
+      sellerId: food.value.sellerId,
+      sellerName: food.value.seller.name,
+      productPrice: food.value.price,
+      productImage: food.value.imageUrl,
+      productStatus: food.value.productStatus
+    };
+
     await router.push({
       name: 'ChatWithRoom',
-      params: {
-        roomId: chatRoomData.roomId
-      },
-      query: {
-        from: 'product',
-        productId: food.value.id,
-        productName: food.value.name,
-        sellerId: food.value.sellerId,
-        sellerName: food.value.seller.name,
-        productPrice: food.value.price,
-        productImage: food.value.imageUrl,
-        productStatus: food.value.productStatus
-      }
+      params: { roomId: chatRoomData.roomId },
+      query: chatQuery
     });
 
     console.log('채팅방으로 이동 완료:', chatRoomData.roomId);
 
   } catch (error) {
     console.error('채팅 시작 실패:', error);
-
-    let errorMessage = '채팅 연결에 실패했습니다.';
-    if (error.response?.status === 404) {
-      errorMessage = '상품 정보를 찾을 수 없습니다.';
-    } else if (error.response?.status === 403) {
-      errorMessage = '채팅 권한이 없습니다.';
-    } else if (error.response?.status >= 500) {
-      errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
-    alert(errorMessage);
+    chatError.value = getChatErrorMessage(error);
   } finally {
     chatLoading.value = false;
   }
+};
+
+// 채팅 재시도
+const retryStartChat = () => {
+  clearChatError();
+  handleStartChat();
+};
+
+// 채팅 에러 제거
+const clearChatError = () => {
+  chatError.value = '';
 };
 
 const writeReview = () => {
@@ -487,6 +537,18 @@ watch(food, (newFood) => {
     document.title = `${newFood.name} - 한입거리`;
   }
 });
+
+// 개발용 디버깅
+if (import.meta.env.DEV) {
+  window.debugOneMouthDetail = {
+    food,
+    canStartChat,
+    handleStartChat,
+    getCurrentUserId,
+    chatLoading,
+    chatError
+  };
+}
 </script>
 
 <style scoped>
@@ -494,11 +556,170 @@ watch(food, (newFood) => {
   min-height: 100vh;
   background: #FFFFFF;
   padding-bottom: env(safe-area-inset-bottom);
+  position: relative;
 }
 
 .main-content {
   padding: 0;
   max-width: 600px;
   margin: 0 auto;
+}
+
+/* 채팅 로딩 오버레이 */
+.chat-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.chat-loading-content {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.chat-loading-content p {
+  margin: 0;
+  color: #374151;
+  font-size: 16px;
+}
+
+/* 채팅 에러 모달 */
+.chat-error-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.chat-error-content {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.chat-error-content h3 {
+  margin: 0 0 12px 0;
+  color: #dc2626;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.chat-error-content p {
+  margin: 0 0 20px 0;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancel-btn,
+.retry-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cancel-btn:hover {
+  background: #e5e7eb;
+}
+
+.retry-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.retry-btn:hover {
+  background: #2563eb;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .chat-loading-content {
+    margin: 20px;
+    padding: 24px;
+  }
+
+  .chat-error-content {
+    margin: 20px;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .detail-container {
+    background: #1f2937;
+  }
+
+  .chat-loading-content,
+  .chat-error-content {
+    background: #374151;
+    color: #f9fafb;
+  }
+
+  .chat-error-content h3 {
+    color: #fca5a5;
+  }
+
+  .spinner {
+    border-color: #4b5563;
+    border-top-color: #60a5fa;
+  }
+
+  .cancel-btn {
+    background: #4b5563;
+    color: #f9fafb;
+  }
+
+  .cancel-btn:hover {
+    background: #6b7280;
+  }
 }
 </style>
