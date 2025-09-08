@@ -300,7 +300,7 @@ class ChatService {
    * 메시지 목록 조회 (커서 기반 페이징)
    */
   async getChatMessages(roomId, cursorPageRequest = {}) {
-    const url = `${this.baseURL}/v1/chat/rooms/${roomId}/messages`
+    const url = `${this.baseURL}/chat/${roomId}/messages`  // 경로 수정
     this.logRequest('GET', url, cursorPageRequest)
 
     try {
@@ -345,7 +345,7 @@ class ChatService {
    * 메시지 전송 (HTTP API)
    */
   async sendMessage(roomId, messageData) {
-    const url = `${this.baseURL}/v1/chat/rooms/${roomId}/messages`
+    const url = `${this.baseURL}/chat/rooms/${roomId}/messages`  // 경로 수정
     const requestData = {
       content: messageData.content,
       type: messageData.type || 'TEXT',

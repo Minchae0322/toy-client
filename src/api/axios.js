@@ -339,7 +339,7 @@ export const chatService = {
         if (cursorPageRequest.size) params.size = cursorPageRequest.size
         if (cursorPageRequest.lastMessageId) params.lastMessageId = cursorPageRequest.lastMessageId
 
-        return chatApi.get(`/v1/chat/rooms/${roomId}/messages`, { params })
+        return chatApi.get(`/chat/${roomId}/messages`, { params })
     },
 
     sendMessage: (roomId, message) => {
@@ -351,7 +351,7 @@ export const chatService = {
             replyToMessageId: message.replyToMessageId || null
         }
 
-        return chatApi.post(`/v1/chat/rooms/${roomId}/messages`, sendRequest)
+        return chatApi.post(`/chat/rooms/${roomId}/messages`, sendRequest)
     },
 
     uploadFile: (roomId, formData) =>
