@@ -11,7 +11,11 @@ class WebSocketService {
     this.subscriptions = new Map()
     this.messageHandlers = new Map()
     this.globalHandlers = new Map()
-    this.baseURL = import.meta.env.VITE_WS_BASE_URL || 'http://localhost:8084'
+
+    // 🔥 백엔드 WebSocket 서버 URL 명확히 설정
+    this.baseURL = import.meta.env.VITE_CHAT_BASE_URL || 'http://localhost:8084'
+    console.log('🔌 [WebSocket] Base URL:', this.baseURL)
+
     this.connectionState = {
       connected: false,
       connecting: false,
@@ -164,6 +168,40 @@ class WebSocketService {
         this.client.webSocket.readyState === WebSocket.OPEN
   }
 
+  // 🔥 디버깅을 위한 연결 테스트 메서드 추가
+  async testConnection() {
+    console.group('🔍 [WebSocket] 연결 테스트')
+
+    console.log('Base URL:', this.baseURL)
+    console.log('WebSocket URL:', `${this.baseURL}/api/ws`)
+    console.log('Current User ID:', this.getCurrentUserId())
+    console.log('Device ID:', this.getDeviceId())
+    console.log('Auth Token exists:', !!this.getAuthToken())
+
+    // 백엔드 서버 헬스체크
+    try {
+      const healthResponse = await fetch(`${this.baseURL}/health`)
+      console.log('Backend Health Check:', healthResponse.ok ? '✅ OK' : '❌ Failed')
+
+      if (healthResponse.ok) {
+        const healthData = await healthResponse.json()
+        console.log('Health Data:', healthData)
+      }
+    } catch (error) {
+      console.error('❌ Backend Health Check Failed:', error.message)
+    }
+
+    // WebSocket 엔드포인트 확인
+    try {
+      const wsResponse = await fetch(`${this.baseURL}/api/ws/info`)
+      console.log('WebSocket Info:', wsResponse.ok ? '✅ Available' : '❌ Not Available')
+    } catch (error) {
+      console.warn('⚠️ WebSocket Info Check:', error.message)
+    }
+
+    console.groupEnd()
+  }
+
   // WebSocket 연결
   connect() {
     return new Promise((resolve, reject) => {
@@ -190,7 +228,7 @@ class WebSocketService {
           if (this.connecting) {
             reject(new Error('연결 시간 초과'))
           }
-        }, 10000)
+        }, 20000) // 20초로 늘림
         checkConnection()
         return
       }
@@ -205,6 +243,8 @@ class WebSocketService {
 
       try {
         console.log('🔌 [WebSocket] 새로운 연결 시작...')
+        console.log('🔌 [WebSocket] 연결 URL:', `${this.baseURL}/api/ws`)
+
         this.connecting = true
         this.updateConnectionState('connecting')
 
@@ -217,8 +257,11 @@ class WebSocketService {
           }
         }
 
-        // SockJS를 사용한 WebSocket 연결 설정
-        const socket = new SockJS(`${this.baseURL}/api/ws`)
+        // 🔥 SockJS URL 수정 - 백엔드 서버로 연결
+        const socketUrl = `${this.baseURL}/api/ws`
+        console.log('🔌 [WebSocket] SockJS 연결 URL:', socketUrl)
+
+        const socket = new SockJS(socketUrl)
 
         this.client = new Client({
           webSocketFactory: () => socket,
@@ -235,8 +278,13 @@ class WebSocketService {
           reconnectDelay: this.reconnectDelay,
           heartbeatIncoming: 10000,
           heartbeatOutgoing: 10000,
+
+          // 🔥 연결 성공 콜백 수정
           onConnect: (frame) => {
-            console.log('✅ [WebSocket] 연결 성공:', frame)
+            console.log('✅ [WebSocket] 연결 성공!')
+            console.log('✅ [WebSocket] Frame:', frame)
+            console.log('✅ [WebSocket] WebSocket URL:', socket.url)
+
             this.connected = true
             this.connecting = false
             this.reconnectAttempts = 0
@@ -244,29 +292,38 @@ class WebSocketService {
 
             // 연결 후 필수 구독 설정
             this.subscribeToEssentialTopics()
-
-            // 기존 구독 복원
             this.restoreSubscriptions()
 
             resolve()
           },
+
           onStompError: (frame) => {
             console.error('❌ [WebSocket] STOMP 에러:', frame)
+            console.error('❌ [WebSocket] Error Headers:', frame.headers)
+            console.error('❌ [WebSocket] Error Body:', frame.body)
+
             this.connected = false
             this.connecting = false
             const error = `STOMP Error: ${frame.body || frame.headers?.message || 'Unknown error'}`
             this.updateConnectionState('error', error)
             reject(new Error(error))
           },
+
           onWebSocketError: (error) => {
             console.error('❌ [WebSocket] WebSocket 에러:', error)
+            console.error('❌ [WebSocket] Socket URL was:', socketUrl)
+
             this.connected = false
             this.connecting = false
             this.updateConnectionState('error', error.message || 'WebSocket connection error')
             reject(error)
           },
+
           onWebSocketClose: (event) => {
             console.log('🔌 [WebSocket] 연결 종료:', event)
+            console.log('🔌 [WebSocket] Close Code:', event.code)
+            console.log('🔌 [WebSocket] Close Reason:', event.reason)
+
             this.connected = false
             this.connecting = false
             this.updateConnectionState('disconnected')
@@ -276,6 +333,7 @@ class WebSocketService {
               this.attemptReconnect()
             }
           },
+
           onDisconnect: (receipt) => {
             console.log('🔌 [WebSocket] 연결 해제됨:', receipt)
             this.connected = false
@@ -284,15 +342,24 @@ class WebSocketService {
           }
         })
 
-        // 연결 시간 초과 처리
+        // 🔥 연결 시간 초과 처리 (더 길게 설정)
         const connectionTimeout = setTimeout(() => {
           if (this.connecting) {
-            console.error('❌ [WebSocket] 연결 시간 초과')
+            console.error('❌ [WebSocket] 연결 시간 초과 (20초)')
             this.connecting = false
             this.updateConnectionState('error', '연결 시간 초과')
-            reject(new Error('연결 시간 초과'))
+
+            if (this.client) {
+              try {
+                this.client.deactivate()
+              } catch (e) {
+                console.warn('타임아웃 시 클라이언트 정리 실패:', e)
+              }
+            }
+
+            reject(new Error('연결 시간 초과 (20초)'))
           }
-        }, 15000)
+        }, 20000) // 20초로 늘림
 
         // 연결 성공 시 타임아웃 해제
         const originalOnConnect = this.client.onConnect
@@ -301,6 +368,7 @@ class WebSocketService {
           originalOnConnect.call(this.client, frame)
         }
 
+        console.log('🔌 [WebSocket] 클라이언트 활성화 시작...')
         this.client.activate()
 
       } catch (error) {
@@ -592,7 +660,7 @@ class WebSocketService {
           if (this.connecting) {
             reject(new Error('연결 시간 초과'))
           }
-        }, 15000)
+        }, 20000) // 20초로 늘림
 
         checkConnection()
       })
@@ -860,7 +928,8 @@ class WebSocketService {
       clientState: this.client ? {
         connected: this.client.connected,
         webSocketState: this.client.webSocket?.readyState
-      } : null
+      } : null,
+      baseURL: this.baseURL
     }
   }
 
@@ -964,6 +1033,16 @@ export const webSocketService = new WebSocketService()
 
 // 연결 상태 모니터링 시작
 webSocketService.startConnectionMonitoring()
+
+// 🔥 개발 도구에서 WebSocket 상태 확인 (브라우저 콘솔에서 실행 가능)
+if (typeof window !== 'undefined') {
+  window.debugWebSocket = () => {
+    console.log('WebSocket Debug Info:', webSocketService.getDebugInfo())
+    webSocketService.testConnection()
+  }
+
+  window.webSocketService = webSocketService // 디버깅용
+}
 
 // 기본 내보내기
 export default webSocketService

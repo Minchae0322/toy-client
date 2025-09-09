@@ -6,6 +6,7 @@ import * as authUtils from '@/utils/auth.js'
 /**
  * 채팅 서비스 전용 API 클래스
  * Chat Server (8084)와의 통신을 담당
+ * 메시지 전송은 WebSocket만 사용, HTTP는 메타데이터 조회용
  */
 class ChatService {
   constructor() {
@@ -294,13 +295,14 @@ class ChatService {
     }
   }
 
-  // ==================== 메시지 API ====================
+  // ==================== 메시지 API (조회용만) ====================
 
   /**
    * 메시지 목록 조회 (커서 기반 페이징)
+   * ⚠️ 기존 메시지 조회용 - 새 메시지 전송은 WebSocket 사용
    */
   async getChatMessages(roomId, cursorPageRequest = {}) {
-    const url = `${this.baseURL}/chat/${roomId}/messages`  // 경로 수정
+    const url = `${this.baseURL}/chat/${roomId}/messages`
     this.logRequest('GET', url, cursorPageRequest)
 
     try {
@@ -341,39 +343,131 @@ class ChatService {
     }
   }
 
+  // ==================== ⚠️ 메시지 전송 API 제거됨 ====================
+  //
+  // sendMessage() HTTP API는 제거되었습니다.
+  // 메시지 전송은 WebSocket (webSocketService.sendMessage)만 사용하세요.
+  //
+  // ================================================================
+
+  // ==================== 샘플 데이터 (개발용) ====================
+
   /**
-   * 메시지 전송 (HTTP API)
+   * 샘플 채팅방 데이터 제공 (API 연결 실패시 폴백용)
    */
-  async sendMessage(roomId, messageData) {
-    const url = `${this.baseURL}/chat/rooms/${roomId}/messages`  // 경로 수정
-    const requestData = {
-      content: messageData.content,
-      type: messageData.type || 'TEXT',
-      replyToMessageId: messageData.replyToMessageId || null,
-      metadata: messageData.metadata || null,
-      deviceId: authUtils.getDeviceId(),
-      timestamp: new Date().toISOString()
+  getSampleChatRooms() {
+    return {
+      success: true,
+      data: [
+        {
+          roomId: 'sample-room-1',
+          title: '맥북 에어 M2 거래',
+          roomType: 'NORMAL',
+          participantCount: 2,
+          lastMessage: '안녕하세요, 맥북 상태가 어떤가요?',
+          lastMessageAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5분 전
+          unreadCount: 2,
+          status: 'ACTIVE',
+          thumbnailUrl: null,
+          description: null,
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() // 1일 전
+        },
+        {
+          roomId: 'sample-room-2',
+          title: '아이폰 15 Pro 문의',
+          roomType: 'NORMAL',
+          participantCount: 2,
+          lastMessage: '네, 거래 가능합니다!',
+          lastMessageAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15분 전
+          unreadCount: 0,
+          status: 'ACTIVE',
+          thumbnailUrl: null,
+          description: null,
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString() // 2일 전
+        },
+        {
+          roomId: 'sample-room-3',
+          title: '고객지원',
+          roomType: 'CUSTOMER_SUPPORT',
+          participantCount: 1,
+          lastMessage: '문의사항이 있으시면 언제든지 연락주세요.',
+          lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2시간 전
+          unreadCount: 1,
+          status: 'ACTIVE',
+          thumbnailUrl: null,
+          description: '고객지원팀과의 채팅',
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString() // 3일 전
+        }
+      ]
+    }
+  }
+
+  /**
+   * 샘플 메시지 데이터 제공
+   */
+  getSampleMessages(roomId) {
+    const messageTemplates = {
+      'sample-room-1': [
+        {
+          messageId: 'msg-1-1',
+          roomId: roomId,
+          senderId: 2,
+          senderName: '판매자',
+          content: '안녕하세요! 맥북에 관심 가져주셔서 감사합니다.',
+          messageType: 'TEXT',
+          sentAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+          isRead: true
+        },
+        {
+          messageId: 'msg-1-2',
+          roomId: roomId,
+          senderId: 1,
+          senderName: '구매자',
+          content: '네, 상태가 어떤가요? 사용한지 얼마나 되었나요?',
+          messageType: 'TEXT',
+          sentAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+          isRead: true
+        },
+        {
+          messageId: 'msg-1-3',
+          roomId: roomId,
+          senderId: 2,
+          senderName: '판매자',
+          content: '약 6개월 사용했고, 상태는 매우 좋습니다. 스크래치도 거의 없어요.',
+          messageType: 'TEXT',
+          sentAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
+          isRead: false
+        }
+      ],
+      'default': [
+        {
+          messageId: `msg-${roomId}-1`,
+          roomId: roomId,
+          senderId: 2,
+          senderName: '상대방',
+          content: '안녕하세요!',
+          messageType: 'TEXT',
+          sentAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+          isRead: true
+        },
+        {
+          messageId: `msg-${roomId}-2`,
+          roomId: roomId,
+          senderId: 1,
+          senderName: '나',
+          content: '네, 안녕하세요. 잘 부탁드립니다.',
+          messageType: 'TEXT',
+          sentAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+          isRead: true
+        }
+      ]
     }
 
-    this.logRequest('POST', url, requestData)
+    const messages = messageTemplates[roomId] || messageTemplates['default']
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(requestData)
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('POST', url, apiResponse)
-      return apiResponse
-
-    } catch (error) {
-      this.logResponse('POST', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
+    return {
+      success: true,
+      data: messages
     }
   }
 
@@ -436,6 +530,11 @@ class ChatService {
     console.log('사용자 ID:', authUtils.getUserId())
     console.log('디바이스 ID:', authUtils.getDeviceId())
     console.log('인증 상태:', authUtils.isAuthenticated())
+
+    console.log('=== ⚠️ 중요 안내 ===')
+    console.log('메시지 전송: WebSocket만 사용 (HTTP API 제거됨)')
+    console.log('메시지 조회: HTTP API 사용 (기존 메시지 로드용)')
+    console.log('채팅방 관리: HTTP API 사용 (메타데이터용)')
 
     console.groupEnd()
   }

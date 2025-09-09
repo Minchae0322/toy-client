@@ -24,13 +24,22 @@
       <p>라우트 방 ID: {{ $route.params.roomId || '없음' }}</p>
       <p>WebSocket 연결: {{ connectionState.connected ? '✅ 연결됨' : '❌ 끊어짐' }}</p>
       <p>사용자 ID: {{ currentUserId || '없음' }}</p>
+      <p>초기화 완료: {{ initializationComplete ? '✅' : '❌' }}</p>
     </div>
 
     <!-- 메인 콘텐츠 -->
     <div class="chat-content" :class="{ 'connection-overlay': showConnectionOverlay }">
+      <!-- 🔥 초기화 로딩 중 -->
+      <div v-if="!initializationComplete" class="initialization-loading">
+        <div class="loading-content">
+          <div class="spinner large"></div>
+          <p>채팅 앱을 준비하는 중...</p>
+        </div>
+      </div>
+
       <!-- 채팅방 목록 뷰 -->
       <ChatRoomView
-          v-if="!selectedRoom"
+          v-else-if="!selectedRoom"
           @room-selected="handleRoomSelected"
           :connection-state="connectionState"
       />
@@ -90,6 +99,7 @@ const showNotificationToast = ref(false)
 const pendingNotification = ref(null)
 const toastTimeout = ref(null)
 const isDev = ref(import.meta.env.DEV)
+const initializationComplete = ref(false) // 🔥 초기화 완료 상태 추가
 
 // WebSocket 상태
 const connectionState = ref({
@@ -188,6 +198,47 @@ const setupGlobalMessageHandlers = () => {
   webSocketService.onMessage('presence-update', (presence) => {
     console.log('👥 전역 접속 상태 업데이트:', presence)
   })
+}
+
+// 🔥 초기화 프로세스 개선
+const initializeApp = async () => {
+  try {
+    console.log('🚀 채팅 앱 초기화 시작...')
+    initializationComplete.value = false
+
+    // 1. 사용자 ID 설정
+    currentUserId.value = getCurrentUserId()
+    if (!currentUserId.value) {
+      console.error('❌ 사용자 ID를 찾을 수 없습니다')
+      return
+    }
+    console.log('👤 현재 사용자 ID:', currentUserId.value)
+
+    // 2. WebSocket 연결 초기화
+    await initializeWebSocket()
+
+    // 3. 🔥 초기 roomId 확인 및 설정 (WebSocket 연결 후)
+    const initialRoomId = getInitialRoomId()
+    if (initialRoomId) {
+      console.log('🎯 초기 채팅방 설정:', initialRoomId)
+      selectedRoom.value = initialRoomId
+    } else {
+      console.log('📋 초기 roomId 없음 - 채팅방 목록 표시')
+      selectedRoom.value = null
+    }
+
+    // 4. 브라우저 알림 권한 요청
+    await requestNotificationPermission()
+
+    // 5. 초기화 완료
+    initializationComplete.value = true
+    console.log('✅ 채팅 앱 초기화 완료')
+    console.log('📋 현재 선택된 채팅방:', selectedRoom.value || '없음')
+
+  } catch (error) {
+    console.error('❌ 채팅 앱 초기화 실패:', error)
+    initializationComplete.value = true // 에러가 나도 화면은 보여주기
+  }
 }
 
 // 채팅방 선택 핸들러 (채팅방 목록에서 올라온 이벤트)
@@ -383,6 +434,9 @@ const handleVisibilityChange = () => {
 watch(
     [() => props.initialRoomId, () => route.params.roomId],
     ([newInitialRoomId, newRouteRoomId]) => {
+      // 🔥 초기화가 완료된 후에만 처리
+      if (!initializationComplete.value) return
+
       const roomId = newInitialRoomId || newRouteRoomId
 
       if (roomId && roomId !== selectedRoom.value) {
@@ -393,46 +447,16 @@ watch(
         selectedRoom.value = null
       }
     },
-    { immediate: true }
+    { immediate: false } // 🔥 immediate 제거 - 초기화 후에만 감지
 )
 
 // 앱 초기화
 onMounted(async () => {
-  try {
-    console.log('🚀 채팅 앱 초기화 시작...')
+  // 페이지 가시성 변경 이벤트 리스너
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    // 사용자 ID 설정
-    currentUserId.value = getCurrentUserId()
-    if (!currentUserId.value) {
-      console.error('❌ 사용자 ID를 찾을 수 없습니다')
-      // 로그인 페이지로 리다이렉트 등의 처리
-      return
-    }
-
-    console.log('👤 현재 사용자 ID:', currentUserId.value)
-
-    // 🔥 초기 roomId 확인 및 설정
-    const initialRoomId = getInitialRoomId()
-    if (initialRoomId) {
-      console.log('🎯 초기 채팅방 설정:', initialRoomId)
-      selectedRoom.value = initialRoomId
-    }
-
-    // WebSocket 연결 초기화
-    await initializeWebSocket()
-
-    // 브라우저 알림 권한 요청
-    await requestNotificationPermission()
-
-    // 페이지 가시성 변경 이벤트 리스너
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    console.log('✅ 채팅 앱 초기화 완료')
-    console.log('📋 현재 선택된 채팅방:', selectedRoom.value || '없음')
-
-  } catch (error) {
-    console.error('❌ 채팅 앱 초기화 실패:', error)
-  }
+  // 🔥 초기화 프로세스 실행
+  await initializeApp()
 })
 
 // 페이지를 떠날 때 정리
@@ -472,6 +496,29 @@ window.addEventListener('beforeunload', () => {
   color: #1e293b;
   min-height: 100vh;
   position: relative;
+}
+
+/* 🔥 초기화 로딩 화면 */
+.initialization-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.loading-content p {
+  font-size: 16px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 /* 디버그 패널 */
@@ -538,6 +585,13 @@ window.addEventListener('beforeunload', () => {
   border-top: 2px solid currentColor;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.spinner.large {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+  color: #3b82f6;
 }
 
 @keyframes spin {
@@ -708,9 +762,13 @@ window.addEventListener('beforeunload', () => {
 
 /* 다크 모드 지원 */
 @media (prefers-color-scheme: dark) {
-  .chat-app {
+  .chat-app, .initialization-loading {
     background-color: #0f172a;
     color: #f1f5f9;
+  }
+
+  .loading-content p {
+    color: #94a3b8;
   }
 
   .notification-toast {
