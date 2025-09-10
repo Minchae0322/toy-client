@@ -64,6 +64,89 @@ const categoriesLoading = ref(false);
 
 const foods = ref([]);
 
+// 개선된 viewDetail 함수
+const viewDetail = async (food) => {
+  console.log('상세페이지로 이동 시도:', {
+    id: food.id,
+    name: food.name,
+    currentRoute: router.currentRoute.value.path
+  });
+
+  try {
+    // 1. food.id 유효성 검사
+    if (!food.id) {
+      console.error('유효하지 않은 food.id:', food.id);
+      alert('상품 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 2. 현재 라우트와 같은지 확인 (중복 이동 방지)
+    const targetPath = `/one-mouth/${food.id}`;
+    if (router.currentRoute.value.path === targetPath) {
+      console.log('이미 해당 페이지에 있음');
+      return;
+    }
+
+    // 3. 라우터 이동 시도
+    console.log('라우터 이동 시작:', targetPath);
+
+    await router.push({
+      name: 'OneMouthDetail',
+      params: {
+        id: String(food.id)
+      }
+    });
+
+    console.log('라우터 이동 성공');
+
+  } catch (error) {
+    console.error('라우터 이동 실패:', error);
+
+    // NavigationDuplicated 에러는 무시
+    if (error.name === 'NavigationDuplicated') {
+      console.log('이미 해당 페이지로 이동 중');
+      return;
+    }
+
+    // 인증 관련 에러 체크
+    if (error.message?.includes('auth') || error.message?.includes('login')) {
+      console.log('인증 문제로 인한 이동 실패');
+      alert('로그인이 필요합니다.');
+      await router.push('/login');
+      return;
+    }
+
+    // 대안 방법들 시도
+    try {
+      // 대안 1: 직접 경로로 이동
+      console.log('대안 1: 직접 경로로 이동 시도');
+      await router.push(`/one-mouth/${food.id}`);
+      console.log('대안 1 성공');
+
+    } catch (secondError) {
+      console.error('대안 1 실패:', secondError);
+
+      try {
+        // 대안 2: replace 사용
+        console.log('대안 2: replace로 이동 시도');
+        await router.replace({
+          name: 'OneMouthDetail',
+          params: { id: String(food.id) }
+        });
+        console.log('대안 2 성공');
+
+      } catch (thirdError) {
+        console.error('대안 2 실패:', thirdError);
+
+        // 최후의 수단: window.location
+        console.log('최후의 수단: window.location 사용');
+        const baseUrl = window.location.origin;
+        window.location.href = `${baseUrl}/one-mouth/${food.id}`;
+      }
+    }
+  }
+};
+
 // 한국어 카테고리명에 맞춘 아이콘 매핑 함수
 const getCategoryIcon = (categoryName, keywords) => {
   if (keywords) {
@@ -152,7 +235,7 @@ const fetchCategories = async () => {
     const response = await contentService.getCategories();
     const serverCategories = response.data?.data || response.data || [];
 
-    console.log('🗂️ 서버에서 받은 카테고리:', serverCategories);
+    console.log('서버에서 받은 카테고리:', serverCategories);
 
     const mappedServerCategories = serverCategories
     .filter(cat => cat.isActive === true)
@@ -174,10 +257,10 @@ const fetchCategories = async () => {
     .sort((a, b) => a.displayOrder - b.displayOrder);
 
     categories.value = mappedServerCategories;
-    console.log('✅ 최종 카테고리 목록:', categories.value);
+    console.log('최종 카테고리 목록:', categories.value);
 
   } catch (error) {
-    console.error('🗂️ 카테고리 로딩 실패:', error);
+    console.error('카테고리 로딩 실패:', error);
     categories.value = [];
   } finally {
     categoriesLoading.value = false;
@@ -190,17 +273,17 @@ const getCurrentCategory = () => {
 
 const getCategoryParams = (categoryKey) => {
   if (!categoryKey || categoryKey === null) {
-    console.log('🔍 선택된 카테고리: 전체 (필터 없음)');
+    console.log('선택된 카테고리: 전체 (필터 없음)');
     return {};
   }
 
   const category = categories.value.find(cat => cat.categoryKey === categoryKey);
   if (!category) {
-    console.log('🔍 선택된 카테고리: 찾을 수 없음 -', categoryKey);
+    console.log('선택된 카테고리: 찾을 수 없음 -', categoryKey);
     return {};
   }
 
-  console.log('🔍 선택된 카테고리:', category);
+  console.log('선택된 카테고리:', category);
 
   if (category.categoryId) {
     return {
@@ -240,7 +323,7 @@ const fetchFoods = async (page = 0, append = false) => {
     const categoryParams = getCategoryParams(activeFilter.value);
     Object.assign(params, categoryParams);
 
-    console.log('📡 API 요청 파라미터:', params);
+    console.log('API 요청 파라미터:', params);
 
     const response = await contentService.getOneMouths(params);
 
@@ -255,7 +338,7 @@ const fetchFoods = async (page = 0, append = false) => {
       last: pageData?.last !== false
     };
 
-    console.log('📡 API 응답:', { contents: contents.length, pagination });
+    console.log('API 응답:', { contents: contents.length, pagination });
 
     // 백엔드 ListView 응답을 프론트엔드 형태로 변환
     const newFoods = contents.map(item => ({
@@ -286,17 +369,7 @@ const fetchFoods = async (page = 0, append = false) => {
       favoritesCount: item.favoritesCount || 0
     }));
 
-    console.log('📦 변환된 데이터 샘플:', newFoods.slice(0, 2).map(item => ({
-      id: item.id,
-      name: item.name,
-      productStatus: item.productStatus,
-      selling: item.selling,
-      rawProductStatus: contents[0]?.productStatus, // 원본 데이터 구조 확인
-      statusDesc: item.productStatus === 'FOR_SALE' ? '판매중' :
-          item.productStatus === 'SOLD_OUT' ? '품절' :
-              item.productStatus === 'RESERVED' ? '예약중' :
-                  item.productStatus === 'DISCONTINUED' ? '판매중단' : '알 수 없음'
-    })));
+    console.log('변환된 데이터 샘플:', newFoods.slice(0, 2));
 
     if (append) {
       foods.value = [...foods.value, ...newFoods];
@@ -312,17 +385,17 @@ const fetchFoods = async (page = 0, append = false) => {
     totalElements.value = pagination.totalElements;
     hasMore.value = !pagination.last;
 
-    console.log(`📊 데이터 로드 완료: ${newFoods.length}개 아이템, 총 ${totalElements.value}개`);
+    console.log(`데이터 로드 완료: ${newFoods.length}개 아이템, 총 ${totalElements.value}개`);
 
   } catch (error) {
-    console.error('🍽 음식 데이터 로딩 실패:', error);
+    console.error('음식 데이터 로딩 실패:', error);
 
     if (!append) {
       foods.value = [];
       filteredFoods.value = [];
       totalElements.value = 0;
       hasMore.value = false;
-      console.log('❌ API 실패: 빈 데이터로 설정');
+      console.log('API 실패: 빈 데이터로 설정');
     }
   } finally {
     loading.value = false;
@@ -380,14 +453,14 @@ const totalUsers = computed(() => 1247);
 // Methods
 const setActiveFilter = (filter) => {
   if (activeFilter.value === filter) return;
-  console.log('🔄 필터 변경:', activeFilter.value, '->', filter);
+  console.log('필터 변경:', activeFilter.value, '->', filter);
   activeFilter.value = filter;
   resetAndFetch();
 };
 
 const setSortBy = (newSortBy) => {
   if (sortBy.value === newSortBy) return;
-  console.log('🔄 정렬 변경:', sortBy.value, '->', newSortBy);
+  console.log('정렬 변경:', sortBy.value, '->', newSortBy);
   sortBy.value = newSortBy;
   resetAndFetch();
 };
@@ -395,7 +468,7 @@ const setSortBy = (newSortBy) => {
 let searchTimeout = null;
 
 const updateSearchQuery = (query) => {
-  console.log('🔍 검색어 변경:', searchQuery.value, '->', query);
+  console.log('검색어 변경:', searchQuery.value, '->', query);
   searchQuery.value = query;
 
   if (searchTimeout) {
@@ -417,14 +490,6 @@ const resetAndFetch = () => {
   fetchFoods(0, false);
 };
 
-const viewDetail = (food) => {
-  console.log('🔗 상세페이지로 이동:', food.id, food.name);
-  router.push({
-    name: 'OneMouthDetail',
-    params: { id: food.id }
-  });
-};
-
 const addNewFood = () => {
   const token = localStorage.getItem('access_token');
   if (!token) {
@@ -439,26 +504,26 @@ const addNewFood = () => {
 // Watchers
 watch(sortBy, (newSortBy, oldSortBy) => {
   if (newSortBy !== oldSortBy) {
-    console.log('🔄 정렬 변경:', oldSortBy, '->', newSortBy);
+    console.log('정렬 변경:', oldSortBy, '->', newSortBy);
     resetAndFetch();
   }
 });
 
 watch(activeFilter, (newFilter, oldFilter) => {
   if (newFilter !== oldFilter) {
-    console.log('👀 카테고리 변경 감지:', oldFilter, '->', newFilter);
+    console.log('카테고리 변경 감지:', oldFilter, '->', newFilter);
   }
 });
 
 // Lifecycle
 onMounted(() => {
-  console.log('🚀 컴포넌트 마운트 시작');
+  console.log('컴포넌트 마운트 시작');
 
   fetchCategories().then(() => {
-    console.log('✅ 카테고리 로드 완료, 음식 데이터 로드 시작');
+    console.log('카테고리 로드 완료, 음식 데이터 로드 시작');
     fetchFoods();
   }).catch(error => {
-    console.error('❌ 초기 로딩 실패:', error);
+    console.error('초기 로딩 실패:', error);
     fetchFoods();
   });
 });

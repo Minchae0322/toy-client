@@ -89,14 +89,89 @@
             </div>
           </div>
 
-          <!-- 판매자 정보 -->
-          <SellerInfoSection
-              :food="food"
-              @view-profile="viewSellerProfile"
-          />
+          <!-- 출시 정보 섹션 -->
+          <div class="launch-info-section">
+            <h2 class="section-title">🚀 출시 정보</h2>
 
-          <!-- 상품 설명 -->
-          <ProductDescriptionSection :food="food" />
+            <div class="launch-info-grid">
+              <div class="launch-item">
+                <span class="launch-label">출시일</span>
+                <span class="launch-value">{{ formatDate(food.launchDate || food.createdAt) }}</span>
+              </div>
+              <div class="launch-item">
+                <span class="launch-label">판매기간</span>
+                <span class="launch-value">{{ food.isLimited ? '한정판매' : '상시판매' }}</span>
+              </div>
+              <div class="launch-item">
+                <span class="launch-label">지역</span>
+                <span class="launch-value">전국 출시</span>
+              </div>
+              <div class="launch-item" v-if="food.eventInfo">
+                <span class="launch-label">이벤트</span>
+                <span class="launch-value">{{ food.eventInfo }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 개인거래 섹션 -->
+          <div class="personal-trade-section">
+            <h2 class="section-title">🛒 개인거래</h2>
+
+            <!-- 거래 리스트 -->
+            <div class="trade-list">
+              <div
+                  v-for="trade in displayedTrades"
+                  :key="trade.id"
+                  class="trade-item"
+                  @click="goToTradeDetail(trade.id)"
+              >
+                <div class="trade-image">
+                  <img :src="trade.imageUrl || '/placeholder-image.jpg'" :alt="trade.title" />
+                </div>
+
+                <div class="trade-info">
+                  <div class="trade-price">{{ trade.price.toLocaleString() }}원</div>
+                  <div class="trade-condition">{{ getConditionText(trade.condition) }}</div>
+                  <div class="trade-quantity">{{ trade.quantity }}개</div>
+                </div>
+
+                <div class="seller-info">
+                  <div class="seller-profile">
+                    <div class="seller-avatar">{{ trade.sellerName.charAt(0) }}</div>
+                    <div class="seller-details">
+                      <div class="seller-name">{{ trade.sellerName }}</div>
+                      <div class="seller-rating">⭐ {{ trade.sellerRating.toFixed(1) }}</div>
+                    </div>
+                  </div>
+                  <div class="seller-distance">{{ trade.distance }}m</div>
+                </div>
+
+                <div class="trade-actions">
+                  <button
+                      class="chat-btn"
+                      @click.stop="startChatWithSeller(trade)"
+                      :disabled="trade.sellerId === currentUserId"
+                  >
+                    {{ trade.sellerId === currentUserId ? '내 상품' : '채팅하기' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 더보기 버튼 또는 빈 상태 -->
+            <div v-if="personalTrades.length === 0" class="empty-trade">
+              <div class="empty-icon">📦</div>
+              <h3>아직 판매중인 상품이 없어요</h3>
+              <p>이 제품의 첫 번째 판매자가 되어보세요!</p>
+              <button class="cta-btn" @click="goToSell">내가 첫 판매자가 되어보세요!</button>
+            </div>
+
+            <div v-else-if="personalTrades.length > displayedTradeCount" class="load-more">
+              <button class="load-more-btn" @click="loadMoreTrades">
+                더 많은 거래 보기 ({{ personalTrades.length - displayedTradeCount }}개 더)
+              </button>
+            </div>
+          </div>
 
           <!-- 리뷰 섹션 -->
           <div class="reviews-section">
@@ -288,6 +363,13 @@ const props = defineProps({
     required: true
   }
 });
+
+// 개인거래 관련 새로운 데이터
+const personalTrades = ref([]);
+const tradeSort = ref('latest');
+const tradeCondition = ref('all');
+const priceRange = ref({ min: 0, max: 50000 });
+const displayedTradeCount = ref(5); // 처음에 5개만 표시
 
 // 반응형 데이터
 const food = ref(null);
@@ -860,6 +942,235 @@ if (import.meta.env.DEV) {
   background: #1DCD9F;
   color: white;
 }
+
+/* 출시 정보 섹션 */
+.launch-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.launch-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.launch-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #718096;
+  text-transform: uppercase;
+}
+
+.launch-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* 거래 리스트 */
+.trade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trade-item {
+  display: grid;
+  grid-template-columns: 80px 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  background: #f7fafc;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.trade-item:hover {
+  background: #edf2f7;
+  border-color: #1DCD9F;
+  transform: translateY(-1px);
+}
+
+.trade-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trade-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.trade-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trade-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1DCD9F;
+}
+
+.trade-condition,
+.trade-quantity {
+  font-size: 13px;
+  color: #718096;
+}
+
+.seller-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.seller-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seller-avatar {
+  width: 32px;
+  height: 32px;
+  background: #1DCD9F;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.seller-details {
+  text-align: center;
+}
+
+.seller-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.seller-rating {
+  font-size: 11px;
+  color: #1DCD9F;
+}
+
+.seller-distance {
+  font-size: 11px;
+  color: #718096;
+}
+
+.trade-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-btn {
+  padding: 8px 16px;
+  background: #1DCD9F;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.chat-btn:hover:not(:disabled) {
+  background: #16a085;
+}
+
+.chat-btn:disabled {
+  background: #cbd5e0;
+  color: #a0aec0;
+  cursor: not-allowed;
+}
+
+/* 빈 상태 */
+.empty-trade {
+  text-align: center;
+  padding: 60px 20px;
+  color: #718096;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-trade h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.empty-trade p {
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.cta-btn {
+  background: #1DCD9F;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cta-btn:hover {
+  background: #16a085;
+  transform: translateY(-1px);
+}
+
+.load-more {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.load-more-btn {
+  background: white;
+  color: #1DCD9F;
+  border: 2px solid #1DCD9F;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.load-more-btn:hover {
+  background: #1DCD9F;
+  color: white;
+}
+
 
 /* 리뷰 섹션 */
 .reviews-section {

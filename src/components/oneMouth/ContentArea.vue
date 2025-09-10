@@ -1,108 +1,89 @@
+<!-- src/components/oneMouth/ContentArea.vue -->
 <template>
   <div class="content-area">
-    <!-- 헤더 영역 -->
-    <div class="content-header">
-      <div class="results-info">
-        <h2>
-          <span v-if="activeFilter">
-            {{ getFilterDisplayName(activeFilter) }}
-          </span>
-          <span v-else>전체</span>
-          <small class="count">({{ totalCount }}개)</small>
-        </h2>
-        <p class="subtitle" v-if="activeFilter">
-          {{ getFilterDescription(activeFilter) }}
-        </p>
-      </div>
-
-      <div class="sort-controls">
-        <select v-model="currentSort" @change="handleSortChange" class="sort-select">
-          <option value="latest">최신순</option>
-          <option value="popular">인기순</option>
-          <option value="rating">평점순</option>
-          <option value="price">가격낮은순</option>
-        </select>
-      </div>
+    <!-- 로딩 상태 -->
+    <div v-if="loading || initialLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>상품을 불러오는 중...</p>
     </div>
 
-    <!-- 로딩 상태 (초기 로딩) -->
-    <div v-if="initialLoading" class="loading-container">
-      <div class="loading-grid">
-        <div v-for="n in 6" :key="n" class="skeleton-card">
-          <div class="skeleton skeleton-image"></div>
-          <div class="skeleton-content">
-            <div class="skeleton skeleton-title"></div>
-            <div class="skeleton skeleton-text"></div>
-            <div class="skeleton skeleton-text short"></div>
+    <!-- 데이터가 없는 경우 -->
+    <div v-else-if="!filteredFoods.length" class="empty-container">
+      <p>표시할 상품이 없습니다.</p>
+    </div>
+
+    <!-- 상품 그리드 -->
+    <div v-else class="food-grid">
+      <div
+          v-for="food in filteredFoods"
+          :key="`food-${food.id}`"
+          class="food-card"
+          @click="handleFoodClick(food)"
+          @keydown.enter="handleFoodClick(food)"
+          tabindex="0"
+          role="button"
+          :aria-label="`${food.name} 상세보기`"
+      >
+        <!-- 이미지 영역 -->
+        <div class="food-image">
+          <img
+              v-if="food.imageUrl"
+              :src="food.imageUrl"
+              :alt="food.name"
+              @error="handleImageError"
+              loading="lazy"
+          />
+          <div v-else class="no-image">
+            <span class="food-emoji">{{ food.emoji || '🍽️' }}</span>
+          </div>
+
+          <!-- 상태 배지 -->
+          <div v-if="food.trending" class="status-badge trending">🔥 인기</div>
+          <div v-if="!food.selling" class="status-badge sold-out">품절</div>
+        </div>
+
+        <!-- 상품 정보 -->
+        <div class="food-info">
+          <h3 class="food-name">{{ food.name }}</h3>
+          <p class="food-description">{{ food.description }}</p>
+
+          <div class="food-meta">
+            <span class="food-price">{{ formatPrice(food.price) }}</span>
+            <span class="food-location">{{ food.location }}</span>
+          </div>
+
+          <div class="food-stats">
+            <span class="rating">⭐ {{ food.rating || 0 }}</span>
+            <span class="reviews">({{ food.reviewCount || 0 }})</span>
+            <span class="views">👁️ {{ food.hits || 0 }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 음식 목록 -->
-    <div v-else-if="filteredFoods.length > 0" class="foods-grid">
-      <FoodCard
-          v-for="food in filteredFoods"
-          :key="`food-${food.id}`"
-          :food="food"
-          @click="handleCardClick(food)"
-          @request-share="handleRequestShare(food)"
-          @start-chat="handleStartChat(food)"
-      />
-
-      <!-- 무한 스크롤 로딩 -->
-      <div v-if="loading" class="infinite-loading">
-        <div class="spinner"></div>
-        <p>더 많은 음식을 불러오는 중...</p>
-      </div>
-
-      <!-- 더 보기 버튼 (무한 스크롤 대신 사용할 경우) -->
-      <div v-else-if="hasMore" class="load-more-container">
-        <button @click="handleLoadMore" class="load-more-btn">
-          더 보기 ({{ remainingCount }}개 더)
-        </button>
-      </div>
-
-      <!-- 마지막 페이지 표시 -->
-      <div v-else-if="filteredFoods.length > 0" class="end-message">
-        <p>🎉 모든 음식을 확인했습니다!</p>
-      </div>
+    <!-- 더보기 버튼 -->
+    <div v-if="hasMore && !loading" class="load-more-container">
+      <button
+          class="load-more-btn"
+          @click="handleLoadMore"
+          :disabled="loading"
+      >
+        더보기
+      </button>
     </div>
 
-    <!-- 빈 상태 -->
-    <div v-else class="empty-state">
-      <div class="empty-content">
-        <div class="empty-icon">🔍</div>
-        <h3>검색 결과가 없습니다</h3>
-        <p v-if="activeFilter">
-          '<strong>{{ getFilterDisplayName(activeFilter) }}</strong>' 카테고리에서<br>
-          조건에 맞는 음식을 찾을 수 없어요.
-        </p>
-        <p v-else>
-          조건에 맞는 음식을 찾을 수 없어요.<br>
-          다른 검색어나 필터를 사용해보세요.
-        </p>
-        <div class="empty-actions">
-          <button @click="clearFilters" class="clear-filters-btn">
-            전체 보기
-          </button>
-          <button @click="addNewFood" class="add-food-btn">
-            새 음식 등록
-          </button>
-        </div>
-      </div>
+    <!-- 로딩 중 (더보기) -->
+    <div v-if="loading && filteredFoods.length > 0" class="loading-more">
+      <div class="loading-spinner small"></div>
+      <span>더 많은 상품을 불러오는 중...</span>
     </div>
-
-    <!-- 스크롤 감지용 요소 -->
-    <div ref="scrollTrigger" class="scroll-trigger"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import FoodCard from './detail/FoodCard.vue';
+import { ref } from 'vue'
 
-// Props
+// Props 정의
 const props = defineProps({
   filteredFoods: {
     type: Array,
@@ -126,295 +107,117 @@ const props = defineProps({
   },
   hasMore: {
     type: Boolean,
-    default: true
+    default: false
   },
   totalCount: {
     type: Number,
     default: 0
   }
-});
+})
 
-// Emits
+// Emits 정의
 const emit = defineEmits([
   'set-sort',
   'view-detail',
-  'request-share',
-  'start-chat',
   'load-more',
-  'scroll-end',
-  'clear-filters',
-  'add-new-food'
-]);
+  'scroll-end'
+])
 
-// 반응형 데이터
-const currentSort = ref(props.sortBy);
-const scrollTrigger = ref(null);
-const observer = ref(null);
+// 상품 카드 클릭 처리
+const handleFoodClick = (food) => {
+  console.log('ContentArea: 카드 클릭됨', {
+    id: food.id,
+    name: food.name,
+    type: typeof food.id
+  })
 
-// Computed
-const remainingCount = computed(() => {
-  return Math.max(0, props.totalCount - props.filteredFoods.length);
-});
+  // 이벤트 전달 확인
+  emit('view-detail', food)
 
-// 필터 표시 이름 가져오기
-const getFilterDisplayName = (filterKey) => {
-  if (!filterKey) return '전체';
+  console.log('ContentArea: view-detail 이벤트 emit 완료')
+}
 
-  // 임시 매핑 (실제로는 categories에서 가져와야 함)
-  const filterNames = {
-    'convenience': '편의점',
-    'cafe': '카페',
-    'snacks': '간식',
-    'drinks': '음료',
-    'desserts': '디저트',
-    'bakery': '베이커리',
-    'korean': '한식',
-    'chinese': '중식',
-    'japanese': '일식',
-    'western': '양식'
-  };
-
-  return filterNames[filterKey] || filterKey;
-};
-
-// 필터 설명 가져오기
-const getFilterDescription = (filterKey) => {
-  if (!filterKey) return '';
-
-  const descriptions = {
-    'convenience': '편의점에서 만나는 특별한 맛',
-    'cafe': '카페의 달콤한 음료와 디저트',
-    'snacks': '간식거리와 과자류',
-    'drinks': '시원하고 달콤한 음료',
-    'desserts': '달콤한 디저트와 케이크',
-    'bakery': '갓 구운 빵과 베이커리'
-  };
-
-  return descriptions[filterKey] || '';
-};
-
-// 이벤트 핸들러들
-const handleCardClick = (food) => {
-  console.log('🍽️ 카드 클릭:', food.name);
-  emit('view-detail', food);
-};
-
-const handleRequestShare = (food) => {
-  emit('request-share', food);
-};
-
-const handleStartChat = (food) => {
-  emit('start-chat', food);
-};
-
-const handleSortChange = () => {
-  emit('set-sort', currentSort.value);
-};
-
+// 더보기 버튼 클릭 처리
 const handleLoadMore = () => {
-  emit('load-more');
-};
+  console.log('ContentArea: 더보기 버튼 클릭')
+  emit('load-more')
+}
 
-const clearFilters = () => {
-  emit('clear-filters');
-};
+// 이미지 에러 처리
+const handleImageError = (event) => {
+  console.log('이미지 로드 실패:', event.target.src)
+  event.target.style.display = 'none'
+  event.target.parentElement.classList.add('error')
+}
 
-const addNewFood = () => {
-  emit('add-new-food');
-};
+// 가격 포맷팅
+const formatPrice = (price) => {
+  if (!price || price === 0) return '무료'
+  return new Intl.NumberFormat('ko-KR').format(price) + '원'
+}
 
-// 무한 스크롤 설정
-const setupInfiniteScroll = () => {
-  if (!scrollTrigger.value) return;
+// 스크롤 이벤트 처리 (무한 스크롤)
+const handleScroll = () => {
+  const container = document.querySelector('.content-area')
+  if (!container || props.loading || !props.hasMore) return
 
-  observer.value = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry.isIntersecting && props.hasMore && !props.loading) {
-          console.log('🔄 무한 스크롤 트리거');
-          emit('scroll-end');
-        }
-      },
-      {
-        root: null,
-        rootMargin: '100px',
-        threshold: 0.1
-      }
-  );
+  const { scrollTop, scrollHeight, clientHeight } = container
 
-  observer.value.observe(scrollTrigger.value);
-};
-
-// 무한 스크롤 해제
-const cleanupInfiniteScroll = () => {
-  if (observer.value) {
-    observer.value.disconnect();
-    observer.value = null;
+  // 스크롤이 바닥에 가까워지면 더보기
+  if (scrollTop + clientHeight >= scrollHeight - 100) {
+    emit('scroll-end')
   }
-};
+}
 
-// Watchers
-watch(() => props.sortBy, (newSort) => {
-  if (currentSort.value !== newSort) {
-    currentSort.value = newSort;
+// 컴포넌트 마운트 시 스크롤 이벤트 등록
+import { onMounted, onUnmounted } from 'vue'
+
+onMounted(() => {
+  const container = document.querySelector('.content-area')
+  if (container) {
+    container.addEventListener('scroll', handleScroll)
   }
-});
-
-// Lifecycle
-onMounted(async () => {
-  await nextTick();
-  setupInfiniteScroll();
-});
+})
 
 onUnmounted(() => {
-  cleanupInfiniteScroll();
-});
-
-// 필터나 음식 목록이 변경될 때 스크롤을 맨 위로
-watch([() => props.activeFilter, () => props.filteredFoods.length],
-    ([newFilter], [oldFilter]) => {
-      // 필터가 변경되었을 때만 스크롤을 맨 위로
-      if (newFilter !== oldFilter) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-);
+  const container = document.querySelector('.content-area')
+  if (container) {
+    container.removeEventListener('scroll', handleScroll)
+  }
+})
 </script>
 
 <style scoped>
 .content-area {
   flex: 1;
-  min-width: 0;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
 }
 
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-  gap: 20px;
-}
-
-.results-info h2 {
-  font-size: 1.5em;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 4px;
-}
-
-.results-info .count {
-  font-size: 0.9em;
-  color: #7f8c8d;
-  font-weight: normal;
-}
-
-.results-info .subtitle {
-  color: #7f8c8d;
-  font-size: 0.9em;
-  margin: 0;
-}
-
-.sort-controls {
-  flex-shrink: 0;
-}
-
-.sort-select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: white;
-  color: #2c3e50;
-  font-size: 14px;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.sort-select:hover,
-.sort-select:focus {
-  outline: none;
-  border-color: #3498db;
-}
-
-/* 로딩 스켈레톤 */
+/* 로딩 상태 */
 .loading-container {
-  width: 100%;
-}
-
-.loading-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.skeleton-card {
-  background: white;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-  border-radius: 4px;
-}
-
-.skeleton-image {
-  width: 100%;
-  height: 120px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
-
-.skeleton-title {
-  height: 20px;
-  margin-bottom: 8px;
-}
-
-.skeleton-text {
-  height: 16px;
-  margin-bottom: 6px;
-}
-
-.skeleton-text.short {
-  width: 60%;
-}
-
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* 음식 목록 */
-.foods-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-/* 무한 스크롤 로딩 */
-.infinite-loading {
-  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
-  color: #666;
+  justify-content: center;
+  height: 300px;
+  gap: 16px;
 }
 
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #3498db;
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #1DCD9F;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 12px;
+}
+
+.loading-spinner.small {
+  width: 24px;
+  height: 24px;
+  border-width: 2px;
 }
 
 @keyframes spin {
@@ -422,154 +225,215 @@ watch([() => props.activeFilter, () => props.filteredFoods.length],
   100% { transform: rotate(360deg); }
 }
 
-/* 더 보기 버튼 */
+/* 빈 상태 */
+.empty-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* 상품 그리드 */
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* 상품 카드 */
+.food-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.food-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #1DCD9F;
+}
+
+.food-card:focus {
+  outline: none;
+  border-color: #1DCD9F;
+  box-shadow: 0 0 0 3px rgba(29, 205, 159, 0.1);
+}
+
+/* 이미지 영역 */
+.food-image {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.food-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.food-card:hover .food-image img {
+  transform: scale(1.05);
+}
+
+.no-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #f8fafc, #e2e8f0);
+}
+
+.food-emoji {
+  font-size: 48px;
+}
+
+/* 상태 배지 */
+.status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.status-badge.trending {
+  background: #ef4444;
+}
+
+.status-badge.sold-out {
+  background: #6b7280;
+}
+
+/* 상품 정보 */
+.food-info {
+  padding: 16px;
+}
+
+.food-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.food-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.food-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.food-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1DCD9F;
+}
+
+.food-location {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.food-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.rating {
+  color: #f59e0b;
+}
+
+/* 더보기 버튼 */
 .load-more-container {
-  grid-column: 1 / -1;
   display: flex;
   justify-content: center;
-  padding: 40px 20px;
+  margin-top: 32px;
 }
 
 .load-more-btn {
-  background: #3498db;
+  padding: 12px 32px;
+  background: #1DCD9F;
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
 }
 
 .load-more-btn:hover {
-  background: #2980b9;
-  transform: translateY(-2px);
+  background: #169976;
 }
 
-/* 끝 메시지 */
-.end-message {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 40px 20px;
-  color: #7f8c8d;
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-/* 빈 상태 */
-.empty-state {
-  grid-column: 1 / -1;
+/* 로딩 더보기 */
+.loading-more {
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: 400px;
-}
-
-.empty-content {
-  text-align: center;
-  max-width: 400px;
-}
-
-.empty-icon {
-  font-size: 4em;
-  margin-bottom: 20px;
-  opacity: 0.5;
-}
-
-.empty-content h3 {
-  color: #2c3e50;
-  margin-bottom: 16px;
-  font-size: 1.3em;
-}
-
-.empty-content p {
-  color: #7f8c8d;
-  line-height: 1.5;
-  margin-bottom: 24px;
-}
-
-.empty-actions {
-  display: flex;
-  gap: 12px;
   justify-content: center;
-  flex-wrap: wrap;
-}
-
-.clear-filters-btn,
-.add-food-btn {
-  padding: 10px 20px;
-  border-radius: 20px;
+  gap: 12px;
+  margin: 32px 0;
+  color: #6b7280;
   font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-}
-
-.clear-filters-btn {
-  background: #ecf0f1;
-  color: #2c3e50;
-}
-
-.clear-filters-btn:hover {
-  background: #d5dbdb;
-}
-
-.add-food-btn {
-  background: #e74c3c;
-  color: white;
-}
-
-.add-food-btn:hover {
-  background: #c0392b;
-}
-
-/* 스크롤 트리거 */
-.scroll-trigger {
-  height: 10px;
-  margin-top: 20px;
 }
 
 /* 반응형 디자인 */
-@media (max-width: 1200px) {
-  .foods-grid,
-  .loading-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+@media (max-width: 768px) {
+  .food-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 16px;
   }
-}
 
-@media (max-width: 768px) {
-  .content-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+  .content-area {
+    padding: 16px;
   }
 
-  .sort-controls {
-    align-self: flex-end;
-  }
-
-  .foods-grid,
-  .loading-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
-  }
-
-  .empty-actions {
-    flex-direction: column;
-  }
-
-  .clear-filters-btn,
-  .add-food-btn {
-    width: 100%;
+  .food-image {
+    height: 160px;
   }
 }
 
 @media (max-width: 480px) {
-  .foods-grid,
-  .loading-grid {
+  .food-grid {
     grid-template-columns: 1fr;
   }
 
-  .results-info h2 {
-    font-size: 1.3em;
+  .food-image {
+    height: 140px;
   }
-}</style>
+}
+</style>
