@@ -364,6 +364,8 @@ const props = defineProps({
   }
 });
 
+
+
 // 개인거래 관련 새로운 데이터
 const personalTrades = ref([]);
 const tradeSort = ref('latest');
@@ -496,6 +498,8 @@ const fetchFoodDetail = async (id) => {
 
     if (tokenUtils.isLoggedIn()) {
       await Promise.all([
+        fetchPersonalTrades(),
+        fetchReviews(),
         checkLikeStatus(),
         checkFavoriteStatus()
       ]);
@@ -650,6 +654,65 @@ const toggleFavorite = async () => {
     processing.value = false;
   }
 };
+
+
+const fetchPersonalTrades = async () => {
+  try {
+    // 실제 API 호출 대신 목업 데이터
+    const mockTrades = [
+      {
+        id: 1,
+        productId: foodId.value,
+        title: '초콜릿 과자 판매',
+        price: 3500,
+        condition: 'new',
+        quantity: 2,
+        imageUrl: '',
+        sellerId: 'user123',
+        sellerName: '판매자A',
+        sellerRating: 4.8,
+        distance: 500,
+        createdAt: '2024-12-08T10:00:00Z',
+        tradeMethod: '직거래'
+      },
+      {
+        id: 2,
+        productId: foodId.value,
+        title: '초콜릿 과자 급매',
+        price: 3000,
+        condition: 'like-new',
+        quantity: 1,
+        imageUrl: '',
+        sellerId: 'user456',
+        sellerName: '판매자B',
+        sellerRating: 4.5,
+        distance: 1200,
+        createdAt: '2024-12-07T15:30:00Z',
+        tradeMethod: '택배'
+      },
+      {
+        id: 3,
+        productId: foodId.value,
+        title: '초콜릿 과자 나눔',
+        price: 2800,
+        condition: 'used',
+        quantity: 3,
+        imageUrl: '',
+        sellerId: 'user789',
+        sellerName: '판매자C',
+        sellerRating: 4.2,
+        distance: 800,
+        createdAt: '2024-12-06T20:15:00Z',
+        tradeMethod: '편의점택배'
+      }
+    ];
+
+    personalTrades.value = mockTrades;
+  } catch (err) {
+    console.error('개인거래 정보 로드 실패:', err);
+  }
+};
+
 
 const handleStartChat = async () => {
   if (!tokenUtils.isLoggedIn()) {
