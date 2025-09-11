@@ -184,41 +184,50 @@
               </div>
             </div>
 
-            <div v-if="reviews.length > 0">
-              <div
-                  v-for="review in reviews"
-                  :key="review.id"
-                  class="review-item"
-              >
-                <div class="review-header">
-                  <div class="review-user">
-                    <div class="user-avatar">{{ review.userName.charAt(0) }}</div>
-                    <div class="user-name">{{ review.userName }}</div>
-                    <div class="user-rating">⭐ {{ review.rating.toFixed(1) }}</div>
+            <!-- 리뷰 컨테이너 -->
+            <div class="reviews-container">
+              <div v-if="reviews.length > 0" class="reviews-list">
+                <div
+                    v-for="review in displayedReviews"
+                    :key="review.id"
+                    class="review-item"
+                >
+                  <div class="review-header">
+                    <div class="review-user">
+                      <div class="user-avatar">{{ review.userName.charAt(0) }}</div>
+                      <div class="user-name">{{ review.userName }}</div>
+                      <div class="user-rating">⭐ {{ review.rating.toFixed(1) }}</div>
+                    </div>
+                  </div>
+                  <div class="review-content">
+                    {{ review.content }}
+                  </div>
+                  <div class="review-meta">
+                    <span>{{ formatDate(review.createdAt) }}</span>
+                    <span>도움됨 {{ Math.floor(Math.random() * 20) }}</span>
+                    <span>거래완료</span>
                   </div>
                 </div>
-                <div class="review-content">
-                  {{ review.content }}
-                </div>
-                <div class="review-meta">
-                  <span>{{ formatDate(review.createdAt) }}</span>
-                  <span>도움됨 {{ Math.floor(Math.random() * 20) }}</span>
-                  <span>거래완료</span>
-                </div>
+              </div>
+
+              <div v-else class="no-reviews">
+                <p>아직 리뷰가 없습니다. 첫 번째 리뷰를 작성해보세요!</p>
+              </div>
+
+              <!-- 리뷰 더보기 버튼 -->
+              <div v-if="reviews.length > displayedReviewCount" class="review-load-more">
+                <button class="load-more-btn" @click="loadMoreReviews">
+                  더 많은 리뷰 보기 ({{ reviews.length - displayedReviewCount }}개 더)
+                </button>
+              </div>
+
+              <!-- 리뷰 작성 버튼 -->
+              <div class="review-write-section">
+                <button class="write-review-btn" @click="writeReview">
+                  리뷰 작성하기
+                </button>
               </div>
             </div>
-
-            <div v-else class="no-reviews">
-              <p>아직 리뷰가 없습니다. 첫 번째 리뷰를 작성해보세요!</p>
-            </div>
-
-            <ReviewSection
-                :reviews="reviews"
-                :reviews-loading="reviewsLoading"
-                :reviews-has-more="reviewsHasMore"
-                @write-review="writeReview"
-                @load-more="loadMoreReviews"
-            />
           </div>
         </main>
 
@@ -262,7 +271,7 @@
           <!-- 관련 제품 -->
           <div class="widget">
             <div class="widget-title">🔗 비슷한 제품</div>
-            <div class="related-item">
+            <div class="related-item" @click="goToRelatedProduct('burger')">
               <div class="related-image">🍔</div>
               <div class="related-info">
                 <div class="related-name">버거킹 신상 와퍼</div>
@@ -270,7 +279,7 @@
                 <div class="related-stats">⭐ 4.2 • 거래 8명</div>
               </div>
             </div>
-            <div class="related-item">
+            <div class="related-item" @click="goToRelatedProduct('fries')">
               <div class="related-image">🍟</div>
               <div class="related-info">
                 <div class="related-name">맥도날드 치즈스틱</div>
@@ -278,7 +287,7 @@
                 <div class="related-stats">⭐ 4.4 • 거래 15명</div>
               </div>
             </div>
-            <div class="related-item">
+            <div class="related-item" @click="goToRelatedProduct('drink')">
               <div class="related-image">🥤</div>
               <div class="related-info">
                 <div class="related-name">KFC 트위스터</div>
@@ -346,10 +355,6 @@ import LoadingState from '@/components/oneMouth/detail/LoadingState.vue';
 import ErrorState from '@/components/oneMouth/detail/ErrorState.vue';
 import ProductHeader from '@/components/oneMouth/detail/ProductHeader.vue';
 import ProductImageSection from '@/components/oneMouth/detail/ProductImageSection.vue';
-import ProductInfoSection from '@/components/oneMouth/detail/ProductInfoSection.vue';
-import SellerInfoSection from '@/components/oneMouth/detail/SellerInfoSection.vue';
-import ProductDescriptionSection from '@/components/oneMouth/detail/ProductDescriptionSection.vue';
-import ReviewSection from '@/components/oneMouth/detail/ReviewSection.vue';
 import BottomActionBar from '@/components/oneMouth/detail/BottomActionBar.vue';
 
 // 라우터 관련
@@ -364,18 +369,10 @@ const props = defineProps({
   }
 });
 
-
-
-// 개인거래 관련 새로운 데이터
-const personalTrades = ref([]);
-const tradeSort = ref('latest');
-const tradeCondition = ref('all');
-const priceRange = ref({ min: 0, max: 50000 });
-const displayedTradeCount = ref(5); // 처음에 5개만 표시
-
 // 반응형 데이터
 const food = ref(null);
 const reviews = ref([]);
+const personalTrades = ref([]);
 const loading = ref(true);
 const reviewsLoading = ref(false);
 const error = ref(null);
@@ -385,12 +382,33 @@ const processing = ref(false);
 const chatLoading = ref(false);
 const chatError = ref('');
 
-// 리뷰 페이지네이션
-const reviewsPage = ref(0);
-const reviewsHasMore = ref(true);
+// 페이지네이션 관련
+const displayedTradeCount = ref(5);
+const displayedReviewCount = ref(3);
 
 // URL에서 ID 추출
 const foodId = computed(() => props.id || route.params.id);
+
+// 현재 사용자 ID
+const currentUserId = computed(() => getCurrentUserId());
+
+// 표시할 데이터 계산
+const displayedTrades = computed(() =>
+    personalTrades.value.slice(0, displayedTradeCount.value)
+);
+
+const displayedReviews = computed(() =>
+    reviews.value.slice(0, displayedReviewCount.value)
+);
+
+// 채팅 시작 가능 여부
+const canStartChat = computed(() => {
+  const userId = getCurrentUserId();
+  return userId &&
+      food.value?.sellerId &&
+      String(userId) !== String(food.value.sellerId) &&
+      food.value.productStatus === 'FOR_SALE';
+});
 
 // 유틸리티 함수들
 const formatDate = (dateString) => {
@@ -409,51 +427,49 @@ const formatDate = (dateString) => {
   } else if (diffDays < 7) {
     return `${diffDays}일 전`;
   } else {
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('ko-KR');
   }
 };
 
 const formatNumber = (num) => {
-  if (num >= 1000) {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
     return (num / 1000).toFixed(1) + 'K';
   }
   return num.toString();
 };
 
-// 기존 스크립트 로직 그대로 유지
+const getConditionText = (condition) => {
+  const conditionMap = {
+    'new': '새상품',
+    'like-new': '거의새것',
+    'used': '중고',
+    'damaged': '파손'
+  };
+  return conditionMap[condition] || '상태미확인';
+};
+
+// 사용자 ID 가져오기
 const getCurrentUserId = () => {
   try {
     const currentUser = tokenUtils.getCurrentUser();
     if (currentUser?.id) {
-      console.log('tokenUtils에서 사용자 ID 가져옴:', currentUser.id);
       return currentUser.id;
     }
 
     const token = tokenUtils.getAccessToken();
     if (token) {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const userId = payload.sub || payload.userId || payload.id || payload.user_id;
-      if (userId) {
-        console.log('직접 토큰 파싱에서 사용자 ID 가져옴:', userId);
-        return userId;
-      }
+      return payload.sub || payload.userId || payload.id || payload.user_id;
     }
   } catch (err) {
     console.error('사용자 ID 추출 중 오류:', err);
   }
-
-  console.error('사용자 ID를 가져올 수 없음');
   return null;
 };
 
-const canStartChat = computed(() => {
-  const currentUserId = getCurrentUserId();
-  return currentUserId &&
-      food.value?.sellerId &&
-      String(currentUserId) !== String(food.value.sellerId) &&
-      food.value.productStatus === 'FOR_SALE';
-});
-
+// 데이터 로드 함수들
 const fetchFoodDetail = async (id) => {
   try {
     loading.value = true;
@@ -493,7 +509,10 @@ const fetchFoodDetail = async (id) => {
       },
       hits: apiData.hits || 0,
       favoritesCount: apiData.favoritesCount || 0,
-      isUserFavorited: apiData.isUserFavorited || false
+      isUserFavorited: apiData.isUserFavorited || false,
+      launchDate: apiData.launchDate,
+      isLimited: apiData.isLimited || false,
+      eventInfo: apiData.eventInfo
     };
 
     if (tokenUtils.isLoggedIn()) {
@@ -503,13 +522,16 @@ const fetchFoodDetail = async (id) => {
         checkLikeStatus(),
         checkFavoriteStatus()
       ]);
+    } else {
+      await Promise.all([
+        fetchPersonalTrades(),
+        fetchReviews()
+      ]);
     }
 
     if (apiData.isUserFavorited !== undefined) {
       isFavorited.value = apiData.isUserFavorited;
     }
-
-    await fetchReviews();
 
     debugChatInfo('상품 정보 로드 완료', {
       productId: food.value.id,
@@ -526,12 +548,178 @@ const fetchFoodDetail = async (id) => {
   }
 };
 
+const fetchPersonalTrades = async () => {
+  try {
+    // 실제 API 호출 대신 목업 데이터
+    const mockTrades = [
+      {
+        id: 1,
+        productId: foodId.value,
+        title: '초콜릿 과자 판매',
+        price: 3500,
+        condition: 'new',
+        quantity: 2,
+        imageUrl: '',
+        sellerId: 'user123',
+        sellerName: '판매자A',
+        sellerRating: 4.8,
+        distance: 500,
+        createdAt: '2024-12-08T10:00:00Z',
+        tradeMethod: '직거래'
+      },
+      {
+        id: 2,
+        productId: foodId.value,
+        title: '초콜릿 과자 급매',
+        price: 3000,
+        condition: 'like-new',
+        quantity: 1,
+        imageUrl: '',
+        sellerId: 'user456',
+        sellerName: '판매자B',
+        sellerRating: 4.5,
+        distance: 1200,
+        createdAt: '2024-12-07T15:30:00Z',
+        tradeMethod: '택배'
+      },
+      {
+        id: 3,
+        productId: foodId.value,
+        title: '초콜릿 과자 나눔',
+        price: 2800,
+        condition: 'used',
+        quantity: 3,
+        imageUrl: '',
+        sellerId: 'user789',
+        sellerName: '판매자C',
+        sellerRating: 4.2,
+        distance: 800,
+        createdAt: '2024-12-06T20:15:00Z',
+        tradeMethod: '편의점택배'
+      },
+      {
+        id: 4,
+        productId: foodId.value,
+        title: '초콜릿 과자 대량판매',
+        price: 15000,
+        condition: 'new',
+        quantity: 10,
+        imageUrl: '',
+        sellerId: 'user101',
+        sellerName: '판매자D',
+        sellerRating: 4.9,
+        distance: 300,
+        createdAt: '2024-12-05T12:20:00Z',
+        tradeMethod: '직거래'
+      },
+      {
+        id: 5,
+        productId: foodId.value,
+        title: '초콜릿 과자 소량판매',
+        price: 2500,
+        condition: 'like-new',
+        quantity: 1,
+        imageUrl: '',
+        sellerId: 'user202',
+        sellerName: '판매자E',
+        sellerRating: 4.3,
+        distance: 1500,
+        createdAt: '2024-12-04T18:45:00Z',
+        tradeMethod: '택배'
+      },
+      {
+        id: 6,
+        productId: foodId.value,
+        title: '초콜릿 과자 빠른판매',
+        price: 3200,
+        condition: 'new',
+        quantity: 2,
+        imageUrl: '',
+        sellerId: 'user303',
+        sellerName: '판매자F',
+        sellerRating: 4.6,
+        distance: 900,
+        createdAt: '2024-12-03T14:30:00Z',
+        tradeMethod: '직거래'
+      }
+    ];
+
+    personalTrades.value = mockTrades;
+  } catch (err) {
+    console.error('개인거래 정보 로드 실패:', err);
+    personalTrades.value = [];
+  }
+};
+
+const fetchReviews = async () => {
+  try {
+    reviewsLoading.value = true;
+
+    const mockReviews = [
+      {
+        id: 1,
+        userName: '맛집탐험가',
+        userProfileImage: '',
+        rating: 5,
+        content: '정말 맛있어요! 초콜릿이 진짜 진하고 달달해서 기분이 좋아졌어요. 포장도 예쁘고 가격도 합리적이네요.',
+        createdAt: '2024-12-08T10:30:00',
+        images: []
+      },
+      {
+        id: 2,
+        userName: '간식매니아',
+        userProfileImage: '',
+        rating: 4,
+        content: '가격도 저렴하고 맛도 좋네요. 다음에 또 사고싶어요! 배송도 빨랐습니다.',
+        createdAt: '2024-12-07T15:45:00',
+        images: []
+      },
+      {
+        id: 3,
+        userName: '초콜릿러버',
+        userProfileImage: '',
+        rating: 5,
+        content: '초콜릿 맛이 정말 진짜예요. 단맛이 적당해서 계속 먹게 되네요. 추천합니다!',
+        createdAt: '2024-12-06T20:15:00',
+        images: []
+      },
+      {
+        id: 4,
+        userName: '디저트킹',
+        userProfileImage: '',
+        rating: 4,
+        content: '친구들과 나눠먹기 좋은 사이즈예요. 맛도 괜찮고 포장상태도 깔끔했습니다.',
+        createdAt: '2024-12-05T12:20:00',
+        images: []
+      },
+      {
+        id: 5,
+        userName: '과자덕후',
+        userProfileImage: '',
+        rating: 5,
+        content: '이런 맛있는 과자가 있었다니! 완전 대박이에요. 재주문 예정입니다.',
+        createdAt: '2024-12-04T18:45:00',
+        images: []
+      }
+    ];
+
+    reviews.value = mockReviews;
+
+  } catch (err) {
+    console.error('리뷰 로드 실패:', err);
+    reviews.value = [];
+  } finally {
+    reviewsLoading.value = false;
+  }
+};
+
 const checkLikeStatus = async () => {
   try {
     const likedItems = JSON.parse(localStorage.getItem('liked_items') || '[]');
     isLiked.value = likedItems.includes(String(foodId.value));
   } catch (err) {
     console.error('좋아요 상태 확인 실패:', err);
+    isLiked.value = false;
   }
 };
 
@@ -541,56 +729,11 @@ const checkFavoriteStatus = async () => {
     isFavorited.value = favoritedItems.includes(String(foodId.value));
   } catch (err) {
     console.error('관심 상태 확인 실패:', err);
+    isFavorited.value = false;
   }
 };
 
-const fetchReviews = async (page = 0, append = false) => {
-  try {
-    if (append) reviewsLoading.value = true;
-
-    const mockReviews = [
-      {
-        id: 1,
-        userName: '맛집탐험가',
-        userProfileImage: '',
-        rating: 5,
-        content: '정말 맛있어요! 초콜릿이 진짜 진하고 달달해서 기분이 좋아졌어요',
-        createdAt: '2024-12-08T10:30:00',
-        images: []
-      },
-      {
-        id: 2,
-        userName: '간식매니아',
-        userProfileImage: '',
-        rating: 4,
-        content: '가격도 저렴하고 맛도 좋네요. 다음에 또 사고싶어요!',
-        createdAt: '2024-12-07T15:45:00',
-        images: []
-      }
-    ];
-
-    if (append) {
-      reviews.value = [...reviews.value, ...mockReviews];
-    } else {
-      reviews.value = mockReviews;
-    }
-
-    reviewsPage.value = page;
-    reviewsHasMore.value = page < 2;
-
-  } catch (err) {
-    console.error('리뷰 로드 실패:', err);
-  } finally {
-    reviewsLoading.value = false;
-  }
-};
-
-const loadMoreReviews = async () => {
-  if (!reviewsHasMore.value || reviewsLoading.value) return;
-  const nextPage = reviewsPage.value + 1;
-  await fetchReviews(nextPage, true);
-};
-
+// 액션 함수들
 const retryLoad = () => {
   fetchFoodDetail(foodId.value);
 };
@@ -655,64 +798,19 @@ const toggleFavorite = async () => {
   }
 };
 
-
-const fetchPersonalTrades = async () => {
-  try {
-    // 실제 API 호출 대신 목업 데이터
-    const mockTrades = [
-      {
-        id: 1,
-        productId: foodId.value,
-        title: '초콜릿 과자 판매',
-        price: 3500,
-        condition: 'new',
-        quantity: 2,
-        imageUrl: '',
-        sellerId: 'user123',
-        sellerName: '판매자A',
-        sellerRating: 4.8,
-        distance: 500,
-        createdAt: '2024-12-08T10:00:00Z',
-        tradeMethod: '직거래'
-      },
-      {
-        id: 2,
-        productId: foodId.value,
-        title: '초콜릿 과자 급매',
-        price: 3000,
-        condition: 'like-new',
-        quantity: 1,
-        imageUrl: '',
-        sellerId: 'user456',
-        sellerName: '판매자B',
-        sellerRating: 4.5,
-        distance: 1200,
-        createdAt: '2024-12-07T15:30:00Z',
-        tradeMethod: '택배'
-      },
-      {
-        id: 3,
-        productId: foodId.value,
-        title: '초콜릿 과자 나눔',
-        price: 2800,
-        condition: 'used',
-        quantity: 3,
-        imageUrl: '',
-        sellerId: 'user789',
-        sellerName: '판매자C',
-        sellerRating: 4.2,
-        distance: 800,
-        createdAt: '2024-12-06T20:15:00Z',
-        tradeMethod: '편의점택배'
-      }
-    ];
-
-    personalTrades.value = mockTrades;
-  } catch (err) {
-    console.error('개인거래 정보 로드 실패:', err);
-  }
+const loadMoreTrades = () => {
+  displayedTradeCount.value = Math.min(
+      displayedTradeCount.value + 5,
+      personalTrades.value.length
+  );
 };
 
+const loadMoreReviews = () => {
+  displayedReviewCount.value = Math.min(
+      displayedReviewCount.value + 3,
+      reviews.value.length
+  );
+};
 
 const handleStartChat = async () => {
   if (!tokenUtils.isLoggedIn()) {
@@ -799,6 +897,64 @@ const handleStartChat = async () => {
   }
 };
 
+const startChatWithSeller = async (trade) => {
+  if (!tokenUtils.isLoggedIn()) {
+    alert('로그인이 필요합니다.');
+    router.push('/login');
+    return;
+  }
+
+  const currentUserId = getCurrentUserId();
+  if (String(currentUserId) === String(trade.sellerId)) {
+    alert('본인의 상품입니다.');
+    return;
+  }
+
+  try {
+    chatLoading.value = true;
+    chatError.value = '';
+
+    const chatStartRequest = {
+      chatContext: 'PERSONAL_TRADE',
+      chatContextId: Number(trade.id),
+      creatorId: Number(trade.id),
+      participantIds: [
+        Number(currentUserId),
+        Number(trade.sellerId)
+      ],
+      deviceId: tokenUtils.getDeviceId() || 'web-browser'
+    };
+
+    const response = await chatService.startChat(chatStartRequest);
+    const chatRoomData = response.data?.data || response.data;
+
+    if (!chatRoomData?.roomId) {
+      throw new Error('채팅방 정보가 올바르지 않습니다.');
+    }
+
+    const chatQuery = {
+      from: 'trade',
+      tradeId: trade.id,
+      productName: trade.title,
+      sellerId: trade.sellerId,
+      sellerName: trade.sellerName,
+      price: trade.price
+    };
+
+    await router.push({
+      name: 'ChatWithRoom',
+      params: { roomId: chatRoomData.roomId },
+      query: chatQuery
+    });
+
+  } catch (error) {
+    console.error('거래 채팅 시작 실패:', error);
+    chatError.value = getChatErrorMessage(error);
+  } finally {
+    chatLoading.value = false;
+  }
+};
+
 const retryStartChat = () => {
   clearChatError();
   handleStartChat();
@@ -829,14 +985,38 @@ const shareFood = () => {
   } else {
     navigator.clipboard.writeText(window.location.href).then(() => {
       alert('링크가 복사되었습니다');
+    }).catch(() => {
+      // 클립보드 복사 실패 시 fallback
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.href;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('링크가 복사되었습니다');
     });
   }
 };
 
-const viewSellerProfile = () => {
-  if (food.value?.seller?.id) {
-    router.push(`/users/${food.value.seller.id}`);
+const goToTradeDetail = (tradeId) => {
+  router.push(`/trade/${tradeId}`);
+};
+
+const goToSell = () => {
+  if (!tokenUtils.isLoggedIn()) {
+    alert('로그인이 필요합니다.');
+    router.push('/login');
+    return;
   }
+  router.push({
+    name: 'SellProduct',
+    query: { productId: foodId.value, productName: food.value?.name }
+  });
+};
+
+const goToRelatedProduct = (type) => {
+  // 관련 상품 페이지로 이동
+  router.push(`/one-mouth/search?category=${type}`);
 };
 
 const handleImageError = (e) => {
@@ -871,7 +1051,9 @@ if (import.meta.env.DEV) {
     handleStartChat,
     getCurrentUserId,
     chatLoading,
-    chatError
+    chatError,
+    reviews,
+    personalTrades
   };
 }
 </script>
@@ -909,6 +1091,15 @@ if (import.meta.env.DEV) {
   padding: 0;
   max-width: none;
   margin: 0;
+}
+
+/* 섹션 제목 공통 스타일 */
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 20px;
+  padding: 24px 24px 0 24px;
 }
 
 /* 제품 헤더 */
@@ -973,6 +1164,10 @@ if (import.meta.env.DEV) {
   margin-bottom: 24px;
 }
 
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
 .info-title {
   font-size: 18px;
   font-weight: 700;
@@ -1007,10 +1202,15 @@ if (import.meta.env.DEV) {
 }
 
 /* 출시 정보 섹션 */
+.launch-info-section {
+  border-bottom: 1px solid #f1f5f9;
+}
+
 .launch-info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
+  padding: 0 24px 24px 24px;
 }
 
 .launch-item {
@@ -1035,11 +1235,16 @@ if (import.meta.env.DEV) {
   color: #2d3748;
 }
 
-/* 거래 리스트 */
+/* 개인거래 섹션 */
+.personal-trade-section {
+  border-bottom: 1px solid #f1f5f9;
+}
+
 .trade-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 0 24px;
 }
 
 .trade-item {
@@ -1176,6 +1381,7 @@ if (import.meta.env.DEV) {
   text-align: center;
   padding: 60px 20px;
   color: #718096;
+  margin: 0 24px;
 }
 
 .empty-icon {
@@ -1214,7 +1420,7 @@ if (import.meta.env.DEV) {
 
 .load-more {
   text-align: center;
-  margin-top: 20px;
+  margin: 20px 24px 24px 24px;
 }
 
 .load-more-btn {
@@ -1234,10 +1440,9 @@ if (import.meta.env.DEV) {
   color: white;
 }
 
-
 /* 리뷰 섹션 */
 .reviews-section {
-  padding: 24px;
+  padding: 0;
 }
 
 .reviews-header {
@@ -1245,6 +1450,7 @@ if (import.meta.env.DEV) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding: 24px 24px 0 24px;
 }
 
 .reviews-title {
@@ -1257,6 +1463,16 @@ if (import.meta.env.DEV) {
   display: flex;
   gap: 16px;
   align-items: center;
+  font-size: 14px;
+  color: #718096;
+}
+
+.reviews-container {
+  padding: 0 24px 24px 24px;
+}
+
+.reviews-list {
+  margin-bottom: 20px;
 }
 
 .review-item {
@@ -1297,6 +1513,7 @@ if (import.meta.env.DEV) {
 .user-name {
   font-weight: 600;
   color: #000000;
+  font-size: 14px;
 }
 
 .user-rating {
@@ -1315,15 +1532,41 @@ if (import.meta.env.DEV) {
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: #222222;
-  opacity: 0.7;
+  color: #718096;
 }
 
 .no-reviews {
   text-align: center;
   padding: 40px 20px;
-  color: #222222;
-  opacity: 0.7;
+  color: #718096;
+}
+
+.review-load-more {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.review-write-section {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.write-review-btn {
+  background: #1DCD9F;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.write-review-btn:hover {
+  background: #16a085;
+  transform: translateY(-1px);
 }
 
 /* 사이드바 */
@@ -1603,6 +1846,26 @@ if (import.meta.env.DEV) {
   .widget:not(:first-child) {
     display: none;
   }
+
+  .trade-item {
+    grid-template-columns: 60px 1fr auto;
+    gap: 12px;
+  }
+
+  .trade-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .seller-info {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .trade-actions {
+    align-self: flex-start;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1624,6 +1887,32 @@ if (import.meta.env.DEV) {
     flex-direction: column;
   }
 
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .launch-info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .trade-item {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .trade-image {
+    justify-self: center;
+    width: 80px;
+    height: 80px;
+  }
+
+  .seller-info {
+    justify-content: center;
+  }
+
   .chat-loading-content {
     margin: 20px;
     padding: 24px;
@@ -1631,6 +1920,243 @@ if (import.meta.env.DEV) {
 
   .chat-error-content {
     margin: 20px;
+  }
+
+  .reviews-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .reviews-stats {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-container {
+    padding: 12px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    padding: 20px 20px 0 20px;
+  }
+
+  .product-header,
+  .product-info,
+  .reviews-container {
+    padding: 20px;
+  }
+
+  .launch-info-grid,
+  .trade-list {
+    padding: 0 20px;
+  }
+
+  .load-more,
+  .empty-trade {
+    margin: 20px 20px 20px 20px;
+  }
+
+  .widget {
+    padding: 16px;
+  }
+
+  .product-title {
+    font-size: 20px;
+  }
+
+  .meta-item {
+    font-size: 14px;
+  }
+
+  .trade-item {
+    padding: 12px;
+  }
+
+  .review-item {
+    padding: 12px 0;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 이미지 에러 처리 */
+.no-image {
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #718096;
+  font-size: 12px;
+}
+
+.no-image::before {
+  content: '이미지 없음';
+}
+
+/* 스크롤바 스타일링 */
+.reviews-list::-webkit-scrollbar,
+.trade-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reviews-list::-webkit-scrollbar-track,
+.trade-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.reviews-list::-webkit-scrollbar-thumb,
+.trade-list::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.reviews-list::-webkit-scrollbar-thumb:hover,
+.trade-list::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* 포커스 스타일 */
+.chat-btn:focus,
+.action-btn:focus,
+.cta-btn:focus,
+.load-more-btn:focus,
+.write-review-btn:focus,
+.cancel-btn:focus,
+.retry-btn:focus {
+  outline: 2px solid #1DCD9F;
+  outline-offset: 2px;
+}
+
+/* 접근성 개선 */
+.trade-item:focus,
+.related-item:focus {
+  outline: 2px solid #1DCD9F;
+  outline-offset: 2px;
+}
+
+/* 로딩 상태 개선 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.trade-item,
+.review-item {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 호버 효과 개선 */
+.trade-item:hover .trade-price {
+  color: #169976;
+}
+
+.review-item:hover {
+  background: #f8fafc;
+  border-radius: 8px;
+  margin: 0 -8px;
+  padding: 16px 8px;
+}
+
+/* 텍스트 선택 방지 */
+.trade-item,
+.related-item,
+.action-btn,
+.chat-btn {
+  user-select: none;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .status-badge,
+  .action-btn.primary,
+  .chat-btn,
+  .cta-btn,
+  .write-review-btn,
+  .retry-btn {
+    border: 2px solid currentColor;
+  }
+
+  .trade-item:hover,
+  .related-item:hover {
+    border: 2px solid #1DCD9F;
+  }
+}
+
+/* 다크모드 대응 (시스템 설정 감지) */
+@media (prefers-color-scheme: dark) {
+  .detail-container {
+    background: #1a202c;
+    color: #e2e8f0;
+  }
+
+  .main-content,
+  .widget {
+    background: #2d3748;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+
+  .product-title,
+  .info-title,
+  .section-title,
+  .reviews-title,
+  .widget-title {
+    color: #e2e8f0;
+  }
+
+  .product-brand,
+  .info-content,
+  .review-content {
+    color: #cbd5e0;
+  }
+
+  .trade-item,
+  .launch-item,
+  .stat-item {
+    background: #4a5568;
+  }
+
+  .trade-item:hover {
+    background: #553c9a;
+  }
+}
+
+/* 인쇄 스타일 */
+@media print {
+  .sidebar,
+  .chat-loading-overlay,
+  .chat-error-modal,
+  .action-buttons,
+  .chat-btn,
+  .cta-btn,
+  .load-more-btn,
+  .write-review-btn {
+    display: none !important;
+  }
+
+  .main-container {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .main-content {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+  }
+
+  .detail-container {
+    background: white;
   }
 }
 </style>
