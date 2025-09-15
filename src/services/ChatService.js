@@ -1,0 +1,656 @@
+// services/ChatService.js
+// 채팅 관련 API 서비스 (Fetch API 기반)
+
+import { BaseApiService } from './BaseApiService.js'
+import * as authUtils from '@/utils/auth.js'
+
+/**
+ * 채팅 서비스
+ * Chat Server (8084)와의 통신을 담당
+ */
+class ChatService extends BaseApiService {
+  constructor() {
+    const baseURL = import.meta.env.DEV
+        ? 'http://localhost:8084/api'
+        : `${import.meta.env.VITE_CHAT_BASE_URL}/api`
+
+    super(baseURL, 'CHAT')
+
+    // WebSocket URL 설정
+    this.wsURL = import.meta.env.DEV
+        ? 'ws://localhost:8084'
+        : import.meta.env.VITE_CHAT_WS_URL || 'wss://your-chat-server.com'
+
+    console.log(`💬 [CHAT] WebSocket URL: ${this.wsURL}`)
+  }
+
+  // ==================== 채팅방 API ====================
+
+  /**
+   * 채팅 시작 (한입만 상세에서 채팅하기 클릭시)
+   */
+  async startChat(chatData) {
+    const requestData = {
+      chatContext: chatData.chatContext || 'PRODUCT_TRADE',
+      chatContextId: chatData.chatContextId,
+      creatorId: chatData.creatorId,
+      participantIds: chatData.participantIds,
+      deviceId: chatData.deviceId || authUtils.getDeviceId()
+    }
+
+    return await this.post('/v1/chat/rooms/chat', requestData)
+  }
+
+  /**
+   * 채팅방 목록 조회
+   */
+  async getChatRooms(searchCondition = {}) {
+    const validatedCondition = this.validateSearchCondition(searchCondition)
+    return await this.get('/v1/chat/rooms', validatedCondition)
+  }
+
+  /**
+   * 채팅방 생성
+   */
+  async createChatRoom(roomData) {
+    const validation = this.validateCreateRoomData(roomData)
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(', '))
+    }
+
+    const requestData = {
+      title: roomData.title,
+      description: roomData.description || null,
+      roomType: roomData.roomType || 'NORMAL',
+      participantUserIds: roomData.participantUserIds || [],
+      isPrivate: roomData.isPrivate || false,
+      maxParticipants: roomData.maxParticipants || null,
+      thumbnailUrl: roomData.thumbnailUrl || null
+    }
+
+    return await this.post('/v1/chat/rooms', requestData)
+  }
+
+  /**
+   * 채팅방 상세 조회
+   */
+  async getChatRoomDetail(roomId) {
+    if (!roomId) {
+      throw new Error('채팅방 ID가 필요합니다.')
+    }
+
+    return await this.get(`/v1/chat/rooms/${roomId}`)
+  }
+
+  /**
+   * 채팅방 입장
+   */
+  async joinChatRoom(roomId) {
+    const requestData = {
+      deviceId: authUtils.getDeviceId()
+    }
+
+    return await this.post(`/v1/chat/rooms/${roomId}/join`, requestData)
+  }
+
+  /**
+   * 채팅방 나가기
+   */
+  async leaveChatRoom(roomId) {
+    const requestData = {
+      deviceId: authUtils.getDeviceId()
+    }
+
+    return await this.post(`/v1/chat/rooms/${roomId}/leave`, requestData)
+  }
+
+  /**
+   * 채팅방 삭제
+   */
+  async deleteChatRoom(roomId) {
+    return await this.delete(`/v1/chat/rooms/${roomId}`)
+  }
+
+  /**
+   * 채팅방 설정 변경
+   */
+  async updateChatRoomSettings(roomId, settings) {
+    return await this.put(`/v1/chat/rooms/${roomId}/settings`, settings)
+  }
+
+  // ==================== 메시지 API ====================
+
+  /**
+   * 메시지 목록 조회 (커서 기반 페이징)
+   */
+  async getChatMessages(roomId, cursorPageRequest = {}) {
+    if (!roomId) {
+      throw new Error('채팅방 ID가 필요합니다.')
+    }
+
+    const params = {
+      size: cursorPageRequest.size || 20
+    }
+
+    if (cursorPageRequest.lastMessageId) {
+      params.lastMessageId = cursorPageRequest.lastMessageId
+    }
+
+    return await this.get(`/chat/${roomId}/messages`, params)
+  }
+
+  /**
+   * 메시지 전송 (HTTP) - 주로 파일 메시지용
+   * 일반 텍스트 메시지는 WebSocket 사용 권장
+   */
+  async sendMessage(roomId, messageData) {
+    if (!roomId) {
+      throw new Error('채팅방 ID가 필요합니다.')
+    }
+
+    const requestData = {
+      content: messageData.content,
+      type: messageData.type || 'TEXT',
+      replyToMessageId: messageData.replyToMessageId || null,
+      metadata: messageData.metadata || null
+    }
+
+    return await this.post(`/chat/rooms/${roomId}/messages`, requestData)
+  }
+
+  /**
+   * 메시지 수정
+   */
+  async updateMessage(messageId, content) {
+    return await this.put(`/chat/messages/${messageId}`, { content })
+  }
+
+  /**
+   * 메시지 삭제
+   */
+  async deleteMessage(messageId) {
+    return await this.delete(`/chat/messages/${messageId}`)
+  }
+
+  // ==================== 파일 업로드 ====================
+
+  /**
+   * 파일 업로드
+   */
+  async uploadFile(roomId, file, options = {}) {
+    if (!roomId || !file) {
+      throw new Error('채팅방 ID와 파일이 필요합니다.')
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    if (options.messageType) {
+      formData.append('messageType', options.messageType)
+    }
+
+    if (options.description) {
+      formData.append('description', options.description)
+    }
+
+    return await this.uploadFile(`/v1/chat/rooms/${roomId}/upload`, formData)
+  }
+
+  /**
+   * 이미지 업로드
+   */
+  async uploadImage(roomId, imageFile, description = '') {
+    return await this.uploadFile(roomId, imageFile, {
+      messageType: 'IMAGE',
+      description
+    })
+  }
+
+  // ==================== 읽음 처리 및 알림 ====================
+
+  /**
+   * 메시지 읽음 처리
+   */
+  async markAsRead(roomId, messageId = null) {
+    const requestData = messageId ? { messageId } : {}
+    return await this.post(`/v1/chat/rooms/${roomId}/read`, requestData)
+  }
+
+  /**
+   * 읽지 않은 메시지 개수 조회
+   */
+  async getUnreadCount(roomId = null) {
+    const url = roomId
+        ? `/v1/chat/rooms/${roomId}/unread-count`
+        : '/v1/chat/unread-count'
+
+    return await this.get(url)
+  }
+
+  /**
+   * 전체 읽지 않은 메시지 개수 조회
+   */
+  async getTotalUnreadCount() {
+    return await this.get('/v1/chat/unread-count')
+  }
+
+  // ==================== 채팅방 멤버 관리 ====================
+
+  /**
+   * 채팅방 멤버 목록 조회
+   */
+  async getChatRoomMembers(roomId, params = {}) {
+    return await this.get(`/v1/chat/rooms/${roomId}/members`, params)
+  }
+
+  /**
+   * 채팅방에 멤버 초대
+   */
+  async inviteMembers(roomId, userIds) {
+    return await this.post(`/v1/chat/rooms/${roomId}/members`, {
+      userIds: Array.isArray(userIds) ? userIds : [userIds]
+    })
+  }
+
+  /**
+   * 채팅방에서 멤버 제거
+   */
+  async removeMember(roomId, userId) {
+    return await this.delete(`/v1/chat/rooms/${roomId}/members/${userId}`)
+  }
+
+  /**
+   * 채팅방 멤버 역할 변경
+   */
+  async updateMemberRole(roomId, userId, role) {
+    return await this.put(`/v1/chat/rooms/${roomId}/members/${userId}/role`, { role })
+  }
+
+  // ==================== 검색 및 필터링 ====================
+
+  /**
+   * 채팅방 검색
+   */
+  async searchChatRooms(keyword, filters = {}) {
+    const params = {
+      keyword,
+      ...filters
+    }
+
+    return await this.get('/v1/chat/rooms/search', params)
+  }
+
+  /**
+   * 메시지 검색
+   */
+  async searchMessages(roomId, keyword, params = {}) {
+    return await this.get(`/v1/chat/rooms/${roomId}/messages/search`, {
+      keyword,
+      ...params
+    })
+  }
+
+  // ==================== 샘플 데이터 (개발용) ====================
+
+  /**
+   * 샘플 채팅방 데이터 제공 (API 연결 실패시 폴백용)
+   */
+  getSampleChatRooms() {
+    return {
+      success: true,
+      data: [
+        {
+          roomId: 'sample-room-1',
+          title: '맥북 에어 M2 거래',
+          roomType: 'NORMAL',
+          participantCount: 2,
+          lastMessage: '안녕하세요, 맥북 상태가 어떤가요?',
+          lastMessageAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+          unreadCount: 2,
+          status: 'ACTIVE',
+          thumbnailUrl: null,
+          description: null,
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
+        },
+        {
+          roomId: 'sample-room-2',
+          title: '아이폰 15 Pro 문의',
+          roomType: 'NORMAL',
+          participantCount: 2,
+          lastMessage: '네, 거래 가능합니다!',
+          lastMessageAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+          unreadCount: 0,
+          status: 'ACTIVE',
+          thumbnailUrl: null,
+          description: null,
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()
+        }
+      ]
+    }
+  }
+
+  /**
+   * 샘플 메시지 데이터 제공
+   */
+  getSampleMessages(roomId) {
+    const messages = [
+      {
+        messageId: `msg-${roomId}-1`,
+        roomId: roomId,
+        senderId: 2,
+        senderName: '상대방',
+        content: '안녕하세요!',
+        messageType: 'TEXT',
+        sentAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+        isRead: true
+      },
+      {
+        messageId: `msg-${roomId}-2`,
+        roomId: roomId,
+        senderId: 1,
+        senderName: '나',
+        content: '네, 안녕하세요. 잘 부탁드립니다.',
+        messageType: 'TEXT',
+        sentAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+        isRead: true
+      }
+    ]
+
+    return {
+      success: true,
+      data: messages
+    }
+  }
+
+  // ==================== 유틸리티 메서드 ====================
+
+  /**
+   * 채팅방 생성 데이터 검증
+   */
+  validateCreateRoomData(roomData) {
+    const errors = []
+
+    if (!roomData.title || roomData.title.trim().length === 0) {
+      errors.push('채팅방 제목은 필수입니다.')
+    }
+
+    if (roomData.title && roomData.title.length > 50) {
+      errors.push('채팅방 제목은 50자 이하여야 합니다.')
+    }
+
+    if (!['NORMAL', 'CHANNEL', 'CUSTOMER_SUPPORT'].includes(roomData.roomType)) {
+      errors.push('올바른 채팅방 타입을 선택해주세요.')
+    }
+
+    if (roomData.roomType === 'NORMAL' && (!roomData.participantUserIds || roomData.participantUserIds.length !== 1)) {
+      errors.push('1:1 채팅방은 상대방 1명을 선택해야 합니다.')
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors
+    }
+  }
+
+  /**
+   * 검색 조건 검증
+   */
+  validateSearchCondition(searchCondition) {
+    const validRoomTypes = ['NORMAL', 'CHANNEL', 'CUSTOMER_SUPPORT']
+    const validStatuses = ['ACTIVE', 'ARCHIVED', 'BLOCKED', 'DELETED']
+
+    if (searchCondition.roomType && !validRoomTypes.includes(searchCondition.roomType)) {
+      searchCondition.roomType = null
+    }
+
+    if (searchCondition.status && !validStatuses.includes(searchCondition.status)) {
+      searchCondition.status = 'ACTIVE'
+    }
+
+    if (searchCondition.keyword && searchCondition.keyword.length > 100) {
+      searchCondition.keyword = searchCondition.keyword.substring(0, 100)
+    }
+
+    return searchCondition
+  }
+
+  // ==================== 채팅방 유틸리티 ====================
+
+  /**
+   * 백엔드 채팅방 응답을 프론트엔드 형식으로 변환
+   */
+  transformChatRoomResponse(backendRoom) {
+    let roomTypeValue = 'NORMAL'
+    if (backendRoom.roomType) {
+      if (typeof backendRoom.roomType === 'string') {
+        roomTypeValue = backendRoom.roomType
+      } else if (backendRoom.roomType.name) {
+        roomTypeValue = backendRoom.roomType.name
+      } else if (backendRoom.roomType.toString) {
+        roomTypeValue = backendRoom.roomType.toString()
+      }
+    }
+
+    return {
+      id: backendRoom.roomId,
+      name: backendRoom.title,
+      type: roomTypeValue,
+      participantCount: backendRoom.participantCount || 2,
+      lastMessage: backendRoom.lastMessage || '메시지가 없습니다',
+      lastMessageSender: null,
+      lastMessageType: backendRoom.lastMessageType ? backendRoom.lastMessageType.toLowerCase() : 'text',
+      lastMessageAt: backendRoom.lastMessageAt ? new Date(backendRoom.lastMessageAt).getTime() : Date.now(),
+      unreadCount: backendRoom.unreadCount || 0,
+      status: backendRoom.status || 'ACTIVE',
+      avatar: backendRoom.thumbnailUrl,
+      description: backendRoom.description,
+      createdAt: backendRoom.createdAt
+    }
+  }
+
+  /**
+   * 백엔드 메시지 응답을 프론트엔드 형식으로 변환
+   */
+  transformMessageResponse(backendMessage) {
+    return {
+      messageId: backendMessage.messageId,
+      roomId: backendMessage.roomId,
+      senderId: backendMessage.senderId,
+      senderName: backendMessage.senderName || `사용자${backendMessage.senderId}`,
+      content: backendMessage.content,
+      type: backendMessage.messageType || backendMessage.type || 'TEXT',
+      createdAt: backendMessage.sentAt || backendMessage.createdAt,
+      status: 'SENT',
+      isRead: backendMessage.isRead || false,
+      replyTo: backendMessage.replyTo,
+      metadata: backendMessage.metadata
+    }
+  }
+
+  /**
+   * 채팅방 목록 정렬
+   */
+  sortChatRooms(rooms, sortBy = 'lastMessage') {
+    return [...rooms].sort((a, b) => {
+      switch (sortBy) {
+        case 'lastMessage':
+          return new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+        case 'name':
+          return a.name.localeCompare(b.name, 'ko-KR')
+        case 'unreadCount':
+          return b.unreadCount - a.unreadCount
+        case 'participantCount':
+          return b.participantCount - a.participantCount
+        default:
+          return new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+      }
+    })
+  }
+
+  /**
+   * 채팅방 필터링
+   */
+  filterChatRooms(rooms, filters) {
+    return rooms.filter(room => {
+      if (filters.type && room.type !== filters.type) {
+        return false
+      }
+
+      if (filters.unreadOnly && room.unreadCount === 0) {
+        return false
+      }
+
+      if (filters.keyword) {
+        const keyword = filters.keyword.toLowerCase()
+        return room.name.toLowerCase().includes(keyword) ||
+            (room.lastMessage && room.lastMessage.toLowerCase().includes(keyword))
+      }
+
+      return true
+    })
+  }
+
+  // ==================== 디버깅 ====================
+
+  /**
+   * Chat Service 상태 디버깅
+   */
+  debugChatStatus() {
+    console.group('🔍 [CHAT] 채팅 서비스 상태')
+
+    console.log('=== 서버 정보 ===')
+    console.log('WebSocket URL:', this.wsURL)
+
+    console.log('=== 중요 안내 ===')
+    console.log('메시지 전송: WebSocket 사용 권장')
+    console.log('메시지 조회: HTTP API 사용')
+    console.log('채팅방 관리: HTTP API 사용')
+
+    // 부모 클래스의 디버깅도 호출
+    this.debugStatus()
+
+    console.groupEnd()
+  }
+}
+
+// ==================== Vue Composables ====================
+
+/**
+ * Vue Composition API용 채팅 훅
+ */
+export function useChat() {
+  const chatService = new ChatService()
+
+  const getRooms = async (searchCondition = {}) => {
+    try {
+      const response = await chatService.getChatRooms(searchCondition)
+      return {
+        success: true,
+        data: response.data || [],
+        message: response.message
+      }
+    } catch (error) {
+      console.error('[CHAT] 채팅방 목록 조회 실패:', error)
+      return {
+        success: false,
+        error: error.message,
+        data: []
+      }
+    }
+  }
+
+  const createRoom = async (roomData) => {
+    try {
+      const response = await chatService.createChatRoom(roomData)
+      return {
+        success: true,
+        data: response.data,
+        message: response.message || '채팅방이 생성되었습니다'
+      }
+    } catch (error) {
+      console.error('[CHAT] 채팅방 생성 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  const sendMessage = async (roomId, messageData) => {
+    try {
+      const response = await chatService.sendMessage(roomId, messageData)
+      return {
+        success: true,
+        data: response.data,
+        message: response.message
+      }
+    } catch (error) {
+      console.error('[CHAT] 메시지 전송 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  const uploadFile = async (roomId, file, options = {}) => {
+    try {
+      const response = await chatService.uploadFile(roomId, file, options)
+      return {
+        success: true,
+        data: response.data,
+        message: response.message
+      }
+    } catch (error) {
+      console.error('[CHAT] 파일 업로드 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  return {
+    // 채팅방 관리
+    getRooms,
+    createRoom,
+    getRoomDetail: (roomId) => chatService.getChatRoomDetail(roomId),
+    joinRoom: (roomId) => chatService.joinChatRoom(roomId),
+    leaveRoom: (roomId) => chatService.leaveChatRoom(roomId),
+
+    // 메시지 관리
+    getMessages: (roomId, params) => chatService.getChatMessages(roomId, params),
+    sendMessage,
+
+    // 파일 관리
+    uploadFile,
+    uploadImage: (roomId, imageFile, description) => chatService.uploadImage(roomId, imageFile, description),
+
+    // 읽음 처리
+    markAsRead: (roomId, messageId) => chatService.markAsRead(roomId, messageId),
+    getUnreadCount: (roomId) => chatService.getUnreadCount(roomId),
+
+    // 유틸리티
+    transformRoom: (room) => chatService.transformChatRoomResponse(room),
+    transformMessage: (message) => chatService.transformMessageResponse(message),
+    sortRooms: (rooms, sortBy) => chatService.sortChatRooms(rooms, sortBy),
+    filterRooms: (rooms, filters) => chatService.filterChatRooms(rooms, filters),
+
+    // 연결 테스트
+    testConnection: () => chatService.testConnection(),
+
+    // 디버깅
+    debugStatus: () => chatService.debugChatStatus()
+  }
+}
+
+// ==================== 싱글톤 인스턴스 ====================
+
+// 싱글톤 인스턴스 생성 및 내보내기
+export const chatService = new ChatService()
+
+// 별칭 (기존 코드 호환성)
+export const chatApi = chatService
+
+// 기본 내보내기
+export default chatService

@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import * as authUtils from '@/utils/auth.js'
-import { authService } from '@/api/axios.js'
 
 // 전역 상태 (모든 컴포넌트에서 공유)
 const globalUser = ref(null)

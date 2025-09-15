@@ -1,7 +1,6 @@
 // src/stores/auth.js - Pinia 인증 스토어 (useAuth와 연동)
 import { defineStore } from 'pinia'
 import * as authUtils from '@/utils/auth.js'
-import { authService } from '@/api/axios.js'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({

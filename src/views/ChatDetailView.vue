@@ -80,9 +80,8 @@ import MessagesArea from '@/components/chat/detail/MessagesArea.vue'
 import MessageInput from '@/components/chat/detail/MessageInput.vue'
 import ChatRoomMenu from '@/components/chat/detail/ChatRoomMenu.vue'
 import ProductInfoCard from '@/components/chat/detail/ProductInfoCard.vue'
-import {chatService, chatRoomUtils} from '@/services/chatService.js'
 import {webSocketService} from '@/services/webSocketService.js'
-
+import { chatService } from '@/services/ChatService.js'
 const props = defineProps(['roomId', 'initialRoomId'])
 const emit = defineEmits(['back-to-list', 'new-message'])
 

@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { contentService } from '@/api/axios.js'
 import CategoryHeader from '@/components/category/CategoryHeader.vue'
 import CategoryStats from '@/components/category/CategoryStats.vue'
 import CategoryForm from '@/components/category/CategoryForm.vue'
