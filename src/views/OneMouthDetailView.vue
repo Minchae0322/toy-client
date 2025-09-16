@@ -2094,43 +2094,7 @@ if (import.meta.env.DEV) {
   }
 }
 
-/* 다크모드 대응 (시스템 설정 감지) */
-@media (prefers-color-scheme: dark) {
-  .detail-container {
-    background: #1a202c;
-    color: #e2e8f0;
-  }
 
-  .main-content,
-  .widget {
-    background: #2d3748;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-  }
-
-  .product-title,
-  .info-title,
-  .section-title,
-  .reviews-title,
-  .widget-title {
-    color: #e2e8f0;
-  }
-
-  .product-brand,
-  .info-content,
-  .review-content {
-    color: #cbd5e0;
-  }
-
-  .trade-item,
-  .launch-item,
-  .stat-item {
-    background: #4a5568;
-  }
-
-  .trade-item:hover {
-    background: #553c9a;
-  }
-}
 
 /* 인쇄 스타일 */
 @media print {

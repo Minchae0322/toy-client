@@ -15,8 +15,23 @@ import CategoryAdminView from "@/views/CategoryAdminView.vue"
 // Chat Views import
 import ChatApp from '@/views/ChatApp.vue'
 
+
+// Product Views import
+import ProductListView from '@/views/ProductListView.vue'
 const routes = [
-  // ==================== 🌍 공개 페이지 (인증 불필요) ====================
+  // ==================== 상품 관련 라우트 ====================
+  {
+    path: '/products',
+    name: 'ProductList',
+    component: ProductListView,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '상품 목록'
+    }
+  },
+
+  // ==================== 공개 페이지 (인증 불필요) ====================
   {
     path: '/login',
     name: 'Login',
@@ -56,7 +71,7 @@ const routes = [
     }
   },
 
-  // ==================== 🔒 보호된 페이지 (인증 필요) ====================
+  // ==================== 보호된 페이지 (인증 필요) ====================
   {
     path: '/home',
     name: 'Home',
@@ -83,7 +98,7 @@ const routes = [
     }
   },
 
-  // ===== 🔒 채팅 관련 라우트 (인증 필요) =====
+  // ===== 채팅 관련 라우트 (인증 필요) =====
   {
     path: '/chat',
     name: 'Chat',
@@ -111,14 +126,14 @@ const routes = [
     }
   },
 
-  // ==================== 🔀 리다이렉트 ====================
+  // ==================== 리다이렉트 ====================
   {
     path: '/',
-    redirect: '/home'
+    redirect: '/products' // 메인 페이지를 상품 목록으로 변경
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/home'
+    redirect: '/products'
   }
 ]
 
@@ -136,10 +151,10 @@ const router = createRouter({
   }
 })
 
-// ==================== 🛡️ 개선된 인증 가드 (OAuth 호환) ====================
+// ==================== 개선된 인증 가드 (OAuth 호환) ====================
 
 /**
- * 🔥 OAuth 호환 인증 체크 함수
+ * OAuth 호환 인증 체크 함수
  */
 const checkAuthenticationStatus = () => {
   const accessToken = authUtils.getAccessToken()
@@ -159,7 +174,7 @@ const checkAuthenticationStatus = () => {
     const refreshToken = authUtils.getRefreshToken()
 
     if (!refreshToken) {
-      // 🔥 OAuth의 경우 RefreshToken이 없을 수 있음
+      // OAuth의 경우 RefreshToken이 없을 수 있음
       console.log('⚠️ [AuthCheck] RefreshToken 없음 - OAuth 로그인으로 추정')
 
       // AccessToken이 최근에 발급되었으면 유효한 것으로 간주 (1시간 이내)
@@ -193,24 +208,24 @@ const checkAuthenticationStatus = () => {
 }
 
 /**
- * 🔥 스마트 인증 가드 - OAuth 호환 버전
+ * 스마트 인증 가드 - OAuth 호환 버전
  */
 router.beforeEach(async (to, from, next) => {
   console.log(`🧭 [Router] 라우트 이동: ${from.path} → ${to.path}`)
 
-  // 🌍 1단계: 공개 페이지 체크
+  // 1단계: 공개 페이지 체크
   if (to.meta.requiresAuth === false || to.meta.public === true) {
     console.log('🌍 [Router] 공개 페이지 접근 허용:', to.path)
     next()
     return
   }
 
-  // 🔒 2단계: 보호된 페이지 - OAuth 호환 인증 체크
+  // 2단계: 보호된 페이지 - OAuth 호환 인증 체크
   if (to.meta.requiresAuth === true) {
     console.log('🛡️ [Router] 보호된 페이지 - 인증 확인:', to.path)
 
     try {
-      // 🔥 OAuth 호환 인증 체크
+      // OAuth 호환 인증 체크
       const isAuthenticated = checkAuthenticationStatus()
 
       if (isAuthenticated) {
@@ -255,7 +270,7 @@ router.beforeEach(async (to, from, next) => {
       })
     }
   } else {
-    // 🤷 3단계: requiresAuth가 undefined인 경우 기본 처리
+    // 3단계: requiresAuth가 undefined인 경우 기본 처리
     console.log('❓ [Router] requiresAuth 미지정 - 공개 페이지로 처리:', to.path)
     next()
   }
@@ -269,6 +284,8 @@ router.afterEach((to) => {
     title = `${to.meta.title} | ToyChat`
   } else if (to.name === 'ChatWithRoom') {
     title = `채팅방 ${to.params.roomId} | ToyChat`
+  } else if (to.name === 'ProductDetail') {
+    title = `상품 ${to.params.id} | ToyChat`
   }
 
   document.title = title
@@ -315,5 +332,144 @@ export const chatNavigation = {
   getChatRoomUrl(roomId) {
     const route = router.resolve({ name: 'ChatWithRoom', params: { roomId } })
     return window.location.origin + route.href
+  }
+}
+
+// ==================== 상품 네비게이션 헬퍼 ====================
+export const productNavigation = {
+  /**
+   * 상품 목록 페이지로 이동
+   */
+  toProductList(query = {}) {
+    return router.push({ name: 'ProductList', query })
+  },
+
+  /**
+   * 상품 상세 페이지로 이동
+   */
+  toProductDetail(productId) {
+    if (!productId) {
+      console.warn('상품 ID가 없습니다')
+      return this.toProductList()
+    }
+    return router.push({ name: 'ProductDetail', params: { id: productId } })
+  },
+
+  /**
+   * 상품 등록 페이지로 이동
+   */
+  toProductCreate() {
+    return router.push({ name: 'ProductCreate' })
+  },
+
+  /**
+   * 상품 수정 페이지로 이동
+   */
+  toProductEdit(productId) {
+    if (!productId) {
+      console.warn('상품 ID가 없습니다')
+      return this.toProductList()
+    }
+    return router.push({ name: 'ProductEdit', params: { id: productId } })
+  },
+
+  /**
+   * 현재 상품 ID 가져오기
+   */
+  getCurrentProductId() {
+    const route = router.currentRoute.value
+    return ['ProductDetail', 'ProductEdit'].includes(route.name)
+        ? parseInt(route.params.id)
+        : null
+  },
+
+  /**
+   * 상품 관련 페이지인지 확인
+   */
+  isProductPage() {
+    const route = router.currentRoute.value
+    return route.name?.startsWith('Product')
+  },
+
+  /**
+   * 상품 URL 생성
+   */
+  getProductUrl(productId) {
+    const route = router.resolve({ name: 'ProductDetail', params: { id: productId } })
+    return window.location.origin + route.href
+  },
+
+  /**
+   * 카테고리별 상품 목록으로 이동
+   */
+  toProductsByCategory(categoryId, categoryName) {
+    return this.toProductList({
+      categoryId: categoryId,
+      categoryName: categoryName
+    })
+  },
+
+  /**
+   * 브랜드별 상품 목록으로 이동
+   */
+  toProductsByBrand(brand) {
+    return this.toProductList({
+      brand: brand
+    })
+  },
+
+  /**
+   * 검색 결과 페이지로 이동
+   */
+  toProductSearch(keyword) {
+    return this.toProductList({
+      keyword: keyword
+    })
+  }
+}
+
+// ==================== 통합 네비게이션 헬퍼 ====================
+export const navigation = {
+  // 기존 채팅 네비게이션
+  chat: chatNavigation,
+
+  // 새로운 상품 네비게이션
+  product: productNavigation,
+
+  /**
+   * 홈으로 이동
+   */
+  toHome() {
+    return router.push({ name: 'Home' })
+  },
+
+  /**
+   * 로그인 페이지로 이동
+   */
+  toLogin(redirectPath) {
+    const query = redirectPath ? { redirect: redirectPath } : {}
+    return router.push({ name: 'Login', query })
+  },
+
+  /**
+   * 현재 경로 정보
+   */
+  getCurrentRoute() {
+    return router.currentRoute.value
+  },
+
+  /**
+   * 이전 페이지로 이동
+   */
+  goBack() {
+    return router.go(-1)
+  },
+
+  /**
+   * 페이지 새로고침 (SPA 방식)
+   */
+  refresh() {
+    const current = router.currentRoute.value
+    return router.replace({ path: '/redirect' + current.fullPath })
   }
 }

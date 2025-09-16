@@ -293,3 +293,17 @@ export const getOAuthProvider = () => {
     const user = getCurrentUser()
     return user?.provider || 'local'
 }
+
+// API 헤더 생성
+export const getApiHeaders = () => {
+    const headers = {
+        'Content-Type': 'application/json'
+    }
+
+    const accessToken = getAccessToken()
+    if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`
+    }
+
+    return headers
+}
