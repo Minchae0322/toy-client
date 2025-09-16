@@ -256,7 +256,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { X, Search, Check, ChevronDown } from 'lucide-vue-next'
-import { chatApi, chatRoomUtils } from '@/services/chatService.js'
+import { chatService } from '@/services/ChatService.js'
 
 const emit = defineEmits(['close', 'created'])
 
@@ -410,7 +410,7 @@ const handleSubmit = async () => {
     submitError.value = ''
 
     // 백엔드 API 호출
-    const response = await chatApi.createChatRoom({
+    const response = await chatService.createChatRoom({
       title: formData.value.title.trim(),
       description: formData.value.description?.trim() || null,
       roomType: formData.value.roomType,

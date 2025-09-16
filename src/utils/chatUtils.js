@@ -1,7 +1,6 @@
 // utils/chatUtils.js
 // 채팅 관련 유틸리티 함수들
 
-import { tokenUtils } from '@/api/axios.js'
 
 /**
  * 메시지 타입 상수

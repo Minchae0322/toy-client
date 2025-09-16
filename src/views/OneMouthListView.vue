@@ -35,12 +35,11 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { contentService } from '@/api/axios.js';
 import HeaderSection from '@/components/oneMouth/HeaderSection.vue';
 import SidebarSection from '@/components/oneMouth/SidebarSection.vue';
 import ContentArea from '@/components/oneMouth/ContentArea.vue';
 import FloatingButton from '@/components/oneMouth/FloatingButton.vue';
-
+import { authService } from '@/services/AuthService.js'
 // 라우터
 const router = useRouter();
 

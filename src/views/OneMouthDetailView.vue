@@ -347,7 +347,6 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { contentService, tokenUtils, chatService } from '@/api/axios.js';
 import { getChatErrorMessage, debugChatInfo } from '@/utils/chatUtils.js';
 
 // 컴포넌트 imports

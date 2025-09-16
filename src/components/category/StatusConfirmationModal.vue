@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue'
-import { contentService } from '@/api/axios.js'
 import StatusConfirmationModal from '@/components/category/StatusConfirmationModal.vue'
 
 const props = defineProps({

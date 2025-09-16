@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue'
-import { contentService } from '@/api/axios.js'
 
 const props = defineProps({
   category: {

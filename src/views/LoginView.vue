@@ -84,8 +84,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
-import { authService } from '@/api/axios.js'
 import * as authUtils from '@/utils/auth.js'
+import { authService } from '@/services/AuthService.js'  // 추가
 
 const router = useRouter()
 const route = useRoute()

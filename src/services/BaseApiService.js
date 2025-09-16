@@ -1,0 +1,459 @@
+// services/base/BaseApiService.js
+// 모든 API 서비스의 공통 기반 클래스 (Fetch API 기반)
+
+import * as authUtils from '@/utils/auth.js'
+
+/**
+ * API 서비스 기반 클래스
+ * - Fetch API 기반 HTTP 통신
+ * - 토큰 자동 갱신
+ * - 공통 에러 처리
+ * - 요청/응답 인터셉터 기능
+ */
+export class BaseApiService {
+  constructor(baseURL, serviceName = 'API') {
+    this.baseURL = baseURL
+    this.serviceName = serviceName
+
+    // 토큰 갱신 상태 관리
+    this.isRefreshing = false
+    this.failedQueue = []
+
+    console.log(`🌐 [${this.serviceName}] 서비스 초기화됨: ${baseURL}`)
+  }
+
+  // ==================== 공통 헤더 생성 ====================
+
+  /**
+   * API 요청용 기본 헤더 생성
+   */
+  getDefaultHeaders(includeAuth = true) {
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Device-ID': authUtils.getDeviceId(),
+      'X-User-Agent': navigator.userAgent,
+      'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+      'X-Language': navigator.language || 'ko'
+    }
+
+    if (includeAuth) {
+      const token = authUtils.getAccessToken()
+      if (token) {
+        headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`
+      }
+    }
+
+    return headers
+  }
+
+  // ==================== 토큰 갱신 ====================
+
+  /**
+   * 토큰 갱신 처리
+   */
+  async refreshToken() {
+    if (this.isRefreshing) {
+      // 이미 갱신 중이면 기존 Promise 반환
+      return new Promise((resolve, reject) => {
+        this.failedQueue.push({ resolve, reject })
+      })
+    }
+
+    const refreshTokenValue = authUtils.getRefreshToken()
+
+    if (!refreshTokenValue) {
+      throw new Error('RefreshToken이 없습니다')
+    }
+
+    if (authUtils.isTokenExpired(refreshTokenValue)) {
+      throw new Error('RefreshToken이 만료되었습니다')
+    }
+
+    this.isRefreshing = true
+
+    try {
+      console.log(`🔄 [${this.serviceName}] 토큰 갱신 시작...`)
+
+      // Auth Server로 토큰 갱신 요청
+      const authBaseURL = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8081'
+      const response = await fetch(`${authBaseURL}/api/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          refreshToken: refreshTokenValue
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`토큰 갱신 실패: ${response.status} ${response.statusText}`)
+      }
+
+      const responseData = await response.json()
+      const data = responseData.data || responseData
+      const { accessToken, refreshToken: newRefreshToken } = data
+
+      if (!accessToken) {
+        throw new Error('새로운 AccessToken을 받지 못했습니다')
+      }
+
+      // 새 토큰들 저장
+      authUtils.setTokens(accessToken, newRefreshToken || refreshTokenValue)
+
+      console.log(`✅ [${this.serviceName}] 토큰 갱신 완료`)
+
+      // 대기 중인 요청들 처리
+      this.processQueue(null, accessToken)
+
+      return accessToken
+
+    } catch (error) {
+      console.error(`❌ [${this.serviceName}] 토큰 갱신 실패:`, error)
+
+      // 실패한 요청들 처리
+      this.processQueue(error, null)
+
+      // 토큰 갱신 실패시 로그아웃 처리
+      authUtils.logout()
+
+      // 로그인 페이지로 리다이렉트
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login?reason=token_expired'
+      }
+
+      throw error
+    } finally {
+      this.isRefreshing = false
+    }
+  }
+
+  /**
+   * 대기열 처리
+   */
+  processQueue(error, token = null) {
+    this.failedQueue.forEach(prom => {
+      if (error) {
+        prom.reject(error)
+      } else {
+        prom.resolve(token)
+      }
+    })
+    this.failedQueue = []
+  }
+
+  // ==================== 핵심 요청 메서드 ====================
+
+  /**
+   * 통합 fetch 요청 처리
+   */
+  async request(url, options = {}) {
+    const { retryOnAuth = true, includeAuth = true, ...fetchOptions } = options
+
+    // URL 처리
+    const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`
+
+    try {
+      // 헤더 설정
+      const headers = {
+        ...this.getDefaultHeaders(includeAuth),
+        ...fetchOptions.headers
+      }
+
+      const requestOptions = {
+        ...fetchOptions,
+        headers
+      }
+
+      // 요청 로깅
+      if (import.meta.env.DEV) {
+        console.log(`📤 [${this.serviceName}] ${requestOptions.method || 'GET'} ${fullUrl}`)
+      }
+
+      const response = await fetch(fullUrl, requestOptions)
+
+      // 401 에러 시 토큰 갱신 후 재시도
+      if (response.status === 401 && retryOnAuth && !options._retried) {
+        console.log(`🔄 [${this.serviceName}] 401 에러 감지, 토큰 갱신 후 재시도...`)
+
+        try {
+          const newToken = await this.refreshToken()
+
+          // 새 토큰으로 헤더 업데이트
+          const newHeaders = {
+            ...headers,
+            'Authorization': `Bearer ${newToken}`
+          }
+
+          // 재시도 플래그 설정하여 무한 루프 방지
+          const retryOptions = {
+            ...requestOptions,
+            headers: newHeaders,
+            _retried: true
+          }
+
+          console.log(`✅ [${this.serviceName}] 토큰 갱신 후 재시도...`)
+          return this.request(url, { ...options, _retried: true })
+
+        } catch (refreshError) {
+          console.error(`❌ [${this.serviceName}] 토큰 갱신 실패, 로그아웃 처리`)
+          throw new ApiError('인증이 만료되었습니다. 다시 로그인해주세요.', 401, null, this.serviceName)
+        }
+      }
+
+      // 응답 처리
+      if (!response.ok) {
+        let errorData = {}
+        try {
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            errorData = await response.json()
+          } else {
+            errorData = { message: await response.text() }
+          }
+        } catch (parseError) {
+          console.warn(`⚠️ [${this.serviceName}] 에러 응답 파싱 실패:`, parseError)
+          errorData = { message: response.statusText }
+        }
+
+        const errorMessage = errorData.message ||
+            errorData.error ||
+            `HTTP ${response.status} ${response.statusText}`
+
+        throw new ApiError(errorMessage, response.status, errorData, this.serviceName)
+      }
+
+      // 성공 응답 로깅
+      if (import.meta.env.DEV) {
+        console.log(`📥 [${this.serviceName}] ${response.status} ${fullUrl}`)
+      }
+
+      // JSON 응답 파싱
+      const contentType = response.headers.get('content-type')
+      let responseData = null
+
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json()
+      } else {
+        responseData = await response.text()
+      }
+
+      return this.handleSuccessResponse({
+        data: responseData,
+        status: response.status,
+        headers: response.headers
+      })
+
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error
+      }
+
+      console.error(`❌ [${this.serviceName}] ${fetchOptions.method || 'GET'} ${fullUrl} 실패:`, error.message)
+      throw new ApiError(error.message, null, null, this.serviceName)
+    }
+  }
+
+  // ==================== HTTP 메서드 래퍼 ====================
+
+  /**
+   * GET 요청
+   */
+  async get(url, params = {}, options = {}) {
+    // 쿼리 파라미터 처리
+    const queryString = new URLSearchParams(params).toString()
+    const fullUrl = `${url}${queryString ? '?' + queryString : ''}`
+
+    return this.request(fullUrl, {
+      method: 'GET',
+      ...options
+    })
+  }
+
+  /**
+   * POST 요청
+   */
+  async post(url, data = null, options = {}) {
+    return this.request(url, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : null,
+      ...options
+    })
+  }
+
+  /**
+   * PUT 요청
+   */
+  async put(url, data = null, options = {}) {
+    return this.request(url, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : null,
+      ...options
+    })
+  }
+
+  /**
+   * DELETE 요청
+   */
+  async delete(url, options = {}) {
+    return this.request(url, {
+      method: 'DELETE',
+      ...options
+    })
+  }
+
+  /**
+   * PATCH 요청
+   */
+  async patch(url, data = null, options = {}) {
+    return this.request(url, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : null,
+      ...options
+    })
+  }
+
+  // ==================== 응답 처리 ====================
+
+  /**
+   * 성공 응답 표준화
+   */
+  handleSuccessResponse(response) {
+    // 백엔드 응답 구조에 맞게 표준화
+    const data = response.data
+
+    return {
+      success: data?.success !== false, // 명시적으로 false가 아니면 success
+      data: data?.data || data,
+      message: data?.message || 'success',
+      status: response.status,
+      headers: response.headers
+    }
+  }
+
+  // ==================== 파일 업로드 ====================
+
+  /**
+   * 파일 업로드 (multipart/form-data)
+   */
+  async uploadFile(url, formData, options = {}) {
+    // Content-Type 헤더 제거 (브라우저가 자동 설정)
+    const headers = {
+      ...this.getDefaultHeaders(true)
+    }
+    delete headers['Content-Type']
+
+    return this.request(url, {
+      method: 'POST',
+      body: formData,
+      headers,
+      ...options
+    })
+  }
+
+  // ==================== 연결 테스트 ====================
+
+  /**
+   * 서버 연결 테스트
+   */
+  async testConnection() {
+    const testEndpoints = [
+      '/actuator/health',
+      '/api/health',
+      '/health'
+    ]
+
+    console.log(`🔍 [${this.serviceName}] 서버 연결 테스트...`)
+
+    for (const endpoint of testEndpoints) {
+      try {
+        const response = await fetch(`${this.baseURL}${endpoint}`, {
+          method: 'GET',
+          headers: this.getDefaultHeaders(false),
+          signal: AbortSignal.timeout(5000) // 5초 타임아웃
+        })
+
+        if (response.ok) {
+          console.log(`✅ [${this.serviceName}] 서버 연결 성공: ${endpoint}`)
+          return true
+        }
+      } catch (error) {
+        console.warn(`❌ [${this.serviceName}] ${endpoint} 연결 실패:`, error.message)
+      }
+    }
+
+    console.log(`❌ [${this.serviceName}] 모든 엔드포인트 연결 실패`)
+    return false
+  }
+
+  // ==================== 디버깅 ====================
+
+  /**
+   * 서비스 상태 디버깅
+   */
+  debugStatus() {
+    console.group(`🔍 [${this.serviceName}] 서비스 상태`)
+
+    console.log('=== 서비스 정보 ===')
+    console.log('Service Name:', this.serviceName)
+    console.log('Base URL:', this.baseURL)
+    console.log('Environment:', import.meta.env.MODE)
+
+    console.log('=== 인증 정보 ===')
+    console.log('Access Token 존재:', !!authUtils.getAccessToken())
+    console.log('Refresh Token 존재:', !!authUtils.getRefreshToken())
+    console.log('사용자 인증 상태:', authUtils.isAuthenticated())
+    console.log('사용자 ID:', authUtils.getUserId())
+    console.log('디바이스 ID:', authUtils.getDeviceId())
+
+    console.log('=== 토큰 갱신 상태 ===')
+    console.log('갱신 진행 중:', this.isRefreshing)
+    console.log('대기열 크기:', this.failedQueue.length)
+
+    console.groupEnd()
+  }
+}
+
+// ==================== 커스텀 에러 클래스 ====================
+
+export class ApiError extends Error {
+  constructor(message, status, data, serviceName) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.data = data
+    this.serviceName = serviceName
+    this.timestamp = new Date().toISOString()
+  }
+
+  static isAuthError(error) {
+    return error.status === 401 || error.status === 403
+  }
+
+  static isNetworkError(error) {
+    return !error.status && (
+        error.message.includes('fetch') ||
+        error.message.includes('network') ||
+        error.message.includes('Failed to fetch')
+    )
+  }
+
+  static isServerError(error) {
+    return error.status >= 500
+  }
+
+  static isClientError(error) {
+    return error.status >= 400 && error.status < 500
+  }
+
+  toLogObject() {
+    return {
+      service: this.serviceName,
+      message: this.message,
+      status: this.status,
+      data: this.data,
+      timestamp: this.timestamp
+    }
+  }
+}

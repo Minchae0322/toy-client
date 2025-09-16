@@ -1,1275 +1,892 @@
 <template>
-  <div class="product-list-view">
-    <!-- 헤더 -->
-    <header class="header">
-      <div class="header-container">
-        <router-link to="/" class="logo">
-          <div class="logo-icon">🍽️</div>
-          한입만
-        </router-link>
-
-        <div class="search-container">
-          <input
-              type="text"
-              class="search-input"
-              placeholder="먹거리, 브랜드를 검색해보세요"
-              v-model="searchCondition.keyword"
-              @keyup.enter="handleSearch"
-          >
-          <div class="search-icon">🔍</div>
-        </div>
-
-        <div class="header-actions">
-          <button class="location-btn">
-            📍 강남구
-          </button>
-          <button class="notification-btn">
-            🔔
-            <div class="notification-badge">3</div>
-          </button>
+  <div class="product-list-container">
+    <!-- 헤더 섹션 -->
+    <div class="header-section">
+      <div class="header-content">
+        <h1 class="page-title">제품 목록</h1>
+        <div class="header-stats">
+          <div class="stat-item">
+            <span class="stat-number">{{ totalProducts }}</span>
+            <span class="stat-label">전체 제품</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{{ newProductsCount }}</span>
+            <span class="stat-label">신제품</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{{ totalLikes }}</span>
+            <span class="stat-label">총 찜하기</span>
+          </div>
         </div>
       </div>
-    </header>
+    </div>
 
-    <!-- 메인 컨테이너 -->
-    <div class="main-container">
-      <!-- 왼쪽 사이드바 -->
-      <aside class="sidebar">
-        <div class="sidebar-section">
-          <div class="sidebar-title">카테고리</div>
-          <ul class="category-list">
-            <li
-                class="category-item"
-                :class="{ active: !searchCondition.categoryId }"
-                @click="selectCategory(null)"
-            >
-              🔥 전체
-            </li>
-            <li
-                v-for="category in categories"
-                :key="category.categoryId"
-                class="category-item"
-                :class="{ active: searchCondition.categoryId === category.categoryId }"
-                @click="selectCategory(category.categoryId)"
-            >
-              {{ category.categoryName }}
-            </li>
-          </ul>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-title">필터</div>
-          <ul class="category-list">
-            <li
-                class="category-item"
-                :class="{ active: filters.tradeAvailable }"
-                @click="toggleFilter('tradeAvailable')"
-            >
-              💰 거래 가능
-            </li>
-            <li
-                class="category-item"
-                :class="{ active: filters.nearby }"
-                @click="toggleFilter('nearby')"
-            >
-              📍 5km 이내
-            </li>
-            <li
-                class="category-item"
-                :class="{ active: filters.highRating }"
-                @click="toggleFilter('highRating')"
-            >
-              ⭐ 4.0 이상
-            </li>
-            <li
-                class="category-item"
-                :class="{ active: filters.newProduct }"
-                @click="toggleFilter('newProduct')"
-            >
-              🆕 신상품
-            </li>
-          </ul>
-        </div>
-      </aside>
-
-      <!-- 메인 콘텐츠 -->
-      <main class="main-content">
-        <!-- 탭 네비게이션 -->
-        <div class="tab-nav">
-          <div class="tab-list">
-            <div
-                class="tab"
-                :class="{ active: activeTab === 'trending' }"
-                @click="setActiveTab('trending')"
-            >
-              <span>🔥</span>
-              <span>트렌딩</span>
-            </div>
-            <div
-                class="tab"
-                :class="{ active: activeTab === 'nearby' }"
-                @click="setActiveTab('nearby')"
-            >
-              <span>📍</span>
-              <span>내 근처</span>
-            </div>
-            <div
-                class="tab"
-                :class="{ active: activeTab === 'new' }"
-                @click="setActiveTab('new')"
-            >
-              <span>💫</span>
-              <span>신상품</span>
-            </div>
-            <div
-                class="tab"
-                :class="{ active: activeTab === 'recent' }"
-                @click="setActiveTab('recent')"
-            >
-              <span>⏰</span>
-              <span>최근 본</span>
-            </div>
+    <div class="main-content">
+      <!-- 사이드바 - 검색 및 필터 -->
+      <div class="sidebar">
+        <div class="search-section">
+          <div class="search-input-container">
+            <Search :size="20" class="search-icon" />
+            <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="제품명, 브랜드 검색..."
+                class="search-input"
+                @input="handleSearchInput"
+            />
           </div>
         </div>
 
-        <!-- 메인 피드 -->
-        <div class="main-feed">
-          <div class="feed-header">
-            <div class="sort-options">
-              <button
-                  v-for="option in sortOptions"
-                  :key="option.value"
-                  class="sort-btn"
-                  :class="{ active: pageable.sort === option.value }"
-                  @click="setSortOption(option.value)"
-              >
-                {{ option.label }}
-              </button>
-            </div>
-          </div>
-
-          <!-- 로딩 상태 -->
-          <div v-if="loading" class="loading-container">
-            <div class="loading-spinner">로딩 중...</div>
-          </div>
-
-          <!-- 에러 상태 -->
-          <div v-else-if="error" class="error-container">
-            <p>{{ error }}</p>
-            <button @click="loadProducts" class="retry-btn">다시 시도</button>
-          </div>
-
-          <!-- 상품 그리드 -->
-          <div v-else class="products-grid">
-            <div
-                v-for="product in products"
-                :key="product.id"
-                class="product-card"
-                @click="goToProductDetail(product.id)"
-            >
-              <div class="product-image">
-                <img
-                    v-if="product.thumbnailUrl"
-                    :src="product.thumbnailUrl"
-                    :alt="product.name"
-                    @error="onImageError"
-                >
-                <div v-else class="product-placeholder">
-                  {{ getProductEmoji(product.categoryName) }}
-                </div>
-                <div class="product-badge">
-                  {{ getProductBadge(product.productType) }}
-                </div>
-                <button
-                    class="heart-btn"
-                    @click.stop="toggleLike(product.id)"
-                    :class="{ liked: likedProducts.has(product.id) }"
-                >
-                  {{ likedProducts.has(product.id) ? '❤️' : '🤍' }}
-                </button>
-              </div>
-              <div class="product-info">
-                <div class="product-name">{{ product.name }}</div>
-                <div class="product-brand">{{ product.brand }}</div>
-                <div class="product-stats">
-                  <span class="stat">⭐ {{ formatRating(product.averageRating) }}</span>
-                  <span class="stat">💬 {{ formatCount(product.reviewCount) }}</span>
-                  <span class="stat">🔥 {{ formatCount(product.likeCount) }}</span>
-                </div>
-                <div class="distance">📍 {{ getRandomDistance() }}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 페이지네이션 -->
-          <div v-if="totalPages > 1" class="pagination">
+        <!-- 카테고리 필터 -->
+        <div class="filter-section">
+          <h3 class="filter-title">카테고리</h3>
+          <div class="filter-options">
             <button
-                v-for="page in visiblePages"
-                :key="page"
-                class="page-btn"
-                :class="{ active: page === currentPage + 1 }"
-                @click="goToPage(page - 1)"
+                @click="setActiveFilter(null)"
+                :class="['filter-option', { active: activeFilter === null }]"
             >
-              {{ page }}
+              <span class="filter-icon">🔄</span>
+              <span class="filter-text">전체</span>
+            </button>
+            <button
+                v-for="category in categories"
+                :key="category.id"
+                @click="setActiveFilter('category', category.id)"
+                :class="['filter-option', { active: activeFilter?.type === 'category' && activeFilter?.value === category.id }]"
+            >
+              <span class="filter-icon">{{ getCategoryIcon(category.name) }}</span>
+              <span class="filter-text">{{ category.name }}</span>
             </button>
           </div>
         </div>
-      </main>
 
-      <!-- 오른쪽 사이드바 -->
-      <aside class="right-sidebar">
-        <!-- 실시간 랭킹 -->
-        <div class="widget">
-          <div class="widget-title">🏆 실시간 랭킹</div>
-          <div
-              v-for="(product, index) in topProducts"
-              :key="product.id"
-              class="ranking-item"
-          >
-            <div
-                class="rank-number"
-                :class="{ top3: index < 3 }"
+        <!-- 브랜드 필터 -->
+        <div class="filter-section">
+          <h3 class="filter-title">브랜드</h3>
+          <div class="filter-options">
+            <button
+                v-for="brand in popularBrands"
+                :key="brand"
+                @click="setActiveFilter('brand', brand)"
+                :class="['filter-option', { active: activeFilter?.type === 'brand' && activeFilter?.value === brand }]"
             >
-              {{ index + 1 }}
-            </div>
-            <div class="ranking-info">
-              <div class="ranking-name">{{ product.name }}</div>
-              <div class="ranking-brand">{{ product.brand }}</div>
-            </div>
-            <div v-if="index === 0" class="trend-badge">🚀 급상승</div>
-            <div v-else-if="index === 2" class="trend-badge">🆕 신규</div>
+              <span class="filter-icon">🏢</span>
+              <span class="filter-text">{{ brand }}</span>
+            </button>
           </div>
         </div>
 
-        <!-- 내 근처 인기 -->
-        <div class="widget">
-          <div class="widget-title">📍 내 근처 인기</div>
-          <div
-              v-for="product in nearbyProducts"
-              :key="product.id"
-              class="ranking-item"
-          >
-            <div class="ranking-info">
-              <div class="ranking-name">{{ product.name }}</div>
-              <div class="ranking-brand">
-                {{ getRandomDistance() }} · {{ formatRating(product.averageRating) }}⭐
-              </div>
-            </div>
+        <!-- 정렬 옵션 -->
+        <div class="filter-section">
+          <h3 class="filter-title">정렬</h3>
+          <div class="sort-options">
+            <label
+                v-for="option in sortOptions"
+                :key="option.value"
+                :class="['sort-option', { active: sortBy === option.value }]"
+            >
+              <input
+                  type="radio"
+                  :value="option.value"
+                  v-model="sortBy"
+                  @change="handleSortChange"
+              />
+              <span class="sort-text">{{ option.label }}</span>
+            </label>
           </div>
         </div>
-      </aside>
+      </div>
+
+      <!-- 메인 컨텐츠 영역 -->
+      <div class="content-area">
+        <!-- 툴바 -->
+        <div class="toolbar">
+          <div class="results-info">
+            <span v-if="!loading">{{ totalProducts }}개 제품</span>
+            <span v-if="activeFilter" class="filter-info">
+              • {{ getFilterText() }}
+            </span>
+          </div>
+
+          <div class="view-controls">
+            <button
+                @click="viewMode = 'grid'"
+                :class="['view-btn', { active: viewMode === 'grid' }]"
+            >
+              <Grid3X3 :size="16" />
+            </button>
+            <button
+                @click="viewMode = 'list'"
+                :class="['view-btn', { active: viewMode === 'list' }]"
+            >
+              <List :size="16" />
+            </button>
+          </div>
+        </div>
+
+        <!-- 로딩 상태 -->
+        <div v-if="initialLoading" class="loading-container">
+          <div class="spinner"></div>
+          <p>제품을 불러오는 중...</p>
+        </div>
+
+        <!-- 제품 목록 -->
+        <div v-else-if="products.length > 0" :class="['products-container', viewMode]">
+          <ProductCard
+              v-for="product in products"
+              :key="product.id"
+              :product="product"
+              :view-mode="viewMode"
+              @view-detail="viewProductDetail"
+              @toggle-like="handleToggleLike"
+          />
+        </div>
+
+        <!-- 빈 상태 -->
+        <div v-else class="empty-state">
+          <Package :size="64" class="empty-icon" />
+          <h3>제품이 없습니다</h3>
+          <p v-if="searchQuery">
+            "{{ searchQuery }}"에 대한 검색 결과가 없습니다.
+          </p>
+          <p v-else-if="activeFilter">
+            해당 조건에 맞는 제품이 없습니다.
+          </p>
+          <p v-else>
+            아직 등록된 제품이 없습니다.
+          </p>
+        </div>
+
+        <!-- 더 보기 버튼 -->
+        <div v-if="hasMore && !loading" class="load-more-container">
+          <button @click="loadMore" class="load-more-btn">
+            더 많은 제품 보기
+          </button>
+        </div>
+
+        <!-- 로딩 더보기 -->
+        <div v-if="loading && !initialLoading" class="loading-more">
+          <div class="spinner-small"></div>
+          <span>더 많은 제품을 불러오는 중...</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { productService, productUtils, productFilterUtils } from '@/services/productService.js'
+import { Search, Grid3X3, List, Package } from 'lucide-vue-next'
+import ProductCard from '@/components/product/ProductCard.vue'
+import { useProduct } from '@/services/ProductService.js'
+import { useAuth } from '@/composables/useAuth.js'
 
-// Router
+// 라우터
 const router = useRouter()
 
-// 반응형 데이터
-const loading = ref(false)
-const error = ref(null)
+// Composables
+const { getList, getDetail, toggleLike, incrementView } = useProduct()
+const { isLoggedIn } = useAuth()
+
+// 반응형 상태
 const products = ref([])
-const categories = ref([])
-const topProducts = ref([])
-const nearbyProducts = ref([])
-const likedProducts = ref(new Set())
-const activeTab = ref('trending')
+const searchQuery = ref('')
+const activeFilter = ref(null)
+const sortBy = ref('release')
+const viewMode = ref('grid')
+const loading = ref(false)
+const initialLoading = ref(true)
+const hasMore = ref(true)
+
+// 페이징 상태
 const currentPage = ref(0)
-const totalPages = ref(0)
-const totalElements = ref(0)
+const pageSize = ref(12)
+const totalProducts = ref(0)
 
-// 검색 조건
-const searchCondition = reactive(productFilterUtils.getDefaultSearchCondition())
-const pageable = reactive(productFilterUtils.getDefaultPageable())
-
-// 필터
-const filters = reactive({
-  tradeAvailable: false,
-  nearby: false,
-  highRating: false,
-  newProduct: false
-})
+// 카테고리 및 브랜드 데이터
+const categories = ref([])
+const popularBrands = ref([])
 
 // 정렬 옵션
-const sortOptions = computed(() => productFilterUtils.getSortOptions())
+const sortOptions = [
+  { value: 'release', label: '최신 출시순' },
+  { value: 'latest', label: '등록순' },
+  { value: 'popular', label: '인기순 (찜하기)' },
+  { value: 'views', label: '조회수순' },
+  { value: 'rating', label: '평점순' },
+  { value: 'name', label: '이름순' }
+]
 
-// 페이지네이션
-const visiblePages = computed(() => {
-  const pages = []
-  const start = Math.max(1, currentPage.value - 2)
-  const end = Math.min(totalPages.value, currentPage.value + 3)
+// 검색 디바운스 타이머
+let searchTimeout = null
 
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
-  }
-  return pages
+// 계산된 속성
+const newProductsCount = computed(() => {
+  return products.value.filter(product => product.isNew).length
+})
+
+const totalLikes = computed(() => {
+  return products.value.reduce((sum, product) => sum + (product.likeCount || 0), 0)
 })
 
 // 메서드
-const loadProducts = async () => {
+const getCategoryIcon = (categoryName) => {
+  const iconMap = {
+    '피규어': '🤖',
+    '프라모델': '✈️',
+    '게임': '🎮',
+    '만화': '📚',
+    '음식': '🍽️',
+    '의류': '👕',
+    '전자제품': '📱',
+    '완구': '🧸',
+    '스포츠': '⚽',
+    '뷰티': '💄'
+  }
+  return iconMap[categoryName] || '📦'
+}
+
+const getFilterText = () => {
+  if (!activeFilter.value) return ''
+
+  if (activeFilter.value.type === 'category') {
+    const category = categories.value.find(c => c.id === activeFilter.value.value)
+    return `카테고리: ${category?.name || '알 수 없음'}`
+  }
+
+  if (activeFilter.value.type === 'brand') {
+    return `브랜드: ${activeFilter.value.value}`
+  }
+
+  return ''
+}
+
+const setActiveFilter = (type, value) => {
+  if (type === null) {
+    activeFilter.value = null
+  } else {
+    activeFilter.value = { type, value }
+  }
+  resetAndFetch()
+}
+
+const handleSearchInput = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+
+  searchTimeout = setTimeout(() => {
+    resetAndFetch()
+  }, 300)
+}
+
+const handleSortChange = () => {
+  resetAndFetch()
+}
+
+const buildSearchCondition = () => {
+  const condition = {
+    status: 'APPROVED' // 승인된 제품만
+  }
+
+  if (searchQuery.value.trim()) {
+    condition.keyword = searchQuery.value.trim()
+  }
+
+  if (activeFilter.value?.type === 'category') {
+    condition.categoryId = activeFilter.value.value
+  }
+
+  if (activeFilter.value?.type === 'brand') {
+    condition.brand = activeFilter.value.value
+  }
+
+  return condition
+}
+
+const buildPageable = (page = 0) => {
+  const sortMap = {
+    'latest': 'createdAt,DESC',
+    'release': 'releaseDate,DESC',
+    'popular': 'likeCount,DESC',
+    'views': 'viewCount,DESC',
+    'rating': 'averageRating,DESC',
+    'name': 'name,ASC'
+  }
+
+  return {
+    page,
+    size: pageSize.value,
+    sort: sortMap[sortBy.value] || 'releaseDate,DESC'
+  }
+}
+
+const fetchProducts = async (page = 0, append = false) => {
+  if (loading.value) return
+
+  loading.value = true
+
   try {
-    loading.value = true
-    error.value = null
+    const searchCondition = buildSearchCondition()
+    const pageable = buildPageable(page)
 
-    const response = await productService.getProducts(searchCondition, pageable)
+    console.log('API 요청:', { searchCondition, pageable })
 
-    if (response.success && response.data) {
-      if (response.data.content) {
-        // 페이징 응답 처리
-        products.value = response.data.content
-        totalPages.value = response.data.totalPages || 1
-        totalElements.value = response.data.totalElements || 0
-        currentPage.value = response.data.pageable?.page || 0
+    const result = await getList(searchCondition, pageable)
+
+    if (result.success) {
+      const pageData = result.data
+      const newProducts = pageData.content || []
+
+      // 제품 데이터 변환
+      const transformedProducts = newProducts.map(product => ({
+        id: product.id,
+        name: product.name,
+        brand: product.brand,
+        price: product.price,
+        viewCount: product.viewCount || 0,
+        likeCount: product.likeCount || 0,
+        averageRating: product.averageRating || 0,
+        reviewCount: product.reviewCount || 0,
+        categoryName: product.categoryName,
+        thumbnailUrl: product.thumbnailUrl || '',
+        releaseDate: product.releaseDate,
+        createdAt: product.createdAt,
+        isNew: isNewProduct(product.releaseDate),
+        isLiked: false, // 추후 개별 조회 필요
+        displayPrice: formatPrice(product.price)
+      }))
+
+      if (append) {
+        products.value = [...products.value, ...transformedProducts]
       } else {
-        // 단순 배열 응답 처리
-        products.value = Array.isArray(response.data) ? response.data : []
+        products.value = transformedProducts
       }
-    } else {
-      throw new Error(response.message || '상품을 불러오는데 실패했습니다.')
-    }
-  } catch (err) {
-    console.error('상품 로딩 실패:', err)
-    error.value = err.message
 
-    // 개발 환경에서 샘플 데이터 사용
-    if (import.meta.env.DEV) {
-      const sampleData = productService.getSampleProducts()
-      products.value = sampleData.data.content || []
-      totalPages.value = sampleData.data.totalPages || 1
+      // 페이징 정보 업데이트
+      currentPage.value = pageData.number || 0
+      totalProducts.value = pageData.totalElements || 0
+      hasMore.value = !pageData.last
+
+      console.log(`제품 로드 완료: ${transformedProducts.length}개, 총 ${totalProducts.value}개`)
+
+    } else {
+      throw new Error(result.error || '제품 조회에 실패했습니다')
     }
+
+  } catch (error) {
+    console.error('제품 데이터 로딩 실패:', error)
+
+    if (!append) {
+      products.value = []
+      totalProducts.value = 0
+      hasMore.value = false
+    }
+
+    // 사용자에게 에러 알림
+    if (error.message.includes('401') || error.message.includes('auth')) {
+      alert('로그인이 필요합니다.')
+      router.push('/login')
+    } else {
+      alert('제품을 불러오는 중 오류가 발생했습니다.')
+    }
+
   } finally {
     loading.value = false
+    initialLoading.value = false
   }
 }
 
-const loadCategories = async () => {
+const isNewProduct = (releaseDate) => {
+  if (!releaseDate) return false
+
+  const release = new Date(releaseDate)
+  const now = new Date()
+  const diffDays = (now - release) / (1000 * 60 * 60 * 24)
+
+  return diffDays <= 30
+}
+
+const formatPrice = (price) => {
+  if (!price || price === '0') return '무료'
+
+  const numPrice = parseInt(price.replace(/[^0-9]/g, ''))
+  if (!isNaN(numPrice)) {
+    return new Intl.NumberFormat('ko-KR', {
+      style: 'currency',
+      currency: 'KRW'
+    }).format(numPrice)
+  }
+
+  return price
+}
+
+const resetAndFetch = () => {
+  if (loading.value) return
+
+  currentPage.value = 0
+  products.value = []
+  hasMore.value = true
+  fetchProducts(0, false)
+}
+
+const loadMore = async () => {
+  if (!hasMore.value || loading.value) return
+
+  const nextPage = currentPage.value + 1
+  await fetchProducts(nextPage, true)
+}
+
+const viewProductDetail = async (product) => {
   try {
-    const response = await productService.getCategories()
-    if (response.success) {
-      categories.value = response.data || []
-    }
-  } catch (err) {
-    console.error('카테고리 로딩 실패:', err)
+    // 조회수 증가
+    await incrementView(product.id)
 
-    // 샘플 데이터 사용
-    const sampleData = productService.getSampleCategories()
-    categories.value = sampleData.data || []
+    // 상세 페이지로 이동
+    await router.push({
+      name: 'ProductDetail',
+      params: { id: product.id }
+    })
+  } catch (error) {
+    console.error('제품 상세 이동 실패:', error)
+
+    // 대안: 직접 URL 이동
+    router.push(`/products/${product.id}`)
   }
 }
 
-const loadTopProducts = async () => {
+const handleToggleLike = async (product) => {
+  if (!isLoggedIn.value) {
+    alert('로그인 후 이용해주세요.')
+    router.push('/login')
+    return
+  }
+
   try {
-    const response = await productService.getProducts(
-        { status: 'APPROVED' },
-        { page: 0, size: 5, sort: 'likeCount,DESC' }
-    )
+    const result = await toggleLike(product.id)
 
-    if (response.success && response.data) {
-      const data = response.data.content || response.data
-      topProducts.value = Array.isArray(data) ? data.slice(0, 5) : []
-    }
-  } catch (err) {
-    console.error('인기 상품 로딩 실패:', err)
-    // 기본 상품에서 상위 5개 사용
-    topProducts.value = products.value.slice(0, 5)
-  }
-}
-
-const loadNearbyProducts = async () => {
-  try {
-    const response = await productService.getProducts(
-        { status: 'APPROVED' },
-        { page: 0, size: 3, sort: 'viewCount,DESC' }
-    )
-
-    if (response.success && response.data) {
-      const data = response.data.content || response.data
-      nearbyProducts.value = Array.isArray(data) ? data.slice(0, 3) : []
-    }
-  } catch (err) {
-    console.error('근처 상품 로딩 실패:', err)
-    // 기본 상품에서 3개 사용
-    nearbyProducts.value = products.value.slice(0, 3)
-  }
-}
-
-const selectCategory = (categoryId) => {
-  searchCondition.categoryId = categoryId
-  pageable.page = 0
-  currentPage.value = 0
-  loadProducts()
-}
-
-const toggleFilter = (filterType) => {
-  filters[filterType] = !filters[filterType]
-  applyFilters()
-}
-
-const applyFilters = () => {
-  // 필터 로직 구현
-  if (filters.tradeAvailable) {
-    searchCondition.productType = 'SALE'
-  } else {
-    searchCondition.productType = null
-  }
-
-  pageable.page = 0
-  currentPage.value = 0
-  loadProducts()
-}
-
-const setActiveTab = (tab) => {
-  activeTab.value = tab
-
-  // 탭에 따른 정렬 변경
-  switch (tab) {
-    case 'trending':
-      pageable.sort = 'likeCount,DESC'
-      break
-    case 'nearby':
-      // 실제로는 위치 기반 정렬이 필요하지만 여기서는 조회수로 대체
-      pageable.sort = 'viewCount,DESC'
-      break
-    case 'new':
-      pageable.sort = 'releaseDate,DESC'
-      break
-    case 'recent':
-      pageable.sort = 'createdAt,DESC'
-      break
-  }
-
-  pageable.page = 0
-  currentPage.value = 0
-  loadProducts()
-}
-
-const setSortOption = (sortValue) => {
-  pageable.sort = sortValue
-  pageable.page = 0
-  currentPage.value = 0
-  loadProducts()
-}
-
-const handleSearch = () => {
-  pageable.page = 0
-  currentPage.value = 0
-  loadProducts()
-}
-
-const goToPage = (page) => {
-  pageable.page = page
-  currentPage.value = page
-  loadProducts()
-}
-
-const goToProductDetail = (productId) => {
-  router.push(`/products/${productId}`)
-}
-
-const toggleLike = async (productId) => {
-  try {
-    await productService.likeProduct(productId)
-
-    if (likedProducts.value.has(productId)) {
-      likedProducts.value.delete(productId)
+    if (result.success) {
+      // 로컬 상태 업데이트
+      const productIndex = products.value.findIndex(p => p.id === product.id)
+      if (productIndex !== -1) {
+        const updatedProduct = products.value[productIndex]
+        updatedProduct.isLiked = !updatedProduct.isLiked
+        updatedProduct.likeCount += updatedProduct.isLiked ? 1 : -1
+      }
     } else {
-      likedProducts.value.add(productId)
+      throw new Error(result.error || '찜하기 실패')
     }
 
-    // 상품 목록 갱신
-    loadProducts()
-  } catch (err) {
-    console.error('좋아요 처리 실패:', err)
+  } catch (error) {
+    console.error('찜하기 실패:', error)
+    alert('찜하기 처리 중 오류가 발생했습니다.')
   }
 }
 
-// 유틸리티 메서드
-const formatRating = (rating) => {
-  if (!rating) return '0.0'
-  return typeof rating === 'number' ? rating.toFixed(1) : rating
-}
+const fetchCategories = async () => {
+  try {
+    // 카테고리 목록 조회 (별도 API 필요)
+    // 임시로 하드코딩된 데이터 사용
+    categories.value = [
+      { id: 1, name: '피규어' },
+      { id: 2, name: '프라모델' },
+      { id: 3, name: '게임' },
+      { id: 4, name: '만화' },
+      { id: 5, name: '음식' }
+    ]
 
-const formatCount = (count) => {
-  if (!count) return '0'
-  return productUtils.formatCount(count)
-}
+    // 인기 브랜드도 임시 데이터
+    popularBrands.value = ['반다이', '코토부키야', '굿스마일', '맥팔레인', '핫토이즈']
 
-const getProductEmoji = (categoryName) => {
-  const emojiMap = {
-    '음료': '🥤',
-    '과자/스낵': '🍫',
-    '베이커리': '🍞',
-    '도시락/간편식': '🍱',
-    '아이스크림': '🍦',
-    '라면/면류': '🍜',
-    '프라모델': '🤖',
-    '피규어': '🎭',
-    '블록완구': '🧱'
+  } catch (error) {
+    console.error('카테고리 로딩 실패:', error)
+    categories.value = []
+    popularBrands.value = []
   }
-  return emojiMap[categoryName] || '🍽️'
 }
 
-const getProductBadge = (productType) => {
-  const badgeMap = {
-    'SALE': '💰 거래가능',
-    'AUCTION': '🔨 경매',
-    'FREE': '🆓 무료나눔',
-    'EXCHANGE': '🔄 교환'
-  }
-  return badgeMap[productType] || '❌ 정보만'
-}
+// 감시자
+watch(searchQuery, () => {
+  handleSearchInput()
+})
 
-const getRandomDistance = () => {
-  const distances = ['100m', '200m', '300m', '500m', '750m', '900m', '1.2km']
-  return distances[Math.floor(Math.random() * distances.length)] + ' 이내'
-}
-
-const onImageError = (event) => {
-  event.target.style.display = 'none'
-  event.target.nextElementSibling.style.display = 'flex'
-}
+watch(sortBy, () => {
+  handleSortChange()
+})
 
 // 라이프사이클
 onMounted(async () => {
-  await Promise.all([
-    loadCategories(),
-    loadProducts()
-  ])
+  console.log('ProductListView 마운트')
 
-  // 사이드바 데이터 로드 (메인 데이터 로드 후)
-  await Promise.all([
-    loadTopProducts(),
-    loadNearbyProducts()
-  ])
-})
+  // 카테고리 먼저 로드
+  await fetchCategories()
 
-// 감시자
-watch([() => searchCondition.keyword], () => {
-  if (!searchCondition.keyword) return
-
-  // 디바운스 검색
-  const searchTimeout = setTimeout(() => {
-    handleSearch()
-  }, 500)
-
-  return () => clearTimeout(searchTimeout)
+  // 제품 목록 로드
+  await fetchProducts()
 })
 </script>
 
 <style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.product-list-view {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f8fafc;
-  color: #222222;
-  line-height: 1.6;
+.product-list-container {
   min-height: 100vh;
+  background: #f8fafc;
 }
 
-/* 헤더 */
-.header {
+.header-section {
   background: white;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 2rem 0;
 }
 
-.header-container {
+.header-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 60px;
 }
 
-.logo {
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.header-stats {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 20px;
-  font-weight: 800;
-  color: #000000;
-  text-decoration: none;
+  gap: 2rem;
 }
 
-.logo-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #1DCD9F, #169976);
-  border-radius: 8px;
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+.main-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 16px;
+  gap: 2rem;
 }
 
-.search-container {
-  flex: 1;
-  max-width: 600px;
-  margin: 0 40px;
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+.search-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-input-container {
   position: relative;
-}
-
-.search-input {
-  width: 100%;
-  padding: 12px 16px 12px 44px;
-  border: 2px solid #e2e8f0;
-  border-radius: 20px;
-  font-size: 14px;
-  transition: border-color 0.2s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #1DCD9F;
 }
 
 .search-icon {
   position: absolute;
-  left: 16px;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #222222;
+  color: #64748b;
 }
 
-.header-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s;
 }
 
-.location-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  background: #f1f5f9;
-  border: none;
-  border-radius: 12px;
-  font-size: 13px;
-  color: #222222;
-  cursor: pointer;
+.search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.notification-btn {
-  position: relative;
-  padding: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-}
-
-.notification-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: #1DCD9F;
-  color: white;
-  border-radius: 50%;
-  width: 14px;
-  height: 14px;
-  font-size: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-/* 메인 컨테이너 */
-.main-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px 24px;
-  display: grid;
-  grid-template-columns: 240px 1fr 320px;
-  gap: 24px;
-}
-
-/* 사이드바 */
-.sidebar {
+.filter-section {
   background: white;
-  border-radius: 16px;
-  padding: 20px;
-  height: fit-content;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar-section {
-  margin-bottom: 24px;
+.filter-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
 }
 
-.sidebar-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 12px;
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.category-list {
-  list-style: none;
-}
-
-.category-item {
-  padding: 8px 12px;
-  margin-bottom: 4px;
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: none;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  text-align: left;
 }
 
-.category-item:hover {
-  background: #f1f5f9;
+.filter-option:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
 }
 
-.category-item.active {
-  background: #1DCD9F;
-  color: white;
+.filter-option.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
-/* 탭 네비게이션 */
-.tab-nav {
-  background: white;
-  border-radius: 16px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+.filter-icon {
+  font-size: 1.25rem;
 }
 
-.tab-list {
-  display: flex;
-  gap: 32px;
-}
-
-.tab {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  cursor: pointer;
-  font-size: 15px;
+.filter-text {
+  font-size: 0.875rem;
   font-weight: 500;
-  color: #222222;
-  position: relative;
-  transition: color 0.2s;
-}
-
-.tab:hover {
-  color: #1DCD9F;
-}
-
-.tab.active {
-  color: #1DCD9F;
-}
-
-.tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -16px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: #1DCD9F;
-  border-radius: 2px;
-}
-
-/* 메인 피드 */
-.main-feed {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-}
-
-.feed-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .sort-options {
   display: flex;
-  gap: 16px;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.sort-btn {
-  padding: 6px 12px;
-  background: none;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  font-size: 13px;
+.sort-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
   cursor: pointer;
+  border-radius: 6px;
   transition: all 0.2s;
 }
 
-.sort-btn.active {
-  background: #1DCD9F;
-  color: white;
-  border-color: #1DCD9F;
+.sort-option:hover {
+  background: #f8fafc;
 }
 
-.loading-container, .error-container {
-  padding: 60px 24px;
-  text-align: center;
+.sort-option.active {
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
-.loading-spinner {
-  font-size: 16px;
-  color: #1DCD9F;
+.sort-option input[type="radio"] {
+  margin: 0;
 }
 
-.retry-btn {
-  margin-top: 16px;
-  padding: 8px 16px;
-  background: #1DCD9F;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.products-grid {
-  padding: 24px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.product-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.2s;
-  cursor: pointer;
-}
-
-.product-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-  border-color: #1DCD9F;
-}
-
-.product-image {
-  position: relative;
-  height: 160px;
-  overflow: hidden;
-}
-
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.product-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(45deg, #1DCD9F, #169976);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 36px;
-}
-
-.product-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(0,0,0,0.7);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.heart-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  background: rgba(255,255,255,0.9);
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.heart-btn.liked {
-  background: rgba(255,182,193,0.9);
-}
-
-.product-info {
-  padding: 16px;
-}
-
-.product-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #000000;
-  margin-bottom: 4px;
-  line-height: 1.3;
-}
-
-.product-brand {
-  font-size: 12px;
-  color: #222222;
-  opacity: 0.6;
-  margin-bottom: 12px;
-}
-
-.product-stats {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.stat {
-  font-size: 12px;
-  color: #222222;
-}
-
-.distance {
-  font-size: 11px;
-  color: #169976;
+.sort-text {
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
-.pagination {
-  padding: 20px 24px;
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  border-top: 1px solid #f1f5f9;
+.content-area {
+  flex: 1;
 }
 
-.page-btn {
-  padding: 8px 12px;
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.results-info {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.filter-info {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.view-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.view-btn {
+  padding: 0.5rem;
   background: none;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.page-btn.active {
-  background: #1DCD9F;
-  color: white;
-  border-color: #1DCD9F;
+.view-btn:hover {
+  border-color: #cbd5e1;
 }
 
-/* 오른쪽 사이드바 */
-.right-sidebar {
+.view-btn.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.loading-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.widget {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-}
-
-.widget-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 16px;
-}
-
-.ranking-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.ranking-item:last-child {
-  border-bottom: none;
-}
-
-.rank-number {
-  width: 20px;
-  height: 20px;
-  background: #f1f5f9;
-  border-radius: 50%;
-  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: #222222;
-  flex-shrink: 0;
+  padding: 4rem 2rem;
+  text-align: center;
 }
 
-.rank-number.top3 {
-  background: #1DCD9F;
-  color: white;
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
 }
 
-.ranking-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ranking-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #000000;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ranking-brand {
-  font-size: 11px;
-  color: #222222;
-  opacity: 0.6;
-}
-
-.trend-badge {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 8px;
-  background: #169976;
-  color: white;
-  flex-shrink: 0;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1200px) {
-  .main-container {
-    grid-template-columns: 200px 1fr 280px;
-    gap: 20px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .main-container {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .sidebar,
-  .right-sidebar {
-    display: none;
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  .header-container {
-    padding: 0 16px;
-    height: 56px;
-  }
-
-  .search-container {
-    margin: 0 16px;
-  }
-
-  .main-container {
-    padding: 16px;
-  }
-
-  .tab-list {
-    gap: 20px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .sort-options {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .feed-header {
-    padding: 16px;
-  }
-}
-
-@media (max-width: 640px) {
-  .logo {
-    font-size: 18px;
-  }
-
-  .logo-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
-  }
-
-  .search-container {
-    margin: 0 12px;
-  }
-
-  .search-input {
-    padding: 10px 14px 10px 40px;
-    font-size: 13px;
-  }
-
-  .header-actions {
-    gap: 8px;
-  }
-
-  .location-btn {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-
-  .products-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .product-card {
-    max-width: 100%;
-  }
-
-  .tab-list {
-    gap: 16px;
-  }
-
-  .tab {
-    font-size: 14px;
-  }
-}
-
-/* 로딩 애니메이션 */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-.loading-spinner::after {
-  content: '';
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  margin-left: 8px;
-  border: 2px solid #1DCD9F;
-  border-top: 2px solid transparent;
+.products-container {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.products-container.grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.products-container.list {
+  grid-template-columns: 1fr;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+}
+
+.empty-icon {
+  margin-bottom: 1rem;
+  color: #cbd5e1;
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.load-more-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.load-more-btn {
+  padding: 0.75rem 2rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.load-more-btn:hover {
+  background: #2563eb;
+}
+
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
-/* 트랜지션 효과 */
-.product-card,
-.category-item,
-.tab,
-.sort-btn,
-.page-btn,
-.heart-btn {
-  transition: all 0.2s ease-in-out;
+/* 반응형 */
+@media (max-width: 1024px) {
+  .main-content {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .header-stats {
+    justify-content: center;
+  }
 }
 
-/* 접근성 개선 */
-.product-card:focus,
-.category-item:focus,
-.tab:focus,
-.sort-btn:focus,
-.page-btn:focus {
-  outline: 2px solid #1DCD9F;
-  outline-offset: 2px;
-}
+@media (max-width: 768px) {
+  .products-container.grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
 
-/* 스크롤바 스타일링 */
-.tab-list::-webkit-scrollbar {
-  height: 4px;
-}
-
-.tab-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 2px;
-}
-
-.tab-list::-webkit-scrollbar-thumb {
-  background: #1DCD9F;
-  border-radius: 2px;
-}
-
-.tab-list::-webkit-scrollbar-thumb:hover {
-  background: #169976;
-}
-
-/* 빈 상태 */
-.empty-state {
-  text-align: center;
-  padding: 60px 24px;
-  color: #64748b;
-}
-
-.empty-state-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.empty-state-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #334155;
-}
-
-.empty-state-description {
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-/* 추가 유틸리티 클래스 */
-.text-truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  .toolbar {
+    flex-direction: column;
+    gap: 1rem;
+  }
 }
 </style>

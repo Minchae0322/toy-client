@@ -145,7 +145,7 @@ import SearchBar from '@/components/chat/SearchBar.vue'
 import ChatRoomTabs from '@/components/chat/ChatRoomTabs.vue'
 import ChatRoomCard from '@/components/chat/ChatRoomCard.vue'
 import CreateChatRoomModal from '@/components/chat/CreateChatRoomModal.vue'
-import { chatService, chatRoomUtils } from '@/services/chatService.js'
+import { chatService } from '@/services/ChatService.js'
 import * as authUtils from '@/utils/auth.js'
 
 // Pinia 스토어 사용
