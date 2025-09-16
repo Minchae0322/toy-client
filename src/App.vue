@@ -80,7 +80,7 @@ onUnmounted(() => webSocketService.disconnect())
         </template>
         <template v-else>
           <RouterLink to="/home" class="nav-link">홈</RouterLink>
-          <RouterLink to="/dashboard" class="nav-link">대시보드</RouterLink>
+          <RouterLink to="/products" class="nav-link">제품</RouterLink>
           <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
           <RouterLink to="/sell" class="nav-link">판매하기</RouterLink>
           <div v-if="isAdmin" class="admin-menu">
