@@ -1,10 +1,3 @@
-시킵니다.
-
-
-
-7
-
-
 <template>
   <div class="product-list-view">
     <!-- 헤더 -->
@@ -409,6 +402,7 @@ const loadTopProducts = async () => {
 
 const loadNearbyProducts = async () => {
   try {
+    // ProductService의 getProducts 메서드 사용 시 올바른 파라미터 전달
     const response = await productService.getProducts(
         { status: 'APPROVED' },
         { page: 0, size: 3, sort: 'viewCount,DESC' }
@@ -420,8 +414,14 @@ const loadNearbyProducts = async () => {
     }
   } catch (err) {
     console.error('근처 상품 로딩 실패:', err)
-    // 기본 상품에서 3개 사용
-    nearbyProducts.value = products.value.slice(0, 3)
+    console.error('Error details:', err)
+
+    // 개발 환경에서 샘플 데이터 사용
+    if (import.meta.env.DEV) {
+      const sampleData = productService.getSampleProducts()
+      const sampleProducts = sampleData.data.content || []
+      nearbyProducts.value = sampleProducts.slice(0, 3)
+    }
   }
 }
 
@@ -447,17 +447,43 @@ const loadCategories = async () => {
 
 const loadCategoryStats = async () => {
   try {
-    const response = await getAllCategoriesStats()
-    if (response.success && response.data.categoriesStats) {
-      categoryStats.value = response.data.categoriesStats.slice(0, 5) // 상위 5개만
+    // /api/categories/stats가 없으므로 개별 카테고리에서 통계 계산
+    // 또는 기존 categories 데이터에서 productCount 활용
+    if (categories.value && categories.value.length > 0) {
+      // 기존 카테고리 데이터에서 통계 생성
+      const totalProducts = categories.value.reduce((sum, cat) => sum + (cat.productCount || 0), 0)
+
+      const stats = categories.value
+      .filter(cat => cat.productCount > 0)
+      .map(cat => ({
+        categoryId: cat.categoryId,
+        categoryName: cat.categoryName,
+        productCount: cat.productCount || 0,
+        percentage: totalProducts > 0 ? ((cat.productCount || 0) / totalProducts * 100).toFixed(1) : 0
+      }))
+      .sort((a, b) => b.productCount - a.productCount)
+      .slice(0, 5)
+
+      categoryStats.value = stats
+      console.log('카테고리 통계를 기존 데이터로 생성:', stats)
+    } else {
+      console.log('카테고리 데이터가 없어 통계를 생성할 수 없음')
+      categoryStats.value = []
     }
   } catch (err) {
-    console.error('카테고리 통계 로딩 실패:', err)
+    console.error('카테고리 통계 생성 실패:', err)
 
     // 개발 환경에서 샘플 데이터 사용
     if (import.meta.env.DEV) {
       const sampleData = categoryService.getSampleCategoriesStats()
-      categoryStats.value = sampleData.data.categoriesStats.slice(0, 5)
+      if (sampleData.data && sampleData.data.categoriesStats) {
+        categoryStats.value = sampleData.data.categoriesStats.slice(0, 5)
+        console.log('샘플 카테고리 통계 데이터 사용')
+      } else {
+        categoryStats.value = []
+      }
+    } else {
+      categoryStats.value = []
     }
   }
 }
@@ -610,11 +636,14 @@ onMounted(async () => {
   ])
 
   // 사이드바 데이터 로드 (메인 데이터 로드 후)
+  // loadCategoryStats는 categories 로드 후에 실행되도록 순서 변경
   await Promise.all([
     loadTopProducts(),
-    loadNearbyProducts(),
-    loadCategoryStats()
+    loadNearbyProducts()
   ])
+
+  // 카테고리 통계는 카테고리 로드 완료 후 실행
+  await loadCategoryStats()
 
   console.log('✅ [PRODUCT-LIST] 모든 데이터 로드 완료')
 })

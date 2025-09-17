@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { categoryService, categoryUtils } from '@/services/CategoryService.js'
+import { categoryService } from '@/services/CategoryService.js'
 import CategoryHeader from '@/components/category/CategoryHeader.vue'
 import CategoryStats from '@/components/category/CategoryStats.vue'
 import CategoryForm from '@/components/category/CategoryForm.vue'
@@ -85,8 +85,8 @@ const handleAddCategory = async (categoryData) => {
     const data = {
       ...categoryData,
       sortOrder: categories.value.length + 1,
-      colorCode: categoryData.colorCode || categoryUtils.generateCategoryColor(),
-      categoryCode: categoryData.categoryCode || categoryUtils.generateCategoryCode(categoryData.categoryName)
+      colorCode: categoryData.colorCode,
+      categoryCode: categoryData.categoryCode
     }
 
     const response = await categoryService.createCategory(data)

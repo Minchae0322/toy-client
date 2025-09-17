@@ -11,7 +11,7 @@ import * as authUtils from '@/utils/auth.js'
 class ProductService extends BaseApiService {
   constructor() {
     const baseURL = import.meta.env.DEV
-        ? 'http://localhost:8080/api'
+        ? 'http://localhost:8082/api'
         : `${import.meta.env.VITE_CONTENT_BASE_URL}/api`
 
     super(baseURL, 'PRODUCT')
