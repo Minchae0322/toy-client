@@ -1,3 +1,10 @@
+시킵니다.
+
+
+
+7
+
+
 <template>
   <div class="product-list-view">
     <!-- 헤더 -->
@@ -52,7 +59,8 @@
                 :class="{ active: searchCondition.categoryId === category.categoryId }"
                 @click="selectCategory(category.categoryId)"
             >
-              {{ category.categoryName }}
+              {{ getCategoryIcon(category.categoryName) }} {{ category.categoryName }}
+              <span class="product-count" v-if="category.productCount">({{ category.productCount }})</span>
             </li>
           </ul>
         </div>
@@ -257,6 +265,29 @@
             </div>
           </div>
         </div>
+
+        <!-- 카테고리 통계 위젯 -->
+        <div class="widget">
+          <div class="widget-title">📊 카테고리별 현황</div>
+          <div
+              v-for="stat in categoryStats"
+              :key="stat.categoryId"
+              class="category-stat-item"
+          >
+            <div class="category-stat-info">
+              <div class="category-stat-name">
+                {{ getCategoryIcon(stat.categoryName) }} {{ stat.categoryName }}
+              </div>
+              <div class="category-stat-count">{{ stat.productCount }}개</div>
+            </div>
+            <div class="category-progress">
+              <div
+                  class="category-progress-bar"
+                  :style="{ width: `${stat.percentage}%` }"
+              ></div>
+            </div>
+          </div>
+        </div>
       </aside>
     </div>
   </div>
@@ -266,15 +297,25 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { productService, productUtils, productFilterUtils } from '@/services/productService.js'
+import { categoryService, categoryUtils, useCategory } from '@/services/CategoryService.js'
 
 // Router
 const router = useRouter()
+
+// Category composable 사용
+const {
+  getCategories,
+  getAllCategoriesStats,
+  sortCategories,
+  filterCategories
+} = useCategory()
 
 // 반응형 데이터
 const loading = ref(false)
 const error = ref(null)
 const products = ref([])
 const categories = ref([])
+const categoryStats = ref([])
 const topProducts = ref([])
 const nearbyProducts = ref([])
 const likedProducts = ref(new Set())
@@ -310,7 +351,8 @@ const visiblePages = computed(() => {
   return pages
 })
 
-// 메서드
+// ==================== 상품 관련 메서드 ====================
+
 const loadProducts = async () => {
   try {
     loading.value = true
@@ -344,21 +386,6 @@ const loadProducts = async () => {
     }
   } finally {
     loading.value = false
-  }
-}
-
-const loadCategories = async () => {
-  try {
-    const response = await productService.getCategories()
-    if (response.success) {
-      categories.value = response.data || []
-    }
-  } catch (err) {
-    console.error('카테고리 로딩 실패:', err)
-
-    // 샘플 데이터 사용
-    const sampleData = productService.getSampleCategories()
-    categories.value = sampleData.data || []
   }
 }
 
@@ -398,12 +425,51 @@ const loadNearbyProducts = async () => {
   }
 }
 
+// ==================== 카테고리 관련 메서드 ====================
+
+const loadCategories = async () => {
+  try {
+    const response = await getCategories({ isActive: true })
+    if (response.success) {
+      // 카테고리 정렬 (sortOrder 기준)
+      categories.value = sortCategories(response.data || [], 'sortOrder')
+    }
+  } catch (err) {
+    console.error('카테고리 로딩 실패:', err)
+
+    // 개발 환경에서 샘플 데이터 사용
+    if (import.meta.env.DEV) {
+      const sampleData = categoryService.getSampleCategories()
+      categories.value = sortCategories(sampleData.data || [], 'sortOrder')
+    }
+  }
+}
+
+const loadCategoryStats = async () => {
+  try {
+    const response = await getAllCategoriesStats()
+    if (response.success && response.data.categoriesStats) {
+      categoryStats.value = response.data.categoriesStats.slice(0, 5) // 상위 5개만
+    }
+  } catch (err) {
+    console.error('카테고리 통계 로딩 실패:', err)
+
+    // 개발 환경에서 샘플 데이터 사용
+    if (import.meta.env.DEV) {
+      const sampleData = categoryService.getSampleCategoriesStats()
+      categoryStats.value = sampleData.data.categoriesStats.slice(0, 5)
+    }
+  }
+}
+
 const selectCategory = (categoryId) => {
   searchCondition.categoryId = categoryId
   pageable.page = 0
   currentPage.value = 0
   loadProducts()
 }
+
+// ==================== 필터 및 정렬 메서드 ====================
 
 const toggleFilter = (filterType) => {
   filters[filterType] = !filters[filterType]
@@ -455,6 +521,8 @@ const setSortOption = (sortValue) => {
   loadProducts()
 }
 
+// ==================== 검색 및 페이징 메서드 ====================
+
 const handleSearch = () => {
   pageable.page = 0
   currentPage.value = 0
@@ -466,6 +534,8 @@ const goToPage = (page) => {
   currentPage.value = page
   loadProducts()
 }
+
+// ==================== 네비게이션 및 액션 메서드 ====================
 
 const goToProductDetail = (productId) => {
   router.push(`/products/${productId}`)
@@ -488,7 +558,8 @@ const toggleLike = async (productId) => {
   }
 }
 
-// 유틸리티 메서드
+// ==================== 유틸리티 메서드 ====================
+
 const formatRating = (rating) => {
   if (!rating) return '0.0'
   return typeof rating === 'number' ? rating.toFixed(1) : rating
@@ -499,19 +570,12 @@ const formatCount = (count) => {
   return productUtils.formatCount(count)
 }
 
+const getCategoryIcon = (categoryName) => {
+  return categoryUtils.getCategoryIcon(categoryName)
+}
+
 const getProductEmoji = (categoryName) => {
-  const emojiMap = {
-    '음료': '🥤',
-    '과자/스낵': '🍫',
-    '베이커리': '🍞',
-    '도시락/간편식': '🍱',
-    '아이스크림': '🍦',
-    '라면/면류': '🍜',
-    '프라모델': '🤖',
-    '피규어': '🎭',
-    '블록완구': '🧱'
-  }
-  return emojiMap[categoryName] || '🍽️'
+  return categoryUtils.getCategoryIcon(categoryName)
 }
 
 const getProductBadge = (productType) => {
@@ -534,8 +598,12 @@ const onImageError = (event) => {
   event.target.nextElementSibling.style.display = 'flex'
 }
 
-// 라이프사이클
+// ==================== 라이프사이클 ====================
+
 onMounted(async () => {
+  console.log('🚀 [PRODUCT-LIST] 컴포넌트 마운트 시작')
+
+  // 카테고리와 상품 데이터 동시 로드
   await Promise.all([
     loadCategories(),
     loadProducts()
@@ -544,11 +612,15 @@ onMounted(async () => {
   // 사이드바 데이터 로드 (메인 데이터 로드 후)
   await Promise.all([
     loadTopProducts(),
-    loadNearbyProducts()
+    loadNearbyProducts(),
+    loadCategoryStats()
   ])
+
+  console.log('✅ [PRODUCT-LIST] 모든 데이터 로드 완료')
 })
 
-// 감시자
+// ==================== 감시자 ====================
+
 watch([() => searchCondition.keyword], () => {
   if (!searchCondition.keyword) return
 
@@ -559,6 +631,23 @@ watch([() => searchCondition.keyword], () => {
 
   return () => clearTimeout(searchTimeout)
 })
+
+// 카테고리 변경 감시
+watch([() => searchCondition.categoryId], () => {
+  console.log('🔄 [PRODUCT-LIST] 카테고리 변경됨:', searchCondition.categoryId)
+})
+
+// ==================== 디버깅 ====================
+
+// 개발 환경에서 디버깅 정보 출력
+if (import.meta.env.DEV) {
+  watch([categories, categoryStats], ([newCategories, newStats]) => {
+    console.group('🔍 [PRODUCT-LIST] 카테고리 데이터 상태')
+    console.log('Categories:', newCategories)
+    console.log('Category Stats:', newStats)
+    console.groupEnd()
+  })
+}
 </script>
 
 <style scoped>

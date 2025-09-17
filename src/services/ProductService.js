@@ -912,6 +912,321 @@ class ProductService extends BaseApiService {
   }
 }
 
+// ==================== 필터 및 유틸리티 ====================
+
+/**
+ * 상품 필터링 및 검색 유틸리티
+ */
+export const productFilterUtils = {
+  /**
+   * 기본 검색 조건 반환
+   */
+  getDefaultSearchCondition() {
+    return {
+      keyword: '',
+      categoryId: null,
+      status: 'APPROVED',
+      productType: null,
+      priceMin: null,
+      priceMax: null,
+      minRating: null,
+      creatorId: null
+    }
+  },
+
+  /**
+   * 기본 페이징 조건 반환
+   */
+  getDefaultPageable() {
+    return {
+      page: 0,
+      size: 20,
+      sort: 'createdAt,DESC'
+    }
+  },
+
+  /**
+   * 정렬 옵션 목록 반환
+   */
+  getSortOptions() {
+    return [
+      { value: 'createdAt,DESC', label: '최신순' },
+      { value: 'createdAt,ASC', label: '오래된순' },
+      { value: 'likeCount,DESC', label: '좋아요순' },
+      { value: 'viewCount,DESC', label: '조회수순' },
+      { value: 'averageRating,DESC', label: '평점높은순' },
+      { value: 'name,ASC', label: '이름순' },
+      { value: 'releaseDate,DESC', label: '출시일순' }
+    ]
+  },
+
+  /**
+   * 상품 타입 옵션 목록 반환
+   */
+  getProductTypeOptions() {
+    return [
+      { value: 'SALE', label: '판매', emoji: '💰' },
+      { value: 'AUCTION', label: '경매', emoji: '🔨' },
+      { value: 'FREE', label: '무료나눔', emoji: '🆓' },
+      { value: 'EXCHANGE', label: '교환', emoji: '🔄' }
+    ]
+  },
+
+  /**
+   * 필터 조건 검증
+   */
+  validateFilters(filters) {
+    const validatedFilters = { ...filters }
+
+    // 가격 범위 검증
+    if (validatedFilters.priceMin && validatedFilters.priceMax) {
+      if (parseInt(validatedFilters.priceMin) > parseInt(validatedFilters.priceMax)) {
+        const temp = validatedFilters.priceMin
+        validatedFilters.priceMin = validatedFilters.priceMax
+        validatedFilters.priceMax = temp
+      }
+    }
+
+    // 평점 범위 검증
+    if (validatedFilters.minRating) {
+      validatedFilters.minRating = Math.max(1, Math.min(5, validatedFilters.minRating))
+    }
+
+    return validatedFilters
+  },
+
+  /**
+   * 검색 조건을 URL 쿼리 파라미터로 변환
+   */
+  toQueryParams(searchCondition, pageable) {
+    const params = new URLSearchParams()
+
+    // 검색 조건
+    Object.entries(searchCondition).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        params.append(key, value)
+      }
+    })
+
+    // 페이징 조건
+    Object.entries(pageable).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        params.append(key, value)
+      }
+    })
+
+    return params.toString()
+  },
+
+  /**
+   * URL 쿼리 파라미터를 검색 조건으로 변환
+   */
+  fromQueryParams(queryString) {
+    const params = new URLSearchParams(queryString)
+    const searchCondition = this.getDefaultSearchCondition()
+    const pageable = this.getDefaultPageable()
+
+    // 검색 조건 파싱
+    for (const [key, value] of params.entries()) {
+      if (key in searchCondition) {
+        if (key === 'categoryId' || key === 'creatorId') {
+          searchCondition[key] = value ? parseInt(value) : null
+        } else if (key === 'priceMin' || key === 'priceMax' || key === 'minRating') {
+          searchCondition[key] = value ? parseFloat(value) : null
+        } else {
+          searchCondition[key] = value
+        }
+      } else if (key in pageable) {
+        if (key === 'page' || key === 'size') {
+          pageable[key] = parseInt(value)
+        } else {
+          pageable[key] = value
+        }
+      }
+    }
+
+    return { searchCondition, pageable }
+  }
+}
+
+/**
+ * 상품 관련 유틸리티 함수들
+ */
+export const productUtils = {
+  /**
+   * 숫자를 한국어 단위로 포맷팅
+   */
+  formatCount(count) {
+    if (!count || count === 0) return '0'
+
+    const num = parseInt(count)
+
+    if (num >= 10000) {
+      return Math.floor(num / 10000) + '만+'
+    } else if (num >= 1000) {
+      return Math.floor(num / 1000) + 'k'
+    }
+
+    return num.toString()
+  },
+
+  /**
+   * 가격 포맷팅
+   */
+  formatPrice(price) {
+    if (!price || price === '0' || price === 0) return '무료'
+
+    const numPrice = typeof price === 'string' ? parseInt(price) : price
+    return new Intl.NumberFormat('ko-KR').format(numPrice) + '원'
+  },
+
+  /**
+   * 평점 포맷팅
+   */
+  formatRating(rating) {
+    if (!rating) return '0.0'
+    return typeof rating === 'number' ? rating.toFixed(1) : rating
+  },
+
+  /**
+   * 날짜 포맷팅
+   */
+  formatDate(dateString) {
+    if (!dateString) return ''
+
+    const date = new Date(dateString)
+    const now = new Date()
+    const diff = now - date
+
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 1) return '방금 전'
+    if (minutes < 60) return `${minutes}분 전`
+    if (hours < 24) return `${hours}시간 전`
+    if (days < 7) return `${days}일 전`
+
+    return date.toLocaleDateString('ko-KR')
+  },
+
+  /**
+   * 카테고리별 이모지 반환
+   */
+  getCategoryEmoji(categoryName) {
+    const emojiMap = {
+      '음료': '🥤',
+      '과자/스낵': '🍫',
+      '베이커리': '🍞',
+      '도시락/간편식': '🍱',
+      '아이스크림': '🍦',
+      '라면/면류': '🍜',
+      '프라모델': '🤖',
+      '피규어': '🎭',
+      '블록완구': '🧱',
+      '완구': '🧸',
+      '게임': '🎮',
+      '도서': '📚',
+      '전자제품': '📱',
+      '의류': '👕',
+      '액세서리': '💍',
+      '뷰티': '💄',
+      '스포츠': '⚽',
+      '기타': '🎁'
+    }
+    return emojiMap[categoryName] || '🍽️'
+  },
+
+  /**
+   * 상품 타입별 배지 텍스트 반환
+   */
+  getProductTypeBadge(productType) {
+    const badgeMap = {
+      'SALE': '💰 거래가능',
+      'AUCTION': '🔨 경매',
+      'FREE': '🆓 무료나눔',
+      'EXCHANGE': '🔄 교환'
+    }
+    return badgeMap[productType] || '❌ 정보만'
+  },
+
+  /**
+   * 랜덤 거리 생성 (데모용)
+   */
+  getRandomDistance() {
+    const distances = ['100m', '200m', '300m', '500m', '750m', '900m', '1.2km', '1.5km']
+    return distances[Math.floor(Math.random() * distances.length)] + ' 이내'
+  },
+
+  /**
+   * 상품 상태 텍스트 반환
+   */
+  getStatusText(status) {
+    const statusMap = {
+      'PENDING': '검토중',
+      'APPROVED': '승인됨',
+      'REJECTED': '반려됨',
+      'DELETED': '삭제됨'
+    }
+    return statusMap[status] || '알 수 없음'
+  },
+
+  /**
+   * 썸네일 URL 생성
+   */
+  getThumbnailUrl(attachmentFiles, defaultUrl = '/images/product-placeholder.jpg') {
+    if (!attachmentFiles || attachmentFiles.length === 0) {
+      return defaultUrl
+    }
+
+    const imageFile = attachmentFiles.find(file =>
+        file.mimeType && file.mimeType.startsWith('image/')
+    )
+
+    return imageFile ? imageFile.fileUrl : defaultUrl
+  },
+
+  /**
+   * 태그 배열을 문자열로 변환
+   */
+  formatTags(tags) {
+    if (!tags || !Array.isArray(tags) || tags.length === 0) return ''
+    return tags.map(tag => `#${tag}`).join(' ')
+  },
+
+  /**
+   * 상품 URL 생성
+   */
+  getProductUrl(productId) {
+    return `/products/${productId}`
+  },
+
+  /**
+   * 상품 공유 URL 생성
+   */
+  getShareUrl(productId) {
+    return `${window.location.origin}/products/${productId}`
+  },
+
+  /**
+   * 이미지 에러 처리
+   */
+  handleImageError(event, fallbackUrl = '/images/product-placeholder.jpg') {
+    event.target.src = fallbackUrl
+    event.target.onerror = null // 무한 루프 방지
+  },
+
+  /**
+   * 상품 검색 키워드 하이라이트
+   */
+  highlightSearchKeyword(text, keyword) {
+    if (!keyword || !text) return text
+
+    const regex = new RegExp(`(${keyword})`, 'gi')
+    return text.replace(regex, '<mark>$1</mark>')
+  }
+}
+
 // ==================== Vue Composables ====================
 
 /**
