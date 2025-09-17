@@ -1,79 +1,22 @@
-// services/productService.js
-// 상품 서비스 전용 API 클래스
+// services/ProductService.js
+// 상품 관련 API 서비스 (Fetch API 기반)
 
+import { BaseApiService } from './BaseApiService.js'
 import * as authUtils from '@/utils/auth.js'
 
 /**
- * 상품 서비스 전용 API 클래스
- * Content Server와의 통신을 담당
- * 상품 CRUD, 검색, 리뷰 등의 기능 제공
+ * 상품 서비스
+ * Content Server (8080)와의 통신을 담당
  */
-class ProductService {
+class ProductService extends BaseApiService {
   constructor() {
-    // Content Server URL 설정
-    if (import.meta.env.DEV) {
-      this.baseURL = import.meta.env.VITE_CONTENT_BASE_URL || 'http://localhost:8080'
-    } else {
-      this.baseURL = import.meta.env.VITE_CONTENT_BASE_URL || 'https://your-content-server.com'
-    }
+    const baseURL = import.meta.env.DEV
+        ? 'http://localhost:8080/api'
+        : `${import.meta.env.VITE_CONTENT_BASE_URL}/api`
 
-    // 상품 API 엔드포인트
-    this.productEndpoint = `${this.baseURL}/api/products`
+    super(baseURL, 'PRODUCT')
 
-    console.log('📦 [ProductService] 초기화됨')
-    console.log('Content API URL:', this.baseURL)
-    console.log('Product Endpoint:', this.productEndpoint)
-  }
-
-  // ==================== 공통 유틸리티 ====================
-
-  /**
-   * API 요청용 헤더 생성
-   */
-  getHeaders() {
-    return authUtils.getApiHeaders()
-  }
-
-  /**
-   * API 응답 처리
-   */
-  async handleResponse(response) {
-    if (!response.ok) {
-      let errorData = {}
-      try {
-        errorData = await response.json()
-      } catch (parseError) {
-        console.warn('에러 응답 파싱 실패:', parseError)
-      }
-
-      const errorMessage = errorData.message ||
-          errorData.error ||
-          `HTTP ${response.status} ${response.statusText}`
-
-      const error = new Error(errorMessage)
-      error.status = response.status
-      error.data = errorData
-      throw error
-    }
-    return response.json()
-  }
-
-  /**
-   * 요청 로깅
-   */
-  logRequest(method, url, data = null) {
-    console.log(`🌐 [ProductService] [${method}] ${url}`, data || '')
-  }
-
-  /**
-   * 응답 로깅
-   */
-  logResponse(method, url, response, error = null) {
-    if (error) {
-      console.error(`❌ [ProductService] [${method}] ${url} 실패:`, error.message)
-    } else {
-      console.log(`✅ [ProductService] [${method}] ${url} 성공`)
-    }
+    console.log(`📦 [PRODUCT] Content Server URL: ${this.baseURL}`)
   }
 
   // ==================== 상품 CRUD API ====================
@@ -81,8 +24,11 @@ class ProductService {
   /**
    * 상품 등록
    */
-  async createProduct(productData, userId) {
-    const url = this.productEndpoint
+  async createProduct(productData) {
+    const validation = this.validateProductData(productData)
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(', '))
+    }
 
     const requestData = {
       name: productData.name,
@@ -98,120 +44,47 @@ class ProductService {
       attachmentFiles: productData.attachmentFiles || []
     }
 
-    this.logRequest('POST', url, requestData)
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(requestData)
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('POST', url, apiResponse)
-
-      return {
-        success: apiResponse.success !== false,
-        data: apiResponse.data || apiResponse,
-        message: apiResponse.message || '상품이 성공적으로 등록되었습니다'
-      }
-
-    } catch (error) {
-      this.logResponse('POST', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
-    }
+    return await this.post('/products', requestData)
   }
 
   /**
    * 상품 단건 조회
    */
-  async getProduct(productId, userId = null) {
-    const url = `${this.productEndpoint}/${productId}`
-    this.logRequest('GET', url)
-
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders()
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('GET', url, apiResponse)
-
-      return {
-        success: apiResponse.success !== false,
-        data: apiResponse.data || apiResponse,
-        message: apiResponse.message || 'success'
-      }
-
-    } catch (error) {
-      this.logResponse('GET', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
+  async getProduct(productId) {
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
     }
+
+    return await this.get(`/products/${productId}`)
   }
 
   /**
    * 상품 목록 조회 (검색 및 페이징)
    */
   async getProducts(searchCondition = {}, pageable = {}) {
-    const url = this.productEndpoint
-    this.logRequest('GET', url, { searchCondition, pageable })
+    const validatedCondition = this.validateSearchCondition(searchCondition)
+    const validatedPageable = this.validatePageable(pageable)
 
-    try {
-      const queryParams = new URLSearchParams()
-
-      // 검색 조건
-      if (searchCondition.keyword) queryParams.append('keyword', searchCondition.keyword)
-      if (searchCondition.categoryId) queryParams.append('categoryId', searchCondition.categoryId.toString())
-      if (searchCondition.brand) queryParams.append('brand', searchCondition.brand)
-      if (searchCondition.status) queryParams.append('status', searchCondition.status)
-      if (searchCondition.productType) queryParams.append('productType', searchCondition.productType)
-
-      // 페이징 조건
-      if (pageable.page !== undefined) queryParams.append('page', pageable.page.toString())
-      if (pageable.size !== undefined) queryParams.append('size', pageable.size.toString())
-      if (pageable.sort) {
-        // sort 배열이나 문자열 처리
-        const sortParams = Array.isArray(pageable.sort) ? pageable.sort : [pageable.sort]
-        sortParams.forEach(sort => queryParams.append('sort', sort))
-      }
-
-      const requestUrl = `${url}${queryParams.toString() ? '?' + queryParams.toString() : ''}`
-
-      const response = await fetch(requestUrl, {
-        method: 'GET',
-        headers: this.getHeaders()
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('GET', url, apiResponse)
-
-      return {
-        success: apiResponse.success !== false,
-        data: apiResponse.data || apiResponse,
-        message: apiResponse.message || 'success'
-      }
-
-    } catch (error) {
-      this.logResponse('GET', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
+    const params = {
+      ...validatedCondition,
+      ...validatedPageable
     }
+
+    return await this.get('/products', params)
   }
 
   /**
    * 상품 수정
    */
   async updateProduct(productId, productData) {
-    const url = `${this.productEndpoint}/${productId}`
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
+    }
+
+    const validation = this.validateProductData(productData)
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(', '))
+    }
 
     const requestData = {
       name: productData.name,
@@ -227,71 +100,18 @@ class ProductService {
       attachmentFiles: productData.attachmentFiles || []
     }
 
-    this.logRequest('PUT', url, requestData)
-
-    try {
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: this.getHeaders(),
-        body: JSON.stringify(requestData)
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('PUT', url, apiResponse)
-
-      return {
-        success: apiResponse.success !== false,
-        data: apiResponse.data || apiResponse,
-        message: apiResponse.message || '상품이 성공적으로 수정되었습니다'
-      }
-
-    } catch (error) {
-      this.logResponse('PUT', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
-    }
+    return await this.put(`/products/${productId}`, requestData)
   }
 
   /**
    * 상품 삭제
    */
   async deleteProduct(productId) {
-    const url = `${this.productEndpoint}/${productId}`
-    this.logRequest('DELETE', url)
-
-    try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: this.getHeaders()
-      })
-
-      // 204 No Content의 경우 JSON 파싱하지 않음
-      if (response.status === 204) {
-        this.logResponse('DELETE', url, { success: true })
-        return {
-          success: true,
-          message: '상품이 성공적으로 삭제되었습니다'
-        }
-      }
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('DELETE', url, apiResponse)
-
-      return {
-        success: apiResponse.success !== false,
-        data: apiResponse.data || null,
-        message: apiResponse.message || '상품이 성공적으로 삭제되었습니다'
-      }
-
-    } catch (error) {
-      this.logResponse('DELETE', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
     }
+
+    return await this.delete(`/products/${productId}`)
   }
 
   // ==================== 상품 리액션 API ====================
@@ -300,55 +120,55 @@ class ProductService {
    * 상품 좋아요/찜하기 토글
    */
   async toggleProductReaction(productId, reactionType) {
-    const url = `${this.productEndpoint}/${productId}/reactions/${reactionType}`
-    this.logRequest('POST', url)
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          deviceId: authUtils.getDeviceId()
-        })
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('POST', url, apiResponse)
-
-      return {
-        success: apiResponse.success !== false,
-        data: apiResponse.data || apiResponse,
-        message: apiResponse.message || 'success'
-      }
-
-    } catch (error) {
-      this.logResponse('POST', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
     }
+
+    const validReactionTypes = ['LIKE', 'BOOKMARK', 'INTEREST', 'SHARE', 'WISH']
+    if (!validReactionTypes.includes(reactionType.toUpperCase())) {
+      throw new Error('올바른 리액션 타입을 선택해주세요.')
+    }
+
+    const requestData = {
+      deviceId: authUtils.getDeviceId()
+    }
+
+    return await this.post(`/products/${productId}/reactions/${reactionType.toUpperCase()}`, requestData)
   }
 
   /**
    * 상품 좋아요
    */
   async likeProduct(productId) {
-    return this.toggleProductReaction(productId, 'like')
+    return this.toggleProductReaction(productId, 'LIKE')
   }
 
   /**
    * 상품 북마크
    */
   async bookmarkProduct(productId) {
-    return this.toggleProductReaction(productId, 'bookmark')
+    return this.toggleProductReaction(productId, 'BOOKMARK')
   }
 
   /**
    * 상품 관심상품 등록
    */
   async interestProduct(productId) {
-    return this.toggleProductReaction(productId, 'interest')
+    return this.toggleProductReaction(productId, 'INTEREST')
+  }
+
+  /**
+   * 상품 공유
+   */
+  async shareProduct(productId) {
+    return this.toggleProductReaction(productId, 'SHARE')
+  }
+
+  /**
+   * 상품 위시리스트 등록
+   */
+  async wishProduct(productId) {
+    return this.toggleProductReaction(productId, 'WISH')
   }
 
   // ==================== 상품 리뷰 API ====================
@@ -357,46 +177,26 @@ class ProductService {
    * 상품 리뷰 목록 조회
    */
   async getProductReviews(productId, pageable = {}) {
-    const url = `${this.productEndpoint}/${productId}/reviews`
-    this.logRequest('GET', url, pageable)
-
-    try {
-      const queryParams = new URLSearchParams()
-
-      if (pageable.page !== undefined) queryParams.append('page', pageable.page.toString())
-      if (pageable.size !== undefined) queryParams.append('size', pageable.size.toString())
-      if (pageable.sort) queryParams.append('sort', pageable.sort)
-
-      const requestUrl = `${url}${queryParams.toString() ? '?' + queryParams.toString() : ''}`
-
-      const response = await fetch(requestUrl, {
-        method: 'GET',
-        headers: this.getHeaders()
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('GET', url, apiResponse)
-
-      return {
-        success: apiResponse.success !== false,
-        data: apiResponse.data || [],
-        message: apiResponse.message || 'success'
-      }
-
-    } catch (error) {
-      this.logResponse('GET', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
     }
+
+    const validatedPageable = this.validatePageable(pageable)
+    return await this.get(`/products/${productId}/reviews`, validatedPageable)
   }
 
   /**
    * 상품 리뷰 작성
    */
   async createProductReview(productId, reviewData) {
-    const url = `${this.productEndpoint}/${productId}/reviews`
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
+    }
+
+    const validation = this.validateReviewData(reviewData)
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(', '))
+    }
 
     const requestData = {
       rating: reviewData.rating,
@@ -404,31 +204,79 @@ class ProductService {
       deviceId: authUtils.getDeviceId()
     }
 
-    this.logRequest('POST', url, requestData)
+    return await this.post(`/products/${productId}/reviews`, requestData)
+  }
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(requestData)
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('POST', url, apiResponse)
-
-      return {
-        success: apiResponse.success !== false,
-        data: apiResponse.data || apiResponse,
-        message: apiResponse.message || '리뷰가 성공적으로 작성되었습니다'
-      }
-
-    } catch (error) {
-      this.logResponse('POST', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
+  /**
+   * 상품 리뷰 수정
+   */
+  async updateProductReview(reviewId, reviewData) {
+    if (!reviewId) {
+      throw new Error('리뷰 ID가 필요합니다.')
     }
+
+    const validation = this.validateReviewData(reviewData)
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(', '))
+    }
+
+    return await this.put(`/reviews/${reviewId}`, {
+      rating: reviewData.rating,
+      comment: reviewData.comment
+    })
+  }
+
+  /**
+   * 상품 리뷰 삭제
+   */
+  async deleteProductReview(reviewId) {
+    if (!reviewId) {
+      throw new Error('리뷰 ID가 필요합니다.')
+    }
+
+    return await this.delete(`/reviews/${reviewId}`)
+  }
+
+  // ==================== 파일 업로드 ====================
+
+  /**
+   * 상품 이미지 업로드
+   */
+  async uploadProductImage(productId, imageFile, options = {}) {
+    if (!productId || !imageFile) {
+      throw new Error('상품 ID와 이미지 파일이 필요합니다.')
+    }
+
+    const formData = new FormData()
+    formData.append('file', imageFile)
+
+    if (options.description) {
+      formData.append('description', options.description)
+    }
+
+    return await this.uploadFile(`/products/${productId}/images`, formData)
+  }
+
+  /**
+   * 상품 첨부파일 업로드
+   */
+  async uploadProductFile(productId, file, options = {}) {
+    if (!productId || !file) {
+      throw new Error('상품 ID와 파일이 필요합니다.')
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    if (options.description) {
+      formData.append('description', options.description)
+    }
+
+    if (options.fileType) {
+      formData.append('fileType', options.fileType)
+    }
+
+    return await this.uploadFile(`/products/${productId}/files`, formData)
   }
 
   // ==================== 카테고리 API ====================
@@ -437,31 +285,91 @@ class ProductService {
    * 카테고리 목록 조회
    */
   async getCategories() {
-    const url = `${this.baseURL}/api/categories`
-    this.logRequest('GET', url)
+    return await this.get('/categories')
+  }
 
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders()
-      })
-
-      const apiResponse = await this.handleResponse(response)
-      this.logResponse('GET', url, apiResponse)
-
-      return {
-        success: apiResponse.success !== false,
-        data: apiResponse.data || [],
-        message: apiResponse.message || 'success'
-      }
-
-    } catch (error) {
-      this.logResponse('GET', url, null, error)
-      if (error.status === 401) {
-        error.needsTokenRefresh = true
-      }
-      throw error
+  /**
+   * 카테고리 상세 조회
+   */
+  async getCategory(categoryId) {
+    if (!categoryId) {
+      throw new Error('카테고리 ID가 필요합니다.')
     }
+
+    return await this.get(`/categories/${categoryId}`)
+  }
+
+  // ==================== 검색 및 필터링 ====================
+
+  /**
+   * 상품 검색
+   */
+  async searchProducts(keyword, filters = {}, pageable = {}) {
+    if (!keyword || keyword.trim().length === 0) {
+      throw new Error('검색 키워드가 필요합니다.')
+    }
+
+    const params = {
+      keyword: keyword.trim(),
+      ...filters,
+      ...this.validatePageable(pageable)
+    }
+
+    return await this.get('/products/search', params)
+  }
+
+  /**
+   * 인기 상품 조회
+   */
+  async getPopularProducts(params = {}) {
+    const validatedParams = {
+      size: params.size || 10,
+      categoryId: params.categoryId || null,
+      period: params.period || 'WEEK' // DAY, WEEK, MONTH
+    }
+
+    return await this.get('/products/popular', validatedParams)
+  }
+
+  /**
+   * 추천 상품 조회
+   */
+  async getRecommendedProducts(params = {}) {
+    const validatedParams = {
+      size: params.size || 10,
+      userId: params.userId || authUtils.getUserId(),
+      type: params.type || 'PERSONALIZED' // PERSONALIZED, SIMILAR, RECENT
+    }
+
+    return await this.get('/products/recommendations', validatedParams)
+  }
+
+  // ==================== 상품 통계 ====================
+
+  /**
+   * 상품 조회수 증가
+   */
+  async incrementViewCount(productId) {
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
+    }
+
+    const requestData = {
+      deviceId: authUtils.getDeviceId()
+    }
+
+    return await this.post(`/products/${productId}/views`, requestData)
+  }
+
+  /**
+   * 상품 통계 조회
+   */
+  async getProductStats(productId) {
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
+    }
+
+    return await this.get(`/products/${productId}/stats`)
   }
 
   // ==================== 샘플 데이터 (개발용) ====================
@@ -505,22 +413,6 @@ class ProductService {
             thumbnailUrl: "https://example.com/images/pikachu1.jpg",
             releaseDate: "2024-02-01",
             createdAt: "2024-01-25T14:20:00"
-          },
-          {
-            id: 3,
-            name: "레고 크리에이터 자동차",
-            brand: "레고",
-            status: "APPROVED",
-            price: "89000",
-            viewCount: 2340,
-            likeCount: 78,
-            averageRating: 4.5,
-            reviewCount: 12,
-            categoryName: "블록완구",
-            productType: "SALE",
-            thumbnailUrl: "https://example.com/images/lego1.jpg",
-            releaseDate: "2024-01-20",
-            createdAt: "2024-01-15T09:15:00"
           }
         ],
         pageable: {
@@ -528,11 +420,10 @@ class ProductService {
           size: 10,
           sort: "createdAt,DESC"
         },
-        totalElements: 3,
+        totalElements: 2,
         totalPages: 1,
         first: true,
-        last: true,
-        numberOfElements: 3
+        last: true
       }
     }
   }
@@ -547,12 +438,15 @@ class ProductService {
         id: productId,
         name: "건담 RX-78-2 Ver. Ka",
         brand: "반다이",
-        status: "APPROVED",
+        status: {
+          title: "APPROVED",
+          description: "승인"
+        },
         description: "마스터 그레이드 건담 RX-78-2 Ver.Ka는 katoki hajime의 리파인 디자인으로 제작된 프라모델입니다.",
-        distributor: "반다이코리아, 인터넷 쇼핑몰",
+        distributor: "반다이코리아",
         price: "45000",
         feature: "리미티드 에디션, 특별 컬러링, 디오라마 베이스 포함",
-        tags: ["건담", "프라모델", "한정판", "콜렉션", "마스터그레이드"],
+        tags: ["건담", "프라모델", "한정판", "콜렉션"],
         viewCount: 1250,
         likeCount: 89,
         averageRating: 4.7,
@@ -570,7 +464,9 @@ class ProductService {
           iconUrl: "https://example.com/icons/plastic-model.svg",
           colorCode: "#FF6B6B",
           sortOrder: 1,
-          isActive: true
+          isActive: true,
+          createdAt: "2024-01-01T00:00:00",
+          updatedAt: "2024-01-01T00:00:00"
         },
         productType: "SALE",
         attachmentFiles: [
@@ -614,7 +510,7 @@ class ProductService {
           hasBookmark: true,
           hasInterest: false,
           hasShare: false,
-          hasWish: true
+          hasWish: false
         }
       }
     }
@@ -636,7 +532,9 @@ class ProductService {
           iconUrl: "https://example.com/icons/plastic-model.svg",
           colorCode: "#FF6B6B",
           sortOrder: 1,
-          isActive: true
+          isActive: true,
+          createdAt: "2024-01-01T00:00:00",
+          updatedAt: "2024-01-01T00:00:00"
         },
         {
           categoryId: 2,
@@ -647,288 +545,15 @@ class ProductService {
           iconUrl: "https://example.com/icons/figure.svg",
           colorCode: "#4ECDC4",
           sortOrder: 2,
-          isActive: true
-        },
-        {
-          categoryId: 3,
-          categoryName: "블록완구",
-          description: "레고, 조립형 블록 완구",
-          categoryCode: "BL001",
-          keywords: ["레고", "블록", "조립", "창의"],
-          iconUrl: "https://example.com/icons/blocks.svg",
-          colorCode: "#45B7D1",
-          sortOrder: 3,
-          isActive: true
+          isActive: true,
+          createdAt: "2024-01-01T00:00:00",
+          updatedAt: "2024-01-01T00:00:00"
         }
       ]
     }
   }
 
-  // ==================== 연결 테스트 ====================
-
-  /**
-   * Content Server 연결 테스트
-   */
-  async testConnection() {
-    const testEndpoints = [
-      `${this.baseURL.replace('/api', '')}/actuator/health`,
-      `${this.baseURL}/health`,
-      `${this.productEndpoint}` // 실제 API 테스트
-    ]
-
-    console.log('🔍 [ProductService] Content Server 연결 테스트...')
-
-    for (const url of testEndpoints) {
-      try {
-        console.log(`🌐 [ProductService] 테스트 중: ${url}`)
-
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: this.getHeaders(),
-          mode: 'cors',
-          credentials: 'include'
-        })
-
-        console.log(`📡 [ProductService] 응답 상태: ${response.status}`)
-
-        // 200 OK 또는 401 (인증 필요)도 서버 연결 성공으로 간주
-        if (response.ok || response.status === 401) {
-          console.log(`✅ [ProductService] Content Server 연결 성공: ${url}`)
-          return true
-        }
-      } catch (error) {
-        console.warn(`❌ [ProductService] ${url} 연결 실패:`, error.message)
-      }
-    }
-
-    console.log('❌ [ProductService] 모든 엔드포인트 연결 실패')
-    return false
-  }
-
-  // ==================== 디버깅 ====================
-
-  /**
-   * Product Service 상태 디버깅
-   */
-  debugStatus() {
-    console.group('🔍 [ProductService] 상태 디버깅')
-
-    console.log('=== 서버 정보 ===')
-    console.log('Base URL:', this.baseURL)
-    console.log('Product Endpoint:', this.productEndpoint)
-    console.log('환경:', import.meta.env.MODE)
-
-    console.log('=== 인증 정보 ===')
-    console.log('Access Token 존재:', !!authUtils.getAccessToken())
-    console.log('사용자 ID:', authUtils.getUserId())
-    console.log('디바이스 ID:', authUtils.getDeviceId())
-    console.log('인증 상태:', authUtils.isAuthenticated())
-
-    console.log('=== API 기능 ===')
-    console.log('지원 기능: CRUD, 검색, 페이징, 리액션, 리뷰')
-    console.log('정렬 옵션: releaseDate, createdAt, likeCount, viewCount, name')
-    console.log('리액션 타입: like, bookmark, interest')
-
-    console.groupEnd()
-  }
-}
-
-// ==================== 상품 유틸리티 ====================
-
-/**
- * 상품 관련 유틸리티 함수들
- */
-export const productUtils = {
-  /**
-   * 상품 상태 한국어 변환
-   */
-  getStatusText(status) {
-    const statusMap = {
-      'PENDING': '대기중',
-      'APPROVED': '승인됨',
-      'REJECTED': '거부됨',
-      'DELETED': '삭제됨'
-    }
-    return statusMap[status] || status
-  },
-
-  /**
-   * 상품 타입 한국어 변환
-   */
-  getProductTypeText(productType) {
-    const typeMap = {
-      'SALE': '판매',
-      'AUCTION': '경매',
-      'FREE': '무료나눔',
-      'EXCHANGE': '교환'
-    }
-    return typeMap[productType] || productType
-  },
-
-  /**
-   * 가격 포맷팅
-   */
-  formatPrice(price) {
-    if (!price) return '가격 정보 없음'
-    if (price === '0' || price === 0) return '무료'
-
-    const numPrice = typeof price === 'string' ? parseInt(price) : price
-    return new Intl.NumberFormat('ko-KR').format(numPrice) + '원'
-  },
-
-  /**
-   * 날짜 포맷팅
-   */
-  formatDate(dateString) {
-    if (!dateString) return '-'
-
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  },
-
-  /**
-   * 상대적 시간 표시
-   */
-  getRelativeTime(dateString) {
-    if (!dateString) return '-'
-
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInMs = now - date
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
-
-    if (diffInMinutes < 1) return '방금 전'
-    if (diffInMinutes < 60) return `${diffInMinutes}분 전`
-    if (diffInHours < 24) return `${diffInHours}시간 전`
-    if (diffInDays < 7) return `${diffInDays}일 전`
-
-    return this.formatDate(dateString)
-  },
-
-  /**
-   * 평점 표시
-   */
-  formatRating(rating) {
-    if (rating === null || rating === undefined) return '평점 없음'
-    return `⭐ ${rating.toFixed(1)}`
-  },
-
-  /**
-   * 수량 포맷팅 (K, M 단위)
-   */
-  formatCount(count) {
-    if (count < 1000) return count.toString()
-    if (count < 1000000) return `${(count / 1000).toFixed(1)}K`
-    return `${(count / 1000000).toFixed(1)}M`
-  },
-
-  /**
-   * 검색 조건 검증
-   */
-  validateSearchCondition(condition) {
-    const validStatuses = ['PENDING', 'APPROVED', 'REJECTED', 'DELETED']
-    const validProductTypes = ['SALE', 'AUCTION', 'FREE', 'EXCHANGE']
-
-    if (condition.status && !validStatuses.includes(condition.status)) {
-      condition.status = 'APPROVED'
-    }
-
-    if (condition.productType && !validProductTypes.includes(condition.productType)) {
-      condition.productType = null
-    }
-
-    if (condition.keyword && condition.keyword.length > 100) {
-      condition.keyword = condition.keyword.substring(0, 100)
-    }
-
-    return condition
-  },
-
-  /**
-   * 정렬 옵션 검증
-   */
-  validateSortOption(sort) {
-    const validSorts = [
-      'releaseDate,DESC', 'releaseDate,ASC',
-      'createdAt,DESC', 'createdAt,ASC',
-      'likeCount,DESC', 'likeCount,ASC',
-      'viewCount,DESC', 'viewCount,ASC',
-      'name,DESC', 'name,ASC',
-      'updatedAt,DESC', 'updatedAt,ASC'
-    ]
-
-    if (!validSorts.includes(sort)) {
-      return 'createdAt,DESC' // 기본값
-    }
-
-    return sort
-  },
-
-  /**
-   * 상품 목록 필터링
-   */
-  filterProducts(products, filters) {
-    return products.filter(product => {
-      if (filters.category && product.categoryName !== filters.category) {
-        return false
-      }
-
-      if (filters.brand && product.brand !== filters.brand) {
-        return false
-      }
-
-      if (filters.priceMin && parseInt(product.price) < filters.priceMin) {
-        return false
-      }
-
-      if (filters.priceMax && parseInt(product.price) > filters.priceMax) {
-        return false
-      }
-
-      if (filters.minRating && product.averageRating < filters.minRating) {
-        return false
-      }
-
-      if (filters.keyword) {
-        const keyword = filters.keyword.toLowerCase()
-        return product.name.toLowerCase().includes(keyword) ||
-            product.brand.toLowerCase().includes(keyword) ||
-            (product.tags && product.tags.some(tag => tag.toLowerCase().includes(keyword)))
-      }
-
-      return true
-    })
-  },
-
-  /**
-   * 상품 리뷰 데이터 검증
-   */
-  validateReviewData(reviewData) {
-    const errors = []
-
-    if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
-      errors.push('평점은 1~5점 사이여야 합니다.')
-    }
-
-    if (!reviewData.comment || reviewData.comment.trim().length === 0) {
-      errors.push('리뷰 내용은 필수입니다.')
-    }
-
-    if (reviewData.comment && reviewData.comment.length > 1000) {
-      errors.push('리뷰 내용은 1000자 이하여야 합니다.')
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors: errors
-    }
-  },
+  // ==================== 유틸리티 메서드 ====================
 
   /**
    * 상품 등록 데이터 검증
@@ -968,11 +593,209 @@ export const productUtils = {
       errors.push('태그는 최대 10개까지 가능합니다.')
     }
 
+    if (!['SALE', 'AUCTION', 'FREE', 'EXCHANGE'].includes(productData.productType)) {
+      errors.push('올바른 상품 타입을 선택해주세요.')
+    }
+
     return {
       isValid: errors.length === 0,
       errors: errors
     }
-  },
+  }
+
+  /**
+   * 리뷰 데이터 검증
+   */
+  validateReviewData(reviewData) {
+    const errors = []
+
+    if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
+      errors.push('평점은 1~5점 사이여야 합니다.')
+    }
+
+    if (!reviewData.comment || reviewData.comment.trim().length === 0) {
+      errors.push('리뷰 내용은 필수입니다.')
+    }
+
+    if (reviewData.comment && reviewData.comment.length > 1000) {
+      errors.push('리뷰 내용은 1000자 이하여야 합니다.')
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors
+    }
+  }
+
+  /**
+   * 검색 조건 검증
+   */
+  validateSearchCondition(searchCondition) {
+    const validStatuses = ['PENDING', 'APPROVED', 'REJECTED', 'DELETED']
+    const validProductTypes = ['SALE', 'AUCTION', 'FREE', 'EXCHANGE']
+
+    if (searchCondition.status && !validStatuses.includes(searchCondition.status)) {
+      searchCondition.status = 'APPROVED'
+    }
+
+    if (searchCondition.productType && !validProductTypes.includes(searchCondition.productType)) {
+      searchCondition.productType = null
+    }
+
+    if (searchCondition.keyword && searchCondition.keyword.length > 100) {
+      searchCondition.keyword = searchCondition.keyword.substring(0, 100)
+    }
+
+    return searchCondition
+  }
+
+  /**
+   * 페이징 조건 검증
+   */
+  validatePageable(pageable) {
+    const validSorts = [
+      'createdAt,DESC', 'createdAt,ASC',
+      'releaseDate,DESC', 'releaseDate,ASC',
+      'likeCount,DESC', 'likeCount,ASC',
+      'viewCount,DESC', 'viewCount,ASC',
+      'name,DESC', 'name,ASC'
+    ]
+
+    const validated = {
+      page: Math.max(0, pageable.page || 0),
+      size: Math.min(100, Math.max(1, pageable.size || 20))
+    }
+
+    if (pageable.sort && validSorts.includes(pageable.sort)) {
+      validated.sort = pageable.sort
+    } else {
+      validated.sort = 'createdAt,DESC'
+    }
+
+    return validated
+  }
+
+  // ==================== 백엔드 응답 변환 ====================
+
+  /**
+   * 백엔드 상품 응답을 프론트엔드 형식으로 변환
+   */
+  transformProductResponse(backendProduct) {
+    return {
+      id: backendProduct.id,
+      name: backendProduct.name,
+      brand: backendProduct.brand,
+      description: backendProduct.description,
+      distributor: backendProduct.distributor,
+      price: backendProduct.price,
+      feature: backendProduct.feature,
+      tags: backendProduct.tags || [],
+      status: this.transformProductStatus(backendProduct.status),
+      productType: backendProduct.productType,
+      thumbnailUrl: this.getThumbnailUrl(backendProduct.attachmentFiles),
+      viewCount: backendProduct.viewCount || 0,
+      likeCount: backendProduct.likeCount || 0,
+      averageRating: backendProduct.averageRating || 0,
+      reviewCount: backendProduct.reviewCount || 0,
+      creatorId: backendProduct.creatorId,
+      releaseDate: backendProduct.releaseDate,
+      categoryName: backendProduct.category?.categoryName || '미분류',
+      category: this.transformCategoryResponse(backendProduct.category),
+      attachmentFiles: backendProduct.attachmentFiles || [],
+      recentReviews: this.transformReviewsResponse(backendProduct.recentReviews),
+      userReaction: this.transformUserReactionResponse(backendProduct.userReaction),
+      createdAt: backendProduct.createdAt,
+      updatedAt: backendProduct.updatedAt
+    }
+  }
+
+  /**
+   * 백엔드 리뷰 응답을 프론트엔드 형식으로 변환
+   */
+  transformReviewResponse(backendReview) {
+    return {
+      id: backendReview.id,
+      productId: backendReview.productId,
+      userId: backendReview.creatorId,
+      userName: backendReview.creatorNickname || `사용자${backendReview.creatorId}`,
+      rating: backendReview.rating,
+      comment: backendReview.comment,
+      status: backendReview.status,
+      likeCount: backendReview.likeCount || 0,
+      reportCount: backendReview.reportCount || 0,
+      createdAt: backendReview.createdAt,
+      updatedAt: backendReview.updatedAt
+    }
+  }
+
+  /**
+   * ProductStatus enum 변환
+   */
+  transformProductStatus(status) {
+    if (typeof status === 'object' && status.title) {
+      return {
+        title: status.title,
+        description: status.description,
+        value: status.title // 호환성을 위한 추가 필드
+      }
+    }
+    return typeof status === 'string' ? status : 'PENDING'
+  }
+
+  /**
+   * 카테고리 응답 변환
+   */
+  transformCategoryResponse(category) {
+    if (!category) return null
+
+    return {
+      categoryId: category.categoryId,
+      categoryName: category.categoryName,
+      description: category.description,
+      categoryCode: category.categoryCode,
+      keywords: category.keywords || [],
+      iconUrl: category.iconUrl,
+      colorCode: category.colorCode,
+      sortOrder: category.sortOrder,
+      isActive: category.isActive,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt
+    }
+  }
+
+  /**
+   * 사용자 리액션 응답 변환
+   */
+  transformUserReactionResponse(userReaction) {
+    if (!userReaction) {
+      return {
+        hasLike: false,
+        hasBookmark: false,
+        hasInterest: false,
+        hasShare: false,
+        hasWish: false
+      }
+    }
+
+    return {
+      hasLike: userReaction.hasLike || false,
+      hasBookmark: userReaction.hasBookmark || false,
+      hasInterest: userReaction.hasInterest || false,
+      hasShare: userReaction.hasShare || false,
+      hasWish: userReaction.hasWish || false
+    }
+  }
+
+  /**
+   * 리뷰 목록 응답 변환
+   */
+  transformReviewsResponse(reviews) {
+    if (!reviews || !Array.isArray(reviews)) return []
+
+    return reviews.map(review => this.transformReviewResponse(review))
+  }
+
+  // ==================== 유틸리티 ====================
 
   /**
    * 썸네일 URL 생성
@@ -987,223 +810,233 @@ export const productUtils = {
     )
 
     return imageFile ? imageFile.fileUrl : '/images/product-placeholder.jpg'
-  },
-
-  /**
-   * 상품 URL 생성
-   */
-  getProductUrl(productId) {
-    return `/products/${productId}`
-  },
-
-  /**
-   * 상품 공유 URL 생성
-   */
-  getShareUrl(productId) {
-    return `${window.location.origin}/products/${productId}`
   }
-}
-
-// ==================== 검색 필터 유틸리티 ====================
-
-/**
- * 상품 검색 필터 관리 유틸리티
- */
-export const productFilterUtils = {
-  /**
-   * 기본 검색 조건
-   */
-  getDefaultSearchCondition() {
-    return {
-      keyword: '',
-      categoryId: null,
-      brand: '',
-      status: 'APPROVED',
-      productType: null
-    }
-  },
 
   /**
-   * 기본 페이징 조건
+   * 가격 포맷팅
    */
-  getDefaultPageable() {
-    return {
-      page: 0,
-      size: 20,
-      sort: 'createdAt,DESC'
-    }
-  },
+  formatPrice(price) {
+    if (!price) return '가격 정보 없음'
+    if (price === '0' || price === 0) return '무료'
 
-  /**
-   * URL 쿼리 파라미터를 검색 조건으로 변환
-   */
-  parseUrlParams(urlSearchParams) {
-    const condition = this.getDefaultSearchCondition()
-    const pageable = this.getDefaultPageable()
-
-    // 검색 조건
-    if (urlSearchParams.get('keyword')) {
-      condition.keyword = urlSearchParams.get('keyword')
-    }
-    if (urlSearchParams.get('categoryId')) {
-      condition.categoryId = parseInt(urlSearchParams.get('categoryId'))
-    }
-    if (urlSearchParams.get('brand')) {
-      condition.brand = urlSearchParams.get('brand')
-    }
-    if (urlSearchParams.get('productType')) {
-      condition.productType = urlSearchParams.get('productType')
-    }
-
-    // 페이징 조건
-    if (urlSearchParams.get('page')) {
-      pageable.page = parseInt(urlSearchParams.get('page'))
-    }
-    if (urlSearchParams.get('size')) {
-      pageable.size = parseInt(urlSearchParams.get('size'))
-    }
-    if (urlSearchParams.get('sort')) {
-      pageable.sort = urlSearchParams.get('sort')
-    }
-
-    return { condition, pageable }
-  },
-
-  /**
-   * 검색 조건을 URL 쿼리 파라미터로 변환
-   */
-  toUrlParams(condition, pageable) {
-    const params = new URLSearchParams()
-
-    // 검색 조건
-    if (condition.keyword) params.set('keyword', condition.keyword)
-    if (condition.categoryId) params.set('categoryId', condition.categoryId.toString())
-    if (condition.brand) params.set('brand', condition.brand)
-    if (condition.productType) params.set('productType', condition.productType)
-
-    // 페이징 조건
-    if (pageable.page > 0) params.set('page', pageable.page.toString())
-    if (pageable.size !== 20) params.set('size', pageable.size.toString())
-    if (pageable.sort !== 'createdAt,DESC') params.set('sort', pageable.sort)
-
-    return params.toString()
-  },
-
-  /**
-   * 정렬 옵션 목록
-   */
-  getSortOptions() {
-    return [
-      { value: 'createdAt,DESC', label: '최신 등록순' },
-      { value: 'likeCount,DESC', label: '인기순 (찜하기)' },
-      { value: 'viewCount,DESC', label: '조회수 높은순' },
-      { value: 'releaseDate,DESC', label: '최신 출시순' },
-      { value: 'releaseDate,ASC', label: '오래된 출시순' },
-      { value: 'name,ASC', label: '이름 오름차순' },
-      { value: 'name,DESC', label: '이름 내림차순' }
-    ]
-  },
-
-  /**
-   * 상품 타입 옵션 목록
-   */
-  getProductTypeOptions() {
-    return [
-      { value: '', label: '전체' },
-      { value: 'SALE', label: '판매' },
-      { value: 'AUCTION', label: '경매' },
-      { value: 'FREE', label: '무료나눔' },
-      { value: 'EXCHANGE', label: '교환' }
-    ]
+    const numPrice = typeof price === 'string' ? parseInt(price) : price
+    return new Intl.NumberFormat('ko-KR').format(numPrice) + '원'
   }
-}
-
-// ==================== 상품 캐시 유틸리티 ====================
-
-/**
- * 상품 데이터 캐싱 유틸리티 (로컬 스토리지 활용)
- */
-export const productCacheUtils = {
-  CACHE_PREFIX: 'product_cache_',
-  CACHE_DURATION: 5 * 60 * 1000, // 5분
 
   /**
-   * 캐시 키 생성
+   * 상품 목록 정렬
    */
-  getCacheKey(type, params = '') {
-    return `${this.CACHE_PREFIX}${type}_${params}`
-  },
-
-  /**
-   * 캐시 데이터 저장
-   */
-  setCache(key, data) {
-    try {
-      const cacheData = {
-        data: data,
-        timestamp: Date.now(),
-        expires: Date.now() + this.CACHE_DURATION
+  sortProducts(products, sortBy = 'createdAt') {
+    return [...products].sort((a, b) => {
+      switch (sortBy) {
+        case 'createdAt':
+          return new Date(b.createdAt) - new Date(a.createdAt)
+        case 'likeCount':
+          return b.likeCount - a.likeCount
+        case 'viewCount':
+          return b.viewCount - a.viewCount
+        case 'averageRating':
+          return b.averageRating - a.averageRating
+        case 'name':
+          return a.name.localeCompare(b.name, 'ko-KR')
+        case 'price':
+          return parseInt(a.price) - parseInt(b.price)
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt)
       }
-      localStorage.setItem(key, JSON.stringify(cacheData))
-    } catch (error) {
-      console.warn('[ProductCache] 캐시 저장 실패:', error)
-    }
-  },
+    })
+  }
 
   /**
-   * 캐시 데이터 조회
+   * 상품 목록 필터링
    */
-  getCache(key) {
-    try {
-      const cached = localStorage.getItem(key)
-      if (!cached) return null
-
-      const cacheData = JSON.parse(cached)
-
-      // 만료 확인
-      if (Date.now() > cacheData.expires) {
-        localStorage.removeItem(key)
-        return null
+  filterProducts(products, filters) {
+    return products.filter(product => {
+      if (filters.category && product.categoryName !== filters.category) {
+        return false
       }
 
-      return cacheData.data
-    } catch (error) {
-      console.warn('[ProductCache] 캐시 조회 실패:', error)
-      return null
-    }
-  },
+      if (filters.brand && product.brand !== filters.brand) {
+        return false
+      }
+
+      if (filters.productType && product.productType !== filters.productType) {
+        return false
+      }
+
+      if (filters.priceMin && parseInt(product.price) < filters.priceMin) {
+        return false
+      }
+
+      if (filters.priceMax && parseInt(product.price) > filters.priceMax) {
+        return false
+      }
+
+      if (filters.minRating && product.averageRating < filters.minRating) {
+        return false
+      }
+
+      if (filters.keyword) {
+        const keyword = filters.keyword.toLowerCase()
+        return product.name.toLowerCase().includes(keyword) ||
+            product.brand.toLowerCase().includes(keyword) ||
+            (product.tags && product.tags.some(tag => tag.toLowerCase().includes(keyword)))
+      }
+
+      return true
+    })
+  }
+
+  // ==================== 디버깅 ====================
 
   /**
-   * 캐시 삭제
+   * Product Service 상태 디버깅
    */
-  removeCache(key) {
-    try {
-      localStorage.removeItem(key)
-    } catch (error) {
-      console.warn('[ProductCache] 캐시 삭제 실패:', error)
-    }
-  },
+  debugProductStatus() {
+    console.group('🔍 [PRODUCT] 상품 서비스 상태')
 
-  /**
-   * 전체 상품 캐시 삭제
-   */
-  clearProductCache() {
-    try {
-      const keys = Object.keys(localStorage)
-      keys.forEach(key => {
-        if (key.startsWith(this.CACHE_PREFIX)) {
-          localStorage.removeItem(key)
-        }
-      })
-    } catch (error) {
-      console.warn('[ProductCache] 전체 캐시 삭제 실패:', error)
-    }
+    console.log('=== 서버 정보 ===')
+    console.log('Content Server URL:', this.baseURL)
+
+    console.log('=== 지원 기능 ===')
+    console.log('상품 CRUD: 등록, 조회, 수정, 삭제')
+    console.log('리액션: 좋아요, 북마크, 관심상품')
+    console.log('리뷰: 조회, 작성, 수정, 삭제')
+    console.log('파일 업로드: 이미지, 첨부파일')
+    console.log('검색 및 필터링: 키워드, 카테고리, 브랜드')
+
+    // 부모 클래스의 디버깅도 호출
+    this.debugStatus()
+
+    console.groupEnd()
   }
 }
 
-// ==================== 내보내기 ====================
+// ==================== Vue Composables ====================
 
-// 싱글톤 인스턴스 생성
+/**
+ * Vue Composition API용 상품 훅
+ */
+export function useProduct() {
+  const productService = new ProductService()
+
+  const getProducts = async (searchCondition = {}, pageable = {}) => {
+    try {
+      const response = await productService.getProducts(searchCondition, pageable)
+      return {
+        success: true,
+        data: response.data || [],
+        message: response.message
+      }
+    } catch (error) {
+      console.error('[PRODUCT] 상품 목록 조회 실패:', error)
+      return {
+        success: false,
+        error: error.message,
+        data: []
+      }
+    }
+  }
+
+  const createProduct = async (productData) => {
+    try {
+      const response = await productService.createProduct(productData)
+      return {
+        success: true,
+        data: response.data,
+        message: response.message || '상품이 등록되었습니다'
+      }
+    } catch (error) {
+      console.error('[PRODUCT] 상품 등록 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  const likeProduct = async (productId) => {
+    try {
+      const response = await productService.likeProduct(productId)
+      return {
+        success: true,
+        data: response.data,
+        message: response.message
+      }
+    } catch (error) {
+      console.error('[PRODUCT] 상품 좋아요 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  const uploadImage = async (productId, imageFile, options = {}) => {
+    try {
+      const response = await productService.uploadProductImage(productId, imageFile, options)
+      return {
+        success: true,
+        data: response.data,
+        message: response.message
+      }
+    } catch (error) {
+      console.error('[PRODUCT] 이미지 업로드 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  return {
+    // 상품 관리
+    getProducts,
+    createProduct,
+    getProduct: (productId) => productService.getProduct(productId),
+    updateProduct: (productId, productData) => productService.updateProduct(productId, productData),
+    deleteProduct: (productId) => productService.deleteProduct(productId),
+
+    // 리액션
+    likeProduct,
+    bookmarkProduct: (productId) => productService.bookmarkProduct(productId),
+    interestProduct: (productId) => productService.interestProduct(productId),
+    shareProduct: (productId) => productService.shareProduct(productId),
+    wishProduct: (productId) => productService.wishProduct(productId),
+
+    // 리뷰
+    getReviews: (productId, pageable) => productService.getProductReviews(productId, pageable),
+    createReview: (productId, reviewData) => productService.createProductReview(productId, reviewData),
+
+    // 파일 업로드
+    uploadImage,
+    uploadFile: (productId, file, options) => productService.uploadProductFile(productId, file, options),
+
+    // 카테고리
+    getCategories: () => productService.getCategories(),
+
+    // 검색
+    searchProducts: (keyword, filters, pageable) => productService.searchProducts(keyword, filters, pageable),
+    getPopularProducts: (params) => productService.getPopularProducts(params),
+    getRecommendedProducts: (params) => productService.getRecommendedProducts(params),
+
+    // 유틸리티
+    transformProduct: (product) => productService.transformProductResponse(product),
+    formatPrice: (price) => productService.formatPrice(price),
+    sortProducts: (products, sortBy) => productService.sortProducts(products, sortBy),
+    filterProducts: (products, filters) => productService.filterProducts(products, filters),
+
+    // 연결 테스트
+    testConnection: () => productService.testConnection(),
+
+    // 디버깅
+    debugStatus: () => productService.debugProductStatus()
+  }
+}
+
+// ==================== 싱글톤 인스턴스 ====================
+
+// 싱글톤 인스턴스 생성 및 내보내기
 export const productService = new ProductService()
 
 // 별칭 (기존 코드 호환성)
