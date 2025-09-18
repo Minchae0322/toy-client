@@ -1,6 +1,5 @@
 // src/router/index.js
-import { createRouter, createWebHistory } from 'vue-router'
-import { authGuard } from '@/router/guards/authGuard.js'
+import {createRouter, createWebHistory} from 'vue-router'
 import * as authUtils from '@/utils/auth.js'
 
 // Views import (기존 구조 유지)
@@ -15,9 +14,11 @@ import CategoryAdminView from "@/views/CategoryAdminView.vue"
 // Chat Views import
 import ChatApp from '@/views/ChatApp.vue'
 
-
 // Product Views import
 import ProductListView from '@/views/ProductListView.vue'
+import ProductCreateView from '@/views/ProductCreateView.vue'
+import ProductDetailView from '@/views/ProductDetailView.vue'
+
 const routes = [
   // ==================== 상품 관련 라우트 ====================
   {
@@ -28,6 +29,36 @@ const routes = [
       requiresAuth: false,
       public: true,
       title: '상품 목록'
+    }
+  },
+  {
+    path: '/products/create',
+    name: 'ProductCreate',
+    component: ProductCreateView,
+    meta: {
+      requiresAuth: true,
+      title: '상품 등록'
+    }
+  },
+  {
+    path: '/products/:id',
+    name: 'ProductDetail',
+    component: ProductDetailView,
+    props: true,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '상품 상세'
+    }
+  },
+  {
+    path: '/products/:id/edit',
+    name: 'ProductEdit',
+    component: () => import('@/views/ProductEditView.vue'),
+    props: true,
+    meta: {
+      requiresAuth: true,
+      title: '상품 수정'
     }
   },
 
@@ -57,6 +88,15 @@ const routes = [
     meta: {
       requiresAuth: false,
       public: true
+    }
+  },
+  {
+    path: '/sell/step2',
+    name: 'SellStep2',
+    component: ProductCreateView,
+    meta: {
+      requiresAuth: true,
+      title: '상품 등록 - 단계 2'
     }
   },
   {
@@ -363,6 +403,17 @@ export const productNavigation = {
   },
 
   /**
+   * 판매 단계별 페이지로 이동
+   */
+  toSellStep2() {
+    return router.push({ name: 'SellStep2' })
+  },
+
+  toSellStep3() {
+    return router.push({ name: 'SellStep3' })
+  },
+
+  /**
    * 상품 수정 페이지로 이동
    */
   toProductEdit(productId) {
@@ -374,21 +425,11 @@ export const productNavigation = {
   },
 
   /**
-   * 현재 상품 ID 가져오기
-   */
-  getCurrentProductId() {
-    const route = router.currentRoute.value
-    return ['ProductDetail', 'ProductEdit'].includes(route.name)
-        ? parseInt(route.params.id)
-        : null
-  },
-
-  /**
    * 상품 관련 페이지인지 확인
    */
   isProductPage() {
     const route = router.currentRoute.value
-    return route.name?.startsWith('Product')
+    return route.name?.startsWith('Product') || route.name?.startsWith('Sell')
   },
 
   /**
