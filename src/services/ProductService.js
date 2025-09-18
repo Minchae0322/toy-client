@@ -65,9 +65,13 @@ class ProductService extends BaseApiService {
     const validatedCondition = this.validateSearchCondition(searchCondition)
     const validatedPageable = this.validatePageable(pageable)
 
+    // null, undefined, 빈 문자열 값 제거
+    const cleanedCondition = this.removeEmptyParams(validatedCondition)
+    const cleanedPageable = this.removeEmptyParams(validatedPageable)
+
     const params = {
-      ...validatedCondition,
-      ...validatedPageable
+      ...cleanedCondition,
+      ...cleanedPageable
     }
 
     return await this.get('/products', params)
@@ -182,7 +186,9 @@ class ProductService extends BaseApiService {
     }
 
     const validatedPageable = this.validatePageable(pageable)
-    return await this.get(`/products/${productId}/reviews`, validatedPageable)
+    const cleanedPageable = this.removeEmptyParams(validatedPageable)
+
+    return await this.get(`/products/${productId}/reviews`, cleanedPageable)
   }
 
   /**
@@ -309,10 +315,13 @@ class ProductService extends BaseApiService {
       throw new Error('검색 키워드가 필요합니다.')
     }
 
+    const cleanedFilters = this.removeEmptyParams(filters)
+    const cleanedPageable = this.removeEmptyParams(this.validatePageable(pageable))
+
     const params = {
       keyword: keyword.trim(),
-      ...filters,
-      ...this.validatePageable(pageable)
+      ...cleanedFilters,
+      ...cleanedPageable
     }
 
     return await this.get('/products/search', params)
@@ -328,7 +337,10 @@ class ProductService extends BaseApiService {
       period: params.period || 'WEEK' // DAY, WEEK, MONTH
     }
 
-    return await this.get('/products/popular', validatedParams)
+    // null 값 제거
+    const cleanedParams = this.removeEmptyParams(validatedParams)
+
+    return await this.get('/products/popular', cleanedParams)
   }
 
   /**
@@ -341,7 +353,10 @@ class ProductService extends BaseApiService {
       type: params.type || 'PERSONALIZED' // PERSONALIZED, SIMILAR, RECENT
     }
 
-    return await this.get('/products/recommendations', validatedParams)
+    // null 값 제거
+    const cleanedParams = this.removeEmptyParams(validatedParams)
+
+    return await this.get('/products/recommendations', cleanedParams)
   }
 
   // ==================== 상품 통계 ====================
@@ -556,6 +571,33 @@ class ProductService extends BaseApiService {
   // ==================== 유틸리티 메서드 ====================
 
   /**
+   * 파라미터에서 null, undefined, 빈 문자열 값 제거
+   */
+  removeEmptyParams(params) {
+    if (!params || typeof params !== 'object') {
+      return {}
+    }
+
+    const cleaned = {}
+
+    Object.entries(params).forEach(([key, value]) => {
+      // null, undefined, 빈 문자열이 아닌 값만 포함
+      if (value !== null && value !== undefined && value !== '') {
+        // 배열인 경우 빈 배열도 제외
+        if (Array.isArray(value)) {
+          if (value.length > 0) {
+            cleaned[key] = value
+          }
+        } else {
+          cleaned[key] = value
+        }
+      }
+    })
+
+    return cleaned
+  }
+
+  /**
    * 상품 등록 데이터 검증
    */
   validateProductData(productData) {
@@ -628,31 +670,85 @@ class ProductService extends BaseApiService {
   }
 
   /**
-   * 검색 조건 검증
+   * 검색 조건 검증 (개선된 버전)
    */
   validateSearchCondition(searchCondition) {
+    if (!searchCondition || typeof searchCondition !== 'object') {
+      return {}
+    }
+
     const validStatuses = ['PENDING', 'APPROVED', 'REJECTED', 'DELETED']
     const validProductTypes = ['SALE', 'AUCTION', 'FREE', 'EXCHANGE']
 
-    if (searchCondition.status && !validStatuses.includes(searchCondition.status)) {
-      searchCondition.status = 'APPROVED'
+    const validated = { ...searchCondition }
+
+    // status 검증
+    if (validated.status && !validStatuses.includes(validated.status)) {
+      validated.status = 'APPROVED'
     }
 
-    if (searchCondition.productType && !validProductTypes.includes(searchCondition.productType)) {
-      searchCondition.productType = null
+    // productType 검증
+    if (validated.productType && !validProductTypes.includes(validated.productType)) {
+      delete validated.productType // 잘못된 값은 제거
     }
 
-    if (searchCondition.keyword && searchCondition.keyword.length > 100) {
-      searchCondition.keyword = searchCondition.keyword.substring(0, 100)
+    // keyword 길이 검증
+    if (validated.keyword && validated.keyword.length > 100) {
+      validated.keyword = validated.keyword.substring(0, 100)
     }
 
-    return searchCondition
+    // categoryId 숫자 검증
+    if (validated.categoryId && isNaN(parseInt(validated.categoryId))) {
+      delete validated.categoryId
+    } else if (validated.categoryId) {
+      validated.categoryId = parseInt(validated.categoryId)
+    }
+
+    // creatorId 숫자 검증
+    if (validated.creatorId && isNaN(parseInt(validated.creatorId))) {
+      delete validated.creatorId
+    } else if (validated.creatorId) {
+      validated.creatorId = parseInt(validated.creatorId)
+    }
+
+    // 가격 범위 검증
+    if (validated.priceMin && isNaN(parseFloat(validated.priceMin))) {
+      delete validated.priceMin
+    } else if (validated.priceMin) {
+      validated.priceMin = parseFloat(validated.priceMin)
+    }
+
+    if (validated.priceMax && isNaN(parseFloat(validated.priceMax))) {
+      delete validated.priceMax
+    } else if (validated.priceMax) {
+      validated.priceMax = parseFloat(validated.priceMax)
+    }
+
+    // 평점 범위 검증
+    if (validated.minRating) {
+      const rating = parseFloat(validated.minRating)
+      if (isNaN(rating) || rating < 1 || rating > 5) {
+        delete validated.minRating
+      } else {
+        validated.minRating = rating
+      }
+    }
+
+    return validated
   }
 
   /**
-   * 페이징 조건 검증
+   * 페이징 조건 검증 (개선된 버전)
    */
   validatePageable(pageable) {
+    if (!pageable || typeof pageable !== 'object') {
+      return {
+        page: 0,
+        size: 20,
+        sort: 'createdAt,DESC'
+      }
+    }
+
     const validSorts = [
       'createdAt,DESC', 'createdAt,ASC',
       'releaseDate,DESC', 'releaseDate,ASC',
@@ -666,6 +762,7 @@ class ProductService extends BaseApiService {
       size: Math.min(100, Math.max(1, pageable.size || 20))
     }
 
+    // sort 검증 - 유효한 값만 설정
     if (pageable.sort && validSorts.includes(pageable.sort)) {
       validated.sort = pageable.sort
     } else {
@@ -919,6 +1016,31 @@ class ProductService extends BaseApiService {
  */
 export const productFilterUtils = {
   /**
+   * 파라미터에서 빈 값 제거 (유틸리티 함수)
+   */
+  removeEmptyParams(params) {
+    if (!params || typeof params !== 'object') {
+      return {}
+    }
+
+    const cleaned = {}
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        if (Array.isArray(value)) {
+          if (value.length > 0) {
+            cleaned[key] = value
+          }
+        } else {
+          cleaned[key] = value
+        }
+      }
+    })
+
+    return cleaned
+  },
+
+  /**
    * 기본 검색 조건 반환
    */
   getDefaultSearchCondition() {
@@ -996,23 +1118,23 @@ export const productFilterUtils = {
   },
 
   /**
-   * 검색 조건을 URL 쿼리 파라미터로 변환
+   * 검색 조건을 URL 쿼리 파라미터로 변환 (null 값 제거)
    */
   toQueryParams(searchCondition, pageable) {
     const params = new URLSearchParams()
 
-    // 검색 조건
-    Object.entries(searchCondition).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        params.append(key, value)
-      }
+    // 검색 조건에서 null 값 제거
+    const cleanedSearch = this.removeEmptyParams(searchCondition)
+    const cleanedPageable = this.removeEmptyParams(pageable)
+
+    // 검색 조건 추가
+    Object.entries(cleanedSearch).forEach(([key, value]) => {
+      params.append(key, value.toString())
     })
 
-    // 페이징 조건
-    Object.entries(pageable).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        params.append(key, value)
-      }
+    // 페이징 조건 추가
+    Object.entries(cleanedPageable).forEach(([key, value]) => {
+      params.append(key, value.toString())
     })
 
     return params.toString()
