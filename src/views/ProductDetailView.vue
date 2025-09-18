@@ -9,6 +9,16 @@
           <router-link to="/products">상품</router-link> >
           {{ product?.name || '상품 상세' }}
         </div>
+
+        <!-- 로그인한 사용자에게만 편집/관리 버튼 표시 -->
+        <div v-if="isLoggedIn && isOwner" class="header-actions">
+          <button class="edit-btn" @click="editProduct">
+            ✏️ 수정
+          </button>
+          <button class="delete-btn" @click="deleteProduct">
+            🗑️ 삭제
+          </button>
+        </div>
       </div>
     </header>
 
@@ -159,22 +169,38 @@
 
           <!-- 액션 버튼 섹션 -->
           <div class="action-section">
+            <!-- 로그인하지 않은 사용자를 위한 안내 -->
+            <div v-if="!isLoggedIn" class="login-notice">
+              <div class="login-notice-content">
+                <span>💡</span>
+                <span>로그인하시면 찜하기, 리뷰 작성 등 더 많은 기능을 이용할 수 있어요!</span>
+                <router-link to="/login" class="login-link">로그인하기</router-link>
+              </div>
+            </div>
+
             <div class="action-buttons">
               <button
                   class="action-btn"
-                  :class="{ primary: userReaction.hasBookmark, secondary: !userReaction.hasBookmark }"
-                  @click="toggleBookmark"
+                  :class="{
+                    primary: isLoggedIn && userReaction.hasBookmark,
+                    secondary: !isLoggedIn || !userReaction.hasBookmark,
+                    disabled: !isLoggedIn
+                  }"
+                  @click="handleBookmarkAction"
                   :disabled="actionLoading"
               >
-                {{ userReaction.hasBookmark ? '💖 찜했음' : '❤️ 찜하기' }}
+                {{ isLoggedIn
+                  ? (userReaction.hasBookmark ? '💖 찜했음' : '❤️ 찜하기')
+                  : '❤️ 찜하기 (로그인 필요)'
+                }}
               </button>
-              <button class="action-btn secondary" @click="toggleShare">
+              <button class="action-btn secondary" @click="handleShareAction">
                 📤 공유
               </button>
             </div>
 
-            <!-- 추가 리액션 버튼 -->
-            <div class="reaction-buttons">
+            <!-- 로그인한 사용자에게만 추가 리액션 버튼 표시 -->
+            <div v-if="isLoggedIn" class="reaction-buttons">
               <button
                   class="reaction-btn"
                   :class="{ active: userReaction.hasLike }"
@@ -241,7 +267,13 @@
                   <div class="trade-distance">📍 {{ trader.distance }}</div>
                 </div>
                 <div class="trade-info">{{ trader.message }}</div>
-                <button class="trade-btn" @click="startTrade(trader)">거래 신청</button>
+                <button
+                    class="trade-btn"
+                    @click="handleTradeAction(trader)"
+                    :disabled="!isLoggedIn"
+                >
+                  {{ isLoggedIn ? '거래 신청' : '로그인 필요' }}
+                </button>
               </div>
             </div>
 
@@ -250,7 +282,13 @@
               <div class="empty-icon">📦</div>
               <h3>아직 거래 가능한 사용자가 없어요</h3>
               <p>이 제품의 첫 번째 거래자가 되어보세요!</p>
-              <button class="cta-btn" @click="goToTrade">첫 거래자가 되어보세요!</button>
+              <button
+                  class="cta-btn"
+                  @click="handleFirstTraderAction"
+                  :disabled="!isLoggedIn"
+              >
+                {{ isLoggedIn ? '첫 거래자가 되어보세요!' : '로그인 후 참여하세요' }}
+              </button>
             </div>
 
             <div v-else-if="availableTraders.length > displayedTradeCount" class="load-more">
@@ -320,8 +358,12 @@
 
               <!-- 리뷰 작성 버튼 -->
               <div class="review-write-section">
-                <button class="write-review-btn" @click="writeReview">
-                  리뷰 작성하기
+                <button
+                    class="write-review-btn"
+                    @click="handleWriteReviewAction"
+                    :disabled="!isLoggedIn"
+                >
+                  {{ isLoggedIn ? '리뷰 작성하기' : '로그인 후 리뷰 작성' }}
                 </button>
               </div>
             </div>
@@ -380,12 +422,34 @@
         </div>
       </div>
     </div>
+
+    <!-- 로그인 유도 모달 -->
+    <div v-if="showLoginModal" class="login-modal-overlay" @click="closeLoginModal">
+      <div class="login-modal-content" @click.stop>
+        <div class="login-modal-icon">🔒</div>
+        <h3>{{ loginModalTitle }}</h3>
+        <p>{{ loginModalMessage }}</p>
+        <div class="login-modal-actions">
+          <button class="modal-btn secondary" @click="closeLoginModal">
+            나중에 하기
+          </button>
+          <router-link
+              :to="{ path: '/login', query: { redirect: $route.fullPath } }"
+              class="modal-btn primary"
+              @click="closeLoginModal"
+          >
+            로그인하기
+          </router-link>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth.js'
 import { useProduct } from '@/composables/useProduct'
 import { useChat } from '@/composables/useChat'
 import { productUtils } from '@/services/productService'
@@ -393,6 +457,14 @@ import { productUtils } from '@/services/productService'
 // Router
 const route = useRoute()
 const router = useRouter()
+
+// Auth Composable
+const {
+  user,
+  isLoggedIn,
+  userId,
+  userNickname
+} = useAuth()
 
 // Composables
 const {
@@ -414,6 +486,9 @@ const actionLoading = ref(false)
 const loadingReviews = ref(false)
 const chatLoading = ref(false)
 const chatError = ref('')
+const showLoginModal = ref(false)
+const loginModalTitle = ref('')
+const loginModalMessage = ref('')
 
 const product = ref(null)
 const reviews = ref([])
@@ -461,6 +536,13 @@ const showTradeSection = computed(() => {
   return product.value?.productType === 'SALE'
 })
 
+const isOwner = computed(() => {
+  return isLoggedIn.value &&
+      userId.value &&
+      product.value?.creatorId &&
+      userId.value === product.value.creatorId
+})
+
 // 표시할 데이터 계산
 const displayedTraders = computed(() =>
     availableTraders.value.slice(0, displayedTradeCount.value)
@@ -470,18 +552,109 @@ const displayedReviews = computed(() =>
     reviews.value.slice(0, displayedReviewCount.value)
 )
 
-// Methods
+// ==================== 인증 관련 액션 핸들러 ====================
+
+const showLoginRequiredModal = (title, message) => {
+  loginModalTitle.value = title
+  loginModalMessage.value = message
+  showLoginModal.value = true
+}
+
+const closeLoginModal = () => {
+  showLoginModal.value = false
+}
+
+const handleBookmarkAction = async () => {
+  if (!isLoggedIn.value) {
+    showLoginRequiredModal(
+        '로그인이 필요합니다',
+        '상품을 찜하려면 로그인해주세요.'
+    )
+    return
+  }
+  await toggleBookmark()
+}
+
+const handleShareAction = async () => {
+  // 공유는 로그인 없이도 가능
+  await shareToSystem()
+}
+
+const handleTradeAction = async (trader) => {
+  if (!isLoggedIn.value) {
+    showLoginRequiredModal(
+        '로그인이 필요합니다',
+        '거래 신청을 하려면 로그인해주세요.'
+    )
+    return
+  }
+  await startTrade(trader)
+}
+
+const handleFirstTraderAction = () => {
+  if (!isLoggedIn.value) {
+    showLoginRequiredModal(
+        '로그인이 필요합니다',
+        '거래에 참여하려면 로그인해주세요.'
+    )
+    return
+  }
+  goToTrade()
+}
+
+const handleWriteReviewAction = () => {
+  if (!isLoggedIn.value) {
+    showLoginRequiredModal(
+        '로그인이 필요합니다',
+        '리뷰를 작성하려면 로그인해주세요.'
+    )
+    return
+  }
+  writeReview()
+}
+
+// ==================== 상품 관리 액션 ====================
+
+const editProduct = () => {
+  router.push(`/products/${product.value.id}/edit`)
+}
+
+const deleteProduct = async () => {
+  if (confirm('정말로 이 상품을 삭제하시겠습니까?')) {
+    try {
+      // 상품 삭제 API 호출 (실제 구현 시 productService.deleteProduct 사용)
+      // await productService.deleteProduct(product.value.id)
+      console.log('상품 삭제:', product.value.id)
+      alert('상품이 삭제되었습니다.')
+      router.push('/products')
+    } catch (err) {
+      console.error('상품 삭제 실패:', err)
+      alert('상품 삭제에 실패했습니다.')
+    }
+  }
+}
+
+// ==================== 데이터 로드 메서드 ====================
+
 const fetchProduct = async () => {
   try {
     loading.value = true
     error.value = null
 
     const productId = route.params.id
-    const response = await getProduct(productId)
+
+    // 로그인한 사용자의 경우 개인화된 정보 포함
+    const response = await getProduct(productId, {
+      userId: isLoggedIn.value ? userId.value : null
+    })
 
     if (response.success) {
       product.value = response.data
-      userReaction.value = response.data.userReaction || userReaction.value
+
+      // 로그인한 사용자의 리액션 정보 설정
+      if (isLoggedIn.value && response.data.userReaction) {
+        userReaction.value = response.data.userReaction
+      }
 
       // 추가 데이터 로드
       await Promise.all([
@@ -582,13 +755,6 @@ const fetchAvailableTraders = async () => {
       message: '주말에 홍대에서 만나실 분들 구해요! 3-4명 정도 함께해요'
     },
     {
-      id: 4,
-      name: '최우진',
-      rating: 4.3,
-      distance: '1.2km',
-      message: '택배 거래 가능해요. 안전거래 선호합니다'
-    },
-    {
       id: 5,
       name: '한지민',
       rating: 4.7,
@@ -605,14 +771,8 @@ const loadMoreTrades = () => {
   )
 }
 
-const loadMoreReviewsDisplay = () => {
-  displayedReviewCount.value = Math.min(
-      displayedReviewCount.value + 3,
-      reviews.value.length
-  )
-}
+// ==================== 리액션 토글 메서드들 ====================
 
-// 리액션 토글 메서드들
 const toggleBookmark = async () => {
   try {
     actionLoading.value = true
@@ -624,6 +784,7 @@ const toggleBookmark = async () => {
     }
   } catch (err) {
     console.error('찜하기 실패:', err)
+    alert('찜하기 처리 중 오류가 발생했습니다.')
   } finally {
     actionLoading.value = false
   }
@@ -640,6 +801,7 @@ const toggleLike = async () => {
     }
   } catch (err) {
     console.error('좋아요 실패:', err)
+    alert('좋아요 처리 중 오류가 발생했습니다.')
   } finally {
     actionLoading.value = false
   }
@@ -655,22 +817,7 @@ const toggleInterest = async () => {
     }
   } catch (err) {
     console.error('관심상품 실패:', err)
-  } finally {
-    actionLoading.value = false
-  }
-}
-
-const toggleShare = async () => {
-  try {
-    actionLoading.value = true
-    const response = await shareProduct(product.value.id)
-
-    if (response.success) {
-      userReaction.value.hasShare = !userReaction.value.hasShare
-      await shareToSystem()
-    }
-  } catch (err) {
-    console.error('공유 실패:', err)
+    alert('관심상품 처리 중 오류가 발생했습니다.')
   } finally {
     actionLoading.value = false
   }
@@ -686,6 +833,7 @@ const toggleWish = async () => {
     }
   } catch (err) {
     console.error('위시리스트 실패:', err)
+    alert('위시리스트 처리 중 오류가 발생했습니다.')
   } finally {
     actionLoading.value = false
   }
@@ -701,25 +849,39 @@ const updateLikeCount = () => {
 }
 
 const shareToSystem = async () => {
-  if (navigator.share) {
-    try {
+  try {
+    if (navigator.share) {
       await navigator.share({
         title: product.value.name,
         text: product.value.description,
         url: window.location.href
       })
-    } catch (err) {
-      // 공유 취소된 경우 무시
+    } else {
+      // 폴백: 클립보드에 복사
+      await navigator.clipboard.writeText(window.location.href)
+      alert('링크가 클립보드에 복사되었습니다!')
     }
-  } else {
-    // 폴백: 클립보드에 복사
-    await navigator.clipboard.writeText(window.location.href)
-    alert('링크가 클립보드에 복사되었습니다!')
+
+    // 로그인한 사용자는 공유 통계에 반영
+    if (isLoggedIn.value) {
+      try {
+        await shareProduct(product.value.id)
+      } catch (err) {
+        // 공유 통계 실패는 무시 (사용자에게는 공유 성공으로 표시)
+        console.warn('공유 통계 업데이트 실패:', err)
+      }
+    }
+  } catch (err) {
+    // 공유 취소된 경우 등은 무시
+    console.log('공유 취소됨:', err)
   }
 }
 
+// ==================== 채팅 및 거래 관련 메서드 ====================
+
 const startTrade = async (trader) => {
   try {
+    chatLoading.value = true
     const response = await startChat({
       chatContext: 'PRODUCT_TRADE',
       chatContextId: product.value.id,
@@ -729,9 +891,14 @@ const startTrade = async (trader) => {
 
     if (response.success) {
       router.push(`/chat/${response.data.roomId}`)
+    } else {
+      chatError.value = response.error || '채팅방 생성에 실패했습니다.'
     }
   } catch (err) {
     console.error('거래 채팅 시작 실패:', err)
+    chatError.value = '채팅 연결 중 오류가 발생했습니다.'
+  } finally {
+    chatLoading.value = false
   }
 }
 
@@ -745,12 +912,14 @@ const goToTrade = () => {
 
 const retryStartChat = () => {
   clearChatError()
-  // 재시도 로직 구현
+  // 재시도 로직은 실제 구현에서 추가
 }
 
 const clearChatError = () => {
   chatError.value = ''
 }
+
+// ==================== 네비게이션 및 UI 메서드 ====================
 
 const setCurrentImage = (index) => {
   currentImageIndex.value = index
@@ -768,7 +937,8 @@ const handleImageError = (event) => {
   event.target.style.display = 'none'
 }
 
-// Utility methods
+// ==================== 유틸리티 메서드 ====================
+
 const formatPrice = (price) => productUtils.formatPrice(price)
 const formatCount = (count) => productUtils.formatCount(count)
 const formatDate = (date) => productUtils.formatDate(date)
@@ -805,7 +975,13 @@ const getStatusIcon = (productType) => {
 }
 
 const getProductTypeText = (productType) => {
-  return productUtils.getProductTypeText(productType)
+  const textMap = {
+    'SALE': '판매',
+    'AUCTION': '경매',
+    'FREE': '무료나눔',
+    'EXCHANGE': '교환'
+  }
+  return textMap[productType] || '기타'
 }
 
 const getReviewStatusText = (status) => {
@@ -816,6 +992,10 @@ const getReviewStatusText = (status) => {
     'HIDDEN': '숨김'
   }
   return statusMap[status] || status
+}
+
+const getReviewStatusClass = (status) => {
+  return status.toLowerCase()
 }
 
 const isHighlightTag = (tag) => {
@@ -832,15 +1012,34 @@ const getSortParam = (sort) => {
   return sortMap[sort] || 'createdAt,DESC'
 }
 
-// Lifecycle
+// ==================== 라이프사이클 ====================
+
 onMounted(() => {
   fetchProduct()
 })
 
-// Watchers
+// ==================== 감시자 ====================
+
 watch(() => route.params.id, (newId, oldId) => {
   if (newId && newId !== oldId) {
     fetchProduct()
+  }
+})
+
+// 로그인 상태 변경 감지
+watch(isLoggedIn, (newValue) => {
+  if (newValue) {
+    // 로그인 후 상품 정보 다시 로드 (개인화된 정보 포함)
+    fetchProduct()
+  } else {
+    // 로그아웃 시 개인 리액션 정보 초기화
+    userReaction.value = {
+      hasLike: false,
+      hasBookmark: false,
+      hasInterest: false,
+      hasShare: false,
+      hasWish: false
+    }
   }
 })
 </script>
@@ -892,11 +1091,48 @@ watch(() => route.params.id, (newId, oldId) => {
   color: #222222;
   font-size: 14px;
   opacity: 0.7;
+  flex: 1;
 }
 
 .breadcrumb a {
   color: #1DCD9F;
   text-decoration: none;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-btn, .delete-btn {
+  padding: 6px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-btn {
+  border-color: #1DCD9F;
+  color: #1DCD9F;
+  background: white;
+}
+
+.edit-btn:hover {
+  background: #1DCD9F;
+  color: white;
+}
+
+.delete-btn {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: white;
+}
+
+.delete-btn:hover {
+  background: #ef4444;
+  color: white;
 }
 
 /* 메인 컨테이너 */
@@ -1159,6 +1395,48 @@ watch(() => route.params.id, (newId, oldId) => {
   background: #f8fafc;
 }
 
+/* 로그인 안내 */
+.login-notice {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+  border-radius: 12px;
+  border-left: 4px solid #1DCD9F;
+}
+
+.login-notice-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.login-notice-content span:first-child {
+  font-size: 20px;
+}
+
+.login-notice-content span:nth-child(2) {
+  flex: 1;
+  font-size: 14px;
+  color: #0369a1;
+}
+
+.login-link {
+  padding: 6px 16px;
+  background: #1DCD9F;
+  color: white;
+  text-decoration: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.login-link:hover {
+  background: #169976;
+}
+
 .action-buttons {
   display: flex;
   gap: 12px;
@@ -1187,7 +1465,15 @@ watch(() => route.params.id, (newId, oldId) => {
   color: #1DCD9F;
 }
 
-.action-btn:hover:not(:disabled) {
+.action-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-color: #e2e8f0;
+}
+
+.action-btn:hover:not(:disabled):not(.disabled) {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(29, 205, 159, 0.3);
 }
@@ -1355,8 +1641,13 @@ watch(() => route.params.id, (newId, oldId) => {
   transition: background 0.2s;
 }
 
-.trade-btn:hover {
+.trade-btn:hover:not(:disabled) {
   background: #169976;
+}
+
+.trade-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
 }
 
 .empty-trade {
@@ -1395,9 +1686,15 @@ watch(() => route.params.id, (newId, oldId) => {
   transition: all 0.2s;
 }
 
-.cta-btn:hover {
+.cta-btn:hover:not(:disabled) {
   background: #16a085;
   transform: translateY(-1px);
+}
+
+.cta-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .load-more {
@@ -1567,9 +1864,15 @@ watch(() => route.params.id, (newId, oldId) => {
   transition: all 0.2s;
 }
 
-.write-review-btn:hover {
+.write-review-btn:hover:not(:disabled) {
   background: #16a085;
   transform: translateY(-1px);
+}
+
+.write-review-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* 관련 제품 섹션 */
@@ -1748,6 +2051,88 @@ watch(() => route.params.id, (newId, oldId) => {
   background: #169976;
 }
 
+/* 로그인 모달 */
+.login-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.login-modal-content {
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.login-modal-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.login-modal-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 12px;
+}
+
+.login-modal-content p {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.login-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-btn.secondary {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.modal-btn.secondary:hover {
+  background: #e2e8f0;
+}
+
+.modal-btn.primary {
+  background: #1DCD9F;
+  color: white;
+}
+
+.modal-btn.primary:hover {
+  background: #169976;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .main-container {
@@ -1756,6 +2141,10 @@ watch(() => route.params.id, (newId, oldId) => {
 
   .header-container {
     padding: 0 16px;
+  }
+
+  .header-actions {
+    display: none; /* 모바일에서는 편집 버튼 숨김 */
   }
 
   .product-title {
@@ -1775,6 +2164,17 @@ watch(() => route.params.id, (newId, oldId) => {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .login-notice-content {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .login-link {
+    align-self: center;
   }
 
   .action-buttons {
@@ -1817,6 +2217,14 @@ watch(() => route.params.id, (newId, oldId) => {
   .related-products-grid {
     padding: 0 20px 20px 20px;
   }
+
+  .login-modal-content {
+    padding: 24px;
+  }
+
+  .login-modal-actions {
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1851,6 +2259,175 @@ watch(() => route.params.id, (newId, oldId) => {
 
   .related-products-grid {
     grid-template-columns: 1fr;
+  }
+
+  .breadcrumb {
+    font-size: 12px;
+  }
+
+  .login-notice-content span:nth-child(2) {
+    font-size: 13px;
+  }
+}
+
+/* 추가 유틸리티 스타일 */
+.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 접근성 개선 */
+.action-btn:focus,
+.reaction-btn:focus,
+.trade-btn:focus,
+.write-review-btn:focus,
+.cta-btn:focus {
+  outline: 2px solid #1DCD9F;
+  outline-offset: 2px;
+}
+
+/* 스크롤바 스타일링 */
+.thumbnail-list::-webkit-scrollbar {
+  height: 4px;
+}
+
+.thumbnail-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 2px;
+}
+
+.thumbnail-list::-webkit-scrollbar-thumb {
+  background: #1DCD9F;
+  border-radius: 2px;
+}
+
+.thumbnail-list::-webkit-scrollbar-thumb:hover {
+  background: #169976;
+}
+
+/* 트랜지션 효과 */
+.product-card,
+.reaction-btn,
+.trade-btn,
+.action-btn,
+.related-product-card {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 다크모드 지원 (기본적인 미디어 쿼리) */
+@media (prefers-color-scheme: dark) {
+  .product-detail-view {
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+
+  .main-content {
+    background: #1e293b;
+  }
+
+  .header {
+    background: #1e293b;
+  }
+
+  .login-notice {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-left-color: #1DCD9F;
+  }
+
+  .login-notice-content span:nth-child(2) {
+    color: #60a5fa;
+  }
+}
+
+/* 인쇄용 스타일 */
+@media print {
+  .header,
+  .action-section,
+  .trade-section,
+  .chat-loading-overlay,
+  .chat-error-modal,
+  .login-modal-overlay {
+    display: none;
+  }
+
+  .main-content {
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .product-detail-view {
+    background: white;
+    color: black;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .action-btn.primary {
+    background: #000;
+    border-color: #000;
+  }
+
+  .status-badge {
+    background: #000;
+    color: white;
+  }
+
+  .tag.highlight {
+    background: #000;
+    color: white;
+  }
+}
+
+/* 애니메이션 감소 모드 */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner,
+  .spinner {
+    animation: none;
+  }
+
+  .action-btn,
+  .reaction-btn,
+  .trade-btn,
+  .cta-btn {
+    transition: none;
+  }
+
+  .action-btn:hover:not(:disabled):not(.disabled),
+  .cta-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* 포커스 표시자 개선 */
+@media (prefers-reduced-motion: no-preference) {
+  .action-btn:focus,
+  .reaction-btn:focus,
+  .trade-btn:focus,
+  .write-review-btn:focus,
+  .cta-btn:focus {
+    animation: focus-pulse 2s infinite;
+  }
+}
+
+@keyframes focus-pulse {
+  0%, 100% {
+    outline-width: 2px;
+  }
+  50% {
+    outline-width: 4px;
   }
 }
 </style>

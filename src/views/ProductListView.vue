@@ -23,10 +23,23 @@
           <button class="location-btn">
             📍 강남구
           </button>
-          <button class="notification-btn">
+
+          <!-- 로그인된 사용자만 알림 버튼 표시 -->
+          <button v-if="isLoggedIn" class="notification-btn">
             🔔
             <div class="notification-badge">3</div>
           </button>
+
+          <!-- 로그인/로그아웃 버튼 -->
+          <div class="auth-section">
+            <div v-if="isLoggedIn" class="user-info">
+              <span class="user-greeting">안녕하세요, {{ userNickname }}님</span>
+              <button class="logout-btn" @click="handleLogout">로그아웃</button>
+            </div>
+            <router-link v-else to="/login" class="login-btn">
+              로그인
+            </router-link>
+          </div>
         </div>
       </div>
     </header>
@@ -91,6 +104,22 @@
             </li>
           </ul>
         </div>
+
+        <!-- 로그인한 사용자만 마이페이지 섹션 표시 -->
+        <div v-if="isLoggedIn" class="sidebar-section">
+          <div class="sidebar-title">마이페이지</div>
+          <ul class="category-list">
+            <li class="category-item" @click="goToMyProducts">
+              📦 내 상품
+            </li>
+            <li class="category-item" @click="goToLikedProducts">
+              ❤️ 찜한 상품
+            </li>
+            <li class="category-item" @click="goToMyReviews">
+              💬 내 리뷰
+            </li>
+          </ul>
+        </div>
       </aside>
 
       <!-- 메인 콘텐츠 -->
@@ -123,6 +152,7 @@
               <span>신상품</span>
             </div>
             <div
+                v-if="isLoggedIn"
                 class="tab"
                 :class="{ active: activeTab === 'recent' }"
                 @click="setActiveTab('recent')"
@@ -146,6 +176,13 @@
               >
                 {{ option.label }}
               </button>
+            </div>
+
+            <!-- 로그인한 사용자에게만 상품 등록 버튼 표시 -->
+            <div v-if="isLoggedIn" class="header-actions">
+              <router-link to="/products/create" class="create-product-btn">
+                ➕ 상품 등록
+              </router-link>
             </div>
           </div>
 
@@ -183,7 +220,7 @@
                 </div>
                 <button
                     class="heart-btn"
-                    @click.stop="toggleLike(product.id)"
+                    @click.stop="handleLikeAction(product.id)"
                     :class="{ liked: likedProducts.has(product.id) }"
                 >
                   {{ likedProducts.has(product.id) ? '❤️' : '🤍' }}
@@ -226,6 +263,7 @@
               v-for="(product, index) in topProducts"
               :key="product.id"
               class="ranking-item"
+              @click="goToProductDetail(product.id)"
           >
             <div
                 class="rank-number"
@@ -249,12 +287,32 @@
               v-for="product in nearbyProducts"
               :key="product.id"
               class="ranking-item"
+              @click="goToProductDetail(product.id)"
           >
             <div class="ranking-info">
               <div class="ranking-name">{{ product.name }}</div>
               <div class="ranking-brand">
                 {{ getRandomDistance() }} · {{ formatRating(product.averageRating) }}⭐
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 로그인한 사용자에게만 개인화된 위젯 표시 -->
+        <div v-if="isLoggedIn" class="widget">
+          <div class="widget-title">👤 나만의 정보</div>
+          <div class="user-stats">
+            <div class="user-stat-item">
+              <div class="user-stat-number">{{ userStats.likedCount }}</div>
+              <div class="user-stat-label">찜한 상품</div>
+            </div>
+            <div class="user-stat-item">
+              <div class="user-stat-number">{{ userStats.reviewCount }}</div>
+              <div class="user-stat-label">작성한 리뷰</div>
+            </div>
+            <div class="user-stat-item">
+              <div class="user-stat-number">{{ userStats.productCount }}</div>
+              <div class="user-stat-label">등록한 상품</div>
             </div>
           </div>
         </div>
@@ -283,17 +341,44 @@
         </div>
       </aside>
     </div>
+
+    <!-- 로그인 유도 모달 -->
+    <div v-if="showLoginModal" class="login-modal-overlay" @click="closeLoginModal">
+      <div class="login-modal-content" @click.stop>
+        <div class="login-modal-icon">🔒</div>
+        <h3>로그인이 필요한 기능입니다</h3>
+        <p>상품에 좋아요를 표시하려면 로그인해주세요.</p>
+        <div class="login-modal-actions">
+          <button class="modal-btn secondary" @click="closeLoginModal">
+            나중에 하기
+          </button>
+          <router-link to="/login" class="modal-btn primary" @click="closeLoginModal">
+            로그인하기
+          </router-link>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth.js'
 import { productService, productUtils, productFilterUtils } from '@/services/productService.js'
 import { categoryService, categoryUtils, useCategory } from '@/services/CategoryService.js'
 
 // Router
 const router = useRouter()
+
+// Auth Composable
+const {
+  user,
+  isLoggedIn,
+  userNickname,
+  userId,
+  logout
+} = useAuth()
 
 // Category composable 사용
 const {
@@ -316,6 +401,14 @@ const activeTab = ref('trending')
 const currentPage = ref(0)
 const totalPages = ref(0)
 const totalElements = ref(0)
+const showLoginModal = ref(false)
+
+// 사용자 통계 (로그인한 사용자만)
+const userStats = ref({
+  likedCount: 0,
+  reviewCount: 0,
+  productCount: 0
+})
 
 // 검색 조건
 const searchCondition = reactive(productFilterUtils.getDefaultSearchCondition())
@@ -344,6 +437,71 @@ const visiblePages = computed(() => {
   return pages
 })
 
+// ==================== 인증 관련 메서드 ====================
+
+const handleLogout = async () => {
+  if (confirm('정말 로그아웃하시겠습니까?')) {
+    await logout()
+    // 로그아웃 후 페이지 새로고침
+    window.location.reload()
+  }
+}
+
+const showLoginRequiredModal = () => {
+  showLoginModal.value = true
+}
+
+const closeLoginModal = () => {
+  showLoginModal.value = false
+}
+
+const handleLikeAction = async (productId) => {
+  // 로그인하지 않은 사용자는 모달 표시
+  if (!isLoggedIn.value) {
+    showLoginRequiredModal()
+    return
+  }
+
+  // 로그인한 사용자는 좋아요 처리
+  await toggleLike(productId)
+}
+
+const loadUserStats = async () => {
+  if (!isLoggedIn.value || !userId.value) return
+
+  try {
+    // 실제로는 사용자 통계 API 호출
+    // 여기서는 샘플 데이터 사용
+    userStats.value = {
+      likedCount: Math.floor(Math.random() * 50) + 1,
+      reviewCount: Math.floor(Math.random() * 30) + 1,
+      productCount: Math.floor(Math.random() * 10) + 1
+    }
+  } catch (err) {
+    console.error('사용자 통계 로딩 실패:', err)
+  }
+}
+
+// ==================== 네비게이션 메서드 ====================
+
+const goToMyProducts = () => {
+  if (isLoggedIn.value) {
+    router.push('/my/products')
+  }
+}
+
+const goToLikedProducts = () => {
+  if (isLoggedIn.value) {
+    router.push('/my/liked')
+  }
+}
+
+const goToMyReviews = () => {
+  if (isLoggedIn.value) {
+    router.push('/my/reviews')
+  }
+}
+
 // ==================== 상품 관련 메서드 ====================
 
 const loadProducts = async () => {
@@ -351,7 +509,13 @@ const loadProducts = async () => {
     loading.value = true
     error.value = null
 
-    const response = await productService.getProducts(searchCondition, pageable)
+    // 로그인된 사용자의 경우 개인화된 정보 포함
+    const enhancedSearchCondition = {
+      ...searchCondition,
+      userId: isLoggedIn.value ? userId.value : null
+    }
+
+    const response = await productService.getProducts(enhancedSearchCondition, pageable)
 
     if (response.success && response.data) {
       if (response.data.content) {
@@ -360,6 +524,11 @@ const loadProducts = async () => {
         totalPages.value = response.data.totalPages || 1
         totalElements.value = response.data.totalElements || 0
         currentPage.value = response.data.pageable?.page || 0
+
+        // 로그인한 사용자의 좋아요 정보 로드
+        if (isLoggedIn.value) {
+          loadUserLikedProducts(response.data.content)
+        }
       } else {
         // 단순 배열 응답 처리
         products.value = Array.isArray(response.data) ? response.data : []
@@ -382,6 +551,20 @@ const loadProducts = async () => {
   }
 }
 
+const loadUserLikedProducts = (productList) => {
+  if (!isLoggedIn.value) return
+
+  // 실제로는 사용자의 좋아요 정보를 API에서 가져옴
+  // 여기서는 랜덤하게 생성
+  const newLikedProducts = new Set()
+  productList.forEach(product => {
+    if (Math.random() > 0.7) { // 30% 확률로 좋아요 상태
+      newLikedProducts.add(product.id)
+    }
+  })
+  likedProducts.value = newLikedProducts
+}
+
 const loadTopProducts = async () => {
   try {
     const response = await productService.getProducts(
@@ -402,7 +585,6 @@ const loadTopProducts = async () => {
 
 const loadNearbyProducts = async () => {
   try {
-    // ProductService의 getProducts 메서드 사용 시 올바른 파라미터 전달
     const response = await productService.getProducts(
         { status: 'APPROVED' },
         { page: 0, size: 3, sort: 'viewCount,DESC' }
@@ -414,9 +596,7 @@ const loadNearbyProducts = async () => {
     }
   } catch (err) {
     console.error('근처 상품 로딩 실패:', err)
-    console.error('Error details:', err)
 
-    // 개발 환경에서 샘플 데이터 사용
     if (import.meta.env.DEV) {
       const sampleData = productService.getSampleProducts()
       const sampleProducts = sampleData.data.content || []
@@ -431,13 +611,11 @@ const loadCategories = async () => {
   try {
     const response = await getCategories({ isActive: true })
     if (response.success) {
-      // 카테고리 정렬 (sortOrder 기준)
       categories.value = sortCategories(response.data || [], 'sortOrder')
     }
   } catch (err) {
     console.error('카테고리 로딩 실패:', err)
 
-    // 개발 환경에서 샘플 데이터 사용
     if (import.meta.env.DEV) {
       const sampleData = categoryService.getSampleCategories()
       categories.value = sortCategories(sampleData.data || [], 'sortOrder')
@@ -447,10 +625,7 @@ const loadCategories = async () => {
 
 const loadCategoryStats = async () => {
   try {
-    // /api/categories/stats가 없으므로 개별 카테고리에서 통계 계산
-    // 또는 기존 categories 데이터에서 productCount 활용
     if (categories.value && categories.value.length > 0) {
-      // 기존 카테고리 데이터에서 통계 생성
       const totalProducts = categories.value.reduce((sum, cat) => sum + (cat.productCount || 0), 0)
 
       const stats = categories.value
@@ -465,20 +640,16 @@ const loadCategoryStats = async () => {
       .slice(0, 5)
 
       categoryStats.value = stats
-      console.log('카테고리 통계를 기존 데이터로 생성:', stats)
     } else {
-      console.log('카테고리 데이터가 없어 통계를 생성할 수 없음')
       categoryStats.value = []
     }
   } catch (err) {
     console.error('카테고리 통계 생성 실패:', err)
 
-    // 개발 환경에서 샘플 데이터 사용
     if (import.meta.env.DEV) {
       const sampleData = categoryService.getSampleCategoriesStats()
       if (sampleData.data && sampleData.data.categoriesStats) {
         categoryStats.value = sampleData.data.categoriesStats.slice(0, 5)
-        console.log('샘플 카테고리 통계 데이터 사용')
       } else {
         categoryStats.value = []
       }
@@ -503,7 +674,6 @@ const toggleFilter = (filterType) => {
 }
 
 const applyFilters = () => {
-  // 필터 로직 구현
   if (filters.tradeAvailable) {
     searchCondition.productType = 'SALE'
   } else {
@@ -516,15 +686,19 @@ const applyFilters = () => {
 }
 
 const setActiveTab = (tab) => {
+  // 로그인하지 않은 사용자가 '최근 본' 탭 클릭 시
+  if (tab === 'recent' && !isLoggedIn.value) {
+    showLoginRequiredModal()
+    return
+  }
+
   activeTab.value = tab
 
-  // 탭에 따른 정렬 변경
   switch (tab) {
     case 'trending':
       pageable.sort = 'likeCount,DESC'
       break
     case 'nearby':
-      // 실제로는 위치 기반 정렬이 필요하지만 여기서는 조회수로 대체
       pageable.sort = 'viewCount,DESC'
       break
     case 'new':
@@ -532,6 +706,8 @@ const setActiveTab = (tab) => {
       break
     case 'recent':
       pageable.sort = 'createdAt,DESC'
+      // 로그인한 사용자의 최근 본 상품 필터 적용
+      searchCondition.userId = userId.value
       break
   }
 
@@ -579,6 +755,9 @@ const toggleLike = async (productId) => {
 
     // 상품 목록 갱신
     loadProducts()
+
+    // 사용자 통계 업데이트
+    loadUserStats()
   } catch (err) {
     console.error('좋아요 처리 실패:', err)
   }
@@ -635,8 +814,7 @@ onMounted(async () => {
     loadProducts()
   ])
 
-  // 사이드바 데이터 로드 (메인 데이터 로드 후)
-  // loadCategoryStats는 categories 로드 후에 실행되도록 순서 변경
+  // 사이드바 데이터 로드
   await Promise.all([
     loadTopProducts(),
     loadNearbyProducts()
@@ -644,6 +822,11 @@ onMounted(async () => {
 
   // 카테고리 통계는 카테고리 로드 완료 후 실행
   await loadCategoryStats()
+
+  // 로그인한 사용자의 경우 개인 통계 로드
+  if (isLoggedIn.value) {
+    await loadUserStats()
+  }
 
   console.log('✅ [PRODUCT-LIST] 모든 데이터 로드 완료')
 })
@@ -653,12 +836,33 @@ onMounted(async () => {
 watch([() => searchCondition.keyword], () => {
   if (!searchCondition.keyword) return
 
-  // 디바운스 검색
   const searchTimeout = setTimeout(() => {
     handleSearch()
   }, 500)
 
   return () => clearTimeout(searchTimeout)
+})
+
+// 로그인 상태 변경 감지
+watch(isLoggedIn, (newValue) => {
+  if (newValue) {
+    // 로그인되면 사용자 통계 로드 및 상품 목록 갱신
+    loadUserStats()
+    loadProducts() // 개인화된 정보로 상품 목록 갱신
+  } else {
+    // 로그아웃되면 사용자 관련 데이터 초기화
+    likedProducts.value.clear()
+    userStats.value = {
+      likedCount: 0,
+      reviewCount: 0,
+      productCount: 0
+    }
+    // 최근 본 탭에서 다른 탭으로 변경
+    if (activeTab.value === 'recent') {
+      activeTab.value = 'trending'
+      setActiveTab('trending')
+    }
+  }
 })
 
 // 카테고리 변경 감시
@@ -675,6 +879,10 @@ if (import.meta.env.DEV) {
     console.log('Categories:', newCategories)
     console.log('Category Stats:', newStats)
     console.groupEnd()
+  })
+
+  watch(isLoggedIn, (newValue) => {
+    console.log('🔐 [PRODUCT-LIST] 로그인 상태 변경:', newValue)
   })
 }
 </script>
@@ -808,6 +1016,56 @@ if (import.meta.env.DEV) {
   font-weight: bold;
 }
 
+/* 인증 섹션 */
+.auth-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-greeting {
+  font-size: 13px;
+  color: #222222;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #222222;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background: #e2e8f0;
+}
+
+.login-btn {
+  padding: 8px 16px;
+  background: #1DCD9F;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.login-btn:hover {
+  background: #169976;
+}
+
 /* 메인 컨테이너 */
 .main-container {
   max-width: 1400px;
@@ -831,6 +1089,10 @@ if (import.meta.env.DEV) {
   margin-bottom: 24px;
 }
 
+.sidebar-section:last-child {
+  margin-bottom: 0;
+}
+
 .sidebar-title {
   font-size: 14px;
   font-weight: 700;
@@ -849,6 +1111,9 @@ if (import.meta.env.DEV) {
   cursor: pointer;
   font-size: 14px;
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .category-item:hover {
@@ -858,6 +1123,11 @@ if (import.meta.env.DEV) {
 .category-item.active {
   background: #1DCD9F;
   color: white;
+}
+
+.product-count {
+  font-size: 12px;
+  opacity: 0.7;
 }
 
 /* 탭 네비게이션 */
@@ -940,6 +1210,22 @@ if (import.meta.env.DEV) {
   background: #1DCD9F;
   color: white;
   border-color: #1DCD9F;
+}
+
+.create-product-btn {
+  padding: 8px 16px;
+  background: #1DCD9F;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.create-product-btn:hover {
+  background: #169976;
 }
 
 .loading-container, .error-container {
@@ -1128,10 +1414,19 @@ if (import.meta.env.DEV) {
   gap: 12px;
   padding: 8px 0;
   border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.ranking-item:hover {
+  background: #f8fafc;
 }
 
 .ranking-item:last-child {
   border-bottom: none;
+  margin-bottom: 0;
 }
 
 .rank-number {
@@ -1183,6 +1478,154 @@ if (import.meta.env.DEV) {
   flex-shrink: 0;
 }
 
+/* 사용자 통계 위젯 */
+.user-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.user-stat-item {
+  text-align: center;
+  padding: 12px 8px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.user-stat-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1DCD9F;
+  margin-bottom: 4px;
+}
+
+.user-stat-label {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* 카테고리 통계 */
+.category-stat-item {
+  margin-bottom: 12px;
+}
+
+.category-stat-item:last-child {
+  margin-bottom: 0;
+}
+
+.category-stat-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.category-stat-name {
+  font-size: 13px;
+  color: #000000;
+}
+
+.category-stat-count {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.category-progress {
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.category-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1DCD9F, #169976);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* 로그인 모달 */
+.login-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.login-modal-content {
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.login-modal-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.login-modal-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 12px;
+}
+
+.login-modal-content p {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.login-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-btn.secondary {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.modal-btn.secondary:hover {
+  background: #e2e8f0;
+}
+
+.modal-btn.primary {
+  background: #1DCD9F;
+  color: white;
+}
+
+.modal-btn.primary:hover {
+  background: #169976;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 1200px) {
   .main-container {
@@ -1218,6 +1661,10 @@ if (import.meta.env.DEV) {
     margin: 0 16px;
   }
 
+  .user-greeting {
+    display: none;
+  }
+
   .main-container {
     padding: 16px;
   }
@@ -1241,6 +1688,17 @@ if (import.meta.env.DEV) {
 
   .feed-header {
     padding: 16px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .login-modal-content {
+    padding: 24px;
+  }
+
+  .login-modal-actions {
+    flex-direction: column;
   }
 }
 
@@ -1289,105 +1747,10 @@ if (import.meta.env.DEV) {
   .tab {
     font-size: 14px;
   }
-}
 
-/* 로딩 애니메이션 */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-spinner::after {
-  content: '';
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  margin-left: 8px;
-  border: 2px solid #1DCD9F;
-  border-top: 2px solid transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* 트랜지션 효과 */
-.product-card,
-.category-item,
-.tab,
-.sort-btn,
-.page-btn,
-.heart-btn {
-  transition: all 0.2s ease-in-out;
-}
-
-/* 접근성 개선 */
-.product-card:focus,
-.category-item:focus,
-.tab:focus,
-.sort-btn:focus,
-.page-btn:focus {
-  outline: 2px solid #1DCD9F;
-  outline-offset: 2px;
-}
-
-/* 스크롤바 스타일링 */
-.tab-list::-webkit-scrollbar {
-  height: 4px;
-}
-
-.tab-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 2px;
-}
-
-.tab-list::-webkit-scrollbar-thumb {
-  background: #1DCD9F;
-  border-radius: 2px;
-}
-
-.tab-list::-webkit-scrollbar-thumb:hover {
-  background: #169976;
-}
-
-/* 빈 상태 */
-.empty-state {
-  text-align: center;
-  padding: 60px 24px;
-  color: #64748b;
-}
-
-.empty-state-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.empty-state-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #334155;
-}
-
-.empty-state-description {
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-/* 추가 유틸리티 클래스 */
-.text-truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  .user-stats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
 </style>
