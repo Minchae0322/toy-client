@@ -1,6 +1,6 @@
 // composables/useChat.js
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { websocketService } from '@/services/websocketService'
+import { webSocketService } from '@/services/websocketService'
 import { useRouter } from 'vue-router'
 
 export function useChat(roomId = null) {

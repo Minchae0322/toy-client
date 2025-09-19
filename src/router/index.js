@@ -51,16 +51,6 @@ const routes = [
       title: '상품 상세'
     }
   },
-  {
-    path: '/products/:id/edit',
-    name: 'ProductEdit',
-    component: () => import('@/views/ProductEditView.vue'),
-    props: true,
-    meta: {
-      requiresAuth: true,
-      title: '상품 수정'
-    }
-  },
 
   // ==================== 공개 페이지 (인증 불필요) ====================
   {
