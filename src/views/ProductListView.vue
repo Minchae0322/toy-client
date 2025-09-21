@@ -126,39 +126,47 @@
       <main class="main-content">
         <!-- 탭 네비게이션 -->
         <div class="tab-nav">
-          <div class="tab-list">
-            <div
-                class="tab"
-                :class="{ active: activeTab === 'trending' }"
-                @click="setActiveTab('trending')"
-            >
-              <span>🔥</span>
-              <span>트렌딩</span>
+          <div class="tab-content">
+            <div class="tab-list">
+              <button
+                  class="tab"
+                  :class="{ active: activeTab === 'trending' }"
+                  @click="setActiveTab('trending')"
+              >
+                <span class="tab-icon">🔥</span>
+                <span>트렌딩</span>
+              </button>
+              <button
+                  class="tab"
+                  :class="{ active: activeTab === 'nearby' }"
+                  @click="setActiveTab('nearby')"
+              >
+                <span class="tab-icon">📍</span>
+                <span>내 근처</span>
+              </button>
+              <button
+                  class="tab"
+                  :class="{ active: activeTab === 'new' }"
+                  @click="setActiveTab('new')"
+              >
+                <span class="tab-icon">💫</span>
+                <span>신상품</span>
+              </button>
+              <button
+                  v-if="isLoggedIn"
+                  class="tab"
+                  :class="{ active: activeTab === 'recent' }"
+                  @click="setActiveTab('recent')"
+              >
+                <span class="tab-icon">⏰</span>
+                <span>최근 본</span>
+              </button>
             </div>
-            <div
-                class="tab"
-                :class="{ active: activeTab === 'nearby' }"
-                @click="setActiveTab('nearby')"
-            >
-              <span>📍</span>
-              <span>내 근처</span>
-            </div>
-            <div
-                class="tab"
-                :class="{ active: activeTab === 'new' }"
-                @click="setActiveTab('new')"
-            >
-              <span>💫</span>
-              <span>신상품</span>
-            </div>
-            <div
-                v-if="isLoggedIn"
-                class="tab"
-                :class="{ active: activeTab === 'recent' }"
-                @click="setActiveTab('recent')"
-            >
-              <span>⏰</span>
-              <span>최근 본</span>
+            <div v-if="isLoggedIn" class="action-section">
+              <router-link to="/products/create" class="create-product-btn">
+                <span>➕</span>
+                <span>상품 등록</span>
+              </router-link>
             </div>
           </div>
         </div>
@@ -176,13 +184,6 @@
               >
                 {{ option.label }}
               </button>
-            </div>
-
-            <!-- 로그인한 사용자에게만 상품 등록 버튼 표시 -->
-            <div v-if="isLoggedIn" class="header-actions">
-              <router-link to="/products/create" class="create-product-btn">
-                ➕ 상품 등록
-              </router-link>
             </div>
           </div>
 
@@ -905,7 +906,7 @@ if (import.meta.env.DEV) {
 /* 헤더 */
 .header {
   background: white;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -1082,7 +1083,7 @@ if (import.meta.env.DEV) {
   border-radius: 16px;
   padding: 20px;
   height: fit-content;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .sidebar-section {
@@ -1130,102 +1131,142 @@ if (import.meta.env.DEV) {
   opacity: 0.7;
 }
 
-/* 탭 네비게이션 */
+/* 개선된 탭 네비게이션 */
 .tab-nav {
   background: white;
   border-radius: 16px;
-  padding: 16px 20px;
+  padding: 20px 24px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f1f5f9;
+}
+
+.tab-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
 .tab-list {
   display: flex;
-  gap: 32px;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 4px;
+  border-radius: 12px;
+  flex: 1;
 }
 
 .tab {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 0;
+  padding: 10px 16px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
-  color: #222222;
+  color: #64748b;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
   position: relative;
-  transition: color 0.2s;
+  background: transparent;
+  border: none;
 }
 
 .tab:hover {
   color: #1DCD9F;
+  background: rgba(29, 205, 159, 0.08);
 }
 
 .tab.active {
   color: #1DCD9F;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
 }
 
-.tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -16px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: #1DCD9F;
-  border-radius: 2px;
+.tab-icon {
+  font-size: 16px;
+}
+
+/* 액션 버튼 섹션 */
+.action-section {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* 소프트 버튼 스타일 */
+.create-product-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(29, 205, 159, 0.1);
+  color: #1DCD9F;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.create-product-btn:hover {
+  background: rgba(29, 205, 159, 0.15);
+  transform: translateY(-1px);
 }
 
 /* 메인 피드 */
 .main-feed {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .feed-header {
+  background: white;
   padding: 20px 24px;
   border-bottom: 1px solid #f1f5f9;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
 }
 
 .sort-options {
   display: flex;
-  gap: 16px;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 4px;
+  border-radius: 10px;
 }
 
 .sort-btn {
-  padding: 6px 12px;
-  background: none;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
   font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sort-btn:hover {
+  color: #1DCD9F;
+  background: rgba(29, 205, 159, 0.08);
 }
 
 .sort-btn.active {
-  background: #1DCD9F;
-  color: white;
-  border-color: #1DCD9F;
-}
-
-.create-product-btn {
-  padding: 8px 16px;
-  background: #1DCD9F;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  background: white;
+  color: #1DCD9F;
   font-weight: 600;
-  text-decoration: none;
-  transition: background 0.2s;
-}
-
-.create-product-btn:hover {
-  background: #169976;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .loading-container, .error-container {
@@ -1266,7 +1307,7 @@ if (import.meta.env.DEV) {
 
 .product-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   border-color: #1DCD9F;
 }
 
@@ -1297,7 +1338,7 @@ if (import.meta.env.DEV) {
   position: absolute;
   top: 8px;
   left: 8px;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -1311,7 +1352,7 @@ if (import.meta.env.DEV) {
   right: 8px;
   width: 28px;
   height: 28px;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
   display: flex;
@@ -1323,7 +1364,7 @@ if (import.meta.env.DEV) {
 }
 
 .heart-btn.liked {
-  background: rgba(255,182,193,0.9);
+  background: rgba(255, 182, 193, 0.9);
 }
 
 .product-info {
@@ -1398,7 +1439,7 @@ if (import.meta.env.DEV) {
   background: white;
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .widget-title {
@@ -1669,28 +1710,40 @@ if (import.meta.env.DEV) {
     padding: 16px;
   }
 
+  .tab-content {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
   .tab-list {
-    gap: 20px;
     overflow-x: auto;
-    padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .tab-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .action-section {
+    justify-content: center;
+  }
+
+  .feed-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .sort-options {
+    justify-content: center;
   }
 
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     padding: 16px;
     gap: 12px;
-  }
-
-  .sort-options {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .feed-header {
-    padding: 16px;
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
   }
 
   .login-modal-content {
@@ -1731,6 +1784,20 @@ if (import.meta.env.DEV) {
     font-size: 12px;
   }
 
+  .tab-nav {
+    padding: 16px;
+  }
+
+  .tab {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .create-product-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
   .products-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -1738,14 +1805,6 @@ if (import.meta.env.DEV) {
 
   .product-card {
     max-width: 100%;
-  }
-
-  .tab-list {
-    gap: 16px;
-  }
-
-  .tab {
-    font-size: 14px;
   }
 
   .user-stats {

@@ -48,7 +48,7 @@
       <!-- 진행 상태 섹션 -->
       <div class="progress-section">
         <div class="progress-header">
-          <div class="step-info">STEP 2 / 3</div>
+          <div class="step-info">제품 등록</div>
         </div>
         <h1 class="progress-title">새 제품을 등록해 주세요</h1>
         <p class="progress-subtitle">
@@ -56,9 +56,6 @@
         </p>
         <div class="approval-notice">
           ⏱️ 보통 2-3시간 내 승인됩니다
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
         </div>
       </div>
 
@@ -161,46 +158,27 @@
                 </div>
               </div>
 
-              <!-- 제품 유형 -->
-              <div class="form-group">
-                <label class="form-label">
-                  제품 유형 <span class="required">*</span>
-                </label>
-                <select
-                    v-model="form.productType"
-                    class="form-input"
-                    required
-                    :class="{ 'error': errors.productType }"
-                    @change="validateField('productType')"
-                    :disabled="!isLoggedIn"
-                >
-                  <option value="">제품 유형을 선택하세요</option>
-                  <option value="SALE">판매용 (일반 구매 가능)</option>
-                  <option value="RENTAL">대여용 (임대/대여)</option>
-                  <option value="INFO">정보제공용 (리뷰/정보만)</option>
-                </select>
-                <div v-if="errors.productType" class="validation-message">
-                  {{ errors.productType }}
-                </div>
-              </div>
-
               <!-- 정가 -->
               <div class="form-group">
                 <label class="form-label">정가 (원)</label>
                 <div class="price-input-container">
                   <input
-                      v-model.number="form.price"
-                      type="number"
+                      v-model="form.price"
+                      type="text"
                       class="form-input"
                       placeholder="0"
-                      min="0"
-                      max="999999999"
+                      pattern="[0-9]*"
+                      maxlength="10"
                       :disabled="!isLoggedIn"
+                      @input="validatePrice"
                   >
                   <span class="price-unit">원</span>
                 </div>
                 <div class="form-help">
                   브랜드 공식 판매가격을 입력해주세요. (선택사항)
+                </div>
+                <div v-if="errors.price" class="validation-message">
+                  {{ errors.price }}
                 </div>
               </div>
 
@@ -401,29 +379,6 @@
             </div>
           </div>
 
-          <!-- 약관 동의 -->
-          <div class="form-section">
-            <div class="form-group">
-              <label class="checkbox-item agreement-checkbox"
-                     :class="{ 'disabled': !isLoggedIn }">
-                <input
-                    v-model="form.agreeTerms"
-                    type="checkbox"
-                    required
-                    :class="{ 'error': errors.agreeTerms }"
-                    :disabled="!isLoggedIn"
-                >
-                <span>
-                  저작권 관련 주의사항을 확인했으며, 허위 정보 등록 시 계정 제재될 수 있음을 동의합니다.
-                  <span class="required">*</span>
-                </span>
-              </label>
-              <div v-if="errors.agreeTerms" class="validation-message">
-                {{ errors.agreeTerms }}
-              </div>
-            </div>
-          </div>
-
           <!-- 폼 액션 버튼 -->
           <div class="form-actions">
             <button
@@ -432,7 +387,7 @@
                 @click="goBack"
                 :disabled="isLoading || !isLoggedIn"
             >
-              이전 단계
+              취소
             </button>
             <button
                 type="submit"
@@ -445,7 +400,7 @@
             >
               <span v-if="isLoading">등록 중...</span>
               <span v-else-if="!isLoggedIn">로그인 필요</span>
-              <span v-else>다음 단계: 거래 정보 입력</span>
+              <span v-else>제품 등록하기</span>
             </button>
           </div>
         </form>
@@ -488,8 +443,8 @@
           관리자 승인 후 다른 사용자들도 이용할 수 있습니다.
         </p>
         <div class="modal-actions">
-          <button class="btn btn-primary" @click="navigateToNextStep">
-            거래 정보 입력하기
+          <button class="btn btn-primary" @click="navigateToProducts">
+            제품 목록 보기
           </button>
           <button class="btn btn-secondary" @click="navigateToHome">
             홈으로 이동
@@ -504,6 +459,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProduct } from '@/services/ProductService.js'
+import { useCategory } from '@/services/CategoryService.js'
 import { useAuth } from '@/composables/useAuth.js'
 
 // Vue Router
@@ -524,10 +480,15 @@ const {
 // Product Service
 const {
   createProduct,
-  getCategories,
-  uploadImage,
-  debugStatus
+  debugStatus,
+  formatFileSize,
+  validateProductData
 } = useProduct()
+
+// Category Service
+const {
+  getCategories
+} = useCategory()
 
 // 반응형 상태
 const isLoading = ref(false)
@@ -546,17 +507,17 @@ const productForm = ref(null)
 const fileInput = ref(null)
 const tagInput = ref(null)
 
-// 폼 데이터
+// 폼 데이터 (백엔드 DTO에 맞춤)
 const form = reactive({
   name: '',
   brand: '',
-  categoryId: '',
-  productType: '',
   description: '',
   distributor: '',
-  price: null,
+  price: '',
+  feature: '',
+  tags: [],
   releaseDate: '',
-  agreeTerms: false
+  categoryId: null
 })
 
 // 에러 상태
@@ -564,9 +525,8 @@ const errors = reactive({
   name: '',
   brand: '',
   categoryId: '',
-  productType: '',
+  price: '',
   images: '',
-  agreeTerms: '',
   auth: ''
 })
 
@@ -586,9 +546,7 @@ const isFormValid = computed(() => {
       form.name.trim() &&
       form.brand.trim() &&
       form.categoryId &&
-      form.productType &&
       uploadedFiles.value.length > 0 &&
-      form.agreeTerms &&
       Object.values(errors).every(error => !error)
 })
 
@@ -621,7 +579,6 @@ watch(isLoggedIn, (newValue, oldValue) => {
 watch(user, (newUser, oldUser) => {
   if (newUser && newUser.id !== oldUser?.id) {
     console.log('👤 [PRODUCT] 사용자 정보 변경:', newUser.nickname || newUser.username)
-    updateFormWithUserInfo(newUser)
   }
 })
 
@@ -711,10 +668,6 @@ const handleLoggedIn = async () => {
   showLoginModal.value = false
 }
 
-const updateFormWithUserInfo = (userInfo) => {
-  console.log('👤 [PRODUCT] 사용자 정보로 폼 업데이트:', userInfo.nickname || userInfo.username)
-}
-
 const handleLoginFromModal = () => {
   router.push({
     name: 'Login',
@@ -749,24 +702,72 @@ const initializeComponent = async () => {
 
 const loadCategories = async () => {
   try {
-    const response = await getCategories()
-    if (response.success) {
+    console.log('🔄 [PRODUCT] 카테고리 로드 시작')
+
+    const response = await getCategories({ isActive: true })
+
+    if (response.success && response.data) {
       categories.value = response.data
+      console.log('✅ [PRODUCT] 카테고리 로드 성공:', categories.value.length)
     } else {
-      console.warn('[PRODUCT] 카테고리 로드 실패:', response.error)
+      console.warn('[PRODUCT] 카테고리 API 실패, 기본값 사용:', response.error)
+
+      // API 실패 시 기본 카테고리 제공
       categories.value = [
-        { categoryId: 1, categoryName: '음료' },
-        { categoryId: 2, categoryName: '스낵/과자' },
-        { categoryId: 3, categoryName: '베이커리' },
-        { categoryId: 4, categoryName: '도시락/식사' },
-        { categoryId: 5, categoryName: '디저트' },
-        { categoryId: 6, categoryName: '기타' }
+        {
+          categoryId: 1,
+          categoryName: '프라모델',
+          description: '건담, 자동차, 항공기 등의 프라스틱 모델',
+          isActive: true
+        },
+        {
+          categoryId: 2,
+          categoryName: '피규어',
+          description: '애니메이션, 게임 캐릭터 피규어',
+          isActive: true
+        },
+        {
+          categoryId: 3,
+          categoryName: '블록완구',
+          description: '레고, 조립식 블록 완구',
+          isActive: true
+        },
+        {
+          categoryId: 4,
+          categoryName: '음료',
+          description: '음료수, 차, 커피 등',
+          isActive: true
+        },
+        {
+          categoryId: 5,
+          categoryName: '과자/스낵',
+          description: '과자, 스낵, 간식류',
+          isActive: true
+        },
+        {
+          categoryId: 6,
+          categoryName: '기타',
+          description: '기타 상품',
+          isActive: true
+        }
       ]
     }
   } catch (error) {
     console.error('[PRODUCT] 카테고리 로드 에러:', error)
+
+    // 에러 시에도 기본 카테고리 제공
+    categories.value = [
+      { categoryId: 1, categoryName: '프라모델', isActive: true },
+      { categoryId: 2, categoryName: '피규어', isActive: true },
+      { categoryId: 3, categoryName: '블록완구', isActive: true },
+      { categoryId: 4, categoryName: '음료', isActive: true },
+      { categoryId: 5, categoryName: '과자/스낵', isActive: true },
+      { categoryId: 6, categoryName: '기타', isActive: true }
+    ]
   }
 }
+
+// === 폼 검증 ===
 
 const validateField = (fieldName) => {
   errors[fieldName] = ''
@@ -774,31 +775,37 @@ const validateField = (fieldName) => {
   switch (fieldName) {
     case 'name':
       if (!form.name.trim()) {
-        errors.name = '제품명을 입력해주세요.'
-      } else if (form.name.length > 100) {
-        errors.name = '제품명은 100자 이하여야 합니다.'
+        errors.name = '제품명은 필수입니다.'
+      } else if (form.name.length < 2 || form.name.length > 100) {
+        errors.name = '제품명은 2자 이상 100자 이하로 입력해주세요.'
       }
       break
 
     case 'brand':
       if (!form.brand.trim()) {
-        errors.brand = '브랜드명을 입력해주세요.'
-      } else if (form.brand.length > 100) {
-        errors.brand = '브랜드명은 100자 이하여야 합니다.'
+        errors.brand = '브랜드명은 필수입니다.'
+      } else if (form.brand.length < 1 || form.brand.length > 100) {
+        errors.brand = '브랜드명은 1자 이상 100자 이하로 입력해주세요.'
       }
       break
 
     case 'categoryId':
-      if (!form.categoryId) {
-        errors.categoryId = '카테고리를 선택해주세요.'
+      if (!form.categoryId || form.categoryId <= 0) {
+        errors.categoryId = '올바른 카테고리를 선택해주세요.'
       }
       break
+  }
+}
 
-    case 'productType':
-      if (!form.productType) {
-        errors.productType = '제품 유형을 선택해주세요.'
-      }
-      break
+const validatePrice = () => {
+  errors.price = ''
+
+  // 숫자만 허용하고 10자리 제한
+  form.price = form.price.replace(/[^0-9]/g, '')
+
+  if (form.price && form.price.length > 10) {
+    form.price = form.price.substring(0, 10)
+    errors.price = '가격은 최대 10자리까지 입력할 수 있습니다.'
   }
 }
 
@@ -806,7 +813,6 @@ const validateForm = () => {
   validateField('name')
   validateField('brand')
   validateField('categoryId')
-  validateField('productType')
 
   if (uploadedFiles.value.length === 0) {
     errors.images = '최소 1개의 이미지를 업로드해주세요.'
@@ -814,16 +820,11 @@ const validateForm = () => {
     errors.images = ''
   }
 
-  if (!form.agreeTerms) {
-    errors.agreeTerms = '약관에 동의해주세요.'
-  } else {
-    errors.agreeTerms = ''
-  }
-
   return Object.values(errors).every(error => !error)
 }
 
-// 파일 처리
+// === 파일 처리 ===
+
 const triggerFileInput = () => {
   fileInput.value?.click()
 }
@@ -896,15 +897,8 @@ const removeImage = (index) => {
   }
 }
 
-const formatFileSize = (size) => {
-  if (size === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(size) / Math.log(k))
-  return parseFloat((size / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
+// === 태그 처리 ===
 
-// 태그 처리
 const focusTagInput = () => {
   nextTick(() => {
     tagInput.value?.focus()
@@ -929,7 +923,8 @@ const handleBackspace = () => {
   }
 }
 
-// 특징 처리
+// === 특징 처리 ===
+
 const addCustomFeature = () => {
   const feature = customFeature.value.trim()
   if (feature && !selectedFeatures.value.includes(feature)) {
@@ -938,7 +933,8 @@ const addCustomFeature = () => {
   }
 }
 
-// 폼 제출
+// === 폼 제출 ===
+
 const handleSubmit = async () => {
   console.log('📤 [PRODUCT] 폼 제출 시작')
 
@@ -963,40 +959,40 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
+    // 선택된 특징들을 세미콜론으로 연결
     const allFeatures = [...selectedFeatures.value]
     if (customFeature.value.trim()) {
       allFeatures.push(customFeature.value.trim())
     }
 
+    // 백엔드 DTO에 맞춘 상품 데이터 구성
     const productData = {
       name: form.name.trim(),
       brand: form.brand.trim(),
-      categoryId: form.categoryId,
-      productType: form.productType,
-      description: form.description.trim(),
-      distributor: form.distributor.trim(),
-      price: form.price ? form.price.toString() : '0',
-      releaseDate: form.releaseDate,
-      feature: allFeatures.join(';'),
+      description: form.description.trim() || null,
+      distributor: form.distributor.trim() || null,
+      price: form.price || null,
+      feature: allFeatures.length > 0 ? allFeatures.join(';') : null,
       tags: selectedTags.value,
-      attachmentFiles: uploadedFiles.value.map(fileObj => fileObj.file),
-      creatorId: userId.value,
-      creatorNickname: userNickname.value
+      releaseDate: form.releaseDate || null,
+      categoryId: form.categoryId
     }
+
+    // 업로드할 파일들
+    const files = uploadedFiles.value.map(fileObj => fileObj.file)
 
     console.log('📦 [PRODUCT] 등록할 상품 데이터:', {
       name: productData.name,
-      creatorId: productData.creatorId,
-      creatorNickname: productData.creatorNickname
+      categoryId: productData.categoryId,
+      filesCount: files.length
     })
 
-    const response = await createProduct(productData)
+    const response = await createProduct(productData, files)
 
     if (response.success) {
       localStorage.removeItem('productFormDraft')
       console.log('✅ [PRODUCT] 제품 등록 성공:', response.data)
       showSuccessModal.value = true
-      updateProgress(100)
     } else {
       throw new Error(response.error || '제품 등록에 실패했습니다.')
     }
@@ -1015,7 +1011,8 @@ const handleSubmit = async () => {
   }
 }
 
-// 임시저장
+// === 임시저장 ===
+
 const saveDraft = () => {
   if (!isLoggedIn.value) return
 
@@ -1030,10 +1027,7 @@ const saveDraft = () => {
   }
 
   localStorage.setItem('productFormDraft', JSON.stringify(draftData))
-  console.log('💾 [PRODUCT] 임시저장 완료:', {
-    userId: draftData.userId,
-    userNickname: draftData.userNickname
-  })
+  console.log('💾 [PRODUCT] 임시저장 완료')
 
   alert('현재 입력 내용이 임시저장되었습니다.')
 }
@@ -1075,15 +1069,16 @@ const restoreDraft = () => {
   }
 }
 
-// 네비게이션
+// === 네비게이션 ===
+
 const goBack = () => {
   if (hasFormData()) {
-    if (confirm('이전 단계로 돌아가시겠습니까?\n입력된 내용은 임시저장됩니다.')) {
+    if (confirm('작성을 취소하시겠습니까?\n입력된 내용은 임시저장됩니다.')) {
       saveDraft()
-      router.push('/sell')
+      router.push('/')
     }
   } else {
-    router.push('/sell')
+    router.push('/')
   }
 }
 
@@ -1094,9 +1089,9 @@ const hasFormData = () => {
       selectedTags.value.length > 0
 }
 
-const navigateToNextStep = () => {
+const navigateToProducts = () => {
   showSuccessModal.value = false
-  router.push('/sell/step3')
+  router.push('/products')
 }
 
 const navigateToHome = () => {
@@ -1106,13 +1101,6 @@ const navigateToHome = () => {
 
 const closeSuccessModal = () => {
   showSuccessModal.value = false
-}
-
-const updateProgress = (percentage) => {
-  const progressFill = document.querySelector('.progress-fill')
-  if (progressFill) {
-    progressFill.style.width = `${percentage}%`
-  }
 }
 
 const beforeUnloadHandler = (event) => {
@@ -1402,20 +1390,6 @@ const debugAuthInfo = () => {
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 24px;
-}
-
-.progress-bar {
-  height: 8px;
-  background-color: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #007bff, #0056b3);
-  width: 66.6%;
-  transition: width 0.3s ease;
 }
 
 /* === 폼 스타일 === */
@@ -1772,25 +1746,6 @@ const debugAuthInfo = () => {
 .file-size {
   font-size: 11px;
   color: #6c757d;
-}
-
-/* === 약관 동의 === */
-.agreement-checkbox {
-  padding: 16px;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.agreement-checkbox:hover:not(.disabled) {
-  border-color: #007bff;
-  background-color: #f8f9fa;
-}
-
-.agreement-checkbox.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 /* === 버튼 === */
@@ -2183,7 +2138,6 @@ const debugAuthInfo = () => {
 }
 
 /* 인터랙티브 요소 강화 */
-.product-card:hover,
 .checkbox-item:hover,
 .tag-item:hover {
   transform: translateY(-2px);
@@ -2207,33 +2161,6 @@ const debugAuthInfo = () => {
   border-radius: 50%;
   border-top-color: transparent;
   animation: spin 1s linear infinite;
-}
-
-/* 다크 모드 대응 (선택사항) */
-@media (prefers-color-scheme: dark) {
-  .product-create-container {
-    background-color: #1a1a1a;
-    color: #ffffff;
-  }
-
-  .form-container,
-  .author-info-section,
-  .progress-section {
-    background-color: #2d2d2d;
-    border-color: #404040;
-  }
-
-  .form-input,
-  .form-textarea {
-    background-color: #3a3a3a;
-    border-color: #555555;
-    color: #ffffff;
-  }
-
-  .modal-content {
-    background-color: #2d2d2d;
-    color: #ffffff;
-  }
 }
 
 /* 성능 최적화 */
