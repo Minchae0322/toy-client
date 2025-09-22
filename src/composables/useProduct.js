@@ -1,7 +1,7 @@
 // composables/useProduct.js
 // Vue Composition API를 위한 상품 관련 Composable
 
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, readonly } from 'vue'
 import { productService } from '@/services/ProductService.js'
 import { useAuth } from '@/composables/useAuth.js'
 
@@ -296,7 +296,7 @@ export function useProduct() {
    */
   const toggleLike = async (productId) => {
     try {
-      const response = await productService.toggleReaction(productId, 'LIKE')
+      const response = await productService.likeProduct(productId)
 
       if (response.success) {
         // UI 상태 즉시 업데이트 (옵티미스틱 업데이트)
@@ -318,7 +318,7 @@ export function useProduct() {
    */
   const toggleBookmark = async (productId) => {
     try {
-      const response = await productService.toggleReaction(productId, 'BOOKMARK')
+      const response = await productService.bookmarkProduct(productId)
 
       if (response.success) {
         updateProductReaction(productId, 'bookmark', response.data?.hasBookmark)
@@ -419,11 +419,7 @@ export function useProduct() {
       errors.push('카테고리는 필수입니다.')
     }
 
-    if (!productData.productType) {
-      errors.push('상품 유형은 필수입니다.')
-    } else if (!['SALE', 'RENTAL', 'INFO'].includes(productData.productType)) {
-      errors.push('올바른 상품 유형을 선택해주세요.')
-    }
+    // productType 검증 제거 - 백엔드 DTO에 없음
 
     // 선택적 필드 검증
     if (productData.description && productData.description.length > 1000) {
@@ -436,15 +432,6 @@ export function useProduct() {
 
     if (productData.tags && productData.tags.length > 10) {
       errors.push('태그는 최대 10개까지 가능합니다.')
-    }
-
-    // 첨부파일 검증 (Vue 컴포넌트에서 처리하는 경우)
-    if (productData.attachmentFiles) {
-      if (productData.attachmentFiles.length === 0) {
-        errors.push('최소 1개의 이미지를 업로드해주세요.')
-      } else if (productData.attachmentFiles.length > 5) {
-        errors.push('최대 5개의 이미지만 업로드할 수 있습니다.')
-      }
     }
 
     return {

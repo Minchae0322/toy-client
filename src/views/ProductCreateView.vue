@@ -1,32 +1,5 @@
 <template>
   <div class="product-create-container">
-    <!-- 상단 네비게이션 -->
-    <nav class="top-nav">
-      <div class="nav-left">
-        <div class="logo">🛒 TradeLink</div>
-        <div class="breadcrumb">
-          <router-link to="/">홈</router-link> >
-          <router-link to="/sell">판매하기</router-link> >
-          새 제품 등록
-        </div>
-      </div>
-      <div class="nav-right">
-        <!-- 사용자 정보 표시 -->
-        <div v-if="isLoggedIn" class="user-info">
-          <span class="welcome-text">{{ userNickname }}님</span>
-          <button type="button" class="btn-link" @click="debugAuthInfo">디버그</button>
-        </div>
-
-        <button
-            type="button"
-            class="save-draft-btn"
-            @click="saveDraft"
-            :disabled="isLoading || !isLoggedIn"
-        >
-          💾 임시저장
-        </button>
-      </div>
-    </nav>
 
     <!-- 인증 상태 확인 중 -->
     <div v-if="authLoading" class="auth-loading">
@@ -65,8 +38,6 @@
         <div class="author-card">
           <div class="author-details">
             <div class="author-name">{{ userNickname }}</div>
-            <div class="author-id">ID: {{ userId }}</div>
-            <div v-if="user?.email" class="author-email">{{ user.email }}</div>
           </div>
           <div class="author-role">
             <span class="role-badge" :class="user?.role?.toLowerCase()">
@@ -262,7 +233,7 @@
                   type="text"
                   placeholder="기타 특징을 직접 입력하세요"
                   class="form-input custom-feature-input"
-                  @keypress.enter="addCustomFeature"
+                  @keydown.enter.prevent="addCustomFeature"
                   :disabled="!isLoggedIn"
               >
               <div class="form-help">
@@ -291,7 +262,7 @@
                     type="text"
                     class="tag-input"
                     placeholder="태그를 입력하고 Enter를 눌러주세요"
-                    @keypress.enter="addTag"
+                    @keydown.enter.prevent="addTag"
                     @keydown.backspace="handleBackspace"
                     :disabled="!isLoggedIn"
                 >
@@ -319,7 +290,7 @@
                     'disabled': !isLoggedIn
                   }"
                   @click="isLoggedIn && triggerFileInput()"
-                  @drop="isLoggedIn && handleFileDrop($event)"
+                  @drop.prevent="isLoggedIn && handleFileDrop($event)"
                   @dragover.prevent="isLoggedIn && handleDragOver($event)"
                   @dragleave="isLoggedIn && handleDragLeave()"
               >
@@ -1319,18 +1290,6 @@ const debugAuthInfo = () => {
   margin-bottom: 4px;
 }
 
-.author-id {
-  font-size: 12px;
-  color: #6c757d;
-  font-family: monospace;
-  margin-bottom: 2px;
-}
-
-.author-email {
-  font-size: 13px;
-  color: #6c757d;
-}
-
 .role-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -1951,9 +1910,21 @@ const debugAuthInfo = () => {
     padding: 10px;
   }
 
-  .nav-right {
+  .top-nav {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .nav-left {
     flex-direction: column;
     gap: 8px;
+    align-items: center;
+  }
+
+  .nav-right {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .user-info {
@@ -2004,13 +1975,6 @@ const debugAuthInfo = () => {
 @media (max-width: 480px) {
   .top-nav {
     padding: 12px 16px;
-    flex-direction: column;
-    gap: 12px;
-    height: auto;
-  }
-
-  .nav-left {
-    gap: 12px;
   }
 
   .logo {
