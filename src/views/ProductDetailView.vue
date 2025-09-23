@@ -37,7 +37,7 @@
           <div class="error-message">
             <h3>상품을 불러올 수 없습니다</h3>
             <p>{{ error }}</p>
-            <button @click="fetchProduct" class="retry-btn">다시 시도</button>
+            <button @click="fetchProductData" class="retry-btn">다시 시도</button>
           </div>
         </div>
 
@@ -50,7 +50,7 @@
             <div class="product-meta">
               <div class="meta-item">
                 <span>⭐</span>
-                <span class="rating">{{ product.averageRating?.toFixed(1) || '0.0' }}</span>
+                <span class="rating">{{ formatRating(product.averageRating) }}</span>
                 <span>({{ product.reviewCount || 0 }}개 리뷰)</span>
               </div>
               <div class="meta-item">
@@ -151,20 +151,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- 카테고리 키워드 -->
-            <div class="info-section" v-if="product.category?.keywords?.length">
-              <div class="info-title">관련 키워드</div>
-              <div class="keyword-list">
-                <span
-                    v-for="keyword in product.category.keywords"
-                    :key="keyword"
-                    class="keyword"
-                >
-                  {{ keyword }}
-                </span>
-              </div>
-            </div>
           </div>
 
           <!-- 액션 버튼 섹션 -->
@@ -233,10 +219,6 @@
                 <div class="stat-label">리뷰</div>
               </div>
               <div class="stat-item">
-                <div class="stat-number">{{ availableTraders.length }}</div>
-                <div class="stat-label">거래가능</div>
-              </div>
-              <div class="stat-item">
                 <div class="stat-number">{{ formatCount(product.viewCount) }}</div>
                 <div class="stat-label">조회수</div>
               </div>
@@ -244,116 +226,42 @@
                 <div class="stat-number">{{ formatCount(product.likeCount) }}</div>
                 <div class="stat-label">찜</div>
               </div>
-            </div>
-          </div>
-
-          <!-- 거래 정보 섹션 -->
-          <div class="trade-section" v-if="showTradeSection">
-            <h2 class="section-title">🤝 거래 가능한 사용자 ({{ availableTraders.length }}명)</h2>
-
-            <!-- 거래 리스트 -->
-            <div class="trade-list">
-              <div
-                  v-for="trader in displayedTraders"
-                  :key="trader.id"
-                  class="trade-item"
-              >
-                <div class="trade-header">
-                  <div class="trade-user">
-                    <div class="user-avatar">{{ trader.name.charAt(0) }}</div>
-                    <div class="user-name">{{ trader.name }}</div>
-                    <div class="user-rating">⭐ {{ trader.rating }}</div>
-                  </div>
-                  <div class="trade-distance">📍 {{ trader.distance }}</div>
-                </div>
-                <div class="trade-info">{{ trader.message }}</div>
-                <button
-                    class="trade-btn"
-                    @click="handleTradeAction(trader)"
-                    :disabled="!isLoggedIn"
-                >
-                  {{ isLoggedIn ? '거래 신청' : '로그인 필요' }}
-                </button>
+              <div class="stat-item">
+                <div class="stat-number">{{ formatCount(product.interestCount || 0) }}</div>
+                <div class="stat-label">관심</div>
               </div>
-            </div>
-
-            <!-- 더보기 버튼 또는 빈 상태 -->
-            <div v-if="availableTraders.length === 0" class="empty-trade">
-              <div class="empty-icon">📦</div>
-              <h3>아직 거래 가능한 사용자가 없어요</h3>
-              <p>이 제품의 첫 번째 거래자가 되어보세요!</p>
-              <button
-                  class="cta-btn"
-                  @click="handleFirstTraderAction"
-                  :disabled="!isLoggedIn"
-              >
-                {{ isLoggedIn ? '첫 거래자가 되어보세요!' : '로그인 후 참여하세요' }}
-              </button>
-            </div>
-
-            <div v-else-if="availableTraders.length > displayedTradeCount" class="load-more">
-              <button class="load-more-btn" @click="loadMoreTrades">
-                더 많은 거래 보기 ({{ availableTraders.length - displayedTradeCount }}개 더)
-              </button>
             </div>
           </div>
 
           <!-- 리뷰 섹션 -->
-          <div class="reviews-section">
+          <div class="reviews-section" v-if="product.recentReviews?.length > 0">
             <div class="reviews-header">
-              <div class="reviews-title">💬 리뷰 ({{ product.reviewCount || 0 }}개)</div>
+              <div class="reviews-title">💬 최근 리뷰</div>
               <div class="reviews-stats">
-                <span>⭐ {{ product.averageRating?.toFixed(1) || '0.0' }}</span>
-                <span>|</span>
-                <select v-model="reviewSort" @change="fetchReviews" class="sort-select">
-                  <option value="latest">최신순</option>
-                  <option value="rating">평점순</option>
-                  <option value="helpful">도움순</option>
-                </select>
+                <span>⭐ {{ formatRating(product.averageRating) }}</span>
               </div>
             </div>
 
             <!-- 리뷰 목록 -->
             <div class="reviews-container">
-              <div v-if="reviews.length > 0" class="reviews-list">
+              <div class="reviews-list">
                 <div
-                    v-for="review in displayedReviews"
+                    v-for="review in product.recentReviews"
                     :key="review.id"
                     class="review-item"
                 >
                   <div class="review-header">
                     <div class="review-user">
-                      <div class="user-avatar">{{ review.userName.charAt(0) }}</div>
+                      <div class="user-avatar">{{ getInitial(review.userName) }}</div>
                       <div class="user-name">{{ review.userName }}</div>
-                      <div class="user-rating">⭐ {{ review.rating.toFixed(1) }}</div>
-                    </div>
-                    <div class="review-status" v-if="review.status">
-                      <span class="status-indicator" :class="getReviewStatusClass(review.status)">
-                        {{ getReviewStatusText(review.status) }}
-                      </span>
+                      <div class="user-rating">⭐ {{ formatRating(review.rating) }}</div>
                     </div>
                   </div>
                   <div class="review-content">{{ review.comment }}</div>
                   <div class="review-meta">
                     <span>{{ getRelativeTime(review.createdAt) }}</span>
-                    <span v-if="review.likeCount">도움됨 {{ review.likeCount }}</span>
-                    <span v-if="review.reportCount > 0" class="report-count">
-                      신고 {{ review.reportCount }}
-                    </span>
                   </div>
                 </div>
-              </div>
-
-              <!-- 리뷰 없음 -->
-              <div v-else class="no-reviews">
-                <p>아직 리뷰가 없습니다. 첫 번째 리뷰를 작성해보세요!</p>
-              </div>
-
-              <!-- 리뷰 더보기 버튼 -->
-              <div v-if="reviews.length > displayedReviewCount" class="review-load-more">
-                <button class="load-more-btn" @click="loadMoreReviews">
-                  더 많은 리뷰 보기 ({{ reviews.length - displayedReviewCount }}개 더)
-                </button>
               </div>
 
               <!-- 리뷰 작성 버튼 -->
@@ -368,59 +276,8 @@
               </div>
             </div>
           </div>
-
-          <!-- 관련 제품 섹션 -->
-          <div class="related-products-section" v-if="relatedProducts.length">
-            <h2 class="section-title">🔗 비슷한 제품</h2>
-            <div class="related-products-grid">
-              <div
-                  v-for="relatedProduct in relatedProducts"
-                  :key="relatedProduct.id"
-                  class="related-product-card"
-                  @click="goToProduct(relatedProduct.id)"
-              >
-                <div class="related-product-image">
-                  <img
-                      v-if="relatedProduct.thumbnailUrl"
-                      :src="relatedProduct.thumbnailUrl"
-                      :alt="relatedProduct.name"
-                      @error="handleImageError"
-                  />
-                  <span v-else class="placeholder">📦</span>
-                </div>
-                <div class="related-product-info">
-                  <div class="related-product-name">{{ relatedProduct.name }}</div>
-                  <div class="related-product-brand">{{ relatedProduct.brand }}</div>
-                  <div class="related-product-stats">
-                    ⭐ {{ relatedProduct.averageRating?.toFixed(1) || '0.0' }} •
-                    거래 {{ relatedProduct.tradeCount || 0 }}명
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </template>
       </main>
-    </div>
-
-    <!-- 채팅 로딩 오버레이 -->
-    <div v-if="chatLoading" class="chat-loading-overlay">
-      <div class="chat-loading-content">
-        <div class="spinner"></div>
-        <p>채팅방을 준비하는 중...</p>
-      </div>
-    </div>
-
-    <!-- 채팅 에러 모달 -->
-    <div v-if="chatError" class="chat-error-modal" @click="clearChatError">
-      <div class="chat-error-content" @click.stop>
-        <h3>채팅 연결 실패</h3>
-        <p>{{ chatError }}</p>
-        <div class="error-actions">
-          <button @click="clearChatError" class="cancel-btn">확인</button>
-          <button @click="retryStartChat" class="retry-btn">다시 시도</button>
-        </div>
-      </div>
     </div>
 
     <!-- 로그인 유도 모달 -->
@@ -450,9 +307,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth.js'
-import { useProduct } from '@/composables/useProduct'
-import { useChat } from '@/composables/useChat'
-import { productUtils } from '@/services/productService'
+import { productService, productUtils } from '@/services/ProductService.js'
 
 // Router
 const route = useRoute()
@@ -466,43 +321,16 @@ const {
   userNickname
 } = useAuth()
 
-// Composables
-const {
-  getProduct,
-  getReviews,
-  likeProduct,
-  bookmarkProduct,
-  interestProduct,
-  shareProduct,
-  wishProduct,
-  getRecommendedProducts
-} = useProduct()
-const { startChat } = useChat()
-
 // Reactive data
 const loading = ref(true)
 const error = ref(null)
 const actionLoading = ref(false)
-const loadingReviews = ref(false)
-const chatLoading = ref(false)
-const chatError = ref('')
 const showLoginModal = ref(false)
 const loginModalTitle = ref('')
 const loginModalMessage = ref('')
 
 const product = ref(null)
-const reviews = ref([])
-const relatedProducts = ref([])
-const availableTraders = ref([])
-
 const currentImageIndex = ref(0)
-const reviewSort = ref('latest')
-const reviewPage = ref(0)
-const hasMoreReviews = ref(false)
-
-// 페이지네이션 관련
-const displayedTradeCount = ref(5)
-const displayedReviewCount = ref(3)
 
 const userReaction = ref({
   hasLike: false,
@@ -532,25 +360,12 @@ const hasDetailInfo = computed(() => {
       product.value?.status
 })
 
-const showTradeSection = computed(() => {
-  return product.value?.productType === 'SALE'
-})
-
 const isOwner = computed(() => {
   return isLoggedIn.value &&
       userId.value &&
       product.value?.creatorId &&
       userId.value === product.value.creatorId
 })
-
-// 표시할 데이터 계산
-const displayedTraders = computed(() =>
-    availableTraders.value.slice(0, displayedTradeCount.value)
-)
-
-const displayedReviews = computed(() =>
-    reviews.value.slice(0, displayedReviewCount.value)
-)
 
 // ==================== 인증 관련 액션 핸들러 ====================
 
@@ -576,30 +391,7 @@ const handleBookmarkAction = async () => {
 }
 
 const handleShareAction = async () => {
-  // 공유는 로그인 없이도 가능
   await shareToSystem()
-}
-
-const handleTradeAction = async (trader) => {
-  if (!isLoggedIn.value) {
-    showLoginRequiredModal(
-        '로그인이 필요합니다',
-        '거래 신청을 하려면 로그인해주세요.'
-    )
-    return
-  }
-  await startTrade(trader)
-}
-
-const handleFirstTraderAction = () => {
-  if (!isLoggedIn.value) {
-    showLoginRequiredModal(
-        '로그인이 필요합니다',
-        '거래에 참여하려면 로그인해주세요.'
-    )
-    return
-  }
-  goToTrade()
 }
 
 const handleWriteReviewAction = () => {
@@ -622,9 +414,7 @@ const editProduct = () => {
 const deleteProduct = async () => {
   if (confirm('정말로 이 상품을 삭제하시겠습니까?')) {
     try {
-      // 상품 삭제 API 호출 (실제 구현 시 productService.deleteProduct 사용)
-      // await productService.deleteProduct(product.value.id)
-      console.log('상품 삭제:', product.value.id)
+      await productService.deleteProduct(product.value.id)
       alert('상품이 삭제되었습니다.')
       router.push('/products')
     } catch (err) {
@@ -636,17 +426,13 @@ const deleteProduct = async () => {
 
 // ==================== 데이터 로드 메서드 ====================
 
-const fetchProduct = async () => {
+const fetchProductData = async () => {
   try {
     loading.value = true
     error.value = null
 
     const productId = route.params.id
-
-    // 로그인한 사용자의 경우 개인화된 정보 포함
-    const response = await getProduct(productId, {
-      userId: isLoggedIn.value ? userId.value : null
-    })
+    const response = await productService.getProduct(productId)
 
     if (response.success) {
       product.value = response.data
@@ -655,13 +441,6 @@ const fetchProduct = async () => {
       if (isLoggedIn.value && response.data.userReaction) {
         userReaction.value = response.data.userReaction
       }
-
-      // 추가 데이터 로드
-      await Promise.all([
-        fetchReviews(),
-        fetchRelatedProducts(),
-        fetchAvailableTraders()
-      ])
     } else {
       error.value = response.error || '상품을 불러올 수 없습니다.'
     }
@@ -672,111 +451,12 @@ const fetchProduct = async () => {
   }
 }
 
-const fetchReviews = async () => {
-  try {
-    const response = await getReviews(product.value.id, {
-      page: 0,
-      size: 10,
-      sort: getSortParam(reviewSort.value)
-    })
-
-    if (response.success) {
-      reviews.value = response.data.content || []
-      hasMoreReviews.value = !response.data.last
-      reviewPage.value = 0
-    }
-  } catch (err) {
-    console.error('리뷰 로드 실패:', err)
-  }
-}
-
-const loadMoreReviews = async () => {
-  try {
-    loadingReviews.value = true
-    const nextPage = reviewPage.value + 1
-
-    const response = await getReviews(product.value.id, {
-      page: nextPage,
-      size: 10,
-      sort: getSortParam(reviewSort.value)
-    })
-
-    if (response.success) {
-      reviews.value.push(...(response.data.content || []))
-      hasMoreReviews.value = !response.data.last
-      reviewPage.value = nextPage
-    }
-  } catch (err) {
-    console.error('추가 리뷰 로드 실패:', err)
-  } finally {
-    loadingReviews.value = false
-  }
-}
-
-const fetchRelatedProducts = async () => {
-  try {
-    const response = await getRecommendedProducts({
-      type: 'SIMILAR',
-      size: 6,
-      excludeId: product.value.id
-    })
-
-    if (response.success) {
-      relatedProducts.value = response.data || []
-    }
-  } catch (err) {
-    console.error('관련 상품 로드 실패:', err)
-  }
-}
-
-const fetchAvailableTraders = async () => {
-  // 실제로는 API에서 거래 가능한 사용자 목록을 가져옴
-  // 여기서는 샘플 데이터 사용
-  availableTraders.value = [
-    {
-      id: 1,
-      name: '김민수',
-      rating: 4.8,
-      distance: '300m',
-      message: '내일 저녁에 강남역에서 픽업 가능해요! 2명분 정도 나눠드려요'
-    },
-    {
-      id: 2,
-      name: '박지영',
-      rating: 4.6,
-      distance: '550m',
-      message: '오늘 오후에 신논현역 근처에서 만나실 분! 세트로 시켜서 나눠먹어요'
-    },
-    {
-      id: 3,
-      name: '이서준',
-      rating: 4.9,
-      distance: '720m',
-      message: '주말에 홍대에서 만나실 분들 구해요! 3-4명 정도 함께해요'
-    },
-    {
-      id: 5,
-      name: '한지민',
-      rating: 4.7,
-      distance: '890m',
-      message: '평일 오후 시간대 거래 가능합니다. 연락주세요!'
-    }
-  ]
-}
-
-const loadMoreTrades = () => {
-  displayedTradeCount.value = Math.min(
-      displayedTradeCount.value + 5,
-      availableTraders.value.length
-  )
-}
-
 // ==================== 리액션 토글 메서드들 ====================
 
 const toggleBookmark = async () => {
   try {
     actionLoading.value = true
-    const response = await bookmarkProduct(product.value.id)
+    const response = await productService.bookmarkProduct(product.value.id)
 
     if (response.success) {
       userReaction.value.hasBookmark = !userReaction.value.hasBookmark
@@ -793,7 +473,7 @@ const toggleBookmark = async () => {
 const toggleLike = async () => {
   try {
     actionLoading.value = true
-    const response = await likeProduct(product.value.id)
+    const response = await productService.likeProduct(product.value.id)
 
     if (response.success) {
       userReaction.value.hasLike = !userReaction.value.hasLike
@@ -810,7 +490,7 @@ const toggleLike = async () => {
 const toggleInterest = async () => {
   try {
     actionLoading.value = true
-    const response = await interestProduct(product.value.id)
+    const response = await productService.toggleProductReaction(product.value.id, 'INTEREST')
 
     if (response.success) {
       userReaction.value.hasInterest = !userReaction.value.hasInterest
@@ -826,7 +506,7 @@ const toggleInterest = async () => {
 const toggleWish = async () => {
   try {
     actionLoading.value = true
-    const response = await wishProduct(product.value.id)
+    const response = await productService.toggleProductReaction(product.value.id, 'WISH')
 
     if (response.success) {
       userReaction.value.hasWish = !userReaction.value.hasWish
@@ -857,7 +537,6 @@ const shareToSystem = async () => {
         url: window.location.href
       })
     } else {
-      // 폴백: 클립보드에 복사
       await navigator.clipboard.writeText(window.location.href)
       alert('링크가 클립보드에 복사되었습니다!')
     }
@@ -865,58 +544,20 @@ const shareToSystem = async () => {
     // 로그인한 사용자는 공유 통계에 반영
     if (isLoggedIn.value) {
       try {
-        await shareProduct(product.value.id)
+        await productService.toggleProductReaction(product.value.id, 'SHARE')
       } catch (err) {
-        // 공유 통계 실패는 무시 (사용자에게는 공유 성공으로 표시)
         console.warn('공유 통계 업데이트 실패:', err)
       }
     }
   } catch (err) {
-    // 공유 취소된 경우 등은 무시
     console.log('공유 취소됨:', err)
   }
 }
 
-// ==================== 채팅 및 거래 관련 메서드 ====================
-
-const startTrade = async (trader) => {
-  try {
-    chatLoading.value = true
-    const response = await startChat({
-      chatContext: 'PRODUCT_TRADE',
-      chatContextId: product.value.id,
-      creatorId: trader.id,
-      participantIds: [trader.id]
-    })
-
-    if (response.success) {
-      router.push(`/chat/${response.data.roomId}`)
-    } else {
-      chatError.value = response.error || '채팅방 생성에 실패했습니다.'
-    }
-  } catch (err) {
-    console.error('거래 채팅 시작 실패:', err)
-    chatError.value = '채팅 연결 중 오류가 발생했습니다.'
-  } finally {
-    chatLoading.value = false
-  }
-}
+// ==================== 리뷰 관련 메서드 ====================
 
 const writeReview = () => {
   router.push(`/products/${product.value.id}/review`)
-}
-
-const goToTrade = () => {
-  router.push(`/products/${product.value.id}/trade`)
-}
-
-const retryStartChat = () => {
-  clearChatError()
-  // 재시도 로직은 실제 구현에서 추가
-}
-
-const clearChatError = () => {
-  chatError.value = ''
 }
 
 // ==================== 네비게이션 및 UI 메서드 ====================
@@ -929,10 +570,6 @@ const goBack = () => {
   router.go(-1)
 }
 
-const goToProduct = (productId) => {
-  router.push(`/products/${productId}`)
-}
-
 const handleImageError = (event) => {
   event.target.style.display = 'none'
 }
@@ -942,7 +579,12 @@ const handleImageError = (event) => {
 const formatPrice = (price) => productUtils.formatPrice(price)
 const formatCount = (count) => productUtils.formatCount(count)
 const formatDate = (date) => productUtils.formatDate(date)
-const getRelativeTime = (date) => productUtils.getRelativeTime(date)
+const getRelativeTime = (date) => productUtils.formatDate(date)
+const formatRating = (rating) => productUtils.formatRating(rating)
+
+const getInitial = (name) => {
+  return name ? name.charAt(0).toUpperCase() : '?'
+}
 
 const getStatusClass = (status) => {
   const statusValue = typeof status === 'object' ? status.title : status
@@ -984,45 +626,22 @@ const getProductTypeText = (productType) => {
   return textMap[productType] || '기타'
 }
 
-const getReviewStatusText = (status) => {
-  const statusMap = {
-    'ACTIVE': '활성',
-    'DELETED': '삭제됨',
-    'REPORTED': '신고됨',
-    'HIDDEN': '숨김'
-  }
-  return statusMap[status] || status
-}
-
-const getReviewStatusClass = (status) => {
-  return status.toLowerCase()
-}
-
 const isHighlightTag = (tag) => {
   const highlightTags = ['신상', '인기', '한정', '추천']
   return highlightTags.some(highlight => tag.includes(highlight))
 }
 
-const getSortParam = (sort) => {
-  const sortMap = {
-    'latest': 'createdAt,DESC',
-    'rating': 'rating,DESC',
-    'helpful': 'likeCount,DESC'
-  }
-  return sortMap[sort] || 'createdAt,DESC'
-}
-
 // ==================== 라이프사이클 ====================
 
 onMounted(() => {
-  fetchProduct()
+  fetchProductData()
 })
 
 // ==================== 감시자 ====================
 
 watch(() => route.params.id, (newId, oldId) => {
   if (newId && newId !== oldId) {
-    fetchProduct()
+    fetchProductData()
   }
 })
 
@@ -1030,7 +649,7 @@ watch(() => route.params.id, (newId, oldId) => {
 watch(isLoggedIn, (newValue) => {
   if (newValue) {
     // 로그인 후 상품 정보 다시 로드 (개인화된 정보 포함)
-    fetchProduct()
+    fetchProductData()
   } else {
     // 로그아웃 시 개인 리액션 정보 초기화
     userReaction.value = {
@@ -1057,7 +676,7 @@ watch(isLoggedIn, (newValue) => {
 /* 헤더 */
 .header {
   background: white;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -1146,7 +765,7 @@ watch(isLoggedIn, (newValue) => {
 .main-content {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
 
@@ -1167,8 +786,12 @@ watch(isLoggedIn, (newValue) => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message h3 {
@@ -1277,7 +900,7 @@ watch(isLoggedIn, (newValue) => {
   position: absolute;
   bottom: 16px;
   right: 16px;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 6px 12px;
   border-radius: 12px;
@@ -1557,168 +1180,6 @@ watch(isLoggedIn, (newValue) => {
   padding: 24px 24px 0 24px;
 }
 
-/* 거래 섹션 */
-.trade-section {
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.trade-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 0 24px;
-}
-
-.trade-item {
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  transition: border-color 0.2s;
-}
-
-.trade-item:hover {
-  border-color: #1DCD9F;
-}
-
-.trade-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.trade-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.user-avatar {
-  width: 24px;
-  height: 24px;
-  background: #1DCD9F;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.user-name {
-  font-weight: 600;
-  color: #000000;
-}
-
-.user-rating {
-  font-size: 12px;
-  color: #169976;
-}
-
-.trade-distance {
-  font-size: 12px;
-  color: #222222;
-  opacity: 0.7;
-}
-
-.trade-info {
-  font-size: 13px;
-  color: #222222;
-  margin-bottom: 8px;
-}
-
-.trade-btn {
-  background: #1DCD9F;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.trade-btn:hover:not(:disabled) {
-  background: #169976;
-}
-
-.trade-btn:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-}
-
-.empty-trade {
-  text-align: center;
-  padding: 60px 20px;
-  color: #718096;
-  margin: 0 24px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.empty-trade h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 8px;
-}
-
-.empty-trade p {
-  font-size: 14px;
-  margin-bottom: 24px;
-}
-
-.cta-btn {
-  background: #1DCD9F;
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.cta-btn:hover:not(:disabled) {
-  background: #16a085;
-  transform: translateY(-1px);
-}
-
-.cta-btn:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.load-more {
-  text-align: center;
-  margin: 20px 24px 24px 24px;
-}
-
-.load-more-btn {
-  background: white;
-  color: #1DCD9F;
-  border: 2px solid #1DCD9F;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.load-more-btn:hover {
-  background: #1DCD9F;
-  color: white;
-}
-
 /* 리뷰 섹션 */
 .reviews-section {
   border-bottom: 1px solid #f1f5f9;
@@ -1783,6 +1244,29 @@ watch(isLoggedIn, (newValue) => {
   gap: 8px;
 }
 
+.user-avatar {
+  width: 24px;
+  height: 24px;
+  background: #1DCD9F;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #000000;
+}
+
+.user-rating {
+  font-size: 12px;
+  color: #169976;
+}
+
 .review-status {
   font-size: 12px;
 }
@@ -1844,6 +1328,23 @@ watch(isLoggedIn, (newValue) => {
 .review-load-more {
   text-align: center;
   margin-bottom: 20px;
+}
+
+.load-more-btn {
+  background: white;
+  color: #1DCD9F;
+  border: 2px solid #1DCD9F;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.load-more-btn:hover {
+  background: #1DCD9F;
+  color: white;
 }
 
 .review-write-section {
@@ -1948,109 +1449,6 @@ watch(isLoggedIn, (newValue) => {
   color: #169976;
 }
 
-/* 채팅 로딩 및 에러 */
-.chat-loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.chat-loading-content {
-  background: white;
-  padding: 32px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #f3f4f6;
-  border-top: 3px solid #1DCD9F;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
-}
-
-.chat-error-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 20px;
-}
-
-.chat-error-content {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.chat-error-content h3 {
-  margin: 0 0 12px 0;
-  color: #dc2626;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.chat-error-content p {
-  margin: 0 0 20px 0;
-  color: #374151;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.error-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-.cancel-btn,
-.retry-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.cancel-btn {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.cancel-btn:hover {
-  background: #e5e7eb;
-}
-
-.retry-btn {
-  background: #1DCD9F;
-  color: white;
-}
-
-.retry-btn:hover {
-  background: #169976;
-}
-
 /* 로그인 모달 */
 .login-modal-overlay {
   position: fixed;
@@ -2144,7 +1542,7 @@ watch(isLoggedIn, (newValue) => {
   }
 
   .header-actions {
-    display: none; /* 모바일에서는 편집 버튼 숨김 */
+    display: none;
   }
 
   .product-title {
@@ -2210,10 +1608,6 @@ watch(isLoggedIn, (newValue) => {
     padding: 20px;
   }
 
-  .trade-list {
-    padding: 0 20px;
-  }
-
   .related-products-grid {
     padding: 0 20px 20px 20px;
   }
@@ -2270,30 +1664,10 @@ watch(isLoggedIn, (newValue) => {
   }
 }
 
-/* 추가 유틸리티 스타일 */
-.disabled {
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 /* 접근성 개선 */
 .action-btn:focus,
 .reaction-btn:focus,
-.trade-btn:focus,
-.write-review-btn:focus,
-.cta-btn:focus {
+.write-review-btn:focus {
   outline: 2px solid #1DCD9F;
   outline-offset: 2px;
 }
@@ -2315,119 +1689,5 @@ watch(isLoggedIn, (newValue) => {
 
 .thumbnail-list::-webkit-scrollbar-thumb:hover {
   background: #169976;
-}
-
-/* 트랜지션 효과 */
-.product-card,
-.reaction-btn,
-.trade-btn,
-.action-btn,
-.related-product-card {
-  transition: all 0.2s ease-in-out;
-}
-
-/* 다크모드 지원 (기본적인 미디어 쿼리) */
-@media (prefers-color-scheme: dark) {
-  .product-detail-view {
-    background: #0f172a;
-    color: #e2e8f0;
-  }
-
-  .main-content {
-    background: #1e293b;
-  }
-
-  .header {
-    background: #1e293b;
-  }
-
-  .login-notice {
-    background: linear-gradient(135deg, #1e293b, #0f172a);
-    border-left-color: #1DCD9F;
-  }
-
-  .login-notice-content span:nth-child(2) {
-    color: #60a5fa;
-  }
-}
-
-/* 인쇄용 스타일 */
-@media print {
-  .header,
-  .action-section,
-  .trade-section,
-  .chat-loading-overlay,
-  .chat-error-modal,
-  .login-modal-overlay {
-    display: none;
-  }
-
-  .main-content {
-    box-shadow: none;
-    border-radius: 0;
-  }
-
-  .product-detail-view {
-    background: white;
-    color: black;
-  }
-}
-
-/* 고대비 모드 지원 */
-@media (prefers-contrast: high) {
-  .action-btn.primary {
-    background: #000;
-    border-color: #000;
-  }
-
-  .status-badge {
-    background: #000;
-    color: white;
-  }
-
-  .tag.highlight {
-    background: #000;
-    color: white;
-  }
-}
-
-/* 애니메이션 감소 모드 */
-@media (prefers-reduced-motion: reduce) {
-  .loading-spinner,
-  .spinner {
-    animation: none;
-  }
-
-  .action-btn,
-  .reaction-btn,
-  .trade-btn,
-  .cta-btn {
-    transition: none;
-  }
-
-  .action-btn:hover:not(:disabled):not(.disabled),
-  .cta-btn:hover:not(:disabled) {
-    transform: none;
-  }
-}
-
-/* 포커스 표시자 개선 */
-@media (prefers-reduced-motion: no-preference) {
-  .action-btn:focus,
-  .reaction-btn:focus,
-  .trade-btn:focus,
-  .write-review-btn:focus,
-  .cta-btn:focus {
-    animation: focus-pulse 2s infinite;
-  }
-}
-
-@keyframes focus-pulse {
-  0%, 100% {
-    outline-width: 2px;
-  }
-  50% {
-    outline-width: 4px;
-  }
 }
 </style>
