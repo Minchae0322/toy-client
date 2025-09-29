@@ -156,9 +156,14 @@ export class BaseApiService {
 
     try {
       // 헤더 설정
-      const headers = {
+      let headers = {
         ...this.getDefaultHeaders(includeAuth),
         ...fetchOptions.headers
+      }
+
+      // FormData인 경우 Content-Type 제거 (브라우저가 자동으로 boundary 포함해서 설정)
+      if (fetchOptions.body instanceof FormData) {
+        delete headers['Content-Type']
       }
 
       const requestOptions = {
@@ -219,6 +224,7 @@ export class BaseApiService {
 
         const errorMessage = errorData.message ||
             errorData.error ||
+            errorData.detail ||
             `HTTP ${response.status} ${response.statusText}`
 
         throw new ApiError(errorMessage, response.status, errorData, this.serviceName)
@@ -324,7 +330,7 @@ export class BaseApiService {
     const data = response.data
 
     return {
-      success: data?.success !== false, // 명시적으로 false가 아니면 success
+      success: data?.success !== false,
       data: data?.data || data,
       message: data?.message || 'success',
       status: response.status,
@@ -338,16 +344,9 @@ export class BaseApiService {
    * 파일 업로드 (multipart/form-data)
    */
   async uploadFile(url, formData, options = {}) {
-    // Content-Type 헤더 제거 (브라우저가 자동 설정)
-    const headers = {
-      ...this.getDefaultHeaders(true)
-    }
-    delete headers['Content-Type']
-
     return this.request(url, {
       method: 'POST',
       body: formData,
-      headers,
       ...options
     })
   }
@@ -371,7 +370,7 @@ export class BaseApiService {
         const response = await fetch(`${this.baseURL}${endpoint}`, {
           method: 'GET',
           headers: this.getDefaultHeaders(false),
-          signal: AbortSignal.timeout(5000) // 5초 타임아웃
+          signal: AbortSignal.timeout(5000)
         })
 
         if (response.ok) {

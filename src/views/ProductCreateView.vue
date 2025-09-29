@@ -431,6 +431,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from
 import { useRouter } from 'vue-router'
 import { useProduct } from '@/services/ProductService.js'
 import { useCategory } from '@/services/CategoryService.js'
+import { useFile } from '@/services/FileService.js'  // 추가
 import { useAuth } from '@/composables/useAuth.js'
 
 // Vue Router
@@ -461,12 +462,24 @@ const {
   getCategories
 } = useCategory()
 
+// File Service 추가
+const {
+  uploadImage,
+  uploadImages,
+  validateFile,
+  isImageFile,
+  createPreview
+} = useFile()
+
 // 반응형 상태
 const isLoading = ref(false)
+const isUploadingFiles = ref(false)  // 파일 업로드 상태 추가
+const uploadProgress = ref(0)  // 업로드 진행률 추가
 const isDragOver = ref(false)
 const showSuccessModal = ref(false)
 const categories = ref([])
 const uploadedFiles = ref([])
+const uploadedFileIds = ref([])  // 업로드된 파일 ID 저장 추가
 const selectedFeatures = ref([])
 const selectedTags = ref([])
 const currentTag = ref('')
@@ -478,7 +491,7 @@ const productForm = ref(null)
 const fileInput = ref(null)
 const tagInput = ref(null)
 
-// 폼 데이터 (백엔드 DTO에 맞춤)
+// 폼 데이터
 const form = reactive({
   name: '',
   brand: '',
@@ -517,12 +530,15 @@ const isFormValid = computed(() => {
       form.name.trim() &&
       form.brand.trim() &&
       form.categoryId &&
-      uploadedFiles.value.length > 0 &&
+      uploadedFileIds.value.length > 0 &&  // 업로드된 파일 ID 확인으로 변경
       Object.values(errors).every(error => !error)
 })
 
 const canSubmit = computed(() => {
-  return isFormValid.value && !isLoading.value && !authLoading.value
+  return isFormValid.value &&
+      !isLoading.value &&
+      !authLoading.value &&
+      !isUploadingFiles.value  // 파일 업로드 중에는 제출 불가
 })
 
 const currentUserInfo = computed(() => {
@@ -682,60 +698,23 @@ const loadCategories = async () => {
       console.log('✅ [PRODUCT] 카테고리 로드 성공:', categories.value.length)
     } else {
       console.warn('[PRODUCT] 카테고리 API 실패, 기본값 사용:', response.error)
-
-      // API 실패 시 기본 카테고리 제공
-      categories.value = [
-        {
-          categoryId: 1,
-          categoryName: '프라모델',
-          description: '건담, 자동차, 항공기 등의 프라스틱 모델',
-          isActive: true
-        },
-        {
-          categoryId: 2,
-          categoryName: '피규어',
-          description: '애니메이션, 게임 캐릭터 피규어',
-          isActive: true
-        },
-        {
-          categoryId: 3,
-          categoryName: '블록완구',
-          description: '레고, 조립식 블록 완구',
-          isActive: true
-        },
-        {
-          categoryId: 4,
-          categoryName: '음료',
-          description: '음료수, 차, 커피 등',
-          isActive: true
-        },
-        {
-          categoryId: 5,
-          categoryName: '과자/스낵',
-          description: '과자, 스낵, 간식류',
-          isActive: true
-        },
-        {
-          categoryId: 6,
-          categoryName: '기타',
-          description: '기타 상품',
-          isActive: true
-        }
-      ]
+      categories.value = getDefaultCategories()
     }
   } catch (error) {
     console.error('[PRODUCT] 카테고리 로드 에러:', error)
-
-    // 에러 시에도 기본 카테고리 제공
-    categories.value = [
-      { categoryId: 1, categoryName: '프라모델', isActive: true },
-      { categoryId: 2, categoryName: '피규어', isActive: true },
-      { categoryId: 3, categoryName: '블록완구', isActive: true },
-      { categoryId: 4, categoryName: '음료', isActive: true },
-      { categoryId: 5, categoryName: '과자/스낵', isActive: true },
-      { categoryId: 6, categoryName: '기타', isActive: true }
-    ]
+    categories.value = getDefaultCategories()
   }
+}
+
+const getDefaultCategories = () => {
+  return [
+    { categoryId: 1, categoryName: '프라모델', isActive: true },
+    { categoryId: 2, categoryName: '피규어', isActive: true },
+    { categoryId: 3, categoryName: '블록완구', isActive: true },
+    { categoryId: 4, categoryName: '음료', isActive: true },
+    { categoryId: 5, categoryName: '과자/스낵', isActive: true },
+    { categoryId: 6, categoryName: '기타', isActive: true }
+  ]
 }
 
 // === 폼 검증 ===
@@ -771,7 +750,6 @@ const validateField = (fieldName) => {
 const validatePrice = () => {
   errors.price = ''
 
-  // 숫자만 허용하고 10자리 제한
   form.price = form.price.replace(/[^0-9]/g, '')
 
   if (form.price && form.price.length > 10) {
@@ -785,7 +763,7 @@ const validateForm = () => {
   validateField('brand')
   validateField('categoryId')
 
-  if (uploadedFiles.value.length === 0) {
+  if (uploadedFileIds.value.length === 0) {
     errors.images = '최소 1개의 이미지를 업로드해주세요.'
   } else {
     errors.images = ''
@@ -794,25 +772,25 @@ const validateForm = () => {
   return Object.values(errors).every(error => !error)
 }
 
-// === 파일 처리 ===
+// === 파일 처리 (파일 업로드 API 연동) ===
 
 const triggerFileInput = () => {
   fileInput.value?.click()
 }
 
-const handleFileSelect = (event) => {
+const handleFileSelect = async (event) => {
   const files = Array.from(event.target.files)
-  processFiles(files)
+  await processFiles(files)
   event.target.value = ''
 }
 
-const handleFileDrop = (event) => {
+const handleFileDrop = async (event) => {
   event.preventDefault()
   isDragOver.value = false
 
   const files = Array.from(event.dataTransfer.files)
   const imageFiles = files.filter(file => file.type.startsWith('image/'))
-  processFiles(imageFiles)
+  await processFiles(imageFiles)
 }
 
 const handleDragOver = (event) => {
@@ -824,47 +802,158 @@ const handleDragLeave = () => {
   isDragOver.value = false
 }
 
-const processFiles = (files) => {
-  files.forEach(file => {
-    if (file.size > 5 * 1024 * 1024) {
-      alert(`${file.name}: 파일 크기는 5MB 이하만 업로드 가능합니다.`)
-      return
+/**
+ * 파일 처리 및 업로드
+ */
+const processFiles = async (files) => {
+  if (!isLoggedIn.value) {
+    alert('로그인이 필요합니다.')
+    return
+  }
+
+  // 파일 개수 제한 확인
+  if (uploadedFiles.value.length + files.length > 5) {
+    alert('최대 5개의 이미지만 업로드할 수 있습니다.')
+    return
+  }
+
+  isUploadingFiles.value = true
+  uploadProgress.value = 0
+
+  try {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+
+      // 이미지 파일 확인
+      if (!isImageFile(file)) {
+        alert(`${file.name}: PNG, JPG, JPEG 파일만 업로드 가능합니다.`)
+        continue
+      }
+
+      // 파일 크기 확인
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`${file.name}: 파일 크기는 5MB 이하만 업로드 가능합니다.`)
+        continue
+      }
+
+      // 빈 파일 확인
+      if (file.size === 0) {
+        alert(`${file.name}: 빈 파일은 업로드할 수 없습니다.`)
+        continue
+      }
+
+      // 미리보기 생성
+      const previewResult = await createPreview(file)
+      if (!previewResult.success) {
+        console.error('미리보기 생성 실패:', previewResult.error)
+        continue
+      }
+
+      // 임시로 파일 정보 추가 (업로드 전)
+      const tempFileObj = {
+        file,
+        name: file.name,
+        size: file.size,
+        preview: previewResult.previewUrl,
+        uploading: true,
+        fileId: null
+      }
+
+      uploadedFiles.value.push(tempFileObj)
+
+      // 파일 업로드 API 호출
+      console.log(`📤 [FILE] 파일 업로드 시작: ${file.name}`)
+
+      const uploadResult = await uploadImage(file, 'PRODUCT')
+
+      if (uploadResult.success && uploadResult.data) {
+        // 업로드 성공 - 파일 ID 저장
+        const fileId = uploadResult.data.id
+        uploadedFileIds.value.push(fileId)
+
+        // 임시 파일 객체 업데이트
+        const fileIndex = uploadedFiles.value.findIndex(f => f.file === file)
+        if (fileIndex !== -1) {
+          uploadedFiles.value[fileIndex].uploading = false
+          uploadedFiles.value[fileIndex].fileId = fileId
+          uploadedFiles.value[fileIndex].fileUrl = uploadResult.data.fileUrl
+        }
+
+        console.log(`✅ [FILE] 파일 업로드 성공: ${file.name}, ID: ${fileId}`)
+      } else {
+        // 업로드 실패
+        console.error(`❌ [FILE] 파일 업로드 실패: ${file.name}`, uploadResult.error)
+        alert(`${file.name} 업로드에 실패했습니다: ${uploadResult.error}`)
+
+        // 실패한 파일 제거
+        const fileIndex = uploadedFiles.value.findIndex(f => f.file === file)
+        if (fileIndex !== -1) {
+          URL.revokeObjectURL(uploadedFiles.value[fileIndex].preview)
+          uploadedFiles.value.splice(fileIndex, 1)
+        }
+      }
+
+      // 진행률 업데이트
+      uploadProgress.value = Math.round(((i + 1) / files.length) * 100)
     }
 
-    if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
-      alert(`${file.name}: PNG, JPG, JPEG 파일만 업로드 가능합니다.`)
-      return
+    if (uploadedFileIds.value.length > 0) {
+      errors.images = ''
     }
 
-    if (uploadedFiles.value.length >= 5) {
-      alert('최대 5개의 이미지만 업로드할 수 있습니다.')
-      return
-    }
-
-    const fileObj = {
-      file,
-      name: file.name,
-      size: file.size,
-      preview: URL.createObjectURL(file)
-    }
-
-    uploadedFiles.value.push(fileObj)
-  })
-
-  if (uploadedFiles.value.length > 0) {
-    errors.images = ''
+  } catch (error) {
+    console.error('❌ [FILE] 파일 처리 중 오류:', error)
+    alert('파일 업로드 중 오류가 발생했습니다.')
+  } finally {
+    isUploadingFiles.value = false
+    uploadProgress.value = 0
   }
 }
 
-const removeImage = (index) => {
-  const fileObj = uploadedFiles.value[index]
-  if (fileObj.preview) {
-    URL.revokeObjectURL(fileObj.preview)
-  }
-  uploadedFiles.value.splice(index, 1)
+/**
+ * 업로드된 이미지 삭제
+ */
+const removeImage = async (index) => {
+  if (!isLoggedIn.value) return
 
-  if (uploadedFiles.value.length === 0) {
-    errors.images = '최소 1개의 이미지를 업로드해주세요.'
+  const fileObj = uploadedFiles.value[index]
+
+  // 확인 메시지
+  if (!confirm(`"${fileObj.name}" 파일을 삭제하시겠습니까?`)) {
+    return
+  }
+
+  try {
+    // 파일 ID가 있으면 서버에서도 삭제 (선택사항)
+    if (fileObj.fileId) {
+      // 필요한 경우 deleteFile API 호출
+      // await deleteFile(fileObj.fileId)
+
+      // 업로드된 파일 ID 목록에서 제거
+      const fileIdIndex = uploadedFileIds.value.indexOf(fileObj.fileId)
+      if (fileIdIndex !== -1) {
+        uploadedFileIds.value.splice(fileIdIndex, 1)
+      }
+    }
+
+    // 미리보기 URL 해제
+    if (fileObj.preview) {
+      URL.revokeObjectURL(fileObj.preview)
+    }
+
+    // 파일 목록에서 제거
+    uploadedFiles.value.splice(index, 1)
+
+    console.log(`🗑️ [FILE] 파일 삭제 완료: ${fileObj.name}`)
+
+    // 파일이 없으면 에러 표시
+    if (uploadedFiles.value.length === 0) {
+      errors.images = '최소 1개의 이미지를 업로드해주세요.'
+    }
+
+  } catch (error) {
+    console.error('❌ [FILE] 파일 삭제 실패:', error)
+    alert('파일 삭제 중 오류가 발생했습니다.')
   }
 }
 
@@ -922,6 +1011,11 @@ const handleSubmit = async () => {
     return
   }
 
+  if (isUploadingFiles.value) {
+    alert('파일 업로드가 진행 중입니다. 잠시만 기다려주세요.')
+    return
+  }
+
   if (!validateForm()) {
     alert('필수 항목을 모두 입력해주세요.')
     return
@@ -946,19 +1040,17 @@ const handleSubmit = async () => {
       feature: allFeatures.length > 0 ? allFeatures.join(';') : null,
       tags: selectedTags.value,
       releaseDate: form.releaseDate || null,
-      categoryId: form.categoryId
+      categoryId: form.categoryId,
+      fileIds: uploadedFileIds.value  // 업로드된 파일 ID 배열 추가
     }
-
-    // 업로드할 파일들
-    const files = uploadedFiles.value.map(fileObj => fileObj.file)
 
     console.log('📦 [PRODUCT] 등록할 상품 데이터:', {
       name: productData.name,
       categoryId: productData.categoryId,
-      filesCount: files.length
+      fileIds: productData.fileIds
     })
 
-    const response = await createProduct(productData, files)
+    const response = await createProduct(productData)
 
     if (response.success) {
       localStorage.removeItem('productFormDraft')
@@ -994,7 +1086,8 @@ const saveDraft = () => {
     form: { ...form },
     selectedFeatures: [...selectedFeatures.value],
     selectedTags: [...selectedTags.value],
-    customFeature: customFeature.value
+    customFeature: customFeature.value,
+    uploadedFileIds: [...uploadedFileIds.value]  // 파일 ID도 저장
   }
 
   localStorage.setItem('productFormDraft', JSON.stringify(draftData))
@@ -1030,6 +1123,9 @@ const restoreDraft = () => {
       }
       if (draftData.customFeature) {
         customFeature.value = draftData.customFeature
+      }
+      if (draftData.uploadedFileIds) {
+        uploadedFileIds.value = draftData.uploadedFileIds
       }
 
       console.log('📥 [PRODUCT] 임시저장 데이터 복원 완료')
@@ -1087,6 +1183,7 @@ const debugAuthInfo = () => {
   console.log('사용자 정보:', currentUserInfo.value)
   console.log('폼 유효성:', isFormValid.value)
   console.log('제출 가능:', canSubmit.value)
+  console.log('업로드된 파일 ID:', uploadedFileIds.value)
   console.groupEnd()
 }
 </script>
