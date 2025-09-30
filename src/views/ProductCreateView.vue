@@ -530,15 +530,15 @@ const isFormValid = computed(() => {
       form.name.trim() &&
       form.brand.trim() &&
       form.categoryId &&
-      uploadedFileIds.value.length > 0 &&  // 업로드된 파일 ID 확인으로 변경
+      uploadedFiles.value.length > 0 &&  // 로컬 파일 존재 여부만 확인
       Object.values(errors).every(error => !error)
 })
 
 const canSubmit = computed(() => {
   return isFormValid.value &&
       !isLoading.value &&
-      !authLoading.value &&
-      !isUploadingFiles.value  // 파일 업로드 중에는 제출 불가
+      !authLoading.value
+  // isUploadingFiles 체크 제거 (이제 제품 등록 시 업로드하므로)
 })
 
 const currentUserInfo = computed(() => {
@@ -803,7 +803,7 @@ const handleDragLeave = () => {
 }
 
 /**
- * 파일 처리 및 업로드
+ * 파일 처리 (로컬에만 저장, 실제 업로드는 제품 등록 시)
  */
 const processFiles = async (files) => {
   if (!isLoggedIn.value) {
@@ -817,13 +817,8 @@ const processFiles = async (files) => {
     return
   }
 
-  isUploadingFiles.value = true
-  uploadProgress.value = 0
-
   try {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-
+    for (const file of files) {
       // 이미지 파일 확인
       if (!isImageFile(file)) {
         alert(`${file.name}: PNG, JPG, JPEG 파일만 업로드 가능합니다.`)
@@ -849,111 +844,49 @@ const processFiles = async (files) => {
         continue
       }
 
-      // 임시로 파일 정보 추가 (업로드 전)
-      const tempFileObj = {
+      // 파일 객체를 로컬에 저장 (실제 업로드는 나중에)
+      const fileObj = {
         file,
         name: file.name,
         size: file.size,
-        preview: previewResult.previewUrl,
-        uploading: true,
-        fileId: null
+        preview: previewResult.previewUrl
       }
 
-      uploadedFiles.value.push(tempFileObj)
-
-      // 파일 업로드 API 호출
-      console.log(`📤 [FILE] 파일 업로드 시작: ${file.name}`)
-
-      const uploadResult = await uploadImage(file, 'PRODUCT')
-
-      if (uploadResult.success && uploadResult.data) {
-        // 업로드 성공 - 파일 ID 저장
-        const fileId = uploadResult.data.id
-        uploadedFileIds.value.push(fileId)
-
-        // 임시 파일 객체 업데이트
-        const fileIndex = uploadedFiles.value.findIndex(f => f.file === file)
-        if (fileIndex !== -1) {
-          uploadedFiles.value[fileIndex].uploading = false
-          uploadedFiles.value[fileIndex].fileId = fileId
-          uploadedFiles.value[fileIndex].fileUrl = uploadResult.data.fileUrl
-        }
-
-        console.log(`✅ [FILE] 파일 업로드 성공: ${file.name}, ID: ${fileId}`)
-      } else {
-        // 업로드 실패
-        console.error(`❌ [FILE] 파일 업로드 실패: ${file.name}`, uploadResult.error)
-        alert(`${file.name} 업로드에 실패했습니다: ${uploadResult.error}`)
-
-        // 실패한 파일 제거
-        const fileIndex = uploadedFiles.value.findIndex(f => f.file === file)
-        if (fileIndex !== -1) {
-          URL.revokeObjectURL(uploadedFiles.value[fileIndex].preview)
-          uploadedFiles.value.splice(fileIndex, 1)
-        }
-      }
-
-      // 진행률 업데이트
-      uploadProgress.value = Math.round(((i + 1) / files.length) * 100)
+      uploadedFiles.value.push(fileObj)
+      console.log(`✅ [FILE] 파일 추가됨: ${file.name}`)
     }
 
-    if (uploadedFileIds.value.length > 0) {
+    if (uploadedFiles.value.length > 0) {
       errors.images = ''
     }
 
   } catch (error) {
     console.error('❌ [FILE] 파일 처리 중 오류:', error)
-    alert('파일 업로드 중 오류가 발생했습니다.')
-  } finally {
-    isUploadingFiles.value = false
-    uploadProgress.value = 0
+    alert('파일 처리 중 오류가 발생했습니다.')
   }
 }
 
 /**
- * 업로드된 이미지 삭제
+ * 이미지 삭제 (로컬에서만 제거)
  */
-const removeImage = async (index) => {
+const removeImage = (index) => {
   if (!isLoggedIn.value) return
 
   const fileObj = uploadedFiles.value[index]
 
-  // 확인 메시지
-  if (!confirm(`"${fileObj.name}" 파일을 삭제하시겠습니까?`)) {
-    return
+  // 미리보기 URL 해제
+  if (fileObj.preview) {
+    URL.revokeObjectURL(fileObj.preview)
   }
 
-  try {
-    // 파일 ID가 있으면 서버에서도 삭제 (선택사항)
-    if (fileObj.fileId) {
-      // 필요한 경우 deleteFile API 호출
-      // await deleteFile(fileObj.fileId)
+  // 파일 목록에서 제거
+  uploadedFiles.value.splice(index, 1)
 
-      // 업로드된 파일 ID 목록에서 제거
-      const fileIdIndex = uploadedFileIds.value.indexOf(fileObj.fileId)
-      if (fileIdIndex !== -1) {
-        uploadedFileIds.value.splice(fileIdIndex, 1)
-      }
-    }
+  console.log(`🗑️ [FILE] 파일 제거: ${fileObj.name}`)
 
-    // 미리보기 URL 해제
-    if (fileObj.preview) {
-      URL.revokeObjectURL(fileObj.preview)
-    }
-
-    // 파일 목록에서 제거
-    uploadedFiles.value.splice(index, 1)
-
-    console.log(`🗑️ [FILE] 파일 삭제 완료: ${fileObj.name}`)
-
-    // 파일이 없으면 에러 표시
-    if (uploadedFiles.value.length === 0) {
-      errors.images = '최소 1개의 이미지를 업로드해주세요.'
-    }
-
-  } catch (error) {
-    console.error('❌ [FILE] 파일 삭제 실패:', error)
-    alert('파일 삭제 중 오류가 발생했습니다.')
+  // 파일이 없으면 에러 표시
+  if (uploadedFiles.value.length === 0) {
+    errors.images = '최소 1개의 이미지를 업로드해주세요.'
   }
 }
 
