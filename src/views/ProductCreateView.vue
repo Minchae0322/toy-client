@@ -429,7 +429,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useProduct } from '@/services/ProductService.js'
+import { useProduct } from '@/composables/useProduct.js'
 import { useCategory } from '@/services/CategoryService.js'
 import { useFile } from '@/services/FileService.js'  // 추가
 import { useAuth } from '@/composables/useAuth.js'
@@ -453,7 +453,6 @@ const {
 const {
   createProduct,
   debugStatus,
-  formatFileSize,
   validateProductData
 } = useProduct()
 
@@ -468,7 +467,8 @@ const {
   uploadImages,
   validateFile,
   isImageFile,
-  createPreview
+  createPreview,
+  formatFileSize
 } = useFile()
 
 // 반응형 상태
@@ -747,6 +747,27 @@ const validateField = (fieldName) => {
   }
 }
 
+const validateForm = () => {
+  validateField('name')
+  validateField('brand')
+  validateField('categoryId')
+
+  // uploadedFileIds 확인
+  if (uploadedFileIds.value.length === 0) {
+    errors.images = '최소 1개의 이미지를 업로드해주세요.'
+  } else {
+    errors.images = ''
+  }
+
+  const hasErrors = Object.values(errors).some(error => error !== '')
+
+  if (hasErrors) {
+    console.log('❌ [PRODUCT] 검증 실패:', errors)
+  }
+
+  return !hasErrors
+}
+
 const validatePrice = () => {
   errors.price = ''
 
@@ -756,20 +777,6 @@ const validatePrice = () => {
     form.price = form.price.substring(0, 10)
     errors.price = '가격은 최대 10자리까지 입력할 수 있습니다.'
   }
-}
-
-const validateForm = () => {
-  validateField('name')
-  validateField('brand')
-  validateField('categoryId')
-
-  if (uploadedFileIds.value.length === 0) {
-    errors.images = '최소 1개의 이미지를 업로드해주세요.'
-  } else {
-    errors.images = ''
-  }
-
-  return Object.values(errors).every(error => !error)
 }
 
 // === 파일 처리 (파일 업로드 API 연동) ===
@@ -802,72 +809,67 @@ const handleDragLeave = () => {
   isDragOver.value = false
 }
 
-/**
- * 파일 처리 (로컬에만 저장, 실제 업로드는 제품 등록 시)
- */
+// === 파일 처리 (업로드하지 않고 미리보기만) ===
+
 const processFiles = async (files) => {
   if (!isLoggedIn.value) {
     alert('로그인이 필요합니다.')
     return
   }
 
-  // 파일 개수 제한 확인
   if (uploadedFiles.value.length + files.length > 5) {
     alert('최대 5개의 이미지만 업로드할 수 있습니다.')
     return
   }
 
-  try {
-    for (const file of files) {
-      // 이미지 파일 확인
-      if (!isImageFile(file)) {
-        alert(`${file.name}: PNG, JPG, JPEG 파일만 업로드 가능합니다.`)
-        continue
-      }
+  errors.images = ''
 
-      // 파일 크기 확인
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name}: 파일 크기는 5MB 이하만 업로드 가능합니다.`)
-        continue
-      }
-
-      // 빈 파일 확인
-      if (file.size === 0) {
-        alert(`${file.name}: 빈 파일은 업로드할 수 없습니다.`)
-        continue
-      }
-
-      // 미리보기 생성
-      const previewResult = await createPreview(file)
-      if (!previewResult.success) {
-        console.error('미리보기 생성 실패:', previewResult.error)
-        continue
-      }
-
-      // 파일 객체를 로컬에 저장 (실제 업로드는 나중에)
-      const fileObj = {
-        file,
-        name: file.name,
-        size: file.size,
-        preview: previewResult.previewUrl
-      }
-
-      uploadedFiles.value.push(fileObj)
-      console.log(`✅ [FILE] 파일 추가됨: ${file.name}`)
+  for (const file of files) {
+    if (!isImageFile(file)) {
+      alert(`${file.name}: PNG, JPG, JPEG 파일만 업로드 가능합니다.`)
+      continue
     }
 
-    if (uploadedFiles.value.length > 0) {
-      errors.images = ''
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`${file.name}: 파일 크기는 5MB 이하만 업로드 가능합니다.`)
+      continue
     }
 
-  } catch (error) {
-    console.error('❌ [FILE] 파일 처리 중 오류:', error)
-    alert('파일 처리 중 오류가 발생했습니다.')
+    if (file.size === 0) {
+      alert(`${file.name}: 빈 파일은 업로드할 수 없습니다.`)
+      continue
+    }
+
+    // 미리보기만 생성 (서버에 업로드하지 않음)
+    const previewResult = await createPreview(file)
+    if (!previewResult.success) {
+      console.error('미리보기 생성 실패:', previewResult.error)
+      continue
+    }
+
+    // 파일 객체만 저장 (업로드는 나중에)
+    uploadedFiles.value.push({
+      file: file,
+      name: file.name,
+      size: file.size,
+      preview: previewResult.previewUrl
+    })
+
+    console.log(`✅ [FILE] 파일 추가: ${file.name}`)
+  }
+
+  if (uploadedFiles.value.length > 0) {
+    errors.images = ''
+  } else {
+    errors.images = '최소 1개의 이미지를 업로드해주세요.'
   }
 }
 
 /**
  * 이미지 삭제 (로컬에서만 제거)
+ */
+/**
+ * 이미지 삭제
  */
 const removeImage = (index) => {
   if (!isLoggedIn.value) return
@@ -879,10 +881,18 @@ const removeImage = (index) => {
     URL.revokeObjectURL(fileObj.preview)
   }
 
+  // uploadedFileIds에서도 제거
+  if (fileObj.fileId) {
+    const fileIdIndex = uploadedFileIds.value.indexOf(fileObj.fileId)
+    if (fileIdIndex > -1) {
+      uploadedFileIds.value.splice(fileIdIndex, 1)
+    }
+  }
+
   // 파일 목록에서 제거
   uploadedFiles.value.splice(index, 1)
 
-  console.log(`🗑️ [FILE] 파일 제거: ${fileObj.name}`)
+  console.log(`🗑️ [FILE] 파일 제거: ${fileObj.name}, ID: ${fileObj.fileId}`)
 
   // 파일이 없으면 에러 표시
   if (uploadedFiles.value.length === 0) {
@@ -926,8 +936,6 @@ const addCustomFeature = () => {
   }
 }
 
-// === 폼 제출 ===
-
 const handleSubmit = async () => {
   console.log('📤 [PRODUCT] 폼 제출 시작')
 
@@ -944,26 +952,48 @@ const handleSubmit = async () => {
     return
   }
 
-  if (isUploadingFiles.value) {
-    alert('파일 업로드가 진행 중입니다. 잠시만 기다려주세요.')
-    return
-  }
-
-  if (!validateForm()) {
-    alert('필수 항목을 모두 입력해주세요.')
+  if (uploadedFiles.value.length === 0) {
+    alert('최소 1개 이상의 이미지를 업로드해주세요.')
     return
   }
 
   isLoading.value = true
 
   try {
-    // 선택된 특징들을 세미콜론으로 연결
+    // 1단계: 파일 업로드
+    console.log('📤 [FILE] 파일 업로드 시작')
+    const uploadedFileInfos = []
+
+    for (const fileObj of uploadedFiles.value) {
+      const uploadResult = await uploadImage(fileObj.file, 'PRODUCT')
+
+      if (!uploadResult.success) {
+        throw new Error(`파일 업로드 실패: ${uploadResult.error}`)
+      }
+
+      console.log('✅ [FILE] 업로드 완료:', uploadResult.data)
+      uploadedFileInfos.push(uploadResult.data)
+    }
+
+    // 2단계: AttachmentInfo DTO 생성
+    const attachmentFileInfos = uploadedFileInfos.map((uploadData, index) => ({
+      fileId: uploadData.id,
+      storedPath: uploadData.fileUrl,
+      originName: uploadData.orgFileNm,
+      fileSize: uploadData.fileSize,
+      contentType: uploadData.fileExt ? `image/${uploadData.fileExt}` : 'image/jpeg',
+      fileExplain: uploadData.fileExplain || '제품 이미지',
+      sortOrder: index + 1
+    }))
+
+    console.log('📦 [PRODUCT] attachmentFileInfos:', JSON.stringify(attachmentFileInfos, null, 2))
+
+    // 3단계: 제품 등록
     const allFeatures = [...selectedFeatures.value]
     if (customFeature.value.trim()) {
       allFeatures.push(customFeature.value.trim())
     }
 
-    // 백엔드 DTO에 맞춘 상품 데이터 구성
     const productData = {
       name: form.name.trim(),
       brand: form.brand.trim(),
@@ -974,14 +1004,10 @@ const handleSubmit = async () => {
       tags: selectedTags.value,
       releaseDate: form.releaseDate || null,
       categoryId: form.categoryId,
-      fileIds: uploadedFileIds.value  // 업로드된 파일 ID 배열 추가
+      attachmentFileInfos: attachmentFileInfos
     }
 
-    console.log('📦 [PRODUCT] 등록할 상품 데이터:', {
-      name: productData.name,
-      categoryId: productData.categoryId,
-      fileIds: productData.fileIds
-    })
+    console.log('📤 [PRODUCT] 최종 전송 데이터:', JSON.stringify(productData, null, 2))
 
     const response = await createProduct(productData)
 
@@ -1007,8 +1033,9 @@ const handleSubmit = async () => {
   }
 }
 
-// === 임시저장 ===
-
+/**
+ * 임시저장
+ */
 const saveDraft = () => {
   if (!isLoggedIn.value) return
 
@@ -1020,15 +1047,25 @@ const saveDraft = () => {
     selectedFeatures: [...selectedFeatures.value],
     selectedTags: [...selectedTags.value],
     customFeature: customFeature.value,
-    uploadedFileIds: [...uploadedFileIds.value]  // 파일 ID도 저장
+    uploadedFiles: uploadedFiles.value.map(f => ({
+      id: f.id,
+      fileUrl: f.fileUrl,
+      orgFileNm: f.orgFileNm,
+      storeFileNm: f.storeFileNm,
+      fileSize: f.fileSize,
+      fileExt: f.fileExt,
+      fileExplain: f.fileExplain
+    }))
   }
 
   localStorage.setItem('productFormDraft', JSON.stringify(draftData))
   console.log('💾 [PRODUCT] 임시저장 완료')
-
   alert('현재 입력 내용이 임시저장되었습니다.')
 }
 
+/**
+ * 임시저장 복원
+ */
 const restoreDraft = () => {
   if (!isLoggedIn.value) return
 
@@ -1039,7 +1076,6 @@ const restoreDraft = () => {
 
       if (draftData.userId && draftData.userId !== userId.value) {
         console.log('⚠️ [PRODUCT] 다른 사용자의 임시저장 데이터')
-
         if (confirm('다른 계정에서 작성된 임시저장 데이터입니다. 삭제하시겠습니까?')) {
           localStorage.removeItem('productFormDraft')
         }
@@ -1057,8 +1093,11 @@ const restoreDraft = () => {
       if (draftData.customFeature) {
         customFeature.value = draftData.customFeature
       }
-      if (draftData.uploadedFileIds) {
-        uploadedFileIds.value = draftData.uploadedFileIds
+      if (draftData.uploadedFiles) {
+        uploadedFiles.value = draftData.uploadedFiles.map(f => ({
+          ...f,
+          preview: null  // 미리보기는 복원 불가 (이미 서버에 업로드됨)
+        }))
       }
 
       console.log('📥 [PRODUCT] 임시저장 데이터 복원 완료')

@@ -124,42 +124,29 @@ export function useProduct() {
     }
   }
 
-  /**
-   * 상품 등록
-   * @param {Object} productData 상품 데이터
-   * @returns {Promise<Object|null>} 등록된 상품 데이터 또는 null
-   */
   const createProduct = async (productData) => {
-    if (!productData) {
-      error.value = '상품 데이터가 필요합니다.'
-      return null
-    }
-
-    // 데이터 유효성 검증
-    const validation = validateProductData(productData)
-    if (!validation.isValid) {
-      error.value = validation.errors.join(', ')
-      return null
-    }
-
-    loading.value = true
-    clearError()
-
     try {
+      console.log('🚀 [PRODUCT] 상품 등록 시작:', productData)  // 전체 데이터 로깅
+
+      // ProductService 클래스의 createProduct 메서드 직접 호출
       const response = await productService.createProduct(productData)
 
-      if (response.success && response.data) {
-        // 등록 성공 시 목록에 추가 (선택사항)
-        // products.value.unshift(response.data)
-        return response.data
+      if (response.success) {
+        console.log('✅ [PRODUCT] 상품 등록 성공:', response.data?.id || '알 수 없음')
+        return {
+          success: true,
+          data: response.data,
+          message: '상품이 성공적으로 등록되었습니다.'
+        }
       } else {
         throw new Error(response.error || '상품 등록에 실패했습니다.')
       }
-    } catch (err) {
-      handleError(err, '상품 등록')
-      return null
-    } finally {
-      loading.value = false
+    } catch (error) {
+      console.error('❌ [PRODUCT] 상품 등록 실패:', error)
+      return {
+        success: false,
+        error: error.message || '상품 등록 중 오류가 발생했습니다.'
+      }
     }
   }
 
