@@ -21,6 +21,7 @@ class ProductService extends BaseApiService {
       throw new Error(validation.errors.join(', '))
     }
 
+    // thumbnailAttachmentInfo와 attachmentFileInfos 분리
     const requestData = {
       name: productData.name.trim(),
       brand: productData.brand.trim(),
@@ -31,10 +32,12 @@ class ProductService extends BaseApiService {
       releaseDate: productData.releaseDate || null,
       feature: productData.feature?.trim() || null,
       tags: productData.tags || [],
-      attachmentFileInfos: productData.attachmentFileInfos || []
+      thumbnailAttachmentInfo: productData.thumbnailAttachmentInfo || null,  // 대표 이미지
+      attachmentFileInfos: productData.attachmentFileInfos || []  // 추가 첨부파일
     }
 
     console.log('📤 [PRODUCT_SERVICE] 최종 전송 데이터:', JSON.stringify(requestData, null, 2))
+    console.log('🖼️ [PRODUCT_SERVICE] thumbnailAttachmentInfo:', requestData.thumbnailAttachmentInfo)
     console.log('📎 [PRODUCT_SERVICE] attachmentFileInfos:', requestData.attachmentFileInfos)
 
     return await this.post('/products', requestData)
@@ -236,6 +239,57 @@ class ProductService extends BaseApiService {
     return validated
   }
 
+  // services/ProductService.js 내부에 추가
+
+  /**
+   * 상품 목록 응답 데이터 정규화
+   * 백엔드 응답 구조를 프론트엔드에서 사용하기 쉽게 변환
+   */
+  normalizeProductListResponse(products) {
+    if (!Array.isArray(products)) return []
+
+    return products.map(product => ({
+      ...product,
+      // thumbnailDto를 thumbnailUrl로도 매핑 (하위 호환성)
+      thumbnailUrl: product.thumbnailDto?.fileUrl || product.thumbnailUrl || null,
+      // 썸네일 정보 보존
+      thumbnail: product.thumbnailDto ? {
+        id: product.thumbnailDto.id,
+        fileUrl: product.thumbnailDto.fileUrl,
+        orgFileNm: product.thumbnailDto.orgFileNm,
+        fileSize: product.thumbnailDto.fileSize,
+        contentType: product.thumbnailDto.contentType
+      } : null
+    }))
+  }
+
+  async getProducts(searchCondition = {}, pageable = {}) {
+    const validatedCondition = this.validateSearchCondition(searchCondition)
+    const validatedPageable = this.validatePageable(pageable)
+    const cleanedCondition = this.removeEmptyParams(validatedCondition)
+    const cleanedPageable = this.removeEmptyParams(validatedPageable)
+
+    const params = {
+      ...cleanedCondition,
+      ...cleanedPageable
+    }
+
+    const response = await this.get('/products', params)
+
+    // 응답 데이터 정규화
+    if (response.success && response.data) {
+      if (response.data.content) {
+        // 페이징 응답
+        response.data.content = this.normalizeProductListResponse(response.data.content)
+      } else if (Array.isArray(response.data)) {
+        // 배열 응답
+        response.data = this.normalizeProductListResponse(response.data)
+      }
+    }
+
+    return response
+  }
+
   validatePageable(pageable) {
     if (!pageable || typeof pageable !== 'object') {
       return {
@@ -287,6 +341,8 @@ class ProductService extends BaseApiService {
     console.groupEnd()
   }
 }
+
+
 
 // 싱글톤 인스턴스만 export
 export const productService = new ProductService()
@@ -420,4 +476,6 @@ export const productUtils = {
 
     return date.toLocaleDateString('ko-KR')
   }
+
+
 }

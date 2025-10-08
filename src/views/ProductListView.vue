@@ -207,11 +207,12 @@
                 @click="goToProductDetail(product.id)"
             >
               <div class="product-image">
+                <!-- 썸네일 이미지 표시 로직 수정 -->
                 <img
-                    v-if="product.thumbnailUrl"
-                    :src="product.thumbnailUrl"
+                    v-if="getThumbnailUrl(product)"
+                    :src="getThumbnailUrl(product)"
                     :alt="product.name"
-                    @error="onImageError"
+                    @error="handleImageError"
                 >
                 <div v-else class="product-placeholder">
                   {{ getProductEmoji(product.categoryName) }}
@@ -765,6 +766,40 @@ const toggleLike = async (productId) => {
 }
 
 // ==================== 유틸리티 메서드 ====================
+/**
+ * 썸네일 URL 가져오기 (백엔드 응답 구조에 맞춤)
+ */
+const getThumbnailUrl = (product) => {
+  // 1. thumbnailDto가 있는 경우 (백엔드 응답 구조)
+  if (product.thumbnailDto?.fileUrl) {
+    return product.thumbnailDto.fileUrl
+  }
+
+  // 2. thumbnailUrl이 직접 있는 경우 (레거시 지원)
+  if (product.thumbnailUrl) {
+    return product.thumbnailUrl
+  }
+
+  // 3. attachments 배열에서 첫 번째 이미지 사용 (대체)
+  if (product.attachments && product.attachments.length > 0) {
+    return product.attachments[0].fileUrl
+  }
+
+  return null
+}
+
+/**
+ * 이미지 로딩 에러 처리
+ */
+const handleImageError = (event) => {
+  console.warn('[PRODUCT] 이미지 로딩 실패:', event.target.src)
+  // 이미지를 숨기고 placeholder 표시
+  event.target.style.display = 'none'
+  const placeholder = event.target.nextElementSibling
+  if (placeholder && placeholder.classList.contains('product-placeholder')) {
+    placeholder.style.display = 'flex'
+  }
+}
 
 const formatRating = (rating) => {
   if (!rating) return '0.0'
@@ -791,13 +826,15 @@ const getProductBadge = (productType) => {
     'FREE': '🆓 무료나눔',
     'EXCHANGE': '🔄 교환'
   }
-  return badgeMap[productType] || '❌ 정보만'
+  return badgeMap[productType] || '💰 거래가능'
 }
 
 const getRandomDistance = () => {
   const distances = ['100m', '200m', '300m', '500m', '750m', '900m', '1.2km']
   return distances[Math.floor(Math.random() * distances.length)] + ' 이내'
 }
+
+
 
 const onImageError = (event) => {
   event.target.style.display = 'none'
@@ -831,6 +868,9 @@ onMounted(async () => {
 
   console.log('✅ [PRODUCT-LIST] 모든 데이터 로드 완료')
 })
+
+
+
 
 // ==================== 감시자 ====================
 

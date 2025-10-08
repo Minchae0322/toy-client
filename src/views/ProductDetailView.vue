@@ -346,9 +346,23 @@ const currentImage = computed(() => {
 })
 
 const imageFiles = computed(() => {
-  return product.value?.attachmentFiles?.filter(file =>
-      file.mimeType?.startsWith('image/')
-  ) || []
+  if (!product.value?.attachmentFiles) return []
+
+  return product.value.attachmentFiles.filter(file => {
+    // contentType이 있으면 사용
+    if (file.contentType) {
+      return file.contentType.startsWith('image/')
+    }
+
+    // contentType이 없으면 파일 확장자로 판단
+    if (file.orgFileNm) {
+      const ext = file.orgFileNm.split('.').pop().toLowerCase()
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)
+    }
+
+    // 둘 다 없으면 일단 포함 (fileUrl이 있으면 표시)
+    return file.fileUrl != null
+  })
 })
 
 const hasDetailInfo = computed(() => {

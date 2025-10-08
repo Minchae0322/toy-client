@@ -126,9 +126,16 @@ export function useProduct() {
 
   const createProduct = async (productData) => {
     try {
-      console.log('🚀 [PRODUCT] 상품 등록 시작:', productData)  // 전체 데이터 로깅
+      console.log('🚀 [PRODUCT] 상품 등록 시작:', productData)
 
-      // ProductService 클래스의 createProduct 메서드 직접 호출
+      // 대표 이미지 필수 검증
+      if (!productData.thumbnailAttachmentInfo) {
+        return {
+          success: false,
+          error: '대표 이미지는 필수입니다.'
+        }
+      }
+
       const response = await productService.createProduct(productData)
 
       if (response.success) {
@@ -406,7 +413,10 @@ export function useProduct() {
       errors.push('카테고리는 필수입니다.')
     }
 
-    // productType 검증 제거 - 백엔드 DTO에 없음
+    // 대표 이미지 필수 검증
+    if (!productData.thumbnailAttachmentInfo) {
+      errors.push('대표 이미지는 필수입니다.')
+    }
 
     // 선택적 필드 검증
     if (productData.description && productData.description.length > 1000) {
