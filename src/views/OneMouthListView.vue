@@ -1,141 +1,233 @@
 <!-- TradeListPage.vue -->
 <template>
   <div class="app-container">
-    <!-- 헤더 -->
-    <header class="header">
-      <div class="header-content">
-        <div class="logo" @click="goToHome">
-          <div class="logo-icon">🛒</div>
-          <span>편의점 거래</span>
-        </div>
-        <nav class="nav-menu">
-          <div class="nav-item active">개인거래</div>
-          <div class="nav-item">공식제품</div>
-          <div class="nav-item">커뮤니티</div>
-        </nav>
-        <div class="header-actions">
-          <button class="btn-secondary">로그인</button>
-          <button class="btn-primary" @click="handleSellClick">판매하기</button>
-        </div>
-      </div>
-    </header>
 
-    <!-- 히어로 섹션 - 심플하게 -->
-    <section class="hero">
-      <div class="hero-content">
-        <h1 class="hero-title">편의점 제품 개인거래</h1>
-        <p class="hero-subtitle">필요한 사람에게, 합리적인 가격으로</p>
-      </div>
-    </section>
+    <!-- 메인 컨텐츠 -->
+    <div class="main-wrapper">
+      <!-- 왼쪽 사이드바 - 카테고리 -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2 class="sidebar-title">카테고리</h2>
+        </div>
 
-    <!-- 필터 섹션 -->
-    <div class="container">
-      <div class="filter-section">
-        <div class="filter-controls">
-          <div class="filter-group">
-            <select class="filter-select" v-model="searchCondition.oneMouthStatus">
-              <option value="">전체 상태</option>
-              <option value="ON_SALE">판매중</option>
-              <option value="RESERVED">예약중</option>
-              <option value="SOLD_OUT">판매완료</option>
-            </select>
+        <div class="category-list">
+          <div
+              class="category-item"
+              :class="{ active: searchCondition.categoryId === '' }"
+              @click="selectCategory('')"
+          >
+            <span class="category-emoji">📋</span>
+            <span class="category-name">전체</span>
           </div>
-          <div class="filter-group">
-            <select class="filter-select" v-model="searchCondition.categoryId">
-              <option value="">전체 카테고리</option>
-              <option v-for="category in categories" :key="category.categoryId" :value="category.categoryId">
-                {{ category.categoryName }}
-              </option>
-            </select>
+
+          <div
+              v-for="category in categories"
+              :key="category.categoryId"
+              class="category-item"
+              :class="{ active: searchCondition.categoryId === category.categoryId }"
+              @click="selectCategory(category.categoryId)"
+          >
+            <span class="category-emoji">{{ getCategoryEmoji(category.categoryName) }}</span>
+            <span class="category-name">{{ category.categoryName }}</span>
           </div>
-          <div class="filter-group">
-            <select class="filter-select" v-model="priceRange">
-              <option value="">가격대</option>
-              <option value="0-10000">1만원 이하</option>
-              <option value="10000-20000">1~2만원</option>
-              <option value="20000-999999">2만원 이상</option>
-            </select>
+        </div>
+
+        <!-- 거래 상태 필터 -->
+        <div class="sidebar-section">
+          <h3 class="section-title">거래 상태</h3>
+          <div class="filter-list">
+            <label class="filter-label">
+              <input
+                  type="radio"
+                  name="status"
+                  value=""
+                  v-model="searchCondition.oneMouthStatus"
+                  class="filter-radio"
+              />
+              <span>전체 상태</span>
+            </label>
+            <label class="filter-label">
+              <input
+                  type="radio"
+                  name="status"
+                  value="ON_SALE"
+                  v-model="searchCondition.oneMouthStatus"
+                  class="filter-radio"
+              />
+              <span>판매중</span>
+            </label>
+            <label class="filter-label">
+              <input
+                  type="radio"
+                  name="status"
+                  value="RESERVED"
+                  v-model="searchCondition.oneMouthStatus"
+                  class="filter-radio"
+              />
+              <span>예약중</span>
+            </label>
+            <label class="filter-label">
+              <input
+                  type="radio"
+                  name="status"
+                  value="SOLD_OUT"
+                  v-model="searchCondition.oneMouthStatus"
+                  class="filter-radio"
+              />
+              <span>판매완료</span>
+            </label>
           </div>
-          <div class="filter-group">
+        </div>
+
+        <!-- 가격대 필터 -->
+        <div class="sidebar-section">
+          <h3 class="section-title">가격대</h3>
+          <div class="filter-list">
+            <label class="filter-label">
+              <input
+                  type="radio"
+                  name="price"
+                  value=""
+                  v-model="priceRange"
+                  class="filter-radio"
+              />
+              <span>전체 가격</span>
+            </label>
+            <label class="filter-label">
+              <input
+                  type="radio"
+                  name="price"
+                  value="0-10000"
+                  v-model="priceRange"
+                  class="filter-radio"
+              />
+              <span>1만원 이하</span>
+            </label>
+            <label class="filter-label">
+              <input
+                  type="radio"
+                  name="price"
+                  value="10000-20000"
+                  v-model="priceRange"
+                  class="filter-radio"
+              />
+              <span>1~2만원</span>
+            </label>
+            <label class="filter-label">
+              <input
+                  type="radio"
+                  name="price"
+                  value="20000-999999"
+                  v-model="priceRange"
+                  class="filter-radio"
+              />
+              <span>2만원 이상</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 지역 검색 -->
+        <div class="sidebar-section">
+          <h3 class="section-title">지역</h3>
+          <div class="search-box">
+            <span class="search-icon">📍</span>
             <input
                 type="text"
-                class="filter-input"
+                class="search-input"
                 v-model="searchCondition.tradeLocation"
                 placeholder="지역 검색"
             />
           </div>
         </div>
-        <div class="sort-tabs">
-          <button
-              v-for="sort in sortOptions"
-              :key="sort.value"
-              class="sort-tab"
-              :class="{ active: currentSort === sort.value }"
-              @click="changeSort(sort.value)"
-          >
-            {{ sort.label }}
-          </button>
-        </div>
-      </div>
-    </div>
+      </aside>
 
-    <!-- 로딩 상태 -->
-    <div v-if="initialLoading" class="loading-container">
-      <div class="loading-spinner"></div>
-    </div>
-
-    <!-- 거래 그리드 -->
-    <div v-else-if="trades.length > 0" class="trade-grid-wrapper">
-      <div class="trade-grid" ref="tradeGrid">
-        <div
-            v-for="trade in trades"
-            :key="trade.oneMouthId"
-            class="trade-card"
-            @click="viewDetail(trade.oneMouthId)"
-        >
-          <div class="trade-image-wrapper">
-            <div class="trade-image" v-if="!trade.thumbnailUrl">
-              {{ getCategoryEmoji(trade.categoryName) }}
-            </div>
-            <img
-                v-else
-                :src="trade.thumbnailUrl"
-                :alt="trade.title"
-                class="trade-image-real"
+      <!-- 오른쪽 메인 컨텐츠 -->
+      <main class="main-content">
+        <!-- 검색 및 정렬 바 -->
+        <div class="toolbar">
+          <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input
+                type="text"
+                class="search-bar-input"
+                v-model="searchKeyword"
+                placeholder="상품명, 키워드 검색"
+                @keyup.enter="resetAndFetch"
             />
-            <div class="trade-badge" v-if="trade.oneMouthStatus !== 'ON_SALE'">
-              {{ getStatusText(trade.oneMouthStatus) }}
-            </div>
           </div>
-          <div class="trade-content">
-            <h3 class="trade-title">{{ trade.title }}</h3>
-            <div class="trade-price">{{ formatPrice(trade.sellingPrice) }}</div>
-            <div class="trade-meta">
-              <span class="meta-item">📍 {{ trade.tradeLocation || '지역미정' }}</span>
-              <span class="meta-item">👁 {{ trade.viewCount }}</span>
-              <span class="meta-item">❤️ {{ trade.favoriteCount }}</span>
-            </div>
+
+          <div class="sort-tabs">
+            <button
+                v-for="sort in sortOptions"
+                :key="sort.value"
+                class="sort-tab"
+                :class="{ active: currentSort === sort.value }"
+                @click="changeSort(sort.value)"
+            >
+              {{ sort.label }}
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- 인피니티 스크롤 로딩 -->
-      <div v-if="loading" class="infinite-loading">
-        <div class="loading-spinner small"></div>
-      </div>
+        <!-- 로딩 상태 -->
+        <div v-if="initialLoading" class="loading-container">
+          <div class="loading-spinner"></div>
+        </div>
 
-      <!-- 더 이상 데이터 없음 -->
-      <div v-if="!hasMore && trades.length > 0" class="no-more-data">
-        모든 상품을 확인했습니다
-      </div>
-    </div>
+        <!-- 거래 그리드 -->
+        <div v-else-if="trades.length > 0" class="trade-grid-wrapper">
+          <div class="trade-grid" ref="tradeGrid">
+            <div
+                v-for="trade in trades"
+                :key="trade.oneMouthId"
+                class="trade-card"
+                @click="viewDetail(trade.oneMouthId)"
+            >
+              <div class="trade-image-wrapper">
+                <div class="trade-image" v-if="!trade.thumbnailUrl">
+                  {{ getCategoryEmoji(trade.categoryName) }}
+                </div>
+                <img
+                    v-else
+                    :src="trade.thumbnailUrl"
+                    :alt="trade.title"
+                    class="trade-image-real"
+                />
+                <div class="trade-badge" v-if="trade.oneMouthStatus !== 'ON_SALE'">
+                  {{ getStatusText(trade.oneMouthStatus) }}
+                </div>
+              </div>
+              <div class="trade-content">
+                <h3 class="trade-title">{{ trade.title }}</h3>
+                <div class="trade-price">{{ formatPrice(trade.sellingPrice) }}</div>
+                <div class="trade-meta">
+                  <span class="meta-item">📍 {{ trade.tradeLocation || '지역미정' }}</span>
+                  <span class="meta-item">👁 {{ trade.viewCount }}</span>
+                  <span class="meta-item">❤️ {{ trade.favoriteCount }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    <!-- 빈 상태 -->
-    <div v-else class="empty-container">
-      <div class="empty-icon">📦</div>
-      <h2>등록된 상품이 없습니다</h2>
-      <p>첫 번째 상품을 등록해보세요</p>
-      <button class="btn-primary" @click="handleSellClick">상품 등록하기</button>
+          <!-- 인피니티 스크롤 로딩 -->
+          <div v-if="loading" class="infinite-loading">
+            <div class="loading-spinner small"></div>
+          </div>
+
+          <!-- 더 이상 데이터 없음 -->
+          <div v-if="!hasMore && trades.length > 0" class="no-more-data">
+            모든 상품을 확인했습니다
+          </div>
+        </div>
+
+        <!-- 빈 상태 -->
+        <div v-else class="empty-container">
+          <div class="empty-icon">📦</div>
+          <h2>등록된 상품이 없습니다</h2>
+          <p>첫 번째 상품을 등록해보세요</p>
+          <button class="btn-primary" @click="handleSellClick">상품 등록하기</button>
+        </div>
+      </main>
     </div>
 
     <!-- 플로팅 버튼 -->
@@ -172,6 +264,7 @@ const searchCondition = ref({
   maxPrice: null
 });
 
+const searchKeyword = ref('');
 const priceRange = ref('');
 const currentSort = ref('latest');
 
@@ -196,6 +289,11 @@ const fetchTrades = async (page = 0, append = false) => {
       sort: sortOption?.sort || 'createdAt,DESC',
       ...searchCondition.value
     };
+
+    // 검색 키워드 추가
+    if (searchKeyword.value) {
+      params.keyword = searchKeyword.value;
+    }
 
     // 빈 값 제거
     Object.keys(params).forEach(key => {
@@ -239,6 +337,11 @@ const fetchCategories = async () => {
     console.error('카테고리 조회 실패:', error);
     categories.value = [];
   }
+};
+
+const selectCategory = (categoryId) => {
+  searchCondition.value.categoryId = categoryId;
+  resetAndFetch();
 };
 
 const loadMore = async () => {
@@ -339,10 +442,6 @@ watch(() => searchCondition.value.oneMouthStatus, () => {
   resetAndFetch();
 });
 
-watch(() => searchCondition.value.categoryId, () => {
-  resetAndFetch();
-});
-
 let locationTimeout = null;
 watch(() => searchCondition.value.tradeLocation, () => {
   if (locationTimeout) {
@@ -389,10 +488,10 @@ onUnmounted(() => {
   background: #fafafa;
   color: var(--secondary);
   line-height: 1.6;
-  min-width: 1200px;
+  min-height: 100vh;
 }
 
-/* 헤더 - 심플하게 */
+/* 헤더 */
 .header {
   background: white;
   border-bottom: 1px solid var(--border);
@@ -402,9 +501,9 @@ onUnmounted(() => {
 }
 
 .header-content {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 20px 60px;
+  padding: 20px 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -494,80 +593,193 @@ onUnmounted(() => {
   color: var(--primary);
 }
 
-.container {
-  max-width: 1400px;
+/* 메인 래퍼 */
+.main-wrapper {
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 0 60px;
+  display: flex;
+  gap: 24px;
+  padding: 24px 40px;
+  align-items: flex-start;
 }
 
-/* 히어로 - 미니멀하게 */
-.hero {
-  padding: 60px 60px 40px;
-  text-align: center;
+/* 사이드바 */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
   background: white;
-  border-bottom: 1px solid var(--border);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  height: fit-content;
 }
 
-.hero-title {
-  font-size: 36px;
+/* 스크롤바 숨기기 */
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sidebar-header {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sidebar-title {
+  fontSize: 18px;
   font-weight: 700;
-  color: var(--secondary);
+  color: #000;
+  margin: 0;
+}
+
+.category-list {
+  padding: 12px 0;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.category-item:hover {
+  background: #f9f9f9;
+}
+
+.category-item.active {
+  background: #f0fdf9;
+  border-left-color: var(--primary);
+}
+
+.category-item.active .category-name {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.category-emoji {
+  font-size: 20px;
+  width: 28px;
+  text-align: center;
+}
+
+.category-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.sidebar-section {
+  padding: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
   margin-bottom: 12px;
 }
 
-.hero-subtitle {
-  font-size: 16px;
-  color: var(--light-gray);
-  font-weight: 400;
-}
-
-/* 필터 - 깔끔하게 */
-.filter-section {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  margin: 32px auto;
-  border: 1px solid var(--border);
-}
-
-.filter-controls {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.filter-group {
+.filter-list {
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
-.filter-select,
-.filter-input {
-  padding: 10px 14px;
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  fontSize: 13px;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.filter-label:hover {
+  color: var(--primary);
+}
+
+.filter-radio {
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 14px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 400;
+  background: #fafafa;
 }
 
-.filter-select:hover,
-.filter-select:focus,
-.filter-input:hover,
-.filter-input:focus {
-  border-color: var(--primary);
+.search-icon {
+  font-size: 14px;
+  color: #999;
+}
+
+.search-input {
+  border: none;
   outline: none;
+  background: transparent;
+  fontSize: 13px;
+  flex: 1;
+  width: 100%;
+}
+
+/* 메인 컨텐츠 */
+.main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbar {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+  flex: 1;
+  max-width: 400px;
+  min-width: 250px;
+}
+
+.search-bar-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  flex: 1;
+  width: 100%;
 }
 
 .sort-tabs {
   display: flex;
   gap: 8px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-  justify-content: center;
 }
 
 .sort-tab {
@@ -593,18 +805,16 @@ onUnmounted(() => {
   border-color: var(--primary);
 }
 
-/* 거래 그리드 - 정보 위계 명확화 */
+/* 거래 그리드 */
 .trade-grid-wrapper {
   min-height: 60vh;
 }
 
 .trade-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
-  padding: 0 60px 80px;
-  max-width: 1520px;
-  margin: 0 auto;
+  margin-bottom: 40px;
 }
 
 .trade-card {
@@ -619,6 +829,7 @@ onUnmounted(() => {
 .trade-card:hover {
   border-color: #e0e0e0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
 }
 
 .trade-image-wrapper {
@@ -689,6 +900,7 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .meta-item {
@@ -696,6 +908,9 @@ onUnmounted(() => {
   color: #aaa;
   font-weight: 400;
   letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .meta-item:not(:last-child)::after {
@@ -794,41 +1009,96 @@ onUnmounted(() => {
 /* 반응형 */
 @media (max-width: 1400px) {
   .trade-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
 
 @media (max-width: 1024px) {
-  .app-container {
-    min-width: auto;
+  .main-wrapper {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    position: static;
+    max-height: none;
+  }
+
+  .category-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  .category-item {
+    justify-content: center;
   }
 
   .trade-grid {
-    grid-template-columns: repeat(2, 1fr);
-    padding: 0 40px 60px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
 
-  .filter-controls {
-    grid-template-columns: repeat(2, 1fr);
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar {
+    max-width: none;
   }
 }
 
 @media (max-width: 768px) {
+  .header-content {
+    padding: 16px 20px;
+  }
+
   .nav-menu {
     display: none;
   }
 
-  .hero-title {
-    font-size: 28px;
+  .main-wrapper {
+    padding: 16px 20px;
   }
 
   .trade-grid {
-    grid-template-columns: 1fr;
-    padding: 0 20px 60px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
   }
 
-  .filter-controls {
+  .category-list {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .sort-tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .sort-tab {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .trade-grid {
     grid-template-columns: 1fr;
+  }
+
+  .logo span {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 8px 16px;
+    font-size: 13px;
   }
 }
 </style>
