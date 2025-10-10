@@ -1,49 +1,5 @@
 <template>
   <div class="product-list-view">
-    <!-- 헤더 -->
-    <header class="header">
-      <div class="header-container">
-        <router-link to="/" class="logo">
-          <div class="logo-icon">🍽️</div>
-          한입만
-        </router-link>
-
-        <div class="search-container">
-          <input
-              type="text"
-              class="search-input"
-              placeholder="먹거리, 브랜드를 검색해보세요"
-              v-model="searchCondition.keyword"
-              @keyup.enter="handleSearch"
-          >
-          <div class="search-icon">🔍</div>
-        </div>
-
-        <div class="header-actions">
-          <button class="location-btn">
-            📍 강남구
-          </button>
-
-          <!-- 로그인된 사용자만 알림 버튼 표시 -->
-          <button v-if="isLoggedIn" class="notification-btn">
-            🔔
-            <div class="notification-badge">3</div>
-          </button>
-
-          <!-- 로그인/로그아웃 버튼 -->
-          <div class="auth-section">
-            <div v-if="isLoggedIn" class="user-info">
-              <span class="user-greeting">안녕하세요, {{ userNickname }}님</span>
-              <button class="logout-btn" @click="handleLogout">로그아웃</button>
-            </div>
-            <router-link v-else to="/login" class="login-btn">
-              로그인
-            </router-link>
-          </div>
-        </div>
-      </div>
-    </header>
-
     <!-- 메인 컨테이너 -->
     <div class="main-container">
       <!-- 왼쪽 사이드바 -->
@@ -56,7 +12,7 @@
                 :class="{ active: !searchCondition.categoryId }"
                 @click="selectCategory(null)"
             >
-              🔥 전체
+              전체
             </li>
             <li
                 v-for="category in categories"
@@ -65,8 +21,8 @@
                 :class="{ active: searchCondition.categoryId === category.categoryId }"
                 @click="selectCategory(category.categoryId)"
             >
-              {{ getCategoryIcon(category.categoryName) }} {{ category.categoryName }}
-              <span class="product-count" v-if="category.productCount">({{ category.productCount }})</span>
+              {{ category.categoryName }}
+              <span class="product-count" v-if="category.productCount">{{ category.productCount }}</span>
             </li>
           </ul>
         </div>
@@ -105,7 +61,6 @@
           </ul>
         </div>
 
-        <!-- 로그인한 사용자만 마이페이지 섹션 표시 -->
         <div v-if="isLoggedIn" class="sidebar-section">
           <div class="sidebar-title">마이페이지</div>
           <ul class="category-list">
@@ -124,49 +79,35 @@
 
       <!-- 메인 콘텐츠 -->
       <main class="main-content">
-        <!-- 탭 네비게이션 -->
-        <div class="tab-nav">
-          <div class="tab-content">
-            <div class="tab-list">
-              <button
-                  class="tab"
-                  :class="{ active: activeTab === 'trending' }"
-                  @click="setActiveTab('trending')"
-              >
-                <span class="tab-icon">🔥</span>
-                <span>트렌딩</span>
-              </button>
-              <button
-                  class="tab"
-                  :class="{ active: activeTab === 'nearby' }"
-                  @click="setActiveTab('nearby')"
-              >
-                <span class="tab-icon">📍</span>
-                <span>내 근처</span>
-              </button>
-              <button
-                  class="tab"
-                  :class="{ active: activeTab === 'new' }"
-                  @click="setActiveTab('new')"
-              >
-                <span class="tab-icon">💫</span>
-                <span>신상품</span>
-              </button>
-              <button
-                  v-if="isLoggedIn"
-                  class="tab"
-                  :class="{ active: activeTab === 'recent' }"
-                  @click="setActiveTab('recent')"
-              >
-                <span class="tab-icon">⏰</span>
-                <span>최근 본</span>
-              </button>
-            </div>
-            <div v-if="isLoggedIn" class="action-section">
-              <router-link to="/products/create" class="create-product-btn">
-                <span>➕</span>
-                <span>상품 등록</span>
-              </router-link>
+        <!-- 탭 네비게이션 + 검색 + 액션 -->
+        <div class="top-section">
+          <div class="tab-nav">
+            <div class="tab-content">
+              <!-- 검색 영역 -->
+              <div class="search-container">
+                <div class="search-icon">🔍</div>
+                <input
+                    type="text"
+                    class="search-input"
+                    placeholder="먹거리, 브랜드를 검색해보세요"
+                    v-model="searchCondition.keyword"
+                    @keyup.enter="handleSearch"
+                >
+                <button
+                    v-if="searchCondition.keyword"
+                    class="clear-btn"
+                    @click="clearSearch"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div v-if="isLoggedIn" class="action-section">
+                <router-link to="/products/create" class="create-product-btn">
+                  <span class="btn-icon">➕</span>
+                  <span class="btn-text">상품 등록</span>
+                </router-link>
+              </div>
             </div>
           </div>
         </div>
@@ -185,17 +126,35 @@
                 {{ option.label }}
               </button>
             </div>
+
+            <div v-if="totalElements > 0" class="result-count">
+              총 <strong>{{ totalElements.toLocaleString() }}</strong>개
+            </div>
           </div>
 
           <!-- 로딩 상태 -->
           <div v-if="loading" class="loading-container">
-            <div class="loading-spinner">로딩 중...</div>
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <p>로딩 중...</p>
+            </div>
           </div>
 
           <!-- 에러 상태 -->
           <div v-else-if="error" class="error-container">
+            <div class="error-icon">⚠️</div>
             <p>{{ error }}</p>
             <button @click="loadProducts" class="retry-btn">다시 시도</button>
+          </div>
+
+          <!-- 검색 결과 없음 -->
+          <div v-else-if="products.length === 0" class="empty-container">
+            <div class="empty-icon">🔍</div>
+            <h3>검색 결과가 없습니다</h3>
+            <p>다른 키워드로 검색해보세요</p>
+            <button @click="clearSearch" class="clear-search-btn">
+              검색 초기화
+            </button>
           </div>
 
           <!-- 상품 그리드 -->
@@ -207,7 +166,6 @@
                 @click="goToProductDetail(product.id)"
             >
               <div class="product-image">
-                <!-- 썸네일 이미지 표시 로직 수정 -->
                 <img
                     v-if="getThumbnailUrl(product)"
                     :src="getThumbnailUrl(product)"
@@ -244,6 +202,13 @@
           <!-- 페이지네이션 -->
           <div v-if="totalPages > 1" class="pagination">
             <button
+                class="page-nav-btn"
+                :disabled="currentPage === 0"
+                @click="goToPage(currentPage - 1)"
+            >
+              ‹
+            </button>
+            <button
                 v-for="page in visiblePages"
                 :key="page"
                 class="page-btn"
@@ -251,6 +216,13 @@
                 @click="goToPage(page - 1)"
             >
               {{ page }}
+            </button>
+            <button
+                class="page-nav-btn"
+                :disabled="currentPage === totalPages - 1"
+                @click="goToPage(currentPage + 1)"
+            >
+              ›
             </button>
           </div>
         </div>
@@ -300,7 +272,6 @@
           </div>
         </div>
 
-        <!-- 로그인한 사용자에게만 개인화된 위젯 표시 -->
         <div v-if="isLoggedIn" class="widget">
           <div class="widget-title">👤 나만의 정보</div>
           <div class="user-stats">
@@ -319,7 +290,6 @@
           </div>
         </div>
 
-        <!-- 카테고리 통계 위젯 -->
         <div class="widget">
           <div class="widget-title">📊 카테고리별 현황</div>
           <div
@@ -370,10 +340,8 @@ import { useAuth } from '@/composables/useAuth.js'
 import { productService, productUtils, productFilterUtils } from '@/services/productService.js'
 import { categoryService, categoryUtils, useCategory } from '@/services/CategoryService.js'
 
-// Router
 const router = useRouter()
 
-// Auth Composable
 const {
   user,
   isLoggedIn,
@@ -382,7 +350,6 @@ const {
   logout
 } = useAuth()
 
-// Category composable 사용
 const {
   getCategories,
   getAllCategoriesStats,
@@ -405,18 +372,15 @@ const totalPages = ref(0)
 const totalElements = ref(0)
 const showLoginModal = ref(false)
 
-// 사용자 통계 (로그인한 사용자만)
 const userStats = ref({
   likedCount: 0,
   reviewCount: 0,
   productCount: 0
 })
 
-// 검색 조건
 const searchCondition = reactive(productFilterUtils.getDefaultSearchCondition())
 const pageable = reactive(productFilterUtils.getDefaultPageable())
 
-// 필터
 const filters = reactive({
   tradeAvailable: false,
   nearby: false,
@@ -424,10 +388,8 @@ const filters = reactive({
   newProduct: false
 })
 
-// 정렬 옵션
 const sortOptions = computed(() => productFilterUtils.getSortOptions())
 
-// 페이지네이션
 const visiblePages = computed(() => {
   const pages = []
   const start = Math.max(1, currentPage.value - 2)
@@ -439,14 +401,18 @@ const visiblePages = computed(() => {
   return pages
 })
 
-// ==================== 인증 관련 메서드 ====================
+// 검색 초기화
+const clearSearch = () => {
+  searchCondition.keyword = ''
+  handleSearch()
+}
 
-const handleLogout = async () => {
-  if (confirm('정말 로그아웃하시겠습니까?')) {
-    await logout()
-    // 로그아웃 후 페이지 새로고침
-    window.location.reload()
+const handleLikeAction = async (productId) => {
+  if (!isLoggedIn.value) {
+    showLoginRequiredModal()
+    return
   }
+  await toggleLike(productId)
 }
 
 const showLoginRequiredModal = () => {
@@ -457,23 +423,9 @@ const closeLoginModal = () => {
   showLoginModal.value = false
 }
 
-const handleLikeAction = async (productId) => {
-  // 로그인하지 않은 사용자는 모달 표시
-  if (!isLoggedIn.value) {
-    showLoginRequiredModal()
-    return
-  }
-
-  // 로그인한 사용자는 좋아요 처리
-  await toggleLike(productId)
-}
-
 const loadUserStats = async () => {
   if (!isLoggedIn.value || !userId.value) return
-
   try {
-    // 실제로는 사용자 통계 API 호출
-    // 여기서는 샘플 데이터 사용
     userStats.value = {
       likedCount: Math.floor(Math.random() * 50) + 1,
       reviewCount: Math.floor(Math.random() * 30) + 1,
@@ -484,34 +436,23 @@ const loadUserStats = async () => {
   }
 }
 
-// ==================== 네비게이션 메서드 ====================
-
 const goToMyProducts = () => {
-  if (isLoggedIn.value) {
-    router.push('/my/products')
-  }
+  if (isLoggedIn.value) router.push('/my/products')
 }
 
 const goToLikedProducts = () => {
-  if (isLoggedIn.value) {
-    router.push('/my/liked')
-  }
+  if (isLoggedIn.value) router.push('/my/liked')
 }
 
 const goToMyReviews = () => {
-  if (isLoggedIn.value) {
-    router.push('/my/reviews')
-  }
+  if (isLoggedIn.value) router.push('/my/reviews')
 }
-
-// ==================== 상품 관련 메서드 ====================
 
 const loadProducts = async () => {
   try {
     loading.value = true
     error.value = null
 
-    // 로그인된 사용자의 경우 개인화된 정보 포함
     const enhancedSearchCondition = {
       ...searchCondition,
       userId: isLoggedIn.value ? userId.value : null
@@ -521,18 +462,15 @@ const loadProducts = async () => {
 
     if (response.success && response.data) {
       if (response.data.content) {
-        // 페이징 응답 처리
         products.value = response.data.content
         totalPages.value = response.data.totalPages || 1
         totalElements.value = response.data.totalElements || 0
         currentPage.value = response.data.pageable?.page || 0
 
-        // 로그인한 사용자의 좋아요 정보 로드
         if (isLoggedIn.value) {
           loadUserLikedProducts(response.data.content)
         }
       } else {
-        // 단순 배열 응답 처리
         products.value = Array.isArray(response.data) ? response.data : []
       }
     } else {
@@ -542,7 +480,6 @@ const loadProducts = async () => {
     console.error('상품 로딩 실패:', err)
     error.value = err.message
 
-    // 개발 환경에서 샘플 데이터 사용
     if (import.meta.env.DEV) {
       const sampleData = productService.getSampleProducts()
       products.value = sampleData.data.content || []
@@ -555,12 +492,9 @@ const loadProducts = async () => {
 
 const loadUserLikedProducts = (productList) => {
   if (!isLoggedIn.value) return
-
-  // 실제로는 사용자의 좋아요 정보를 API에서 가져옴
-  // 여기서는 랜덤하게 생성
   const newLikedProducts = new Set()
   productList.forEach(product => {
-    if (Math.random() > 0.7) { // 30% 확률로 좋아요 상태
+    if (Math.random() > 0.7) {
       newLikedProducts.add(product.id)
     }
   })
@@ -580,7 +514,6 @@ const loadTopProducts = async () => {
     }
   } catch (err) {
     console.error('인기 상품 로딩 실패:', err)
-    // 기본 상품에서 상위 5개 사용
     topProducts.value = products.value.slice(0, 5)
   }
 }
@@ -606,8 +539,6 @@ const loadNearbyProducts = async () => {
     }
   }
 }
-
-// ==================== 카테고리 관련 메서드 ====================
 
 const loadCategories = async () => {
   try {
@@ -668,8 +599,6 @@ const selectCategory = (categoryId) => {
   loadProducts()
 }
 
-// ==================== 필터 및 정렬 메서드 ====================
-
 const toggleFilter = (filterType) => {
   filters[filterType] = !filters[filterType]
   applyFilters()
@@ -687,45 +616,12 @@ const applyFilters = () => {
   loadProducts()
 }
 
-const setActiveTab = (tab) => {
-  // 로그인하지 않은 사용자가 '최근 본' 탭 클릭 시
-  if (tab === 'recent' && !isLoggedIn.value) {
-    showLoginRequiredModal()
-    return
-  }
-
-  activeTab.value = tab
-
-  switch (tab) {
-    case 'trending':
-      pageable.sort = 'likeCount,DESC'
-      break
-    case 'nearby':
-      pageable.sort = 'viewCount,DESC'
-      break
-    case 'new':
-      pageable.sort = 'releaseDate,DESC'
-      break
-    case 'recent':
-      pageable.sort = 'createdAt,DESC'
-      // 로그인한 사용자의 최근 본 상품 필터 적용
-      searchCondition.userId = userId.value
-      break
-  }
-
-  pageable.page = 0
-  currentPage.value = 0
-  loadProducts()
-}
-
 const setSortOption = (sortValue) => {
   pageable.sort = sortValue
   pageable.page = 0
   currentPage.value = 0
   loadProducts()
 }
-
-// ==================== 검색 및 페이징 메서드 ====================
 
 const handleSearch = () => {
   pageable.page = 0
@@ -737,9 +633,8 @@ const goToPage = (page) => {
   pageable.page = page
   currentPage.value = page
   loadProducts()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-
-// ==================== 네비게이션 및 액션 메서드 ====================
 
 const goToProductDetail = (productId) => {
   router.push(`/products/${productId}`)
@@ -755,32 +650,22 @@ const toggleLike = async (productId) => {
       likedProducts.value.add(productId)
     }
 
-    // 상품 목록 갱신
     loadProducts()
-
-    // 사용자 통계 업데이트
     loadUserStats()
   } catch (err) {
     console.error('좋아요 처리 실패:', err)
   }
 }
 
-// ==================== 유틸리티 메서드 ====================
-/**
- * 썸네일 URL 가져오기 (백엔드 응답 구조에 맞춤)
- */
 const getThumbnailUrl = (product) => {
-  // 1. thumbnailDto가 있는 경우 (백엔드 응답 구조)
   if (product.thumbnailDto?.fileUrl) {
     return product.thumbnailDto.fileUrl
   }
 
-  // 2. thumbnailUrl이 직접 있는 경우 (레거시 지원)
   if (product.thumbnailUrl) {
     return product.thumbnailUrl
   }
 
-  // 3. attachments 배열에서 첫 번째 이미지 사용 (대체)
   if (product.attachments && product.attachments.length > 0) {
     return product.attachments[0].fileUrl
   }
@@ -788,12 +673,8 @@ const getThumbnailUrl = (product) => {
   return null
 }
 
-/**
- * 이미지 로딩 에러 처리
- */
 const handleImageError = (event) => {
   console.warn('[PRODUCT] 이미지 로딩 실패:', event.target.src)
-  // 이미지를 숨기고 placeholder 표시
   event.target.style.display = 'none'
   const placeholder = event.target.nextElementSibling
   if (placeholder && placeholder.classList.contains('product-placeholder')) {
@@ -821,12 +702,12 @@ const getProductEmoji = (categoryName) => {
 
 const getProductBadge = (productType) => {
   const badgeMap = {
-    'SALE': '💰 거래가능',
-    'AUCTION': '🔨 경매',
-    'FREE': '🆓 무료나눔',
-    'EXCHANGE': '🔄 교환'
+    'SALE': '거래가능',
+    'AUCTION': '경매',
+    'FREE': '무료나눔',
+    'EXCHANGE': '교환'
   }
-  return badgeMap[productType] || '💰 거래가능'
+  return badgeMap[productType] || '거래가능'
 }
 
 const getRandomDistance = () => {
@@ -834,34 +715,21 @@ const getRandomDistance = () => {
   return distances[Math.floor(Math.random() * distances.length)] + ' 이내'
 }
 
-
-
-const onImageError = (event) => {
-  event.target.style.display = 'none'
-  event.target.nextElementSibling.style.display = 'flex'
-}
-
-// ==================== 라이프사이클 ====================
-
 onMounted(async () => {
   console.log('🚀 [PRODUCT-LIST] 컴포넌트 마운트 시작')
 
-  // 카테고리와 상품 데이터 동시 로드
   await Promise.all([
     loadCategories(),
     loadProducts()
   ])
 
-  // 사이드바 데이터 로드
   await Promise.all([
     loadTopProducts(),
     loadNearbyProducts()
   ])
 
-  // 카테고리 통계는 카테고리 로드 완료 후 실행
   await loadCategoryStats()
 
-  // 로그인한 사용자의 경우 개인 통계 로드
   if (isLoggedIn.value) {
     await loadUserStats()
   }
@@ -869,13 +737,8 @@ onMounted(async () => {
   console.log('✅ [PRODUCT-LIST] 모든 데이터 로드 완료')
 })
 
-
-
-
-// ==================== 감시자 ====================
-
 watch([() => searchCondition.keyword], () => {
-  if (!searchCondition.keyword) return
+  if (!searchCondition.keyword && searchCondition.keyword !== '') return
 
   const searchTimeout = setTimeout(() => {
     handleSearch()
@@ -884,246 +747,61 @@ watch([() => searchCondition.keyword], () => {
   return () => clearTimeout(searchTimeout)
 })
 
-// 로그인 상태 변경 감지
 watch(isLoggedIn, (newValue) => {
   if (newValue) {
-    // 로그인되면 사용자 통계 로드 및 상품 목록 갱신
     loadUserStats()
-    loadProducts() // 개인화된 정보로 상품 목록 갱신
+    loadProducts()
   } else {
-    // 로그아웃되면 사용자 관련 데이터 초기화
     likedProducts.value.clear()
     userStats.value = {
       likedCount: 0,
       reviewCount: 0,
       productCount: 0
     }
-    // 최근 본 탭에서 다른 탭으로 변경
     if (activeTab.value === 'recent') {
       activeTab.value = 'trending'
-      setActiveTab('trending')
+      setSortOption('likeCount,DESC')
     }
   }
 })
-
-// 카테고리 변경 감시
-watch([() => searchCondition.categoryId], () => {
-  console.log('🔄 [PRODUCT-LIST] 카테고리 변경됨:', searchCondition.categoryId)
-})
-
-// ==================== 디버깅 ====================
-
-// 개발 환경에서 디버깅 정보 출력
-if (import.meta.env.DEV) {
-  watch([categories, categoryStats], ([newCategories, newStats]) => {
-    console.group('🔍 [PRODUCT-LIST] 카테고리 데이터 상태')
-    console.log('Categories:', newCategories)
-    console.log('Category Stats:', newStats)
-    console.groupEnd()
-  })
-
-  watch(isLoggedIn, (newValue) => {
-    console.log('🔐 [PRODUCT-LIST] 로그인 상태 변경:', newValue)
-  })
-}
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .product-list-view {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f8fafc;
-  color: #222222;
+  background: #fafafa;
+  color: #333;
   line-height: 1.6;
   min-height: 100vh;
-}
-
-/* 헤더 */
-.header {
-  background: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 60px;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 20px;
-  font-weight: 800;
-  color: #000000;
-  text-decoration: none;
-}
-
-.logo-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #1DCD9F, #169976);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 16px;
-}
-
-.search-container {
-  flex: 1;
-  max-width: 600px;
-  margin: 0 40px;
-  position: relative;
-}
-
-.search-input {
-  width: 100%;
-  padding: 12px 16px 12px 44px;
-  border: 2px solid #e2e8f0;
-  border-radius: 20px;
-  font-size: 14px;
-  transition: border-color 0.2s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #1DCD9F;
-}
-
-.search-icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #222222;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.location-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  background: #f1f5f9;
-  border: none;
-  border-radius: 12px;
-  font-size: 13px;
-  color: #222222;
-  cursor: pointer;
-}
-
-.notification-btn {
-  position: relative;
-  padding: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-}
-
-.notification-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: #1DCD9F;
-  color: white;
-  border-radius: 50%;
-  width: 14px;
-  height: 14px;
-  font-size: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-/* 인증 섹션 */
-.auth-section {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.user-greeting {
-  font-size: 13px;
-  color: #222222;
-  white-space: nowrap;
-}
-
-.logout-btn {
-  padding: 6px 12px;
-  background: #f1f5f9;
-  border: none;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #222222;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.logout-btn:hover {
-  background: #e2e8f0;
-}
-
-.login-btn {
-  padding: 8px 16px;
-  background: #1DCD9F;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background 0.2s;
-}
-
-.login-btn:hover {
-  background: #169976;
 }
 
 /* 메인 컨테이너 */
 .main-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px 24px;
+  padding: 24px 60px;
   display: grid;
-  grid-template-columns: 240px 1fr 320px;
+  grid-template-columns: 220px 1fr 300px;
   gap: 24px;
 }
 
 /* 사이드바 */
 .sidebar {
   background: white;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 20px;
   height: fit-content;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f0f0;
+  position: sticky;
+  top: 24px;
 }
 
 .sidebar-section {
@@ -1135,10 +813,11 @@ if (import.meta.env.DEV) {
 }
 
 .sidebar-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  color: #000000;
+  color: #000;
   margin-bottom: 12px;
+  letter-spacing: -0.3px;
 }
 
 .category-list {
@@ -1146,105 +825,132 @@ if (import.meta.env.DEV) {
 }
 
 .category-item {
-  padding: 8px 12px;
+  padding: 10px 12px;
   margin-bottom: 4px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  transition: background 0.2s;
+  font-weight: 500;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  color: #888;
 }
 
 .category-item:hover {
-  background: #f1f5f9;
+  background: #f8f8f8;
+  color: #333;
 }
 
 .category-item.active {
   background: #1DCD9F;
   color: white;
+  font-weight: 600;
 }
 
 .product-count {
   font-size: 12px;
-  opacity: 0.7;
+  opacity: 0.6;
+  font-weight: 400;
 }
 
-/* 개선된 탭 네비게이션 */
+/* 상단 섹션 (검색 + 액션) */
+.top-section {
+  margin-bottom: 20px;
+}
+
 .tab-nav {
   background: white;
-  border-radius: 16px;
-  padding: 20px 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 16px 20px;
+  border: 1px solid #f0f0f0;
 }
 
 .tab-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
-.tab-list {
-  display: flex;
-  gap: 8px;
-  background: #f8fafc;
-  padding: 4px;
-  border-radius: 12px;
+/* 검색 컨테이너 */
+.search-container {
+  position: relative;
   flex: 1;
+  max-width: 600px;
 }
 
-.tab {
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #999;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 40px 12px 48px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: #fafafa;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #1DCD9F;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(29, 205, 159, 0.1);
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #e0e0e0;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: #64748b;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  position: relative;
-  background: transparent;
-  border: none;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
-.tab:hover {
-  color: #1DCD9F;
-  background: rgba(29, 205, 159, 0.08);
+.clear-btn:hover {
+  background: #d0d0d0;
+  color: #333;
 }
 
-.tab.active {
-  color: #1DCD9F;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  font-weight: 600;
-}
-
-.tab-icon {
-  font-size: 16px;
-}
-
-/* 액션 버튼 섹션 */
+/* 액션 섹션 */
 .action-section {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
-/* 소프트 버튼 스타일 */
 .create-product-btn {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: rgba(29, 205, 159, 0.1);
-  color: #1DCD9F;
+  background: linear-gradient(135deg, #1DCD9F 0%, #169976 100%);
+  color: white;
   border: none;
   border-radius: 10px;
   font-size: 14px;
@@ -1252,46 +958,58 @@ if (import.meta.env.DEV) {
   text-decoration: none;
   transition: all 0.2s ease;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(29, 205, 159, 0.2);
 }
 
 .create-product-btn:hover {
-  background: rgba(29, 205, 159, 0.15);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 205, 159, 0.3);
+}
+
+.create-product-btn:active {
+  transform: translateY(0);
+}
+
+.btn-icon {
+  font-size: 16px;
+}
+
+.btn-text {
+  font-size: 14px;
 }
 
 /* 메인 피드 */
 .main-feed {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
 }
 
 .feed-header {
   background: white;
-  padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
 }
 
 .sort-options {
   display: flex;
-  gap: 8px;
-  background: #f8fafc;
+  gap: 6px;
+  background: #f8f8f8;
   padding: 4px;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .sort-btn {
-  padding: 8px 16px;
+  padding: 7px 14px;
   background: transparent;
   border: none;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: #64748b;
+  color: #666;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -1306,39 +1024,136 @@ if (import.meta.env.DEV) {
   background: white;
   color: #1DCD9F;
   font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.loading-container, .error-container {
-  padding: 60px 24px;
+.result-count {
+  font-size: 13px;
+  color: #666;
+}
+
+.result-count strong {
+  color: #1DCD9F;
+  font-weight: 700;
+}
+
+/* 로딩 상태 */
+.loading-container {
+  padding: 80px 24px;
   text-align: center;
 }
 
 .loading-spinner {
-  font-size: 16px;
-  color: #1DCD9F;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f0f0f0;
+  border-top-color: #1DCD9F;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+  font-size: 14px;
+  color: #666;
+}
+
+/* 에러 상태 */
+.error-container {
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.error-container p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
 }
 
 .retry-btn {
-  margin-top: 16px;
-  padding: 8px 16px;
+  padding: 10px 24px;
   background: #1DCD9F;
   color: white;
   border: none;
   border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
+.retry-btn:hover {
+  background: #169976;
+}
+
+/* 빈 결과 */
+.empty-container {
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-container h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.empty-container p {
+  font-size: 14px;
+  color: #999;
+  margin-bottom: 24px;
+}
+
+.clear-search-btn {
+  padding: 10px 24px;
+  background: #f8f8f8;
+  color: #666;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-search-btn:hover {
+  background: #e8e8e8;
+  border-color: #d0d0d0;
+}
+
+/* 상품 그리드 */
 .products-grid {
-  padding: 24px;
+  padding: 20px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
 }
 
 .product-card {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #f0f0f0;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.2s;
@@ -1346,126 +1161,190 @@ if (import.meta.env.DEV) {
 }
 
 .product-card:hover {
+  border-color: #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: #1DCD9F;
 }
 
 .product-image {
   position: relative;
-  height: 160px;
+  height: 200px;
   overflow: hidden;
+  background: #fafafa;
 }
 
 .product-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
 }
 
 .product-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, #1DCD9F, #169976);
+  background: linear-gradient(135deg, #1DCD9F 0%, #169976 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 36px;
+  font-size: 56px;
+  opacity: 0.9;
 }
 
 .product-badge {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(0, 0, 0, 0.7);
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
   color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
 .heart-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.9);
+  top: 10px;
+  left: 10px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
   border: none;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.heart-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .heart-btn.liked {
-  background: rgba(255, 182, 193, 0.9);
+  background: rgba(255, 182, 193, 0.95);
+  animation: heartbeat 0.3s ease;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
 }
 
 .product-info {
-  padding: 16px;
+  padding: 14px;
 }
 
 .product-name {
   font-size: 15px;
-  font-weight: 600;
-  color: #000000;
-  margin-bottom: 4px;
-  line-height: 1.3;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  letter-spacing: -0.3px;
+  min-height: 42px;
 }
 
 .product-brand {
-  font-size: 12px;
-  color: #222222;
-  opacity: 0.6;
+  font-size: 13px;
+  color: #aaa;
   margin-bottom: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
 }
 
 .product-stats {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .stat {
   font-size: 12px;
-  color: #222222;
+  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 400;
 }
 
 .distance {
-  font-size: 11px;
-  color: #169976;
+  font-size: 13px;
+  color: #666;
   font-weight: 500;
 }
 
+/* 페이지네이션 */
 .pagination {
-  padding: 20px 24px;
+  padding: 24px 20px;
   display: flex;
   justify-content: center;
-  gap: 8px;
-  border-top: 1px solid #f1f5f9;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid #f0f0f0;
 }
 
-.page-btn {
-  padding: 8px 12px;
-  background: none;
-  border: 1px solid #e2e8f0;
+.page-btn,
+.page-nav-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-btn:hover:not(.active),
+.page-nav-btn:hover:not(:disabled) {
+  border-color: #1DCD9F;
+  color: #1DCD9F;
+  background: rgba(29, 205, 159, 0.05);
 }
 
 .page-btn.active {
   background: #1DCD9F;
   color: white;
   border-color: #1DCD9F;
+  font-weight: 600;
+}
+
+.page-nav-btn {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.page-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* 오른쪽 사이드바 */
@@ -1473,36 +1352,40 @@ if (import.meta.env.DEV) {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: sticky;
+  top: 24px;
+  height: fit-content;
 }
 
 .widget {
   background: white;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid #f0f0f0;
 }
 
 .widget-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
-  color: #000000;
-  margin-bottom: 16px;
+  color: #000;
+  margin-bottom: 14px;
+  letter-spacing: -0.3px;
 }
 
 .ranking-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 10px 8px;
+  border-bottom: 1px solid #f8f8f8;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
   border-radius: 8px;
   margin-bottom: 4px;
 }
 
 .ranking-item:hover {
-  background: #f8fafc;
+  background: #f8f8f8;
 }
 
 .ranking-item:last-child {
@@ -1511,22 +1394,23 @@ if (import.meta.env.DEV) {
 }
 
 .rank-number {
-  width: 20px;
-  height: 20px;
-  background: #f1f5f9;
+  width: 24px;
+  height: 24px;
+  background: #f0f0f0;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: #222222;
+  color: #999;
   flex-shrink: 0;
 }
 
 .rank-number.top3 {
-  background: #1DCD9F;
+  background: linear-gradient(135deg, #1DCD9F, #169976);
   color: white;
+  box-shadow: 0 2px 8px rgba(29, 205, 159, 0.3);
 }
 
 .ranking-info {
@@ -1537,44 +1421,56 @@ if (import.meta.env.DEV) {
 .ranking-name {
   font-size: 13px;
   font-weight: 600;
-  color: #000000;
-  margin-bottom: 2px;
+  color: #000;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.ranking-brand {
+  font-size: 11px;
+  color: #999;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ranking-brand {
-  font-size: 11px;
-  color: #222222;
-  opacity: 0.6;
-}
-
 .trend-badge {
   font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 8px;
-  background: #169976;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
   color: white;
   flex-shrink: 0;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
 }
 
-/* 사용자 통계 위젯 */
+/* 사용자 통계 */
 .user-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 10px;
 }
 
 .user-stat-item {
   text-align: center;
-  padding: 12px 8px;
-  background: #f8fafc;
-  border-radius: 8px;
+  padding: 14px 10px;
+  background: linear-gradient(135deg, #f8f8f8 0%, #fafafa 100%);
+  border-radius: 10px;
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.user-stat-item:hover {
+  background: linear-gradient(135deg, #f0f0f0 0%, #f5f5f5 100%);
+  transform: translateY(-2px);
 }
 
 .user-stat-number {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: #1DCD9F;
   margin-bottom: 4px;
@@ -1582,12 +1478,13 @@ if (import.meta.env.DEV) {
 
 .user-stat-label {
   font-size: 11px;
-  color: #64748b;
+  color: #666;
+  font-weight: 500;
 }
 
 /* 카테고리 통계 */
 .category-stat-item {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .category-stat-item:last-child {
@@ -1598,22 +1495,24 @@ if (import.meta.env.DEV) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .category-stat-name {
-  font-size: 13px;
-  color: #000000;
+  font-size: 12px;
+  color: #333;
+  font-weight: 500;
 }
 
 .category-stat-count {
-  font-size: 12px;
-  color: #64748b;
+  font-size: 11px;
+  color: #1DCD9F;
+  font-weight: 600;
 }
 
 .category-progress {
   height: 6px;
-  background: #f1f5f9;
+  background: #f0f0f0;
   border-radius: 3px;
   overflow: hidden;
 }
@@ -1622,7 +1521,8 @@ if (import.meta.env.DEV) {
   height: 100%;
   background: linear-gradient(90deg, #1DCD9F, #169976);
   border-radius: 3px;
-  transition: width 0.3s ease;
+  transition: width 0.4s ease;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
 /* 로그인 모달 */
@@ -1632,41 +1532,66 @@ if (import.meta.env.DEV) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
   padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .login-modal-content {
   background: white;
-  padding: 32px;
+  padding: 40px 32px;
   border-radius: 16px;
-  max-width: 400px;
+  max-width: 420px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-modal-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+  font-size: 56px;
+  margin-bottom: 20px;
+  animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 .login-modal-content h3 {
   font-size: 20px;
-  font-weight: 600;
-  color: #000000;
+  font-weight: 700;
+  color: #000;
   margin-bottom: 12px;
+  letter-spacing: -0.5px;
 }
 
 .login-modal-content p {
   font-size: 14px;
-  color: #64748b;
-  margin-bottom: 24px;
-  line-height: 1.5;
+  color: #666;
+  margin-bottom: 28px;
+  line-height: 1.6;
 }
 
 .login-modal-actions {
@@ -1676,9 +1601,9 @@ if (import.meta.env.DEV) {
 }
 
 .modal-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -1687,24 +1612,28 @@ if (import.meta.env.DEV) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 120px;
 }
 
 .modal-btn.secondary {
-  background: #f1f5f9;
-  color: #64748b;
+  background: #f0f0f0;
+  color: #666;
 }
 
 .modal-btn.secondary:hover {
-  background: #e2e8f0;
+  background: #e0e0e0;
+  color: #333;
 }
 
 .modal-btn.primary {
-  background: #1DCD9F;
+  background: linear-gradient(135deg, #1DCD9F 0%, #169976 100%);
   color: white;
+  box-shadow: 0 4px 12px rgba(29, 205, 159, 0.3);
 }
 
 .modal-btn.primary:hover {
-  background: #169976;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(29, 205, 159, 0.4);
 }
 
 /* 반응형 디자인 */
@@ -1712,6 +1641,11 @@ if (import.meta.env.DEV) {
   .main-container {
     grid-template-columns: 200px 1fr 280px;
     gap: 20px;
+    padding: 20px 40px;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 }
 
@@ -1719,6 +1653,7 @@ if (import.meta.env.DEV) {
   .main-container {
     grid-template-columns: 1fr;
     gap: 16px;
+    padding: 16px 24px;
   }
 
   .sidebar,
@@ -1726,130 +1661,151 @@ if (import.meta.env.DEV) {
     display: none;
   }
 
+  .search-container {
+    max-width: none;
+  }
+
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
   }
 }
 
 @media (max-width: 768px) {
-  .header-container {
-    padding: 0 16px;
-    height: 56px;
-  }
-
-  .search-container {
-    margin: 0 16px;
-  }
-
-  .user-greeting {
-    display: none;
-  }
-
   .main-container {
-    padding: 16px;
+    padding: 12px 16px;
+  }
+
+  .tab-nav {
+    padding: 12px 16px;
   }
 
   .tab-content {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     align-items: stretch;
   }
 
-  .tab-list {
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+  .search-container {
+    max-width: none;
   }
 
-  .tab-list::-webkit-scrollbar {
-    display: none;
+  .search-input {
+    font-size: 13px;
+    padding: 11px 36px 11px 44px;
   }
 
   .action-section {
+    justify-content: stretch;
+  }
+
+  .create-product-btn {
+    width: 100%;
     justify-content: center;
+    padding: 12px 20px;
   }
 
   .feed-header {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     align-items: stretch;
   }
 
   .sort-options {
-    justify-content: center;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .sort-options::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .sort-options::-webkit-scrollbar-thumb {
+    background: #e0e0e0;
+    border-radius: 2px;
+  }
+
+  .result-count {
+    text-align: center;
   }
 
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     padding: 16px;
     gap: 12px;
   }
 
-  .login-modal-content {
-    padding: 24px;
+  .product-image {
+    height: 160px;
   }
 
-  .login-modal-actions {
-    flex-direction: column;
+  .pagination {
+    padding: 20px 16px;
+    gap: 4px;
+  }
+
+  .page-btn,
+  .page-nav-btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 640px) {
-  .logo {
-    font-size: 18px;
+  .products-grid {
+    grid-template-columns: 1fr;
   }
 
-  .logo-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
+  .product-image {
+    height: 220px;
   }
 
-  .search-container {
-    margin: 0 12px;
+  .login-modal-content {
+    padding: 32px 24px;
   }
 
-  .search-input {
-    padding: 10px 14px 10px 40px;
-    font-size: 13px;
+  .modal-btn {
+    flex: 1;
+    min-width: auto;
   }
+}
 
-  .header-actions {
-    gap: 8px;
-  }
-
-  .location-btn {
-    padding: 6px 10px;
-    font-size: 12px;
+@media (max-width: 480px) {
+  .main-container {
+    padding: 8px 12px;
   }
 
   .tab-nav {
-    padding: 16px;
+    padding: 10px 12px;
   }
 
-  .tab {
-    padding: 8px 12px;
-    font-size: 13px;
+  .search-input {
+    font-size: 12px;
+    padding: 10px 32px 10px 40px;
+  }
+
+  .search-icon {
+    left: 14px;
+    font-size: 16px;
   }
 
   .create-product-btn {
-    padding: 10px 16px;
     font-size: 13px;
+    padding: 10px 16px;
+  }
+
+  .btn-icon {
+    font-size: 14px;
   }
 
   .products-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    padding: 12px;
   }
 
-  .product-card {
-    max-width: 100%;
-  }
-
-  .user-stats {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  .product-name {
+    font-size: 13px;
   }
 }
 </style>

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue'
+import { categoryService } from '@/services/CategoryService.js'
 
 const props = defineProps({
   category: {
@@ -122,7 +123,7 @@ const executeToggleActive = async () => {
 
   try {
     console.log('🚀 API 호출 시작 - toggleCategoryStatus:', categoryId)
-    const response = await contentService.toggleCategoryStatus(categoryId)
+    const response = await categoryService.toggleCategoryStatus(categoryId)
     console.log('🚀 API 응답:', response)
 
     if (response && response.data) {

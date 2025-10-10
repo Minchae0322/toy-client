@@ -1,8 +1,7 @@
 // services/OneMouthService.js
 // 한입만 컨텐츠 관련 API 서비스 (Fetch API 기반)
 
-import { BaseApiService } from './base/BaseApiService.js'
-import * as authUtils from '@/utils/auth.js'
+import { BaseApiService } from './BaseApiService.js'
 
 /**
  * 한입만 컨텐츠 서비스
@@ -20,14 +19,34 @@ class OneMouthService extends BaseApiService {
   // ==================== 한입만 게시물 API ====================
 
   /**
-   * 한입만 게시물 목록 조회
+   * 한입만 게시물 목록 조회 (페이징)
+   * GET /api/one-mouths
    */
   async getOneMouths(params = {}) {
     const queryParams = {
-      page: params.page || 0,
-      size: params.size || 20,
-      sort: params.sort || 'createdAt,desc',
-      ...params
+      page: params.page ?? 0,
+      size: params.size ?? 10,
+      sort: params.sort || 'createdAt,DESC'
+    }
+
+    // 검색 조건 추가
+    if (params.oneMouthStatus) {
+      queryParams.oneMouthStatus = params.oneMouthStatus
+    }
+    if (params.categoryId) {
+      queryParams.categoryId = params.categoryId
+    }
+    if (params.tradeLocation) {
+      queryParams.tradeLocation = params.tradeLocation
+    }
+    if (params.minPrice !== null && params.minPrice !== undefined) {
+      queryParams.minPrice = params.minPrice
+    }
+    if (params.maxPrice !== null && params.maxPrice !== undefined) {
+      queryParams.maxPrice = params.maxPrice
+    }
+    if (params.keyword) {
+      queryParams.keyword = params.keyword
     }
 
     return await this.get('/one-mouths', queryParams)
@@ -35,6 +54,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 한입만 게시물 상세 조회
+   * GET /api/one-mouths/{id}
    */
   async getOneMouthDetail(id) {
     if (!id) {
@@ -46,6 +66,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 한입만 게시물 생성
+   * POST /api/one-mouths
    */
   async createOneMouth(data) {
     const validation = this.validateOneMouthData(data)
@@ -53,25 +74,20 @@ class OneMouthService extends BaseApiService {
       throw new Error(validation.errors.join(', '))
     }
 
-    const requestData = {
-      title: data.title,
-      content: data.content,
-      price: data.price,
-      location: data.location,
-      categoryId: data.categoryId,
-      tags: data.tags || [],
-      images: data.images || [],
-      isNegotiable: data.isNegotiable || false,
-      condition: data.condition || 'GOOD',
-      deliveryMethod: data.deliveryMethod || 'DIRECT',
-      paymentMethod: data.paymentMethod || 'CASH'
-    }
+    return await this.post('/one-mouths', data)
+  }
 
-    return await this.post('/one-mouths', requestData)
+  /**
+   * 한입만 게시물 임시저장
+   * POST /api/one-mouths/draft
+   */
+  async createOneMouthDraft(data) {
+    return await this.post('/one-mouths/draft', data)
   }
 
   /**
    * 한입만 게시물 수정
+   * PUT /api/one-mouths/{id}
    */
   async updateOneMouth(id, data) {
     if (!id) {
@@ -88,6 +104,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 한입만 게시물 삭제
+   * DELETE /api/one-mouths/{id}
    */
   async deleteOneMouth(id) {
     if (!id) {
@@ -99,12 +116,13 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 한입만 게시물 상태 변경 (판매중/예약중/판매완료)
+   * PATCH /api/one-mouths/{id}/status
    */
   async updateOneMouthStatus(id, status) {
-    const validStatuses = ['SELLING', 'RESERVED', 'SOLD', 'HIDDEN']
+    const validStatuses = ['ON_SALE', 'RESERVED', 'SOLD_OUT']
 
     if (!validStatuses.includes(status)) {
-      throw new Error('올바른 상태값을 입력해주세요.')
+      throw new Error('올바른 상태값을 입력해주세요. (ON_SALE, RESERVED, SOLD_OUT)')
     }
 
     return await this.patch(`/one-mouths/${id}/status`, { status })
@@ -114,6 +132,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 관심 상품 추가/제거 토글
+   * POST /api/one-mouths/{id}/favorite
    */
   async toggleOneMouthFavorite(id) {
     if (!id) {
@@ -125,6 +144,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 관심 상품 제거
+   * DELETE /api/one-mouths/{id}/favorite
    */
   async removeOneMouthFavorite(id) {
     if (!id) {
@@ -136,64 +156,37 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 사용자 관심 상품 목록 조회
+   * GET /api/one-mouths/favorites
    */
   async getUserFavorites(params = {}) {
-    return await this.get('/one-mouths/favorites', params)
-  }
-
-  // ==================== 검색 및 필터링 API ====================
-
-  /**
-   * 한입만 게시물 검색
-   */
-  async searchOneMouths(query, filters = {}) {
-    const params = {
-      query,
-      page: filters.page || 0,
-      size: filters.size || 20,
-      sort: filters.sort || 'createdAt,desc',
-      ...filters
-    }
-
-    return await this.get('/one-mouths/search', params)
-  }
-
-  /**
-   * 카테고리별 한입만 게시물 조회
-   */
-  async getOneMouthsByCategory(categoryId, params = {}) {
-    return await this.get(`/one-mouths/categories/${categoryId}`, params)
-  }
-
-  /**
-   * 가격 범위별 한입만 게시물 조회
-   */
-  async getOneMouthsByPriceRange(minPrice, maxPrice, params = {}) {
     const queryParams = {
-      minPrice,
-      maxPrice,
-      ...params
+      page: params.page ?? 0,
+      size: params.size ?? 10,
+      sort: params.sort || 'createdAt,DESC'
     }
 
-    return await this.get('/one-mouths/price-range', queryParams)
+    return await this.get('/one-mouths/favorites', queryParams)
   }
 
+  // ==================== 조회수 API ====================
+
   /**
-   * 지역별 한입만 게시물 조회
+   * 조회수 증가
+   * POST /api/one-mouths/{id}/view
    */
-  async getOneMouthsByLocation(location, params = {}) {
-    const queryParams = {
-      location,
-      ...params
+  async incrementViewCount(id) {
+    if (!id) {
+      throw new Error('게시물 ID가 필요합니다.')
     }
 
-    return await this.get('/one-mouths/location', queryParams)
+    return await this.post(`/one-mouths/${id}/view`)
   }
 
   // ==================== 이미지 관리 API ====================
 
   /**
-   * 이미지 업로드
+   * 이미지 업로드 (다중)
+   * POST /api/one-mouths/images
    */
   async uploadImages(files, options = {}) {
     if (!files || files.length === 0) {
@@ -203,7 +196,7 @@ class OneMouthService extends BaseApiService {
     const formData = new FormData()
 
     // 여러 파일 추가
-    Array.from(files).forEach((file, index) => {
+    Array.from(files).forEach((file) => {
       formData.append('images', file)
     })
 
@@ -216,8 +209,13 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 단일 이미지 업로드
+   * POST /api/one-mouths/image
    */
   async uploadSingleImage(file, options = {}) {
+    if (!file) {
+      throw new Error('업로드할 이미지가 필요합니다.')
+    }
+
     const formData = new FormData()
     formData.append('image', file)
 
@@ -230,6 +228,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 이미지 삭제
+   * DELETE /api/one-mouths/images
    */
   async deleteImage(imageUrl) {
     if (!imageUrl) {
@@ -241,56 +240,29 @@ class OneMouthService extends BaseApiService {
     })
   }
 
-  // ==================== 좋아요 및 조회수 API ====================
-
-  /**
-   * 좋아요 추가/제거
-   */
-  async toggleLike(id) {
-    if (!id) {
-      throw new Error('게시물 ID가 필요합니다.')
-    }
-
-    return await this.post(`/one-mouths/${id}/like`)
-  }
-
-  /**
-   * 좋아요 제거
-   */
-  async removeLike(id) {
-    if (!id) {
-      throw new Error('게시물 ID가 필요합니다.')
-    }
-
-    return await this.delete(`/one-mouths/${id}/like`)
-  }
-
-  /**
-   * 조회수 증가
-   */
-  async incrementViewCount(id) {
-    if (!id) {
-      throw new Error('게시물 ID가 필요합니다.')
-    }
-
-    return await this.post(`/one-mouths/${id}/view`)
-  }
-
   // ==================== 댓글 API ====================
 
   /**
    * 댓글 목록 조회
+   * GET /api/one-mouths/{id}/comments
    */
   async getComments(id, params = {}) {
     if (!id) {
       throw new Error('게시물 ID가 필요합니다.')
     }
 
-    return await this.get(`/one-mouths/${id}/comments`, params)
+    const queryParams = {
+      page: params.page ?? 0,
+      size: params.size ?? 20,
+      sort: params.sort || 'createdAt,DESC'
+    }
+
+    return await this.get(`/one-mouths/${id}/comments`, queryParams)
   }
 
   /**
    * 댓글 작성
+   * POST /api/one-mouths/{id}/comments
    */
   async createComment(id, content, parentId = null) {
     if (!id || !content) {
@@ -307,6 +279,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 댓글 수정
+   * PUT /api/comments/{commentId}
    */
   async updateComment(commentId, content) {
     if (!commentId || !content) {
@@ -320,6 +293,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 댓글 삭제
+   * DELETE /api/comments/{commentId}
    */
   async deleteComment(commentId) {
     if (!commentId) {
@@ -333,6 +307,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 게시물 신고
+   * POST /api/one-mouths/{id}/report
    */
   async reportOneMouth(id, reason, description = '') {
     if (!id || !reason) {
@@ -349,6 +324,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 댓글 신고
+   * POST /api/comments/{commentId}/report
    */
   async reportComment(commentId, reason, description = '') {
     if (!commentId || !reason) {
@@ -367,12 +343,13 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 카테고리 목록 조회 (페이징)
+   * GET /api/categories
    */
   async getCategoriesPages(pageable = {}, condition = {}) {
     const params = {
-      page: pageable.page || 0,
-      size: pageable.size || 20,
-      sort: pageable.sort || 'name,asc',
+      page: pageable.page ?? 0,
+      size: pageable.size ?? 20,
+      sort: pageable.sort || 'sortOrder,ASC',
       ...condition
     }
 
@@ -381,6 +358,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 전체 카테고리 목록 조회
+   * GET /api/categories/list
    */
   async getCategories(condition = {}) {
     return await this.get('/categories/list', condition)
@@ -388,6 +366,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 카테고리 상세 조회
+   * GET /api/categories/{categoryId}
    */
   async getCategoryDetail(categoryId) {
     if (!categoryId) {
@@ -399,6 +378,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 카테고리 생성 (관리자 전용)
+   * POST /api/categories
    */
   async createCategory(data) {
     const validation = this.validateCategoryData(data)
@@ -411,6 +391,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 카테고리 수정 (관리자 전용)
+   * PUT /api/categories/{categoryId}
    */
   async updateCategory(categoryId, data) {
     if (!categoryId) {
@@ -427,6 +408,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 카테고리 삭제 (관리자 전용)
+   * DELETE /api/categories/{categoryId}
    */
   async deleteCategory(categoryId) {
     if (!categoryId) {
@@ -440,6 +422,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 게시물 통계 조회
+   * GET /api/one-mouths/{id}/stats
    */
   async getOneMouthStats(id) {
     if (!id) {
@@ -451,6 +434,7 @@ class OneMouthService extends BaseApiService {
 
   /**
    * 사용자 판매 통계 조회
+   * GET /api/one-mouths/my-stats 또는 /api/one-mouths/users/{userId}/stats
    */
   async getUserSalesStats(userId = null) {
     const url = userId
@@ -471,52 +455,28 @@ class OneMouthService extends BaseApiService {
     if (isCreate || data.title !== undefined) {
       if (!data.title || data.title.trim().length === 0) {
         errors.push('제목은 필수입니다.')
-      } else if (data.title.length > 100) {
-        errors.push('제목은 100자 이하여야 합니다.')
+      } else if (data.title.length > 500) {
+        errors.push('제목은 500자 이하여야 합니다.')
       }
     }
 
-    if (isCreate || data.content !== undefined) {
-      if (!data.content || data.content.trim().length === 0) {
-        errors.push('내용은 필수입니다.')
-      } else if (data.content.length > 2000) {
-        errors.push('내용은 2000자 이하여야 합니다.')
+    if (isCreate || data.description !== undefined) {
+      if (data.description && data.description.length > 1000) {
+        errors.push('설명은 1000자 이하여야 합니다.')
       }
     }
 
-    if (isCreate || data.price !== undefined) {
-      if (data.price === null || data.price === undefined) {
-        errors.push('가격은 필수입니다.')
-      } else if (data.price < 0) {
+    if (isCreate || data.sellingPrice !== undefined) {
+      if (data.sellingPrice === null || data.sellingPrice === undefined) {
+        errors.push('판매 가격은 필수입니다.')
+      } else if (data.sellingPrice < 0) {
         errors.push('가격은 0원 이상이어야 합니다.')
-      } else if (data.price > 999999999) {
-        errors.push('가격은 999,999,999원 이하여야 합니다.')
       }
     }
 
-    if (isCreate || data.location !== undefined) {
-      if (!data.location || data.location.trim().length === 0) {
-        errors.push('거래 지역은 필수입니다.')
-      }
-    }
-
-    if (isCreate || data.categoryId !== undefined) {
-      if (!data.categoryId) {
-        errors.push('카테고리는 필수입니다.')
-      }
-    }
-
-    if (data.condition) {
-      const validConditions = ['NEW', 'LIKE_NEW', 'GOOD', 'FAIR', 'POOR']
-      if (!validConditions.includes(data.condition)) {
-        errors.push('올바른 상품 상태를 선택해주세요.')
-      }
-    }
-
-    if (data.deliveryMethod) {
-      const validMethods = ['DIRECT', 'DELIVERY', 'BOTH']
-      if (!validMethods.includes(data.deliveryMethod)) {
-        errors.push('올바른 거래 방법을 선택해주세요.')
+    if (isCreate || data.productId !== undefined) {
+      if (!data.productId) {
+        errors.push('연결된 제품은 필수입니다.')
       }
     }
 
@@ -532,10 +492,10 @@ class OneMouthService extends BaseApiService {
   validateCategoryData(data, isCreate = true) {
     const errors = []
 
-    if (isCreate || data.name !== undefined) {
-      if (!data.name || data.name.trim().length === 0) {
+    if (isCreate || data.categoryName !== undefined) {
+      if (!data.categoryName || data.categoryName.trim().length === 0) {
         errors.push('카테고리 이름은 필수입니다.')
-      } else if (data.name.length > 50) {
+      } else if (data.categoryName.length > 50) {
         errors.push('카테고리 이름은 50자 이하여야 합니다.')
       }
     }
@@ -607,12 +567,19 @@ class OneMouthService extends BaseApiService {
   debugOneMouthStatus() {
     console.group('🔍 [CONTENT] 한입만 서비스 상태')
 
-    console.log('=== 지원 기능 ===')
-    console.log('게시물 CRUD: 생성, 조회, 수정, 삭제')
-    console.log('이미지 업로드: 단일/다중 이미지 지원')
-    console.log('검색/필터링: 카테고리, 가격, 지역별 검색')
-    console.log('소셜 기능: 좋아요, 관심상품, 댓글')
-    console.log('신고 시스템: 게시물/댓글 신고')
+    console.log('=== API 엔드포인트 ===')
+    console.log('GET    /api/one-mouths - 목록 조회')
+    console.log('GET    /api/one-mouths/{id} - 상세 조회')
+    console.log('POST   /api/one-mouths - 게시물 생성')
+    console.log('POST   /api/one-mouths/draft - 임시저장')
+    console.log('PUT    /api/one-mouths/{id} - 게시물 수정')
+    console.log('DELETE /api/one-mouths/{id} - 게시물 삭제')
+    console.log('PATCH  /api/one-mouths/{id}/status - 상태 변경')
+
+    console.log('\n=== 지원 상태 ===')
+    console.log('ON_SALE: 판매중')
+    console.log('RESERVED: 예약중')
+    console.log('SOLD_OUT: 판매완료')
 
     // 부모 클래스의 디버깅도 호출
     this.debugStatus()
@@ -674,6 +641,23 @@ export function useOneMouth() {
       }
     } catch (error) {
       console.error('[CONTENT] 한입만 생성 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  const createDraft = async (data) => {
+    try {
+      const response = await oneMouthService.createOneMouthDraft(data)
+      return {
+        success: true,
+        data: response.data,
+        message: response.message || '임시저장되었습니다'
+      }
+    } catch (error) {
+      console.error('[CONTENT] 한입만 임시저장 실패:', error)
       return {
         success: false,
         error: error.message
@@ -748,29 +732,12 @@ export function useOneMouth() {
     }
   }
 
-  const search = async (query, filters = {}) => {
-    try {
-      const response = await oneMouthService.searchOneMouths(query, filters)
-      return {
-        success: true,
-        data: response.data || [],
-        message: response.message
-      }
-    } catch (error) {
-      console.error('[CONTENT] 한입만 검색 실패:', error)
-      return {
-        success: false,
-        error: error.message,
-        data: []
-      }
-    }
-  }
-
   return {
     // CRUD 기본 기능
     getList,
     getDetail,
     create,
+    createDraft,
     update,
     remove,
 
@@ -782,19 +749,12 @@ export function useOneMouth() {
     removeFavorite: (id) => oneMouthService.removeOneMouthFavorite(id),
     getFavorites: (params) => oneMouthService.getUserFavorites(params),
 
-    // 검색 및 필터링
-    search,
-    getByCategory: (categoryId, params) => oneMouthService.getOneMouthsByCategory(categoryId, params),
-    getByPriceRange: (min, max, params) => oneMouthService.getOneMouthsByPriceRange(min, max, params),
-    getByLocation: (location, params) => oneMouthService.getOneMouthsByLocation(location, params),
-
     // 이미지 관리
     uploadImages,
     uploadSingleImage: (file, options) => oneMouthService.uploadSingleImage(file, options),
     deleteImage: (imageUrl) => oneMouthService.deleteImage(imageUrl),
 
-    // 소셜 기능
-    toggleLike: (id) => oneMouthService.toggleLike(id),
+    // 조회수
     incrementView: (id) => oneMouthService.incrementViewCount(id),
 
     // 댓글
@@ -809,6 +769,7 @@ export function useOneMouth() {
 
     // 카테고리
     getCategories: (condition) => oneMouthService.getCategories(condition),
+    getCategoriesPages: (pageable, condition) => oneMouthService.getCategoriesPages(pageable, condition),
     getCategoryDetail: (categoryId) => oneMouthService.getCategoryDetail(categoryId),
 
     // 통계

@@ -1,5 +1,4 @@
 <script setup>
-
 import {RouterLink, RouterView, useRoute} from 'vue-router'
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {webSocketService} from '@/services/webSocketService.js'
@@ -10,9 +9,9 @@ const {userInfo, isLoggedIn, isAdmin, logout} = useAuth()
 
 const isLoggingOut = ref(false)
 const wsConnected = ref(false)
-const showDebug = ref(import.meta.env.DEV) // 개발환경에서만 디버깅 정보 표시
+const showDebug = ref(import.meta.env.DEV)
 
-// 인증(로그인/회원가입/콜백) 전용 페이지 여부
+// 인증 페이지 여부
 const isAuthPage = computed(() =>
     ['/login', '/register', '/oauth/callback'].includes(route.path)
 )
@@ -30,11 +29,11 @@ const handleLogout = async () => {
   isLoggingOut.value = true
   try {
     webSocketService.disconnect()
-  } catch {
-  }
+  } catch {}
   await logout()
   isLoggingOut.value = false
 }
+
 onMounted(() => {
   if (isLoggedIn.value) {
     webSocketService.connect().catch(console.error)
@@ -55,200 +54,395 @@ onUnmounted(() => webSocketService.disconnect())
 </script>
 
 <template>
-  <!-- 디버그 정보 (개발환경에서만 보임) -->
+  <!-- 디버그 정보 -->
   <div v-if="showDebug && !isAuthPage" class="debug-info">
     <div>로그인: {{ isLoggedIn }}</div>
     <div>관리자: {{ isAdmin }}</div>
     <div>사용자: {{ userInfo?.username }}</div>
-    <div>역할: {{ userInfo?.role }}</div>
-    <div>WebSocket: {{ wsConnected ? '🟢 연결됨' : '🔴 끊김' }}</div>
+    <div>WebSocket: {{ wsConnected ? '🟢' : '🔴' }}</div>
   </div>
 
   <!-- 헤더 -->
   <header v-if="!isAuthPage" class="app-header">
     <div class="header-container">
+      <!-- 로고 -->
       <div class="logo">
-        <RouterLink to="/home" class="mz-title">🍽️ 한입만</RouterLink>
+        <RouterLink to="/home" class="logo-link">
+          <span class="logo-icon">🍽️</span>
+          <span class="logo-text">한입만</span>
+        </RouterLink>
       </div>
+
+      <!-- 메인 네비게이션 -->
       <nav class="main-nav">
-        <template v-if="isLoggingOut">
-          <div class="loading">로그아웃 중...</div>
-        </template>
-        <template v-else-if="!isLoggedIn">
-          <RouterLink to="/login" class="nav-link">로그인</RouterLink>
-          <RouterLink to="/register" class="nav-link">회원가입</RouterLink>
-        </template>
-        <template v-else>
-          <RouterLink to="/home" class="nav-link">홈</RouterLink>
-          <RouterLink to="/products" class="nav-link">제품</RouterLink>
-          <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
-          <RouterLink to="/sell" class="nav-link">판매하기</RouterLink>
-          <div v-if="isAdmin" class="admin-menu">
-            <RouterLink to="/admin" class="admin-link">🛠️ 관리자</RouterLink>
-            <RouterLink to="/admin/users" class="admin-link">👥 사용자 관리</RouterLink>
-            <RouterLink to="/admin/category" class="admin-link">카테고리 관리</RouterLink>
+        <template v-if="!isLoggedIn">
+          <div class="nav-items">
+            <RouterLink to="/one-mouth/list" class="nav-link">둘러보기</RouterLink>
           </div>
-          <div class="user-section">
-            <span class="username">{{ userInfo?.username || '사용자' }}</span>
-            <span v-if="isAdmin" class="admin-badge">관리자</span>
-            <button @click="handleLogout" class="logout-btn">로그아웃</button>
+          <div class="auth-buttons">
+            <RouterLink to="/login" class="btn-login">로그인</RouterLink>
+            <RouterLink to="/register" class="btn-register">회원가입</RouterLink>
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="nav-items">
+            <RouterLink to="/home" class="nav-link">홈</RouterLink>
+            <RouterLink to="/products" class="nav-link">제품</RouterLink>
+            <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
+            <RouterLink to="/sell" class="nav-link btn-sell">판매하기</RouterLink>
+          </div>
+
+          <!-- 관리자 메뉴 -->
+          <div v-if="isAdmin" class="admin-dropdown">
+            <button class="admin-toggle">관리자 ▾</button>
+            <div class="admin-menu">
+              <RouterLink to="/admin" class="admin-item">대시보드</RouterLink>
+              <RouterLink to="/admin/users" class="admin-item">사용자 관리</RouterLink>
+              <RouterLink to="/admin/category" class="admin-item">카테고리 관리</RouterLink>
+            </div>
+          </div>
+
+          <!-- 사용자 정보 -->
+          <div class="user-menu">
+            <div class="user-info">
+              <span class="user-avatar">{{ userInfo?.username?.charAt(0).toUpperCase() }}</span>
+              <span class="user-name">{{ userInfo?.username }}</span>
+            </div>
+            <button @click="handleLogout" class="btn-logout" :disabled="isLoggingOut">
+              {{ isLoggingOut ? '로그아웃 중...' : '로그아웃' }}
+            </button>
           </div>
         </template>
       </nav>
     </div>
   </header>
 
-  <!-- 메인 라우터 뷰 -->
+  <!-- 메인 컨텐츠 -->
   <main :class="['app-main', { 'no-padding': isAuthPage }]">
     <RouterView/>
   </main>
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+
+* {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 디버그 정보 */
 .debug-info {
   position: fixed;
   top: 10px;
   right: 10px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
-  padding: 10px;
-  border-radius: 5px;
-  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
   z-index: 9999;
-  line-height: 1.4;
+  line-height: 1.6;
+  backdrop-filter: blur(10px);
 }
 
 .debug-info div {
   margin: 2px 0;
 }
 
+/* 헤더 */
 .app-header {
   background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #f0f0f0;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .header-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
+  height: 64px;
 }
 
-.logo .mz-title {
-  font-size: 1.5rem;
-  font-weight: bold;
+/* 로고 */
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-decoration: none;
-  background: linear-gradient(to right, #9333ea, #db2777);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
+  transition: opacity 0.2s;
 }
 
+.logo-link:hover {
+  opacity: 0.8;
+}
+
+.logo-icon {
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000;
+  letter-spacing: -0.5px;
+}
+
+/* 메인 네비게이션 */
 .main-nav {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 32px;
+}
+
+.nav-items {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .nav-link {
   text-decoration: none;
-  color: #333;
+  color: #666;
+  font-size: 14px;
   font-weight: 500;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: all 0.3s;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  letter-spacing: -0.3px;
 }
 
 .nav-link:hover {
-  background: #f3f4f6;
-  color: #9333ea;
+  color: #000;
+  background: #f8f8f8;
 }
 
 .nav-link.router-link-active {
-  background: #9333ea;
+  color: #1DCD9F;
+  background: rgba(29, 205, 159, 0.08);
+}
+
+/* 판매하기 버튼 */
+.btn-sell {
+  background: #1DCD9F;
+  color: white;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.btn-sell:hover {
+  background: #169976;
   color: white;
 }
 
-.admin-menu {
-  display: flex;
-  gap: 10px;
-  padding: 0 15px;
-  border-left: 2px solid #e5e7eb;
-  border-right: 2px solid #e5e7eb;
-  margin: 0 10px;
-}
-
-.admin-link {
-  background: linear-gradient(135deg, #ff6b35, #f39c12) !important;
-  color: white !important;
-  font-weight: 600 !important;
-  border-radius: 8px !important;
-  padding: 8px 12px !important;
-  text-decoration: none !important;
-  transition: all 0.3s !important;
-  font-size: 0.9rem;
-}
-
-.admin-link:hover {
-  background: linear-gradient(135deg, #e55a2b, #e67e22) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
-}
-
-.user-section {
+/* 인증 버튼 */
+.auth-buttons {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding-left: 15px;
-  border-left: 1px solid #e5e7eb;
+  gap: 8px;
 }
 
-.username {
-  font-weight: 600;
-  color: #333;
+.btn-login {
+  text-decoration: none;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
 }
 
-.admin-badge {
-  background: linear-gradient(135deg, #ff6b35, #f39c12);
+.btn-login:hover {
+  color: #000;
+  background: #f8f8f8;
+}
+
+.btn-register {
+  text-decoration: none;
+  background: #000;
   color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  font-size: 14px;
   font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 8px;
+  transition: all 0.2s;
 }
 
-.logout-btn {
-  background: #ef4444;
+.btn-register:hover {
+  background: #333;
+}
+
+/* 관리자 드롭다운 */
+.admin-dropdown {
+  position: relative;
+}
+
+.admin-toggle {
+  background: #ff6b35;
   color: white;
   border: none;
   padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-toggle:hover {
+  background: #e55a2b;
+}
+
+.admin-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: all 0.2s;
+}
+
+.admin-dropdown:hover .admin-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.admin-item {
+  display: block;
+  text-decoration: none;
+  color: #333;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.admin-item:hover {
+  background: #f8f8f8;
+  color: #ff6b35;
+}
+
+.admin-item.router-link-active {
+  background: rgba(255, 107, 53, 0.1);
+  color: #ff6b35;
+}
+
+/* 사용자 메뉴 */
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 24px;
+  border-left: 1px solid #f0f0f0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #1DCD9F, #169976);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  letter-spacing: -0.3px;
+}
+
+.btn-logout {
+  background: transparent;
+  color: #999;
+  border: 1px solid #e0e0e0;
+  padding: 6px 14px;
   border-radius: 6px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.2s;
 }
 
-.logout-btn:hover {
-  background: #dc2626;
+.btn-logout:hover:not(:disabled) {
+  color: #666;
+  border-color: #ccc;
+  background: #f8f8f8;
 }
 
-.loading {
-  color: #6b7280;
-  font-style: italic;
+.btn-logout:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
+/* 메인 컨텐츠 */
 .app-main {
-  padding: 2rem;
+  min-height: calc(100vh - 64px);
+  background: #fafafa;
 }
 
 .app-main.no-padding {
   padding: 0;
+  background: white;
+}
+
+/* 반응형 */
+@media (max-width: 1024px) {
+  .header-container {
+    padding: 0 40px;
+  }
+
+  .nav-items {
+    gap: 4px;
+  }
+
+  .nav-link {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 20px;
+  }
+
+  .main-nav {
+    gap: 16px;
+  }
+
+  .nav-items {
+    display: none;
+  }
+
+  .user-name {
+    display: none;
+  }
 }
 </style>

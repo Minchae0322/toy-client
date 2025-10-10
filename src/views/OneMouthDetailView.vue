@@ -1,2049 +1,438 @@
+<!-- TradeDetailPage.vue -->
 <template>
-  <div class="detail-container">
-    <!-- 로딩 상태 -->
-    <LoadingState v-if="loading" />
-
-    <!-- 에러 상태 -->
-    <ErrorState
-        v-else-if="error"
-        :error="error"
-        @retry="retryLoad"
-        @go-back="goBack"
-    />
-
-    <!-- 정상 데이터 표시 -->
-    <div v-else-if="food" class="content-wrapper">
-      <!-- 헤더 -->
-      <ProductHeader
-          :is-liked="isLiked"
-          @go-back="goBack"
-          @share="shareFood"
-          @toggle-like="toggleLike"
-      />
-
-      <!-- 메인 컨테이너 -->
-      <div class="main-container">
-        <!-- 메인 콘텐츠 -->
-        <main class="main-content">
-          <!-- 제품 헤더 -->
-          <div class="product-header">
-            <h1 class="product-title">{{ food.name }}</h1>
-            <div class="product-brand">{{ food.seller?.name || '판매자' }}</div>
-            <div class="product-meta">
-              <div class="meta-item">
-                <span>⭐</span>
-                <span class="rating">{{ (food.seller?.rating || 4.5).toFixed(1) }}</span>
-                <span>({{ reviews.length }}개 리뷰)</span>
-              </div>
-              <div class="meta-item">
-                <span>💬</span>
-                <span>{{ reviews.length }}</span>
-              </div>
-              <div class="meta-item">
-                <span>🔥</span>
-                <span>{{ food.hits || 0 }}</span>
-              </div>
-              <div class="meta-item">
-                <span>👁️</span>
-                <span>{{ food.hits || 0 }}</span>
-              </div>
-              <div
-                  class="status-badge"
-                  :class="{ 'info-only': food.productStatus !== 'FOR_SALE' }"
-              >
-                {{ food.productStatus === 'FOR_SALE' ? '💰 거래가능' : '❌ 정보만' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- 이미지 섹션 -->
-          <ProductImageSection
-              :food="food"
-              @image-error="handleImageError"
-          />
-
-          <!-- 제품 정보 -->
-          <div class="product-info">
-            <div class="info-section">
-              <div class="info-title">제품 소개</div>
-              <div class="info-content">
-                {{ food.description || '상품 설명이 없습니다.' }}
-              </div>
-              <div class="tag-list">
-                <div class="tag highlight">#신메뉴</div>
-                <div class="tag highlight">#화제</div>
-                <div class="tag">#{{ food.productType || '기타' }}</div>
-                <div class="tag">#한입만</div>
-              </div>
-            </div>
-
-            <div class="info-section">
-              <div class="info-title">상세 정보</div>
-              <div class="info-content">
-                <strong>가격:</strong> {{ food.price?.toLocaleString() || 0 }}원<br>
-                <strong>수량:</strong> {{ food.quantity || 1 }}{{ food.unit || '개' }}<br>
-                <strong>위치:</strong> {{ food.location || '위치 정보 없음' }}<br>
-                <strong>등록일:</strong> {{ formatDate(food.createdAt) }}<br>
-                <strong>상태:</strong> {{ food.productStatus === 'FOR_SALE' ? '거래가능' : '정보제공' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- 출시 정보 섹션 -->
-          <div class="launch-info-section">
-            <h2 class="section-title">🚀 출시 정보</h2>
-
-            <div class="launch-info-grid">
-              <div class="launch-item">
-                <span class="launch-label">출시일</span>
-                <span class="launch-value">{{ formatDate(food.launchDate || food.createdAt) }}</span>
-              </div>
-              <div class="launch-item">
-                <span class="launch-label">판매기간</span>
-                <span class="launch-value">{{ food.isLimited ? '한정판매' : '상시판매' }}</span>
-              </div>
-              <div class="launch-item">
-                <span class="launch-label">지역</span>
-                <span class="launch-value">전국 출시</span>
-              </div>
-              <div class="launch-item" v-if="food.eventInfo">
-                <span class="launch-label">이벤트</span>
-                <span class="launch-value">{{ food.eventInfo }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 개인거래 섹션 -->
-          <div class="personal-trade-section">
-            <h2 class="section-title">🛒 개인거래</h2>
-
-            <!-- 거래 리스트 -->
-            <div class="trade-list">
-              <div
-                  v-for="trade in displayedTrades"
-                  :key="trade.id"
-                  class="trade-item"
-                  @click="goToTradeDetail(trade.id)"
-              >
-                <div class="trade-image">
-                  <img :src="trade.imageUrl || '/placeholder-image.jpg'" :alt="trade.title" />
-                </div>
-
-                <div class="trade-info">
-                  <div class="trade-price">{{ trade.price.toLocaleString() }}원</div>
-                  <div class="trade-condition">{{ getConditionText(trade.condition) }}</div>
-                  <div class="trade-quantity">{{ trade.quantity }}개</div>
-                </div>
-
-                <div class="seller-info">
-                  <div class="seller-profile">
-                    <div class="seller-avatar">{{ trade.sellerName.charAt(0) }}</div>
-                    <div class="seller-details">
-                      <div class="seller-name">{{ trade.sellerName }}</div>
-                      <div class="seller-rating">⭐ {{ trade.sellerRating.toFixed(1) }}</div>
-                    </div>
-                  </div>
-                  <div class="seller-distance">{{ trade.distance }}m</div>
-                </div>
-
-                <div class="trade-actions">
-                  <button
-                      class="chat-btn"
-                      @click.stop="startChatWithSeller(trade)"
-                      :disabled="trade.sellerId === currentUserId"
-                  >
-                    {{ trade.sellerId === currentUserId ? '내 상품' : '채팅하기' }}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 더보기 버튼 또는 빈 상태 -->
-            <div v-if="personalTrades.length === 0" class="empty-trade">
-              <div class="empty-icon">📦</div>
-              <h3>아직 판매중인 상품이 없어요</h3>
-              <p>이 제품의 첫 번째 판매자가 되어보세요!</p>
-              <button class="cta-btn" @click="goToSell">내가 첫 판매자가 되어보세요!</button>
-            </div>
-
-            <div v-else-if="personalTrades.length > displayedTradeCount" class="load-more">
-              <button class="load-more-btn" @click="loadMoreTrades">
-                더 많은 거래 보기 ({{ personalTrades.length - displayedTradeCount }}개 더)
-              </button>
-            </div>
-          </div>
-
-          <!-- 리뷰 섹션 -->
-          <div class="reviews-section">
-            <div class="reviews-header">
-              <div class="reviews-title">💬 리뷰 ({{ reviews.length }}개)</div>
-              <div class="reviews-stats">
-                <span>⭐ {{ (food.seller?.rating || 4.5).toFixed(1) }}</span>
-                <span>|</span>
-                <span>최신순</span>
-              </div>
-            </div>
-
-            <!-- 리뷰 컨테이너 -->
-            <div class="reviews-container">
-              <div v-if="reviews.length > 0" class="reviews-list">
-                <div
-                    v-for="review in displayedReviews"
-                    :key="review.id"
-                    class="review-item"
-                >
-                  <div class="review-header">
-                    <div class="review-user">
-                      <div class="user-avatar">{{ review.userName.charAt(0) }}</div>
-                      <div class="user-name">{{ review.userName }}</div>
-                      <div class="user-rating">⭐ {{ review.rating.toFixed(1) }}</div>
-                    </div>
-                  </div>
-                  <div class="review-content">
-                    {{ review.content }}
-                  </div>
-                  <div class="review-meta">
-                    <span>{{ formatDate(review.createdAt) }}</span>
-                    <span>도움됨 {{ Math.floor(Math.random() * 20) }}</span>
-                    <span>거래완료</span>
-                  </div>
-                </div>
-              </div>
-
-              <div v-else class="no-reviews">
-                <p>아직 리뷰가 없습니다. 첫 번째 리뷰를 작성해보세요!</p>
-              </div>
-
-              <!-- 리뷰 더보기 버튼 -->
-              <div v-if="reviews.length > displayedReviewCount" class="review-load-more">
-                <button class="load-more-btn" @click="loadMoreReviews">
-                  더 많은 리뷰 보기 ({{ reviews.length - displayedReviewCount }}개 더)
-                </button>
-              </div>
-
-              <!-- 리뷰 작성 버튼 -->
-              <div class="review-write-section">
-                <button class="write-review-btn" @click="writeReview">
-                  리뷰 작성하기
-                </button>
-              </div>
-            </div>
-          </div>
-        </main>
-
-        <!-- 사이드바 -->
-        <aside class="sidebar">
-          <!-- 액션 버튼 -->
-          <div class="widget">
-            <div class="action-buttons">
-              <button
-                  class="action-btn primary"
-                  :class="{ 'favorited': isFavorited }"
-                  @click="toggleFavorite"
-                  :disabled="processing"
-              >
-                {{ isFavorited ? '💚 찜완료' : '❤️ 찜하기' }}
-              </button>
-              <button class="action-btn secondary" @click="shareFood">
-                📤 공유
-              </button>
-            </div>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <div class="stat-number">{{ reviews.length }}</div>
-                <div class="stat-label">리뷰</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">{{ food.productStatus === 'FOR_SALE' ? '가능' : '불가' }}</div>
-                <div class="stat-label">거래</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">{{ formatNumber(food.hits || 0) }}</div>
-                <div class="stat-label">조회수</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">{{ formatNumber(food.favoritesCount || 0) }}</div>
-                <div class="stat-label">찜</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 관련 제품 -->
-          <div class="widget">
-            <div class="widget-title">🔗 비슷한 제품</div>
-            <div class="related-item" @click="goToRelatedProduct('burger')">
-              <div class="related-image">🍔</div>
-              <div class="related-info">
-                <div class="related-name">버거킹 신상 와퍼</div>
-                <div class="related-brand">버거킹</div>
-                <div class="related-stats">⭐ 4.2 • 거래 8명</div>
-              </div>
-            </div>
-            <div class="related-item" @click="goToRelatedProduct('fries')">
-              <div class="related-image">🍟</div>
-              <div class="related-info">
-                <div class="related-name">맥도날드 치즈스틱</div>
-                <div class="related-brand">맥도날드</div>
-                <div class="related-stats">⭐ 4.4 • 거래 15명</div>
-              </div>
-            </div>
-            <div class="related-item" @click="goToRelatedProduct('drink')">
-              <div class="related-image">🥤</div>
-              <div class="related-info">
-                <div class="related-name">KFC 트위스터</div>
-                <div class="related-brand">KFC</div>
-                <div class="related-stats">⭐ 4.0 • 거래 6명</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 위치 정보 -->
-          <div class="widget">
-            <div class="widget-title">📍 내 근처 정보</div>
-            <div class="info-content">
-              <strong>{{ food.location || '위치 정보 없음' }}</strong><br>
-              평균 거리: <strong>680m</strong><br>
-              상태: <strong>{{ food.productStatus === 'FOR_SALE' ? '거래가능' : '정보만' }}</strong>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </div>
-
-    <!-- 하단 고정 액션 버튼 -->
-    <BottomActionBar
-        v-if="food && food.productStatus === 'FOR_SALE'"
-        :food="food"
-        :is-favorited="isFavorited"
-        :chat-loading="chatLoading"
-        :chat-error="chatError"
-        @toggle-favorite="toggleFavorite"
-        @start-chat="handleStartChat"
-        @clear-chat-error="clearChatError"
-    />
-
-    <!-- 채팅 로딩 오버레이 -->
-    <div v-if="chatLoading" class="chat-loading-overlay">
-      <div class="chat-loading-content">
-        <div class="spinner"></div>
-        <p>채팅방을 준비하는 중...</p>
-      </div>
-    </div>
-
-    <!-- 채팅 에러 모달 -->
-    <div v-if="chatError" class="chat-error-modal" @click="clearChatError">
-      <div class="chat-error-content" @click.stop>
-        <h3>채팅 연결 실패</h3>
-        <p>{{ chatError }}</p>
-        <div class="error-actions">
-          <button @click="clearChatError" class="cancel-btn">확인</button>
-          <button @click="retryStartChat" class="retry-btn">다시 시도</button>
+  <div class="detail-page">
+    <!-- 헤더 -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo" @click="goToList">
+          <div class="logo-icon">🛒</div>
+          <span>편의점 거래</span>
+        </div>
+        <nav class="nav-menu">
+          <div class="nav-item active">개인거래</div>
+          <div class="nav-item">공식제품</div>
+          <div class="nav-item">커뮤니티</div>
+          <div class="nav-item">이용가이드</div>
+        </nav>
+        <div class="header-actions">
+          <button class="btn-secondary">로그인</button>
+          <button class="btn-primary">판매하기</button>
         </div>
       </div>
+    </header>
+
+    <!-- 상세 컨텐츠 -->
+    <div v-if="trade" class="detail-container">
+      <div class="detail-wrapper">
+        <!-- 이미지 섹션 -->
+        <div class="detail-images">
+          <div class="detail-image main">{{ trade.emoji }}</div>
+          <div class="detail-image">📦</div>
+          <div class="detail-image">✨</div>
+        </div>
+
+        <!-- 정보 섹션 -->
+        <div class="detail-body">
+          <!-- 제품 링크 배너 -->
+          <div class="product-link-banner">
+            <div class="product-link-icon">{{ trade.emoji }}</div>
+            <div class="product-link-info">
+              <div class="product-link-title">연관 공식 제품</div>
+              <div class="product-link-sub">
+                {{ trade.productInfo.name }} · ⭐ {{ trade.productInfo.rating }} ({{ trade.productInfo.reviews }}개 리뷰)
+              </div>
+            </div>
+            <button class="btn-secondary small">제품 정보 보기</button>
+          </div>
+
+          <!-- 가격 정보 -->
+          <div class="detail-price-section">
+            <span class="detail-price">{{ formatPrice(trade.price) }}</span>
+            <span class="detail-discount">-{{ trade.discount }}%</span>
+            <span class="detail-badge">{{ trade.badge }}</span>
+          </div>
+
+          <!-- 제목 -->
+          <h2 class="detail-title">{{ trade.title }}</h2>
+
+          <!-- 상세 정보 그리드 -->
+          <div class="detail-info-grid">
+            <div class="info-item">
+              <span class="info-label">상태</span>
+              <span class="info-value">{{ trade.condition }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">수량</span>
+              <span class="info-value">{{ trade.quantity }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">거래방법</span>
+              <span class="info-value">{{ trade.tradeMethod }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">희망지역</span>
+              <span class="info-value">{{ trade.location }}</span>
+            </div>
+          </div>
+
+          <!-- 상세 설명 -->
+          <div class="detail-description">
+            <h3 class="section-title">상세 설명</h3>
+            <p class="description-text">{{ trade.description }}</p>
+          </div>
+
+          <!-- 판매자 정보 -->
+          <div class="seller-card">
+            <div class="seller-main">
+              <div class="seller-avatar-large">{{ trade.seller.avatar }}</div>
+              <div class="seller-info-detailed">
+                <div class="seller-name-large">{{ trade.seller.name }}</div>
+                <div class="seller-stats">
+                  ⭐ {{ trade.seller.rating }} · {{ trade.seller.tradeCount }}회 거래 · 최근 활동: 1시간 전
+                </div>
+              </div>
+            </div>
+            <button class="btn-secondary">다른 판매상품 보기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 액션 버튼 -->
+      <div class="detail-actions">
+        <button class="btn-back" @click="goToList">목록으로</button>
+        <button class="btn-chat">💬 채팅하기</button>
+      </div>
+    </div>
+
+    <!-- 로딩 상태 -->
+    <div v-else-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>상품 정보를 불러오는 중...</p>
+    </div>
+
+    <!-- 에러 상태 -->
+    <div v-else class="error-container">
+      <div class="error-icon">⚠️</div>
+      <h2>상품을 찾을 수 없습니다</h2>
+      <p>요청하신 상품이 존재하지 않거나 삭제되었습니다.</p>
+      <button class="btn-primary" @click="goToList">목록으로 돌아가기</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { getChatErrorMessage, debugChatInfo } from '@/utils/chatUtils.js';
+import { ref, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 
-// 컴포넌트 imports
-import LoadingState from '@/components/oneMouth/detail/LoadingState.vue';
-import ErrorState from '@/components/oneMouth/detail/ErrorState.vue';
-import ProductHeader from '@/components/oneMouth/detail/ProductHeader.vue';
-import ProductImageSection from '@/components/oneMouth/detail/ProductImageSection.vue';
-import BottomActionBar from '@/components/oneMouth/detail/BottomActionBar.vue';
-
-// 라우터 관련
-const route = useRoute();
 const router = useRouter();
+const route = useRoute();
 
-// Props
-const props = defineProps({
-  id: {
-    type: [String, Number],
-    required: true
-  }
-});
-
-// 반응형 데이터
-const food = ref(null);
-const reviews = ref([]);
-const personalTrades = ref([]);
+const trade = ref(null);
 const loading = ref(true);
-const reviewsLoading = ref(false);
-const error = ref(null);
-const isLiked = ref(false);
-const isFavorited = ref(false);
-const processing = ref(false);
-const chatLoading = ref(false);
-const chatError = ref('');
 
-// 페이지네이션 관련
-const displayedTradeCount = ref(5);
-const displayedReviewCount = ref(3);
-
-// URL에서 ID 추출
-const foodId = computed(() => props.id || route.params.id);
-
-// 현재 사용자 ID
-const currentUserId = computed(() => getCurrentUserId());
-
-// 표시할 데이터 계산
-const displayedTrades = computed(() =>
-    personalTrades.value.slice(0, displayedTradeCount.value)
-);
-
-const displayedReviews = computed(() =>
-    reviews.value.slice(0, displayedReviewCount.value)
-);
-
-// 채팅 시작 가능 여부
-const canStartChat = computed(() => {
-  const userId = getCurrentUserId();
-  return userId &&
-      food.value?.sellerId &&
-      String(userId) !== String(food.value.sellerId) &&
-      food.value.productStatus === 'FOR_SALE';
-});
-
-// 유틸리티 함수들
-const formatDate = (dateString) => {
-  if (!dateString) return '날짜 정보 없음';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now - date);
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-  const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-  if (diffMinutes < 60) {
-    return `${diffMinutes}분 전`;
-  } else if (diffHours < 24) {
-    return `${diffHours}시간 전`;
-  } else if (diffDays < 7) {
-    return `${diffDays}일 전`;
-  } else {
-    return date.toLocaleDateString('ko-KR');
+// 더미 데이터 (실제로는 API에서 가져옴)
+const tradeData = {
+  1: {
+    id: 1,
+    emoji: '☕',
+    badge: '새상품',
+    price: 7500,
+    discount: 25,
+    originalPrice: 10000,
+    title: '스타벅스 아메리카노 Tall 쿠폰 1매',
+    seller: {
+      name: '카페인중독자',
+      avatar: 'K',
+      rating: 4.8,
+      tradeCount: 32
+    },
+    distance: 0.5,
+    condition: '새상품 (미개봉)',
+    quantity: '1개',
+    tradeMethod: '직거래, 택배',
+    location: '강남역 2번 출구',
+    description: '선물 받았는데 커피를 안 마셔서 판매합니다. 유효기간은 3개월 이상 남았어요. 직거래는 강남역 2번 출구에서 가능하고, 택배도 가능합니다! 포장은 완전히 뜯지 않은 새 상품이에요. 궁금하신 점 있으면 편하게 채팅 주세요 😊',
+    productInfo: {
+      name: '스타벅스 아메리카노 Tall',
+      rating: 4.7,
+      reviews: 234
+    }
+  },
+  2: {
+    id: 2,
+    emoji: '🍱',
+    badge: '거의 새것',
+    price: 15000,
+    discount: 20,
+    originalPrice: 18800,
+    title: 'CU 프리미엄 도시락 세트 (2개입)',
+    seller: {
+      name: '편의점러버',
+      avatar: 'P',
+      rating: 4.9,
+      tradeCount: 45
+    },
+    distance: 1.2,
+    condition: '거의 새것',
+    quantity: '2개',
+    tradeMethod: '직거래',
+    location: '신논현역 근처',
+    description: '오늘 구매했는데 계획이 취소되어 판매합니다. 유통기한 충분하고 냉장 보관 중입니다. 신논현역 근처에서 직거래 가능합니다.',
+    productInfo: {
+      name: 'CU 프리미엄 도시락',
+      rating: 4.5,
+      reviews: 156
+    }
+  },
+  3: {
+    id: 3,
+    emoji: '🍪',
+    badge: '사용감 있음',
+    price: 3000,
+    discount: 40,
+    originalPrice: 5000,
+    title: '롯데 초코파이 1박스 (6개입)',
+    seller: {
+      name: '초코좋아',
+      avatar: 'C',
+      rating: 4.6,
+      tradeCount: 28
+    },
+    distance: 2.3,
+    condition: '사용감 있음',
+    quantity: '1박스',
+    tradeMethod: '직거래, 편의점택배',
+    location: '역삼동',
+    description: '개봉했지만 상태 좋습니다. 유통기한 충분합니다. 직거래나 편의점택배 모두 가능합니다.',
+    productInfo: {
+      name: '롯데 초코파이',
+      rating: 4.8,
+      reviews: 892
+    }
   }
 };
 
-const formatNumber = (num) => {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + 'M';
-  } else if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
-  }
-  return num.toString();
+// Methods
+const formatPrice = (price) => {
+  return price.toLocaleString() + '원';
 };
 
-const getConditionText = (condition) => {
-  const conditionMap = {
-    'new': '새상품',
-    'like-new': '거의새것',
-    'used': '중고',
-    'damaged': '파손'
-  };
-  return conditionMap[condition] || '상태미확인';
+const goToList = () => {
+  router.push({ name: 'TradeList' });
 };
 
-// 사용자 ID 가져오기
-const getCurrentUserId = () => {
+const fetchTradeDetail = async (id) => {
+  loading.value = true;
+
   try {
-    const currentUser = tokenUtils.getCurrentUser();
-    if (currentUser?.id) {
-      return currentUser.id;
-    }
+    // 실제로는 API 호출
+    // const response = await tradeService.getTradeDetail(id);
+    // trade.value = response.data;
 
-    const token = tokenUtils.getAccessToken();
-    if (token) {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.sub || payload.userId || payload.id || payload.user_id;
-    }
-  } catch (err) {
-    console.error('사용자 ID 추출 중 오류:', err);
-  }
-  return null;
-};
+    // 더미 데이터 사용
+    await new Promise(resolve => setTimeout(resolve, 500)); // 로딩 시뮬레이션
 
-// 데이터 로드 함수들
-const fetchFoodDetail = async (id) => {
-  try {
-    loading.value = true;
-    error.value = null;
+    const tradeId = parseInt(id);
+    trade.value = tradeData[tradeId] || null;
 
-    const response = await contentService.getOneMouthDetail(id);
-    const apiData = response.data?.data || response.data;
-
-    if (!apiData) {
-      throw new Error('상품 정보를 찾을 수 없습니다.');
-    }
-
-    const productStatusValue = apiData.productStatus?.title || apiData.productStatus || 'FOR_SALE';
-
-    food.value = {
-      id: apiData.oneMouthId,
-      name: apiData.title || '제목 없음',
-      description: apiData.description || '',
-      price: apiData.price || 0,
-      location: apiData.location || '',
-      createdAt: apiData.createdAt,
-      updatedAt: apiData.updatedAt,
-      quantity: apiData.quantity,
-      unit: apiData.unit?.title || apiData.unit?.description || '개',
-      productType: apiData.productType,
-      productStatus: productStatusValue,
-      productStatusObj: apiData.productStatus,
-      imageUrl: apiData.thumbnailUrl || '',
-      attachments: apiData.oneMouthAttachmentFiles || [],
-      sellerId: apiData.sellerId,
-      seller: {
-        id: apiData.sellerId,
-        name: `판매자${apiData.sellerId}`,
-        rating: 4.5,
-        reviewCount: 0,
-        profileImage: ''
-      },
-      hits: apiData.hits || 0,
-      favoritesCount: apiData.favoritesCount || 0,
-      isUserFavorited: apiData.isUserFavorited || false,
-      launchDate: apiData.launchDate,
-      isLimited: apiData.isLimited || false,
-      eventInfo: apiData.eventInfo
-    };
-
-    if (tokenUtils.isLoggedIn()) {
-      await Promise.all([
-        fetchPersonalTrades(),
-        fetchReviews(),
-        checkLikeStatus(),
-        checkFavoriteStatus()
-      ]);
-    } else {
-      await Promise.all([
-        fetchPersonalTrades(),
-        fetchReviews()
-      ]);
-    }
-
-    if (apiData.isUserFavorited !== undefined) {
-      isFavorited.value = apiData.isUserFavorited;
-    }
-
-    debugChatInfo('상품 정보 로드 완료', {
-      productId: food.value.id,
-      sellerId: food.value.sellerId,
-      currentUserId: getCurrentUserId(),
-      canStartChat: canStartChat.value
-    });
-
-  } catch (err) {
-    console.error('상세 정보 로드 실패:', err);
-    error.value = err.response?.status === 404 ? '존재하지 않는 상품입니다.' : '상품 정보를 불러올 수 없습니다.';
+  } catch (error) {
+    console.error('거래 정보 로딩 실패:', error);
+    trade.value = null;
   } finally {
     loading.value = false;
   }
 };
 
-const fetchPersonalTrades = async () => {
-  try {
-    // 실제 API 호출 대신 목업 데이터
-    const mockTrades = [
-      {
-        id: 1,
-        productId: foodId.value,
-        title: '초콜릿 과자 판매',
-        price: 3500,
-        condition: 'new',
-        quantity: 2,
-        imageUrl: '',
-        sellerId: 'user123',
-        sellerName: '판매자A',
-        sellerRating: 4.8,
-        distance: 500,
-        createdAt: '2024-12-08T10:00:00Z',
-        tradeMethod: '직거래'
-      },
-      {
-        id: 2,
-        productId: foodId.value,
-        title: '초콜릿 과자 급매',
-        price: 3000,
-        condition: 'like-new',
-        quantity: 1,
-        imageUrl: '',
-        sellerId: 'user456',
-        sellerName: '판매자B',
-        sellerRating: 4.5,
-        distance: 1200,
-        createdAt: '2024-12-07T15:30:00Z',
-        tradeMethod: '택배'
-      },
-      {
-        id: 3,
-        productId: foodId.value,
-        title: '초콜릿 과자 나눔',
-        price: 2800,
-        condition: 'used',
-        quantity: 3,
-        imageUrl: '',
-        sellerId: 'user789',
-        sellerName: '판매자C',
-        sellerRating: 4.2,
-        distance: 800,
-        createdAt: '2024-12-06T20:15:00Z',
-        tradeMethod: '편의점택배'
-      },
-      {
-        id: 4,
-        productId: foodId.value,
-        title: '초콜릿 과자 대량판매',
-        price: 15000,
-        condition: 'new',
-        quantity: 10,
-        imageUrl: '',
-        sellerId: 'user101',
-        sellerName: '판매자D',
-        sellerRating: 4.9,
-        distance: 300,
-        createdAt: '2024-12-05T12:20:00Z',
-        tradeMethod: '직거래'
-      },
-      {
-        id: 5,
-        productId: foodId.value,
-        title: '초콜릿 과자 소량판매',
-        price: 2500,
-        condition: 'like-new',
-        quantity: 1,
-        imageUrl: '',
-        sellerId: 'user202',
-        sellerName: '판매자E',
-        sellerRating: 4.3,
-        distance: 1500,
-        createdAt: '2024-12-04T18:45:00Z',
-        tradeMethod: '택배'
-      },
-      {
-        id: 6,
-        productId: foodId.value,
-        title: '초콜릿 과자 빠른판매',
-        price: 3200,
-        condition: 'new',
-        quantity: 2,
-        imageUrl: '',
-        sellerId: 'user303',
-        sellerName: '판매자F',
-        sellerRating: 4.6,
-        distance: 900,
-        createdAt: '2024-12-03T14:30:00Z',
-        tradeMethod: '직거래'
+// Watchers
+watch(
+    () => route.params.id,
+    (newId) => {
+      if (newId) {
+        fetchTradeDetail(newId);
       }
-    ];
+    },
+    { immediate: true }
+);
 
-    personalTrades.value = mockTrades;
-  } catch (err) {
-    console.error('개인거래 정보 로드 실패:', err);
-    personalTrades.value = [];
-  }
-};
-
-const fetchReviews = async () => {
-  try {
-    reviewsLoading.value = true;
-
-    const mockReviews = [
-      {
-        id: 1,
-        userName: '맛집탐험가',
-        userProfileImage: '',
-        rating: 5,
-        content: '정말 맛있어요! 초콜릿이 진짜 진하고 달달해서 기분이 좋아졌어요. 포장도 예쁘고 가격도 합리적이네요.',
-        createdAt: '2024-12-08T10:30:00',
-        images: []
-      },
-      {
-        id: 2,
-        userName: '간식매니아',
-        userProfileImage: '',
-        rating: 4,
-        content: '가격도 저렴하고 맛도 좋네요. 다음에 또 사고싶어요! 배송도 빨랐습니다.',
-        createdAt: '2024-12-07T15:45:00',
-        images: []
-      },
-      {
-        id: 3,
-        userName: '초콜릿러버',
-        userProfileImage: '',
-        rating: 5,
-        content: '초콜릿 맛이 정말 진짜예요. 단맛이 적당해서 계속 먹게 되네요. 추천합니다!',
-        createdAt: '2024-12-06T20:15:00',
-        images: []
-      },
-      {
-        id: 4,
-        userName: '디저트킹',
-        userProfileImage: '',
-        rating: 4,
-        content: '친구들과 나눠먹기 좋은 사이즈예요. 맛도 괜찮고 포장상태도 깔끔했습니다.',
-        createdAt: '2024-12-05T12:20:00',
-        images: []
-      },
-      {
-        id: 5,
-        userName: '과자덕후',
-        userProfileImage: '',
-        rating: 5,
-        content: '이런 맛있는 과자가 있었다니! 완전 대박이에요. 재주문 예정입니다.',
-        createdAt: '2024-12-04T18:45:00',
-        images: []
-      }
-    ];
-
-    reviews.value = mockReviews;
-
-  } catch (err) {
-    console.error('리뷰 로드 실패:', err);
-    reviews.value = [];
-  } finally {
-    reviewsLoading.value = false;
-  }
-};
-
-const checkLikeStatus = async () => {
-  try {
-    const likedItems = JSON.parse(localStorage.getItem('liked_items') || '[]');
-    isLiked.value = likedItems.includes(String(foodId.value));
-  } catch (err) {
-    console.error('좋아요 상태 확인 실패:', err);
-    isLiked.value = false;
-  }
-};
-
-const checkFavoriteStatus = async () => {
-  try {
-    const favoritedItems = JSON.parse(localStorage.getItem('favorited_items') || '[]');
-    isFavorited.value = favoritedItems.includes(String(foodId.value));
-  } catch (err) {
-    console.error('관심 상태 확인 실패:', err);
-    isFavorited.value = false;
-  }
-};
-
-// 액션 함수들
-const retryLoad = () => {
-  fetchFoodDetail(foodId.value);
-};
-
-const goBack = () => {
-  if (window.history.length > 1) {
-    router.back();
-  } else {
-    router.push('/one-mouth/list');
-  }
-};
-
-const toggleLike = async () => {
-  if (!tokenUtils.isLoggedIn()) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
-    return;
-  }
-
-  try {
-    const likedItems = JSON.parse(localStorage.getItem('liked_items') || '[]');
-    if (isLiked.value) {
-      const updatedItems = likedItems.filter(id => id !== String(foodId.value));
-      localStorage.setItem('liked_items', JSON.stringify(updatedItems));
-    } else {
-      likedItems.push(String(foodId.value));
-      localStorage.setItem('liked_items', JSON.stringify(likedItems));
-    }
-    isLiked.value = !isLiked.value;
-  } catch (err) {
-    console.error('좋아요 처리 실패:', err);
-  }
-};
-
-const toggleFavorite = async () => {
-  if (!tokenUtils.isLoggedIn()) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
-    return;
-  }
-
-  try {
-    processing.value = true;
-
-    if (isFavorited.value) {
-      await contentService.removeOneMouthFavorite(foodId.value);
-    } else {
-      await contentService.toggleOneMouthFavorite(foodId.value);
-    }
-
-    isFavorited.value = !isFavorited.value;
-
-    if (food.value) {
-      food.value.favoritesCount += isFavorited.value ? 1 : -1;
-    }
-
-  } catch (err) {
-    console.error('관심 상품 처리 실패:', err);
-    alert('관심 상품 처리에 실패했습니다.');
-  } finally {
-    processing.value = false;
-  }
-};
-
-const loadMoreTrades = () => {
-  displayedTradeCount.value = Math.min(
-      displayedTradeCount.value + 5,
-      personalTrades.value.length
-  );
-};
-
-const loadMoreReviews = () => {
-  displayedReviewCount.value = Math.min(
-      displayedReviewCount.value + 3,
-      reviews.value.length
-  );
-};
-
-const handleStartChat = async () => {
-  if (!tokenUtils.isLoggedIn()) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
-    return;
-  }
-
-  const currentUserId = getCurrentUserId();
-  if (!currentUserId) {
-    console.error('현재 사용자 ID를 가져올 수 없습니다.');
-    alert('사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
-    router.push('/login');
-    return;
-  }
-
-  if (!canStartChat.value) {
-    if (String(currentUserId) === String(food.value.sellerId)) {
-      alert('본인의 상품입니다.');
-    } else if (food.value.productStatus !== 'FOR_SALE') {
-      alert('현재 거래할 수 없는 상품입니다.');
-    } else {
-      alert('채팅을 시작할 수 없습니다.');
-    }
-    return;
-  }
-
-  try {
-    chatLoading.value = true;
-    chatError.value = '';
-
-    debugChatInfo('채팅 시작 요청', {
-      productId: food.value.id,
-      sellerId: food.value.sellerId,
-      currentUserId: currentUserId
-    });
-
-    const chatStartRequest = {
-      chatContext: 'PRODUCT_TRADE',
-      chatContextId: Number(food.value.id),
-      creatorId: Number(food.value.id),
-      participantIds: [
-        Number(currentUserId),
-        Number(food.value.sellerId)
-      ],
-      deviceId: tokenUtils.getDeviceId() || 'web-browser'
-    };
-
-    console.log('채팅 시작 요청:', chatStartRequest);
-
-    const response = await chatService.startChat(chatStartRequest);
-    const chatRoomData = response.data?.data || response.data;
-
-    console.log('채팅방 생성/조회 완료:', chatRoomData);
-
-    if (!chatRoomData?.roomId) {
-      throw new Error('채팅방 정보가 올바르지 않습니다.');
-    }
-
-    const chatQuery = {
-      from: 'product',
-      productId: food.value.id,
-      productName: food.value.name,
-      sellerId: food.value.sellerId,
-      sellerName: food.value.seller.name,
-      productPrice: food.value.price,
-      productImage: food.value.imageUrl,
-      productStatus: food.value.productStatus
-    };
-
-    await router.push({
-      name: 'ChatWithRoom',
-      params: { roomId: chatRoomData.roomId },
-      query: chatQuery
-    });
-
-    console.log('채팅방으로 이동 완료:', chatRoomData.roomId);
-
-  } catch (error) {
-    console.error('채팅 시작 실패:', error);
-    chatError.value = getChatErrorMessage(error);
-  } finally {
-    chatLoading.value = false;
-  }
-};
-
-const startChatWithSeller = async (trade) => {
-  if (!tokenUtils.isLoggedIn()) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
-    return;
-  }
-
-  const currentUserId = getCurrentUserId();
-  if (String(currentUserId) === String(trade.sellerId)) {
-    alert('본인의 상품입니다.');
-    return;
-  }
-
-  try {
-    chatLoading.value = true;
-    chatError.value = '';
-
-    const chatStartRequest = {
-      chatContext: 'PERSONAL_TRADE',
-      chatContextId: Number(trade.id),
-      creatorId: Number(trade.id),
-      participantIds: [
-        Number(currentUserId),
-        Number(trade.sellerId)
-      ],
-      deviceId: tokenUtils.getDeviceId() || 'web-browser'
-    };
-
-    const response = await chatService.startChat(chatStartRequest);
-    const chatRoomData = response.data?.data || response.data;
-
-    if (!chatRoomData?.roomId) {
-      throw new Error('채팅방 정보가 올바르지 않습니다.');
-    }
-
-    const chatQuery = {
-      from: 'trade',
-      tradeId: trade.id,
-      productName: trade.title,
-      sellerId: trade.sellerId,
-      sellerName: trade.sellerName,
-      price: trade.price
-    };
-
-    await router.push({
-      name: 'ChatWithRoom',
-      params: { roomId: chatRoomData.roomId },
-      query: chatQuery
-    });
-
-  } catch (error) {
-    console.error('거래 채팅 시작 실패:', error);
-    chatError.value = getChatErrorMessage(error);
-  } finally {
-    chatLoading.value = false;
-  }
-};
-
-const retryStartChat = () => {
-  clearChatError();
-  handleStartChat();
-};
-
-const clearChatError = () => {
-  chatError.value = '';
-};
-
-const writeReview = () => {
-  if (!tokenUtils.isLoggedIn()) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
-    return;
-  }
-  router.push(`/one-mouth/${foodId.value}/review`);
-};
-
-const shareFood = () => {
-  const shareData = {
-    title: food.value.name,
-    text: food.value.description,
-    url: window.location.href
-  };
-
-  if (navigator.share && navigator.canShare(shareData)) {
-    navigator.share(shareData).catch(err => console.error('공유 실패:', err));
-  } else {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      alert('링크가 복사되었습니다');
-    }).catch(() => {
-      // 클립보드 복사 실패 시 fallback
-      const textArea = document.createElement('textarea');
-      textArea.value = window.location.href;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      alert('링크가 복사되었습니다');
-    });
-  }
-};
-
-const goToTradeDetail = (tradeId) => {
-  router.push(`/trade/${tradeId}`);
-};
-
-const goToSell = () => {
-  if (!tokenUtils.isLoggedIn()) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
-    return;
-  }
-  router.push({
-    name: 'SellProduct',
-    query: { productId: foodId.value, productName: food.value?.name }
-  });
-};
-
-const goToRelatedProduct = (type) => {
-  // 관련 상품 페이지로 이동
-  router.push(`/one-mouth/search?category=${type}`);
-};
-
-const handleImageError = (e) => {
-  e.target.style.display = 'none';
-  e.target.parentElement.classList.add('no-image');
-};
-
-// 라이프사이클
+// Lifecycle
 onMounted(() => {
-  fetchFoodDetail(foodId.value);
+  console.log('거래 상세 페이지 마운트, ID:', route.params.id);
 });
-
-// URL 파라미터 변경 감지
-watch(() => route.params.id, (newId) => {
-  if (newId && newId !== foodId.value) {
-    fetchFoodDetail(newId);
-  }
-});
-
-// 페이지 제목 업데이트
-watch(food, (newFood) => {
-  if (newFood) {
-    document.title = `${newFood.name} - 한입거리`;
-  }
-});
-
-// 개발용 디버깅
-if (import.meta.env.DEV) {
-  window.debugOneMouthDetail = {
-    food,
-    canStartChat,
-    handleStartChat,
-    getCurrentUserId,
-    chatLoading,
-    chatError,
-    reviews,
-    personalTrades
-  };
-}
 </script>
 
 <style scoped>
-/* 메인 컨테이너 - Vue 스타일 적용 */
-.detail-container {
-  min-height: 100vh;
-  background: #FFFFFF;
-  padding-bottom: env(safe-area-inset-bottom);
-  position: relative;
-}
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
 
-.content-wrapper {
-  max-width: 100%;
-  margin: 0 auto;
-}
-
-/* 메인 컨테이너 */
-.main-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 24px;
-}
-
-/* 메인 콘텐츠 */
-.main-content {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  overflow: hidden;
-  padding: 0;
-  max-width: none;
+* {
   margin: 0;
-}
-
-/* 섹션 제목 공통 스타일 */
-.section-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 20px;
-  padding: 24px 24px 0 24px;
-}
-
-/* 제품 헤더 */
-.product-header {
-  padding: 24px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.product-title {
-  font-size: 28px;
-  font-weight: 800;
-  color: #000000;
-  margin-bottom: 8px;
-}
-
-.product-brand {
-  font-size: 16px;
-  color: #222222;
-  opacity: 0.7;
-  margin-bottom: 16px;
-}
-
-.product-meta {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 15px;
-}
-
-.rating {
-  color: #169976;
-  font-weight: 600;
-}
-
-.status-badge {
-  background: #1DCD9F;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.status-badge.info-only {
-  background: #222222;
-}
-
-/* 제품 정보 */
-.product-info {
-  padding: 24px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.info-section {
-  margin-bottom: 24px;
-}
-
-.info-section:last-child {
-  margin-bottom: 0;
-}
-
-.info-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 12px;
-}
-
-.info-content {
-  font-size: 15px;
-  line-height: 1.6;
-  color: #222222;
-}
-
-.tag-list {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.tag {
-  background: #f1f5f9;
-  color: #222222;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-}
-
-.tag.highlight {
-  background: #1DCD9F;
-  color: white;
-}
-
-/* 출시 정보 섹션 */
-.launch-info-section {
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.launch-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  padding: 0 24px 24px 24px;
-}
-
-.launch-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 16px;
-  background: #f7fafc;
-  border-radius: 8px;
-}
-
-.launch-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #718096;
-  text-transform: uppercase;
-}
-
-.launch-value {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2d3748;
-}
-
-/* 개인거래 섹션 */
-.personal-trade-section {
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.trade-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 0 24px;
-}
-
-.trade-item {
-  display: grid;
-  grid-template-columns: 80px 1fr auto auto;
-  gap: 16px;
-  align-items: center;
-  padding: 16px;
-  background: #f7fafc;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 2px solid transparent;
-}
-
-.trade-item:hover {
-  background: #edf2f7;
-  border-color: #1DCD9F;
-  transform: translateY(-1px);
-}
-
-.trade-image {
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.trade-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.trade-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.trade-price {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1DCD9F;
-}
-
-.trade-condition,
-.trade-quantity {
-  font-size: 13px;
-  color: #718096;
-}
-
-.seller-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.seller-profile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.seller-avatar {
-  width: 32px;
-  height: 32px;
-  background: #1DCD9F;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.seller-details {
-  text-align: center;
-}
-
-.seller-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #2d3748;
-}
-
-.seller-rating {
-  font-size: 11px;
-  color: #1DCD9F;
-}
-
-.seller-distance {
-  font-size: 11px;
-  color: #718096;
-}
-
-.trade-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.chat-btn {
-  padding: 8px 16px;
-  background: #1DCD9F;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.chat-btn:hover:not(:disabled) {
-  background: #16a085;
-}
-
-.chat-btn:disabled {
-  background: #cbd5e0;
-  color: #a0aec0;
-  cursor: not-allowed;
-}
-
-/* 빈 상태 */
-.empty-trade {
-  text-align: center;
-  padding: 60px 20px;
-  color: #718096;
-  margin: 0 24px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.empty-trade h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 8px;
-}
-
-.empty-trade p {
-  font-size: 14px;
-  margin-bottom: 24px;
-}
-
-.cta-btn {
-  background: #1DCD9F;
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.cta-btn:hover {
-  background: #16a085;
-  transform: translateY(-1px);
-}
-
-.load-more {
-  text-align: center;
-  margin: 20px 24px 24px 24px;
-}
-
-.load-more-btn {
-  background: white;
-  color: #1DCD9F;
-  border: 2px solid #1DCD9F;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.load-more-btn:hover {
-  background: #1DCD9F;
-  color: white;
-}
-
-/* 리뷰 섹션 */
-.reviews-section {
   padding: 0;
+  box-sizing: border-box;
 }
 
-.reviews-header {
+:root {
+  --primary: #1DCD9F;
+  --primary-dark: #169976;
+  --secondary: #000000;
+  --gray: #222222;
+  --light-gray: #666;
+  --bg: #ffffff;
+  --bg-secondary: #fafafa;
+  --border: #e5e7eb;
+}
+
+.detail-page {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fafafa;
+  color: var(--secondary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 60px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 24px 24px 0 24px;
 }
 
-.reviews-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #000000;
-}
-
-.reviews-stats {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  font-size: 14px;
-  color: #718096;
-}
-
-.reviews-container {
-  padding: 0 24px 24px 24px;
-}
-
-.reviews-list {
-  margin-bottom: 20px;
-}
-
-.review-item {
-  padding: 16px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.review-item:last-child {
-  border-bottom: none;
-}
-
-.review-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.review-user {
+.logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--secondary);
+  cursor: pointer;
+  transition: transform 0.3s;
 }
 
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  background: #1DCD9F;
-  border-radius: 50%;
+.logo:hover {
+  transform: translateY(-2px);
+}
+
+.logo-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 24px;
+  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
 }
 
-.user-name {
-  font-weight: 600;
-  color: #000000;
-  font-size: 14px;
-}
-
-.user-rating {
-  font-size: 12px;
-  color: #169976;
-}
-
-.review-content {
-  font-size: 14px;
-  line-height: 1.5;
-  color: #222222;
-  margin-bottom: 8px;
-}
-
-.review-meta {
+.nav-menu {
   display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: #718096;
+  gap: 48px;
+  align-items: center;
 }
 
-.no-reviews {
-  text-align: center;
-  padding: 40px 20px;
-  color: #718096;
+.nav-item {
+  color: var(--gray);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  position: relative;
+  padding: 10px 0;
+  transition: color 0.3s;
 }
 
-.review-load-more {
-  text-align: center;
-  margin-bottom: 20px;
+.nav-item:hover {
+  color: var(--primary);
 }
 
-.review-write-section {
-  text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
+.nav-item.active {
+  color: var(--primary);
 }
 
-.write-review-btn {
-  background: #1DCD9F;
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: 3px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.write-review-btn:hover {
-  background: #16a085;
-  transform: translateY(-1px);
-}
-
-/* 사이드바 */
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.widget {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-}
-
-.widget-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 16px;
-}
-
-/* 액션 버튼들 */
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.action-btn {
-  flex: 1;
-  padding: 12px;
-  border: 2px solid #1DCD9F;
+  padding: 14px 32px;
   border-radius: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-  text-decoration: none;
-  background: white;
-  font-size: 14px;
-}
-
-.action-btn.primary {
-  background: #1DCD9F;
-  color: white;
-}
-
-.action-btn.primary.favorited {
-  background: #169976;
-}
-
-.action-btn.secondary {
-  background: white;
-  color: #1DCD9F;
-}
-
-.action-btn:hover {
-  transform: translateY(-1px);
+  transition: all 0.3s;
   box-shadow: 0 4px 12px rgba(29, 205, 159, 0.3);
 }
 
-.action-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(29, 205, 159, 0.4);
 }
 
-/* 통계 정보 */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.stat-item {
-  text-align: center;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
-}
-
-.stat-number {
-  font-size: 20px;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #222222;
-  opacity: 0.7;
-}
-
-/* 관련 제품 */
-.related-item {
-  display: flex;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f1f5f9;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.related-item:hover {
-  background: #f8fafc;
-}
-
-.related-item:last-child {
-  border-bottom: none;
-}
-
-.related-image {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(45deg, #1DCD9F, #169976);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 20px;
-}
-
-.related-info {
-  flex: 1;
-}
-
-.related-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #000000;
-  margin-bottom: 2px;
-}
-
-.related-brand {
-  font-size: 11px;
-  color: #222222;
-  opacity: 0.7;
-  margin-bottom: 4px;
-}
-
-.related-stats {
-  font-size: 11px;
-  color: #169976;
-}
-
-/* 채팅 로딩 오버레이 */
-.chat-loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.chat-loading-content {
+.btn-secondary {
   background: white;
-  padding: 32px;
+  color: var(--gray);
+  border: 2px solid var(--border);
+  padding: 12px 28px;
   border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #f3f4f6;
-  border-top: 3px solid #1DCD9F;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.chat-loading-content p {
-  margin: 0;
-  color: #374151;
-  font-size: 16px;
-}
-
-/* 채팅 에러 모달 */
-.chat-error-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 20px;
-}
-
-.chat-error-content {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.chat-error-content h3 {
-  margin: 0 0 12px 0;
-  color: #dc2626;
-  font-size: 18px;
   font-weight: 600;
-}
-
-.chat-error-content p {
-  margin: 0 0 20px 0;
-  color: #374151;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.error-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-.cancel-btn,
-.retry-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s;
 }
 
-.cancel-btn {
-  background: #f3f4f6;
-  color: #374151;
+.btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
-.cancel-btn:hover {
-  background: #e5e7eb;
+.btn-secondary.small {
+  padding: 10px 20px;
+  font-size: 14px;
 }
 
-.retry-btn {
-  background: #1DCD9F;
-  color: white;
+.detail-container {
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 60px 100px;
 }
 
-.retry-btn:hover {
-  background: #169976;
+.detail-wrapper {
+  background: white;
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px rgba(29, 205, 159, 0.12);
+  border: 1px solid var(--border);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 반응형 디자인 */
-@media (max-width: 1024px) {
-  .main-container {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .sidebar {
-    order: -1;
-  }
-
-  .widget:not(:first-child) {
-    display: none;
-  }
-
-  .trade-item {
-    grid-template-columns: 60px 1fr auto;
-    gap: 12px;
-  }
-
-  .trade-image {
-    width: 60px;
-    height: 60px;
-  }
-
-  .seller-info {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .trade-actions {
-    align-self: flex-start;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-container {
-    padding: 16px;
-  }
-
-  .product-title {
-    font-size: 24px;
-  }
-
-  .product-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
-
-  .launch-info-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .trade-item {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    text-align: center;
-  }
-
-  .trade-image {
-    justify-self: center;
-    width: 80px;
-    height: 80px;
-  }
-
-  .seller-info {
-    justify-content: center;
-  }
-
-  .chat-loading-content {
-    margin: 20px;
-    padding: 24px;
-  }
-
-  .chat-error-content {
-    margin: 20px;
-  }
-
-  .reviews-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .reviews-stats {
-    align-self: flex-end;
-  }
-}
-
-@media (max-width: 480px) {
-  .main-container {
-    padding: 12px;
-  }
-
-  .section-title {
-    font-size: 18px;
-    padding: 20px 20px 0 20px;
-  }
-
-  .product-header,
-  .product-info,
-  .reviews-container {
-    padding: 20px;
-  }
-
-  .launch-info-grid,
-  .trade-list {
-    padding: 0 20px;
-  }
-
-  .load-more,
-  .empty-trade {
-    margin: 20px 20px 20px 20px;
-  }
-
-  .widget {
-    padding: 16px;
-  }
-
-  .product-title {
-    font-size: 20px;
-  }
-
-  .meta-item {
-    font-size: 14px;
-  }
-
-  .trade-item {
-    padding: 12px;
-  }
-
-  .review-item {
-    padding: 12px 0;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* 이미지 에러 처리 */
-.no-image {
-  background: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #718096;
-  font-size: 12px;
-}
-
-.no-image::before {
-  content: '이미지 없음';
-}
-
-/* 스크롤바 스타일링 */
-.reviews-list::-webkit-scrollbar,
-.trade-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.reviews-list::-webkit-scrollbar-track,
-.trade-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.reviews-list::-webkit-scrollbar-thumb,
-.trade-list::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
-  border-radius: 3px;
-}
-
-.reviews-list::-webkit-scrollbar-thumb:hover,
-.trade-list::-webkit-scrollbar-thumb:hover {
-  background: #a0aec0;
-}
-
-/* 포커스 스타일 */
-.chat-btn:focus,
-.action-btn:focus,
-.cta-btn:focus,
-.load-more-btn:focus,
-.write-review-btn:focus,
-.cancel-btn:focus,
-.retry-btn:focus {
-  outline: 2px solid #1DCD9F;
-  outline-offset: 2px;
-}
-
-/* 접근성 개선 */
-.trade-item:focus,
-.related-item:focus {
-  outline: 2px solid #1DCD9F;
-  outline-offset: 2px;
-}
-
-/* 로딩 상태 개선 */
-@keyframes fadeIn {
+@keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
@@ -2051,75 +440,321 @@ if (import.meta.env.DEV) {
   }
 }
 
-.trade-item,
-.review-item {
-  animation: fadeIn 0.3s ease-out;
+.detail-images {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 20px;
+  padding: 40px;
+  height: 450px;
 }
 
-/* 호버 효과 개선 */
-.trade-item:hover .trade-price {
-  color: #169976;
+.detail-image {
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+  overflow: hidden;
+  transition: transform 0.3s;
 }
 
-.review-item:hover {
-  background: #f8fafc;
-  border-radius: 8px;
-  margin: 0 -8px;
-  padding: 16px 8px;
+.detail-image:hover {
+  transform: scale(1.02);
 }
 
-/* 텍스트 선택 방지 */
-.trade-item,
-.related-item,
-.action-btn,
-.chat-btn {
-  user-select: none;
+.detail-image.main {
+  grid-row: span 2;
+  font-size: 150px;
 }
 
-/* 고대비 모드 지원 */
-@media (prefers-contrast: high) {
-  .status-badge,
-  .action-btn.primary,
-  .chat-btn,
-  .cta-btn,
-  .write-review-btn,
-  .retry-btn {
-    border: 2px solid currentColor;
-  }
-
-  .trade-item:hover,
-  .related-item:hover {
-    border: 2px solid #1DCD9F;
-  }
+.detail-body {
+  padding: 50px;
 }
 
+.product-link-banner {
+  background: linear-gradient(135deg, rgba(29, 205, 159, 0.1) 0%, rgba(22, 153, 118, 0.05) 100%);
+  border: 2px dashed var(--primary);
+  border-radius: 24px;
+  padding: 24px;
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
 
+.product-link-icon {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
+  flex-shrink: 0;
+}
 
-/* 인쇄 스타일 */
-@media print {
-  .sidebar,
-  .chat-loading-overlay,
-  .chat-error-modal,
-  .action-buttons,
-  .chat-btn,
-  .cta-btn,
-  .load-more-btn,
-  .write-review-btn {
-    display: none !important;
-  }
+.product-link-info {
+  flex: 1;
+}
 
-  .main-container {
+.product-link-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 6px;
+}
+
+.product-link-sub {
+  font-size: 14px;
+  color: var(--light-gray);
+}
+
+.detail-price-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.detail-price {
+  font-size: 56px;
+  font-weight: 800;
+  color: var(--secondary);
+}
+
+.detail-discount {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.detail-badge {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
+}
+
+.detail-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 40px;
+  line-height: 1.4;
+}
+
+.detail-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  background: var(--bg-secondary);
+  padding: 32px;
+  border-radius: 24px;
+  margin-bottom: 40px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-label {
+  font-size: 15px;
+  color: var(--light-gray);
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 16px;
+  color: var(--secondary);
+  font-weight: 700;
+}
+
+.detail-description {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 18px;
+}
+
+.description-text {
+  font-size: 16px;
+  color: var(--gray);
+  line-height: 1.8;
+}
+
+.seller-card {
+  background: var(--bg-secondary);
+  padding: 32px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.seller-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.seller-avatar-large {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
+}
+
+.seller-info-detailed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seller-name-large {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--secondary);
+}
+
+.seller-stats {
+  font-size: 14px;
+  color: var(--light-gray);
+}
+
+.detail-actions {
+  display: flex;
+  gap: 20px;
+  margin-top: 40px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn-back {
+  flex: 1;
+  padding: 20px;
+  background: white;
+  color: var(--gray);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-back:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-chat {
+  flex: 2;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
+}
+
+.btn-chat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(29, 205, 159, 0.4);
+}
+
+.loading-container,
+.error-container {
+  text-align: center;
+  padding: 100px 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 30px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-container p,
+.error-container p {
+  font-size: 16px;
+  color: var(--light-gray);
+  margin-top: 20px;
+}
+
+.error-icon {
+  font-size: 80px;
+  margin-bottom: 30px;
+}
+
+.error-container h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 20px;
+}
+
+.error-container .btn-primary {
+  margin-top: 40px;
+}
+
+@media (max-width: 768px) {
+  .detail-images {
     grid-template-columns: 1fr;
-    padding: 0;
+    height: auto;
   }
 
-  .main-content {
-    box-shadow: none;
-    border: 1px solid #e2e8f0;
+  .detail-image.main {
+    grid-row: span 1;
+    height: 300px;
   }
 
-  .detail-container {
-    background: white;
+  .detail-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-card {
+    flex-direction: column;
+  }
+
+  .detail-actions {
+    flex-direction: column;
   }
 }
 </style>

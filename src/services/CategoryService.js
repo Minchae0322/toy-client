@@ -1,8 +1,7 @@
 // services/CategoryService.js
-// 카테고리 관련 API 서비스 (Fetch API 기반)
+// 카테고리 관련 API 서비스 (백엔드 API 스펙에 맞춤)
 
 import { BaseApiService } from './BaseApiService.js'
-import * as authUtils from '@/utils/auth.js'
 
 /**
  * 카테고리 서비스
@@ -23,6 +22,7 @@ class CategoryService extends BaseApiService {
 
   /**
    * 카테고리 등록
+   * POST /categories
    */
   async createCategory(categoryData) {
     const validation = this.validateCategoryData(categoryData)
@@ -32,13 +32,9 @@ class CategoryService extends BaseApiService {
 
     const requestData = {
       categoryName: categoryData.categoryName,
-      description: categoryData.description,
-      categoryCode: categoryData.categoryCode,
-      keywords: categoryData.keywords || [],
-      iconUrl: categoryData.iconUrl,
-      colorCode: categoryData.colorCode,
-      sortOrder: categoryData.sortOrder || 0,
-      isActive: categoryData.isActive !== false // 기본값 true
+      description: categoryData.description || null,
+      categoryCode: categoryData.categoryCode || null,
+      keywords: categoryData.keywords || []
     }
 
     return await this.post('/categories', requestData)
@@ -46,6 +42,7 @@ class CategoryService extends BaseApiService {
 
   /**
    * 카테고리 단건 조회
+   * GET /categories/{categoryId}
    */
   async getCategory(categoryId) {
     if (!categoryId) {
@@ -57,6 +54,7 @@ class CategoryService extends BaseApiService {
 
   /**
    * 카테고리 목록 조회 (페이징)
+   * GET /categories
    */
   async getCategoriesPages(pageable = {}, condition = {}) {
     const validatedPageable = this.validatePageable(pageable)
@@ -71,7 +69,8 @@ class CategoryService extends BaseApiService {
   }
 
   /**
-   * 카테고리 목록 조회 (전체 목록)
+   * 카테고리 전체 목록 조회
+   * GET /categories/list
    */
   async getCategories(condition = {}) {
     const validatedCondition = this.validateSearchCondition(condition)
@@ -80,26 +79,23 @@ class CategoryService extends BaseApiService {
 
   /**
    * 카테고리 수정
+   * PUT /categories/{categoryId}
    */
   async updateCategory(categoryId, categoryData) {
     if (!categoryId) {
       throw new Error('카테고리 ID가 필요합니다.')
     }
 
-    const validation = this.validateCategoryData(categoryData)
+    const validation = this.validateCategoryData(categoryData, true)
     if (!validation.isValid) {
       throw new Error(validation.errors.join(', '))
     }
 
     const requestData = {
       categoryName: categoryData.categoryName,
-      description: categoryData.description,
-      categoryCode: categoryData.categoryCode,
+      description: categoryData.description || null,
       keywords: categoryData.keywords || [],
-      iconUrl: categoryData.iconUrl,
-      colorCode: categoryData.colorCode,
-      sortOrder: categoryData.sortOrder,
-      isActive: categoryData.isActive
+      sortOrder: categoryData.sortOrder
     }
 
     return await this.put(`/categories/${categoryId}`, requestData)
@@ -107,6 +103,7 @@ class CategoryService extends BaseApiService {
 
   /**
    * 카테고리 삭제
+   * DELETE /categories/{categoryId}
    */
   async deleteCategory(categoryId) {
     if (!categoryId) {
@@ -116,91 +113,40 @@ class CategoryService extends BaseApiService {
     return await this.delete(`/categories/${categoryId}`)
   }
 
-  // ==================== 카테고리 통계 API ====================
-
-  /**
-   * 카테고리별 상품 수 조회
-   */
-  async getCategoryProductCount(categoryId) {
-    if (!categoryId) {
-      throw new Error('카테고리 ID가 필요합니다.')
-    }
-
-    return await this.get(`/categories/${categoryId}/product-count`)
-  }
-
-  /**
-   * 카테고리별 통계 조회
-   */
-  async getCategoryStats(categoryId) {
-    if (!categoryId) {
-      throw new Error('카테고리 ID가 필요합니다.')
-    }
-
-    return await this.get(`/categories/${categoryId}/stats`)
-  }
-
-  /**
-   * 전체 카테고리 통계 조회
-   */
-  async getAllCategoriesStats() {
-    return await this.get('/categories/stats')
-  }
-
   // ==================== 카테고리 정렬 API ====================
 
   /**
-   * 카테고리 순서 변경
+   * 카테고리 순서 변경 (드래그 앤 드롭)
+   * PUT /categories/{categoryId}/reorder
    */
-  async updateCategoryOrder(categoryId, newOrder) {
-    if (!categoryId || newOrder === undefined) {
-      throw new Error('카테고리 ID와 새로운 순서가 필요합니다.')
+  async updateCategoryOrder(categoryId, targetPosition) {
+    if (!categoryId || targetPosition === undefined) {
+      throw new Error('카테고리 ID와 목표 위치가 필요합니다.')
+    }
+
+    if (targetPosition < 1) {
+      throw new Error('목표 위치는 1 이상이어야 합니다.')
     }
 
     const requestData = {
-      sortOrder: newOrder
+      targetPosition: targetPosition
     }
 
-    return await this.patch(`/categories/${categoryId}/order`, requestData)
-  }
-
-  /**
-   * 여러 카테고리 순서 일괄 변경
-   */
-  async updateCategoriesOrder(orderData) {
-    if (!orderData || !Array.isArray(orderData)) {
-      throw new Error('순서 데이터 배열이 필요합니다.')
-    }
-
-    // 데이터 검증
-    const validatedData = orderData.map(item => {
-      if (!item.categoryId || item.sortOrder === undefined) {
-        throw new Error('각 항목에는 categoryId와 sortOrder가 필요합니다.')
-      }
-      return {
-        categoryId: item.categoryId,
-        sortOrder: item.sortOrder
-      }
-    })
-
-    return await this.patch('/categories/order', { categories: validatedData })
+    return await this.put(`/categories/${categoryId}/reorder`, requestData)
   }
 
   // ==================== 카테고리 활성화 관리 ====================
 
   /**
-   * 카테고리 활성화/비활성화
+   * 카테고리 활성화/비활성화 토글
+   * PATCH /categories/{categoryId}/toggle-status
    */
-  async toggleCategoryStatus(categoryId, isActive) {
-    if (!categoryId || isActive === undefined) {
-      throw new Error('카테고리 ID와 활성화 상태가 필요합니다.')
+  async toggleCategoryStatus(categoryId) {
+    if (!categoryId) {
+      throw new Error('카테고리 ID가 필요합니다.')
     }
 
-    const requestData = {
-      isActive: isActive
-    }
-
-    return await this.patch(`/categories/${categoryId}/status`, requestData)
+    return await this.patch(`/categories/${categoryId}/toggle-status`)
   }
 
   // ==================== 샘플 데이터 (개발용) ====================
@@ -216,13 +162,9 @@ class CategoryService extends BaseApiService {
           categoryId: 1,
           categoryName: "프라모델",
           description: "건담, 자동차, 항공기 등의 프라스틱 모델",
-          categoryCode: "PM001",
-          keywords: ["건담", "프라모델", "조립", "피규어"],
-          iconUrl: "https://example.com/icons/plastic-model.svg",
-          colorCode: "#FF6B6B",
+          keywords: "건담,프라모델,조립,피규어",
           sortOrder: 1,
           isActive: true,
-          productCount: 245,
           createdAt: "2024-01-01T00:00:00",
           updatedAt: "2024-01-01T00:00:00"
         },
@@ -230,13 +172,9 @@ class CategoryService extends BaseApiService {
           categoryId: 2,
           categoryName: "피규어",
           description: "애니메이션, 게임 캐릭터 피규어",
-          categoryCode: "FG001",
-          keywords: ["피규어", "애니메이션", "게임", "캐릭터"],
-          iconUrl: "https://example.com/icons/figure.svg",
-          colorCode: "#4ECDC4",
+          keywords: "피규어,애니메이션,게임,캐릭터",
           sortOrder: 2,
           isActive: true,
-          productCount: 189,
           createdAt: "2024-01-01T00:00:00",
           updatedAt: "2024-01-01T00:00:00"
         },
@@ -244,13 +182,9 @@ class CategoryService extends BaseApiService {
           categoryId: 3,
           categoryName: "블록완구",
           description: "레고, 조립식 블록 완구",
-          categoryCode: "BL001",
-          keywords: ["레고", "블록", "조립", "완구"],
-          iconUrl: "https://example.com/icons/blocks.svg",
-          colorCode: "#45B7D1",
+          keywords: "레고,블록,조립,완구",
           sortOrder: 3,
           isActive: true,
-          productCount: 156,
           createdAt: "2024-01-01T00:00:00",
           updatedAt: "2024-01-01T00:00:00"
         },
@@ -258,13 +192,9 @@ class CategoryService extends BaseApiService {
           categoryId: 4,
           categoryName: "음료",
           description: "음료수, 차, 커피 등",
-          categoryCode: "DR001",
-          keywords: ["음료", "음료수", "차", "커피"],
-          iconUrl: "https://example.com/icons/drink.svg",
-          colorCode: "#96CEB4",
+          keywords: "음료,음료수,차,커피",
           sortOrder: 4,
           isActive: true,
-          productCount: 324,
           createdAt: "2024-01-01T00:00:00",
           updatedAt: "2024-01-01T00:00:00"
         },
@@ -272,13 +202,9 @@ class CategoryService extends BaseApiService {
           categoryId: 5,
           categoryName: "과자/스낵",
           description: "과자, 스낵, 간식류",
-          categoryCode: "SN001",
-          keywords: ["과자", "스낵", "간식", "쿠키"],
-          iconUrl: "https://example.com/icons/snack.svg",
-          colorCode: "#FECA57",
+          keywords: "과자,스낵,간식,쿠키",
           sortOrder: 5,
           isActive: true,
-          productCount: 412,
           createdAt: "2024-01-01T00:00:00",
           updatedAt: "2024-01-01T00:00:00"
         }
@@ -304,55 +230,10 @@ class CategoryService extends BaseApiService {
       success: true,
       data: {
         ...category,
-        recentProducts: [
-          {
-            id: 1,
-            name: "건담 RX-78-2 Ver. Ka",
-            brand: "반다이",
-            price: "45000",
-            thumbnailUrl: "https://example.com/images/gundam1.jpg",
-            likeCount: 89,
-            createdAt: "2024-01-10T10:30:00"
-          },
-          {
-            id: 2,
-            name: "포켓몬 피카츄 피규어",
-            brand: "굿스마일컴퍼니",
-            price: "28000",
-            thumbnailUrl: "https://example.com/images/pikachu1.jpg",
-            likeCount: 156,
-            createdAt: "2024-01-25T14:20:00"
-          }
-        ],
-        stats: {
-          totalProducts: category.productCount,
-          activeProducts: Math.floor(category.productCount * 0.9),
-          averagePrice: 35000,
-          totalViews: 12450,
-          totalLikes: 1890
-        }
-      }
-    }
-  }
-
-  /**
-   * 샘플 카테고리 통계 데이터 제공
-   */
-  getSampleCategoriesStats() {
-    return {
-      success: true,
-      data: {
-        totalCategories: 5,
-        activeCategories: 5,
-        inactiveCategories: 0,
-        totalProducts: 1326,
-        categoriesStats: [
-          { categoryId: 1, categoryName: "프라모델", productCount: 245, percentage: 18.5 },
-          { categoryId: 2, categoryName: "피규어", productCount: 189, percentage: 14.3 },
-          { categoryId: 3, categoryName: "블록완구", productCount: 156, percentage: 11.8 },
-          { categoryId: 4, categoryName: "음료", productCount: 324, percentage: 24.4 },
-          { categoryId: 5, categoryName: "과자/스낵", productCount: 412, percentage: 31.1 }
-        ]
+        categoryCode: null,
+        keywords: this.parseKeywords(category.keywords),
+        iconUrl: null,
+        colorCode: null
       }
     }
   }
@@ -360,41 +241,49 @@ class CategoryService extends BaseApiService {
   // ==================== 유틸리티 메서드 ====================
 
   /**
-   * 카테고리 등록 데이터 검증
+   * 카테고리 등록/수정 데이터 검증
    */
-  validateCategoryData(categoryData) {
+  validateCategoryData(categoryData, isUpdate = false) {
     const errors = []
 
     if (!categoryData.categoryName || categoryData.categoryName.trim().length === 0) {
       errors.push('카테고리명은 필수입니다.')
     }
 
-    if (categoryData.categoryName && categoryData.categoryName.length > 50) {
-      errors.push('카테고리명은 50자 이하여야 합니다.')
-    }
-
-    if (!categoryData.categoryCode || categoryData.categoryCode.trim().length === 0) {
-      errors.push('카테고리 코드는 필수입니다.')
-    }
-
-    if (categoryData.categoryCode && categoryData.categoryCode.length > 20) {
-      errors.push('카테고리 코드는 20자 이하여야 합니다.')
+    if (categoryData.categoryName && categoryData.categoryName.length > 100) {
+      errors.push('카테고리명은 100자 이하여야 합니다.')
     }
 
     if (categoryData.description && categoryData.description.length > 500) {
       errors.push('카테고리 설명은 500자 이하여야 합니다.')
     }
 
-    if (categoryData.keywords && categoryData.keywords.length > 20) {
-      errors.push('키워드는 최대 20개까지 가능합니다.')
+    if (categoryData.categoryCode && categoryData.categoryCode.length > 50) {
+      errors.push('카테고리 코드는 50자 이하여야 합니다.')
     }
 
-    if (categoryData.colorCode && !/^#[0-9A-F]{6}$/i.test(categoryData.colorCode)) {
-      errors.push('올바른 색상 코드를 입력해주세요. (예: #FF6B6B)')
+    if (categoryData.keywords && Array.isArray(categoryData.keywords)) {
+      if (categoryData.keywords.length > 10) {
+        errors.push('키워드는 최대 10개까지 가능합니다.')
+      }
+
+      const invalidKeywords = categoryData.keywords.filter(k =>
+          !k || k.trim().length === 0 || k.length > 20
+      )
+
+      if (invalidKeywords.length > 0) {
+        errors.push('각 키워드는 1-20자여야 합니다.')
+      }
     }
 
-    if (categoryData.sortOrder !== undefined && (isNaN(categoryData.sortOrder) || categoryData.sortOrder < 0)) {
-      errors.push('정렬 순서는 0 이상의 숫자여야 합니다.')
+    if (isUpdate) {
+      if (categoryData.sortOrder === undefined || categoryData.sortOrder === null) {
+        errors.push('정렬 순서는 필수입니다.')
+      }
+
+      if (categoryData.sortOrder !== undefined && categoryData.sortOrder < 0) {
+        errors.push('정렬 순서는 0 이상이어야 합니다.')
+      }
     }
 
     return {
@@ -456,13 +345,12 @@ class CategoryService extends BaseApiService {
       categoryId: backendCategory.categoryId,
       categoryName: backendCategory.categoryName,
       description: backendCategory.description,
-      categoryCode: backendCategory.categoryCode,
-      keywords: backendCategory.keywords || [],
-      iconUrl: backendCategory.iconUrl,
-      colorCode: backendCategory.colorCode,
+      categoryCode: backendCategory.categoryCode || null,
+      keywords: this.parseKeywords(backendCategory.keywords),
+      iconUrl: backendCategory.iconUrl || null,
+      colorCode: backendCategory.colorCode || null,
       sortOrder: backendCategory.sortOrder || 0,
       isActive: backendCategory.isActive !== false,
-      productCount: backendCategory.productCount || 0,
       createdAt: backendCategory.createdAt,
       updatedAt: backendCategory.updatedAt
     }
@@ -480,8 +368,6 @@ class CategoryService extends BaseApiService {
           return a.sortOrder - b.sortOrder
         case 'categoryName':
           return a.categoryName.localeCompare(b.categoryName, 'ko-KR')
-        case 'productCount':
-          return b.productCount - a.productCount
         case 'createdAt':
           return new Date(b.createdAt) - new Date(a.createdAt)
         default:
@@ -501,9 +387,11 @@ class CategoryService extends BaseApiService {
 
       if (filters.keyword) {
         const keyword = filters.keyword.toLowerCase()
+        const keywordsArray = this.parseKeywords(category.keywords)
+
         return category.categoryName.toLowerCase().includes(keyword) ||
             category.description?.toLowerCase().includes(keyword) ||
-            (category.keywords && category.keywords.some(tag => tag.toLowerCase().includes(keyword)))
+            keywordsArray.some(tag => tag.toLowerCase().includes(keyword))
       }
 
       return true
@@ -511,7 +399,34 @@ class CategoryService extends BaseApiService {
   }
 
   /**
-   * 카테고리별 색상 생성
+   * 키워드 문자열을 배열로 변환
+   */
+  parseKeywords(keywordString) {
+    if (!keywordString) return []
+    return keywordString
+    .split(',')
+    .map(keyword => keyword.trim())
+    .filter(keyword => keyword.length > 0)
+  }
+
+  /**
+   * 키워드 배열을 문자열로 변환
+   */
+  formatKeywords(keywords) {
+    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) return ''
+    return keywords.join(',')
+  }
+
+  /**
+   * 키워드를 해시태그 형식으로 표시
+   */
+  formatKeywordsWithHash(keywords) {
+    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) return ''
+    return keywords.map(keyword => `#${keyword}`).join(' ')
+  }
+
+  /**
+   * 카테고리별 색상 생성 (UI용)
    */
   generateCategoryColor(index) {
     const colors = [
@@ -533,13 +448,16 @@ class CategoryService extends BaseApiService {
     console.log('=== 서버 정보 ===')
     console.log('Content Server URL:', this.baseURL)
 
-    console.log('=== 지원 기능 ===')
-    console.log('카테고리 CRUD: 등록, 조회, 수정, 삭제')
-    console.log('카테고리 정렬: 순서 변경, 일괄 변경')
-    console.log('카테고리 활성화: 활성화/비활성화 관리')
-    console.log('카테고리 통계: 상품 수, 전체 통계')
+    console.log('=== 지원 API ===')
+    console.log('POST   /categories - 카테고리 생성')
+    console.log('GET    /categories - 카테고리 목록 조회 (페이징)')
+    console.log('GET    /categories/list - 카테고리 전체 목록')
+    console.log('GET    /categories/{id} - 카테고리 상세 조회')
+    console.log('PUT    /categories/{id} - 카테고리 수정')
+    console.log('DELETE /categories/{id} - 카테고리 삭제')
+    console.log('PATCH  /categories/{id}/toggle-status - 활성화 토글')
+    console.log('PUT    /categories/{id}/reorder - 순서 변경')
 
-    // 부모 클래스의 디버깅도 호출
     this.debugStatus()
 
     console.groupEnd()
@@ -587,62 +505,10 @@ export const categoryUtils = {
   },
 
   /**
-   * 카테고리 코드 생성
+   * 카테고리 상태 배지 색상
    */
-  generateCategoryCode(categoryName) {
-    const codeMap = {
-      '프라모델': 'PM',
-      '피규어': 'FG',
-      '블록완구': 'BL',
-      '완구': 'TO',
-      '게임': 'GM',
-      '도서': 'BK',
-      '전자제품': 'EL',
-      '의류': 'CL',
-      '액세서리': 'AC',
-      '뷰티': 'BT',
-      '스포츠': 'SP',
-      '음료': 'DR',
-      '과자/스낵': 'SN',
-      '베이커리': 'BK',
-      '도시락/간편식': 'ML',
-      '아이스크림': 'IC',
-      '라면/면류': 'ND'
-    }
-
-    const baseCode = codeMap[categoryName] || 'GN'
-    const timestamp = Date.now().toString().slice(-3)
-    return `${baseCode}${timestamp}`
-  },
-
-  /**
-   * 카테고리 색상 생성
-   */
-  generateCategoryColor() {
-    const colors = [
-      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
-      '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43'
-    ]
-    return colors[Math.floor(Math.random() * colors.length)]
-  },
-
-  /**
-   * 키워드 배열을 문자열로 변환
-   */
-  formatKeywords(keywords) {
-    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) return ''
-    return keywords.map(keyword => `#${keyword}`).join(' ')
-  },
-
-  /**
-   * 키워드 문자열을 배열로 변환
-   */
-  parseKeywords(keywordString) {
-    if (!keywordString) return []
-    return keywordString
-    .split(/[,\s]+/)
-    .map(keyword => keyword.replace(/^#/, '').trim())
-    .filter(keyword => keyword.length > 0)
+  getStatusBadgeClass(isActive) {
+    return isActive ? 'badge-success' : 'badge-secondary'
   }
 }
 
@@ -689,9 +555,9 @@ export function useCategory() {
     }
   }
 
-  const updateCategoryOrder = async (categoryId, newOrder) => {
+  const reorderCategory = async (categoryId, targetPosition) => {
     try {
-      const response = await categoryService.updateCategoryOrder(categoryId, newOrder)
+      const response = await categoryService.updateCategoryOrder(categoryId, targetPosition)
       return {
         success: true,
         data: response.data,
@@ -699,6 +565,23 @@ export function useCategory() {
       }
     } catch (error) {
       console.error('[CATEGORY] 카테고리 순서 변경 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  const toggleStatus = async (categoryId) => {
+    try {
+      const response = await categoryService.toggleCategoryStatus(categoryId)
+      return {
+        success: true,
+        data: response.data,
+        message: response.message || '카테고리 상태가 변경되었습니다'
+      }
+    } catch (error) {
+      console.error('[CATEGORY] 카테고리 상태 변경 실패:', error)
       return {
         success: false,
         error: error.message
@@ -717,21 +600,19 @@ export function useCategory() {
     // 페이징 조회
     getCategoriesPages: (pageable, condition) => categoryService.getCategoriesPages(pageable, condition),
 
-    // 통계
-    getCategoryStats: (categoryId) => categoryService.getCategoryStats(categoryId),
-    getAllCategoriesStats: () => categoryService.getAllCategoriesStats(),
-
     // 순서 관리
-    updateCategoryOrder,
-    updateCategoriesOrder: (orderData) => categoryService.updateCategoriesOrder(orderData),
+    reorderCategory,
 
     // 상태 관리
-    toggleCategoryStatus: (categoryId, isActive) => categoryService.toggleCategoryStatus(categoryId, isActive),
+    toggleStatus,
 
     // 유틸리티
     transformCategory: (category) => categoryService.transformCategoryResponse(category),
     sortCategories: (categories, sortBy) => categoryService.sortCategories(categories, sortBy),
     filterCategories: (categories, filters) => categoryService.filterCategories(categories, filters),
+    parseKeywords: (keywords) => categoryService.parseKeywords(keywords),
+    formatKeywords: (keywords) => categoryService.formatKeywords(keywords),
+    formatKeywordsWithHash: (keywords) => categoryService.formatKeywordsWithHash(keywords),
 
     // 연결 테스트
     testConnection: () => categoryService.testConnection(),
@@ -743,11 +624,6 @@ export function useCategory() {
 
 // ==================== 싱글톤 인스턴스 ====================
 
-// 싱글톤 인스턴스 생성 및 내보내기
 export const categoryService = new CategoryService()
-
-// 별칭 (기존 코드 호환성)
 export const categoryApi = categoryService
-
-// 기본 내보내기
 export default categoryService
