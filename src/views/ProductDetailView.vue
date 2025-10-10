@@ -233,18 +233,43 @@
             </div>
           </div>
 
-          <!-- 리뷰 섹션 -->
-          <div class="reviews-section" v-if="product.recentReviews?.length > 0">
-            <div class="reviews-header">
-              <div class="reviews-title">💬 최근 리뷰</div>
-              <div class="reviews-stats">
-                <span>⭐ {{ formatRating(product.averageRating) }}</span>
-              </div>
+          <!-- 탭 네비게이션 -->
+          <div class="tabs-section">
+            <div class="tabs-nav">
+              <button
+                  class="tab-btn"
+                  :class="{ active: activeTab === 'reviews' }"
+                  @click="activeTab = 'reviews'"
+              >
+                💬 리뷰 ({{ product.reviewCount || 0 }})
+              </button>
+              <button
+                  class="tab-btn"
+                  :class="{ active: activeTab === 'trades' }"
+                  @click="activeTab = 'trades'"
+              >
+                🛒 개인거래 ({{ oneMouthTrades.length }})
+              </button>
             </div>
 
-            <!-- 리뷰 목록 -->
-            <div class="reviews-container">
-              <div class="reviews-list">
+            <!-- 리뷰 탭 콘텐츠 -->
+            <div v-show="activeTab === 'reviews'" class="tab-content">
+              <div class="reviews-header">
+                <div class="reviews-stats">
+                  <span class="avg-rating">⭐ {{ formatRating(product.averageRating) }}</span>
+                  <span class="review-count">{{ product.reviewCount || 0 }}개의 리뷰</span>
+                </div>
+                <button
+                    class="write-review-btn"
+                    @click="handleWriteReviewAction"
+                    :disabled="!isLoggedIn"
+                >
+                  {{ isLoggedIn ? '리뷰 작성하기' : '로그인 후 리뷰 작성' }}
+                </button>
+              </div>
+
+              <!-- 리뷰 목록 -->
+              <div v-if="product.recentReviews?.length > 0" class="reviews-list">
                 <div
                     v-for="review in product.recentReviews"
                     :key="review.id"
@@ -253,25 +278,67 @@
                   <div class="review-header">
                     <div class="review-user">
                       <div class="user-avatar">{{ getInitial(review.userName) }}</div>
-                      <div class="user-name">{{ review.userName }}</div>
-                      <div class="user-rating">⭐ {{ formatRating(review.rating) }}</div>
+                      <div class="user-info">
+                        <div class="user-name">{{ review.userName }}</div>
+                        <div class="user-rating">⭐ {{ formatRating(review.rating) }}</div>
+                      </div>
                     </div>
+                    <div class="review-date">{{ getRelativeTime(review.createdAt) }}</div>
                   </div>
                   <div class="review-content">{{ review.comment }}</div>
-                  <div class="review-meta">
-                    <span>{{ getRelativeTime(review.createdAt) }}</span>
+                </div>
+              </div>
+              <div v-else class="empty-state">
+                <div class="empty-icon">💬</div>
+                <p>아직 작성된 리뷰가 없습니다</p>
+                <button class="write-review-btn" @click="handleWriteReviewAction" :disabled="!isLoggedIn">
+                  첫 리뷰 작성하기
+                </button>
+              </div>
+            </div>
+
+            <!-- 개인거래 탭 콘텐츠 -->
+            <div v-show="activeTab === 'trades'" class="tab-content">
+              <div class="trades-header">
+                <div class="trades-info">
+                  <span class="trades-count">{{ oneMouthTrades.length }}개의 거래</span>
+                  <span class="trades-desc">이 상품으로 진행중인 개인거래입니다</span>
+                </div>
+                <button class="create-trade-btn" @click="createTrade">
+                  거래 등록하기
+                </button>
+              </div>
+
+              <!-- 거래 목록 -->
+              <div v-if="oneMouthTrades.length > 0" class="trades-grid">
+                <div
+                    v-for="trade in oneMouthTrades"
+                    :key="trade.oneMouthId"
+                    class="trade-card"
+                    @click="viewTrade(trade.oneMouthId)"
+                >
+                  <div class="trade-image">
+                    <img v-if="trade.thumbnailUrl" :src="trade.thumbnailUrl" :alt="trade.title" />
+                    <div v-else class="trade-placeholder">🛒</div>
+                    <div class="trade-status-badge" :class="trade.oneMouthStatus.toLowerCase()">
+                      {{ getTradeStatusText(trade.oneMouthStatus) }}
+                    </div>
+                  </div>
+                  <div class="trade-info">
+                    <h4 class="trade-title">{{ trade.title }}</h4>
+                    <div class="trade-price">{{ formatPrice(trade.sellingPrice) }}</div>
+                    <div class="trade-meta">
+                      <span>📍 {{ trade.tradeLocation || '지역미정' }}</span>
+                      <span>👁 {{ trade.viewCount }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <!-- 리뷰 작성 버튼 -->
-              <div class="review-write-section">
-                <button
-                    class="write-review-btn"
-                    @click="handleWriteReviewAction"
-                    :disabled="!isLoggedIn"
-                >
-                  {{ isLoggedIn ? '리뷰 작성하기' : '로그인 후 리뷰 작성' }}
+              <div v-else class="empty-state">
+                <div class="empty-icon">🛒</div>
+                <p>아직 등록된 거래가 없습니다</p>
+                <button class="create-trade-btn" @click="createTrade">
+                  첫 거래 등록하기
                 </button>
               </div>
             </div>
@@ -331,6 +398,8 @@ const loginModalMessage = ref('')
 
 const product = ref(null)
 const currentImageIndex = ref(0)
+const activeTab = ref('reviews') // 'reviews' 또는 'trades'
+const oneMouthTrades = ref([]) // 개인거래 목록
 
 const userReaction = ref({
   hasLike: false,
@@ -349,18 +418,13 @@ const imageFiles = computed(() => {
   if (!product.value?.attachmentFiles) return []
 
   return product.value.attachmentFiles.filter(file => {
-    // contentType이 있으면 사용
     if (file.contentType) {
       return file.contentType.startsWith('image/')
     }
-
-    // contentType이 없으면 파일 확장자로 판단
     if (file.orgFileNm) {
       const ext = file.orgFileNm.split('.').pop().toLowerCase()
       return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)
     }
-
-    // 둘 다 없으면 일단 포함 (fileUrl이 있으면 표시)
     return file.fileUrl != null
   })
 })
@@ -381,8 +445,69 @@ const isOwner = computed(() => {
       userId.value === product.value.creatorId
 })
 
-// ==================== 인증 관련 액션 핸들러 ====================
+// ==================== 데이터 로드 메서드 ====================
+const fetchProductData = async () => {
+  try {
+    loading.value = true
+    error.value = null
 
+    const productId = route.params.id
+    const response = await productService.getProduct(productId)
+
+    if (response.success) {
+      product.value = response.data
+
+      if (isLoggedIn.value && response.data.userReaction) {
+        userReaction.value = response.data.userReaction
+      }
+
+      // 개인거래 목록 로드
+      await fetchOneMouthTrades(productId)
+    } else {
+      error.value = response.error || '상품을 불러올 수 없습니다.'
+    }
+  } catch (err) {
+    error.value = err.message || '네트워크 오류가 발생했습니다.'
+  } finally {
+    loading.value = false
+  }
+}
+
+// 개인거래 목록 조회
+const fetchOneMouthTrades = async (productId) => {
+  try {
+    // API 호출 (실제 구현 시)
+    // const response = await oneMouthService.getTradesByProduct(productId)
+    // oneMouthTrades.value = response.data || []
+
+    // 샘플 데이터
+    oneMouthTrades.value = [
+      {
+        oneMouthId: 1,
+        title: '스타벅스 콜드브루 할인 판매',
+        sellingPrice: 3500,
+        tradeLocation: '강남역',
+        viewCount: 45,
+        oneMouthStatus: 'ON_SALE',
+        thumbnailUrl: ''
+      },
+      {
+        oneMouthId: 2,
+        title: '급처! 스타벅스 쿠폰',
+        sellingPrice: 3000,
+        tradeLocation: '홍대입구',
+        viewCount: 32,
+        oneMouthStatus: 'RESERVED',
+        thumbnailUrl: ''
+      }
+    ]
+  } catch (err) {
+    console.error('개인거래 목록 조회 실패:', err)
+    oneMouthTrades.value = []
+  }
+}
+
+// ==================== 인증 관련 액션 핸들러 ====================
 const showLoginRequiredModal = (title, message) => {
   loginModalTitle.value = title
   loginModalMessage.value = message
@@ -420,7 +545,6 @@ const handleWriteReviewAction = () => {
 }
 
 // ==================== 상품 관리 액션 ====================
-
 const editProduct = () => {
   router.push(`/products/${product.value.id}/edit`)
 }
@@ -438,35 +562,7 @@ const deleteProduct = async () => {
   }
 }
 
-// ==================== 데이터 로드 메서드 ====================
-
-const fetchProductData = async () => {
-  try {
-    loading.value = true
-    error.value = null
-
-    const productId = route.params.id
-    const response = await productService.getProduct(productId)
-
-    if (response.success) {
-      product.value = response.data
-
-      // 로그인한 사용자의 리액션 정보 설정
-      if (isLoggedIn.value && response.data.userReaction) {
-        userReaction.value = response.data.userReaction
-      }
-    } else {
-      error.value = response.error || '상품을 불러올 수 없습니다.'
-    }
-  } catch (err) {
-    error.value = err.message || '네트워크 오류가 발생했습니다.'
-  } finally {
-    loading.value = false
-  }
-}
-
 // ==================== 리액션 토글 메서드들 ====================
-
 const toggleBookmark = async () => {
   try {
     actionLoading.value = true
@@ -555,7 +651,6 @@ const shareToSystem = async () => {
       alert('링크가 클립보드에 복사되었습니다!')
     }
 
-    // 로그인한 사용자는 공유 통계에 반영
     if (isLoggedIn.value) {
       try {
         await productService.toggleProductReaction(product.value.id, 'SHARE')
@@ -569,13 +664,36 @@ const shareToSystem = async () => {
 }
 
 // ==================== 리뷰 관련 메서드 ====================
-
 const writeReview = () => {
   router.push(`/products/${product.value.id}/review`)
 }
 
-// ==================== 네비게이션 및 UI 메서드 ====================
+// ==================== 개인거래 관련 메서드 ====================
+const createTrade = () => {
+  if (!isLoggedIn.value) {
+    showLoginRequiredModal(
+        '로그인이 필요합니다',
+        '거래를 등록하려면 로그인해주세요.'
+    )
+    return
+  }
+  router.push(`/one-mouth/create?productId=${product.value.id}`)
+}
 
+const viewTrade = (tradeId) => {
+  router.push(`/one-mouth/${tradeId}`)
+}
+
+const getTradeStatusText = (status) => {
+  const statusMap = {
+    'ON_SALE': '판매중',
+    'RESERVED': '예약중',
+    'SOLD_OUT': '판매완료'
+  }
+  return statusMap[status] || '알 수 없음'
+}
+
+// ==================== 네비게이션 및 UI 메서드 ====================
 const setCurrentImage = (index) => {
   currentImageIndex.value = index
 }
@@ -589,7 +707,6 @@ const handleImageError = (event) => {
 }
 
 // ==================== 유틸리티 메서드 ====================
-
 const formatPrice = (price) => productUtils.formatPrice(price)
 const formatCount = (count) => productUtils.formatCount(count)
 const formatDate = (date) => productUtils.formatDate(date)
@@ -646,26 +763,21 @@ const isHighlightTag = (tag) => {
 }
 
 // ==================== 라이프사이클 ====================
-
 onMounted(() => {
   fetchProductData()
 })
 
 // ==================== 감시자 ====================
-
 watch(() => route.params.id, (newId, oldId) => {
   if (newId && newId !== oldId) {
     fetchProductData()
   }
 })
 
-// 로그인 상태 변경 감지
 watch(isLoggedIn, (newValue) => {
   if (newValue) {
-    // 로그인 후 상품 정보 다시 로드 (개인화된 정보 포함)
     fetchProductData()
   } else {
-    // 로그아웃 시 개인 리액션 정보 초기화
     userReaction.value = {
       hasLike: false,
       hasBookmark: false,
@@ -942,6 +1054,7 @@ watch(isLoggedIn, (newValue) => {
   border: 2px solid transparent;
   transition: border-color 0.2s;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .thumbnail img {
@@ -1009,20 +1122,6 @@ watch(isLoggedIn, (newValue) => {
 .tag.highlight {
   background: #1DCD9F;
   color: white;
-}
-
-.keyword-list {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.keyword {
-  background: #e2e8f0;
-  color: #475569;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
 }
 
 /* 액션 섹션 */
@@ -1185,32 +1284,52 @@ watch(isLoggedIn, (newValue) => {
   opacity: 0.7;
 }
 
-/* 섹션 제목 */
-.section-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 20px;
-  padding: 24px 24px 0 24px;
-}
-
-/* 리뷰 섹션 */
-.reviews-section {
+/* 탭 섹션 */
+.tabs-section {
   border-bottom: 1px solid #f1f5f9;
 }
 
+.tabs-nav {
+  display: flex;
+  border-bottom: 2px solid #f1f5f9;
+  padding: 0 24px;
+}
+
+.tab-btn {
+  padding: 16px 24px;
+  border: none;
+  background: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #1DCD9F;
+}
+
+.tab-btn.active {
+  color: #1DCD9F;
+  font-weight: 600;
+  border-bottom-color: #1DCD9F;
+}
+
+.tab-content {
+  padding: 24px;
+}
+
+/* 리뷰 헤더 */
 .reviews-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 24px 24px 0 24px;
-}
-
-.reviews-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #000000;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .reviews-stats {
@@ -1219,159 +1338,22 @@ watch(isLoggedIn, (newValue) => {
   align-items: center;
 }
 
-.sort-select {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.reviews-container {
-  padding: 0 24px 24px 24px;
-}
-
-.reviews-list {
-  margin-bottom: 16px;
-}
-
-.review-item {
-  padding: 16px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.review-item:last-child {
-  border-bottom: none;
-}
-
-.review-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.review-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.user-avatar {
-  width: 24px;
-  height: 24px;
-  background: #1DCD9F;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 12px;
+.avg-rating {
+  font-size: 18px;
   font-weight: 600;
-}
-
-.user-name {
-  font-weight: 600;
-  color: #000000;
-}
-
-.user-rating {
-  font-size: 12px;
   color: #169976;
 }
 
-.review-status {
-  font-size: 12px;
-}
-
-.status-indicator {
-  padding: 2px 6px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.status-indicator.active {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.status-indicator.deleted {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.status-indicator.reported {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-indicator.hidden {
-  background: #f1f5f9;
+.review-count {
+  font-size: 14px;
   color: #64748b;
-}
-
-.review-content {
-  font-size: 14px;
-  line-height: 1.5;
-  color: #222222;
-  margin-bottom: 8px;
-}
-
-.review-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: #222222;
-  opacity: 0.7;
-}
-
-.report-count {
-  color: #ef4444 !important;
-  opacity: 1 !important;
-}
-
-.no-reviews {
-  text-align: center;
-  padding: 40px 20px;
-  color: #222222;
-  opacity: 0.7;
-}
-
-.review-load-more {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.load-more-btn {
-  background: white;
-  color: #1DCD9F;
-  border: 2px solid #1DCD9F;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.load-more-btn:hover {
-  background: #1DCD9F;
-  color: white;
-}
-
-.review-write-section {
-  text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
 }
 
 .write-review-btn {
   background: #1DCD9F;
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -1380,7 +1362,7 @@ watch(isLoggedIn, (newValue) => {
 }
 
 .write-review-btn:hover:not(:disabled) {
-  background: #16a085;
+  background: #169976;
   transform: translateY(-1px);
 }
 
@@ -1390,77 +1372,229 @@ watch(isLoggedIn, (newValue) => {
   transform: none;
 }
 
-/* 관련 제품 섹션 */
-.related-products-section {
+/* 리뷰 목록 */
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.review-item {
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.review-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background: #1DCD9F;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #000000;
+  font-size: 14px;
+}
+
+.user-rating {
+  font-size: 12px;
+  color: #169976;
+}
+
+.review-date {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.review-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #222222;
+}
+
+/* 거래 헤더 */
+.trades-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
   border-bottom: 1px solid #f1f5f9;
 }
 
-.related-products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  padding: 0 24px 24px 24px;
+.trades-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.related-product-card {
+.trades-count {
+  font-size: 18px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.trades-desc {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.create-trade-btn {
+  background: #1DCD9F;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.create-trade-btn:hover {
+  background: #169976;
+  transform: translateY(-1px);
+}
+
+/* 거래 그리드 */
+.trades-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.trade-card {
   background: white;
+  border: 1px solid #f1f5f9;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.related-product-card:hover {
+.trade-card:hover {
   border-color: #1DCD9F;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(29, 205, 159, 0.2);
+  box-shadow: 0 4px 12px rgba(29, 205, 159, 0.15);
 }
 
-.related-product-image {
+.trade-image {
   width: 100%;
-  height: 160px;
-  background: linear-gradient(45deg, #1DCD9F, #169976);
+  height: 180px;
+  background: #f8fafc;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 40px;
   overflow: hidden;
 }
 
-.related-product-image img {
+.trade-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.related-product-image .placeholder {
-  font-size: 40px;
+.trade-placeholder {
+  font-size: 48px;
+  opacity: 0.3;
 }
 
-.related-product-info {
+.trade-status-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+}
+
+.trade-status-badge.on_sale {
+  background: #1DCD9F;
+}
+
+.trade-status-badge.reserved {
+  background: #f59e0b;
+}
+
+.trade-status-badge.sold_out {
+  background: #64748b;
+}
+
+.trade-info {
   padding: 16px;
 }
 
-.related-product-name {
+.trade-title {
   font-size: 14px;
   font-weight: 600;
   color: #000000;
-  margin-bottom: 4px;
-  line-height: 1.4;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.related-product-brand {
-  font-size: 12px;
-  color: #222222;
-  opacity: 0.7;
+.trade-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1DCD9F;
   margin-bottom: 8px;
 }
 
-.related-product-stats {
+.trade-meta {
+  display: flex;
+  gap: 12px;
   font-size: 12px;
-  color: #169976;
+  color: #64748b;
+}
+
+/* 빈 상태 */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 24px;
 }
 
 /* 로그인 모달 */
@@ -1545,6 +1679,34 @@ watch(isLoggedIn, (newValue) => {
   background: #169976;
 }
 
+/* 접근성 개선 */
+.action-btn:focus,
+.reaction-btn:focus,
+.write-review-btn:focus,
+.create-trade-btn:focus {
+  outline: 2px solid #1DCD9F;
+  outline-offset: 2px;
+}
+
+/* 스크롤바 스타일링 */
+.thumbnail-list::-webkit-scrollbar {
+  height: 4px;
+}
+
+.thumbnail-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 2px;
+}
+
+.thumbnail-list::-webkit-scrollbar-thumb {
+  background: #1DCD9F;
+  border-radius: 2px;
+}
+
+.thumbnail-list::-webkit-scrollbar-thumb:hover {
+  background: #169976;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .main-container {
@@ -1578,6 +1740,19 @@ watch(isLoggedIn, (newValue) => {
     gap: 12px;
   }
 
+  .tabs-nav {
+    padding: 0 16px;
+  }
+
+  .tab-btn {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+
+  .tab-content {
+    padding: 16px;
+  }
+
   .login-notice-content {
     flex-direction: column;
     align-items: stretch;
@@ -1606,24 +1781,22 @@ watch(isLoggedIn, (newValue) => {
     gap: 8px;
   }
 
-  .related-products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  .reviews-header, .trades-header {
+    flex-direction: column;
+    align-items: stretch;
     gap: 12px;
   }
 
-  .section-title {
-    font-size: 18px;
-    padding: 20px 20px 0 20px;
+  .reviews-stats {
+    justify-content: center;
   }
 
-  .product-info,
-  .action-section,
-  .reviews-container {
-    padding: 20px;
+  .trades-info {
+    text-align: center;
   }
 
-  .related-products-grid {
-    padding: 0 20px 20px 20px;
+  .trades-grid {
+    grid-template-columns: 1fr;
   }
 
   .login-modal-content {
@@ -1632,6 +1805,19 @@ watch(isLoggedIn, (newValue) => {
 
   .login-modal-actions {
     flex-direction: column;
+  }
+
+  .product-info,
+  .action-section {
+    padding: 20px;
+  }
+
+  .image-gallery {
+    padding: 20px;
+  }
+
+  .product-header {
+    padding: 20px;
   }
 }
 
@@ -1665,10 +1851,6 @@ watch(isLoggedIn, (newValue) => {
     font-size: 10px;
   }
 
-  .related-products-grid {
-    grid-template-columns: 1fr;
-  }
-
   .breadcrumb {
     font-size: 12px;
   }
@@ -1676,32 +1858,18 @@ watch(isLoggedIn, (newValue) => {
   .login-notice-content span:nth-child(2) {
     font-size: 13px;
   }
-}
 
-/* 접근성 개선 */
-.action-btn:focus,
-.reaction-btn:focus,
-.write-review-btn:focus {
-  outline: 2px solid #1DCD9F;
-  outline-offset: 2px;
-}
+  .tab-btn {
+    padding: 12px 12px;
+    font-size: 13px;
+  }
 
-/* 스크롤바 스타일링 */
-.thumbnail-list::-webkit-scrollbar {
-  height: 4px;
-}
+  .avg-rating {
+    font-size: 16px;
+  }
 
-.thumbnail-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 2px;
-}
-
-.thumbnail-list::-webkit-scrollbar-thumb {
-  background: #1DCD9F;
-  border-radius: 2px;
-}
-
-.thumbnail-list::-webkit-scrollbar-thumb:hover {
-  background: #169976;
+  .trades-count {
+    font-size: 16px;
+  }
 }
 </style>
