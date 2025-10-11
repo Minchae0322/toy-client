@@ -1,124 +1,174 @@
 <template>
-  <section class="reviews-section">
+  <div class="review-section">
+    <!-- 섹션 헤더 -->
     <div class="section-header">
-      <h2 class="section-title">
-        리뷰
-        <span class="review-count">{{ reviews.length }}</span>
-      </h2>
-      <button @click="$emit('write-review')" class="write-review-btn">
-        리뷰 작성
-      </button>
-    </div>
-
-    <div v-if="reviews.length > 0" class="reviews-list">
-      <div v-for="review in reviews" :key="review.id" class="review-item">
-        <div class="review-header">
-          <div class="reviewer-info">
-            <div class="reviewer-avatar">
-              <img v-if="review.userProfileImage" :src="review.userProfileImage" :alt="review.userName" />
-              <User v-else :size="16" />
-            </div>
-            <span class="reviewer-name">{{ review.userName }}</span>
-          </div>
-          <div class="review-rating">
-            <Star v-for="i in 5" :key="i" :size="14" :fill="i <= review.rating ? '#FFB800' : 'none'" stroke="#FFB800" />
-          </div>
-        </div>
-        <p class="review-content">{{ review.content }}</p>
-        <span class="review-date">{{ formatRelativeTime(review.createdAt) }}</span>
+      <div class="section-title-wrapper">
+        <h2 class="section-title">💬 리뷰</h2>
+        <span class="section-count">{{ product.reviewCount || 0 }}개</span>
+      </div>
+      <div class="reviews-stats">
+        <span class="avg-rating">⭐ {{ formatRating(product.averageRating) }}</span>
+        <span class="review-count">평균 평점</span>
       </div>
     </div>
 
-    <div v-else class="empty-reviews">
-      <MessageSquare :size="48" />
-      <p>아직 리뷰가 없어요</p>
-      <span>첫 번째 리뷰를 남겨보세요!</span>
+    <!-- 리뷰 액션 -->
+    <div class="reviews-actions">
+      <button
+          class="write-review-btn"
+          @click="$emit('write-review')"
+          :disabled="!isLoggedIn"
+      >
+        {{ isLoggedIn ? '✍️ 리뷰 작성하기' : '🔒 로그인 후 리뷰 작성' }}
+      </button>
     </div>
 
-    <button v-if="reviewsHasMore" @click="$emit('load-more')" class="load-more-btn" :disabled="reviewsLoading">
-      {{ reviewsLoading ? '로딩 중...' : '더 보기' }}
-    </button>
-  </section>
+    <!-- 리뷰 목록 -->
+    <div v-if="product.recentReviews?.length > 0" class="reviews-list">
+      <div
+          v-for="review in product.recentReviews"
+          :key="review.id"
+          class="review-item"
+      >
+        <div class="review-header">
+          <div class="review-user">
+            <div class="user-avatar">{{ getInitial(review.userName) }}</div>
+            <div class="user-info">
+              <div class="user-name">{{ review.userName }}</div>
+              <div class="user-rating">⭐ {{ formatRating(review.rating) }}</div>
+            </div>
+          </div>
+          <div class="review-date">{{ getRelativeTime(review.createdAt) }}</div>
+        </div>
+        <div class="review-content">{{ review.comment }}</div>
+      </div>
+    </div>
+
+    <!-- 빈 상태 -->
+    <div v-else class="empty-state">
+      <div class="empty-icon">💬</div>
+      <p>아직 작성된 리뷰가 없습니다</p>
+      <p class="empty-description">이 상품의 첫 리뷰를 작성해보세요!</p>
+      <button
+          class="write-review-btn"
+          @click="$emit('write-review')"
+          :disabled="!isLoggedIn"
+      >
+        첫 리뷰 작성하기
+      </button>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { Star, User, MessageSquare } from 'lucide-vue-next';
+import { productUtils } from '@/services/ProductService.js'
 
-defineProps({
-  reviews: {
-    type: Array,
+const props = defineProps({
+  product: {
+    type: Object,
     required: true
   },
-  reviewsLoading: {
+  isLoggedIn: {
     type: Boolean,
-    default: false
-  },
-  reviewsHasMore: {
-    type: Boolean,
-    default: false
+    required: true
   }
-});
+})
 
-defineEmits(['write-review', 'load-more']);
+const emit = defineEmits(['write-review'])
 
-const formatRelativeTime = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = Math.floor((now - date) / 1000);
+const formatRating = (rating) => productUtils.formatRating(rating)
+const getRelativeTime = (date) => productUtils.formatDate(date)
 
-  if (diff < 60) return '방금 전';
-  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)}일 전`;
-
-  return `${date.getFullYear()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}`;
-};
+const getInitial = (name) => {
+  return name ? name.charAt(0).toUpperCase() : '?'
+}
 </script>
 
 <style scoped>
-.reviews-section {
-  padding: 24px 20px 40px;
+.review-section {
+  padding: 32px 24px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
+/* 섹션 헤더 */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .section-title {
-  font-size: 17px;
+  font-size: 24px;
   font-weight: 700;
-  color: #191F28;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: #000000;
+  margin: 0;
 }
 
-.review-count {
-  font-size: 14px;
-  color: #8B95A1;
+.section-count {
+  font-size: 16px;
+  color: #64748b;
   font-weight: 500;
 }
 
+.reviews-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.avg-rating {
+  font-size: 20px;
+  font-weight: 700;
+  color: #169976;
+}
+
+.review-count {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* 리뷰 액션 */
+.reviews-actions {
+  margin-bottom: 24px;
+}
+
 .write-review-btn {
-  padding: 8px 16px;
-  background: #FF6B6B;
+  background: #1DCD9F;
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  width: 100%;
+  max-width: 300px;
 }
 
-.write-review-btn:hover {
-  background: #FF5252;
+.write-review-btn:hover:not(:disabled) {
+  background: #169976;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 205, 159, 0.3);
 }
 
+.write-review-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 리뷰 목록 */
 .reviews-list {
   display: flex;
   flex-direction: column;
@@ -126,9 +176,16 @@ const formatRelativeTime = (dateString) => {
 }
 
 .review-item {
-  padding: 16px;
-  background: #F8F9FA;
+  padding: 20px;
+  background: #f8fafc;
   border-radius: 12px;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s;
+}
+
+.review-item:hover {
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .review-header {
@@ -138,94 +195,125 @@ const formatRelativeTime = (dateString) => {
   margin-bottom: 12px;
 }
 
-.reviewer-info {
+.review-user {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
-.reviewer-avatar {
-  width: 32px;
-  height: 32px;
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: #1DCD9F;
   border-radius: 50%;
-  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  color: #B0B8C1;
-}
-
-.reviewer-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.reviewer-name {
-  font-size: 14px;
+  color: white;
+  font-size: 16px;
   font-weight: 600;
-  color: #191F28;
 }
 
-.review-rating {
+.user-info {
   display: flex;
+  flex-direction: column;
   gap: 2px;
 }
 
-.review-content {
-  font-size: 14px;
-  line-height: 1.5;
-  color: #4E5968;
-  margin-bottom: 8px;
+.user-name {
+  font-weight: 600;
+  color: #000000;
+  font-size: 15px;
+}
+
+.user-rating {
+  font-size: 13px;
+  color: #169976;
+  font-weight: 500;
 }
 
 .review-date {
   font-size: 12px;
-  color: #8B95A1;
+  color: #64748b;
 }
 
-.empty-reviews {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
+.review-content {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #222222;
+}
+
+/* 빈 상태 */
+.empty-state {
   text-align: center;
-  color: #B0B8C1;
+  padding: 60px 20px;
 }
 
-.empty-reviews p {
-  margin-top: 16px;
-  font-size: 16px;
-  color: #4E5968;
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+  opacity: 0.3;
 }
 
-.empty-reviews span {
-  font-size: 14px;
-  color: #8B95A1;
-}
-
-.load-more-btn {
-  width: 100%;
-  padding: 14px;
-  margin-top: 20px;
-  background: white;
-  border: 1px solid #E5E8EB;
-  border-radius: 8px;
-  color: #4E5968;
-  font-size: 14px;
+.empty-state p {
+  font-size: 18px;
+  color: #000000;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  margin-bottom: 8px;
 }
 
-.load-more-btn:hover:not(:disabled) {
-  background: #F8F9FA;
+.empty-description {
+  font-size: 14px !important;
+  color: #64748b !important;
+  font-weight: 400 !important;
+  margin-bottom: 24px !important;
 }
 
-.load-more-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.empty-state .write-review-btn {
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .review-section {
+    padding: 24px 16px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .reviews-stats {
+    align-items: flex-start;
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+
+  .write-review-btn {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .review-section {
+    padding: 20px 12px;
+  }
+
+  .section-title {
+    font-size: 20px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .empty-icon {
+    font-size: 64px;
+  }
 }
 </style>
