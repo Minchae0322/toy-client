@@ -3,16 +3,22 @@
     <!-- 헤더 -->
     <header class="header">
       <div class="header-container">
-        <button class="back-btn" @click="goBack">←</button>
+        <button class="back-btn" @click="goBack">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
         <div class="breadcrumb">
-          <router-link to="/">홈</router-link> >
-          <router-link to="/products">상품</router-link> >
-          {{ product?.name || '상품 상세' }}
+          <router-link to="/">홈</router-link>
+          <span class="separator">/</span>
+          <router-link to="/products">상품</router-link>
+          <span class="separator">/</span>
+          <span class="current">{{ product?.name || '상품 상세' }}</span>
         </div>
 
         <div v-if="isLoggedIn && isOwner" class="header-actions">
-          <button class="edit-btn" @click="editProduct">✏️ 수정</button>
-          <button class="delete-btn" @click="deleteProduct">🗑️ 삭제</button>
+          <button class="edit-btn" @click="editProduct">수정</button>
+          <button class="delete-btn" @click="deleteProduct">삭제</button>
         </div>
       </div>
     </header>
@@ -23,7 +29,7 @@
         <!-- 로딩 상태 -->
         <div v-if="loading" class="loading-container">
           <div class="loading-spinner"></div>
-          <p>상품 정보를 불러오는 중...</p>
+          <p>상품 정보를 불러오는 중입니다</p>
         </div>
 
         <!-- 에러 상태 -->
@@ -110,13 +116,13 @@ import { useAuth } from '@/composables/useAuth.js'
 import { productService } from '@/services/ProductService.js'
 
 // 컴포넌트 임포트
-import ProductHeader from '@/components/oneMouth/detail/ProductHeader.vue'
-import ImageGallery from '@/components/oneMouth/detail/ImageGallery.vue'
-import ProductInfo from '@/components/oneMouth/detail/ProductInfo.vue'
-import ActionSection from '@/components/oneMouth/detail/ActionSection.vue'
-import ReviewSection from '@/components/oneMouth/detail/ReviewSection.vue'
-import TradeSection from '@/components/oneMouth/detail/TradeSection.vue'
-import LoginModal from '@/components/oneMouth/detail/LoginModal.vue'
+import ProductHeader from '@/components/product/detail/ProductHeader.vue'
+import ImageGallery from '@/components/product/detail/ImageGallery.vue'
+import ProductInfo from '@/components/product/detail/ProductInfo.vue'
+import ActionSection from '@/components/product/detail/ActionSection.vue'
+import ReviewSection from '@/components/product/detail/ReviewSection.vue'
+import TradeSection from '@/components/product/detail/TradeSection.vue'
+import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -414,15 +420,16 @@ watch(isLoggedIn, (newValue) => {
 <style scoped>
 .product-detail-view {
   min-height: 100vh;
-  background: #f8fafc;
-  color: #222222;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #FAFAFA;
+  color: #1F2937;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.6;
+  letter-spacing: -0.01em;
 }
 
 .header {
   background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #E5E7EB;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -431,107 +438,123 @@ watch(isLoggedIn, (newValue) => {
 .header-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   height: 64px;
-  gap: 20px;
+  gap: 16px;
 }
 
 .back-btn {
   background: none;
   border: none;
-  font-size: 24px;
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
-  transition: background 0.2s;
-  color: #64748b;
+  transition: all 0.2s;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .back-btn:hover {
-  background: #f1f5f9;
+  background: #F3F4F6;
+  color: #111827;
 }
 
 .breadcrumb {
-  color: #64748b;
+  color: #9CA3AF;
   font-size: 14px;
   flex: 1;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .breadcrumb a {
-  color: #1DCD9F;
+  color: #059669;
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .breadcrumb a:hover {
-  color: #169976;
+  color: #047857;
+}
+
+.breadcrumb .separator {
+  color: #D1D5DB;
+}
+
+.breadcrumb .current {
+  color: #1F2937;
+  font-weight: 600;
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
 }
 
 .edit-btn, .delete-btn {
   padding: 8px 16px;
   border: 1px solid;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  letter-spacing: -0.01em;
 }
 
 .edit-btn {
-  border-color: #1DCD9F;
-  color: #1DCD9F;
+  border-color: #D1D5DB;
+  color: #374151;
   background: white;
 }
 
 .edit-btn:hover {
-  background: #1DCD9F;
-  color: white;
+  background: #F9FAFB;
+  border-color: #9CA3AF;
 }
 
 .delete-btn {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: white;
+  border-color: #FEE2E2;
+  color: #DC2626;
+  background: #FEF2F2;
 }
 
 .delete-btn:hover {
-  background: #ef4444;
-  color: white;
+  background: #FEE2E2;
+  border-color: #FECACA;
 }
 
 .main-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 32px;
+  padding: 32px 24px 80px;
 }
 
 .main-content {
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
 .loading-container, .error-container {
-  padding: 80px 32px;
+  padding: 80px 24px;
   text-align: center;
 }
 
 .loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #f1f5f9;
-  border-top: 4px solid #1DCD9F;
+  width: 40px;
+  height: 40px;
+  border: 3px solid #F3F4F6;
+  border-top: 3px solid #059669;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
   margin: 0 auto 20px;
 }
 
@@ -542,40 +565,46 @@ watch(isLoggedIn, (newValue) => {
 
 .loading-container p {
   font-size: 15px;
-  color: #64748b;
+  color: #6B7280;
+  font-weight: 500;
 }
 
 .error-message h3 {
-  color: #ef4444;
+  color: #DC2626;
   margin-bottom: 12px;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .error-message p {
-  color: #64748b;
-  margin-bottom: 20px;
+  color: #6B7280;
+  margin-bottom: 24px;
+  font-size: 14px;
 }
 
 .retry-btn {
-  background: #1DCD9F;
+  background: #059669;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
   transition: all 0.2s;
+  letter-spacing: -0.01em;
 }
 
 .retry-btn:hover {
-  background: #169976;
+  background: #047857;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
 }
 
 @media (max-width: 768px) {
   .main-container {
-    padding: 24px 16px;
+    padding: 24px 16px 60px;
   }
 
   .header-container {
@@ -587,22 +616,18 @@ watch(isLoggedIn, (newValue) => {
     display: none;
   }
 
-  .back-btn {
-    font-size: 20px;
+  .breadcrumb {
+    font-size: 13px;
   }
 }
 
 @media (max-width: 480px) {
   .main-container {
-    padding: 16px 12px;
-  }
-
-  .breadcrumb {
-    font-size: 13px;
+    padding: 16px 12px 60px;
   }
 
   .main-content {
-    border-radius: 16px;
+    border-radius: 12px;
   }
 }
 </style>
