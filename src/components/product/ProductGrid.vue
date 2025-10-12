@@ -37,6 +37,7 @@
       <div class="product-info">
         <div class="product-name">{{ product.name }}</div>
         <div class="product-brand">{{ product.brand }}</div>
+        <div v-if="product.price" class="product-price">{{ formatPrice(product.price) }}</div>
         <div class="product-stats">
           <span class="stat">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -98,6 +99,18 @@ const formatRating = (rating) => {
 const formatCount = (count) => {
   if (!count) return '0'
   return productUtils.formatCount(count)
+}
+
+const formatPrice = (price) => {
+  if (!price) return ''
+
+  // String 타입일 경우 숫자로 변환
+  const numPrice = typeof price === 'string' ? parseInt(price.replace(/,/g, '')) : price
+
+  if (numPrice === 0) return '무료'
+  if (isNaN(numPrice)) return ''
+
+  return numPrice.toLocaleString() + '원'
 }
 
 const getProductBadge = (productType) => {
@@ -222,27 +235,35 @@ const getRandomDistance = () => {
 }
 
 .product-name {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: #111827;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   letter-spacing: -0.01em;
-  min-height: 42px;
+  min-height: 45px;
 }
 
 .product-brand {
   font-size: 13px;
   color: #9CA3AF;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 500;
+}
+
+.product-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #059669;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
 }
 
 .product-stats {
