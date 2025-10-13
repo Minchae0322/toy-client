@@ -493,7 +493,7 @@ defineExpose({
   }
 }
 
-/* 다크 모드 지원 (선택사항) */
+/*!* 다크 모드 지원 (선택사항) *!
 @media (prefers-color-scheme: dark) {
   .category-management {
     background-color: #111827;
@@ -515,5 +515,5 @@ defineExpose({
   .debug-btn:hover {
     background: #4b5563;
   }
-}
+}*/
 </style>

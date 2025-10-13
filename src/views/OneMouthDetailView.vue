@@ -1,121 +1,114 @@
 <!-- TradeDetailPage.vue -->
 <template>
   <div class="detail-page">
-    <!-- 헤더 -->
-    <header class="header">
-      <div class="header-content">
-        <div class="logo" @click="goToList">
-          <div class="logo-icon">🛒</div>
-          <span>편의점 거래</span>
-        </div>
-        <nav class="nav-menu">
-          <div class="nav-item active">개인거래</div>
-          <div class="nav-item">공식제품</div>
-          <div class="nav-item">커뮤니티</div>
-          <div class="nav-item">이용가이드</div>
-        </nav>
-        <div class="header-actions">
-          <button class="btn-secondary">로그인</button>
-          <button class="btn-primary">판매하기</button>
-        </div>
-      </div>
-    </header>
-
-    <!-- 상세 컨텐츠 -->
+    <!-- 메인 컨텐츠 -->
     <div v-if="trade" class="detail-container">
-      <div class="detail-wrapper">
-        <!-- 이미지 섹션 -->
-        <div class="detail-images">
-          <div class="detail-image main">{{ trade.emoji }}</div>
-          <div class="detail-image">📦</div>
-          <div class="detail-image">✨</div>
-        </div>
+      <div class="content-wrapper">
+        <!-- 이미지 갤러리 -->
+        <TradeImageGallery :images="trade.images" :thumbnail="trade.thumbnailUrl" />
 
-        <!-- 정보 섹션 -->
-        <div class="detail-body">
-          <!-- 제품 링크 배너 -->
-          <div class="product-link-banner">
-            <div class="product-link-icon">{{ trade.emoji }}</div>
-            <div class="product-link-info">
-              <div class="product-link-title">연관 공식 제품</div>
-              <div class="product-link-sub">
-                {{ trade.productInfo.name }} · ⭐ {{ trade.productInfo.rating }} ({{ trade.productInfo.reviews }}개 리뷰)
-              </div>
-            </div>
-            <button class="btn-secondary small">제품 정보 보기</button>
-          </div>
-
-          <!-- 가격 정보 -->
-          <div class="detail-price-section">
-            <span class="detail-price">{{ formatPrice(trade.price) }}</span>
-            <span class="detail-discount">-{{ trade.discount }}%</span>
-            <span class="detail-badge">{{ trade.badge }}</span>
+        <!-- 상세 정보 -->
+        <div class="detail-info">
+          <!-- 상태 뱃지 -->
+          <div class="status-badge" :class="getStatusClass(trade.status)">
+            {{ getStatusText(trade.status) }}
           </div>
 
           <!-- 제목 -->
-          <h2 class="detail-title">{{ trade.title }}</h2>
+          <h1 class="trade-title">{{ trade.title }}</h1>
 
-          <!-- 상세 정보 그리드 -->
-          <div class="detail-info-grid">
-            <div class="info-item">
+          <!-- 가격 정보 -->
+          <div class="price-section">
+            <span class="current-price">{{ formatPrice(trade.price) }}</span>
+            <span v-if="trade.originalPrice" class="original-price">
+              {{ formatPrice(trade.originalPrice) }}
+            </span>
+          </div>
+
+          <!-- 상세 정보 테이블 -->
+          <div class="info-table">
+            <div class="info-row">
               <span class="info-label">상태</span>
               <span class="info-value">{{ trade.condition }}</span>
             </div>
-            <div class="info-item">
+            <div class="info-row">
               <span class="info-label">수량</span>
               <span class="info-value">{{ trade.quantity }}</span>
             </div>
-            <div class="info-item">
+            <div class="info-row">
               <span class="info-label">거래방법</span>
               <span class="info-value">{{ trade.tradeMethod }}</span>
             </div>
-            <div class="info-item">
-              <span class="info-label">희망지역</span>
+            <div class="info-row">
+              <span class="info-label">거래지역</span>
               <span class="info-value">{{ trade.location }}</span>
             </div>
           </div>
 
-          <!-- 상세 설명 -->
-          <div class="detail-description">
-            <h3 class="section-title">상세 설명</h3>
-            <p class="description-text">{{ trade.description }}</p>
-          </div>
-
           <!-- 판매자 정보 -->
-          <div class="seller-card">
-            <div class="seller-main">
-              <div class="seller-avatar-large">{{ trade.seller.avatar }}</div>
-              <div class="seller-info-detailed">
-                <div class="seller-name-large">{{ trade.seller.name }}</div>
-                <div class="seller-stats">
-                  ⭐ {{ trade.seller.rating }} · {{ trade.seller.tradeCount }}회 거래 · 최근 활동: 1시간 전
-                </div>
-              </div>
-            </div>
-            <button class="btn-secondary">다른 판매상품 보기</button>
+          <TradeSellerInfo :seller="trade.seller" />
+
+          <!-- 액션 버튼 -->
+          <div class="action-buttons">
+            <button class="btn-favorite" :class="{ active: isFavorite }" @click="toggleFavorite">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 17.5L8.75 16.375C4.5 12.5 1.66667 10 1.66667 6.875C1.66667 4.375 3.54167 2.5 6.04167 2.5C7.45833 2.5 8.83333 3.125 10 4.16667C11.1667 3.125 12.5417 2.5 13.9583 2.5C16.4583 2.5 18.3333 4.375 18.3333 6.875C18.3333 10 15.5 12.5 11.25 16.375L10 17.5Z" :fill="isFavorite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <span>관심</span>
+            </button>
+            <button class="btn-primary" @click="handleChat">채팅하기</button>
           </div>
         </div>
       </div>
 
-      <!-- 액션 버튼 -->
-      <div class="detail-actions">
-        <button class="btn-back" @click="goToList">목록으로</button>
-        <button class="btn-chat">💬 채팅하기</button>
+      <!-- 상세 설명 섹션 -->
+      <div class="description-section">
+        <h2 class="section-title">상세 설명</h2>
+        <p class="description-text">{{ trade.description }}</p>
+      </div>
+
+      <!-- 연관 상품 (선택사항) -->
+      <div v-if="trade.relatedProduct" class="related-product">
+        <div class="related-header">
+          <h3>연관 공식 제품</h3>
+          <p>이 제품의 정식 판매 정보를 확인하세요</p>
+        </div>
+        <div class="related-content">
+          <div class="related-info">
+            <h4>{{ trade.relatedProduct.name }}</h4>
+            <div class="related-meta">
+              <span class="rating">★ {{ trade.relatedProduct.rating }}</span>
+              <span class="review-count">리뷰 {{ trade.relatedProduct.reviews }}개</span>
+            </div>
+          </div>
+          <button class="btn-secondary">제품 보기</button>
+        </div>
+      </div>
+
+      <!-- 네비게이션 -->
+      <div class="bottom-nav">
+        <button class="btn-back" @click="goToList">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          목록으로
+        </button>
       </div>
     </div>
 
     <!-- 로딩 상태 -->
-    <div v-else-if="loading" class="loading-container">
-      <div class="loading-spinner"></div>
+    <div v-else-if="loading" class="loading-state">
+      <div class="spinner"></div>
       <p>상품 정보를 불러오는 중...</p>
     </div>
 
     <!-- 에러 상태 -->
-    <div v-else class="error-container">
-      <div class="error-icon">⚠️</div>
-      <h2>상품을 찾을 수 없습니다</h2>
-      <p>요청하신 상품이 존재하지 않거나 삭제되었습니다.</p>
-      <button class="btn-primary" @click="goToList">목록으로 돌아가기</button>
+    <div v-else class="error-state">
+      <div class="error-content">
+        <h2>상품을 찾을 수 없습니다</h2>
+        <p>요청하신 상품이 존재하지 않거나 삭제되었습니다</p>
+        <button class="btn-primary" @click="goToList">목록으로 돌아가기</button>
+      </div>
     </div>
   </div>
 </template>
@@ -123,98 +116,78 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import TradeImageGallery from '@/components/oneMouth/detail/TradeImageGallery.vue';
+import TradeSellerInfo from '@/components/oneMouth/detail/TradeSellerInfo.vue';
 
 const router = useRouter();
 const route = useRoute();
 
 const trade = ref(null);
 const loading = ref(true);
+const isFavorite = ref(false);
 
-// 더미 데이터 (실제로는 API에서 가져옴)
+// 더미 데이터
 const tradeData = {
   1: {
     id: 1,
-    emoji: '☕',
-    badge: '새상품',
-    price: 7500,
-    discount: 25,
-    originalPrice: 10000,
     title: '스타벅스 아메리카노 Tall 쿠폰 1매',
-    seller: {
-      name: '카페인중독자',
-      avatar: 'K',
-      rating: 4.8,
-      tradeCount: 32
-    },
-    distance: 0.5,
+    price: 7500,
+    originalPrice: 10000,
+    status: 'ON_SALE',
     condition: '새상품 (미개봉)',
     quantity: '1개',
     tradeMethod: '직거래, 택배',
     location: '강남역 2번 출구',
-    description: '선물 받았는데 커피를 안 마셔서 판매합니다. 유효기간은 3개월 이상 남았어요. 직거래는 강남역 2번 출구에서 가능하고, 택배도 가능합니다! 포장은 완전히 뜯지 않은 새 상품이에요. 궁금하신 점 있으면 편하게 채팅 주세요 😊',
-    productInfo: {
+    description: '선물 받았는데 커피를 안 마셔서 판매합니다. 유효기간은 3개월 이상 남았어요. 직거래는 강남역 2번 출구에서 가능하고, 택배도 가능합니다. 포장은 완전히 뜯지 않은 새 상품입니다. 궁금하신 점 있으면 편하게 채팅 주세요.',
+    thumbnailUrl: null,
+    images: [],
+    seller: {
+      id: 1,
+      name: '카페인중독자',
+      rating: 4.8,
+      tradeCount: 32,
+      responseRate: 95
+    },
+    relatedProduct: {
       name: '스타벅스 아메리카노 Tall',
       rating: 4.7,
       reviews: 234
-    }
-  },
-  2: {
-    id: 2,
-    emoji: '🍱',
-    badge: '거의 새것',
-    price: 15000,
-    discount: 20,
-    originalPrice: 18800,
-    title: 'CU 프리미엄 도시락 세트 (2개입)',
-    seller: {
-      name: '편의점러버',
-      avatar: 'P',
-      rating: 4.9,
-      tradeCount: 45
-    },
-    distance: 1.2,
-    condition: '거의 새것',
-    quantity: '2개',
-    tradeMethod: '직거래',
-    location: '신논현역 근처',
-    description: '오늘 구매했는데 계획이 취소되어 판매합니다. 유통기한 충분하고 냉장 보관 중입니다. 신논현역 근처에서 직거래 가능합니다.',
-    productInfo: {
-      name: 'CU 프리미엄 도시락',
-      rating: 4.5,
-      reviews: 156
-    }
-  },
-  3: {
-    id: 3,
-    emoji: '🍪',
-    badge: '사용감 있음',
-    price: 3000,
-    discount: 40,
-    originalPrice: 5000,
-    title: '롯데 초코파이 1박스 (6개입)',
-    seller: {
-      name: '초코좋아',
-      avatar: 'C',
-      rating: 4.6,
-      tradeCount: 28
-    },
-    distance: 2.3,
-    condition: '사용감 있음',
-    quantity: '1박스',
-    tradeMethod: '직거래, 편의점택배',
-    location: '역삼동',
-    description: '개봉했지만 상태 좋습니다. 유통기한 충분합니다. 직거래나 편의점택배 모두 가능합니다.',
-    productInfo: {
-      name: '롯데 초코파이',
-      rating: 4.8,
-      reviews: 892
     }
   }
 };
 
 // Methods
 const formatPrice = (price) => {
+  if (!price) return '0원';
   return price.toLocaleString() + '원';
+};
+
+const getStatusText = (status) => {
+  const statusMap = {
+    'ON_SALE': '판매중',
+    'RESERVED': '예약중',
+    'SOLD_OUT': '거래완료'
+  };
+  return statusMap[status] || '';
+};
+
+const getStatusClass = (status) => {
+  return status?.toLowerCase().replace('_', '-') || '';
+};
+
+const toggleFavorite = () => {
+  isFavorite.value = !isFavorite.value;
+};
+
+const handleChat = () => {
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    alert('로그인이 필요합니다.');
+    router.push('/login');
+    return;
+  }
+  // 채팅 페이지로 이동
+  console.log('채팅 시작');
 };
 
 const goToList = () => {
@@ -226,11 +199,7 @@ const fetchTradeDetail = async (id) => {
 
   try {
     // 실제로는 API 호출
-    // const response = await tradeService.getTradeDetail(id);
-    // trade.value = response.data;
-
-    // 더미 데이터 사용
-    await new Promise(resolve => setTimeout(resolve, 500)); // 로딩 시뮬레이션
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     const tradeId = parseInt(id);
     trade.value = tradeData[tradeId] || null;
@@ -253,15 +222,24 @@ watch(
     },
     { immediate: true }
 );
-
-// Lifecycle
-onMounted(() => {
-  console.log('거래 상세 페이지 마운트, ID:', route.params.id);
-});
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+:root {
+  --primary-color: #4F46E5;
+  --primary-hover: #4338CA;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  --border-color: #E5E7EB;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --success-color: #10B981;
+  --warning-color: #F59E0B;
+  --error-color: #EF4444;
+}
 
 * {
   margin: 0;
@@ -269,492 +247,380 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-:root {
-  --primary: #1DCD9F;
-  --primary-dark: #169976;
-  --secondary: #000000;
-  --gray: #222222;
-  --light-gray: #666;
-  --bg: #ffffff;
-  --bg-secondary: #fafafa;
-  --border: #e5e7eb;
-}
-
 .detail-page {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #fafafa;
-  color: var(--secondary);
-  line-height: 1.6;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   min-height: 100vh;
-}
-
-.header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--secondary);
-  cursor: pointer;
-  transition: transform 0.3s;
-}
-
-.logo:hover {
-  transform: translateY(-2px);
-}
-
-.logo-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
-}
-
-.nav-menu {
-  display: flex;
-  gap: 48px;
-  align-items: center;
-}
-
-.nav-item {
-  color: var(--gray);
-  font-weight: 600;
-  font-size: 16px;
-  cursor: pointer;
-  position: relative;
-  padding: 10px 0;
-  transition: color 0.3s;
-}
-
-.nav-item:hover {
-  color: var(--primary);
-}
-
-.nav-item.active {
-  color: var(--primary);
-}
-
-.nav-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
-  border-radius: 3px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
-  border: none;
-  padding: 14px 32px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(29, 205, 159, 0.3);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(29, 205, 159, 0.4);
-}
-
-.btn-secondary {
-  background: white;
-  color: var(--gray);
-  border: 2px solid var(--border);
-  padding: 12px 28px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-secondary:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.btn-secondary.small {
-  padding: 10px 20px;
-  font-size: 14px;
+  padding: 32px 24px 80px;
 }
 
 .detail-container {
   max-width: 1200px;
-  margin: 60px auto;
-  padding: 0 60px 100px;
+  margin: 0 auto;
 }
 
-.detail-wrapper {
-  background: white;
-  border-radius: 32px;
+.content-wrapper {
+  background: var(--bg-primary);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
   overflow: hidden;
-  box-shadow: 0 4px 32px rgba(29, 205, 159, 0.12);
-  border: 1px solid var(--border);
-  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.detail-images {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1fr 480px;
+  gap: 0;
+  margin-bottom: 24px;
+}
+
+.detail-info {
   padding: 40px;
-  height: 450px;
-}
-
-.detail-image {
-  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
-  border-radius: 24px;
   display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.status-badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 80px;
-  overflow: hidden;
-  transition: transform 0.3s;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  width: fit-content;
 }
 
-.detail-image:hover {
-  transform: scale(1.02);
+.status-badge.on-sale {
+  background: #ECFDF5;
+  color: var(--success-color);
 }
 
-.detail-image.main {
-  grid-row: span 2;
-  font-size: 150px;
+.status-badge.reserved {
+  background: #FEF3C7;
+  color: var(--warning-color);
 }
 
-.detail-body {
-  padding: 50px;
+.status-badge.sold-out {
+  background: #F3F4F6;
+  color: var(--text-secondary);
 }
 
-.product-link-banner {
-  background: linear-gradient(135deg, rgba(29, 205, 159, 0.1) 0%, rgba(22, 153, 118, 0.05) 100%);
-  border: 2px dashed var(--primary);
-  border-radius: 24px;
-  padding: 24px;
-  margin-bottom: 40px;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.product-link-icon {
-  width: 70px;
-  height: 70px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
-  flex-shrink: 0;
-}
-
-.product-link-info {
-  flex: 1;
-}
-
-.product-link-title {
-  font-size: 17px;
+.trade-title {
+  font-size: 28px;
   font-weight: 700;
-  color: var(--secondary);
-  margin-bottom: 6px;
-}
-
-.product-link-sub {
-  font-size: 14px;
-  color: var(--light-gray);
-}
-
-.detail-price-section {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
-}
-
-.detail-price {
-  font-size: 56px;
-  font-weight: 800;
-  color: var(--secondary);
-}
-
-.detail-discount {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.detail-badge {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
-  border-radius: 24px;
-  font-size: 15px;
-  font-weight: 700;
-  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
-}
-
-.detail-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--secondary);
-  margin-bottom: 40px;
+  color: var(--text-primary);
   line-height: 1.4;
+  letter-spacing: -0.02em;
 }
 
-.detail-info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+.price-section {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.current-price {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.original-price {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+.info-table {
   background: var(--bg-secondary);
-  padding: 32px;
-  border-radius: 24px;
-  margin-bottom: 40px;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.info-item {
+.info-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .info-label {
-  font-size: 15px;
-  color: var(--light-gray);
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
 .info-value {
-  font-size: 16px;
-  color: var(--secondary);
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.detail-description {
-  margin-bottom: 40px;
+.action-buttons {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.btn-favorite {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-favorite:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-favorite.active {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: #EEF2FF;
+}
+
+.btn-primary {
+  padding: 16px 24px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.description-section {
+  background: var(--bg-primary);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  padding: 40px;
+  margin-bottom: 24px;
 }
 
 .section-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--secondary);
-  margin-bottom: 18px;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  letter-spacing: -0.01em;
 }
 
 .description-text {
-  font-size: 16px;
-  color: var(--gray);
+  font-size: 15px;
+  color: var(--text-secondary);
   line-height: 1.8;
+  white-space: pre-wrap;
 }
 
-.seller-card {
-  background: var(--bg-secondary);
+.related-product {
+  background: var(--bg-primary);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
   padding: 32px;
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  margin-bottom: 24px;
 }
 
-.seller-main {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.related-header {
+  margin-bottom: 20px;
 }
 
-.seller-avatar-large {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: white;
+.related-header h3 {
+  font-size: 18px;
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
+  color: var(--text-primary);
+  margin-bottom: 4px;
 }
 
-.seller-info-detailed {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.seller-name-large {
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--secondary);
-}
-
-.seller-stats {
+.related-header p {
   font-size: 14px;
-  color: var(--light-gray);
+  color: var(--text-secondary);
 }
 
-.detail-actions {
+.related-content {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 20px;
-  margin-top: 40px;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+}
+
+.related-info h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.related-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.rating {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.review-count {
+  color: var(--text-tertiary);
+}
+
+.bottom-nav {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .btn-back {
-  flex: 1;
-  padding: 20px;
-  background: white;
-  color: var(--gray);
-  border: 2px solid var(--border);
-  border-radius: 16px;
-  font-size: 18px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
+  font-family: inherit;
 }
 
 .btn-back:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
-.btn-chat {
-  flex: 2;
-  padding: 20px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
-  border: none;
-  border-radius: 16px;
-  font-size: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 16px rgba(29, 205, 159, 0.3);
+.loading-state,
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px 20px;
 }
 
-.btn-chat:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(29, 205, 159, 0.4);
+.loading-state {
+  flex-direction: column;
+  gap: 20px;
 }
 
-.loading-container,
-.error-container {
-  text-align: center;
-  padding: 100px 20px;
-  max-width: 600px;
-  margin: 0 auto;
+.loading-state p {
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid var(--border);
-  border-top-color: var(--primary);
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 30px;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-.loading-container p,
-.error-container p {
-  font-size: 16px;
-  color: var(--light-gray);
-  margin-top: 20px;
+.error-content {
+  text-align: center;
+  max-width: 400px;
 }
 
-.error-icon {
-  font-size: 80px;
-  margin-bottom: 30px;
-}
-
-.error-container h2 {
-  font-size: 32px;
+.error-content h2 {
+  font-size: 24px;
   font-weight: 700;
-  color: var(--secondary);
-  margin-bottom: 20px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
 }
 
-.error-container .btn-primary {
-  margin-top: 40px;
+.error-content p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+@media (max-width: 1024px) {
+  .content-wrapper {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
-  .detail-images {
+  .detail-page {
+    padding: 20px 16px 60px;
+  }
+
+  .detail-info {
+    padding: 24px;
+    gap: 24px;
+  }
+
+  .trade-title {
+    font-size: 22px;
+  }
+
+  .current-price {
+    font-size: 26px;
+  }
+
+  .description-section,
+  .related-product {
+    padding: 24px;
+  }
+
+  .action-buttons {
     grid-template-columns: 1fr;
-    height: auto;
   }
 
-  .detail-image.main {
-    grid-row: span 1;
-    height: 300px;
-  }
-
-  .detail-info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .seller-card {
-    flex-direction: column;
-  }
-
-  .detail-actions {
-    flex-direction: column;
+  .btn-favorite {
+    flex-direction: row;
+    justify-content: center;
   }
 }
 </style>
