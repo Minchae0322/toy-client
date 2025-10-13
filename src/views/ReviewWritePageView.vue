@@ -1,0 +1,745 @@
+<!-- ReviewWritePage.vue -->
+<template>
+  <div class="review-write-page">
+    <!-- 헤더 -->
+    <div class="page-header">
+      <button class="back-button" @click="handleBack">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1 class="page-title">리뷰 작성</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <!-- 상품 정보 -->
+    <div v-if="product" class="product-info">
+      <div class="product-image">
+        <img v-if="product.thumbnailUrl" :src="product.thumbnailUrl" :alt="product.name" />
+        <div v-else class="image-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
+      <div class="product-details">
+        <h3 class="product-name">{{ product.name }}</h3>
+        <p class="product-brand">{{ product.brand }}</p>
+      </div>
+    </div>
+
+    <!-- 리뷰 폼 -->
+    <form class="review-form" @submit.prevent="handleSubmit">
+      <!-- 평점 선택 -->
+      <div class="form-section">
+        <label class="form-label">
+          평점
+          <span class="required">*</span>
+        </label>
+        <div class="rating-selector">
+          <button
+              v-for="star in 5"
+              :key="star"
+              type="button"
+              class="star-button"
+              :class="{ active: star <= formData.rating, hover: star <= hoverRating }"
+              @click="selectRating(star)"
+              @mouseenter="hoverRating = star"
+              @mouseleave="hoverRating = 0"
+          >
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <path d="M16 4L19.708 11.528L28 12.756L22 18.588L23.416 26.844L16 22.944L8.584 26.844L10 18.588L4 12.756L12.292 11.528L16 4Z" :fill="star <= (hoverRating || formData.rating) ? '#F59E0B' : 'none'" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div v-if="formData.rating > 0" class="rating-text">
+          {{ getRatingText(formData.rating) }}
+        </div>
+        <div v-if="errors.rating" class="error-message">{{ errors.rating }}</div>
+      </div>
+
+      <!-- 리뷰 내용 -->
+      <div class="form-section">
+        <label class="form-label" for="comment">
+          리뷰 내용
+          <span class="required">*</span>
+        </label>
+        <textarea
+            id="comment"
+            v-model="formData.comment"
+            class="form-textarea"
+            :class="{ error: errors.comment }"
+            placeholder="상품에 대한 솔직한 리뷰를 작성해주세요&#10;&#10;• 상품의 장단점을 구체적으로 작성해주시면 다른 고객들에게 큰 도움이 됩니다&#10;• 최소 10자 이상 작성해주세요"
+            rows="8"
+            maxlength="1000"
+            @input="validateComment"
+        ></textarea>
+        <div class="textarea-info">
+          <span v-if="errors.comment" class="error-message">{{ errors.comment }}</span>
+          <span class="char-count" :class="{ limit: formData.comment.length >= 1000 }">
+            {{ formData.comment.length }} / 1000
+          </span>
+        </div>
+      </div>
+
+      <!-- 이미지 첨부 (선택사항) -->
+      <div class="form-section">
+        <label class="form-label">
+          사진 첨부
+          <span class="optional">(선택)</span>
+        </label>
+        <div class="image-upload-area">
+          <div v-if="previewImages.length > 0" class="image-preview-list">
+            <div
+                v-for="(image, index) in previewImages"
+                :key="index"
+                class="image-preview-item"
+            >
+              <img :src="image.url" :alt="`첨부 이미지 ${index + 1}`" />
+              <button type="button" class="remove-image-btn" @click="removeImage(index)">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <label v-if="previewImages.length < 5" class="upload-button">
+            <input
+                type="file"
+                accept="image/*"
+                multiple
+                class="file-input"
+                @change="handleImageUpload"
+                :disabled="previewImages.length >= 5"
+            />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>사진 추가</span>
+            <span class="upload-limit">(최대 5장)</span>
+          </label>
+        </div>
+        <p class="form-help">JPG, PNG 파일 (최대 5MB)</p>
+      </div>
+
+      <!-- 제출 버튼 -->
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" @click="handleCancel">취소</button>
+        <button type="submit" class="btn-submit" :disabled="isSubmitting || !isFormValid">
+          {{ isSubmitting ? '등록 중...' : '리뷰 등록' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
+
+// State
+const product = ref(null)
+const formData = ref({
+  rating: 0,
+  comment: '',
+  images: []
+})
+const errors = ref({
+  rating: '',
+  comment: ''
+})
+const previewImages = ref([])
+const hoverRating = ref(0)
+const isSubmitting = ref(false)
+
+// Computed
+const isFormValid = computed(() => {
+  return formData.value.rating > 0 &&
+      formData.value.comment.trim().length >= 10 &&
+      !errors.value.rating &&
+      !errors.value.comment
+})
+
+// Methods
+const selectRating = (rating) => {
+  formData.value.rating = rating
+  errors.value.rating = ''
+}
+
+const getRatingText = (rating) => {
+  const texts = {
+    1: '별로예요',
+    2: '그저 그래요',
+    3: '괜찮아요',
+    4: '좋아요',
+    5: '최고예요'
+  }
+  return texts[rating] || ''
+}
+
+const validateComment = () => {
+  const comment = formData.value.comment.trim()
+  if (comment.length === 0) {
+    errors.value.comment = '리뷰 내용을 입력해주세요'
+  } else if (comment.length < 10) {
+    errors.value.comment = '최소 10자 이상 입력해주세요'
+  } else {
+    errors.value.comment = ''
+  }
+}
+
+const handleImageUpload = (event) => {
+  const files = Array.from(event.target.files)
+  const remainingSlots = 5 - previewImages.value.length
+
+  if (files.length > remainingSlots) {
+    alert(`최대 ${remainingSlots}장까지 추가할 수 있습니다`)
+    return
+  }
+
+  files.forEach(file => {
+    // 파일 크기 체크 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`${file.name}은(는) 5MB를 초과합니다`)
+      return
+    }
+
+    // 파일 타입 체크
+    if (!file.type.startsWith('image/')) {
+      alert(`${file.name}은(는) 이미지 파일이 아닙니다`)
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      previewImages.value.push({
+        file: file,
+        url: e.target.result
+      })
+    }
+    reader.readAsDataURL(file)
+  })
+
+  event.target.value = ''
+}
+
+const removeImage = (index) => {
+  previewImages.value.splice(index, 1)
+}
+
+const validateForm = () => {
+  let isValid = true
+
+  if (formData.value.rating === 0) {
+    errors.value.rating = '평점을 선택해주세요'
+    isValid = false
+  }
+
+  validateComment()
+  if (errors.value.comment) {
+    isValid = false
+  }
+
+  return isValid
+}
+
+const handleSubmit = async () => {
+  if (!validateForm()) {
+    return
+  }
+
+  isSubmitting.value = true
+
+  try {
+    // 이미지 업로드 처리
+    const imageUrls = []
+    for (const image of previewImages.value) {
+      // 실제로는 이미지 업로드 API 호출
+      // const uploadResponse = await uploadImage(image.file)
+      // imageUrls.push(uploadResponse.url)
+      imageUrls.push(image.url) // 임시
+    }
+
+    const reviewData = {
+      productId: route.params.productId,
+      rating: formData.value.rating,
+      comment: formData.value.comment.trim(),
+      images: imageUrls
+    }
+
+    // 실제 API 호출
+    // const response = await reviewService.createReview(reviewData)
+
+    // 성공 시 상품 상세 페이지로 이동
+    alert('리뷰가 등록되었습니다')
+    router.push({
+      name: 'ProductDetail',
+      params: { id: route.params.productId }
+    })
+
+  } catch (error) {
+    console.error('리뷰 등록 실패:', error)
+    alert('리뷰 등록에 실패했습니다. 다시 시도해주세요.')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const handleCancel = () => {
+  if (formData.value.rating > 0 || formData.value.comment.trim().length > 0) {
+    if (confirm('작성 중인 내용이 있습니다. 취소하시겠습니까?')) {
+      handleBack()
+    }
+  } else {
+    handleBack()
+  }
+}
+
+const handleBack = () => {
+  router.back()
+}
+
+const loadProductInfo = async () => {
+  // 실제로는 API에서 상품 정보 가져오기
+  // const response = await productService.getProduct(route.params.productId)
+  // product.value = response.data
+
+  // 임시 더미 데이터
+  product.value = {
+    id: route.params.productId,
+    name: '스타벅스 아메리카노 Tall',
+    brand: '스타벅스',
+    thumbnailUrl: null
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  loadProductInfo()
+})
+</script>
+
+<style scoped>
+.review-write-page {
+  min-height: 100vh;
+  background: #FAFAFA;
+  padding-bottom: 80px;
+}
+
+/* 헤더 */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: white;
+  border-bottom: 1px solid #F3F4F6;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 8px;
+}
+
+.back-button:hover {
+  background: #F3F4F6;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.header-spacer {
+  width: 40px;
+}
+
+/* 상품 정보 */
+.product-info {
+  display: flex;
+  gap: 16px;
+  padding: 24px;
+  background: white;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  color: #D1D5DB;
+}
+
+.product-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.product-brand {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0;
+}
+
+/* 리뷰 폼 */
+.review-form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.form-section {
+  margin-bottom: 32px;
+}
+
+.form-label {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+.required {
+  color: #EF4444;
+  margin-left: 4px;
+}
+
+.optional {
+  color: #9CA3AF;
+  font-weight: 500;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+/* 평점 선택 */
+.rating-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.star-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.star-button:hover {
+  transform: scale(1.1);
+}
+
+.star-button.active,
+.star-button.hover {
+  transform: scale(1.15);
+}
+
+.rating-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #F59E0B;
+  margin-top: 8px;
+}
+
+/* 텍스트 영역 */
+.form-textarea {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all 0.2s;
+  background: white;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.form-textarea.error {
+  border-color: #EF4444;
+}
+
+.form-textarea.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-textarea::placeholder {
+  color: #9CA3AF;
+}
+
+.textarea-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.char-count {
+  font-size: 13px;
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
+.char-count.limit {
+  color: #EF4444;
+}
+
+.error-message {
+  font-size: 13px;
+  color: #EF4444;
+  font-weight: 500;
+}
+
+.form-help {
+  font-size: 13px;
+  color: #9CA3AF;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* 이미지 업로드 */
+.image-upload-area {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.image-preview-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.image-preview-item {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #E5E7EB;
+}
+
+.image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.remove-image-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.upload-button {
+  width: 100px;
+  height: 100px;
+  border: 2px dashed #D1D5DB;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #9CA3AF;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.upload-button:hover {
+  border-color: #059669;
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-limit {
+  font-size: 11px;
+  color: #D1D5DB;
+}
+
+/* 액션 버튼 */
+.form-actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+  margin-top: 40px;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 20px 0;
+  border-top: 1px solid #F3F4F6;
+}
+
+.btn-cancel {
+  padding: 16px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-cancel:hover {
+  border-color: #D1D5DB;
+  background: #F9FAFB;
+}
+
+.btn-submit {
+  padding: 16px;
+  background: #059669;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.btn-submit:disabled {
+  background: #D1D5DB;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .review-form {
+    padding: 20px;
+  }
+
+  .form-section {
+    margin-bottom: 28px;
+  }
+
+  .star-button svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .form-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 16px 20px;
+  }
+
+  .page-title {
+    font-size: 16px;
+  }
+
+  .product-info {
+    padding: 20px;
+  }
+
+  .product-image {
+    width: 64px;
+    height: 64px;
+  }
+
+  .product-name {
+    font-size: 15px;
+  }
+
+  .review-form {
+    padding: 16px;
+  }
+
+  .star-button svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .rating-selector {
+    gap: 4px;
+  }
+}
+</style>

@@ -13,6 +13,8 @@ class ProductService extends BaseApiService {
     console.log(`📦 [PRODUCT] Content Server URL: ${this.baseURL}`)
   }
 
+  // ==================== 상품 관련 메서드 ====================
+
   async createProduct(productData) {
     console.log('🚀 [PRODUCT_SERVICE] 상품 등록 요청 데이터 (전체):', JSON.stringify(productData, null, 2))
 
@@ -21,7 +23,6 @@ class ProductService extends BaseApiService {
       throw new Error(validation.errors.join(', '))
     }
 
-    // thumbnailAttachmentInfo와 attachmentFileInfos 분리
     const requestData = {
       name: productData.name.trim(),
       brand: productData.brand.trim(),
@@ -32,14 +33,11 @@ class ProductService extends BaseApiService {
       releaseDate: productData.releaseDate || null,
       feature: productData.feature?.trim() || null,
       tags: productData.tags || [],
-      thumbnailAttachmentInfo: productData.thumbnailAttachmentInfo || null,  // 대표 이미지
-      attachmentFileInfos: productData.attachmentFileInfos || []  // 추가 첨부파일
+      thumbnailAttachmentInfo: productData.thumbnailAttachmentInfo || null,
+      attachmentFileInfos: productData.attachmentFileInfos || []
     }
 
     console.log('📤 [PRODUCT_SERVICE] 최종 전송 데이터:', JSON.stringify(requestData, null, 2))
-    console.log('🖼️ [PRODUCT_SERVICE] thumbnailAttachmentInfo:', requestData.thumbnailAttachmentInfo)
-    console.log('📎 [PRODUCT_SERVICE] attachmentFileInfos:', requestData.attachmentFileInfos)
-
     return await this.post('/products', requestData)
   }
 
@@ -61,7 +59,17 @@ class ProductService extends BaseApiService {
       ...cleanedPageable
     }
 
-    return await this.get('/products', params)
+    const response = await this.get('/products', params)
+
+    if (response.success && response.data) {
+      if (response.data.content) {
+        response.data.content = this.normalizeProductListResponse(response.data.content)
+      } else if (Array.isArray(response.data)) {
+        response.data = this.normalizeProductListResponse(response.data)
+      }
+    }
+
+    return response
   }
 
   async updateProduct(productId, productData) {
@@ -160,6 +168,155 @@ class ProductService extends BaseApiService {
     return await this.get('/products/popular', cleanedParams)
   }
 
+  // ==================== 리뷰 관련 메서드 ====================
+
+  /**
+   * 리뷰 등록
+   */
+  async createReview(reviewData) {
+    const validation = this.validateReviewData(reviewData)
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(', '))
+    }
+
+    const requestData = {
+      productId: parseInt(reviewData.productId),
+      rating: reviewData.rating,
+      comment: reviewData.comment.trim(),
+      imageUrls: reviewData.images || []
+    }
+
+    return await this.post('/reviews', requestData)
+  }
+
+  /**
+   * 리뷰 조회
+   */
+  async getReview(reviewId) {
+    if (!reviewId) {
+      throw new Error('리뷰 ID가 필요합니다.')
+    }
+    return await this.get(`/reviews/${reviewId}`)
+  }
+
+  /**
+   * 상품별 리뷰 목록 조회
+   */
+  async getProductReviews(productId, pageable = {}) {
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
+    }
+
+    const validatedPageable = this.validateReviewPageable(pageable)
+    const params = this.removeEmptyParams(validatedPageable)
+
+    return await this.get(`/products/${productId}/reviews`, params)
+  }
+
+  /**
+   * 내가 작성한 리뷰 목록 조회
+   */
+  async getMyReviews(pageable = {}) {
+    const validatedPageable = this.validateReviewPageable(pageable)
+    const params = this.removeEmptyParams(validatedPageable)
+
+    return await this.get('/reviews/my', params)
+  }
+
+  /**
+   * 리뷰 수정
+   */
+  async updateReview(reviewId, reviewData) {
+    if (!reviewId) {
+      throw new Error('리뷰 ID가 필요합니다.')
+    }
+
+    const validation = this.validateReviewData(reviewData)
+    if (!validation.isValid) {
+      throw new Error(validation.errors.join(', '))
+    }
+
+    const requestData = {
+      rating: reviewData.rating,
+      comment: reviewData.comment.trim(),
+      imageUrls: reviewData.images || []
+    }
+
+    return await this.put(`/reviews/${reviewId}`, requestData)
+  }
+
+  /**
+   * 리뷰 삭제
+   */
+  async deleteReview(reviewId) {
+    if (!reviewId) {
+      throw new Error('리뷰 ID가 필요합니다.')
+    }
+    return await this.delete(`/reviews/${reviewId}`)
+  }
+
+  /**
+   * 리뷰 좋아요 토글
+   */
+  async toggleReviewLike(reviewId) {
+    if (!reviewId) {
+      throw new Error('리뷰 ID가 필요합니다.')
+    }
+    return await this.post(`/reviews/${reviewId}/like`)
+  }
+
+  /**
+   * 리뷰 신고
+   */
+  async reportReview(reviewId, reason) {
+    if (!reviewId) {
+      throw new Error('리뷰 ID가 필요합니다.')
+    }
+    if (!reason || reason.trim().length === 0) {
+      throw new Error('신고 사유를 입력해주세요.')
+    }
+
+    return await this.post(`/reviews/${reviewId}/report`, { reason: reason.trim() })
+  }
+
+  /**
+   * 리뷰 통계 조회
+   */
+  async getReviewStats(productId) {
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
+    }
+    return await this.get(`/products/${productId}/reviews/stats`)
+  }
+
+  /**
+   * 리뷰 이미지 업로드
+   */
+  async uploadReviewImage(file) {
+    if (!file) {
+      throw new Error('파일이 필요합니다.')
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('파일 크기는 5MB 이하여야 합니다.')
+    }
+
+    if (!file.type.startsWith('image/')) {
+      throw new Error('이미지 파일만 업로드 가능합니다.')
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return await this.post('/reviews/images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
+
+  // ==================== 유틸리티 메서드 ====================
+
   removeEmptyParams(params) {
     if (!params || typeof params !== 'object') {
       return {}
@@ -180,6 +337,24 @@ class ProductService extends BaseApiService {
 
     return cleaned
   }
+
+  normalizeProductListResponse(products) {
+    if (!Array.isArray(products)) return []
+
+    return products.map(product => ({
+      ...product,
+      thumbnailUrl: product.thumbnailDto?.fileUrl || product.thumbnailUrl || null,
+      thumbnail: product.thumbnailDto ? {
+        id: product.thumbnailDto.id,
+        fileUrl: product.thumbnailDto.fileUrl,
+        orgFileNm: product.thumbnailDto.orgFileNm,
+        fileSize: product.thumbnailDto.fileSize,
+        contentType: product.thumbnailDto.contentType
+      } : null
+    }))
+  }
+
+  // ==================== 검증 메서드 ====================
 
   validateProductData(productData) {
     const errors = []
@@ -214,6 +389,35 @@ class ProductService extends BaseApiService {
     }
   }
 
+  validateReviewData(reviewData) {
+    const errors = []
+
+    if (!reviewData.productId) {
+      errors.push('상품 ID가 필요합니다.')
+    }
+
+    if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
+      errors.push('평점은 1~5 사이여야 합니다.')
+    }
+
+    if (!reviewData.comment || reviewData.comment.trim().length === 0) {
+      errors.push('리뷰 내용을 입력해주세요.')
+    } else if (reviewData.comment.trim().length < 10) {
+      errors.push('리뷰는 최소 10자 이상 작성해주세요.')
+    } else if (reviewData.comment.length > 1000) {
+      errors.push('리뷰는 1000자 이하로 작성해주세요.')
+    }
+
+    if (reviewData.images && reviewData.images.length > 5) {
+      errors.push('이미지는 최대 5장까지 첨부 가능합니다.')
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    }
+  }
+
   validateSearchCondition(searchCondition) {
     if (!searchCondition || typeof searchCondition !== 'object') {
       return {}
@@ -237,57 +441,6 @@ class ProductService extends BaseApiService {
     }
 
     return validated
-  }
-
-  // services/ProductService.js 내부에 추가
-
-  /**
-   * 상품 목록 응답 데이터 정규화
-   * 백엔드 응답 구조를 프론트엔드에서 사용하기 쉽게 변환
-   */
-  normalizeProductListResponse(products) {
-    if (!Array.isArray(products)) return []
-
-    return products.map(product => ({
-      ...product,
-      // thumbnailDto를 thumbnailUrl로도 매핑 (하위 호환성)
-      thumbnailUrl: product.thumbnailDto?.fileUrl || product.thumbnailUrl || null,
-      // 썸네일 정보 보존
-      thumbnail: product.thumbnailDto ? {
-        id: product.thumbnailDto.id,
-        fileUrl: product.thumbnailDto.fileUrl,
-        orgFileNm: product.thumbnailDto.orgFileNm,
-        fileSize: product.thumbnailDto.fileSize,
-        contentType: product.thumbnailDto.contentType
-      } : null
-    }))
-  }
-
-  async getProducts(searchCondition = {}, pageable = {}) {
-    const validatedCondition = this.validateSearchCondition(searchCondition)
-    const validatedPageable = this.validatePageable(pageable)
-    const cleanedCondition = this.removeEmptyParams(validatedCondition)
-    const cleanedPageable = this.removeEmptyParams(validatedPageable)
-
-    const params = {
-      ...cleanedCondition,
-      ...cleanedPageable
-    }
-
-    const response = await this.get('/products', params)
-
-    // 응답 데이터 정규화
-    if (response.success && response.data) {
-      if (response.data.content) {
-        // 페이징 응답
-        response.data.content = this.normalizeProductListResponse(response.data.content)
-      } else if (Array.isArray(response.data)) {
-        // 배열 응답
-        response.data = this.normalizeProductListResponse(response.data)
-      }
-    }
-
-    return response
   }
 
   validatePageable(pageable) {
@@ -321,6 +474,28 @@ class ProductService extends BaseApiService {
     return validated
   }
 
+  validateReviewPageable(pageable) {
+    if (!pageable || typeof pageable !== 'object') {
+      return {
+        page: 0,
+        size: 10,
+        sort: 'createdAt,DESC'
+      }
+    }
+
+    const validSorts = [
+      'createdAt,DESC', 'createdAt,ASC',
+      'rating,DESC', 'rating,ASC',
+      'likeCount,DESC', 'likeCount,ASC'
+    ]
+
+    return {
+      page: Math.max(0, pageable.page || 0),
+      size: Math.min(50, Math.max(1, pageable.size || 10)),
+      sort: validSorts.includes(pageable.sort) ? pageable.sort : 'createdAt,DESC'
+    }
+  }
+
   formatPrice(price) {
     if (!price) return '가격 정보 없음'
     if (price === '0' || price === 0) return '무료'
@@ -336,15 +511,15 @@ class ProductService extends BaseApiService {
     console.log('=== 지원 기능 ===')
     console.log('상품 CRUD: 등록, 조회, 수정, 삭제')
     console.log('리액션: 좋아요, 북마크, 관심상품')
+    console.log('리뷰 CRUD: 등록, 조회, 수정, 삭제')
+    console.log('리뷰 기능: 좋아요, 신고, 이미지 업로드')
     console.log('검색 및 필터링: 키워드, 카테고리, 브랜드')
     this.debugStatus()
     console.groupEnd()
   }
 }
 
-
-
-// 싱글톤 인스턴스만 export
+// 싱글톤 인스턴스
 export const productService = new ProductService()
 export default productService
 
@@ -352,9 +527,6 @@ export default productService
  * 상품 필터링 및 검색 유틸리티
  */
 export const productFilterUtils = {
-  /**
-   * 파라미터에서 빈 값 제거 (유틸리티 함수)
-   */
   removeEmptyParams(params) {
     if (!params || typeof params !== 'object') {
       return {}
@@ -377,9 +549,6 @@ export const productFilterUtils = {
     return cleaned
   },
 
-  /**
-   * 기본 검색 조건 반환
-   */
   getDefaultSearchCondition() {
     return {
       keyword: '',
@@ -389,9 +558,6 @@ export const productFilterUtils = {
     }
   },
 
-  /**
-   * 기본 페이징 조건 반환
-   */
   getDefaultPageable() {
     return {
       page: 0,
@@ -400,9 +566,6 @@ export const productFilterUtils = {
     }
   },
 
-  /**
-   * 정렬 옵션 목록 반환
-   */
   getSortOptions() {
     return [
       { value: 'createdAt,DESC', label: '최신순' },
@@ -420,9 +583,6 @@ export const productFilterUtils = {
  * 상품 관련 유틸리티 함수들
  */
 export const productUtils = {
-  /**
-   * 숫자를 한국어 단위로 포맷팅
-   */
   formatCount(count) {
     if (!count || count === 0) return '0'
 
@@ -437,9 +597,6 @@ export const productUtils = {
     return num.toString()
   },
 
-  /**
-   * 가격 포맷팅
-   */
   formatPrice(price) {
     if (!price || price === '0' || price === 0) return '무료'
 
@@ -447,17 +604,11 @@ export const productUtils = {
     return new Intl.NumberFormat('ko-KR').format(numPrice) + '원'
   },
 
-  /**
-   * 평점 포맷팅
-   */
   formatRating(rating) {
     if (!rating) return '0.0'
     return typeof rating === 'number' ? rating.toFixed(1) : rating
   },
 
-  /**
-   * 날짜 포맷팅
-   */
   formatDate(dateString) {
     if (!dateString) return ''
 
@@ -475,7 +626,26 @@ export const productUtils = {
     if (days < 7) return `${days}일 전`
 
     return date.toLocaleDateString('ko-KR')
+  },
+
+  getRatingText(rating) {
+    const texts = {
+      1: '별로예요',
+      2: '그저 그래요',
+      3: '괜찮아요',
+      4: '좋아요',
+      5: '최고예요'
+    }
+    return texts[Math.round(rating)] || '평가 없음'
+  },
+
+  getRatingStars(rating) {
+    const fullStars = Math.floor(rating)
+    const hasHalfStar = rating % 1 >= 0.5
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0)
+
+    return '★'.repeat(fullStars) +
+        (hasHalfStar ? '☆' : '') +
+        '☆'.repeat(emptyStars)
   }
-
-
 }

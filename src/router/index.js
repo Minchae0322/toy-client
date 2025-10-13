@@ -18,6 +18,7 @@ import ChatApp from '@/views/ChatApp.vue'
 import ProductListView from '@/views/ProductListView.vue'
 import ProductCreateView from '@/views/ProductCreateView.vue'
 import ProductDetailView from '@/views/ProductDetailView.vue'
+import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
 
 const routes = [
   // ==================== 상품 관련 라우트 ====================
@@ -29,6 +30,15 @@ const routes = [
       requiresAuth: false,
       public: true,
       title: '상품 목록'
+    }
+  },
+  {
+    path: '/products/:productId/review/write',
+    name: 'ReviewWrite',
+    component: ProductReviewWrite,
+    meta: {
+      requiresAuth: true,
+      title: '리뷰 작성'
     }
   },
   {
