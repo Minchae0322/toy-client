@@ -134,39 +134,52 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useProductDetail } from '@/composables/useProduct'
 
 const router = useRouter()
 const route = useRoute()
 
+const {
+  fetchProduct,
+  createReview,
+  uploadReviewImage,
+  validateReviewData
+} = useProductDetail()
+
 // State
 const product = ref(null)
-const formData = ref({
+const loading = ref(false)
+const loadError = ref(null)
+
+const formData = reactive({
   rating: 0,
   comment: '',
   images: []
 })
-const errors = ref({
+
+const errors = reactive({
   rating: '',
   comment: ''
 })
+
 const previewImages = ref([])
 const hoverRating = ref(0)
 const isSubmitting = ref(false)
 
 // Computed
 const isFormValid = computed(() => {
-  return formData.value.rating > 0 &&
-      formData.value.comment.trim().length >= 10 &&
-      !errors.value.rating &&
-      !errors.value.comment
+  return formData.rating > 0 &&
+      formData.comment.trim().length >= 10 &&
+      !errors.rating &&
+      !errors.comment
 })
 
 // Methods
 const selectRating = (rating) => {
-  formData.value.rating = rating
-  errors.value.rating = ''
+  formData.rating = rating
+  errors.rating = ''
 }
 
 const getRatingText = (rating) => {
@@ -181,13 +194,13 @@ const getRatingText = (rating) => {
 }
 
 const validateComment = () => {
-  const comment = formData.value.comment.trim()
+  const comment = formData.comment.trim()
   if (comment.length === 0) {
-    errors.value.comment = '리뷰 내용을 입력해주세요'
+    errors.comment = '리뷰 내용을 입력해주세요'
   } else if (comment.length < 10) {
-    errors.value.comment = '최소 10자 이상 입력해주세요'
+    errors.comment = '최소 10자 이상 입력해주세요'
   } else {
-    errors.value.comment = ''
+    errors.comment = ''
   }
 }
 
@@ -201,13 +214,11 @@ const handleImageUpload = (event) => {
   }
 
   files.forEach(file => {
-    // 파일 크기 체크 (5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert(`${file.name}은(는) 5MB를 초과합니다`)
       return
     }
 
-    // 파일 타입 체크
     if (!file.type.startsWith('image/')) {
       alert(`${file.name}은(는) 이미지 파일이 아닙니다`)
       return
@@ -233,63 +244,71 @@ const removeImage = (index) => {
 const validateForm = () => {
   let isValid = true
 
-  if (formData.value.rating === 0) {
-    errors.value.rating = '평점을 선택해주세요'
+  if (formData.rating === 0) {
+    errors.rating = '평점을 선택해주세요'
     isValid = false
   }
 
   validateComment()
-  if (errors.value.comment) {
+  if (errors.comment) {
     isValid = false
   }
 
   return isValid
 }
-
 const handleSubmit = async () => {
-  if (!validateForm()) {
-    return
-  }
+  if (!validateForm()) return
 
   isSubmitting.value = true
 
   try {
-    // 이미지 업로드 처리
+    const productId = route.params.id
+
+    if (!productId) {
+      alert('상품 ID가 없습니다')
+      return
+    }
+
+    // 1. 이미지 업로드
     const imageUrls = []
     for (const image of previewImages.value) {
-      // 실제로는 이미지 업로드 API 호출
-      // const uploadResponse = await uploadImage(image.file)
-      // imageUrls.push(uploadResponse.url)
-      imageUrls.push(image.url) // 임시
+      const url = await uploadReviewImage(image.file)
+      if (url) imageUrls.push(url)
     }
 
+    // 2. 리뷰 데이터 구성
+    // ✅ attachmentFileInfos로 필드명 변경
     const reviewData = {
-      productId: route.params.productId,
-      rating: formData.value.rating,
-      comment: formData.value.comment.trim(),
-      images: imageUrls
+      productId: productId,
+      rating: formData.rating,
+      comment: formData.comment.trim(),
+      attachmentFileInfos: imageUrls  // ✅ images → attachmentFileInfos
     }
 
-    // 실제 API 호출
-    // const response = await reviewService.createReview(reviewData)
+    console.log('전송할 리뷰 데이터:', reviewData)
 
-    // 성공 시 상품 상세 페이지로 이동
-    alert('리뷰가 등록되었습니다')
-    router.push({
-      name: 'ProductDetail',
-      params: { id: route.params.productId }
-    })
+    // 3. 리뷰 등록
+    const result = await createReview(reviewData)
 
+    if (result.success) {
+      alert('리뷰가 등록되었습니다')
+      router.push({
+        name: 'ProductDetail',
+        params: { id: productId }
+      })
+    } else {
+      alert(result.error || '리뷰 등록에 실패했습니다')
+    }
   } catch (error) {
     console.error('리뷰 등록 실패:', error)
-    alert('리뷰 등록에 실패했습니다. 다시 시도해주세요.')
+    alert('리뷰 등록에 실패했습니다')
   } finally {
     isSubmitting.value = false
   }
 }
 
 const handleCancel = () => {
-  if (formData.value.rating > 0 || formData.value.comment.trim().length > 0) {
+  if (formData.rating > 0 || formData.comment.trim().length > 0) {
     if (confirm('작성 중인 내용이 있습니다. 취소하시겠습니까?')) {
       handleBack()
     }
@@ -303,33 +322,53 @@ const handleBack = () => {
 }
 
 const loadProductInfo = async () => {
-  // 실제로는 API에서 상품 정보 가져오기
-  // const response = await productService.getProduct(route.params.productId)
-  // product.value = response.data
+  const productId = route.params.id
 
-  // 임시 더미 데이터
-  product.value = {
-    id: route.params.productId,
-    name: '스타벅스 아메리카노 Tall',
-    brand: '스타벅스',
-    thumbnailUrl: null
+  console.log('현재 route params:', route.params)
+  console.log('사용할 productId:', productId)
+
+  if (!productId) {
+    loadError.value = '상품 ID가 올바르지 않습니다'
+    return
+  }
+
+  loading.value = true
+  loadError.value = null
+
+  try {
+    const result = await fetchProduct(productId)
+
+    if (result) {
+      product.value = result
+    } else {
+      product.value = {
+        id: productId,
+        name: '스타벅스 아메리카노 Tall',
+        brand: '스타벅스',
+        thumbnailUrl: null
+      }
+    }
+  } catch (error) {
+    console.error('상품 정보 로드 실패:', error)
+    loadError.value = '상품 정보를 불러오는데 실패했습니다'
+  } finally {
+    loading.value = false
   }
 }
 
-// Lifecycle
 onMounted(() => {
   loadProductInfo()
 })
 </script>
 
 <style scoped>
+/* 기존 스타일 그대로 유지 */
 .review-write-page {
   min-height: 100vh;
   background: #FAFAFA;
   padding-bottom: 80px;
 }
 
-/* 헤더 */
 .page-header {
   display: flex;
   align-items: center;
@@ -371,7 +410,6 @@ onMounted(() => {
   width: 40px;
 }
 
-/* 상품 정보 */
 .product-info {
   display: flex;
   gap: 16px;
@@ -424,7 +462,6 @@ onMounted(() => {
   margin: 0;
 }
 
-/* 리뷰 폼 */
 .review-form {
   max-width: 800px;
   margin: 0 auto;
@@ -456,7 +493,6 @@ onMounted(() => {
   margin-left: 4px;
 }
 
-/* 평점 선택 */
 .rating-selector {
   display: flex;
   gap: 8px;
@@ -487,7 +523,6 @@ onMounted(() => {
   margin-top: 8px;
 }
 
-/* 텍스트 영역 */
 .form-textarea {
   width: 100%;
   padding: 16px;
@@ -549,7 +584,6 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
-/* 이미지 업로드 */
 .image-upload-area {
   display: flex;
   gap: 12px;
@@ -631,7 +665,6 @@ onMounted(() => {
   color: #D1D5DB;
 }
 
-/* 액션 버튼 */
 .form-actions {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -687,7 +720,6 @@ onMounted(() => {
   transform: none;
 }
 
-/* 반응형 */
 @media (max-width: 768px) {
   .review-form {
     padding: 20px;

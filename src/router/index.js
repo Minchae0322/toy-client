@@ -33,7 +33,7 @@ const routes = [
     }
   },
   {
-    path: '/products/:productId/review/write',
+    path: '/products/:id/review/write',
     name: 'ReviewWrite',
     component: ProductReviewWrite,
     meta: {

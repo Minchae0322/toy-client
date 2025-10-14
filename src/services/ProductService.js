@@ -171,22 +171,44 @@ class ProductService extends BaseApiService {
   // ==================== 리뷰 관련 메서드 ====================
 
   /**
-   * 리뷰 등록
+   * 상품 리뷰 등록
+   * POST /api/products/{id}/reviews
    */
-  async createReview(reviewData) {
+  async createReview(productId, reviewData) {
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
+    }
+
     const validation = this.validateReviewData(reviewData)
     if (!validation.isValid) {
       throw new Error(validation.errors.join(', '))
     }
 
     const requestData = {
-      productId: parseInt(reviewData.productId),
+      productId: parseInt(productId),
       rating: reviewData.rating,
       comment: reviewData.comment.trim(),
-      imageUrls: reviewData.images || []
+      attachmentFileInfos: reviewData.attachmentFileInfos || []
     }
 
-    return await this.post('/reviews', requestData)
+    console.log('📤 [PRODUCT_SERVICE] 리뷰 등록 요청:', requestData)
+    return await this.post(`/products/${productId}/reviews`, requestData)
+  }
+
+  /**
+   * 상품별 리뷰 목록 조회
+   * GET /api/products/{id}/reviews
+   */
+  async getProductReviews(productId, pageable = {}) {
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
+    }
+
+    const validatedPageable = this.validateReviewPageable(pageable)
+    const params = this.removeEmptyParams(validatedPageable)
+
+    console.log('📤 [PRODUCT_SERVICE] 리뷰 목록 조회:', { productId, params })
+    return await this.get(`/products/${productId}/reviews`, params)
   }
 
   /**
@@ -197,20 +219,6 @@ class ProductService extends BaseApiService {
       throw new Error('리뷰 ID가 필요합니다.')
     }
     return await this.get(`/reviews/${reviewId}`)
-  }
-
-  /**
-   * 상품별 리뷰 목록 조회
-   */
-  async getProductReviews(productId, pageable = {}) {
-    if (!productId) {
-      throw new Error('상품 ID가 필요합니다.')
-    }
-
-    const validatedPageable = this.validateReviewPageable(pageable)
-    const params = this.removeEmptyParams(validatedPageable)
-
-    return await this.get(`/products/${productId}/reviews`, params)
   }
 
   /**
@@ -239,7 +247,7 @@ class ProductService extends BaseApiService {
     const requestData = {
       rating: reviewData.rating,
       comment: reviewData.comment.trim(),
-      imageUrls: reviewData.images || []
+      imageUrls: reviewData.imageUrls || []
     }
 
     return await this.put(`/reviews/${reviewId}`, requestData)
@@ -392,10 +400,6 @@ class ProductService extends BaseApiService {
   validateReviewData(reviewData) {
     const errors = []
 
-    if (!reviewData.productId) {
-      errors.push('상품 ID가 필요합니다.')
-    }
-
     if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
       errors.push('평점은 1~5 사이여야 합니다.')
     }
@@ -408,7 +412,7 @@ class ProductService extends BaseApiService {
       errors.push('리뷰는 1000자 이하로 작성해주세요.')
     }
 
-    if (reviewData.images && reviewData.images.length > 5) {
+    if (reviewData.attachmentFileInfos && reviewData.attachmentFileInfos.length > 5) {
       errors.push('이미지는 최대 5장까지 첨부 가능합니다.')
     }
 

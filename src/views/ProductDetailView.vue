@@ -80,10 +80,10 @@
 
           <!-- 리뷰 섹션 -->
           <ReviewSection
-              v-if="product"
-              :product="product"
+              :product-id="product.id"
               :is-logged-in="isLoggedIn"
               @write-review="handleWriteReviewAction"
+              @refresh-product="fetchProductData"
           />
 
           <!-- 개인거래 섹션 -->

@@ -367,6 +367,8 @@ export function useProduct() {
     }
   }
 
+  // composables/useProduct.js
+
   /**
    * 리뷰 등록
    */
@@ -375,7 +377,18 @@ export function useProduct() {
     clearError()
 
     try {
-      const response = await productService.createReview(reviewData)
+      // ✅ productId를 reviewData에서 추출
+      const productId = reviewData.productId
+
+      if (!productId) {
+        return {
+          success: false,
+          error: '상품 ID가 필요합니다.'
+        }
+      }
+
+      // ✅ productService.createReview는 두 개의 인자를 받음
+      const response = await productService.createReview(productId, reviewData)
 
       if (response.success && response.data) {
         reviews.value.unshift(response.data)
