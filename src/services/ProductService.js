@@ -298,7 +298,8 @@ class ProductService extends BaseApiService {
   }
 
   /**
-   * 리뷰 이미지 업로드
+   * 리뷰 이미지 업로드 (파일 서버로 직접 업로드)
+   * ProductCreate와 동일한 방식 사용
    */
   async uploadReviewImage(file) {
     if (!file) {
@@ -316,7 +317,9 @@ class ProductService extends BaseApiService {
     const formData = new FormData()
     formData.append('file', file)
 
-    return await this.post('/reviews/images', formData, {
+    // 파일 서버에 직접 업로드
+    console.log('📤 [PRODUCT_SERVICE] 리뷰 이미지 업로드 시작')
+    return await this.post('/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

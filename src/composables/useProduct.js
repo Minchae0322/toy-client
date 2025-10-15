@@ -367,17 +367,14 @@ export function useProduct() {
     }
   }
 
-  // composables/useProduct.js
-
   /**
-   * 리뷰 등록
+   * 리뷰 등록 (파일 업로드 로직 포함)
    */
   const createReview = async (reviewData) => {
     loading.value = true
     clearError()
 
     try {
-      // ✅ productId를 reviewData에서 추출
       const productId = reviewData.productId
 
       if (!productId) {
@@ -387,7 +384,6 @@ export function useProduct() {
         }
       }
 
-      // ✅ productService.createReview는 두 개의 인자를 받음
       const response = await productService.createReview(productId, reviewData)
 
       if (response.success && response.data) {
@@ -564,7 +560,7 @@ export function useProduct() {
   }
 
   /**
-   * 리뷰 이미지 업로드
+   * 리뷰 이미지 업로드 (파일 서버로 업로드 후 파일 정보 반환)
    */
   const uploadReviewImage = async (file) => {
     if (!file) {
@@ -573,14 +569,27 @@ export function useProduct() {
     }
 
     try {
+      console.log('📤 [COMPOSABLE] 리뷰 이미지 업로드 시작:', file.name)
+
       const response = await productService.uploadReviewImage(file)
 
       if (response.success && response.data) {
-        return response.data.url || response.data.fileUrl
+        // ProductCreate처럼 파일 정보 객체 반환
+        const fileInfo = {
+          id: response.data.id,
+          fileUrl: response.data.fileUrl,
+          orgFileNm: response.data.orgFileNm || file.name,
+          fileSize: response.data.fileSize || file.size,
+          contentType: response.data.contentType || file.type
+        }
+
+        console.log('✅ [COMPOSABLE] 리뷰 이미지 업로드 성공:', fileInfo)
+        return fileInfo
       } else {
         throw new Error(response.error || '이미지 업로드에 실패했습니다.')
       }
     } catch (err) {
+      console.error('❌ [COMPOSABLE] 이미지 업로드 실패:', err)
       handleError(err, '이미지 업로드')
       return null
     }
@@ -648,7 +657,7 @@ export function useProduct() {
       errors.push('리뷰는 1000자 이하로 작성해주세요.')
     }
 
-    if (reviewData.images && reviewData.images.length > 5) {
+    if (reviewData.attachmentFileInfos && reviewData.attachmentFileInfos.length > 5) {
       errors.push('이미지는 최대 5장까지 첨부 가능합니다.')
     }
 

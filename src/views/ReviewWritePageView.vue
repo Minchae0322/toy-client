@@ -256,6 +256,7 @@ const validateForm = () => {
 
   return isValid
 }
+
 const handleSubmit = async () => {
   if (!validateForm()) return
 
@@ -269,23 +270,41 @@ const handleSubmit = async () => {
       return
     }
 
-    // 1. 이미지 업로드
-    const imageUrls = []
+    console.log('📤 [REVIEW_WRITE] 리뷰 등록 시작')
+
+    // 1. 이미지 파일을 서버에 업로드하고 파일 정보 받기
+    const attachmentFileInfos = []
+
     for (const image of previewImages.value) {
-      const url = await uploadReviewImage(image.file)
-      if (url) imageUrls.push(url)
+      console.log('📤 이미지 업로드 중:', image.file.name)
+      const fileInfo = await uploadReviewImage(image.file)
+
+      if (fileInfo) {
+        // ProductCreate처럼 파일 정보 객체 사용
+        attachmentFileInfos.push({
+          id: fileInfo.id,
+          fileUrl: fileInfo.fileUrl,
+          orgFileNm: fileInfo.orgFileNm,
+          fileSize: fileInfo.fileSize,
+          contentType: fileInfo.contentType
+        })
+        console.log('✅ 이미지 업로드 성공:', fileInfo.orgFileNm)
+      } else {
+        console.error('❌ 이미지 업로드 실패:', image.file.name)
+      }
     }
 
+    console.log('✅ 모든 이미지 업로드 완료:', attachmentFileInfos.length, '개')
+
     // 2. 리뷰 데이터 구성
-    // ✅ attachmentFileInfos로 필드명 변경
     const reviewData = {
       productId: productId,
       rating: formData.rating,
       comment: formData.comment.trim(),
-      attachmentFileInfos: imageUrls  // ✅ images → attachmentFileInfos
+      attachmentFileInfos: attachmentFileInfos  // 파일 정보 객체 배열
     }
 
-    console.log('전송할 리뷰 데이터:', reviewData)
+    console.log('📤 [REVIEW_WRITE] 최종 전송 데이터:', JSON.stringify(reviewData, null, 2))
 
     // 3. 리뷰 등록
     const result = await createReview(reviewData)
@@ -300,7 +319,7 @@ const handleSubmit = async () => {
       alert(result.error || '리뷰 등록에 실패했습니다')
     }
   } catch (error) {
-    console.error('리뷰 등록 실패:', error)
+    console.error('❌ [REVIEW_WRITE] 리뷰 등록 실패:', error)
     alert('리뷰 등록에 실패했습니다')
   } finally {
     isSubmitting.value = false
@@ -362,7 +381,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 기존 스타일 그대로 유지 */
 .review-write-page {
   min-height: 100vh;
   background: #FAFAFA;
