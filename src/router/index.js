@@ -21,7 +21,7 @@ import ProductDetailView from '@/views/ProductDetailView.vue'
 import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
 
 // Sale Post Views import
-import SalePostCreateView from '@/views/oneMouth/SalePostCreateView.vue'
+import SalePostCreateView from '@/views/SalePostCreateView.vue'
 
 const routes = [
   // ==================== 상품 관련 라우트 ====================
