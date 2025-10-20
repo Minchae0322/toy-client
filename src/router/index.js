@@ -20,6 +20,9 @@ import ProductCreateView from '@/views/ProductCreateView.vue'
 import ProductDetailView from '@/views/ProductDetailView.vue'
 import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
 
+// Sale Post Views import
+import SalePostCreateView from '@/views/oneMouth/SalePostCreateView.vue'
+
 const routes = [
   // ==================== 상품 관련 라우트 ====================
   {
@@ -59,6 +62,38 @@ const routes = [
       requiresAuth: false,
       public: true,
       title: '상품 상세'
+    }
+  },
+
+  // ==================== 한입만 거래 관련 라우트 ====================
+  {
+    path: '/one-mouth',
+    name: 'OneMouthList',
+    component: OneMouthListView,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '한입만 거래'
+    }
+  },
+  {
+    path: '/one-mouth/create',
+    name: 'SalePostCreate',
+    component: SalePostCreateView,
+    meta: {
+      requiresAuth: true,
+      title: '상품 등록'
+    }
+  },
+  {
+    path: '/one-mouth/:id',
+    name: 'OneMouthDetail',
+    component: OneMouthDetailView,
+    props: true,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '게시글 상세'
     }
   },
 
@@ -118,23 +153,6 @@ const routes = [
     component: HomeView,
     meta: {
       requiresAuth: true
-    }
-  },
-  {
-    path: '/one-mouth/list',
-    name: 'OneMouthList',
-    component: OneMouthListView,
-    meta: {
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/one-mouth/:id',
-    name: 'OneMouthDetail',
-    component: OneMouthDetailView,
-    props: true,
-    meta: {
-      requiresAuth: false // 상세 페이지는 공개
     }
   },
 
@@ -326,6 +344,8 @@ router.afterEach((to) => {
     title = `채팅방 ${to.params.roomId} | ToyChat`
   } else if (to.name === 'ProductDetail') {
     title = `상품 ${to.params.id} | ToyChat`
+  } else if (to.name === 'OneMouthDetail') {
+    title = `게시글 ${to.params.id} | ToyChat`
   }
 
   document.title = title
@@ -469,13 +489,92 @@ export const productNavigation = {
   }
 }
 
+// ==================== 한입만 거래 네비게이션 헬퍼 ====================
+export const salePostNavigation = {
+  /**
+   * 한입만 거래 목록으로 이동
+   */
+  toList(query = {}) {
+    return router.push({ name: 'OneMouthList', query })
+  },
+
+  /**
+   * 판매 게시글 등록 페이지로 이동
+   */
+  toCreate() {
+    return router.push({ name: 'SalePostCreate' })
+  },
+
+  /**
+   * 판매 게시글 상세 페이지로 이동
+   */
+  toDetail(postId) {
+    if (!postId) {
+      console.warn('게시글 ID가 없습니다')
+      return this.toList()
+    }
+    return router.push({ name: 'OneMouthDetail', params: { id: postId } })
+  },
+
+  /**
+   * 판매 게시글 수정 페이지로 이동
+   */
+  toEdit(postId) {
+    if (!postId) {
+      console.warn('게시글 ID가 없습니다')
+      return this.toList()
+    }
+    return router.push({ name: 'SalePostEdit', params: { id: postId } })
+  },
+
+  /**
+   * 한입만 관련 페이지인지 확인
+   */
+  isOneMouthPage() {
+    const route = router.currentRoute.value
+    return route.name?.startsWith('OneMouth') || route.name?.startsWith('SalePost')
+  },
+
+  /**
+   * 게시글 URL 생성
+   */
+  getPostUrl(postId) {
+    const route = router.resolve({ name: 'OneMouthDetail', params: { id: postId } })
+    return window.location.origin + route.href
+  },
+
+  /**
+   * 카테고리별 게시글 목록으로 이동
+   */
+  toPostsByCategory(categoryId) {
+    return this.toList({ categoryId })
+  },
+
+  /**
+   * 판매 방식별 게시글 목록으로 이동
+   */
+  toPostsBySaleType(saleType) {
+    return this.toList({ saleType })
+  },
+
+  /**
+   * 검색 결과 페이지로 이동
+   */
+  toSearch(keyword) {
+    return this.toList({ keyword })
+  }
+}
+
 // ==================== 통합 네비게이션 헬퍼 ====================
 export const navigation = {
   // 기존 채팅 네비게이션
   chat: chatNavigation,
 
-  // 새로운 상품 네비게이션
+  // 상품 네비게이션
   product: productNavigation,
+
+  // 한입만 거래 네비게이션
+  salePost: salePostNavigation,
 
   /**
    * 홈으로 이동
