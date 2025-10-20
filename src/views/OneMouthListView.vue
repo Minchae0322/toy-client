@@ -3,11 +3,11 @@
     <!-- 헤더 -->
     <header class="header">
       <div class="header-container">
-        <h1 class="logo">한입만</h1>
+        <h1 class="logo" @click="router.push('/one-mouth')">한입만</h1>
 
         <nav class="nav">
           <button class="nav-btn">카테고리</button>
-          <button class="nav-btn">판매하기</button>
+          <button class="nav-btn" @click="handleSellClick">판매하기</button>
           <button class="nav-btn">내 주문</button>
           <button class="cart">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
@@ -23,8 +23,16 @@
     <main class="container">
       <!-- 페이지 헤더 -->
       <div class="page-header">
-        <h2 class="page-title">한입만 마켓</h2>
-        <p class="page-desc">원하는 방식으로 구매하세요</p>
+        <div class="title-section">
+          <h2 class="page-title">한입만 마켓</h2>
+          <p class="page-desc">원하는 방식으로 구매하세요</p>
+        </div>
+        <button class="btn-register" @click="handleSellClick">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>상품 등록</span>
+        </button>
       </div>
 
       <!-- 필터 -->
@@ -180,7 +188,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { oneMouthService } from '@/services/OneMouthService.js';
+import { oneMouthService } from '@/services/SalePostService.js';
 import TradeCard from '@/components/oneMouth/TradeCard.vue';
 
 const router = useRouter();
@@ -446,7 +454,14 @@ onUnmounted(() => {
 
 /* 페이지 헤더 */
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
+}
+
+.title-section {
+  flex: 1;
 }
 
 .page-title {
@@ -458,6 +473,27 @@ onUnmounted(() => {
 .page-desc {
   color: #737373;
   font-size: 0.9375rem;
+}
+
+.btn-register {
+  padding: 0.75rem 1.5rem;
+  background: #1A1A1A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-register:hover {
+  background: #404040;
+  transform: translateY(-1px);
 }
 
 /* 필터 섹션 */
@@ -741,6 +777,17 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .container {
     padding: 2rem 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .btn-register {
+    width: 100%;
+    justify-content: center;
   }
 
   .page-title {

@@ -90,7 +90,7 @@ onUnmounted(() => webSocketService.disconnect())
             <RouterLink to="/home" class="nav-link">홈</RouterLink>
             <RouterLink to="/products" class="nav-link">제품</RouterLink>
             <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
-            <RouterLink to="/sell" class="nav-link btn-sell">판매하기</RouterLink>
+            <RouterLink to="/one-mouth/create" class="nav-link btn-sell">판매하기</RouterLink>
           </div>
 
           <!-- 관리자 메뉴 -->
