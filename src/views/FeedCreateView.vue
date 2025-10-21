@@ -31,42 +31,47 @@
 
         <!-- Selected Photos -->
         <div v-if="selectedPhotos.length > 0" class="selected-photos">
-          <draggable
-              v-model="selectedPhotos"
-              class="photo-grid"
-              item-key="id"
-          >
-            <template #item="{ element, index }">
-              <div class="photo-item">
-                <img :src="element.preview" :alt="`Photo ${index + 1}`" />
-                <button class="btn-remove" @click="removePhoto(index)">
-                  <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
-                  </svg>
-                </button>
-                <div class="photo-order">{{ index + 1 }}</div>
+          <div class="photo-grid">
+            <div
+                v-for="(photo, index) in selectedPhotos"
+                :key="photo.id"
+                class="photo-item"
+            >
+              <img :src="photo.preview" :alt="`Photo ${index + 1}`" />
+              <button class="btn-remove" @click="removePhoto(index)">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                </svg>
+              </button>
+              <div class="photo-order">{{ index + 1 }}</div>
+
+              <!-- 업로드 진행률 표시 -->
+              <div v-if="photo.uploading" class="upload-progress">
+                <div class="progress-bar-inner" :style="{ width: `${photo.progress}%` }"></div>
               </div>
-            </template>
-          </draggable>
+            </div>
+          </div>
         </div>
 
         <!-- Add Photo Buttons -->
         <div class="photo-actions">
-          <label class="btn-photo-action">
+          <label class="btn-photo-action" :class="{ disabled: selectedPhotos.length >= 5 }">
             <input
                 type="file"
                 accept="image/*"
                 multiple
                 @change="handleFileSelect"
                 style="display: none;"
+                :disabled="selectedPhotos.length >= 5"
             />
             <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
             <span>갤러리에서 선택</span>
+            <span v-if="selectedPhotos.length >= 5" class="disabled-hint">(최대 5장)</span>
           </label>
 
-          <button class="btn-photo-action" @click="openCamera">
+          <button class="btn-photo-action" @click="openCamera" :disabled="selectedPhotos.length >= 5">
             <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -88,10 +93,11 @@
 
         <button
             class="btn-next"
-            :disabled="selectedPhotos.length === 0"
+            :disabled="selectedPhotos.length === 0 || uploadingPhotos"
             @click="nextStep"
         >
-          다음
+          <span v-if="!uploadingPhotos">다음</span>
+          <span v-else>업로드 중...</span>
         </button>
       </section>
 
@@ -425,6 +431,16 @@
       </div>
     </div>
 
+    <!-- Error Toast -->
+    <Transition name="toast">
+      <div v-if="errorMessage" class="error-toast">
+        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 9.586 8.707 7.293z"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+    </Transition>
+
     <!-- Success Toast -->
     <Transition name="toast">
       <div v-if="showSuccessToast" class="success-toast">
@@ -440,15 +456,20 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useFile } from '@/services/FileService';
 
 const router = useRouter();
+const fileService = useFile();
 
 // State
 const currentStep = ref(1);
 const selectedPhotos = ref([]);
+const uploadedFileIds = ref([]);
 const showCancelDialog = ref(false);
 const showSuccessToast = ref(false);
 const isSubmitting = ref(false);
+const uploadingPhotos = ref(false);
+const errorMessage = ref('');
 const hashtagInput = ref('');
 const productSuggestions = ref([]);
 
@@ -518,40 +539,131 @@ const mockProductNames = [
 // Computed
 const canSubmit = computed(() => {
   return selectedPhotos.value.length > 0 &&
+      uploadedFileIds.value.length > 0 &&
       formData.value.productName &&
       formData.value.category &&
-      formData.value.review.length >= 10;
+      formData.value.review.length >= 10 &&
+      !isSubmitting.value;
 });
 
 // Methods
-const handleFileSelect = (event) => {
+const handleFileSelect = async (event) => {
   const files = Array.from(event.target.files);
   const remainingSlots = 5 - selectedPhotos.value.length;
 
-  files.slice(0, remainingSlots).forEach((file, index) => {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        selectedPhotos.value.push({
-          id: Date.now() + index,
-          file: file,
-          preview: e.target.result
-        });
-      };
-      reader.readAsDataURL(file);
+  if (files.length === 0) return;
+
+  const filesToAdd = files.slice(0, remainingSlots);
+
+  for (const file of filesToAdd) {
+    if (!fileService.isImageFile(file)) {
+      showError('이미지 파일만 업로드 가능합니다.');
+      continue;
     }
-  });
+
+    if (file.size > 10 * 1024 * 1024) {
+      showError(`${file.name}의 크기가 10MB를 초과합니다.`);
+      continue;
+    }
+
+    try {
+      const previewResult = await fileService.createPreview(file);
+
+      if (previewResult.success) {
+        const photoItem = {
+          id: Date.now() + Math.random(),
+          file: file,
+          preview: previewResult.previewUrl,
+          uploading: false,
+          progress: 0,
+          fileId: null
+        };
+
+        selectedPhotos.value.push(photoItem);
+      }
+    } catch (error) {
+      console.error('미리보기 생성 실패:', error);
+      showError('이미지 미리보기 생성에 실패했습니다.');
+    }
+  }
 
   event.target.value = '';
 };
 
 const removePhoto = (index) => {
+  const photo = selectedPhotos.value[index];
+
+  if (photo.fileId) {
+    const fileIdIndex = uploadedFileIds.value.indexOf(photo.fileId);
+    if (fileIdIndex > -1) {
+      uploadedFileIds.value.splice(fileIdIndex, 1);
+    }
+
+    fileService.remove(photo.fileId).catch(error => {
+      console.warn('파일 삭제 실패:', error);
+    });
+  }
+
   selectedPhotos.value.splice(index, 1);
 };
 
+const uploadPhotosToServer = async () => {
+  if (selectedPhotos.value.length === 0) return true;
+
+  uploadingPhotos.value = true;
+
+  try {
+    for (const photo of selectedPhotos.value) {
+      if (photo.fileId) continue;
+
+      photo.uploading = true;
+      photo.progress = 0;
+
+      const uploadResult = await fileService.uploadImage(photo.file, 'FEED');
+
+      if (uploadResult.success) {
+        photo.fileId = uploadResult.data.id;
+        photo.progress = 100;
+        uploadedFileIds.value.push(uploadResult.data.id);
+        console.log('✅ 파일 업로드 성공:', uploadResult.data);
+      } else {
+        throw new Error(uploadResult.error || '파일 업로드 실패');
+      }
+
+      photo.uploading = false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ 파일 업로드 실패:', error);
+    showError(error.message || '사진 업로드에 실패했습니다.');
+    return false;
+  } finally {
+    uploadingPhotos.value = false;
+  }
+};
+
 const openCamera = () => {
-  console.log('Open camera');
-  // Implement camera functionality
+  showError('카메라 기능은 준비 중입니다.');
+};
+
+const nextStep = async () => {
+  if (currentStep.value === 1) {
+    const uploadSuccess = await uploadPhotosToServer();
+    if (!uploadSuccess) return;
+  }
+
+  if (currentStep.value < 4) {
+    currentStep.value++;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
+
+const prevStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 };
 
 const handleProductNameInput = () => {
@@ -598,20 +710,6 @@ const formatPrice = (price) => {
   return '₩' + Number(price).toLocaleString();
 };
 
-const nextStep = () => {
-  if (currentStep.value < 4) {
-    currentStep.value++;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-};
-
-const prevStep = () => {
-  if (currentStep.value > 1) {
-    currentStep.value--;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-};
-
 const handleCancel = () => {
   if (selectedPhotos.value.length > 0 || formData.value.productName || formData.value.review) {
     showCancelDialog.value = true;
@@ -620,7 +718,13 @@ const handleCancel = () => {
   }
 };
 
-const confirmCancel = () => {
+const confirmCancel = async () => {
+  if (uploadedFileIds.value.length > 0) {
+    await fileService.removeMultiple(uploadedFileIds.value).catch(error => {
+      console.warn('임시 파일 삭제 실패:', error);
+    });
+  }
+
   showCancelDialog.value = false;
   router.back();
 };
@@ -630,23 +734,54 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true;
 
-  // Simulate upload
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  try {
+    const feedData = {
+      productName: formData.value.productName,
+      category: formData.value.category,
+      subCategory: formData.value.subCategory,
+      review: formData.value.review,
+      store: formData.value.store === 'direct' ? formData.value.storeCustom : formData.value.store,
+      price: formData.value.priceHidden ? null : formData.value.price,
+      status: formData.value.status,
+      hashtags: formData.value.hashtags,
+      fileIds: uploadedFileIds.value
+    };
 
-  isSubmitting.value = false;
-  showSuccessToast.value = true;
+    console.log('📤 피드 생성 요청:', feedData);
 
+    // TODO: 실제 API 호출
+    // const result = await feedService.createFeed(feedData);
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    isSubmitting.value = false;
+    showSuccessToast.value = true;
+
+    setTimeout(() => {
+      router.push('/feed');
+    }, 1500);
+
+  } catch (error) {
+    console.error('❌ 피드 생성 실패:', error);
+    showError(error.message || '게시글 등록에 실패했습니다.');
+    isSubmitting.value = false;
+  }
+};
+
+const showError = (message) => {
+  errorMessage.value = message;
   setTimeout(() => {
-    router.push('/feed');
-  }, 1500);
+    errorMessage.value = '';
+  }, 3000);
 };
 
 onMounted(() => {
-  console.log('Create feed page mounted');
+  console.log('✅ FeedCreateView 마운트 완료');
+  fileService.debugStatus();
 });
 </script>
 
-<style scoped>
+<style>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
 :root {
@@ -798,7 +933,6 @@ onMounted(() => {
   border-radius: 12px;
   overflow: hidden;
   background: var(--hover);
-  cursor: move;
 }
 
 .photo-item img {
@@ -822,6 +956,7 @@ onMounted(() => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  z-index: 2;
 }
 
 .btn-remove:hover {
@@ -848,6 +983,23 @@ onMounted(() => {
   justify-content: center;
   font-size: 14px;
   font-weight: 700;
+  z-index: 1;
+}
+
+.upload-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
 }
 
 .photo-actions {
@@ -875,10 +1027,16 @@ onMounted(() => {
   font-family: inherit;
 }
 
-.btn-photo-action:hover {
+.btn-photo-action:hover:not(:disabled):not(.disabled) {
   border-color: var(--accent);
   background: #FFF7ED;
   transform: translateY(-2px);
+}
+
+.btn-photo-action:disabled,
+.btn-photo-action.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-photo-action .icon {
@@ -886,6 +1044,11 @@ onMounted(() => {
   height: 32px;
   color: var(--accent);
   stroke-width: 2;
+}
+
+.disabled-hint {
+  font-size: 12px;
+  color: var(--secondary);
 }
 
 /* Tips Box */
@@ -1602,6 +1765,30 @@ onMounted(() => {
 
 .btn-dialog.confirm:hover {
   background: #B91C1C;
+}
+
+/* Error Toast */
+.error-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 16px 24px;
+  background: #DC2626;
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3);
+  z-index: 300;
+}
+
+.error-toast .icon {
+  width: 24px;
+  height: 24px;
 }
 
 /* Success Toast */

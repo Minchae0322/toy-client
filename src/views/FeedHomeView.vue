@@ -2461,3 +2461,4 @@ const formatNumber = (num) => {
     height: 200px;
   }
 }
+</style>

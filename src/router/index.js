@@ -4,7 +4,6 @@ import * as authUtils from '@/utils/auth.js'
 
 // Views import (기존 구조 유지)
 import LoginView from '@/views/LoginView.vue'
-import HomeView from '@/views/HomeView.vue'
 import OAuthCallback from '@/views/OAuth2Callback.vue'
 import OneMouthView from '@/views/OneMouthView.vue'
 import OneMouthListView from "@/views/OneMouthListView.vue"
@@ -22,6 +21,11 @@ import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
 
 // Sale Post Views import
 import SalePostCreateView from '@/views/SalePostCreateView.vue'
+
+// Feed Views import (FeedHomeView를 홈으로 사용)
+import FeedHomeView from '@/views/FeedHomeView.vue'
+import FeedDetailView from '@/views/FeedDetailView.vue'
+import FeedCreateView from '@/views/FeedCreateView.vue'
 
 const routes = [
   // ==================== 상품 관련 라우트 ====================
@@ -97,6 +101,38 @@ const routes = [
     }
   },
 
+  // ==================== 피드(인증) 관련 라우트 ====================
+  {
+    path: '/feed',
+    name: 'FeedHome',
+    component: FeedHomeView,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '피드'
+    }
+  },
+  {
+    path: '/feed/create',
+    name: 'FeedCreate',
+    component: FeedCreateView,
+    meta: {
+      requiresAuth: true,
+      title: '인증 올리기'
+    }
+  },
+  {
+    path: '/feed/:id',
+    name: 'FeedDetail',
+    component: FeedDetailView,
+    props: true,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '인증 상세'
+    }
+  },
+
   // ==================== 공개 페이지 (인증 불필요) ====================
   {
     path: '/login',
@@ -147,14 +183,6 @@ const routes = [
   },
 
   // ==================== 보호된 페이지 (인증 필요) ====================
-  {
-    path: '/home',
-    name: 'Home',
-    component: HomeView,
-    meta: {
-      requiresAuth: true
-    }
-  },
 
   // ===== 채팅 관련 라우트 (인증 필요) =====
   {
@@ -187,11 +215,11 @@ const routes = [
   // ==================== 리다이렉트 ====================
   {
     path: '/',
-    redirect: '/products' // 메인 페이지를 상품 목록으로 변경
+    redirect: '/feed' // 메인 페이지를 피드로 변경
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/products'
+    redirect: '/feed'
   }
 ]
 
@@ -346,6 +374,8 @@ router.afterEach((to) => {
     title = `상품 ${to.params.id} | ToyChat`
   } else if (to.name === 'OneMouthDetail') {
     title = `게시글 ${to.params.id} | ToyChat`
+  } else if (to.name === 'FeedDetail') {
+    title = `인증 ${to.params.id} | ToyChat`
   }
 
   document.title = title
@@ -565,6 +595,78 @@ export const salePostNavigation = {
   }
 }
 
+// ==================== 피드(인증) 네비게이션 헬퍼 ====================
+export const feedNavigation = {
+  /**
+   * 피드 홈으로 이동
+   */
+  toFeedHome(query = {}) {
+    return router.push({ name: 'FeedHome', query })
+  },
+
+  /**
+   * 피드 상세 페이지로 이동
+   */
+  toFeedDetail(feedId) {
+    if (!feedId) {
+      console.warn('피드 ID가 없습니다')
+      return this.toFeedHome()
+    }
+    return router.push({ name: 'FeedDetail', params: { id: feedId } })
+  },
+
+  /**
+   * 피드 작성 페이지로 이동
+   */
+  toFeedCreate() {
+    return router.push({ name: 'FeedCreate' })
+  },
+
+  /**
+   * 피드 관련 페이지인지 확인
+   */
+  isFeedPage() {
+    const route = router.currentRoute.value
+    return route.name?.startsWith('Feed')
+  },
+
+  /**
+   * 피드 URL 생성
+   */
+  getFeedUrl(feedId) {
+    const route = router.resolve({ name: 'FeedDetail', params: { id: feedId } })
+    return window.location.origin + route.href
+  },
+
+  /**
+   * 카테고리별 피드 목록으로 이동
+   */
+  toFeedsByCategory(category) {
+    return this.toFeedHome({ category })
+  },
+
+  /**
+   * 태그별 피드 목록으로 이동
+   */
+  toFeedsByTag(tag) {
+    return this.toFeedHome({ tag })
+  },
+
+  /**
+   * 검색 결과 페이지로 이동
+   */
+  toFeedSearch(keyword) {
+    return this.toFeedHome({ keyword })
+  },
+
+  /**
+   * 유저별 피드 목록으로 이동
+   */
+  toFeedsByUser(userId) {
+    return this.toFeedHome({ userId })
+  }
+}
+
 // ==================== 통합 네비게이션 헬퍼 ====================
 export const navigation = {
   // 기존 채팅 네비게이션
@@ -575,6 +677,9 @@ export const navigation = {
 
   // 한입만 거래 네비게이션
   salePost: salePostNavigation,
+
+  // 피드 네비게이션
+  feed: feedNavigation,
 
   /**
    * 홈으로 이동
