@@ -13,406 +13,335 @@
           :disabled="!canSubmit"
           @click="handleSubmit"
       >
-        게시
+        {{ isSubmitting ? '업로드 중...' : '게시' }}
       </button>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main Content - 2 Column Layout -->
     <main class="create-content">
-      <!-- Step 1: Photo Selection -->
-      <section v-if="currentStep === 1" class="step-section photo-step">
-        <div class="step-header">
-          <h2 class="step-title">
-            <span class="step-number">1</span>
-            사진 선택
-          </h2>
-          <p class="step-desc">최대 5장까지 추가할 수 있어요</p>
-        </div>
+      <div class="content-grid">
 
-        <!-- Selected Photos -->
-        <div v-if="selectedPhotos.length > 0" class="selected-photos">
-          <div class="photo-grid">
-            <div
-                v-for="(photo, index) in selectedPhotos"
-                :key="photo.id"
-                class="photo-item"
-            >
-              <img :src="photo.preview" :alt="`Photo ${index + 1}`" />
-              <button class="btn-remove" @click="removePhoto(index)">
-                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
-                </svg>
-              </button>
-              <div class="photo-order">{{ index + 1 }}</div>
+        <!-- Left Column -->
+        <div class="left-column">
 
-              <!-- 업로드 진행률 표시 -->
-              <div v-if="photo.uploading" class="upload-progress">
-                <div class="progress-bar-inner" :style="{ width: `${photo.progress}%` }"></div>
-              </div>
+          <!-- Photo Section -->
+          <section class="card photo-section">
+            <div class="card-header">
+              <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <h2 class="card-title">사진</h2>
+              <span class="photo-count">{{ selectedPhotos.length }}/5</span>
             </div>
-          </div>
-        </div>
 
-        <!-- Add Photo Buttons -->
-        <div class="photo-actions">
-          <label class="btn-photo-action" :class="{ disabled: selectedPhotos.length >= 5 }">
-            <input
-                type="file"
-                accept="image/*"
-                multiple
-                @change="handleFileSelect"
-                style="display: none;"
-                :disabled="selectedPhotos.length >= 5"
-            />
-            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            <span>갤러리에서 선택</span>
-            <span v-if="selectedPhotos.length >= 5" class="disabled-hint">(최대 5장)</span>
-          </label>
-
-          <button class="btn-photo-action" @click="openCamera" :disabled="selectedPhotos.length >= 5">
-            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <span>카메라로 촬영</span>
-          </button>
-        </div>
-
-        <!-- Tips -->
-        <div class="tips-box">
-          <h3 class="tips-title">📸 좋은 인증 사진 꿀팁</h3>
-          <ul class="tips-list">
-            <li>자연광에서 찍으면 색감이 더 잘 나와요</li>
-            <li>제품 전체가 나오게 찍어주세요</li>
-            <li>배경은 심플할수록 좋아요</li>
-            <li>여러 각도에서 찍은 사진을 올려보세요</li>
-          </ul>
-        </div>
-
-        <button
-            class="btn-next"
-            :disabled="selectedPhotos.length === 0 || uploadingPhotos"
-            @click="nextStep"
-        >
-          <span v-if="!uploadingPhotos">다음</span>
-          <span v-else>업로드 중...</span>
-        </button>
-      </section>
-
-      <!-- Step 2: Product Info -->
-      <section v-if="currentStep === 2" class="step-section info-step">
-        <div class="step-header">
-          <h2 class="step-title">
-            <span class="step-number">2</span>
-            제품 정보
-          </h2>
-          <p class="step-desc">어떤 제품인지 알려주세요</p>
-        </div>
-
-        <!-- Photo Preview -->
-        <div class="preview-photos">
-          <div
-              v-for="(photo, idx) in selectedPhotos.slice(0, 3)"
-              :key="idx"
-              class="preview-photo"
-          >
-            <img :src="photo.preview" alt="Preview" />
-          </div>
-          <div v-if="selectedPhotos.length > 3" class="preview-more">
-            +{{ selectedPhotos.length - 3 }}
-          </div>
-        </div>
-
-        <!-- Product Name -->
-        <div class="form-group">
-          <label class="form-label required">제품명</label>
-          <div class="autocomplete-wrapper">
-            <input
-                type="text"
-                class="form-input"
-                placeholder="예: 조던 4 레트로 브레드"
-                v-model="formData.productName"
-                @input="handleProductNameInput"
-            />
-            <div v-if="productSuggestions.length > 0" class="suggestions">
-              <button
-                  v-for="suggestion in productSuggestions"
-                  :key="suggestion"
-                  class="suggestion-item"
-                  @click="selectSuggestion(suggestion)"
+            <!-- Selected Photos Grid with Drag & Drop -->
+            <div v-if="selectedPhotos.length > 0" class="photo-grid">
+              <div
+                  v-for="(photo, index) in selectedPhotos"
+                  :key="photo.id"
+                  class="photo-item"
+                  draggable="true"
+                  @dragstart="handleDragStart($event, index)"
+                  @dragover.prevent
+                  @drop="handleDrop($event, index)"
+                  @dragenter="handleDragEnter(index)"
+                  @dragleave="handleDragLeave"
+                  :class="{ 'drag-over': dragOverIndex === index }"
               >
-                {{ suggestion }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Category -->
-        <div class="form-group">
-          <label class="form-label required">카테고리</label>
-          <div class="category-grid">
-            <button
-                v-for="cat in categories"
-                :key="cat.value"
-                :class="['category-btn', { active: formData.category === cat.value }]"
-                @click="formData.category = cat.value"
-            >
-              <span class="category-icon">{{ cat.icon }}</span>
-              <span class="category-name">{{ cat.label }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Sub Category -->
-        <div v-if="formData.category && subCategories[formData.category]" class="form-group">
-          <label class="form-label">세부 카테고리</label>
-          <div class="sub-category-list">
-            <button
-                v-for="sub in subCategories[formData.category]"
-                :key="sub"
-                :class="['sub-category-btn', { active: formData.subCategory === sub }]"
-                @click="formData.subCategory = sub"
-            >
-              {{ sub }}
-            </button>
-          </div>
-        </div>
-
-        <div class="nav-buttons">
-          <button class="btn-prev" @click="prevStep">이전</button>
-          <button
-              class="btn-next"
-              :disabled="!formData.productName || !formData.category"
-              @click="nextStep"
-          >
-            다음
-          </button>
-        </div>
-      </section>
-
-      <!-- Step 3: Details & Review -->
-      <section v-if="currentStep === 3" class="step-section detail-step">
-        <div class="step-header">
-          <h2 class="step-title">
-            <span class="step-number">3</span>
-            상세 정보
-          </h2>
-          <p class="step-desc">제품에 대한 생각을 들려주세요</p>
-        </div>
-
-        <!-- Review (Required) -->
-        <div class="form-group">
-          <label class="form-label required">
-            한줄평
-            <span class="char-count" :class="{ error: formData.review.length > 100 }">
-              {{ formData.review.length }} / 100
-            </span>
-          </label>
-          <textarea
-              class="form-textarea"
-              placeholder="제품에 대한 솔직한 리뷰를 10자 이상 작성해주세요"
-              v-model="formData.review"
-              rows="4"
-              maxlength="100"
-          ></textarea>
-          <p v-if="formData.review.length > 0 && formData.review.length < 10" class="form-hint error">
-            최소 10자 이상 작성해주세요
-          </p>
-        </div>
-
-        <!-- Store (Optional) -->
-        <div class="form-group">
-          <label class="form-label">구매처</label>
-          <select class="form-select" v-model="formData.store">
-            <option value="">선택 안함</option>
-            <option v-for="store in stores" :key="store" :value="store">
-              {{ store }}
-            </option>
-            <option value="direct">직접 입력</option>
-          </select>
-          <input
-              v-if="formData.store === 'direct'"
-              type="text"
-              class="form-input mt-2"
-              placeholder="구매처를 입력하세요"
-              v-model="formData.storeCustom"
-          />
-        </div>
-
-        <!-- Price (Optional) -->
-        <div class="form-group">
-          <label class="form-label">
-            구매 가격
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="formData.priceHidden" />
-              <span>가격 비공개</span>
-            </label>
-          </label>
-          <div class="price-input-wrapper">
-            <span class="price-prefix">₩</span>
-            <input
-                type="number"
-                class="form-input price-input"
-                placeholder="230000"
-                v-model="formData.price"
-                :disabled="formData.priceHidden"
-            />
-          </div>
-        </div>
-
-        <!-- Status -->
-        <div class="form-group">
-          <label class="form-label">제품 상태</label>
-          <div class="status-grid">
-            <button
-                v-for="status in statuses"
-                :key="status.value"
-                :class="['status-btn', { active: formData.status === status.value }]"
-                @click="formData.status = status.value"
-            >
-              <span class="status-icon">{{ status.icon }}</span>
-              <span>{{ status.label }}</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="nav-buttons">
-          <button class="btn-prev" @click="prevStep">이전</button>
-          <button
-              class="btn-next"
-              :disabled="formData.review.length < 10"
-              @click="nextStep"
-          >
-            다음
-          </button>
-        </div>
-      </section>
-
-      <!-- Step 4: Hashtags & Final -->
-      <section v-if="currentStep === 4" class="step-section hashtag-step">
-        <div class="step-header">
-          <h2 class="step-title">
-            <span class="step-number">4</span>
-            해시태그 & 최종 확인
-          </h2>
-          <p class="step-desc">마지막으로 해시태그를 추가해주세요</p>
-        </div>
-
-        <!-- Hashtags -->
-        <div class="form-group">
-          <label class="form-label">해시태그 (최대 5개)</label>
-          <div class="hashtag-input-wrapper">
-            <div class="selected-hashtags">
-              <span
-                  v-for="(tag, idx) in formData.hashtags"
-                  :key="idx"
-                  class="hashtag-tag"
-              >
-                {{ tag }}
-                <button class="remove-tag" @click="removeHashtag(idx)">
+                <img :src="photo.preview" :alt="`Photo ${index + 1}`" />
+                <button class="btn-remove" @click="removePhoto(index)">
                   <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
                   </svg>
                 </button>
+                <div class="photo-order">{{ index + 1 }}</div>
+                <div class="drag-handle">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+                  </svg>
+                </div>
+                <div v-if="photo.uploading" class="upload-progress">
+                  <div class="progress-bar-inner" :style="{ width: `${photo.progress}%` }"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Add Photo Buttons -->
+            <div class="photo-actions">
+              <label class="btn-photo-action" :class="{ disabled: selectedPhotos.length >= 5 }">
+                <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    @change="handleFileSelect"
+                    style="display: none;"
+                    :disabled="selectedPhotos.length >= 5"
+                />
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>갤러리</span>
+              </label>
+
+              <button class="btn-photo-action" @click="openCamera" :disabled="selectedPhotos.length >= 5">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>카메라</span>
+              </button>
+            </div>
+            <p class="hint-text">사진을 드래그하여 순서를 변경할 수 있습니다</p>
+          </section>
+
+          <!-- Product Name -->
+          <section class="card">
+            <label class="form-label required">제품명</label>
+            <div class="autocomplete-wrapper">
+              <input
+                  type="text"
+                  class="form-input"
+                  placeholder="예: 조던 4 레트로 브레드"
+                  v-model="formData.productName"
+                  @input="handleProductNameInput"
+              />
+              <div v-if="productSuggestions.length > 0" class="suggestions">
+                <button
+                    v-for="suggestion in productSuggestions"
+                    :key="suggestion"
+                    class="suggestion-item"
+                    @click="selectSuggestion(suggestion)"
+                >
+                  {{ suggestion }}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Category -->
+          <section class="card">
+            <label class="form-label required">카테고리</label>
+
+            <!-- Category Dropdown -->
+            <div class="category-dropdown">
+              <button
+                  class="category-select-btn"
+                  @click="showCategoryDropdown = !showCategoryDropdown"
+              >
+                <div v-if="formData.category" class="selected-category">
+                  <svg class="category-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getCategoryIcon(formData.category)"/>
+                  </svg>
+                  <span>{{ getCategoryLabel(formData.category) }}</span>
+                </div>
+                <span v-else class="placeholder">카테고리를 선택하세요</span>
+                <svg class="dropdown-icon" :class="{ open: showCategoryDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+
+              <div v-if="showCategoryDropdown" class="category-dropdown-menu">
+                <button
+                    v-for="cat in categories"
+                    :key="cat.value"
+                    class="category-dropdown-item"
+                    :class="{ active: formData.category === cat.value }"
+                    @click="selectCategory(cat.value)"
+                >
+                  <svg class="category-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="cat.icon"/>
+                  </svg>
+                  <span>{{ cat.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sub Category -->
+            <div v-if="formData.category && subCategories[formData.category]" class="sub-category-wrapper">
+              <label class="form-label">세부 카테고리</label>
+              <div class="sub-category-list">
+                <button
+                    v-for="sub in subCategories[formData.category]"
+                    :key="sub"
+                    :class="['sub-category-btn', { active: formData.subCategory === sub }]"
+                    @click="formData.subCategory = sub"
+                >
+                  {{ sub }}
+                </button>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+
+          <!-- Review -->
+          <section class="card">
+            <label class="form-label">
+              한줄평
+              <span class="char-count" :class="{ error: formData.review.length > 100 }">
+                {{ formData.review.length }}/100
               </span>
+            </label>
+            <textarea
+                class="form-textarea"
+                placeholder="제품에 대한 솔직한 리뷰를 작성해주세요 (선택사항)"
+                v-model="formData.review"
+                rows="4"
+                maxlength="100"
+            ></textarea>
+          </section>
+
+          <!-- Additional Info -->
+          <section class="card additional-info">
+            <!-- Store -->
+            <div class="form-group">
+              <label class="form-label">
+                <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                구매처
+              </label>
+              <select class="form-select" v-model="formData.store">
+                <option value="">선택 안함</option>
+                <option v-for="store in stores" :key="store" :value="store">
+                  {{ store }}
+                </option>
+                <option value="direct">직접 입력</option>
+              </select>
+              <input
+                  v-if="formData.store === 'direct'"
+                  type="text"
+                  class="form-input mt-2"
+                  placeholder="구매처를 입력하세요"
+                  v-model="formData.storeCustom"
+              />
             </div>
-            <input
-                v-if="formData.hashtags.length < 5"
-                type="text"
-                class="hashtag-input"
-                placeholder="#해시태그 입력"
-                v-model="hashtagInput"
-                @keyup.enter="addHashtag"
-            />
-          </div>
-          <p class="form-hint">엔터를 눌러 태그를 추가하세요</p>
-        </div>
 
-        <!-- Popular Hashtags -->
-        <div class="popular-hashtags">
-          <p class="popular-title">🔥 인기 해시태그</p>
-          <div class="popular-list">
-            <button
-                v-for="tag in popularHashtags"
-                :key="tag"
-                class="popular-tag"
-                @click="addPopularHashtag(tag)"
-                :disabled="formData.hashtags.includes(tag) || formData.hashtags.length >= 5"
-            >
-              {{ tag }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Preview -->
-        <div class="preview-section">
-          <h3 class="preview-title">미리보기</h3>
-          <div class="preview-card">
-            <div class="preview-header">
-              <img :src="currentUser.image" alt="User" class="preview-avatar" />
-              <div class="preview-author">
-                <div class="preview-author-name">
-                  <span>{{ currentUser.name }}</span>
-                  <span class="preview-level">{{ currentUser.level }}</span>
-                </div>
-                <div class="preview-meta">
-                  <span>방금</span>
-                  <span>·</span>
-                  <span>{{ formData.category }}</span>
-                </div>
+            <!-- Price -->
+            <div class="form-group">
+              <label class="form-label">
+                <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                구매 가격
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="formData.priceHidden" />
+                  <span>비공개</span>
+                </label>
+              </label>
+              <div class="price-input-wrapper">
+                <span class="price-prefix">₩</span>
+                <input
+                    type="number"
+                    class="form-input price-input"
+                    placeholder="230000"
+                    v-model="formData.price"
+                    :disabled="formData.priceHidden"
+                />
               </div>
             </div>
 
-            <div class="preview-image">
-              <img :src="selectedPhotos[0]?.preview" alt="Preview" />
-              <div v-if="selectedPhotos.length > 1" class="preview-indicator">
-                1 / {{ selectedPhotos.length }}
+            <!-- Status -->
+            <div class="form-group">
+              <label class="form-label">
+                <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+                제품 상태
+              </label>
+              <div class="status-grid">
+                <button
+                    v-for="status in statuses"
+                    :key="status.value"
+                    :class="['status-btn', { active: formData.status === status.value }]"
+                    @click="formData.status = status.value"
+                >
+                  <svg class="status-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="status.icon"/>
+                  </svg>
+                  <span>{{ status.label }}</span>
+                </button>
               </div>
             </div>
+          </section>
 
-            <div class="preview-content">
-              <h4 class="preview-product">{{ formData.productName }}</h4>
-              <div class="preview-details">
-                <span v-if="formData.store && formData.store !== 'direct'">📍 {{ formData.store }}</span>
-                <span v-if="formData.store === 'direct' && formData.storeCustom">📍 {{ formData.storeCustom }}</span>
-                <span v-if="formData.price && !formData.priceHidden" class="preview-price">
-                  {{ formatPrice(formData.price) }}
-                </span>
-              </div>
-              <p class="preview-review">{{ formData.review }}</p>
-              <div v-if="formData.hashtags.length > 0" class="preview-hashtags">
-                <span v-for="tag in formData.hashtags" :key="tag" class="preview-hashtag">
-                  {{ tag }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="nav-buttons">
-          <button class="btn-prev" @click="prevStep">이전</button>
-          <button
-              class="btn-next primary"
-              @click="handleSubmit"
-              :disabled="isSubmitting"
-          >
-            <span v-if="!isSubmitting">게시하기</span>
-            <span v-else>
-              <svg class="spinner" viewBox="0 0 50 50">
-                <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="4"/>
+          <!-- Hashtags -->
+          <section class="card">
+            <label class="form-label">
+              <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
               </svg>
-              업로드 중...
-            </span>
-          </button>
+              해시태그
+              <span class="count-badge">{{ formData.hashtags.length }}/5</span>
+            </label>
+
+            <div class="hashtag-input-wrapper">
+              <div class="selected-hashtags">
+                <span
+                    v-for="(tag, idx) in formData.hashtags"
+                    :key="idx"
+                    class="hashtag-tag"
+                >
+                  {{ tag }}
+                  <button class="remove-tag" @click="removeHashtag(idx)">
+                    <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                    </svg>
+                  </button>
+                </span>
+              </div>
+              <input
+                  v-if="formData.hashtags.length < 5"
+                  type="text"
+                  class="hashtag-input"
+                  placeholder="#해시태그 입력"
+                  v-model="hashtagInput"
+                  @keyup.enter="addHashtag"
+              />
+            </div>
+            <p class="form-hint">엔터를 눌러 태그를 추가하세요</p>
+
+            <!-- Popular Hashtags -->
+            <div class="popular-hashtags">
+              <p class="popular-title">인기 해시태그</p>
+              <div class="popular-list">
+                <button
+                    v-for="tag in popularHashtags"
+                    :key="tag"
+                    class="popular-tag"
+                    @click="addPopularHashtag(tag)"
+                    :disabled="formData.hashtags.includes(tag) || formData.hashtags.length >= 5"
+                >
+                  {{ tag }}
+                </button>
+              </div>
+            </div>
+          </section>
+
         </div>
-      </section>
+      </div>
     </main>
 
-    <!-- Progress Bar -->
-    <div class="progress-bar">
-      <div class="progress-fill" :style="{ width: `${(currentStep / 4) * 100}%` }"></div>
+    <!-- Fixed Bottom Submit Button -->
+    <div class="fixed-bottom-bar">
+      <div class="fixed-bottom-content">
+        <button
+            class="btn-submit-large"
+            :disabled="!canSubmit"
+            @click="handleSubmit"
+        >
+          <svg v-if="isSubmitting" class="spinner" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <span v-if="!isSubmitting">인증 올리기</span>
+          <span v-else>업로드 중...</span>
+        </button>
+      </div>
     </div>
 
     <!-- Confirm Dialog -->
@@ -431,7 +360,7 @@
       </div>
     </div>
 
-    <!-- Error Toast -->
+    <!-- Toasts -->
     <Transition name="toast">
       <div v-if="errorMessage" class="error-toast">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
@@ -441,13 +370,12 @@
       </div>
     </Transition>
 
-    <!-- Success Toast -->
     <Transition name="toast">
       <div v-if="showSuccessToast" class="success-toast">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
         </svg>
-        <span>인증이 게시되었습니다! (+50 EXP)</span>
+        <span>인증이 게시되었습니다!</span>
       </div>
     </Transition>
   </div>
@@ -461,8 +389,6 @@ import { useFile } from '@/services/FileService';
 const router = useRouter();
 const fileService = useFile();
 
-// State
-const currentStep = ref(1);
 const selectedPhotos = ref([]);
 const uploadedFileIds = ref([]);
 const showCancelDialog = ref(false);
@@ -472,6 +398,11 @@ const uploadingPhotos = ref(false);
 const errorMessage = ref('');
 const hashtagInput = ref('');
 const productSuggestions = ref([]);
+const showCategoryDropdown = ref(false);
+
+// Drag & Drop state
+const draggedIndex = ref(null);
+const dragOverIndex = ref(null);
 
 const formData = ref({
   productName: '',
@@ -486,41 +417,72 @@ const formData = ref({
   hashtags: []
 });
 
-// Data
-const currentUser = {
-  name: 'current_user',
-  image: 'https://i.pravatar.cc/150?img=12',
-  level: '💪'
-};
-
+// SVG paths for categories
 const categories = [
-  { value: 'sneakers', label: '스니커즈', icon: '👟' },
-  { value: 'tech', label: '테크', icon: '💻' },
-  { value: 'beauty', label: '뷰티', icon: '💄' },
-  { value: 'fnb', label: 'F&B', icon: '☕' },
-  { value: 'fashion', label: '패션', icon: '👔' },
-  { value: 'life', label: '라이프', icon: '🏠' }
+  { value: 'sneakers', label: '스니커즈', icon: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z' },
+  { value: 'tech', label: '테크', icon: 'M20 3H4c-1.1 0-1.99.9-1.99 2L2 19c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v3zm5 5h-4V9h4v8z' },
+  { value: 'beauty', label: '뷰티', icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z' },
+  { value: 'fnb', label: 'F&B', icon: 'M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z' },
+  { value: 'fashion', label: '패션', icon: 'M12 2l-5.5 9h11z M7 13v8h10v-8z' },
+  { value: 'life', label: '라이프', icon: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z' },
+  { value: 'sports', label: '스포츠', icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z' },
+  { value: 'books', label: '도서', icon: 'M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z' },
+  { value: 'toys', label: '완구/취미', icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z' },
+  { value: 'pet', label: '반려동물', icon: 'M4.5 9.5m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0 M9 5.5m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0 M15 5.5m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0 M19.5 9.5m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0 M17.34 14.86c-.87-1.02-1.6-1.89-2.48-2.91-.46-.54-1.05-1.08-1.75-1.32-.11-.04-.22-.07-.33-.09-.25-.04-.52-.04-.78-.04s-.53 0-.79.05c-.11.02-.22.05-.33.09-.7.24-1.28.78-1.75 1.32-.87 1.02-1.6 1.89-2.48 2.91-1.31 1.31-2.92 2.76-2.62 4.79.29 1.02 1.02 2.03 2.33 2.32.73.15 3.06-.44 5.54-.44h.18c2.48 0 4.81.58 5.54.44 1.31-.29 2.04-1.31 2.33-2.32.31-2.04-1.3-3.49-2.61-4.8z' },
+  { value: 'health', label: '건강/의료', icon: 'M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z' },
+  { value: 'car', label: '자동차', icon: 'M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z' },
+  { value: 'music', label: '음악/악기', icon: 'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z' },
+  { value: 'art', label: '미술/공예', icon: 'M12 22C6.49 22 2 17.51 2 12S6.49 2 12 2s10 4.04 10 9c0 3.31-2.69 6-6 6h-1.77c-.28 0-.5.22-.5.5 0 .12.05.23.13.33.41.47.64 1.06.64 1.67A2.5 2.5 0 0 1 12 22zm0-18c-4.41 0-8 3.59-8 8s3.59 8 8 8c.28 0 .5-.22.5-.5a.54.54 0 0 0-.14-.35c-.41-.46-.63-1.05-.63-1.65a2.5 2.5 0 0 1 2.5-2.5H16c2.21 0 4-1.79 4-4 0-3.86-3.59-7-8-7z M6.5 9m-1.5 0a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0 M9.5 5.5m-1.5 0a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0 M14.5 5.5m-1.5 0a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0 M17.5 9m-1.5 0a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0' },
+  { value: 'travel', label: '여행/레저', icon: 'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z' },
+  { value: 'etc', label: '기타', icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z' }
 ];
 
 const subCategories = {
-  sneakers: ['러닝화', '농구화', '라이프스타일', '하이탑', '로우탑'],
-  tech: ['스마트폰', '태블릿', '이어폰/헤드폰', '노트북', '웨어러블'],
-  beauty: ['스킨케어', '메이크업', '향수', '헤어케어', '네일'],
-  fnb: ['커피', '베이커리', '레스토랑', '주류', '디저트'],
-  fashion: ['아우터', '상의', '하의', '신발', '액세서리'],
-  life: ['홈데코', '가전', '반려동물', '피트니스', '여행']
+  sneakers: ['러닝화', '농구화', '라이프스타일', '하이탑', '로우탑', '슬립온', '샌들/슬리퍼'],
+  tech: ['스마트폰', '태블릿', '이어폰/헤드폰', '노트북', '웨어러블', '스마트워치', '게이밍기어', '액세서리'],
+  beauty: ['스킨케어', '메이크업', '향수', '헤어케어', '네일', '바디케어', '남성화장품'],
+  fnb: ['커피', '베이커리', '레스토랑', '주류', '디저트', '건강식품', '간편식'],
+  fashion: ['아우터', '상의', '하의', '신발', '액세서리', '가방', '시계', '주얼리'],
+  life: ['홈데코', '가구', '침구', '주방용품', '욕실용품', '청소용품', '수납/정리'],
+  sports: ['운동화', '운동복', '운동기구', '자전거', '캠핑', '등산', '수영', '골프'],
+  books: ['소설', '비소설', '자기계발', '경제경영', '인문', '과학', '만화'],
+  toys: ['피규어', '프라모델', '보드게임', '레고', '인형', 'RC', '퍼즐'],
+  pet: ['사료', '간식', '용품', '장난감', '의류', '미용', '건강'],
+  health: ['영양제', '건강기능식품', '의료기기', '마사지기', '건강관리'],
+  car: ['용품', '액세서리', '세차용품', '튜닝', '블랙박스', '네비게이션'],
+  music: ['악기', '오디오', '앰프', '이펙터', '악보', '음반'],
+  art: ['화구', '공예재료', '캔버스', '액자', '조형재료'],
+  travel: ['캐리어', '백팩', '여행용품', '캠핑용품', '아웃도어'],
+  etc: ['기타']
 };
 
 const stores = [
   '무신사', '크림', '나이키 공식', '아디다스 공식', '애플 공식',
-  '올리브영', 'SSENSE', '29CM', 'W컨셉', '브랜디'
+  '올리브영', 'SSENSE', '29CM', 'W컨셉', '브랜디', '쿠팡', '네이버쇼핑',
+  '11번가', 'G마켓', '옥션', 'SSG닷컴'
 ];
 
 const statuses = [
-  { value: 'available', label: '구매 가능', icon: '✅' },
-  { value: 'soldout', label: '품절', icon: '❌' },
-  { value: 'restock', label: '재입고 대기', icon: '⏳' },
-  { value: 'sale', label: '세일중', icon: '🏷️' }
+  {
+    value: 'available',
+    label: '구매 가능',
+    icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+  },
+  {
+    value: 'soldout',
+    label: '품절',
+    icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'
+  },
+  {
+    value: 'restock',
+    label: '재입고 대기',
+    icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+  },
+  {
+    value: 'sale',
+    label: '세일중',
+    icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'
+  }
 ];
 
 const popularHashtags = [
@@ -536,17 +498,46 @@ const mockProductNames = [
   '조던 1 로열'
 ];
 
-// Computed
 const canSubmit = computed(() => {
   return selectedPhotos.value.length > 0 &&
       uploadedFileIds.value.length > 0 &&
       formData.value.productName &&
       formData.value.category &&
-      formData.value.review.length >= 10 &&
       !isSubmitting.value;
 });
 
-// Methods
+// Drag & Drop handlers
+const handleDragStart = (event, index) => {
+  draggedIndex.value = index;
+  event.dataTransfer.effectAllowed = 'move';
+};
+
+const handleDragEnter = (index) => {
+  dragOverIndex.value = index;
+};
+
+const handleDragLeave = () => {
+  dragOverIndex.value = null;
+};
+
+const handleDrop = (event, dropIndex) => {
+  event.preventDefault();
+
+  if (draggedIndex.value === null || draggedIndex.value === dropIndex) {
+    draggedIndex.value = null;
+    dragOverIndex.value = null;
+    return;
+  }
+
+  const photos = [...selectedPhotos.value];
+  const [draggedPhoto] = photos.splice(draggedIndex.value, 1);
+  photos.splice(dropIndex, 0, draggedPhoto);
+
+  selectedPhotos.value = photos;
+  draggedIndex.value = null;
+  dragOverIndex.value = null;
+};
+
 const handleFileSelect = async (event) => {
   const files = Array.from(event.target.files);
   const remainingSlots = 5 - selectedPhotos.value.length;
@@ -580,6 +571,7 @@ const handleFileSelect = async (event) => {
         };
 
         selectedPhotos.value.push(photoItem);
+        await uploadPhotoToServer(photoItem);
       }
     } catch (error) {
       console.error('미리보기 생성 실패:', error);
@@ -588,6 +580,29 @@ const handleFileSelect = async (event) => {
   }
 
   event.target.value = '';
+};
+
+const uploadPhotoToServer = async (photo) => {
+  photo.uploading = true;
+  photo.progress = 0;
+
+  try {
+    const uploadResult = await fileService.uploadImage(photo.file, 'FEED');
+
+    if (uploadResult.success) {
+      photo.fileId = uploadResult.data.id;
+      photo.progress = 100;
+      uploadedFileIds.value.push(uploadResult.data.id);
+      console.log('✅ 파일 업로드 성공:', uploadResult.data);
+    } else {
+      throw new Error(uploadResult.error || '파일 업로드 실패');
+    }
+  } catch (error) {
+    console.error('❌ 파일 업로드 실패:', error);
+    showError(error.message || '사진 업로드에 실패했습니다.');
+  } finally {
+    photo.uploading = false;
+  }
 };
 
 const removePhoto = (index) => {
@@ -607,63 +622,24 @@ const removePhoto = (index) => {
   selectedPhotos.value.splice(index, 1);
 };
 
-const uploadPhotosToServer = async () => {
-  if (selectedPhotos.value.length === 0) return true;
-
-  uploadingPhotos.value = true;
-
-  try {
-    for (const photo of selectedPhotos.value) {
-      if (photo.fileId) continue;
-
-      photo.uploading = true;
-      photo.progress = 0;
-
-      const uploadResult = await fileService.uploadImage(photo.file, 'FEED');
-
-      if (uploadResult.success) {
-        photo.fileId = uploadResult.data.id;
-        photo.progress = 100;
-        uploadedFileIds.value.push(uploadResult.data.id);
-        console.log('✅ 파일 업로드 성공:', uploadResult.data);
-      } else {
-        throw new Error(uploadResult.error || '파일 업로드 실패');
-      }
-
-      photo.uploading = false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('❌ 파일 업로드 실패:', error);
-    showError(error.message || '사진 업로드에 실패했습니다.');
-    return false;
-  } finally {
-    uploadingPhotos.value = false;
-  }
-};
-
 const openCamera = () => {
   showError('카메라 기능은 준비 중입니다.');
 };
 
-const nextStep = async () => {
-  if (currentStep.value === 1) {
-    const uploadSuccess = await uploadPhotosToServer();
-    if (!uploadSuccess) return;
-  }
-
-  if (currentStep.value < 4) {
-    currentStep.value++;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+const selectCategory = (value) => {
+  formData.value.category = value;
+  formData.value.subCategory = '';
+  showCategoryDropdown.value = false;
 };
 
-const prevStep = () => {
-  if (currentStep.value > 1) {
-    currentStep.value--;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+const getCategoryLabel = (value) => {
+  const cat = categories.find(c => c.value === value);
+  return cat ? cat.label : '';
+};
+
+const getCategoryIcon = (value) => {
+  const cat = categories.find(c => c.value === value);
+  return cat ? cat.icon : '';
 };
 
 const handleProductNameInput = () => {
@@ -703,11 +679,6 @@ const removeHashtag = (index) => {
 const addPopularHashtag = (tag) => {
   if (formData.value.hashtags.length >= 5 || formData.value.hashtags.includes(tag)) return;
   formData.value.hashtags.push(tag);
-};
-
-const formatPrice = (price) => {
-  if (!price) return '';
-  return '₩' + Number(price).toLocaleString();
 };
 
 const handleCancel = () => {
@@ -750,8 +721,6 @@ const handleSubmit = async () => {
     console.log('📤 피드 생성 요청:', feedData);
 
     // TODO: 실제 API 호출
-    // const result = await feedService.createFeed(feedData);
-
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     isSubmitting.value = false;
@@ -873,58 +842,72 @@ onMounted(() => {
 
 /* Main Content */
 .create-content {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 24px 20px;
 }
 
-/* Step Section */
-.step-section {
-  padding: 32px 0;
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
 }
 
-.step-header {
-  margin-bottom: 32px;
+@media (min-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
-.step-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--primary);
+.left-column,
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Card */
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 20px;
 }
 
-.step-number {
-  width: 36px;
-  height: 36px;
-  background: var(--accent);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.section-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+  stroke-width: 2;
+}
+
+.card-title {
   font-size: 18px;
   font-weight: 700;
+  color: var(--primary);
+  flex: 1;
 }
 
-.step-desc {
-  font-size: 15px;
+.photo-count,
+.count-badge {
+  font-size: 14px;
   color: var(--secondary);
-  padding-left: 48px;
+  font-weight: 600;
 }
 
-/* Photo Selection */
-.selected-photos {
-  margin-bottom: 24px;
-}
-
+/* Photo Section with Drag & Drop */
 .photo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+  margin-bottom: 16px;
 }
 
 .photo-item {
@@ -933,12 +916,49 @@ onMounted(() => {
   border-radius: 12px;
   overflow: hidden;
   background: var(--hover);
+  cursor: move;
+  transition: all 0.2s;
+}
+
+.photo-item:hover {
+  transform: scale(1.02);
+}
+
+.photo-item.drag-over {
+  border: 2px dashed var(--accent);
+  opacity: 0.5;
 }
 
 .photo-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.drag-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.photo-item:hover .drag-handle {
+  display: flex;
+}
+
+.drag-handle svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+  stroke-width: 2;
 }
 
 .btn-remove {
@@ -1006,7 +1026,6 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-bottom: 24px;
 }
 
 .btn-photo-action {
@@ -1014,12 +1033,12 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 32px 16px;
+  gap: 8px;
+  padding: 24px 16px;
   background: white;
   border: 2px dashed var(--border);
   border-radius: 16px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--primary);
   cursor: pointer;
@@ -1040,97 +1059,24 @@ onMounted(() => {
 }
 
 .btn-photo-action .icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   color: var(--accent);
   stroke-width: 2;
 }
 
-.disabled-hint {
-  font-size: 12px;
+.hint-text {
+  font-size: 13px;
   color: var(--secondary);
+  text-align: center;
+  margin-top: 8px;
 }
 
-/* Tips Box */
-.tips-box {
-  padding: 20px;
-  background: linear-gradient(135deg, #EFF6FF 0%, #F3E8FF 100%);
-  border-radius: 16px;
-  margin-bottom: 32px;
-}
-
-.tips-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 12px;
-}
-
-.tips-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tips-list li {
-  font-size: 14px;
-  color: var(--secondary);
-  padding-left: 20px;
-  position: relative;
-}
-
-.tips-list li::before {
-  content: '•';
-  position: absolute;
-  left: 8px;
-  color: var(--accent);
-  font-weight: 700;
-}
-
-/* Preview Photos */
-.preview-photos {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.preview-photo {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--hover);
-}
-
-.preview-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.preview-more {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  background: var(--hover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--secondary);
-}
-
-/* Form Groups */
-.form-group {
-  margin-bottom: 24px;
-}
-
+/* Form */
 .form-label {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   font-size: 15px;
   font-weight: 600;
   color: var(--primary);
@@ -1140,10 +1086,17 @@ onMounted(() => {
 .form-label.required::after {
   content: '*';
   color: var(--accent);
-  margin-left: 4px;
+}
+
+.inline-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--secondary);
+  stroke-width: 2;
 }
 
 .char-count {
+  margin-left: auto;
   font-size: 13px;
   color: var(--secondary);
   font-weight: 500;
@@ -1235,49 +1188,111 @@ onMounted(() => {
   background: var(--hover);
 }
 
-/* Category Grid */
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+/* Category Dropdown */
+.category-dropdown {
+  position: relative;
 }
 
-.category-btn {
+.category-select-btn {
+  width: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 20px 12px;
+  justify-content: space-between;
+  padding: 14px 16px;
   background: white;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-select-btn:hover {
+  border-color: var(--accent);
+}
+
+.selected-category {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-weight: 600;
+}
+
+.placeholder {
+  color: var(--secondary);
+}
+
+.category-icon-svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+.dropdown-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--secondary);
+  transition: transform 0.2s;
+}
+
+.dropdown-icon.open {
+  transform: rotate(180deg);
+}
+
+.category-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.category-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 500;
   color: var(--primary);
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
 }
 
-.category-btn:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
+.category-dropdown-item:hover {
+  background: var(--hover);
 }
 
-.category-btn.active {
-  border-color: var(--accent);
+.category-dropdown-item.active {
   background: #FFF7ED;
+  color: var(--accent);
+  font-weight: 600;
 }
 
-.category-icon {
-  font-size: 32px;
+.category-dropdown-item.active .category-icon-svg {
+  color: var(--accent);
 }
 
-.category-name {
-  font-size: 14px;
+.sub-category-wrapper {
+  margin-top: 16px;
 }
 
-/* Sub Category List */
 .sub-category-list {
   display: flex;
   flex-wrap: wrap;
@@ -1308,7 +1323,18 @@ onMounted(() => {
   color: white;
 }
 
-/* Checkbox */
+/* Additional Info */
+.additional-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -1317,13 +1343,13 @@ onMounted(() => {
   font-weight: 500;
   color: var(--secondary);
   cursor: pointer;
+  margin-left: auto;
 }
 
 .checkbox-label input[type="checkbox"] {
   cursor: pointer;
 }
 
-/* Price Input */
 .price-input-wrapper {
   position: relative;
 }
@@ -1342,7 +1368,7 @@ onMounted(() => {
   padding-left: 36px;
 }
 
-/* Status Grid */
+/* Status */
 .status-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1354,7 +1380,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 16px;
+  padding: 12px;
   background: white;
   border: 2px solid var(--border);
   border-radius: 12px;
@@ -1377,8 +1403,10 @@ onMounted(() => {
   color: white;
 }
 
-.status-icon {
-  font-size: 20px;
+.status-icon-svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
 }
 
 /* Hashtags */
@@ -1446,16 +1474,14 @@ onMounted(() => {
   outline: none;
 }
 
-/* Popular Hashtags */
 .popular-hashtags {
-  padding: 20px;
-  background: white;
-  border-radius: 16px;
-  margin-bottom: 32px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
 .popular-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--primary);
   margin-bottom: 12px;
@@ -1488,213 +1514,6 @@ onMounted(() => {
 .popular-tag:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-/* Preview */
-.preview-section {
-  margin-bottom: 32px;
-}
-
-.preview-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 16px;
-}
-
-.preview-card {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-.preview-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-}
-
-.preview-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  object-fit: cover;
-}
-
-.preview-author {
-  flex: 1;
-}
-
-.preview-author-name {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 4px;
-}
-
-.preview-level {
-  font-size: 14px;
-}
-
-.preview-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--secondary);
-}
-
-.preview-image {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  background: var(--hover);
-}
-
-.preview-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.preview-indicator {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.preview-content {
-  padding: 16px;
-}
-
-.preview-product {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 8px;
-}
-
-.preview-details {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--secondary);
-  margin-bottom: 12px;
-}
-
-.preview-price {
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.preview-review {
-  font-size: 14px;
-  color: var(--primary);
-  line-height: 1.6;
-  margin-bottom: 12px;
-}
-
-.preview-hashtags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.preview-hashtag {
-  font-size: 13px;
-  color: #1D4ED8;
-  font-weight: 600;
-}
-
-/* Navigation Buttons */
-.nav-buttons {
-  display: flex;
-  gap: 12px;
-}
-
-.btn-prev,
-.btn-next {
-  flex: 1;
-  padding: 16px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.btn-prev {
-  background: white;
-  color: var(--primary);
-  border: 2px solid var(--border);
-}
-
-.btn-prev:hover {
-  border-color: var(--primary);
-  background: var(--hover);
-}
-
-.btn-next {
-  background: var(--accent);
-  color: white;
-}
-
-.btn-next:hover:not(:disabled) {
-  background: #EA580C;
-  transform: translateY(-2px);
-}
-
-.btn-next:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-next.primary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.spinner {
-  width: 20px;
-  height: 20px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Progress Bar */
-.progress-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--border);
-  z-index: 100;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--accent);
-  transition: width 0.3s ease;
 }
 
 /* Modal */
@@ -1767,49 +1586,36 @@ onMounted(() => {
   background: #B91C1C;
 }
 
-/* Error Toast */
-.error-toast {
-  position: fixed;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 16px 24px;
-  background: #DC2626;
-  color: white;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3);
-  z-index: 300;
-}
-
-.error-toast .icon {
-  width: 24px;
-  height: 24px;
-}
-
-/* Success Toast */
+/* Toasts */
+.error-toast,
 .success-toast {
   position: fixed;
   bottom: 32px;
   left: 50%;
   transform: translateX(-50%);
   padding: 16px 24px;
-  background: var(--primary);
-  color: white;
   border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 15px;
   font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   z-index: 300;
 }
 
+.error-toast {
+  background: #DC2626;
+  color: white;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3);
+}
+
+.success-toast {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.error-toast .icon,
 .success-toast .icon {
   width: 24px;
   height: 24px;
@@ -1826,19 +1632,8 @@ onMounted(() => {
   transform: translateX(-50%) translateY(20px);
 }
 
+/* Responsive */
 @media (max-width: 768px) {
-  .create-content {
-    padding: 0 16px;
-  }
-
-  .step-section {
-    padding: 24px 0;
-  }
-
-  .category-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .photo-actions {
     grid-template-columns: 1fr;
   }
@@ -1846,5 +1641,65 @@ onMounted(() => {
   .status-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Fixed Bottom Bar */
+.fixed-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid var(--border);
+  padding: 16px;
+  z-index: 40;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.fixed-bottom-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.btn-submit-large {
+  width: 100%;
+  padding: 18px 24px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.btn-submit-large:hover:not(:disabled) {
+  background: #EA580C;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.4);
+}
+
+.btn-submit-large:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>
