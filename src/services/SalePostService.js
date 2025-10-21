@@ -1,4 +1,4 @@
-// services/OneMouthService.js
+// services/SalePostService.js
 // 한입만 컨텐츠 관련 API 서비스 (Fetch API 기반)
 
 import { BaseApiService } from './BaseApiService.js'
@@ -7,7 +7,7 @@ import { BaseApiService } from './BaseApiService.js'
  * 한입만 컨텐츠 서비스
  * Content Server (8082)와의 통신을 담당
  */
-class OneMouthService extends BaseApiService {
+class SalePostService extends BaseApiService {
   constructor() {
     const baseURL = import.meta.env.DEV
         ? 'http://localhost:8082/api'
@@ -452,6 +452,7 @@ class OneMouthService extends BaseApiService {
   validateOneMouthData(data, isCreate = true) {
     const errors = []
 
+    // 제목 검증
     if (isCreate || data.title !== undefined) {
       if (!data.title || data.title.trim().length === 0) {
         errors.push('제목은 필수입니다.')
@@ -460,23 +461,87 @@ class OneMouthService extends BaseApiService {
       }
     }
 
+    // 설명 검증
     if (isCreate || data.description !== undefined) {
       if (data.description && data.description.length > 1000) {
         errors.push('설명은 1000자 이하여야 합니다.')
       }
     }
 
-    if (isCreate || data.sellingPrice !== undefined) {
-      if (data.sellingPrice === null || data.sellingPrice === undefined) {
-        errors.push('판매 가격은 필수입니다.')
-      } else if (data.sellingPrice < 0) {
-        errors.push('가격은 0원 이상이어야 합니다.')
-      }
-    }
+    // 판매 타입에 따른 옵션 검증
+    if (isCreate && data.saleType) {
+      switch (data.saleType) {
+        case 'ONEMOUTH':
+          if (!data.biteSizeOption) {
+            errors.push('한입 판매 옵션이 필요합니다.')
+          } else {
+            if (!data.biteSizeOption.unitPrice || data.biteSizeOption.unitPrice <= 0) {
+              errors.push('단위 가격은 필수이며 0보다 커야 합니다.')
+            }
+            if (!data.biteSizeOption.unitQuantity || data.biteSizeOption.unitQuantity <= 0) {
+              errors.push('단위 수량은 필수이며 0보다 커야 합니다.')
+            }
+            if (!data.biteSizeOption.totalBiteCount || data.biteSizeOption.totalBiteCount <= 0) {
+              errors.push('총 한입 개수는 필수이며 0보다 커야 합니다.')
+            }
+          }
+          break
 
-    if (isCreate || data.productId !== undefined) {
-      if (!data.productId) {
-        errors.push('연결된 제품은 필수입니다.')
+        case 'NORMAL':
+          if (!data.normalSaleOptions || data.normalSaleOptions.length === 0) {
+            errors.push('일반 판매 옵션이 필요합니다.')
+          } else {
+            data.normalSaleOptions.forEach((opt, idx) => {
+              if (!opt.optionName || opt.optionName.trim().length === 0) {
+                errors.push(`옵션 ${idx + 1}의 이름은 필수입니다.`)
+              }
+              if (!opt.price || opt.price <= 0) {
+                errors.push(`옵션 ${idx + 1}의 가격은 필수이며 0보다 커야 합니다.`)
+              }
+              if (!opt.totalStock || opt.totalStock <= 0) {
+                errors.push(`옵션 ${idx + 1}의 재고는 필수이며 0보다 커야 합니다.`)
+              }
+            })
+          }
+          break
+
+        case 'GROUP_BUY':
+          if (!data.groupBuyOption) {
+            errors.push('공동구매 옵션이 필요합니다.')
+          } else {
+            if (!data.groupBuyOption.targetCount || data.groupBuyOption.targetCount <= 0) {
+              errors.push('목표 인원은 필수이며 0보다 커야 합니다.')
+            }
+            if (!data.groupBuyOption.discountedPrice || data.groupBuyOption.discountedPrice <= 0) {
+              errors.push('할인 가격은 필수이며 0보다 커야 합니다.')
+            }
+            if (!data.groupBuyOption.deadline) {
+              errors.push('마감일은 필수입니다.')
+            }
+          }
+          break
+
+        case 'PROXY':
+          if (!data.proxyBuyOption) {
+            errors.push('대리구매 옵션이 필요합니다.')
+          } else {
+            if (!data.proxyBuyOption.estimatedProductPrice || data.proxyBuyOption.estimatedProductPrice <= 0) {
+              errors.push('예상 상품 가격은 필수이며 0보다 커야 합니다.')
+            }
+            if (!data.proxyBuyOption.serviceFee || data.proxyBuyOption.serviceFee < 0) {
+              errors.push('대행 수수료는 필수이며 0 이상이어야 합니다.')
+            }
+            if (!data.proxyBuyOption.purchaseLocation || data.proxyBuyOption.purchaseLocation.trim().length === 0) {
+              errors.push('구매 장소는 필수입니다.')
+            }
+            if (!data.proxyBuyOption.maxQuantity || data.proxyBuyOption.maxQuantity <= 0) {
+              errors.push('최대 수량은 필수이며 0보다 커야 합니다.')
+            }
+          }
+          break
+
+        default:
+          errors.push('올바른 판매 타입을 선택해주세요.')
       }
     }
 
@@ -594,7 +659,7 @@ class OneMouthService extends BaseApiService {
  * Vue Composition API용 한입만 훅
  */
 export function useOneMouth() {
-  const oneMouthService = new OneMouthService()
+  const oneMouthService = new SalePostService()
 
   const getList = async (params = {}) => {
     try {
@@ -793,7 +858,7 @@ export function useOneMouth() {
 // ==================== 싱글톤 인스턴스 ====================
 
 // 싱글톤 인스턴스 생성 및 내보내기
-export const oneMouthService = new OneMouthService()
+export const oneMouthService = new SalePostService()
 
 // 별칭 (기존 코드 호환성)
 export const contentService = oneMouthService

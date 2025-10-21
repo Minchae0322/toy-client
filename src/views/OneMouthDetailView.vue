@@ -74,7 +74,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useOneMouth } from '@/services/OneMouthService'
+import { useOneMouth } from '@/services/SalePostService.js'
 import PaymentModal from '@/components/oneMouth/detail/PaymentModal.vue'
 import AppHeader from '@/components/oneMouth/detail/AppHeader.vue'
 import ImageGallery from '@/components/oneMouth/detail/ImageGallery.vue'

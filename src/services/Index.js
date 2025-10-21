@@ -7,7 +7,7 @@ export { BaseApiService, ApiError } from './BaseApiService.js'
 // ==================== 서비스 클래스들 ====================
 export { default as authService, useAuth } from './AuthService.js'
 export { default as chatService, useChat } from './ChatService.js'
-export { default as oneMouthService, useOneMouth } from './OneMouthService.js'
+export { default as oneMouthService, useOneMouth } from './SalePostService.js'
 
 // ==================== 통합 API 매니저 ====================
 
@@ -70,7 +70,7 @@ class ApiServiceManager {
       ] = await Promise.all([
         import('./AuthService.js'),
         import('./ChatService.js'),
-        import('./OneMouthService.js')
+        import('./SalePostService.js')
       ])
 
       // 서비스 인스턴스들 등록
@@ -291,7 +291,7 @@ export function debugApiServices() {
 // 기존 방식으로 import한 사용자들을 위한 호환성 유지
 import authService from './AuthService.js'
 import chatService from './ChatService.js'
-import oneMouthService from './OneMouthService.js'
+import oneMouthService from './SalePostService.js'
 
 // 기존 axios.js 스타일 export (하위 호환성)
 export {
