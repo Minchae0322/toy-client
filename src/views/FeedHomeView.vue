@@ -1481,18 +1481,30 @@ const formatNumber = (num) => {
   gap: 20px;
 }
 
+/* 태블릿: 2컬럼 */
 @media (min-width: 768px) {
+  .feed-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+/* 데스크톱: 2컬럼 유지 */
+@media (min-width: 1024px) {
   .feed-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
   }
 }
 
-@media (min-width: 1280px) {
+/* 큰 화면에서만 3컬럼 */
+@media (min-width: 1600px) {
   .feed-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
   }
 }
+
 
 .post-card {
   background: var(--card);
@@ -1648,6 +1660,7 @@ const formatNumber = (num) => {
   padding: 16px;
 }
 
+/* Post Actions - 오버플로우 방지 */
 .post-actions {
   display: flex;
   align-items: center;
@@ -1655,12 +1668,15 @@ const formatNumber = (num) => {
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
+  gap: 8px;
 }
 
 .action-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .action-btn {
@@ -1677,21 +1693,20 @@ const formatNumber = (num) => {
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
+  flex-shrink: 0;
 }
 
-.action-btn:hover {
-  background: var(--hover);
-  color: var(--primary);
-}
-
-.action-btn.liked {
-  color: var(--accent);
+.action-btn .icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+  flex-shrink: 0;
 }
 
 .action-btn .fire {
   font-size: 18px;
+  flex-shrink: 0;
 }
-
 .action-btn .icon {
   width: 20px;
   height: 20px;
@@ -2460,5 +2475,31 @@ const formatNumber = (num) => {
     width: 100%;
     height: 200px;
   }
+
+
 }
+
+/* 작은 카드에서 버튼 크기 조정 */
+@media (max-width: 1279px) {
+  .action-btn {
+    padding: 6px 8px;
+    font-size: 13px;
+    gap: 4px;
+  }
+
+  .action-btn .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .action-btn .fire {
+    font-size: 16px;
+  }
+
+  .action-left {
+    gap: 8px;
+  }
+
+}
+
 </style>
