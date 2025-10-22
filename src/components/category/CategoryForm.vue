@@ -1,5 +1,16 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+
+const props = defineProps({
+  parentId: {
+    type: Number,
+    default: null
+  },
+  categories: {
+    type: Array,
+    default: () => []
+  }
+})
 
 const emit = defineEmits(['submit', 'cancel'])
 
@@ -7,10 +18,22 @@ const formData = ref({
   categoryName: '',
   description: '',
   categoryCode: '',
-  keywords: []
+  keywords: [],
+  parentId: props.parentId
 })
 
 const keywordInput = ref('')
+
+// 선택 가능한 부모 카테고리 (최대 depth 2까지만)
+const availableParentCategories = computed(() => {
+  return props.categories.filter(cat => (cat.depth || 0) < 2)
+})
+
+const selectedParentName = computed(() => {
+  if (!formData.value.parentId) return null
+  const parent = props.categories.find(c => c.categoryId === formData.value.parentId)
+  return parent ? parent.categoryName : null
+})
 
 const handleSubmit = () => {
   if (!formData.value.categoryName.trim()) {
@@ -18,7 +41,6 @@ const handleSubmit = () => {
     return
   }
 
-  // 카테고리 코드가 없으면 카테고리명으로 자동 생성
   const categoryCode = formData.value.categoryCode.trim() ||
       formData.value.categoryName.trim().toUpperCase().replace(/\s+/g, '_')
 
@@ -26,7 +48,8 @@ const handleSubmit = () => {
     categoryName: formData.value.categoryName.trim(),
     description: formData.value.description.trim() || '',
     categoryCode: categoryCode,
-    keywords: formData.value.keywords.filter(keyword => keyword.trim() !== '')
+    keywords: formData.value.keywords.filter(keyword => keyword.trim() !== ''),
+    parentId: formData.value.parentId || null
   }
 
   emit('submit', data)
@@ -43,12 +66,12 @@ const resetForm = () => {
     categoryName: '',
     description: '',
     categoryCode: '',
-    keywords: []
+    keywords: [],
+    parentId: props.parentId
   }
   keywordInput.value = ''
 }
 
-// 키워드 관리 함수들
 const addKeyword = () => {
   const keyword = keywordInput.value.trim()
   if (keyword && !formData.value.keywords.includes(keyword) && formData.value.keywords.length < 10) {
@@ -68,14 +91,13 @@ const handleKeywordKeyup = (event) => {
   }
 }
 
-// 카테고리 코드 자동 생성
 const generateCategoryCode = () => {
   if (formData.value.categoryName.trim()) {
     formData.value.categoryCode = formData.value.categoryName.trim()
-        .toUpperCase()
-        .replace(/[^A-Z0-9가-힣]/g, '_')
-        .replace(/_+/g, '_')
-        .replace(/^_|_$/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9가-힣]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
   }
 }
 </script>
@@ -83,11 +105,33 @@ const generateCategoryCode = () => {
 <template>
   <div class="form-section">
     <div class="form-header">
-      <h2>새 카테고리 추가</h2>
+      <h2>
+        {{ parentId ? `'${selectedParentName}' 하위 카테고리 추가` : '새 카테고리 추가' }}
+      </h2>
       <button @click="handleCancel" class="close-button">✕</button>
     </div>
 
     <div class="form-grid">
+      <!-- 부모 카테고리 선택 (신규 추가 시에만) -->
+      <div v-if="!parentId" class="form-group">
+        <label for="parentCategory">부모 카테고리 (선택사항)</label>
+        <select
+            id="parentCategory"
+            v-model="formData.parentId"
+            class="form-select"
+        >
+          <option :value="null">최상위 카테고리</option>
+          <option
+              v-for="category in availableParentCategories"
+              :key="category.categoryId"
+              :value="category.categoryId"
+          >
+            {{ '└'.repeat(category.depth || 0) }} {{ category.categoryName }}
+          </option>
+        </select>
+        <small class="field-hint">선택하지 않으면 최상위 카테고리로 생성됩니다</small>
+      </div>
+
       <div class="form-group">
         <label for="categoryName">카테고리 이름 *</label>
         <input
@@ -139,7 +183,7 @@ const generateCategoryCode = () => {
       </div>
     </div>
 
-    <!-- 키워드 섹션 -->
+    <!-- 키워드 섹션 (기존과 동일) -->
     <div class="keywords-section">
       <label class="keywords-label">키워드 (최대 10개)</label>
 
@@ -192,7 +236,11 @@ const generateCategoryCode = () => {
   </div>
 </template>
 
+
 <style scoped>
+
+
+
 .form-section {
   background: white;
   border-radius: 12px;
@@ -263,6 +311,7 @@ const generateCategoryCode = () => {
   font-size: 14px;
   transition: border-color 0.2s;
   background: white;
+  cursor: pointer;
 }
 
 .form-input:focus,

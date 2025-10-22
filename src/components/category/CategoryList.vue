@@ -16,16 +16,21 @@ const props = defineProps({
   isEmpty: {
     type: Boolean,
     default: false
+  },
+  depth: {
+    type: Number,
+    default: 0
   }
 })
 
 const emit = defineEmits([
   'add-category',
+  'add-sub-category',
   'update-category',
   'delete-category',
   'reorder-categories',
-  'update-categories',
-  'status-updated' // 🔥 status-updated 이벤트 추가
+  'toggle-status',
+  'status-updated'
 ])
 
 const draggedItem = ref(null)
@@ -55,32 +60,21 @@ const handleDrop = async (targetItem, targetIndex) => {
     return
   }
 
+  // 같은 부모를 가진 카테고리끼리만 순서 변경 가능
+  if (draggedItem.value.parentId !== targetItem.parentId) {
+    alert('같은 레벨의 카테고리끼리만 순서를 변경할 수 있습니다.')
+    draggedItem.value = null
+    dragOverIndex.value = -1
+    return
+  }
+
   const draggedCategoryId = draggedItem.value.categoryId
   const targetSortOrder = targetItem.sortOrder
 
-  // 원래 상태 백업
-  const originalCategories = [...props.categories]
-
   try {
-    // UI 즉시 업데이트 (낙관적 업데이트)
-    const draggedIndex = props.categories.findIndex(c => c.categoryId === draggedCategoryId)
-    const newCategories = [...props.categories]
-    const [removed] = newCategories.splice(draggedIndex, 1)
-    newCategories.splice(targetIndex, 0, removed)
-
-    // sortOrder 재정렬
-    newCategories.forEach((cat, index) => {
-      cat.sortOrder = index + 1
-    })
-
-    emit('update-categories', newCategories)
-
-    // API 호출
     await emit('reorder-categories', draggedCategoryId, targetSortOrder)
-
   } catch (error) {
-    // 실패 시 원래 상태로 되돌리기
-    emit('update-categories', originalCategories)
+    console.error('순서 변경 실패:', error)
   }
 
   draggedItem.value = null
@@ -88,27 +82,17 @@ const handleDrop = async (targetItem, targetIndex) => {
 }
 
 const handleUpdateCategory = async (id, field, value) => {
-  const category = props.categories.find(cat => cat.categoryId === id)
-  if (category) {
-    const originalValue = category[field]
-    category[field] = value
+  const updateData = {
+    categoryName: field === 'categoryName' ? value : undefined,
+    description: field === 'description' ? value : undefined,
+    keywords: field === 'keywords' ? value : undefined
+  }
 
-    try {
-      // 모든 필드를 한 번에 전송
-      const updateData = {
-        categoryName: category.categoryName,
-        description: category.description || '',
-        keywords: Array.isArray(category.keywords) ? category.keywords :
-            (typeof category.keywords === 'string' ?
-                category.keywords.split(',').map(k => k.trim()).filter(k => k) : [])
-      }
-
-      await emit('update-category', id, updateData)
-    } catch (error) {
-      // 실패 시 원래 값으로 복구
-      category[field] = originalValue
-      throw error
-    }
+  try {
+    await emit('update-category', id, updateData)
+  } catch (error) {
+    console.error('카테고리 수정 실패:', error)
+    throw error
   }
 }
 
@@ -120,44 +104,66 @@ const handleAddCategory = () => {
   emit('add-category')
 }
 
-// 🔥 새로 추가: 상태 업데이트 이벤트 전달
+const handleAddSubCategory = (parentId) => {
+  emit('add-sub-category', parentId)
+}
+
+const handleToggleStatus = (categoryId) => {
+  emit('toggle-status', categoryId)
+}
+
 const handleStatusUpdated = (eventData) => {
-  console.log('📋 CategoryList에서 status-updated 이벤트 전달:', eventData)
   emit('status-updated', eventData)
 }
 </script>
 
 <template>
-  <div class="list-section">
-    <div class="list-header">
+  <div class="list-section" :class="{ 'nested': depth > 0 }">
+    <div v-if="depth === 0" class="list-header">
       <h2>카테고리 목록</h2>
-      <p v-if="!isEmpty && !loading">드래그해서 순서를 변경할 수 있습니다</p>
+      <p v-if="!isEmpty && !loading">같은 레벨 내에서 드래그하여 순서를 변경할 수 있습니다</p>
     </div>
 
     <!-- 로딩 상태 -->
-    <CategoryLoading v-if="loading" />
+    <CategoryLoading v-if="loading && depth === 0" />
 
     <!-- 빈 목록 상태 -->
-    <CategoryEmpty v-else-if="isEmpty" @add-category="handleAddCategory" />
+    <CategoryEmpty v-else-if="isEmpty && depth === 0" @add-category="handleAddCategory" />
 
-    <!-- 카테고리 목록 -->
+    <!-- 카테고리 목록 (재귀 구조) -->
     <div v-else class="category-list">
-      <CategoryItem
-          v-for="(category, index) in categories"
-          :key="category.categoryId"
-          :category="category"
-          :index="index"
-          :is-dragging="draggedItem?.categoryId === category.categoryId"
-          :is-drag-over="dragOverIndex === index && draggedItem?.categoryId !== category.categoryId"
-          @drag-start="handleDragStart"
-          @drag-end="handleDragEnd"
-          @drag-enter="handleDragEnter"
-          @drag-leave="handleDragLeave"
-          @drop="handleDrop"
-          @update="handleUpdateCategory"
-          @delete="handleDeleteCategory"
-          @status-updated="handleStatusUpdated"
-      />
+      <template v-for="(category, index) in categories" :key="category.categoryId">
+        <CategoryItem
+            :category="category"
+            :index="index"
+            :depth="depth"
+            :is-dragging="draggedItem?.categoryId === category.categoryId"
+            :is-drag-over="dragOverIndex === index && draggedItem?.categoryId !== category.categoryId"
+            @drag-start="handleDragStart"
+            @drag-end="handleDragEnd"
+            @drag-enter="handleDragEnter"
+            @drag-leave="handleDragLeave"
+            @drop="handleDrop"
+            @update="handleUpdateCategory"
+            @delete="handleDeleteCategory"
+            @toggle-status="handleToggleStatus"
+            @add-sub-category="handleAddSubCategory"
+            @status-updated="handleStatusUpdated"
+        />
+
+        <!-- 자식 카테고리 재귀 렌더링 -->
+        <CategoryList
+            v-if="category.children && category.children.length > 0"
+            :categories="category.children"
+            :depth="depth + 1"
+            @add-sub-category="handleAddSubCategory"
+            @update-category="handleUpdateCategory"
+            @delete-category="handleDeleteCategory"
+            @reorder-categories="handleReorderCategories"
+            @toggle-status="handleToggleStatus"
+            @status-updated="handleStatusUpdated"
+        />
+      </template>
     </div>
   </div>
 </template>
@@ -171,6 +177,15 @@ const handleStatusUpdated = (eventData) => {
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.list-section.nested {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-left: 32px;
+  margin-top: 8px;
+  box-shadow: none;
 }
 
 .list-header {
@@ -196,8 +211,11 @@ const handleStatusUpdated = (eventData) => {
   flex-direction: column;
 }
 
-/* 모바일 최적화 */
 @media (max-width: 640px) {
+  .list-section.nested {
+    margin-left: 16px;
+  }
+
   .list-header {
     padding: 12px;
   }
@@ -211,7 +229,6 @@ const handleStatusUpdated = (eventData) => {
   }
 }
 
-/* 태블릿 */
 @media (min-width: 768px) {
   .list-header {
     padding: 20px;
@@ -226,7 +243,6 @@ const handleStatusUpdated = (eventData) => {
   }
 }
 
-/* 데스크톱 */
 @media (min-width: 1024px) {
   .list-header {
     padding: 24px 24px 16px 24px;
