@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   parentId: {
@@ -22,6 +22,12 @@ const formData = ref({
   parentId: props.parentId
 })
 
+// props.parentId가 변경되면 formData.parentId도 업데이트
+watch(() => props.parentId, (newVal) => {
+  formData.value.parentId = newVal
+  console.log('👀 props.parentId 변경됨:', newVal)
+}, { immediate: true })
+
 const keywordInput = ref('')
 
 // 선택 가능한 부모 카테고리 (최대 depth 2까지만)
@@ -35,6 +41,14 @@ const selectedParentName = computed(() => {
   return parent ? parent.categoryName : null
 })
 
+// 부모 카테고리 선택 변경 시 로그
+const onParentChange = (event) => {
+  const value = event.target.value
+  // "null" 문자열을 실제 null로 변환
+  formData.value.parentId = value === '' || value === 'null' ? null : Number(value)
+  console.log('🔄 부모 카테고리 선택:', formData.value.parentId)
+}
+
 const handleSubmit = () => {
   if (!formData.value.categoryName.trim()) {
     alert('카테고리 이름은 필수입니다.')
@@ -44,13 +58,23 @@ const handleSubmit = () => {
   const categoryCode = formData.value.categoryCode.trim() ||
       formData.value.categoryName.trim().toUpperCase().replace(/\s+/g, '_')
 
+  // keywords를 쉼표로 구분된 문자열로 변환
+  const keywordsString = formData.value.keywords
+  .filter(keyword => keyword.trim() !== '')
+  .join(',')
+
   const data = {
     categoryName: formData.value.categoryName.trim(),
-    description: formData.value.description.trim() || '',
+    description: formData.value.description.trim() || null,
     categoryCode: categoryCode,
-    keywords: formData.value.keywords.filter(keyword => keyword.trim() !== ''),
-    parentId: formData.value.parentId || null
+    keywords: keywordsString,
+    parentId: formData.value.parentId
   }
+
+  console.log('📝 전송할 카테고리 데이터:', data)
+  console.log('📝 현재 formData.parentId:', formData.value.parentId)
+  console.log('📝 props.parentId:', props.parentId)
+  console.log('📝 선택된 부모 이름:', selectedParentName.value)
 
   emit('submit', data)
   resetForm()
@@ -117,7 +141,8 @@ const generateCategoryCode = () => {
         <label for="parentCategory">부모 카테고리 (선택사항)</label>
         <select
             id="parentCategory"
-            v-model="formData.parentId"
+            :value="formData.parentId"
+            @change="onParentChange"
             class="form-select"
         >
           <option :value="null">최상위 카테고리</option>
@@ -129,7 +154,19 @@ const generateCategoryCode = () => {
             {{ '└'.repeat(category.depth || 0) }} {{ category.categoryName }}
           </option>
         </select>
-        <small class="field-hint">선택하지 않으면 최상위 카테고리로 생성됩니다</small>
+        <small class="field-hint">
+          선택하지 않으면 최상위 카테고리로 생성됩니다
+          (현재 선택: {{ formData.parentId || '없음' }})
+        </small>
+      </div>
+
+      <!-- props로 부모가 지정된 경우 표시 -->
+      <div v-else class="form-group">
+        <label>부모 카테고리</label>
+        <div class="parent-info">
+          📁 {{ selectedParentName }} (ID: {{ parentId }})
+        </div>
+        <small class="field-hint">이 카테고리의 하위 카테고리로 생성됩니다</small>
       </div>
 
       <div class="form-group">
@@ -183,7 +220,7 @@ const generateCategoryCode = () => {
       </div>
     </div>
 
-    <!-- 키워드 섹션 (기존과 동일) -->
+    <!-- 키워드 섹션 -->
     <div class="keywords-section">
       <label class="keywords-label">키워드 (최대 10개)</label>
 
@@ -236,11 +273,7 @@ const generateCategoryCode = () => {
   </div>
 </template>
 
-
 <style scoped>
-
-
-
 .form-section {
   background: white;
   border-radius: 12px;
@@ -302,6 +335,16 @@ const generateCategoryCode = () => {
   margin-bottom: 6px;
 }
 
+.parent-info {
+  padding: 12px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  color: #166534;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .form-input,
 .form-textarea,
 .form-select {
@@ -311,6 +354,9 @@ const generateCategoryCode = () => {
   font-size: 14px;
   transition: border-color 0.2s;
   background: white;
+}
+
+.form-select {
   cursor: pointer;
 }
 
@@ -356,7 +402,6 @@ const generateCategoryCode = () => {
   margin-top: 4px;
 }
 
-/* 키워드 섹션 */
 .keywords-section {
   margin-bottom: 20px;
   padding: 16px;
@@ -491,7 +536,6 @@ const generateCategoryCode = () => {
   background: #059669;
 }
 
-/* 모바일 최적화 */
 @media (max-width: 640px) {
   .form-section {
     padding: 12px;
@@ -537,7 +581,6 @@ const generateCategoryCode = () => {
   }
 }
 
-/* 태블릿 */
 @media (min-width: 768px) {
   .form-section {
     padding: 20px;
@@ -558,7 +601,6 @@ const generateCategoryCode = () => {
   }
 }
 
-/* 데스크톱 */
 @media (min-width: 1024px) {
   .form-section {
     padding: 24px;
