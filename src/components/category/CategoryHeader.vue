@@ -1,135 +1,145 @@
 <script setup>
-const emit = defineEmits(['add-category'])
-
-const handleAddClick = () => {
-  emit('add-category')
-}
+defineEmits(['add-category'])
 </script>
 
 <template>
-  <div class="header-section">
+  <div class="category-header">
     <div class="header-content">
-      <div class="header-info">
-        <h1>카테고리 관리</h1>
-        <p>한입만 앱의 카테고리를 관리합니다</p>
+      <div class="header-left">
+        <div class="icon-wrapper">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect x="4" y="4" width="10" height="10" rx="2" fill="currentColor" opacity="0.8"/>
+            <rect x="18" y="4" width="10" height="10" rx="2" fill="currentColor" opacity="0.6"/>
+            <rect x="4" y="18" width="10" height="10" rx="2" fill="currentColor" opacity="0.4"/>
+            <rect x="18" y="18" width="10" height="10" rx="2" fill="currentColor" opacity="0.2"/>
+          </svg>
+        </div>
+        <div class="header-text">
+          <h1 class="header-title">카테고리 관리</h1>
+          <p class="header-subtitle">체계적인 컨텐츠 분류 시스템</p>
+        </div>
       </div>
-      <button @click="handleAddClick" class="add-button">
-        <span class="icon">➕</span>
-        <span class="button-text">카테고리 추가</span>
+      <button @click="$emit('add-category')" class="add-button">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>새 카테고리</span>
       </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.header-section {
+.category-header {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  padding: 16px;
-  margin-bottom: 16px;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
-.header-info h1 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 4px 0;
-}
-
-.header-info p {
-  color: #6b7280;
-  margin: 0;
-  font-size: 14px;
-}
-
-.add-button {
-  background: #10b981;
-  color: white;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
+.header-left {
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: background-color 0.2s;
+  gap: 16px;
+  flex: 1;
+}
+
+.icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
   flex-shrink: 0;
 }
 
-.add-button:hover {
-  background: #059669;
+.header-text {
+  flex: 1;
 }
 
-/* 모바일 최적화 */
-@media (max-width: 640px) {
-  .header-section {
-    padding: 12px;
-    margin-bottom: 12px;
+.header-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 400;
+}
+
+.add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  background: #0f172a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.add-button:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+}
+
+.add-button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .category-header {
+    padding: 20px;
   }
 
   .header-content {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: stretch;
   }
 
-  .header-info h1 {
-    font-size: 18px;
+  .header-left {
+    margin-bottom: 16px;
   }
 
-  .header-info p {
+  .icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-title {
+    font-size: 20px;
+  }
+
+  .header-subtitle {
     font-size: 13px;
   }
 
   .add-button {
     width: 100%;
     justify-content: center;
-    padding: 12px;
-  }
-
-  .button-text {
-    display: block;
-  }
-}
-
-@media (max-width: 480px) {
-  .button-text {
-    display: none;
-  }
-
-  .add-button {
-    width: auto;
-    padding: 10px;
-  }
-}
-
-/* 태블릿 */
-@media (min-width: 768px) {
-  .header-section {
-    padding: 24px;
-    margin-bottom: 24px;
-  }
-
-  .header-info h1 {
-    font-size: 24px;
-  }
-
-  .add-button {
-    padding: 12px 16px;
+    padding: 14px;
   }
 }
 </style>

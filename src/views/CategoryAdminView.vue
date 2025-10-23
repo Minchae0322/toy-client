@@ -7,16 +7,14 @@ import CategoryForm from '@/components/category/CategoryForm.vue'
 import CategoryList from '@/components/category/CategoryList.vue'
 import NotificationToast from '@/components/category/NotificationToast.vue'
 
-// 반응형 데이터
-const categories = ref([])  // 트리 구조
-const flatCategories = ref([])  // 평면 구조 (통계용)
+const categories = ref([])
+const flatCategories = ref([])
 const loading = ref(false)
 const showAddForm = ref(false)
-const selectedParentId = ref(null)  // 추가 시 선택된 부모 카테고리
+const selectedParentId = ref(null)
 const notification = ref({show: false, message: '', type: 'success'})
 const error = ref(null)
 
-// 계산된 속성
 const activeCategories = computed(() =>
     flatCategories.value.filter(c => c.isActive).length
 )
@@ -27,11 +25,6 @@ const inactiveCategories = computed(() =>
 
 const isEmpty = computed(() => categories.value.length === 0)
 
-const totalProducts = computed(() =>
-    flatCategories.value.reduce((sum, c) => sum + (c.productCount || 0), 0)
-)
-
-// 알림 표시
 const showNotification = (message, type = 'success') => {
   notification.value = {show: true, message, type}
   setTimeout(() => {
@@ -39,35 +32,24 @@ const showNotification = (message, type = 'success') => {
   }, 3000)
 }
 
-// 카테고리 로드
 const loadCategories = async () => {
   loading.value = true
   error.value = null
 
   try {
     const response = await categoryService.getCategories()
-    console.log('📂 카테고리 응답:', response)
 
     if (response.success && response.data) {
       const data = Array.isArray(response.data) ? response.data : []
-      console.log('📂 원본 데이터:', data)
-
-      // 백엔드 응답이 평면 구조인 경우 (parentId 확인)
       const hasParentId = data.some(cat => cat.parentId !== null && cat.parentId !== undefined)
 
       if (hasParentId) {
-        // 계층형 구조가 있는 경우 트리로 변환
         categories.value = categoryService.buildCategoryTree(data)
         flatCategories.value = categoryService.flattenCategoryTree(categories.value)
       } else {
-        // 모두 최상위 카테고리인 경우 그대로 사용
         categories.value = data
         flatCategories.value = data
       }
-
-      console.log('📂 트리 구조:', categories.value)
-      console.log('📂 평면 구조:', flatCategories.value)
-
     } else {
       throw new Error(response.message || '카테고리 목록 조회 실패')
     }
@@ -82,23 +64,15 @@ const loadCategories = async () => {
   }
 }
 
-// 카테고리 추가
 const handleAddCategory = async (categoryData) => {
   try {
-    // categoryData에 이미 parentId가 포함되어 있으므로 그대로 사용
-    console.log('➕ 카테고리 추가 요청:', categoryData)
-    console.log('➕ selectedParentId.value:', selectedParentId.value)
-
     const response = await categoryService.createCategory(categoryData)
 
     if (response.success) {
       await loadCategories()
-
       const wasSubCategory = categoryData.parentId !== null
       const parentText = wasSubCategory ? '하위 카테고리가' : '카테고리가'
       showNotification(`${parentText} 추가되었습니다.`)
-
-      // 성공 후에 폼 닫기
       showAddForm.value = false
       selectedParentId.value = null
     } else {
@@ -110,10 +84,8 @@ const handleAddCategory = async (categoryData) => {
   }
 }
 
-// 카테고리 수정
 const handleUpdateCategory = async (categoryId, updateData) => {
   try {
-    console.log('✏️ 카테고리 수정 요청:', categoryId, updateData)
     const response = await categoryService.updateCategory(categoryId, updateData)
 
     if (response.success) {
@@ -129,10 +101,8 @@ const handleUpdateCategory = async (categoryId, updateData) => {
   }
 }
 
-// 카테고리 삭제
 const handleDeleteCategory = async (categoryId) => {
   try {
-    // 하위 카테고리 확인
     const category = flatCategories.value.find(c => c.categoryId === categoryId)
     if (!category) return
 
@@ -146,7 +116,6 @@ const handleDeleteCategory = async (categoryId) => {
       if (!confirmed) return
     }
 
-    console.log('🗑️ 카테고리 삭제 요청:', categoryId)
     const response = await categoryService.deleteCategory(categoryId)
 
     if (response.success) {
@@ -161,10 +130,8 @@ const handleDeleteCategory = async (categoryId) => {
   }
 }
 
-// 순서 변경 (같은 레벨 내에서만)
 const handleReorderCategories = async (draggedId, targetOrder) => {
   try {
-    console.log('🔄 순서 변경 요청:', draggedId, '→', targetOrder)
     const response = await categoryService.updateCategoryOrder(draggedId, targetOrder)
 
     if (response.success) {
@@ -176,15 +143,13 @@ const handleReorderCategories = async (draggedId, targetOrder) => {
   } catch (error) {
     console.error('❌ 순서 변경 실패:', error)
     showNotification(error.message || '순서 변경에 실패했습니다.', 'error')
-    await loadCategories()  // 실패 시 원래 상태로 복구
+    await loadCategories()
     throw error
   }
 }
 
-// 상태 토글
 const handleToggleStatus = async (categoryId) => {
   try {
-    console.log('🔄 상태 토글 요청:', categoryId)
     const response = await categoryService.toggleCategoryStatus(categoryId)
 
     if (response.success) {
@@ -200,13 +165,11 @@ const handleToggleStatus = async (categoryId) => {
   }
 }
 
-// 하위 카테고리 추가 열기
 const openAddSubCategory = (parentId) => {
   selectedParentId.value = parentId
   showAddForm.value = true
 }
 
-// 최상위 카테고리 추가 열기
 const openAddForm = () => {
   selectedParentId.value = null
   showAddForm.value = true
@@ -217,7 +180,6 @@ const closeAddForm = () => {
   selectedParentId.value = null
 }
 
-// 라이프사이클
 onMounted(async () => {
   await loadCategories()
 })
@@ -228,56 +190,70 @@ defineExpose({
 </script>
 
 <template>
-  <div class="category-management">
-    <CategoryHeader @add-category="openAddForm"/>
+  <div class="category-admin">
+    <div class="admin-container">
+      <CategoryHeader @add-category="openAddForm"/>
 
-    <CategoryStats
-        :data-source="flatCategories"
-        :auto-calculate="true"
-        :loading="loading"
-        :error="error"
-    />
+      <CategoryStats
+          :data-source="flatCategories"
+          :auto-calculate="true"
+          :loading="loading"
+          :error="error"
+      />
 
-    <CategoryForm
-        v-if="showAddForm"
-        :parent-id="selectedParentId"
-        :categories="flatCategories"
-        @submit="handleAddCategory"
-        @cancel="closeAddForm"
-    />
+      <CategoryForm
+          v-if="showAddForm"
+          :parent-id="selectedParentId"
+          :categories="flatCategories"
+          @submit="handleAddCategory"
+          @cancel="closeAddForm"
+      />
 
-    <CategoryList
-        :categories="categories"
-        :loading="loading"
-        :is-empty="isEmpty"
-        :error="error"
-        @add-category="openAddForm"
-        @add-sub-category="openAddSubCategory"
-        @update-category="handleUpdateCategory"
-        @delete-category="handleDeleteCategory"
-        @toggle-status="handleToggleStatus"
-        @reorder-categories="handleReorderCategories"
-        @refresh="loadCategories"
-    />
+      <CategoryList
+          :categories="categories"
+          :loading="loading"
+          :is-empty="isEmpty"
+          :error="error"
+          @add-category="openAddForm"
+          @add-sub-category="openAddSubCategory"
+          @update-category="handleUpdateCategory"
+          @delete-category="handleDeleteCategory"
+          @toggle-status="handleToggleStatus"
+          @reorder-categories="handleReorderCategories"
+          @refresh="loadCategories"
+      />
 
-    <NotificationToast
-        :show="notification.show"
-        :message="notification.message"
-        :type="notification.type"
-    />
+      <NotificationToast
+          :show="notification.show"
+          :message="notification.message"
+          :type="notification.type"
+      />
+    </div>
   </div>
 </template>
 
 <style scoped>
-.category-management {
+.category-admin {
   min-height: 100vh;
-  background-color: #f9fafb;
-  padding: 16px;
+  background: #f8f9fa;
+  padding: 0;
+}
+
+.admin-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 16px;
 }
 
 @media (min-width: 768px) {
-  .category-management {
-    padding: 32px 16px;
+  .admin-container {
+    padding: 32px 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-container {
+    padding: 40px 32px;
   }
 }
 </style>

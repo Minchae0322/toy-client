@@ -17,115 +17,102 @@ defineProps({
 </script>
 
 <template>
-  <Transition name="slide">
-    <div v-if="show" class="notification" :class="type">
-      <div class="notification-content">
-        <span class="notification-icon">
-          {{ type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️' }}
-        </span>
-        <span class="notification-message">{{ message }}</span>
+  <Transition name="toast">
+    <div v-if="show" class="toast-notification" :class="type">
+      <div class="toast-icon">
+        <svg v-if="type === 'success'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.2"/>
+          <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg v-else-if="type === 'error'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.2"/>
+          <path d="M15 9l-6 6m0-6l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <svg v-else-if="type === 'warning'" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 20h20L12 2z" fill="currentColor" opacity="0.2"/>
+          <path d="M12 9v4m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.2"/>
+          <path d="M12 16v-4m0-4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
       </div>
+      <p class="toast-message">{{ message }}</p>
     </div>
   </Transition>
 </template>
 
 <style scoped>
-.notification {
+.toast-notification {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  max-width: 300px;
-  backdrop-filter: blur(10px);
-}
-
-.notification-content {
+  top: 24px;
+  right: 24px;
+  padding: 16px 20px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  z-index: 10000;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  max-width: 400px;
+  min-width: 300px;
 }
 
-.notification-icon {
+.toast-notification.success {
+  background: linear-gradient(135deg, rgba(17, 153, 142, 0.95) 0%, rgba(56, 239, 125, 0.95) 100%);
+  color: white;
+}
+
+.toast-notification.error {
+  background: linear-gradient(135deg, rgba(238, 9, 121, 0.95) 0%, rgba(255, 106, 0, 0.95) 100%);
+  color: white;
+}
+
+.toast-notification.warning {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.95) 0%, rgba(245, 158, 11, 0.95) 100%);
+  color: white;
+}
+
+.toast-notification.info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(37, 99, 235, 0.95) 100%);
+  color: white;
+}
+
+.toast-icon {
   flex-shrink: 0;
 }
 
-.notification-message {
+.toast-message {
   flex: 1;
-  word-break: break-word;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.5;
 }
 
-.notification.success {
-  background: rgba(220, 252, 231, 0.95);
-  color: #166534;
-  border: 1px solid #bbf7d0;
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.notification.error {
-  background: rgba(254, 202, 202, 0.95);
-  color: #991b1b;
-  border: 1px solid #fca5a5;
-}
-
-.notification.warning {
-  background: rgba(254, 240, 138, 0.95);
-  color: #92400e;
-  border: 1px solid #fcd34d;
-}
-
-.notification.info {
-  background: rgba(219, 234, 254, 0.95);
-  color: #1e40af;
-  border: 1px solid #93c5fd;
-}
-
-/* 애니메이션 */
-.slide-enter-active,
-.slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-enter-from {
-  transform: translateX(100%);
+.toast-enter-from {
   opacity: 0;
+  transform: translateX(100px) scale(0.8);
 }
 
-.slide-leave-to {
-  transform: translateX(100%);
+.toast-leave-to {
   opacity: 0;
+  transform: translateX(100px) scale(0.8);
 }
 
-/* 모바일 최적화 */
-@media (max-width: 640px) {
-  .notification {
-    top: 10px;
-    right: 10px;
-    left: 10px;
+@media (max-width: 768px) {
+  .toast-notification {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    min-width: auto;
     max-width: none;
-    font-size: 13px;
-    padding: 10px 12px;
-  }
-
-  .notification-content {
-    gap: 6px;
-  }
-}
-
-/* 태블릿 */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .notification {
-    max-width: 350px;
-  }
-}
-
-/* 데스크톱 */
-@media (min-width: 1024px) {
-  .notification {
-    max-width: 400px;
   }
 }
 </style>

@@ -60,7 +60,6 @@ const handleDrop = async (targetItem, targetIndex) => {
     return
   }
 
-  // 같은 부모를 가진 카테고리끼리만 순서 변경 가능
   if (draggedItem.value.parentId !== targetItem.parentId) {
     alert('같은 레벨의 카테고리끼리만 순서를 변경할 수 있습니다.')
     draggedItem.value = null
@@ -72,7 +71,7 @@ const handleDrop = async (targetItem, targetIndex) => {
   const targetSortOrder = targetItem.sortOrder
 
   try {
-    await emit('reorder-categories', draggedCategoryId, targetSortOrder)
+    emit('reorder-categories', draggedCategoryId, targetSortOrder)
   } catch (error) {
     console.error('순서 변경 실패:', error)
   }
@@ -89,7 +88,7 @@ const handleUpdateCategory = async (id, field, value) => {
   }
 
   try {
-    await emit('update-category', id, updateData)
+    emit('update-category', id, updateData)
   } catch (error) {
     console.error('카테고리 수정 실패:', error)
     throw error
@@ -120,8 +119,11 @@ const handleStatusUpdated = (eventData) => {
 <template>
   <div class="list-section" :class="{ 'nested': depth > 0 }">
     <div v-if="depth === 0" class="list-header">
-      <h2>카테고리 목록</h2>
-      <p v-if="!isEmpty && !loading">같은 레벨 내에서 드래그하여 순서를 변경할 수 있습니다</p>
+      <div class="header-row">
+        <h2 class="list-title">카테고리 목록</h2>
+        <div class="list-count">{{ categories.length }}</div>
+      </div>
+      <p v-if="!isEmpty && !loading" class="list-hint">같은 레벨 내에서 드래그하여 순서를 변경할 수 있습니다</p>
     </div>
 
     <!-- 로딩 상태 -->
@@ -159,7 +161,7 @@ const handleStatusUpdated = (eventData) => {
             @add-sub-category="handleAddSubCategory"
             @update-category="handleUpdateCategory"
             @delete-category="handleDeleteCategory"
-            @reorder-categories="handleReorderCategories"
+            @reorder-categories="(draggedId, targetOrder) => $emit('reorder-categories', draggedId, targetOrder)"
             @toggle-status="handleToggleStatus"
             @status-updated="handleStatusUpdated"
         />
@@ -171,81 +173,105 @@ const handleStatusUpdated = (eventData) => {
 <style scoped>
 .list-section {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  overflow: hidden;
 }
 
 .list-section.nested {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  margin-left: 32px;
-  margin-top: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-left: 40px;
+  margin-top: 12px;
   box-shadow: none;
 }
 
 .list-header {
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
 }
 
-.list-header h2 {
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.list-title {
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
-  margin: 0 0 4px 0;
+  color: #0f172a;
+  margin: 0;
 }
 
-.list-header p {
+.list-count {
+  padding: 4px 10px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 12px;
   font-size: 12px;
-  color: #6b7280;
+  font-weight: 600;
+}
+
+.list-hint {
+  font-size: 13px;
+  color: #64748b;
   margin: 0;
 }
 
 .category-list {
   display: flex;
   flex-direction: column;
+  padding: 16px;
 }
 
 @media (max-width: 640px) {
   .list-section.nested {
-    margin-left: 16px;
+    margin-left: 20px;
   }
 
   .list-header {
+    padding: 16px;
+  }
+
+  .list-title {
+    font-size: 15px;
+  }
+
+  .list-hint {
+    font-size: 12px;
+  }
+
+  .category-list {
     padding: 12px;
-  }
-
-  .list-header h2 {
-    font-size: 14px;
-  }
-
-  .list-header p {
-    font-size: 11px;
   }
 }
 
 @media (min-width: 768px) {
   .list-header {
-    padding: 20px;
+    padding: 20px 24px;
   }
 
-  .list-header h2 {
-    font-size: 18px;
+  .list-title {
+    font-size: 16px;
   }
 
-  .list-header p {
-    font-size: 14px;
+  .list-hint {
+    font-size: 13px;
   }
 }
 
 @media (min-width: 1024px) {
   .list-header {
-    padding: 24px 24px 16px 24px;
+    padding: 24px 28px;
+  }
+
+  .category-list {
+    padding: 20px;
   }
 }
 </style>

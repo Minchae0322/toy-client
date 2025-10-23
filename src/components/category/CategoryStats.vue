@@ -1,3 +1,4 @@
+<!-- CategoryStats.vue -->
 <script setup>
 import { computed, watch, ref } from 'vue'
 
@@ -14,12 +15,10 @@ const props = defineProps({
     type: Number,
     default: 0
   },
-  // 자동 계산 여부
   autoCalculate: {
     type: Boolean,
     default: false
   },
-  // 데이터 소스 (배열이나 객체)
   dataSource: {
     type: Array,
     default: () => []
@@ -28,14 +27,12 @@ const props = defineProps({
 
 const emit = defineEmits(['stats-updated'])
 
-// 반응형 상태
 const stats = ref({
   total: props.total,
   active: props.active,
   inactive: props.inactive
 })
 
-// 자동 계산된 통계
 const computedStats = computed(() => {
   if (!props.autoCalculate || !props.dataSource.length) {
     return {
@@ -54,12 +51,10 @@ const computedStats = computed(() => {
   return { total, active, inactive }
 })
 
-// 최종 표시할 통계
 const displayStats = computed(() => {
   return props.autoCalculate ? computedStats.value : stats.value
 })
 
-// props 변경 감지
 watch(() => [props.total, props.active, props.inactive],
     ([newTotal, newActive, newInactive]) => {
       stats.value = {
@@ -71,20 +66,17 @@ watch(() => [props.total, props.active, props.inactive],
     { immediate: true }
 )
 
-// 계산된 통계 변경 감지 및 이벤트 발생
 watch(computedStats, (newStats) => {
   if (props.autoCalculate) {
     emit('stats-updated', newStats)
   }
 }, { deep: true })
 
-// 외부에서 호출 가능한 업데이트 함수
 const updateStats = (newStats) => {
   stats.value = { ...stats.value, ...newStats }
   emit('stats-updated', stats.value)
 }
 
-// 컴포넌트 인스턴스에 노출
 defineExpose({
   updateStats,
   currentStats: displayStats
@@ -94,26 +86,43 @@ defineExpose({
 <template>
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon">📊</div>
+      <div class="stat-icon total">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </div>
       <div class="stat-content">
-        <div class="stat-label">전체 카테고리</div>
         <div class="stat-value">{{ displayStats.total }}</div>
+        <div class="stat-label">전체 카테고리</div>
       </div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon">👁️</div>
+      <div class="stat-icon active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
       <div class="stat-content">
-        <div class="stat-label">활성 카테고리</div>
-        <div class="stat-value active">{{ displayStats.active }}</div>
+        <div class="stat-value">{{ displayStats.active }}</div>
+        <div class="stat-label">활성 상태</div>
       </div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon">🚫</div>
+      <div class="stat-icon inactive">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+          <path d="M15 9l-6 6m0-6l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div class="stat-content">
-        <div class="stat-label">비활성 카테고리</div>
-        <div class="stat-value inactive">{{ displayStats.inactive }}</div>
+        <div class="stat-value">{{ displayStats.inactive }}</div>
+        <div class="stat-label">비활성 상태</div>
       </div>
     </div>
   </div>
@@ -122,34 +131,51 @@ defineExpose({
 <style scoped>
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .stat-card {
   background: white;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
 }
 
 .stat-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .stat-icon {
-  font-size: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+}
+
+.stat-icon.total {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.stat-icon.active {
+  background: #f0fdf4;
+  color: #22c55e;
+}
+
+.stat-icon.inactive {
+  background: #fef2f2;
+  color: #ef4444;
 }
 
 .stat-content {
@@ -157,83 +183,33 @@ defineExpose({
   min-width: 0;
 }
 
-.stat-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #6b7280;
-  margin-bottom: 4px;
-}
-
 .stat-value {
-  font-size: 18px;
+  font-size: 28px;
   font-weight: 700;
-  color: #111827;
-  transition: color 0.2s ease;
+  color: #0f172a;
+  line-height: 1;
+  margin-bottom: 6px;
 }
 
-.stat-value.active {
-  color: #10b981;
+.stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
 }
 
-.stat-value.inactive {
-  color: #ef4444;
-}
-
-/* 모바일 최적화 */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 12px;
   }
 
   .stat-card {
-    padding: 12px;
+    padding: 16px;
   }
 
   .stat-icon {
-    font-size: 18px;
-  }
-
-  .stat-label {
-    font-size: 11px;
-  }
-
-  .stat-value {
-    font-size: 16px;
-  }
-}
-
-/* 태블릿 */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .stat-card {
-    padding: 20px;
-  }
-}
-
-/* 데스크톱 */
-@media (min-width: 1024px) {
-  .stats-grid {
-    gap: 24px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    padding: 24px;
-  }
-
-  .stat-icon {
-    font-size: 24px;
-  }
-
-  .stat-label {
-    font-size: 14px;
+    width: 40px;
+    height: 40px;
   }
 
   .stat-value {
