@@ -42,7 +42,7 @@
       </button>
     </nav>
 
-    <button class="btn-create">
+    <button class="btn-create" @click="handleCreateFeed">
       <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
@@ -64,6 +64,16 @@
     </div>
   </aside>
 </template>
+
+<script setup>
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const handleCreateFeed = () => {
+  router.push({ name: 'FeedCreate' });
+};
+</script>
 
 <style scoped>
 .sidebar-left {
@@ -199,6 +209,10 @@
   background: #EA580C;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.btn-create:active {
+  transform: translateY(0);
 }
 
 .btn-create .icon {

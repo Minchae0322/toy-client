@@ -20,13 +20,14 @@
           @like="handleLike"
           @save="handleSave"
           @comment="handleComment"
+          @click="handlePostClick"
       />
     </div>
 
     <!-- List View -->
     <div v-else class="list-view">
       <article v-for="feed in feeds" :key="feed.feedId" class="list-item">
-        <div class="list-image" @click="$emit('post-click', feed.feedId)">
+        <div class="list-image" @click="handlePostClick(feed.feedId)">
           <img :src="feed.thumbnailUrl?.fileUrl || 'https://via.placeholder.com/400'" :alt="feed.productName" />
         </div>
         <div class="list-content">
@@ -51,12 +52,11 @@
               </svg>
             </button>
           </div>
-          <div class="list-main" @click="$emit('post-click', feed.feedId)">
+          <div class="list-main" @click="handlePostClick(feed.feedId)">
             <h3 class="list-title">{{ feed.productName }}</h3>
             <p class="list-review">{{ feed.reviewSummary }}</p>
             <div class="list-details">
-              <span v-if="feed.buyPrice" class="price">{{ formatPrice(feed.buyPrice) }}</span>
-              <span v-if="feed.price" class="original-price">{{ formatPrice(feed.price) }}</span>
+              <span v-if="feed.price" class="price">{{ formatPrice(feed.price) }}</span>
             </div>
             <div class="list-hashtags" v-if="feed.hashtags && feed.hashtags.length > 0">
               <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="hashtag">#{{ tag }}</span>
@@ -65,7 +65,7 @@
           <div class="list-actions">
             <button @click="handleLike(feed.feedId)" :class="['action-btn', { liked: likedPosts.has(feed.feedId) }]">
               <span class="fire">🔥</span>
-              <span>{{ (feed.reactionStats?.likeCount || 0) + (likedPosts.has(feed.feedId) ? 1 : 0) }}</span>
+              <span>{{ feed.reactionStats?.likeCount || 0 }}</span>
             </button>
             <button class="action-btn">
               <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +77,7 @@
               <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
-              <span>0</span>
+              <span>{{ feed.commentCount || 0 }}</span>
             </button>
             <button @click="handleSave(feed.feedId)" :class="['action-btn save', { saved: savedPosts.has(feed.feedId) }]">
               <svg class="icon" :fill="savedPosts.has(feed.feedId) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,9 +143,25 @@ const emit = defineEmits(['like', 'save', 'comment', 'post-click']);
 const sortOption = ref('latest');
 const observerTarget = ref(null);
 
-const handleLike = (feedId) => emit('like', feedId);
-const handleSave = (feedId) => emit('save', feedId);
-const handleComment = (feedId) => emit('comment', feedId);
+const handleLike = (feedId) => {
+  console.log('👍 FeedList - Like:', feedId);
+  emit('like', feedId);
+};
+
+const handleSave = (feedId) => {
+  console.log('💾 FeedList - Save:', feedId);
+  emit('save', feedId);
+};
+
+const handleComment = (feedId) => {
+  console.log('💬 FeedList - Comment:', feedId);
+  emit('comment', feedId);
+};
+
+const handlePostClick = (feedId) => {
+  console.log('🎯 FeedList - Post Click:', feedId);
+  emit('post-click', feedId);
+};
 
 const formatDate = (dateString) => {
   if (!dateString) return '';
@@ -429,12 +445,6 @@ defineExpose({
 .price {
   font-weight: 700;
   color: var(--primary);
-}
-
-.original-price {
-  text-decoration: line-through;
-  color: var(--secondary);
-  font-size: 12px;
 }
 
 .list-hashtags {

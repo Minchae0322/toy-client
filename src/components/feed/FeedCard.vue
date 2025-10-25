@@ -1,5 +1,5 @@
 <template>
-  <article class="post-card">
+  <article class="post-card" @click="handleCardClick">
     <!-- Header -->
     <div class="post-header">
       <div class="post-author-info">
@@ -110,7 +110,7 @@
               v-for="tag in feed.hashtags"
               :key="tag"
               class="hashtag"
-              @click="handleHashtagClick(tag)"
+              @click="handleHashtagClick(tag, $event)"
           >
             #{{ tag }}
           </span>
@@ -144,7 +144,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
-  'like', 'hot', 'save', 'comment', 'menu', 'search-tag', 'update'
+  'like', 'hot', 'save', 'comment', 'menu', 'search-tag', 'update', 'click'
 ]);
 
 // Local State
@@ -171,8 +171,24 @@ const discountRate = computed(() => {
 
 const showDiscount = computed(() => discountRate.value > 0);
 
+// 카드 클릭 핸들러
+const handleCardClick = (event) => {
+  // 버튼 클릭은 카드 클릭으로 전파하지 않음
+  if (
+      event.target.closest('.action-btn') ||
+      event.target.closest('.btn-more') ||
+      event.target.closest('.hashtag')
+  ) {
+    return;
+  }
+
+  console.log('🎯 카드 클릭:', props.feed.feedId);
+  emit('click', props.feed.feedId);
+};
+
 // Methods
-const handleLike = async () => {
+const handleLike = async (event) => {
+  event.stopPropagation();
   if (isLoading.value) return;
 
   // 낙관적 업데이트
@@ -221,7 +237,8 @@ const handleLike = async () => {
   }
 };
 
-const handleHot = async () => {
+const handleHot = async (event) => {
+  event.stopPropagation();
   if (isLoading.value) return;
 
   // 낙관적 업데이트
@@ -272,7 +289,9 @@ const handleHot = async () => {
 
 const handleDoubleTapLike = () => {
   if (!localIsLiked.value) {
-    handleLike();
+    // 이벤트 객체 생성
+    const mockEvent = { stopPropagation: () => {} };
+    handleLike(mockEvent);
     showLikeAnimation.value = true;
     setTimeout(() => {
       showLikeAnimation.value = false;
@@ -280,20 +299,24 @@ const handleDoubleTapLike = () => {
   }
 };
 
-const handleSave = () => {
+const handleSave = (event) => {
+  event.stopPropagation();
   localIsSaved.value = !localIsSaved.value;
   emit('save', props.feed.feedId);
 };
 
-const handleComment = () => {
+const handleComment = (event) => {
+  event.stopPropagation();
   emit('comment', props.feed.feedId);
 };
 
-const handleMenu = () => {
+const handleMenu = (event) => {
+  event.stopPropagation();
   emit('menu', props.feed.feedId);
 };
 
-const handleHashtagClick = (tag) => {
+const handleHashtagClick = (tag, event) => {
+  event.stopPropagation();
   emit('search-tag', tag);
 };
 
@@ -357,6 +380,7 @@ const formatCount = (count) => {
   overflow: hidden;
   transition: all 0.3s;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  cursor: pointer;
 }
 
 .post-card:hover {
@@ -473,7 +497,6 @@ const formatCount = (count) => {
 .post-image-container {
   position: relative;
   width: 100%;
-  cursor: pointer;
   user-select: none;
 }
 

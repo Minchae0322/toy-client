@@ -48,7 +48,7 @@
         </svg>
         <span>배틀</span>
       </button>
-      <button class="bottom-nav-fab">
+      <button class="bottom-nav-fab" @click="handleCreateFeed">
         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
         </svg>
@@ -72,6 +72,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useCategory } from '@/services/CategoryService';
 import { useFeed } from '@/services/FeedService';
 
@@ -82,6 +83,7 @@ import CategoryFilter from '@/components/feed/CategoryFilter.vue';
 import HotSection from '@/components/feed/HotSection.vue';
 import FeedList from '@/components/feed/FeedList.vue';
 
+const router = useRouter();
 const categoryService = useCategory();
 const feedService = useFeed();
 
@@ -225,17 +227,24 @@ const handleSave = (feedId) => {
 
 const handleComment = (feedId) => {
   console.log('댓글:', feedId);
+  // 나중에 댓글 모달 구현 시 사용
 };
 
-const openPost = (postId) => {
-  console.log('포스트 열기:', postId);
+const openPost = (feedId) => {
+  console.log('📖 피드 상세 페이지로 이동:', feedId);
+  router.push({ name: 'FeedDetail', params: { id: feedId } });
+};
+
+const handleCreateFeed = () => {
+  console.log('✍️ 피드 작성 페이지로 이동');
+  router.push({ name: 'FeedCreate' });
 };
 
 // Lifecycle
 let observer = null;
 
 onMounted(() => {
-  console.log('✅ CategoryHomeView 마운트');
+  console.log('✅ FeedHomeView 마운트');
 
   loadCategories();
   loadFeeds();
