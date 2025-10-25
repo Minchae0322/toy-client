@@ -771,9 +771,6 @@ const confirmCancel = () => {
   router.back();
 };
 
-/**
- * Feed 생성 (파일 업로드 + Feed 생성을 한 번에 처리)
- */
 const handleSubmit = async () => {
   if (!canSubmit.value || isSubmitting.value) return;
 
@@ -792,8 +789,8 @@ const handleSubmit = async () => {
     const thumbnailFile = thumbnailPhoto.file;
     const additionalFiles = additionalPhotos.map(photo => photo.file);
 
-    console.log('📸 대표 이미지:', thumbnailFile.name);
-    console.log('📎 추가 이미지:', additionalFiles.map(f => f.name));
+    console.log('📸 대표 이미지:', thumbnailFile.name, thumbnailFile.size, 'bytes');
+    console.log('📎 추가 이미지:', additionalFiles.map(f => `${f.name} (${f.size} bytes)`));
 
     // 2. Feed 데이터 준비
     const feedData = {
@@ -802,19 +799,25 @@ const handleSubmit = async () => {
       productNameCustom: formData.value.productNameCustom.trim(),
       subCategoryId: formData.value.subCategoryId,
       review: formData.value.review.trim(),
+      buyPlace: formData.value.store === 'direct'
+          ? formData.value.storeCustom?.trim()
+          : formData.value.store || null,  // 🔥 추가
       buyPrice: formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null,
       price: formData.value.price ? parseInt(formData.value.price) : null,
       hashtags: formData.value.hashtags
     };
 
-    console.log('📝 Feed 데이터:', feedData);
+    console.log('📝 Feed 데이터:', JSON.stringify(feedData, null, 2));
 
     // 3. createFeedWithFiles 호출 (파일 업로드 + Feed 생성)
+    console.log('⏳ FeedService.createFeedWithFiles 호출...');
     const result = await feedService.createFeedWithFiles(
         feedData,
         thumbnailFile,
         additionalFiles
     );
+
+    console.log('📦 서버 응답:', JSON.stringify(result, null, 2));
 
     if (result.success) {
       console.log('✅ Feed 생성 완료:', result.data);
@@ -838,6 +841,7 @@ const handleSubmit = async () => {
 
   } catch (error) {
     console.error('❌ Feed 생성 실패:', error);
+    console.error('❌ 에러 스택:', error.stack);
     showError(error.message || '게시글 등록에 실패했습니다.');
     isSubmitting.value = false;
   }

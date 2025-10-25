@@ -136,6 +136,7 @@ class FeedService extends BaseApiService {
       productNameCustom: feedData.productNameCustom?.trim() || null,
       subCategoryId: parseInt(feedData.subCategoryId),
       review: feedData.review.trim(),
+      buyPlace: feedData.buyPlace?.trim() || null,  // 🔥 추가
       buyPrice: feedData.buyPrice || null,
       price: feedData.price || null,
       thumbnailAttachmentInfo: feedData.thumbnailAttachmentInfo,
