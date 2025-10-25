@@ -1,7 +1,7 @@
 // services/FeedService.js
 
 import { BaseApiService } from './BaseApiService.js'
-import * as authUtils from '@/utils/auth.js'
+import { fileService } from './FileService.js'
 
 class FeedService extends BaseApiService {
   constructor() {
@@ -14,6 +14,109 @@ class FeedService extends BaseApiService {
   }
 
   // ==================== 피드 CRUD 메서드 ====================
+
+  /**
+   * 피드 생성 (파일 업로드 포함)
+   * 1. FileService로 대표 이미지 업로드
+   * 2. FileService로 추가 이미지 업로드 (있는 경우)
+   * 3. 업로드된 파일 정보로 피드 생성
+   */
+  async createFeedWithFiles(feedData, thumbnailFile, additionalFiles = []) {
+    console.log('🚀 [FEED_SERVICE] 피드 생성 프로세스 시작')
+    console.log('📝 피드 데이터:', feedData)
+    console.log('🖼️ 대표 이미지:', thumbnailFile?.name)
+    console.log('📎 추가 이미지 개수:', additionalFiles.length)
+
+    try {
+      // 1. 대표 이미지 업로드 (FileService 사용)
+      console.log('1️⃣ 대표 이미지 업로드 중...')
+      const thumbnailResponse = await fileService.uploadImage(thumbnailFile, 'FEED')
+
+      if (!thumbnailResponse.success) {
+        throw new Error('대표 이미지 업로드에 실패했습니다.')
+      }
+
+      const thumbnailInfo = this.convertToAttachmentInfo(thumbnailResponse.data)
+      console.log('✅ 대표 이미지 업로드 완료:', thumbnailInfo)
+
+      // 2. 추가 이미지 업로드 (FileService 사용)
+      let attachmentFileInfos = []
+      if (additionalFiles && additionalFiles.length > 0) {
+        console.log('2️⃣ 추가 이미지 업로드 중...')
+        const uploadResults = await fileService.uploadImages(additionalFiles, 'FEED')
+
+        if (uploadResults.success && uploadResults.data) {
+          attachmentFileInfos = uploadResults.data
+          .map(fileData => this.convertToAttachmentInfo(fileData))
+
+          console.log(`✅ 추가 이미지 ${attachmentFileInfos.length}개 업로드 완료`)
+        }
+      }
+
+      // 3. 피드 생성 요청
+      console.log('3️⃣ 피드 생성 요청 중...')
+      const feedCreateData = {
+        ...feedData,
+        thumbnailAttachmentInfo: thumbnailInfo,
+        attachmentFileInfos: attachmentFileInfos
+      }
+
+      console.log('📤 최종 피드 생성 데이터:', JSON.stringify(feedCreateData, null, 2))
+      return await this.createFeed(feedCreateData)
+
+    } catch (error) {
+      console.error('❌ [FEED_SERVICE] 피드 생성 실패:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 파일 업로드 응답을 AttachmentInfo로 변환
+   *
+   * 서버 응답 예시:
+   * {
+   *   "id": 48,
+   *   "fileCode": "FEED",
+   *   "orgFileNm": "에어포스.jpg",
+   *   "storeFileNm": "20251025210419_7a5de62f.jpg",
+   *   "fileUrl": "http://localhost:8081/api/uploads/...",
+   *   "fileSize": 2253,
+   *   "fileExplain": "FEED 이미지",
+   *   "fileExt": "jpg",
+   *   "storageType": { "title": "LOCAL" }
+   * }
+   */
+  convertToAttachmentInfo(fileResponse) {
+    if (!fileResponse) {
+      throw new Error('파일 응답이 없습니다.')
+    }
+
+    console.log('🔄 파일 응답 변환:', fileResponse)
+
+    // 이미 변환된 형태인지 확인
+    if (fileResponse.fileId && fileResponse.storedPath) {
+      console.log('✅ 이미 변환된 AttachmentInfo:', fileResponse)
+      return fileResponse
+    }
+
+    // 필수 필드 검증
+    if (!fileResponse.id || !fileResponse.fileUrl) {
+      console.error('❌ 잘못된 파일 응답 구조:', fileResponse)
+      throw new Error('파일 응답 형식이 올바르지 않습니다.')
+    }
+
+    const attachmentInfo = {
+      fileId: fileResponse.id,
+      storedPath: fileResponse.fileUrl,
+      originName: fileResponse.orgFileNm,
+      fileSize: fileResponse.fileSize,
+      contentType: `image/${fileResponse.fileExt}`,
+      fileExplain: fileResponse.fileExplain || 'FEED 이미지'
+    }
+
+    console.log('✅ 변환된 AttachmentInfo:', attachmentInfo)
+    return attachmentInfo
+  }
 
   /**
    * 피드 생성
@@ -35,7 +138,7 @@ class FeedService extends BaseApiService {
       review: feedData.review.trim(),
       buyPrice: feedData.buyPrice || null,
       price: feedData.price || null,
-      thumbnailAttachmentInfo: feedData.thumbnailAttachmentInfo || null,
+      thumbnailAttachmentInfo: feedData.thumbnailAttachmentInfo,
       attachmentFileInfos: feedData.attachmentFileInfos || [],
       hashtags: feedData.hashtags || []
     }
@@ -209,7 +312,6 @@ class FeedService extends BaseApiService {
 
   /**
    * 카테고리별 피드 조회
-   * GET /api/feeds?categoryId={categoryId}
    */
   async getFeedsByCategory(categoryId, pageable = {}) {
     if (!categoryId) {
@@ -221,7 +323,6 @@ class FeedService extends BaseApiService {
 
   /**
    * 해시태그별 피드 조회
-   * GET /api/feeds?hashtags={hashtag}
    */
   async getFeedsByHashtag(hashtag, pageable = {}) {
     if (!hashtag || hashtag.trim().length === 0) {
@@ -233,7 +334,6 @@ class FeedService extends BaseApiService {
 
   /**
    * 키워드 검색
-   * GET /api/feeds?keyword={keyword}
    */
   async searchFeeds(keyword, searchCondition = {}, pageable = {}) {
     if (!keyword || keyword.trim().length === 0) {
@@ -241,52 +341,6 @@ class FeedService extends BaseApiService {
     }
 
     return await this.getFeeds({ ...searchCondition, keyword }, pageable)
-  }
-
-  // ==================== 이미지 업로드 ====================
-
-  /**
-   * 피드 이미지 업로드
-   * POST /api/files/upload
-   */
-  async uploadFeedImage(file) {
-    if (!file) {
-      throw new Error('파일이 필요합니다.')
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      throw new Error('파일 크기는 10MB 이하여야 합니다.')
-    }
-
-    if (!file.type.startsWith('image/')) {
-      throw new Error('이미지 파일만 업로드 가능합니다.')
-    }
-
-    const formData = new FormData()
-    formData.append('file', file)
-
-    console.log('📤 [FEED_SERVICE] 피드 이미지 업로드 시작')
-    return await this.post('/files/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-  }
-
-  /**
-   * 다중 이미지 업로드
-   */
-  async uploadFeedImages(files) {
-    if (!files || files.length === 0) {
-      throw new Error('파일이 필요합니다.')
-    }
-
-    if (files.length > 10) {
-      throw new Error('이미지는 최대 10개까지 업로드 가능합니다.')
-    }
-
-    const uploadPromises = Array.from(files).map(file => this.uploadFeedImage(file))
-    return await Promise.all(uploadPromises)
   }
 
   // ==================== 유틸리티 메서드 ====================
@@ -530,41 +584,6 @@ class FeedService extends BaseApiService {
 
     return validated
   }
-
-  /**
-   * 가격 포맷팅
-   */
-  formatPrice(price) {
-    if (!price || price === 0) return '무료'
-    const numPrice = typeof price === 'string' ? parseInt(price) : price
-    return new Intl.NumberFormat('ko-KR').format(numPrice) + '원'
-  }
-
-  /**
-   * 할인율 계산
-   */
-  calculateDiscountRate(price, buyPrice) {
-    if (!price || !buyPrice || price === 0) return 0
-    return Math.round(((price - buyPrice) / price) * 100)
-  }
-
-  /**
-   * 디버그 정보 출력
-   */
-  debugFeedStatus() {
-    console.group('🔍 [FEED] 피드 서비스 상태')
-    console.log('=== 서버 정보 ===')
-    console.log('Content Server URL:', this.baseURL)
-    console.log('=== 지원 기능 ===')
-    console.log('피드 CRUD: 생성, 조회(페이징/커서), 수정, 삭제')
-    console.log('리액션: LIKE(좋아요), HOT(핫해요)')
-    console.log('검색: 키워드, 카테고리, 해시태그, 활성화 상태')
-    console.log('이미지: 대표 이미지 1장 필수 + 상세 이미지 최대 10장')
-    console.log('=== 제한사항 ===')
-    console.log('첨부파일은 생성 시에만 가능 (수정 불가)')
-    this.debugStatus()
-    console.groupEnd()
-  }
 }
 
 // ==================== 싱글톤 인스턴스 ====================
@@ -578,6 +597,7 @@ export function useFeed() {
   const service = new FeedService()
 
   return {
+    createFeedWithFiles: (data, thumbnail, files) => service.createFeedWithFiles(data, thumbnail, files),
     createFeed: (data) => service.createFeed(data),
     getFeed: (id) => service.getFeed(id),
     getFeeds: (condition, pageable) => service.getFeeds(condition, pageable),
@@ -590,51 +610,11 @@ export function useFeed() {
     toggleReaction: (id, type) => service.toggleFeedReaction(id, type),
     removeReaction: (id) => service.removeFeedReaction(id),
     searchFeeds: (keyword, condition, pageable) => service.searchFeeds(keyword, condition, pageable),
-    uploadImage: (file) => service.uploadFeedImage(file),
-    uploadImages: (files) => service.uploadFeedImages(files),
-    debugStatus: () => service.debugFeedStatus()
+    convertToAttachmentInfo: (response) => service.convertToAttachmentInfo(response)
   }
 }
 
-// ==================== 피드 필터링 유틸리티 ====================
-
-export const feedFilterUtils = {
-  getDefaultSearchCondition() {
-    return {
-      keyword: '',
-      categoryId: null,
-      hashtags: [],
-      isActive: null,
-      cursor: null,
-      size: 20
-    }
-  },
-
-  getDefaultPageable() {
-    return {
-      page: 0,
-      size: 20,
-      sort: 'createdAt,DESC'
-    }
-  },
-
-  getSortOptions() {
-    return [
-      { value: 'createdAt,DESC', label: '최신순' },
-      { value: 'createdAt,ASC', label: '오래된순' },
-      { value: 'viewCount,DESC', label: '조회수순' }
-    ]
-  },
-
-  getReactionTypes() {
-    return [
-      { value: 'LIKE', label: '좋아요', icon: '👍' },
-      { value: 'HOT', label: '핫해요', icon: '🔥' }
-    ]
-  }
-}
-
-// ==================== 피드 유틸리티 함수 ====================
+// ==================== 유틸리티 함수 ====================
 
 export const feedUtils = {
   formatCount(count) {

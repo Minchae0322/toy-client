@@ -131,12 +131,17 @@
                   type="button"
               >
                 <div v-if="formData.subCategoryId" class="selected-category">
-                  <svg class="category-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getCategoryIcon(formData.subCategoryId)"/>
-                  </svg>
-                  <span>{{ getSubCategoryLabel(formData.subCategoryId) }}</span>
+                  <div class="category-icon-wrapper">
+                    <svg class="category-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getCategoryIcon(formData.subCategoryId)"/>
+                    </svg>
+                  </div>
+                  <span class="category-text">{{ getSubCategoryLabel(formData.subCategoryId) }}</span>
                 </div>
-                <span v-else-if="categoriesLoading" class="placeholder">카테고리 로딩 중...</span>
+                <span v-else-if="categoriesLoading" class="placeholder">
+                  <span class="loading-dots"></span>
+                  카테고리 로딩 중...
+                </span>
                 <span v-else class="placeholder">카테고리를 선택하세요</span>
                 <svg class="dropdown-icon" :class="{ open: showCategoryDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -145,33 +150,57 @@
 
               <Transition name="dropdown">
                 <div v-if="showCategoryDropdown && !categoriesLoading" class="category-dropdown-menu">
-                  <div v-if="categories.length === 0" class="empty-message">
-                    카테고리가 없습니다.
-                  </div>
-                  <div v-for="parent in categories" :key="parent.categoryId" class="category-group">
-                    <div class="category-group-header">
-                      <svg class="category-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getCategoryIcon(parent.categoryId)"/>
+                  <div class="dropdown-header">
+                    <span class="dropdown-title">카테고리 선택</span>
+                    <button class="btn-close-dropdown" @click.stop="closeCategoryDropdown" type="button">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                       </svg>
-                      {{ parent.categoryName }}
+                    </button>
+                  </div>
+
+                  <div class="dropdown-content">
+                    <div v-if="categories.length === 0" class="empty-message">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                      </svg>
+                      <p>카테고리가 없습니다</p>
                     </div>
-                    <div v-if="parent.subCategories && parent.subCategories.length > 0" class="sub-categories">
-                      <button
-                          v-for="sub in parent.subCategories"
-                          :key="sub.categoryId"
-                          class="category-dropdown-item sub-category-item"
-                          :class="{ active: formData.subCategoryId === sub.categoryId }"
-                          @click.stop="selectSubCategory(sub.categoryId)"
-                          type="button"
-                      >
-                        <span>{{ sub.categoryName }}</span>
-                        <svg v-if="formData.subCategoryId === sub.categoryId" class="check-icon" fill="currentColor" viewBox="0 0 20 20">
-                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+
+                    <div v-for="parent in categories" :key="parent.categoryId" class="category-group">
+                      <div class="category-group-header">
+                        <div class="parent-icon-wrapper">
+                          <svg class="parent-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getCategoryIcon(parent.categoryId)"/>
+                          </svg>
+                        </div>
+                        <span class="parent-name">{{ parent.categoryName }}</span>
+                      </div>
+
+                      <div v-if="parent.subCategories && parent.subCategories.length > 0" class="sub-categories">
+                        <button
+                            v-for="sub in parent.subCategories"
+                            :key="sub.categoryId"
+                            class="sub-category-item"
+                            :class="{ active: formData.subCategoryId === sub.categoryId }"
+                            @click.stop="selectSubCategory(sub.categoryId)"
+                            type="button"
+                        >
+                          <span class="sub-name">{{ sub.categoryName }}</span>
+                          <Transition name="check">
+                            <svg v-if="formData.subCategoryId === sub.categoryId" class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                            </svg>
+                          </Transition>
+                        </button>
+                      </div>
+
+                      <div v-else class="no-subcategories">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                      </button>
-                    </div>
-                    <div v-else class="no-subcategories">
-                      하위 카테고리가 없습니다.
+                        <span>하위 카테고리가 없습니다</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -396,18 +425,16 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
-import { useFile } from '@/services/FileService';
 import { useFeed } from '@/services/FeedService';
 import { useCategory } from '@/services/CategoryService';
 import { getUserId } from '@/utils/auth';
 
 const router = useRouter();
-const fileService = useFile();
 const feedService = useFeed();
 const categoryService = useCategory();
 
+// 선택된 사진들 (File 객체만 저장, 서버 업로드는 하지 않음)
 const selectedPhotos = ref([]);
-const uploadedAttachmentInfos = ref([]);
 const showCancelDialog = ref(false);
 const showSuccessToast = ref(false);
 const isSubmitting = ref(false);
@@ -467,7 +494,6 @@ const mockProductNames = [
 
 const canSubmit = computed(() => {
   return selectedPhotos.value.length > 0 &&
-      uploadedAttachmentInfos.value.length > 0 &&
       formData.value.productNameCustom.trim() &&
       formData.value.subCategoryId &&
       formData.value.review.trim() &&
@@ -476,31 +502,20 @@ const canSubmit = computed(() => {
 
 // ==================== 카테고리 관련 메서드 ====================
 
-/**
- * 카테고리 목록 조회
- */
 const loadCategories = async () => {
   try {
     categoriesLoading.value = true;
-
-    // 평면 구조로 조회 후 트리로 변환
     const response = await categoryService.getCategories({ isActive: true });
 
-    console.log('📦 카테고리 API 응답:', response);
-
     if (response.success && response.data) {
-      // children이 이미 있는 경우 그대로 사용
       if (response.data.length > 0 && response.data[0].children !== undefined) {
         categories.value = response.data.map(parent => ({
           ...parent,
           subCategories: parent.children || []
         }));
       } else {
-        // children이 없으면 직접 트리 구조 생성
         categories.value = buildCategoryTree(response.data);
       }
-
-      console.log('✅ 카테고리 로드 성공:', categories.value);
     } else {
       throw new Error(response.error || '카테고리 조회 실패');
     }
@@ -512,42 +527,26 @@ const loadCategories = async () => {
   }
 };
 
-/**
- * 평면 구조를 계층 구조로 변환
- */
 const buildCategoryTree = (flatCategories) => {
-  if (!flatCategories || flatCategories.length === 0) {
-    return [];
-  }
+  if (!flatCategories || flatCategories.length === 0) return [];
 
   const categoryMap = new Map();
   const result = [];
 
-  // 1단계: 모든 카테고리를 Map에 저장
   flatCategories.forEach(cat => {
-    categoryMap.set(cat.categoryId, {
-      ...cat,
-      subCategories: []
-    });
+    categoryMap.set(cat.categoryId, { ...cat, subCategories: [] });
   });
 
-  // 2단계: 부모-자식 관계 구성
   flatCategories.forEach(cat => {
     const category = categoryMap.get(cat.categoryId);
-
     if (cat.parentId) {
-      // 자식 카테고리인 경우
       const parent = categoryMap.get(cat.parentId);
-      if (parent) {
-        parent.subCategories.push(category);
-      }
+      if (parent) parent.subCategories.push(category);
     } else {
-      // 최상위 카테고리인 경우
       result.push(category);
     }
   });
 
-  // 3단계: 정렬 (sortOrder 기준)
   const sortCategories = (cats) => {
     cats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     cats.forEach(cat => {
@@ -558,50 +557,29 @@ const buildCategoryTree = (flatCategories) => {
   };
 
   sortCategories(result);
-
-  console.log('🌳 변환된 카테고리 트리:', result);
   return result;
 };
 
-/**
- * 카테고리 드롭다운 토글
- */
 const toggleCategoryDropdown = () => {
   showCategoryDropdown.value = !showCategoryDropdown.value;
-  console.log('🔽 드롭다운 토글:', showCategoryDropdown.value);
 };
 
-/**
- * 카테고리 드롭다운 닫기
- */
 const closeCategoryDropdown = () => {
-  console.log('🔒 드롭다운 닫기');
   showCategoryDropdown.value = false;
 };
 
-/**
- * 서브카테고리 선택
- */
 const selectSubCategory = (subCategoryId) => {
-  console.log('📌 카테고리 선택 시도:', subCategoryId);
   formData.value.subCategoryId = subCategoryId;
-  console.log('📌 저장된 subCategoryId:', formData.value.subCategoryId);
   showCategoryDropdown.value = false;
 };
 
-/**
- * 서브카테고리 라벨 조회
- */
 const getSubCategoryLabel = (subCategoryId) => {
   if (!subCategoryId) return '';
 
   for (const parent of categories.value) {
-    // 부모 카테고리 자체가 선택된 경우
     if (parent.categoryId === subCategoryId) {
       return parent.categoryName;
     }
-
-    // 자식 카테고리에서 찾기
     if (parent.subCategories && parent.subCategories.length > 0) {
       for (const sub of parent.subCategories) {
         if (sub.categoryId === subCategoryId) {
@@ -613,16 +591,10 @@ const getSubCategoryLabel = (subCategoryId) => {
   return '';
 };
 
-/**
- * 카테고리 아이콘 조회
- */
 const getCategoryIcon = (categoryId) => {
   return 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z';
 };
 
-/**
- * 외부 클릭 핸들러
- */
 const handleClickOutside = (event) => {
   if (categoryDropdownRef.value &&
       !categoryDropdownRef.value.contains(event.target) &&
@@ -631,7 +603,7 @@ const handleClickOutside = (event) => {
   }
 };
 
-// ==================== 사진 업로드 관련 메서드 ====================
+// ==================== 사진 선택 관련 메서드 (업로드는 하지 않음) ====================
 
 const handleDragStart = (event, index) => {
   draggedIndex.value = index;
@@ -660,17 +632,13 @@ const handleDrop = (event, dropIndex) => {
   photos.splice(dropIndex, 0, draggedPhoto);
 
   selectedPhotos.value = photos;
-
-  const attachmentInfos = [...uploadedAttachmentInfos.value];
-  const [draggedInfo] = attachmentInfos.splice(draggedIndex.value, 1);
-  attachmentInfos.splice(dropIndex, 0, draggedInfo);
-
-  uploadedAttachmentInfos.value = attachmentInfos;
-
   draggedIndex.value = null;
   dragOverIndex.value = null;
 };
 
+/**
+ * 파일 선택 (미리보기만 생성, 서버 업로드 X)
+ */
 const handleFileSelect = async (event) => {
   const files = Array.from(event.target.files);
   const remainingSlots = 5 - selectedPhotos.value.length;
@@ -680,7 +648,8 @@ const handleFileSelect = async (event) => {
   const filesToAdd = files.slice(0, remainingSlots);
 
   for (const file of filesToAdd) {
-    if (!fileService.isImageFile(file)) {
+    // 파일 검증
+    if (!file.type.startsWith('image/')) {
       showError('이미지 파일만 업로드 가능합니다.');
       continue;
     }
@@ -691,23 +660,21 @@ const handleFileSelect = async (event) => {
     }
 
     try {
-      const previewResult = await fileService.createPreview(file);
+      // 미리보기 URL만 생성
+      const previewUrl = URL.createObjectURL(file);
 
-      if (previewResult.success) {
-        const photoItem = {
-          id: Date.now() + Math.random(),
-          file: file,
-          preview: previewResult.previewUrl,
-          uploading: false,
-          progress: 0,
-          attachmentInfo: null
-        };
+      const photoItem = {
+        id: Date.now() + Math.random(),
+        file: file,  // File 객체 저장
+        preview: previewUrl,  // 미리보기용
+        uploaded: false  // 아직 업로드 안됨
+      };
 
-        selectedPhotos.value.push(photoItem);
-        await uploadPhotoToServer(photoItem);
-      }
+      selectedPhotos.value.push(photoItem);
+      console.log('✅ 사진 추가 (미리보기만):', file.name);
+
     } catch (error) {
-      console.error('미리보기 생성 실패:', error);
+      console.error('❌ 미리보기 생성 실패:', error);
       showError('이미지 미리보기 생성에 실패했습니다.');
     }
   }
@@ -715,55 +682,19 @@ const handleFileSelect = async (event) => {
   event.target.value = '';
 };
 
-const uploadPhotoToServer = async (photo) => {
-  photo.uploading = true;
-  photo.progress = 0;
-
-  try {
-    const uploadResult = await fileService.uploadImage(photo.file, 'FEED');
-
-    if (uploadResult.success) {
-      const attachmentInfo = {
-        fileId: uploadResult.data.id,
-        fileUrl: uploadResult.data.url,
-        fileName: uploadResult.data.originalFileName,
-        fileSize: uploadResult.data.fileSize,
-        mimeType: uploadResult.data.mimeType
-      };
-
-      photo.attachmentInfo = attachmentInfo;
-      photo.progress = 100;
-      uploadedAttachmentInfos.value.push(attachmentInfo);
-
-      console.log('✅ 파일 업로드 성공:', attachmentInfo);
-    } else {
-      throw new Error(uploadResult.error || '파일 업로드 실패');
-    }
-  } catch (error) {
-    console.error('❌ 파일 업로드 실패:', error);
-    showError(error.message || '사진 업로드에 실패했습니다.');
-  } finally {
-    photo.uploading = false;
-  }
-};
-
+/**
+ * 사진 제거 (메모리 정리)
+ */
 const removePhoto = (index) => {
   const photo = selectedPhotos.value[index];
 
-  if (photo.attachmentInfo) {
-    const infoIndex = uploadedAttachmentInfos.value.findIndex(
-        info => info.fileId === photo.attachmentInfo.fileId
-    );
-    if (infoIndex > -1) {
-      uploadedAttachmentInfos.value.splice(infoIndex, 1);
-    }
-
-    fileService.remove(photo.attachmentInfo.fileId).catch(error => {
-      console.warn('파일 삭제 실패:', error);
-    });
+  // 미리보기 URL 메모리 해제
+  if (photo.preview) {
+    URL.revokeObjectURL(photo.preview);
   }
 
   selectedPhotos.value.splice(index, 1);
+  console.log('✅ 사진 제거:', index);
 };
 
 const openCamera = () => {
@@ -828,22 +759,25 @@ const handleCancel = () => {
   }
 };
 
-const confirmCancel = async () => {
-  if (uploadedAttachmentInfos.value.length > 0) {
-    const fileIds = uploadedAttachmentInfos.value.map(info => info.fileId);
-    await fileService.removeMultiple(fileIds).catch(error => {
-      console.warn('임시 파일 삭제 실패:', error);
-    });
-  }
+const confirmCancel = () => {
+  // 미리보기 URL 메모리 해제
+  selectedPhotos.value.forEach(photo => {
+    if (photo.preview) {
+      URL.revokeObjectURL(photo.preview);
+    }
+  });
 
   showCancelDialog.value = false;
   router.back();
 };
 
+/**
+ * Feed 생성 (파일 업로드 + Feed 생성을 한 번에 처리)
+ */
 const handleSubmit = async () => {
   if (!canSubmit.value || isSubmitting.value) return;
 
-  if (uploadedAttachmentInfos.value.length === 0) {
+  if (selectedPhotos.value.length === 0) {
     showError('최소 1장 이상의 사진이 필요합니다.');
     return;
   }
@@ -851,8 +785,17 @@ const handleSubmit = async () => {
   isSubmitting.value = true;
 
   try {
-    const [thumbnailInfo, ...detailInfos] = uploadedAttachmentInfos.value;
+    console.log('🚀 Feed 생성 시작...');
 
+    // 1. File 객체 추출
+    const [thumbnailPhoto, ...additionalPhotos] = selectedPhotos.value;
+    const thumbnailFile = thumbnailPhoto.file;
+    const additionalFiles = additionalPhotos.map(photo => photo.file);
+
+    console.log('📸 대표 이미지:', thumbnailFile.name);
+    console.log('📎 추가 이미지:', additionalFiles.map(f => f.name));
+
+    // 2. Feed 데이터 준비
     const feedData = {
       userId: formData.value.userId,
       productId: formData.value.productId,
@@ -861,17 +804,28 @@ const handleSubmit = async () => {
       review: formData.value.review.trim(),
       buyPrice: formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null,
       price: formData.value.price ? parseInt(formData.value.price) : null,
-      thumbnailAttachmentInfo: thumbnailInfo,
-      attachmentFileInfos: detailInfos,
       hashtags: formData.value.hashtags
     };
 
-    console.log('📤 피드 생성 요청:', feedData);
+    console.log('📝 Feed 데이터:', feedData);
 
-    const result = await feedService.createFeed(feedData);
+    // 3. createFeedWithFiles 호출 (파일 업로드 + Feed 생성)
+    const result = await feedService.createFeedWithFiles(
+        feedData,
+        thumbnailFile,
+        additionalFiles
+    );
 
     if (result.success) {
-      console.log('✅ 피드 생성 성공:', result.data);
+      console.log('✅ Feed 생성 완료:', result.data);
+
+      // 미리보기 URL 메모리 해제
+      selectedPhotos.value.forEach(photo => {
+        if (photo.preview) {
+          URL.revokeObjectURL(photo.preview);
+        }
+      });
+
       isSubmitting.value = false;
       showSuccessToast.value = true;
 
@@ -879,11 +833,11 @@ const handleSubmit = async () => {
         router.push('/feed');
       }, 1500);
     } else {
-      throw new Error(result.error || '피드 생성 실패');
+      throw new Error(result.error || 'Feed 생성 실패');
     }
 
   } catch (error) {
-    console.error('❌ 피드 생성 실패:', error);
+    console.error('❌ Feed 생성 실패:', error);
     showError(error.message || '게시글 등록에 실패했습니다.');
     isSubmitting.value = false;
   }
@@ -900,12 +854,17 @@ const showError = (message) => {
 
 onMounted(async () => {
   console.log('✅ FeedCreateView 마운트 완료');
-  fileService.debugStatus();
   await loadCategories();
   document.addEventListener('click', handleClickOutside);
 });
 
 onBeforeUnmount(() => {
+  // 컴포넌트 종료 시 메모리 정리
+  selectedPhotos.value.forEach(photo => {
+    if (photo.preview) {
+      URL.revokeObjectURL(photo.preview);
+    }
+  });
   document.removeEventListener('click', handleClickOutside);
 });
 </script>
@@ -1347,8 +1306,7 @@ onBeforeUnmount(() => {
 .suggestion-item:hover {
   background: var(--hover);
 }
-
-/* Category Dropdown */
+/* Category Dropdown - Premium Design */
 .category-dropdown {
   position: relative;
 }
@@ -1358,129 +1316,425 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  padding: 16px 18px;
+  background: linear-gradient(to bottom, #ffffff, #fafbfc);
+  border: 2px solid var(--border);
+  border-radius: 14px;
   font-size: 15px;
   font-family: inherit;
   color: var(--primary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.category-select-btn:hover {
+.category-select-btn:hover:not(:disabled) {
   border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+  transform: translateY(-1px);
+}
+
+.category-select-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .selected-category {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  flex: 1;
+}
+
+.category-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.category-text {
   font-weight: 600;
+  color: var(--primary);
+  line-height: 1.4;
 }
 
 .placeholder {
   color: var(--secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loading-dots {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: loading 1.4s infinite;
+  position: relative;
+}
+
+.loading-dots::before,
+.loading-dots::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: loading 1.4s infinite;
+}
+
+.loading-dots::before {
+  left: -8px;
+  animation-delay: -0.2s;
+}
+
+.loading-dots::after {
+  left: 8px;
+  animation-delay: 0.2s;
+}
+
+@keyframes loading {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
 }
 
 .category-icon-svg {
   width: 20px;
   height: 20px;
   color: var(--accent);
-  stroke-width: 2;
+  stroke-width: 2.5;
   flex-shrink: 0;
 }
 
 .dropdown-icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   color: var(--secondary);
-  transition: transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
 }
 
 .dropdown-icon.open {
   transform: rotate(180deg);
+  color: var(--accent);
 }
 
+/* Dropdown Menu */
 .category-dropdown-menu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
   right: 0;
-  margin-top: 4px;
   background: white;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  max-height: 400px;
-  overflow-y: auto;
-  z-index: 10;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  max-height: 480px;
+  overflow: hidden;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
 }
 
-.category-dropdown-item {
-  width: 100%;
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 2px solid var(--border);
+  background: linear-gradient(to bottom, #fafbfc, #ffffff);
+  flex-shrink: 0;
+}
+
+.dropdown-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.btn-close-dropdown {
+  padding: 6px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close-dropdown:hover {
+  background: var(--hover);
+}
+
+.btn-close-dropdown svg {
+  width: 20px;
+  height: 20px;
+  color: var(--secondary);
+  stroke-width: 2.5;
+}
+
+.dropdown-content {
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.dropdown-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+/* Empty State */
+.empty-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  color: var(--secondary);
+  gap: 12px;
+}
+
+.empty-message svg {
+  width: 48px;
+  height: 48px;
+  opacity: 0.3;
+  stroke-width: 1.5;
+}
+
+.empty-message p {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Category Group */
+.category-group {
+  margin-bottom: 4px;
+}
+
+.category-group:last-child {
+  margin-bottom: 0;
+}
+
+.category-group-header {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+
+.parent-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.parent-icon-svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+  stroke-width: 2.5;
+}
+
+.parent-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Sub Categories */
+.sub-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 12px;
+}
+
+.sub-category-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
   background: transparent;
   border: none;
+  border-radius: 10px;
   text-align: left;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+.sub-category-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sub-category-item:hover::before {
+  transform: scaleY(1);
+}
+
+.sub-category-item:hover {
+  background: linear-gradient(to right, #FFF7ED, transparent);
+  padding-left: 20px;
+}
+
+.sub-category-item.active {
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+  padding-left: 20px;
+}
+
+.sub-category-item.active::before {
+  transform: scaleY(1);
+}
+
+.sub-name {
   font-size: 15px;
   font-weight: 500;
   color: var(--primary);
-  cursor: pointer;
   transition: all 0.2s;
-  font-family: inherit;
 }
 
-.category-dropdown-item:hover {
-  background: var(--hover);
-}
-
-.category-dropdown-item.active {
-  background: #FFF7ED;
+.sub-category-item:hover .sub-name {
   color: var(--accent);
   font-weight: 600;
 }
 
-.category-dropdown-item.active .category-icon-svg {
+.sub-category-item.active .sub-name {
   color: var(--accent);
+  font-weight: 700;
 }
 
-.sub-category-wrapper {
-  margin-top: 16px;
+.check-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
-.sub-category-list {
+/* No Subcategories */
+.no-subcategories {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
-}
-
-.sub-category-btn {
-  padding: 10px 16px;
-  background: white;
-  border: 1px solid var(--border);
+  padding: 16px;
+  margin-left: 12px;
+  background: var(--bg);
   border-radius: 10px;
-  font-size: 14px;
+  color: var(--secondary);
+  font-size: 13px;
   font-weight: 500;
-  color: var(--primary);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
 }
 
-.sub-category-btn:hover {
-  border-color: var(--accent);
-  background: #FFF7ED;
+.no-subcategories svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
+  stroke-width: 2;
+  flex-shrink: 0;
 }
 
-.sub-category-btn.active {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: white;
+/* Dropdown Transition */
+.dropdown-enter-active {
+  animation: dropdownIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-leave-active {
+  animation: dropdownOut 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdownOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+/* Check Icon Transition */
+.check-enter-active {
+  animation: checkIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.check-leave-active {
+  animation: checkOut 0.2s ease-out;
+}
+
+@keyframes checkIn {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(-90deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes checkOut {
+  from {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0) rotate(90deg);
+  }
 }
 
 /* Additional Info */

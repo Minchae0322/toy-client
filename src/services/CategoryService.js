@@ -445,7 +445,6 @@ export function useCategory() {
     createCategory: (data) => service.createCategory(data),
     updateCategory: (id, data) => service.updateCategory(id, data),
     deleteCategory: (id) => service.deleteCategory(id),
-    getCategoryTree: (condition) => service.getCategoryTree(condition),
     toggleStatus: (id) => service.toggleCategoryStatus(id),
     reorderCategory: (id, position) => service.updateCategoryOrder(id, position),
     debugStatus: () => service.debugCategoryStatus()
