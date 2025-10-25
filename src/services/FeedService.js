@@ -35,7 +35,8 @@ class FeedService extends BaseApiService {
       review: feedData.review.trim(),
       buyPrice: feedData.buyPrice || null,
       price: feedData.price || null,
-      imageUrls: feedData.imageUrls || [],
+      thumbnailAttachmentInfo: feedData.thumbnailAttachmentInfo || null,
+      attachmentFileInfos: feedData.attachmentFileInfos || [],
       hashtags: feedData.hashtags || []
     }
 
@@ -83,6 +84,25 @@ class FeedService extends BaseApiService {
   }
 
   /**
+   * 피드 목록 조회 (커서 페이징)
+   * GET /api/feeds/scroll
+   */
+  async getFeedsWithCursor(searchCondition = {}) {
+    const validatedCondition = this.validateSearchCondition(searchCondition)
+    const cleanedCondition = this.removeEmptyParams(validatedCondition)
+
+    const response = await this.get('/feeds/scroll', cleanedCondition)
+
+    if (response.success && response.data) {
+      if (response.data.feeds) {
+        response.data.feeds = this.normalizeFeedListResponse(response.data.feeds)
+      }
+    }
+
+    return response
+  }
+
+  /**
    * 피드 전체 목록 조회
    * GET /api/feeds/list
    */
@@ -108,7 +128,7 @@ class FeedService extends BaseApiService {
       throw new Error('피드 ID가 필요합니다.')
     }
 
-    const validation = this.validateFeedData(feedData)
+    const validation = this.validateUpdateFeedData(feedData)
     if (!validation.isValid) {
       throw new Error(validation.errors.join(', '))
     }
@@ -122,7 +142,6 @@ class FeedService extends BaseApiService {
       review: feedData.review.trim(),
       buyPrice: feedData.buyPrice || null,
       price: feedData.price || null,
-      imageUrls: feedData.imageUrls || [],
       hashtags: feedData.hashtags || []
     }
 
@@ -141,28 +160,35 @@ class FeedService extends BaseApiService {
     return await this.delete(`/feeds/${feedId}`)
   }
 
-  // ==================== 피드 반응 메서드 ====================
+  // ==================== 피드 리액션 메서드 ====================
 
   /**
-   * 피드 반응 토글
-   * POST /api/feeds/{feedId}/reactions/{reactionType}
+   * 피드 리액션 토글
+   * POST /api/feeds/{feedId}/reactions?reactionType={type}
    */
   async toggleFeedReaction(feedId, reactionType) {
     if (!feedId) {
       throw new Error('피드 ID가 필요합니다.')
     }
 
-    const validReactionTypes = ['LIKE', 'INTEREST', 'SHARE']
+    const validReactionTypes = ['LIKE', 'HOT']
     if (!validReactionTypes.includes(reactionType.toUpperCase())) {
-      throw new Error('올바른 리액션 타입을 선택해주세요.')
+      throw new Error('올바른 리액션 타입을 선택해주세요. (LIKE, HOT)')
     }
 
-    const requestData = {
-      userId: authUtils.getUserId(),
-      deviceId: authUtils.getDeviceId()
+    return await this.post(`/feeds/${feedId}/reactions?reactionType=${reactionType.toUpperCase()}`)
+  }
+
+  /**
+   * 피드 리액션 제거
+   * DELETE /api/feeds/{feedId}/reactions
+   */
+  async removeFeedReaction(feedId) {
+    if (!feedId) {
+      throw new Error('피드 ID가 필요합니다.')
     }
 
-    return await this.post(`/feeds/${feedId}/reactions/${reactionType.toUpperCase()}`, requestData)
+    return await this.delete(`/feeds/${feedId}/reactions`)
   }
 
   /**
@@ -173,108 +199,48 @@ class FeedService extends BaseApiService {
   }
 
   /**
-   * 피드 관심
+   * 피드 핫해요
    */
-  async interestFeed(feedId) {
-    return this.toggleFeedReaction(feedId, 'INTEREST')
-  }
-
-  /**
-   * 피드 공유
-   */
-  async shareFeed(feedId) {
-    return this.toggleFeedReaction(feedId, 'SHARE')
+  async hotFeed(feedId) {
+    return this.toggleFeedReaction(feedId, 'HOT')
   }
 
   // ==================== 검색 및 필터 메서드 ====================
 
   /**
-   * 피드 검색
-   * GET /api/feeds/search
-   */
-  async searchFeeds(searchCondition = {}, pageable = {}) {
-    const validatedCondition = this.validateSearchCondition(searchCondition)
-    const validatedPageable = this.validatePageable(pageable)
-    const cleanedCondition = this.removeEmptyParams(validatedCondition)
-    const cleanedPageable = this.removeEmptyParams(validatedPageable)
-
-    const params = {
-      ...cleanedCondition,
-      ...cleanedPageable
-    }
-
-    return await this.get('/feeds/search', params)
-  }
-
-  /**
    * 카테고리별 피드 조회
-   * GET /api/feeds/category/{categoryId}
+   * GET /api/feeds?categoryId={categoryId}
    */
   async getFeedsByCategory(categoryId, pageable = {}) {
     if (!categoryId) {
       throw new Error('카테고리 ID가 필요합니다.')
     }
 
-    const validatedPageable = this.validatePageable(pageable)
-    const params = this.removeEmptyParams(validatedPageable)
-
-    return await this.get(`/feeds/category/${categoryId}`, params)
+    return await this.getFeeds({ categoryId }, pageable)
   }
 
   /**
    * 해시태그별 피드 조회
-   * GET /api/feeds/hashtag/{hashtag}
+   * GET /api/feeds?hashtags={hashtag}
    */
   async getFeedsByHashtag(hashtag, pageable = {}) {
     if (!hashtag || hashtag.trim().length === 0) {
       throw new Error('해시태그가 필요합니다.')
     }
 
-    const validatedPageable = this.validatePageable(pageable)
-    const params = this.removeEmptyParams(validatedPageable)
-
-    return await this.get(`/feeds/hashtag/${encodeURIComponent(hashtag)}`, params)
+    return await this.getFeeds({ hashtags: [hashtag] }, pageable)
   }
 
   /**
-   * 사용자별 피드 조회
-   * GET /api/feeds/user/{userId}
+   * 키워드 검색
+   * GET /api/feeds?keyword={keyword}
    */
-  async getFeedsByUser(userId, pageable = {}) {
-    if (!userId) {
-      throw new Error('사용자 ID가 필요합니다.')
+  async searchFeeds(keyword, searchCondition = {}, pageable = {}) {
+    if (!keyword || keyword.trim().length === 0) {
+      throw new Error('검색 키워드가 필요합니다.')
     }
 
-    const validatedPageable = this.validatePageable(pageable)
-    const params = this.removeEmptyParams(validatedPageable)
-
-    return await this.get(`/feeds/user/${userId}`, params)
-  }
-
-  /**
-   * 내가 작성한 피드 조회
-   * GET /api/feeds/my
-   */
-  async getMyFeeds(pageable = {}) {
-    const validatedPageable = this.validatePageable(pageable)
-    const params = this.removeEmptyParams(validatedPageable)
-
-    return await this.get('/feeds/my', params)
-  }
-
-  /**
-   * 인기 피드 조회
-   * GET /api/feeds/popular
-   */
-  async getPopularFeeds(params = {}) {
-    const validatedParams = {
-      size: params.size || 10,
-      categoryId: params.categoryId || null,
-      period: params.period || 'WEEK'
-    }
-
-    const cleanedParams = this.removeEmptyParams(validatedParams)
-    return await this.get('/feeds/popular', cleanedParams)
+    return await this.getFeeds({ ...searchCondition, keyword }, pageable)
   }
 
   // ==================== 이미지 업로드 ====================
@@ -362,8 +328,7 @@ class FeedService extends BaseApiService {
       reactionStats: feed.reactionStats || {
         totalCount: 0,
         likeCount: 0,
-        greatCount: 0,
-        badCount: 0
+        hotCount: 0
       }
     }))
   }
@@ -371,7 +336,7 @@ class FeedService extends BaseApiService {
   // ==================== 검증 메서드 ====================
 
   /**
-   * 피드 데이터 검증
+   * 피드 생성 데이터 검증
    */
   validateFeedData(feedData) {
     const errors = []
@@ -388,7 +353,7 @@ class FeedService extends BaseApiService {
       errors.push('상품명은 200자 이하여야 합니다.')
     }
 
-    if (!feedData.subCategoryId && !feedData.categoryId) {
+    if (!feedData.subCategoryId) {
       errors.push('카테고리는 필수입니다.')
     }
 
@@ -410,8 +375,69 @@ class FeedService extends BaseApiService {
       }
     }
 
-    if (feedData.imageUrls && feedData.imageUrls.length > 10) {
-      errors.push('이미지는 최대 10개까지 업로드 가능합니다.')
+    if (!feedData.thumbnailAttachmentInfo) {
+      errors.push('대표 이미지는 필수입니다.')
+    }
+
+    if (feedData.attachmentFileInfos && feedData.attachmentFileInfos.length > 10) {
+      errors.push('상세 이미지는 최대 10개까지 업로드 가능합니다.')
+    }
+
+    if (feedData.hashtags && feedData.hashtags.length > 20) {
+      errors.push('해시태그는 최대 20개까지 등록 가능합니다.')
+    }
+
+    if (feedData.hashtags) {
+      const invalidHashtags = feedData.hashtags.filter(tag => tag.length > 50)
+      if (invalidHashtags.length > 0) {
+        errors.push('각 해시태그는 50자 이하여야 합니다.')
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors
+    }
+  }
+
+  /**
+   * 피드 수정 데이터 검증
+   */
+  validateUpdateFeedData(feedData) {
+    const errors = []
+
+    if (!feedData.userId) {
+      errors.push('사용자 ID는 필수입니다.')
+    }
+
+    if (!feedData.productId && (!feedData.productNameCustom || feedData.productNameCustom.trim().length === 0)) {
+      errors.push('상품을 선택하거나 상품명을 입력해주세요.')
+    }
+
+    if (feedData.productNameCustom && feedData.productNameCustom.length > 200) {
+      errors.push('상품명은 200자 이하여야 합니다.')
+    }
+
+    if (!feedData.categoryId) {
+      errors.push('카테고리는 필수입니다.')
+    }
+
+    if (!feedData.review || feedData.review.trim().length === 0) {
+      errors.push('리뷰 내용은 필수입니다.')
+    } else if (feedData.review.length > 1000) {
+      errors.push('리뷰는 1000자 이하로 작성해주세요.')
+    }
+
+    if (feedData.buyPrice !== null && feedData.buyPrice !== undefined) {
+      if (feedData.buyPrice < 0 || feedData.buyPrice > 999999999) {
+        errors.push('구매 가격은 0원 이상 999,999,999원 이하여야 합니다.')
+      }
+    }
+
+    if (feedData.price !== null && feedData.price !== undefined) {
+      if (feedData.price < 0 || feedData.price > 999999999) {
+        errors.push('정가는 0원 이상 999,999,999원 이하여야 합니다.')
+      }
     }
 
     if (feedData.hashtags && feedData.hashtags.length > 20) {
@@ -455,6 +481,22 @@ class FeedService extends BaseApiService {
       validated.hashtags = validated.hashtags.slice(0, 10)
     }
 
+    if (validated.isActive !== undefined && validated.isActive !== null) {
+      validated.isActive = Boolean(validated.isActive)
+    }
+
+    if (validated.cursor && isNaN(parseInt(validated.cursor))) {
+      delete validated.cursor
+    } else if (validated.cursor) {
+      validated.cursor = parseInt(validated.cursor)
+    }
+
+    if (validated.size && isNaN(parseInt(validated.size))) {
+      delete validated.size
+    } else if (validated.size) {
+      validated.size = Math.min(100, Math.max(1, parseInt(validated.size)))
+    }
+
     return validated
   }
 
@@ -472,8 +514,7 @@ class FeedService extends BaseApiService {
 
     const validSorts = [
       'createdAt,DESC', 'createdAt,ASC',
-      'viewCount,DESC', 'viewCount,ASC',
-      'likeCount,DESC', 'likeCount,ASC'
+      'viewCount,DESC', 'viewCount,ASC'
     ]
 
     const validated = {
@@ -515,10 +556,12 @@ class FeedService extends BaseApiService {
     console.log('=== 서버 정보 ===')
     console.log('Content Server URL:', this.baseURL)
     console.log('=== 지원 기능 ===')
-    console.log('피드 CRUD: 생성, 조회, 수정, 삭제')
-    console.log('반응: 좋아요, 관심, 공유')
-    console.log('검색: 키워드, 카테고리, 해시태그, 사용자')
-    console.log('이미지: 단일/다중 업로드 (최대 10장)')
+    console.log('피드 CRUD: 생성, 조회(페이징/커서), 수정, 삭제')
+    console.log('리액션: LIKE(좋아요), HOT(핫해요)')
+    console.log('검색: 키워드, 카테고리, 해시태그, 활성화 상태')
+    console.log('이미지: 대표 이미지 1장 필수 + 상세 이미지 최대 10장')
+    console.log('=== 제한사항 ===')
+    console.log('첨부파일은 생성 시에만 가능 (수정 불가)')
     this.debugStatus()
     console.groupEnd()
   }
@@ -538,11 +581,17 @@ export function useFeed() {
     createFeed: (data) => service.createFeed(data),
     getFeed: (id) => service.getFeed(id),
     getFeeds: (condition, pageable) => service.getFeeds(condition, pageable),
+    getFeedsWithCursor: (condition) => service.getFeedsWithCursor(condition),
+    getFeedList: (condition) => service.getFeedList(condition),
     updateFeed: (id, data) => service.updateFeed(id, data),
     deleteFeed: (id) => service.deleteFeed(id),
     likeFeed: (id) => service.likeFeed(id),
-    searchFeeds: (condition, pageable) => service.searchFeeds(condition, pageable),
+    hotFeed: (id) => service.hotFeed(id),
+    toggleReaction: (id, type) => service.toggleFeedReaction(id, type),
+    removeReaction: (id) => service.removeFeedReaction(id),
+    searchFeeds: (keyword, condition, pageable) => service.searchFeeds(keyword, condition, pageable),
     uploadImage: (file) => service.uploadFeedImage(file),
+    uploadImages: (files) => service.uploadFeedImages(files),
     debugStatus: () => service.debugFeedStatus()
   }
 }
@@ -555,7 +604,9 @@ export const feedFilterUtils = {
       keyword: '',
       categoryId: null,
       hashtags: [],
-      userId: null
+      isActive: null,
+      cursor: null,
+      size: 20
     }
   },
 
@@ -571,8 +622,14 @@ export const feedFilterUtils = {
     return [
       { value: 'createdAt,DESC', label: '최신순' },
       { value: 'createdAt,ASC', label: '오래된순' },
-      { value: 'viewCount,DESC', label: '조회수순' },
-      { value: 'likeCount,DESC', label: '좋아요순' }
+      { value: 'viewCount,DESC', label: '조회수순' }
+    ]
+  },
+
+  getReactionTypes() {
+    return [
+      { value: 'LIKE', label: '좋아요', icon: '👍' },
+      { value: 'HOT', label: '핫해요', icon: '🔥' }
     ]
   }
 }
