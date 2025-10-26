@@ -281,31 +281,35 @@
               </div>
             </div>
 
-            <!-- Status -->
+            <!-- Evaluation (제품 평가) -->
             <div class="form-group">
-              <label class="form-label">
+              <label class="form-label required">
                 <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                 </svg>
-                제품 상태
+                제품 평가
               </label>
               <div class="status-grid">
                 <button
-                    v-for="status in statuses"
-                    :key="status.value"
-                    :class="['status-btn', { active: formData.status === status.value }]"
-                    @click="formData.status = status.value"
+                    v-for="evaluation in evaluations"
+                    :key="evaluation.value"
+                    :class="['status-btn', { active: formData.evaluation === evaluation.value }]"
+                    @click="formData.evaluation = evaluation.value"
                     type="button"
                 >
-                  <svg class="status-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="status.icon"/>
+                  <svg
+                      class="status-icon-svg"
+                      :fill="formData.evaluation === evaluation.value ? 'currentColor' : 'none'"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="evaluation.icon"/>
                   </svg>
-                  <span>{{ status.label }}</span>
+                  <span>{{ evaluation.label }}</span>
                 </button>
               </div>
             </div>
           </section>
-
           <!-- Hashtags -->
           <section class="card">
             <label class="form-label">
@@ -465,7 +469,7 @@ const formData = ref({
   buyPrice: null,
   price: null,
   priceHidden: false,
-  status: 'new',
+  evaluation: 'BEST',  // 🔥 status → evaluation으로 변경, 기본값 BEST
   hashtags: []
 });
 
@@ -474,12 +478,30 @@ const stores = [
   '지마켓', '11번가', 'SSG', '롯데온'
 ];
 
-const statuses = [
-  { value: 'new', label: '새 제품', icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z' },
-  { value: 'like-new', label: '거의 새것', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z' },
-  { value: 'good', label: '양호', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-  { value: 'used', label: '사용감 있음', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }
+// 🔥 statuses → evaluations로 변경
+const evaluations = [
+  {
+    value: 'BEST',
+    label: '강추',
+    icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'
+  },
+  {
+    value: 'GOOD',
+    label: '추천',
+    icon: 'M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5'
+  },
+  {
+    value: 'OKAY',
+    label: '괜찮음',
+    icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+  },
+  {
+    value: 'BAD',
+    label: '비추천',
+    icon: 'M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5'
+  }
 ];
+
 
 const popularHashtags = [
   '조던4', '에어팟맥스', '디올립글로우', '나이키', '스니커즈',
@@ -497,6 +519,7 @@ const canSubmit = computed(() => {
       formData.value.productNameCustom.trim() &&
       formData.value.subCategoryId &&
       formData.value.review.trim() &&
+      formData.value.evaluation &&
       !isSubmitting.value;
 });
 
@@ -801,9 +824,10 @@ const handleSubmit = async () => {
       review: formData.value.review.trim(),
       buyPlace: formData.value.store === 'direct'
           ? formData.value.storeCustom?.trim()
-          : formData.value.store || null,  // 🔥 추가
+          : formData.value.store || null,
       buyPrice: formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null,
       price: formData.value.price ? parseInt(formData.value.price) : null,
+      evaluation: formData.value.evaluation,  // 🔥 평가 추가 (BEST/GOOD/OKAY/BAD)
       hashtags: formData.value.hashtags
     };
 
@@ -1785,8 +1809,7 @@ onBeforeUnmount(() => {
 .price-input {
   padding-left: 36px;
 }
-
-/* Status */
+/* Status → Evaluation */
 .status-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1798,7 +1821,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px;
+  padding: 14px 12px;
   background: white;
   border: 2px solid var(--border);
   border-radius: 12px;
@@ -1813,6 +1836,7 @@ onBeforeUnmount(() => {
 .status-btn:hover {
   border-color: var(--accent);
   background: #FFF7ED;
+  transform: translateY(-1px);
 }
 
 .status-btn.active {
@@ -1822,9 +1846,11 @@ onBeforeUnmount(() => {
 }
 
 .status-icon-svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   stroke-width: 2;
+  flex-shrink: 0;
+  transition: all 0.2s;
 }
 
 /* Hashtags */
@@ -2057,7 +2083,19 @@ onBeforeUnmount(() => {
   }
 
   .status-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .status-btn {
+    padding: 12px 10px;
+    font-size: 13px;
+    gap: 6px;
+  }
+
+  .status-icon-svg {
+    width: 18px;
+    height: 18px;
   }
 }
 

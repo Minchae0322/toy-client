@@ -303,7 +303,7 @@ onUnmounted(() => {
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
 :root {
-  --primary: #0F172A;
+  --primary: #222222;
   --secondary: #64748B;
   --accent: #F97316;
   --border: #E2E8F0;

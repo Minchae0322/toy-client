@@ -5,12 +5,20 @@
       <div class="post-author-info">
         <div class="author-avatar-small">
           <img v-if="feed.userInfo?.profileImageUrl" :src="feed.userInfo.profileImageUrl" alt="" />
-          <span v-else>{{ feed.userInfo?.nickname?.charAt(0) || '👤' }}</span>
+          <span v-else class="avatar-placeholder">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+            </svg>
+          </span>
         </div>
         <div class="author-details">
           <div class="author-name-row">
             <span class="author-name">{{ feed.userInfo?.nickname || '익명' }}</span>
-            <span class="author-level">🔥</span>
+            <span class="author-level-badge">
+              <svg class="level-icon" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+            </span>
           </div>
           <div class="post-meta">
             <span>{{ formatDate(feed.createdAt) }}</span>
@@ -34,6 +42,15 @@
           class="post-image"
           loading="lazy"
       />
+      <!-- 🔥 Evaluation Badge Overlay -->
+      <div v-if="feed.feedEvaluation" class="evaluation-badge-overlay">
+        <span :class="['evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
+          <svg class="eval-icon" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getEvaluationIconPath(feed.feedEvaluation)"/>
+          </svg>
+          {{ getEvaluationLabel(feed.feedEvaluation) }}
+        </span>
+      </div>
       <div v-if="showLikeAnimation" class="like-animation">
         <svg class="heart-icon" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
@@ -52,7 +69,9 @@
               :class="['action-btn', { liked: localIsLiked }]"
               :disabled="isLoading"
           >
-            <span class="fire">🔥</span>
+            <svg class="icon fire-icon" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+            </svg>
             <span>{{ formatCount(localLikeCount) }}</span>
           </button>
 
@@ -62,8 +81,10 @@
               :class="['action-btn', { hot: localIsHot }]"
               :disabled="isLoading"
           >
-            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            <svg class="icon" :fill="localIsHot ? 'currentColor' : 'none'" stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
             </svg>
             <span>{{ formatCount(localHotCount) }}</span>
           </button>
@@ -71,7 +92,8 @@
           <!-- 댓글 버튼 -->
           <button @click="handleComment" class="action-btn">
             <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
             <span>{{ formatCount(feed.commentCount || 0) }}</span>
           </button>
@@ -83,21 +105,34 @@
             :class="['action-btn', 'save', { saved: localIsSaved }]"
             :disabled="isLoading"
         >
-          <svg class="icon" :fill="localIsSaved ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+          <svg class="icon" :fill="localIsSaved ? 'currentColor' : 'none'" stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
           </svg>
         </button>
       </div>
 
       <!-- Info -->
       <div class="post-info">
-        <!-- 제품명 -->
-        <h3 class="post-title">{{ feed.productName }}</h3>
+        <!-- 🔥 제목 + Evaluation Badge -->
+        <div class="post-title-row">
+          <h3 class="post-title">{{ feed.productName }}</h3>
+          <span v-if="feed.feedEvaluation"
+                :class="['evaluation-status', getEvaluationClass(feed.feedEvaluation)]">
+            <svg class="eval-icon-small" :fill="getEvaluationIconFill(feed.feedEvaluation)"
+                 stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    :d="getEvaluationIconPath(feed.feedEvaluation)"/>
+            </svg>
+            {{ getEvaluationLabel(feed.feedEvaluation) }}
+          </span>
+        </div>
 
-        <!-- 리뷰 - 메인 콘텐츠 -->
+        <!-- 리뷰 -->
         <p v-if="feed.reviewSummary" class="post-review">{{ feed.reviewSummary }}</p>
 
-        <!-- 가격 정보 - 작고 간결하게 -->
+        <!-- 가격 정보 -->
         <div v-if="feed.price || feed.buyPlace" class="post-details">
           <span v-if="feed.buyPlace" class="store">{{ feed.buyPlace }}</span>
           <span v-if="feed.price" class="price">{{ formatPrice(feed.price) }}</span>
@@ -121,8 +156,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { feedService } from '@/services/FeedService';
+import {ref, computed} from 'vue';
+import {feedService, feedUtils} from '@/services/FeedService';
 
 const props = defineProps({
   feed: {
@@ -147,18 +182,15 @@ const emit = defineEmits([
   'like', 'hot', 'save', 'comment', 'menu', 'search-tag', 'update', 'click'
 ]);
 
-// Local State
 const showLikeAnimation = ref(false);
 const isLoading = ref(false);
 
-// Local 반응 상태 (낙관적 업데이트용)
 const localIsLiked = ref(props.isLiked);
 const localIsHot = ref(props.isHot);
 const localIsSaved = ref(props.isSaved);
 const localLikeCount = ref(props.feed.reactionStats?.likeCount || 0);
 const localHotCount = ref(props.feed.reactionStats?.hotCount || 0);
 
-// Computed
 const discountRate = computed(() => {
   const originalPrice = props.feed.product?.price;
   const buyPrice = props.feed.price;
@@ -171,9 +203,39 @@ const discountRate = computed(() => {
 
 const showDiscount = computed(() => discountRate.value > 0);
 
-// 카드 클릭 핸들러
+// 🔥 Evaluation 유틸리티 메서드
+const getEvaluationLabel = (evaluation) => {
+  return feedUtils.getEvaluationLabel(evaluation);
+};
+
+const getEvaluationClass = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
+  const classMap = {
+    'BEST': 'eval-best',
+    'GOOD': 'eval-good',
+    'OKAY': 'eval-okay',
+    'BAD': 'eval-bad'
+  };
+  return classMap[code] || '';
+};
+
+const getEvaluationIconPath = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
+  const icons = {
+    'BEST': 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
+    'GOOD': 'M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5',
+    'OKAY': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+    'BAD': 'M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5'
+  };
+  return icons[code] || icons['OKAY'];
+};
+
+const getEvaluationIconFill = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
+  return code === 'BEST' ? 'currentColor' : 'none';
+};
+
 const handleCardClick = (event) => {
-  // 버튼 클릭은 카드 클릭으로 전파하지 않음
   if (
       event.target.closest('.action-btn') ||
       event.target.closest('.btn-more') ||
@@ -186,19 +248,16 @@ const handleCardClick = (event) => {
   emit('click', props.feed.feedId);
 };
 
-// Methods
 const handleLike = async (event) => {
   event.stopPropagation();
   if (isLoading.value) return;
 
-  // 낙관적 업데이트
   const prevIsLiked = localIsLiked.value;
   const prevCount = localLikeCount.value;
 
   localIsLiked.value = !localIsLiked.value;
   localLikeCount.value += localIsLiked.value ? 1 : -1;
 
-  // HOT이 활성화되어 있으면 해제
   if (localIsHot.value) {
     localIsHot.value = false;
     localHotCount.value = Math.max(0, localHotCount.value - 1);
@@ -208,14 +267,10 @@ const handleLike = async (event) => {
     isLoading.value = true;
     const response = await feedService.likeFeed(props.feed.feedId);
 
-    console.log('👍 LIKE 응답:', response);
-
-    // 서버 응답으로 실제 값 업데이트
     if (response.success && response.data) {
       localIsLiked.value = response.data.isActive;
       localLikeCount.value = response.data.likeCount || localLikeCount.value;
 
-      // 부모에게 업데이트 알림
       emit('update', {
         feedId: props.feed.feedId,
         reactionStats: {
@@ -229,7 +284,6 @@ const handleLike = async (event) => {
     emit('like', props.feed.feedId);
   } catch (error) {
     console.error('❌ LIKE 실패:', error);
-    // 실패 시 롤백
     localIsLiked.value = prevIsLiked;
     localLikeCount.value = prevCount;
   } finally {
@@ -241,14 +295,12 @@ const handleHot = async (event) => {
   event.stopPropagation();
   if (isLoading.value) return;
 
-  // 낙관적 업데이트
   const prevIsHot = localIsHot.value;
   const prevCount = localHotCount.value;
 
   localIsHot.value = !localIsHot.value;
   localHotCount.value += localIsHot.value ? 1 : -1;
 
-  // LIKE가 활성화되어 있으면 해제
   if (localIsLiked.value) {
     localIsLiked.value = false;
     localLikeCount.value = Math.max(0, localLikeCount.value - 1);
@@ -258,14 +310,10 @@ const handleHot = async (event) => {
     isLoading.value = true;
     const response = await feedService.hotFeed(props.feed.feedId);
 
-    console.log('🔥 HOT 응답:', response);
-
-    // 서버 응답으로 실제 값 업데이트
     if (response.success && response.data) {
       localIsHot.value = response.data.isActive;
       localHotCount.value = response.data.hotCount || localHotCount.value;
 
-      // 부모에게 업데이트 알림
       emit('update', {
         feedId: props.feed.feedId,
         reactionStats: {
@@ -279,7 +327,6 @@ const handleHot = async (event) => {
     emit('hot', props.feed.feedId);
   } catch (error) {
     console.error('❌ HOT 실패:', error);
-    // 실패 시 롤백
     localIsHot.value = prevIsHot;
     localHotCount.value = prevCount;
   } finally {
@@ -289,8 +336,10 @@ const handleHot = async (event) => {
 
 const handleDoubleTapLike = () => {
   if (!localIsLiked.value) {
-    // 이벤트 객체 생성
-    const mockEvent = { stopPropagation: () => {} };
+    const mockEvent = {
+      stopPropagation: () => {
+      }
+    };
     handleLike(mockEvent);
     showLikeAnimation.value = true;
     setTimeout(() => {
@@ -320,37 +369,16 @@ const handleHashtagClick = (tag, event) => {
   emit('search-tag', tag);
 };
 
-// Formatters
 const formatDate = (dateString) => {
-  if (!dateString) return '';
-
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now - date;
-
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 1) return '방금 전';
-  if (minutes < 60) return `${minutes}분 전`;
-  if (hours < 24) return `${hours}시간 전`;
-  if (days < 7) return `${days}일 전`;
-
-  return date.toLocaleDateString('ko-KR');
+  return feedUtils.formatDate(dateString);
 };
 
 const formatPrice = (price) => {
-  if (!price || price === 0) return '무료';
-  return '₩' + new Intl.NumberFormat('ko-KR').format(price);
+  return feedUtils.formatPrice(price);
 };
 
 const formatCount = (count) => {
-  if (!count) return '0';
-  if (count >= 1000) {
-    return (count / 1000).toFixed(1) + 'K';
-  }
-  return count.toString();
+  return feedUtils.formatCount(count);
 };
 </script>
 
@@ -388,7 +416,6 @@ const formatCount = (count) => {
   transform: translateY(-2px);
 }
 
-/* Header */
 .post-header {
   display: flex;
   align-items: center;
@@ -424,6 +451,11 @@ const formatCount = (count) => {
   object-fit: cover;
 }
 
+.avatar-placeholder svg {
+  width: 20px;
+  height: 20px;
+}
+
 .author-details {
   display: flex;
   flex-direction: column;
@@ -447,9 +479,16 @@ const formatCount = (count) => {
   text-overflow: ellipsis;
 }
 
-.author-level {
-  font-size: 14px;
+.author-level-badge {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
+}
+
+.level-icon {
+  width: 16px;
+  height: 16px;
+  color: #F59E0B;
 }
 
 .post-meta {
@@ -493,7 +532,6 @@ const formatCount = (count) => {
   color: var(--secondary);
 }
 
-/* Image */
 .post-image-container {
   position: relative;
   width: 100%;
@@ -511,6 +549,58 @@ const formatCount = (count) => {
   .post-image {
     height: 280px;
   }
+}
+
+/* 🔥 Evaluation Badge Overlay (이미지 위) */
+.evaluation-badge-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+}
+
+.evaluation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.eval-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.evaluation-badge.eval-best {
+  background: rgba(249, 115, 22, 0.95);
+  color: white;
+}
+
+.evaluation-badge.eval-good {
+  background: rgba(16, 185, 129, 0.95);
+  color: white;
+}
+
+.evaluation-badge.eval-okay {
+  background: rgba(59, 130, 246, 0.95);
+  color: white;
+}
+
+.evaluation-badge.eval-bad {
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+}
+
+.post-card:hover .evaluation-badge {
+  transform: scale(1.05);
 }
 
 .like-animation {
@@ -544,26 +634,24 @@ const formatCount = (count) => {
   }
 }
 
-/* Content */
 .post-content {
   padding: 16px;
 }
 
-/* Actions */
 .post-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
-  gap: 8px;
+  gap: 4px;
 }
 
 .action-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 }
@@ -571,14 +659,14 @@ const formatCount = (count) => {
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: 3px;
+  padding: 4px 6px;
   background: transparent;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--secondary);
+  color: var(--primary);
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
@@ -602,20 +690,16 @@ const formatCount = (count) => {
   color: #DC2626;
 }
 
-.action-btn.hot .icon {
-  fill: #DC2626;
-}
-
 .action-btn .icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   stroke-width: 2;
   flex-shrink: 0;
 }
 
-.action-btn .fire {
-  font-size: 18px;
-  flex-shrink: 0;
+.action-btn .fire-icon {
+  width: 19px;
+  height: 19px;
 }
 
 .action-btn.save {
@@ -626,34 +710,81 @@ const formatCount = (count) => {
   color: #1D4ED8;
 }
 
-/* Info */
 .post-info {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-/* 제품명 - 강조 */
+/* 🔥 제목 + Evaluation Badge 한 줄에 */
+.post-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .post-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--primary);
   line-height: 1.4;
   letter-spacing: -0.3px;
+  flex: 0 1 auto;
 }
 
 @media (min-width: 768px) {
   .post-title {
-    font-size: 19px;
+    font-size: 18px;
   }
 }
 
-/* 리뷰 - 메인 콘텐츠로 강조 */
+/* 🔥 Evaluation Status (제목 옆) */
+.evaluation-status {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.eval-icon-small {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.evaluation-status.eval-best {
+  background: #FFF7ED;
+  color: #F97316;
+}
+
+.evaluation-status.eval-good {
+  background: #D1FAE5;
+  color: #059669;
+
+}
+
+.evaluation-status.eval-okay {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+.evaluation-status.eval-bad {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
 .post-review {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--primary);
-  line-height: 1.7;
+  line-height: 1.6;
   letter-spacing: -0.2px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -662,16 +793,14 @@ const formatCount = (count) => {
   word-break: keep-all;
 }
 
-/* 가격 정보 - 덜 강조 */
 .post-details {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
   font-size: 12px;
-  padding-top: 4px;
-  border-top: 1px solid var(--border);
   padding-top: 8px;
+  border-top: 1px solid var(--border);
 }
 
 .store {
@@ -694,7 +823,6 @@ const formatCount = (count) => {
   font-weight: 700;
 }
 
-/* 해시태그 */
 .post-hashtags {
   display: flex;
   flex-wrap: wrap;
@@ -702,7 +830,7 @@ const formatCount = (count) => {
 }
 
 .hashtag {
-  font-size: 13px;
+  font-size: 12px;
   color: #1D4ED8;
   font-weight: 500;
   cursor: pointer;
@@ -714,25 +842,25 @@ const formatCount = (count) => {
   text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 1279px) {
   .action-btn {
-    padding: 6px 8px;
-    font-size: 13px;
-    gap: 4px;
+    padding: 3px 5px;
+    font-size: 11px;
+    gap: 2px;
   }
 
   .action-btn .icon {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 
-  .action-btn .fire {
-    font-size: 16px;
+  .action-btn .fire-icon {
+    width: 17px;
+    height: 17px;
   }
 
   .action-left {
-    gap: 8px;
+    gap: 4px;
   }
 }
 
@@ -742,11 +870,37 @@ const formatCount = (count) => {
   }
 
   .post-title {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   .post-review {
-    font-size: 14px;
+    font-size: 13px;
+  }
+
+  .evaluation-badge-overlay {
+    top: 8px;
+    left: 8px;
+  }
+
+  .evaluation-badge {
+    padding: 5px 10px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .eval-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .evaluation-status {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
+
+  .eval-icon-small {
+    width: 12px;
+    height: 12px;
   }
 }
 </style>

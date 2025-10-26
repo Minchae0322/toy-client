@@ -17,9 +17,6 @@ class FeedService extends BaseApiService {
 
   /**
    * 피드 생성 (파일 업로드 포함)
-   * 1. FileService로 대표 이미지 업로드
-   * 2. FileService로 추가 이미지 업로드 (있는 경우)
-   * 3. 업로드된 파일 정보로 피드 생성
    */
   async createFeedWithFiles(feedData, thumbnailFile, additionalFiles = []) {
     console.log('🚀 [FEED_SERVICE] 피드 생성 프로세스 시작')
@@ -28,7 +25,7 @@ class FeedService extends BaseApiService {
     console.log('📎 추가 이미지 개수:', additionalFiles.length)
 
     try {
-      // 1. 대표 이미지 업로드 (FileService 사용)
+      // 1. 대표 이미지 업로드
       console.log('1️⃣ 대표 이미지 업로드 중...')
       const thumbnailResponse = await fileService.uploadImage(thumbnailFile, 'FEED')
 
@@ -39,7 +36,7 @@ class FeedService extends BaseApiService {
       const thumbnailInfo = this.convertToAttachmentInfo(thumbnailResponse.data)
       console.log('✅ 대표 이미지 업로드 완료:', thumbnailInfo)
 
-      // 2. 추가 이미지 업로드 (FileService 사용)
+      // 2. 추가 이미지 업로드
       let attachmentFileInfos = []
       if (additionalFiles && additionalFiles.length > 0) {
         console.log('2️⃣ 추가 이미지 업로드 중...')
@@ -72,19 +69,6 @@ class FeedService extends BaseApiService {
 
   /**
    * 파일 업로드 응답을 AttachmentInfo로 변환
-   *
-   * 서버 응답 예시:
-   * {
-   *   "id": 48,
-   *   "fileCode": "FEED",
-   *   "orgFileNm": "에어포스.jpg",
-   *   "storeFileNm": "20251025210419_7a5de62f.jpg",
-   *   "fileUrl": "http://localhost:8081/api/uploads/...",
-   *   "fileSize": 2253,
-   *   "fileExplain": "FEED 이미지",
-   *   "fileExt": "jpg",
-   *   "storageType": { "title": "LOCAL" }
-   * }
    */
   convertToAttachmentInfo(fileResponse) {
     if (!fileResponse) {
@@ -93,13 +77,11 @@ class FeedService extends BaseApiService {
 
     console.log('🔄 파일 응답 변환:', fileResponse)
 
-    // 이미 변환된 형태인지 확인
     if (fileResponse.fileId && fileResponse.storedPath) {
       console.log('✅ 이미 변환된 AttachmentInfo:', fileResponse)
       return fileResponse
     }
 
-    // 필수 필드 검증
     if (!fileResponse.id || !fileResponse.fileUrl) {
       console.error('❌ 잘못된 파일 응답 구조:', fileResponse)
       throw new Error('파일 응답 형식이 올바르지 않습니다.')
@@ -136,9 +118,10 @@ class FeedService extends BaseApiService {
       productNameCustom: feedData.productNameCustom?.trim() || null,
       subCategoryId: parseInt(feedData.subCategoryId),
       review: feedData.review.trim(),
-      buyPlace: feedData.buyPlace?.trim() || null,  // 🔥 추가
+      buyPlace: feedData.buyPlace?.trim() || null,
       buyPrice: feedData.buyPrice || null,
       price: feedData.price || null,
+      evaluation: feedData.evaluation?.toUpperCase() || null,  // 🔥 추가
       thumbnailAttachmentInfo: feedData.thumbnailAttachmentInfo,
       attachmentFileInfos: feedData.attachmentFileInfos || [],
       hashtags: feedData.hashtags || []
@@ -244,8 +227,10 @@ class FeedService extends BaseApiService {
       productNameCustom: feedData.productNameCustom?.trim() || null,
       categoryId: parseInt(feedData.categoryId),
       review: feedData.review.trim(),
+      buyPlace: feedData.buyPlace?.trim() || null,
       buyPrice: feedData.buyPrice || null,
       price: feedData.price || null,
+      evaluation: feedData.evaluation?.toUpperCase() || null,  // 🔥 추가
       hashtags: feedData.hashtags || []
     }
 
@@ -344,6 +329,22 @@ class FeedService extends BaseApiService {
     return await this.getFeeds({ ...searchCondition, keyword }, pageable)
   }
 
+  /**
+   * 평가별 피드 조회
+   * @param {string} evaluation - BEST, GOOD, OKAY, BAD
+   */
+  async getFeedsByEvaluation(evaluation, searchCondition = {}, pageable = {}) {
+    const validEvaluations = ['BEST', 'GOOD', 'OKAY', 'BAD']
+    if (!validEvaluations.includes(evaluation?.toUpperCase())) {
+      throw new Error('올바른 평가 타입을 선택해주세요. (BEST, GOOD, OKAY, BAD)')
+    }
+
+    return await this.getFeeds({
+      ...searchCondition,
+      evaluation: evaluation.toUpperCase()
+    }, pageable)
+  }
+
   // ==================== 유틸리티 메서드 ====================
 
   /**
@@ -380,12 +381,34 @@ class FeedService extends BaseApiService {
       ...feed,
       thumbnailUrl: feed.thumbnailUrl || null,
       hashtags: feed.hashtags || [],
+      feedEvaluation: this.normalizeFeedEvaluation(feed.feedEvaluation),  // 🔥 추가
+      commentCount: feed.commentCount || 0,  // 🔥 추가
       reactionStats: feed.reactionStats || {
         totalCount: 0,
         likeCount: 0,
         hotCount: 0
       }
     }))
+  }
+
+  /**
+   * FeedEvaluation 정규화
+   * @JsonFormat(shape = JsonFormat.Shape.OBJECT) 처리
+   */
+  normalizeFeedEvaluation(evaluation) {
+    if (!evaluation) return null
+
+    // 이미 정규화된 경우
+    if (typeof evaluation === 'string') {
+      return evaluation
+    }
+
+    // { code: "BEST", description: "강추" } 형태인 경우
+    if (evaluation.code) {
+      return evaluation.code
+    }
+
+    return null
   }
 
   // ==================== 검증 메서드 ====================
@@ -427,6 +450,14 @@ class FeedService extends BaseApiService {
     if (feedData.price !== null && feedData.price !== undefined) {
       if (feedData.price < 0 || feedData.price > 999999999) {
         errors.push('정가는 0원 이상 999,999,999원 이하여야 합니다.')
+      }
+    }
+
+    // 🔥 평가 검증 추가
+    if (feedData.evaluation) {
+      const validEvaluations = ['BEST', 'GOOD', 'OKAY', 'BAD']
+      if (!validEvaluations.includes(feedData.evaluation.toUpperCase())) {
+        errors.push('올바른 평가를 선택해주세요. (강추, 추천, 괜찮음, 비추천)')
       }
     }
 
@@ -495,6 +526,14 @@ class FeedService extends BaseApiService {
       }
     }
 
+    // 🔥 평가 검증 추가
+    if (feedData.evaluation) {
+      const validEvaluations = ['BEST', 'GOOD', 'OKAY', 'BAD']
+      if (!validEvaluations.includes(feedData.evaluation.toUpperCase())) {
+        errors.push('올바른 평가를 선택해주세요. (강추, 추천, 괜찮음, 비추천)')
+      }
+    }
+
     if (feedData.hashtags && feedData.hashtags.length > 20) {
       errors.push('해시태그는 최대 20개까지 등록 가능합니다.')
     }
@@ -534,6 +573,16 @@ class FeedService extends BaseApiService {
 
     if (validated.hashtags && Array.isArray(validated.hashtags)) {
       validated.hashtags = validated.hashtags.slice(0, 10)
+    }
+
+    // 🔥 평가 검증 추가
+    if (validated.evaluation) {
+      const validEvaluations = ['BEST', 'GOOD', 'OKAY', 'BAD']
+      if (validEvaluations.includes(validated.evaluation.toUpperCase())) {
+        validated.evaluation = validated.evaluation.toUpperCase()
+      } else {
+        delete validated.evaluation
+      }
     }
 
     if (validated.isActive !== undefined && validated.isActive !== null) {
@@ -611,6 +660,7 @@ export function useFeed() {
     toggleReaction: (id, type) => service.toggleFeedReaction(id, type),
     removeReaction: (id) => service.removeFeedReaction(id),
     searchFeeds: (keyword, condition, pageable) => service.searchFeeds(keyword, condition, pageable),
+    getFeedsByEvaluation: (evaluation, condition, pageable) => service.getFeedsByEvaluation(evaluation, condition, pageable),
     convertToAttachmentInfo: (response) => service.convertToAttachmentInfo(response)
   }
 }
@@ -672,5 +722,43 @@ export const feedUtils = {
     .split(/[,\s]+/)
     .map(tag => tag.replace('#', '').trim())
     .filter(tag => tag.length > 0)
+  },
+
+  // 🔥 평가 관련 유틸리티
+  getEvaluationLabel(evaluation) {
+    // String 또는 Object 모두 처리
+    const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
+
+    const labels = {
+      'BEST': '강추',
+      'GOOD': '추천',
+      'OKAY': '괜찮음',
+      'BAD': '비추천'
+    }
+    return labels[code] || ''
+  },
+
+  getEvaluationColor(evaluation) {
+    const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
+
+    const colors = {
+      'BEST': '#F97316',  // 오렌지
+      'GOOD': '#10B981',  // 그린
+      'OKAY': '#3B82F6',  // 블루
+      'BAD': '#EF4444'    // 레드
+    }
+    return colors[code] || '#64748B'
+  },
+
+  getEvaluationIcon(evaluation) {
+    const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
+
+    const icons = {
+      'BEST': '',
+      'GOOD': '',
+      'OKAY': '',
+      'BAD': ''
+    }
+    return icons[code] || ''
   }
 }

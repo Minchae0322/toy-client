@@ -29,18 +29,35 @@
       <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="handlePostClick(feed.feedId)">
         <div class="list-image">
           <img :src="feed.thumbnailUrl?.fileUrl || 'https://via.placeholder.com/400'" :alt="feed.productName" />
+          <!-- 🔥 Evaluation Badge Overlay (List View) -->
+          <div v-if="feed.feedEvaluation" class="list-evaluation-badge-overlay">
+            <span :class="['list-evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
+              <svg class="list-eval-icon" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getEvaluationIconPath(feed.feedEvaluation)"/>
+              </svg>
+              {{ getEvaluationLabel(feed.feedEvaluation) }}
+            </span>
+          </div>
         </div>
         <div class="list-content">
           <div class="list-header">
             <div class="list-author-info">
               <div class="author-avatar-small">
                 <img v-if="feed.userInfo?.profileImageUrl" :src="feed.userInfo.profileImageUrl" alt="User" />
-                <span v-else>👤</span>
+                <span v-else class="avatar-placeholder">
+                  <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                  </svg>
+                </span>
               </div>
               <div>
                 <div class="author-name-row">
                   <span class="author-name">{{ feed.userInfo?.nickname || '익명' }}</span>
-                  <span class="author-level">🔥</span>
+                  <span class="author-level-badge">
+                    <svg class="level-icon" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  </span>
                   <span class="list-category">{{ feed.categoryName }}</span>
                 </div>
                 <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
@@ -54,14 +71,26 @@
           </div>
 
           <div class="list-main">
-            <h3 class="list-title">{{ feed.productName }}</h3>
+            <!-- 🔥 제목 + Evaluation Badge -->
+            <div class="list-title-row">
+              <h3 class="list-title">{{ feed.productName }}</h3>
+              <span v-if="feed.feedEvaluation" :class="['list-evaluation-status', getEvaluationClass(feed.feedEvaluation)]">
+                <svg class="list-eval-icon-small" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getEvaluationIconPath(feed.feedEvaluation)"/>
+                </svg>
+                {{ getEvaluationLabel(feed.feedEvaluation) }}
+              </span>
+            </div>
+
             <p class="list-review">{{ feed.reviewSummary }}</p>
 
-            <!-- 리액션과 가격 정보를 한 줄로 통합 -->
+            <!-- 🔥 리액션 & 가격 정보 -->
             <div class="list-meta">
               <div class="list-reactions">
                 <span class="reaction-item">
-                  <span class="fire-emoji">🔥</span>
+                  <svg class="icon-small fire-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                  </svg>
                   {{ feed.reactionStats?.likeCount || 0 }}
                 </span>
                 <span class="reaction-item">
@@ -77,9 +106,7 @@
                   {{ feed.commentCount || 0 }}
                 </span>
               </div>
-              <div class="list-details" v-if="feed.price">
-                <span class="price">{{ formatPrice(feed.price) }}</span>
-              </div>
+              <span v-if="feed.price" class="price">{{ formatPrice(feed.price) }}</span>
             </div>
 
             <div class="list-hashtags" v-if="feed.hashtags && feed.hashtags.length > 0">
@@ -99,11 +126,15 @@
         <p>로딩 중...</p>
       </div>
       <div v-else-if="!hasNext && feeds.length > 0" class="end-message">
-        <span class="emoji">✨</span>
+        <svg class="end-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
         <p>모든 게시물을 확인했습니다</p>
       </div>
       <div v-else-if="feeds.length === 0 && !loading" class="empty-message">
-        <span class="emoji">📭</span>
+        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+        </svg>
         <p>아직 게시물이 없습니다</p>
       </div>
     </div>
@@ -113,6 +144,7 @@
 <script setup>
 import { ref } from 'vue';
 import FeedCard from './FeedCard.vue';
+import { feedUtils } from '@/services/FeedService';
 
 const props = defineProps({
   feeds: {
@@ -146,6 +178,38 @@ const emit = defineEmits(['like', 'save', 'comment', 'post-click']);
 const sortOption = ref('latest');
 const observerTarget = ref(null);
 
+// 🔥 Evaluation 유틸리티 메서드
+const getEvaluationLabel = (evaluation) => {
+  return feedUtils.getEvaluationLabel(evaluation);
+};
+
+const getEvaluationClass = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
+  const classMap = {
+    'BEST': 'eval-best',
+    'GOOD': 'eval-good',
+    'OKAY': 'eval-okay',
+    'BAD': 'eval-bad'
+  };
+  return classMap[code] || '';
+};
+
+const getEvaluationIconPath = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
+  const icons = {
+    'BEST': 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
+    'GOOD': 'M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5',
+    'OKAY': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+    'BAD': 'M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5'
+  };
+  return icons[code] || icons['OKAY'];
+};
+
+const getEvaluationIconFill = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
+  return code === 'BEST' ? 'currentColor' : 'none';
+};
+
 const handleLike = (feedId) => {
   console.log('👍 FeedList - Like:', feedId);
   emit('like', feedId);
@@ -167,27 +231,11 @@ const handlePostClick = (feedId) => {
 };
 
 const formatDate = (dateString) => {
-  if (!dateString) return '';
-
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now - date;
-
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 1) return '방금 전';
-  if (minutes < 60) return `${minutes}분 전`;
-  if (hours < 24) return `${hours}시간 전`;
-  if (days < 7) return `${days}일 전`;
-
-  return date.toLocaleDateString('ko-KR');
+  return feedUtils.formatDate(dateString);
 };
 
 const formatPrice = (price) => {
-  if (!price) return '무료';
-  return '₩' + price.toLocaleString('ko-KR');
+  return feedUtils.formatPrice(price);
 };
 
 defineExpose({
@@ -305,7 +353,9 @@ defineExpose({
   transform: translateY(-2px);
 }
 
+/* 🔥 List View - Image with Evaluation Badge */
 .list-image {
+  position: relative;
   width: 180px;
   height: 180px;
   flex-shrink: 0;
@@ -325,11 +375,57 @@ defineExpose({
   transform: scale(1.05);
 }
 
+.list-evaluation-badge-overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+.list-evaluation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.list-eval-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.list-evaluation-badge.eval-best {
+  background: rgba(249, 115, 22, 0.95);
+  color: white;
+}
+
+.list-evaluation-badge.eval-good {
+  background: rgba(16, 185, 129, 0.95);
+  color: white;
+}
+
+.list-evaluation-badge.eval-okay {
+  background: rgba(59, 130, 246, 0.95);
+  color: white;
+}
+
+.list-evaluation-badge.eval-bad {
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+}
+
 .list-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -359,12 +455,18 @@ defineExpose({
   font-size: 20px;
   flex-shrink: 0;
   overflow: hidden;
+  color: white;
 }
 
 .author-avatar-small img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.avatar-placeholder svg {
+  width: 20px;
+  height: 20px;
 }
 
 .author-name-row {
@@ -380,8 +482,16 @@ defineExpose({
   color: var(--primary);
 }
 
-.author-level {
-  font-size: 14px;
+.author-level-badge {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.level-icon {
+  width: 14px;
+  height: 14px;
+  color: #F59E0B;
 }
 
 .list-category {
@@ -422,80 +532,129 @@ defineExpose({
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+}
+
+/* 🔥 제목 + Evaluation Badge 한 줄에 */
+.list-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .list-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--primary);
   line-height: 1.4;
+  flex: 0 1 auto;
+}
+
+/* 🔥 List View - Evaluation Status (제목 옆) */
+.list-evaluation-status {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.list-eval-icon-small {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.list-evaluation-status.eval-best {
+  background: #FFF7ED;
+  color: #F97316;
+
+}
+
+.list-evaluation-status.eval-good {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.list-evaluation-status.eval-okay {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+.list-evaluation-status.eval-bad {
+  background: #FEE2E2;
+  color: #DC2626;
 }
 
 .list-review {
   font-size: 14px;
   color: var(--secondary);
-  line-height: 1.6;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* 리액션 & 가격 정보 - 한 줄로 정리 */
+/* 🔥 리액션 & 가격 정보 */
 .list-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .list-reactions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .reaction-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--secondary);
-  font-weight: 500;
-}
-
-.fire-emoji {
-  font-size: 14px;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .icon-small {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   stroke-width: 2;
+  flex-shrink: 0;
 }
 
-.list-details {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.icon-small.fire-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .price {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--primary);
   font-size: 13px;
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 .list-hashtags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  padding-top: 4px;
 }
 
 .hashtag {
-  font-size: 12px;
+  font-size: 11px;
   color: #1D4ED8;
   font-weight: 500;
   cursor: pointer;
@@ -552,9 +711,11 @@ defineExpose({
   margin: 0 auto;
 }
 
-.end-message .emoji,
-.empty-message .emoji {
-  font-size: 48px;
+.end-icon,
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--secondary);
 }
 
 .end-message p,
@@ -582,6 +743,58 @@ defineExpose({
   .list-image {
     width: 100%;
     height: 200px;
+  }
+
+  .list-evaluation-badge-overlay {
+    top: 8px;
+    left: 8px;
+  }
+
+  .list-evaluation-badge {
+    padding: 4px 8px;
+    font-size: 9px;
+    gap: 3px;
+  }
+
+  .list-eval-icon {
+    width: 10px;
+    height: 10px;
+  }
+
+  .list-title {
+    font-size: 16px;
+  }
+
+  .list-evaluation-status {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
+
+  .list-eval-icon-small {
+    width: 11px;
+    height: 11px;
+  }
+
+  .list-meta {
+    flex-wrap: wrap;
+  }
+
+  .list-reactions {
+    gap: 6px;
+  }
+
+  .reaction-item {
+    font-size: 10px;
+    gap: 2px;
+  }
+
+  .icon-small {
+    width: 13px;
+    height: 13px;
+  }
+
+  .price {
+    font-size: 12px;
   }
 }
 </style>
