@@ -5,7 +5,7 @@
       <h3 class="sidebar-title">🔥 실시간 트렌딩</h3>
       <div class="trending-list">
         <div v-for="(tag, idx) in trendingTags" :key="tag" class="trending-item">
-          <span class="trend-rank">#{{ idx + 1 }}</span>
+          <span class="trend-rank">{{ idx + 1 }}</span>
           <div class="trend-info">
             <p class="trend-tag">{{ tag }}</p>
             <p class="trend-count">{{ Math.floor(Math.random() * 500) + 100 }}개 인증</p>

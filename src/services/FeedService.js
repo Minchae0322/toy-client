@@ -121,7 +121,7 @@ class FeedService extends BaseApiService {
       buyPlace: feedData.buyPlace?.trim() || null,
       buyPrice: feedData.buyPrice || null,
       price: feedData.price || null,
-      evaluation: feedData.evaluation?.toUpperCase() || null,  // 🔥 추가
+      evaluation: feedData.evaluation?.toUpperCase() || null,
       thumbnailAttachmentInfo: feedData.thumbnailAttachmentInfo,
       attachmentFileInfos: feedData.attachmentFileInfos || [],
       hashtags: feedData.hashtags || []
@@ -164,6 +164,27 @@ class FeedService extends BaseApiService {
         response.data.content = this.normalizeFeedListResponse(response.data.content)
       } else if (Array.isArray(response.data)) {
         response.data = this.normalizeFeedListResponse(response.data)
+      }
+    }
+
+    return response
+  }
+
+  /**
+   * 핫 피드 목록 조회 ⭐ 신규 추가
+   * GET /api/feeds/hot
+   */
+  async getHotFeeds(pageable = {}) {
+    const validatedPageable = this.validatePageable(pageable)
+    const cleanedPageable = this.removeEmptyParams(validatedPageable)
+
+    const response = await this.get('/feeds/hot', cleanedPageable)
+
+    if (response.success && response.data) {
+      if (response.data.content) {
+        response.data.content = this.normalizeHotFeedResponse(response.data.content)
+      } else if (Array.isArray(response.data)) {
+        response.data = this.normalizeHotFeedResponse(response.data)
       }
     }
 
@@ -230,7 +251,7 @@ class FeedService extends BaseApiService {
       buyPlace: feedData.buyPlace?.trim() || null,
       buyPrice: feedData.buyPrice || null,
       price: feedData.price || null,
-      evaluation: feedData.evaluation?.toUpperCase() || null,  // 🔥 추가
+      evaluation: feedData.evaluation?.toUpperCase() || null,
       hashtags: feedData.hashtags || []
     }
 
@@ -249,10 +270,10 @@ class FeedService extends BaseApiService {
     return await this.delete(`/feeds/${feedId}`)
   }
 
-  // ==================== 피드 리액션 메서드 ====================
+  // ==================== 피드 리액션 메서드 ⭐ 업데이트 ====================
 
   /**
-   * 피드 리액션 토글
+   * 피드 리액션 토글 (좋아요 또는 핫)
    * POST /api/feeds/{feedId}/reactions?reactionType={type}
    */
   async toggleFeedReaction(feedId, reactionType) {
@@ -261,37 +282,60 @@ class FeedService extends BaseApiService {
     }
 
     const validReactionTypes = ['LIKE', 'HOT']
-    if (!validReactionTypes.includes(reactionType.toUpperCase())) {
+    const upperType = reactionType.toUpperCase()
+
+    if (!validReactionTypes.includes(upperType)) {
       throw new Error('올바른 리액션 타입을 선택해주세요. (LIKE, HOT)')
     }
 
-    return await this.post(`/feeds/${feedId}/reactions?reactionType=${reactionType.toUpperCase()}`)
+    return await this.post(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
   }
 
   /**
-   * 피드 리액션 제거
-   * DELETE /api/feeds/{feedId}/reactions
+   * 특정 타입 리액션 제거 ⭐ 업데이트
+   * DELETE /api/feeds/{feedId}/reactions?reactionType={type}
    */
-  async removeFeedReaction(feedId) {
+  async removeFeedReaction(feedId, reactionType) {
     if (!feedId) {
       throw new Error('피드 ID가 필요합니다.')
     }
 
-    return await this.delete(`/feeds/${feedId}/reactions`)
+    const validReactionTypes = ['LIKE', 'HOT']
+    const upperType = reactionType.toUpperCase()
+
+    if (!validReactionTypes.includes(upperType)) {
+      throw new Error('올바른 리액션 타입을 선택해주세요. (LIKE, HOT)')
+    }
+
+    return await this.delete(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
   }
 
   /**
-   * 피드 좋아요
+   * 좋아요 토글
    */
-  async likeFeed(feedId) {
+  async toggleLike(feedId) {
     return this.toggleFeedReaction(feedId, 'LIKE')
   }
 
   /**
-   * 피드 핫해요
+   * 핫 토글
    */
-  async hotFeed(feedId) {
+  async toggleHot(feedId) {
     return this.toggleFeedReaction(feedId, 'HOT')
+  }
+
+  /**
+   * 좋아요 제거
+   */
+  async removeLike(feedId) {
+    return this.removeFeedReaction(feedId, 'LIKE')
+  }
+
+  /**
+   * 핫 제거
+   */
+  async removeHot(feedId) {
+    return this.removeFeedReaction(feedId, 'HOT')
   }
 
   // ==================== 검색 및 필터 메서드 ====================
@@ -381,8 +425,7 @@ class FeedService extends BaseApiService {
       ...feed,
       thumbnailUrl: feed.thumbnailUrl || null,
       hashtags: feed.hashtags || [],
-      feedEvaluation: this.normalizeFeedEvaluation(feed.feedEvaluation),  // 🔥 추가
-      commentCount: feed.commentCount || 0,  // 🔥 추가
+      feedEvaluation: this.normalizeFeedEvaluation(feed.feedEvaluation),
       reactionStats: feed.reactionStats || {
         totalCount: 0,
         likeCount: 0,
@@ -392,8 +435,25 @@ class FeedService extends BaseApiService {
   }
 
   /**
+   * 핫 피드 응답 정규화 ⭐ 신규 추가
+   */
+  normalizeHotFeedResponse(feeds) {
+    if (!Array.isArray(feeds)) return []
+
+    return feeds.map(feed => ({
+      feedId: feed.feedId,
+      productName: feed.productName || '상품명 없음',
+      reviewSummary: feed.reviewSummary || '',
+      hotFeedThumbnailDto: feed.hotFeedThumbnailDto || null,
+      likeCount: feed.likeCount || 0,
+      hotCount: feed.hotCount || 0,
+      viewCount: feed.viewCount || 0,
+      hotScore: feed.hotScore || 0
+    }))
+  }
+
+  /**
    * FeedEvaluation 정규화
-   * @JsonFormat(shape = JsonFormat.Shape.OBJECT) 처리
    */
   normalizeFeedEvaluation(evaluation) {
     if (!evaluation) return null
@@ -453,7 +513,6 @@ class FeedService extends BaseApiService {
       }
     }
 
-    // 🔥 평가 검증 추가
     if (feedData.evaluation) {
       const validEvaluations = ['BEST', 'GOOD', 'OKAY', 'BAD']
       if (!validEvaluations.includes(feedData.evaluation.toUpperCase())) {
@@ -526,7 +585,6 @@ class FeedService extends BaseApiService {
       }
     }
 
-    // 🔥 평가 검증 추가
     if (feedData.evaluation) {
       const validEvaluations = ['BEST', 'GOOD', 'OKAY', 'BAD']
       if (!validEvaluations.includes(feedData.evaluation.toUpperCase())) {
@@ -575,7 +633,6 @@ class FeedService extends BaseApiService {
       validated.hashtags = validated.hashtags.slice(0, 10)
     }
 
-    // 🔥 평가 검증 추가
     if (validated.evaluation) {
       const validEvaluations = ['BEST', 'GOOD', 'OKAY', 'BAD']
       if (validEvaluations.includes(validated.evaluation.toUpperCase())) {
@@ -618,7 +675,8 @@ class FeedService extends BaseApiService {
 
     const validSorts = [
       'createdAt,DESC', 'createdAt,ASC',
-      'viewCount,DESC', 'viewCount,ASC'
+      'viewCount,DESC', 'viewCount,ASC',
+      'likeCount,DESC', 'hotCount,DESC'  // ⭐ 추가
     ]
 
     const validated = {
@@ -647,20 +705,36 @@ export function useFeed() {
   const service = new FeedService()
 
   return {
+    // 피드 CRUD
     createFeedWithFiles: (data, thumbnail, files) => service.createFeedWithFiles(data, thumbnail, files),
     createFeed: (data) => service.createFeed(data),
     getFeed: (id) => service.getFeed(id),
     getFeeds: (condition, pageable) => service.getFeeds(condition, pageable),
+    getHotFeeds: (pageable) => service.getHotFeeds(pageable),
     getFeedsWithCursor: (condition) => service.getFeedsWithCursor(condition),
     getFeedList: (condition) => service.getFeedList(condition),
     updateFeed: (id, data) => service.updateFeed(id, data),
     deleteFeed: (id) => service.deleteFeed(id),
+
+    // 리액션
+    toggleLike: (id) => service.toggleLike(id),
+    toggleHot: (id) => service.toggleHot(id),
+    removeLike: (id) => service.removeLike(id),
+    removeHot: (id) => service.removeHot(id),
+    toggleReaction: (id, type) => service.toggleFeedReaction(id, type),
+    removeReaction: (id, type) => service.removeFeedReaction(id, type),
+
+    // ⭐ 별칭 추가 (하위 호환성)
     likeFeed: (id) => service.likeFeed(id),
     hotFeed: (id) => service.hotFeed(id),
-    toggleReaction: (id, type) => service.toggleFeedReaction(id, type),
-    removeReaction: (id) => service.removeFeedReaction(id),
+
+    // 검색/필터
     searchFeeds: (keyword, condition, pageable) => service.searchFeeds(keyword, condition, pageable),
+    getFeedsByCategory: (categoryId, pageable) => service.getFeedsByCategory(categoryId, pageable),
+    getFeedsByHashtag: (hashtag, pageable) => service.getFeedsByHashtag(hashtag, pageable),
     getFeedsByEvaluation: (evaluation, condition, pageable) => service.getFeedsByEvaluation(evaluation, condition, pageable),
+
+    // 유틸리티
     convertToAttachmentInfo: (response) => service.convertToAttachmentInfo(response)
   }
 }
@@ -724,9 +798,7 @@ export const feedUtils = {
     .filter(tag => tag.length > 0)
   },
 
-  // 🔥 평가 관련 유틸리티
   getEvaluationLabel(evaluation) {
-    // String 또는 Object 모두 처리
     const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
 
     const labels = {
@@ -742,10 +814,10 @@ export const feedUtils = {
     const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
 
     const colors = {
-      'BEST': '#F97316',  // 오렌지
-      'GOOD': '#10B981',  // 그린
-      'OKAY': '#3B82F6',  // 블루
-      'BAD': '#EF4444'    // 레드
+      'BEST': '#F97316',
+      'GOOD': '#10B981',
+      'OKAY': '#3B82F6',
+      'BAD': '#EF4444'
     }
     return colors[code] || '#64748B'
   },
@@ -754,11 +826,17 @@ export const feedUtils = {
     const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
 
     const icons = {
-      'BEST': '',
-      'GOOD': '',
-      'OKAY': '',
-      'BAD': ''
+      'BEST': '🔥',
+      'GOOD': '👍',
+      'OKAY': '👌',
+      'BAD': '👎'
     }
     return icons[code] || ''
+  },
+
+  // ⭐ 핫 스코어 포맷팅 추가
+  formatHotScore(score) {
+    if (!score || score === 0) return '0.0'
+    return parseFloat(score).toFixed(1)
   }
 }

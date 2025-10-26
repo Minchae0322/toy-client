@@ -12,8 +12,9 @@
       />
 
       <HotSection
-          :hot-posts="mockHotPosts"
-          @post-click="openPost"
+          :limit="5"
+          @feed-click="openPost"
+          @see-all="handleSeeAllHot"
       />
 
       <FeedList
@@ -120,45 +121,6 @@ watch(viewMode, (newMode) => {
   }
 });
 
-// Mock Data
-const mockHotPosts = [
-  {
-    id: 1,
-    images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800'],
-    product: '조던 4 레트로 브레드',
-    author: { name: 'sneaker_king' },
-    reactions: { fire: 234, views: 1200 }
-  },
-  {
-    id: 2,
-    images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800'],
-    product: '에어팟 맥스',
-    author: { name: 'tech_guru' },
-    reactions: { fire: 189, views: 890 }
-  },
-  {
-    id: 3,
-    images: ['https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800'],
-    product: '디올 립글로우',
-    author: { name: 'beauty_queen' },
-    reactions: { fire: 156, views: 670 }
-  },
-  {
-    id: 4,
-    images: ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800'],
-    product: '아미 로고 후드티',
-    author: { name: 'fashion_icon' },
-    reactions: { fire: 142, views: 520 }
-  },
-  {
-    id: 5,
-    images: ['https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800'],
-    product: '블루보틀 커피 원두',
-    author: { name: 'coffee_lover' },
-    reactions: { fire: 98, views: 450 }
-  }
-];
-
 // Methods
 const loadCategories = async () => {
   try {
@@ -226,14 +188,30 @@ const handleCategoryChange = ({ category, subCategory }) => {
   resetAndLoadFeeds();
 };
 
-const handleLike = (feedId) => {
-  const newSet = new Set(likedPosts.value);
-  if (newSet.has(feedId)) {
-    newSet.delete(feedId);
-  } else {
-    newSet.add(feedId);
+const handleLike = async (feedId) => {
+  try {
+    console.log('❤️ 좋아요 토글:', feedId);
+    const response = await feedService.toggleLike(feedId);
+
+    if (response.success) {
+      const newSet = new Set(likedPosts.value);
+      if (newSet.has(feedId)) {
+        newSet.delete(feedId);
+      } else {
+        newSet.add(feedId);
+      }
+      likedPosts.value = newSet;
+
+      // 피드 목록 업데이트
+      const feedIndex = feeds.value.findIndex(f => f.feedId === feedId);
+      if (feedIndex !== -1) {
+        const feed = feeds.value[feedIndex];
+        feed.reactionStats.likeCount = response.data.likeCount;
+      }
+    }
+  } catch (error) {
+    console.error('❌ 좋아요 실패:', error);
   }
-  likedPosts.value = newSet;
 };
 
 const handleSave = (feedId) => {
@@ -247,7 +225,8 @@ const handleSave = (feedId) => {
 };
 
 const handleComment = (feedId) => {
-  console.log('댓글:', feedId);
+  console.log('💬 댓글:', feedId);
+  router.push({ name: 'FeedDetail', params: { id: feedId }, hash: '#comments' });
 };
 
 const openPost = (feedId) => {
@@ -258,6 +237,12 @@ const openPost = (feedId) => {
 const handleCreateFeed = () => {
   console.log('✍️ 피드 작성 페이지로 이동');
   router.push({ name: 'FeedCreate' });
+};
+
+const handleSeeAllHot = () => {
+  console.log('🔥 핫 피드 전체보기');
+  // TODO: 핫 피드 전체 페이지 라우트 추가
+  alert('핫 피드 전체보기 페이지는 준비중입니다.');
 };
 
 // Lifecycle
@@ -300,29 +285,11 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-:root {
-  --primary: #222222;
-  --secondary: #64748B;
-  --accent: #F97316;
-  --border: #E2E8F0;
-  --bg: #F8FAFC;
-  --card: #FFFFFF;
-  --hover: #F1F5F9;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* 전역 스타일은 App.vue나 main.js에서 관리하는 것이 좋습니다 */
 .app-container {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--bg);
+  background: #F8FAFC;
   min-height: 100vh;
-  color: var(--primary);
+  color: #222222;
 }
 
 .main-content {
@@ -351,8 +318,8 @@ onUnmounted(() => {
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--card);
-  border-top: 1px solid var(--border);
+  background: #FFFFFF;
+  border-top: 1px solid #E2E8F0;
   z-index: 50;
   display: flex;
   align-items: center;
@@ -376,14 +343,14 @@ onUnmounted(() => {
   padding: 8px 12px;
   background: transparent;
   border: none;
-  color: var(--secondary);
+  color: #64748B;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: inherit;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .bottom-nav-item.active {
-  color: var(--primary);
+  color: #222222;
 }
 
 .bottom-nav-item .icon {
@@ -391,7 +358,7 @@ onUnmounted(() => {
   height: 24px;
 }
 
-.bottom-nav-item span {
+.bottom-nav-item span:not(.nav-badge) {
   font-size: 11px;
   font-weight: 600;
 }
@@ -416,7 +383,7 @@ onUnmounted(() => {
 .bottom-nav-fab {
   width: 56px;
   height: 56px;
-  background: var(--accent);
+  background: #F97316;
   color: white;
   border: none;
   border-radius: 28px;
