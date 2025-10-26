@@ -78,10 +78,11 @@ const handleLogout = async (reason = 'Token expired') => {
 }
 
 /**
- * 백엔드 RefreshJwtFilter를 통한 토큰 갱신 (무한루프 방지)
+ * 백엔드 RefreshJwtFilter를 통한 토큰 갱신 (Cookie 사용)
  */
 const refreshTokenViaBackend = async () => {
   const refreshToken = authUtils.getRefreshToken()
+
   if (!refreshToken) {
     throw new Error('No refresh token available')
   }
@@ -94,54 +95,53 @@ const refreshTokenViaBackend = async () => {
 
   console.log('🔄 [Interceptor] RefreshJwtFilter를 통한 토큰 갱신 시도')
 
-  // 백엔드의 보호된 엔드포인트들 (RefreshJwtFilter가 처리)
-  const testEndpoints = [
-    '/api/v1/auth/verify',
-    '/api/v1/users/profile',
-    '/api/v1/chat/rooms'
-  ]
+  try {
+    // 🍪 RefreshToken을 Cookie에 설정
+    document.cookie = `refreshToken=${refreshToken}; path=/; SameSite=Lax`;
 
-  for (const endpoint of testEndpoints) {
-    try {
-      console.log(`🌐 [Interceptor] 토큰 갱신 요청: ${endpoint}`)
+    console.log('🍪 [Interceptor] RefreshToken Cookie 설정 완료')
 
-      // 🔥 authClient 사용 (무한루프 방지 - 이 클라이언트는 에러 인터셉터 없음)
-      const response = await authClient.get(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${refreshToken}`,
-          'X-Device-ID': authUtils.getDeviceId()
-        }
-      })
+    // 🌐 보호된 엔드포인트 호출 (RefreshJwtFilter가 처리)
+    const response = await authClient.get('/api/v1/users/profile', {
+      headers: {
+        'X-Device-ID': authUtils.getDeviceId()
+      },
+      withCredentials: true  // 🔥 Cookie 전송 필수!
+    })
 
-      console.log(`📡 [Interceptor] 응답 상태: ${response.status}`)
+    console.log(`📡 [Interceptor] 응답 상태: ${response.status}`)
 
-      // 성공 응답 또는 404 (엔드포인트 없음)도 인증은 성공
-      if (response.status === 200 || response.status === 404) {
-        const newAccessToken = response.headers['authorization'] || response.headers['Authorization']
+    // RefreshJwtFilter가 응답 헤더에 새 AccessToken 추가
+    const newAccessToken = response.headers['authorization'] || response.headers['Authorization']
 
-        if (newAccessToken) {
-          const cleanToken = newAccessToken.replace('Bearer ', '')
-          authUtils.setAccessToken(cleanToken)
+    if (newAccessToken) {
+      const cleanToken = newAccessToken.replace('Bearer ', '')
+      authUtils.setAccessToken(cleanToken)
 
-          console.log('✅ [Interceptor] 토큰 갱신 성공:', endpoint)
-          return cleanToken
-        }
-      }
-
-    } catch (error) {
-      console.warn(`⚠️ [Interceptor] ${endpoint} 실패:`, error.response?.status, error.message)
-
-      // 🚨 401 에러면 RefreshToken 만료!
-      if (error.response?.status === 401) {
-        console.log('🚨 [Interceptor] RefreshToken 만료 확인됨')
-        throw new Error('Refresh token expired')
-      }
-
-      continue
+      console.log('✅ [Interceptor] 토큰 갱신 성공')
+      return cleanToken
     }
-  }
 
-  throw new Error('모든 엔드포인트에서 토큰 갱신 실패')
+    throw new Error('응답 헤더에 새 AccessToken 없음')
+
+  } catch (error) {
+    console.error('❌ [Interceptor] 토큰 갱신 실패:', {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data
+    })
+
+    // 🚨 401 에러면 RefreshToken 만료!
+    if (error.response?.status === 401) {
+      console.log('🚨 [Interceptor] RefreshToken 만료 확인됨')
+      throw new Error('Refresh token expired')
+    }
+
+    throw error
+  } finally {
+    // 🧹 Cookie 정리 (보안상 좋음)
+    document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  }
 }
 
 /**
@@ -262,12 +262,8 @@ apiClient.interceptors.response.use(responseInterceptor, errorInterceptor)
 
 // 🔥 인증 클라이언트에는 요청 인터셉터만 등록 (에러 인터셉터 없음 - 무한루프 방지!)
 authClient.interceptors.request.use(requestInterceptor, (error) => Promise.reject(error))
-// authClient에는 응답 인터셉터 등록하지 않음!
 
-// 🔥 전역 axios에는 등록하지 않음 (기존 fetch와 충돌 방지)
-// axios.interceptors는 주석 처리
-
-console.log('✅ [Interceptor] 토큰 자동 갱신 인터셉터 등록 완료 (무한루프 방지)')
+console.log('✅ [Interceptor] 토큰 자동 갱신 인터셉터 등록 완료 (Cookie 기반)')
 
 // ==================== 수동 토큰 갱신 함수 (긴급용) ====================
 

@@ -71,7 +71,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCategory } from '@/services/CategoryService';
 import { useFeed } from '@/services/FeedService';
@@ -95,9 +95,30 @@ const hasNext = ref(true);
 const loading = ref(false);
 const likedPosts = ref(new Set());
 const savedPosts = ref(new Set());
-const viewMode = ref('feed');
+
+// localStorage에서 뷰 모드 불러오기
+const getStoredViewMode = () => {
+  try {
+    return localStorage.getItem('feedViewMode') || 'feed';
+  } catch (error) {
+    console.error('localStorage 읽기 실패:', error);
+    return 'feed';
+  }
+};
+
+const viewMode = ref(getStoredViewMode());
 const feedListRef = ref(null);
 const selectedCategoryId = ref(null);
+
+// viewMode 변경 감지 및 저장
+watch(viewMode, (newMode) => {
+  try {
+    localStorage.setItem('feedViewMode', newMode);
+    console.log('💾 뷰 모드 저장:', newMode);
+  } catch (error) {
+    console.error('localStorage 저장 실패:', error);
+  }
+});
 
 // Mock Data
 const mockHotPosts = [
@@ -227,7 +248,6 @@ const handleSave = (feedId) => {
 
 const handleComment = (feedId) => {
   console.log('댓글:', feedId);
-  // 나중에 댓글 모달 구현 시 사용
 };
 
 const openPost = (feedId) => {
@@ -245,6 +265,7 @@ let observer = null;
 
 onMounted(() => {
   console.log('✅ FeedHomeView 마운트');
+  console.log('📋 저장된 뷰 모드:', viewMode.value);
 
   loadCategories();
   loadFeeds();

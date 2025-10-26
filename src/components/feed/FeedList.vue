@@ -26,8 +26,8 @@
 
     <!-- List View -->
     <div v-else class="list-view">
-      <article v-for="feed in feeds" :key="feed.feedId" class="list-item">
-        <div class="list-image" @click="handlePostClick(feed.feedId)">
+      <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="handlePostClick(feed.feedId)">
+        <div class="list-image">
           <img :src="feed.thumbnailUrl?.fileUrl || 'https://via.placeholder.com/400'" :alt="feed.productName" />
         </div>
         <div class="list-content">
@@ -46,44 +46,47 @@
                 <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
               </div>
             </div>
-            <button class="btn-more">
+            <button class="btn-more" @click.stop>
               <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
               </svg>
             </button>
           </div>
-          <div class="list-main" @click="handlePostClick(feed.feedId)">
+
+          <div class="list-main">
             <h3 class="list-title">{{ feed.productName }}</h3>
             <p class="list-review">{{ feed.reviewSummary }}</p>
-            <div class="list-details">
-              <span v-if="feed.price" class="price">{{ formatPrice(feed.price) }}</span>
+
+            <!-- 리액션과 가격 정보를 한 줄로 통합 -->
+            <div class="list-meta">
+              <div class="list-reactions">
+                <span class="reaction-item">
+                  <span class="fire-emoji">🔥</span>
+                  {{ feed.reactionStats?.likeCount || 0 }}
+                </span>
+                <span class="reaction-item">
+                  <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  {{ feed.reactionStats?.hotCount || 0 }}
+                </span>
+                <span class="reaction-item">
+                  <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                  </svg>
+                  {{ feed.commentCount || 0 }}
+                </span>
+              </div>
+              <div class="list-details" v-if="feed.price">
+                <span class="price">{{ formatPrice(feed.price) }}</span>
+              </div>
             </div>
+
             <div class="list-hashtags" v-if="feed.hashtags && feed.hashtags.length > 0">
-              <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="hashtag">#{{ tag }}</span>
+              <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="hashtag" @click.stop>
+                #{{ tag }}
+              </span>
             </div>
-          </div>
-          <div class="list-actions">
-            <button @click="handleLike(feed.feedId)" :class="['action-btn', { liked: likedPosts.has(feed.feedId) }]">
-              <span class="fire">🔥</span>
-              <span>{{ feed.reactionStats?.likeCount || 0 }}</span>
-            </button>
-            <button class="action-btn">
-              <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
-              <span>{{ feed.reactionStats?.hotCount || 0 }}</span>
-            </button>
-            <button @click="handleComment(feed.feedId)" class="action-btn">
-              <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-              </svg>
-              <span>{{ feed.commentCount || 0 }}</span>
-            </button>
-            <button @click="handleSave(feed.feedId)" :class="['action-btn save', { saved: savedPosts.has(feed.feedId) }]">
-              <svg class="icon" :fill="savedPosts.has(feed.feedId) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-              </svg>
-            </button>
           </div>
         </div>
       </article>
@@ -294,6 +297,7 @@ defineExpose({
   display: flex;
   gap: 20px;
   transition: all 0.3s;
+  cursor: pointer;
 }
 
 .list-item:hover {
@@ -307,7 +311,6 @@ defineExpose({
   flex-shrink: 0;
   border-radius: 16px;
   overflow: hidden;
-  cursor: pointer;
   background: var(--hover);
 }
 
@@ -327,18 +330,22 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .list-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .list-author-info {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .author-avatar-small {
@@ -364,6 +371,7 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .author-name {
@@ -397,6 +405,7 @@ defineExpose({
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-more:hover {
@@ -411,14 +420,15 @@ defineExpose({
 
 .list-main {
   flex: 1;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .list-title {
   font-size: 18px;
   font-weight: 700;
   color: var(--primary);
-  margin-bottom: 8px;
   line-height: 1.4;
 }
 
@@ -426,25 +436,56 @@ defineExpose({
   font-size: 14px;
   color: var(--secondary);
   line-height: 1.6;
-  margin-bottom: 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* 리액션 & 가격 정보 - 한 줄로 정리 */
+.list-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.list-reactions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reaction-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--secondary);
+  font-weight: 500;
+}
+
+.fire-emoji {
+  font-size: 14px;
+}
+
+.icon-small {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
 .list-details {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
-  font-size: 13px;
-  margin-bottom: 8px;
 }
 
 .price {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--primary);
+  font-size: 13px;
 }
 
 .list-hashtags {
@@ -454,7 +495,7 @@ defineExpose({
 }
 
 .hashtag {
-  font-size: 13px;
+  font-size: 12px;
   color: #1D4ED8;
   font-weight: 500;
   cursor: pointer;
@@ -464,59 +505,6 @@ defineExpose({
 .hashtag:hover {
   color: #1E40AF;
   text-decoration: underline;
-}
-
-.list-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-  flex-shrink: 0;
-}
-
-.action-btn:hover {
-  background: var(--hover);
-}
-
-.action-btn.liked {
-  color: var(--accent);
-}
-
-.action-btn .icon {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2;
-  flex-shrink: 0;
-}
-
-.action-btn .fire {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.action-btn.save {
-  margin-left: auto;
-}
-
-.action-btn.saved {
-  color: #1D4ED8;
 }
 
 /* Loading & Empty States */
@@ -594,23 +582,6 @@ defineExpose({
   .list-image {
     width: 100%;
     height: 200px;
-  }
-}
-
-@media (max-width: 1279px) {
-  .action-btn {
-    padding: 6px 8px;
-    font-size: 13px;
-    gap: 4px;
-  }
-
-  .action-btn .icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  .action-btn .fire {
-    font-size: 16px;
   }
 }
 </style>
