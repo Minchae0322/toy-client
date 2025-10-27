@@ -26,8 +26,7 @@
           :liked-posts="likedPosts"
           :hot-posts="hotPosts"
           :saved-posts="savedPosts"
-          @like="handleLike"
-          @hot="handleHot"
+          @update="handleReactionUpdate"
           @save="handleSave"
           @comment="handleComment"
           @post-click="openPost"
@@ -184,6 +183,41 @@ const loadFeeds = async () => {
     console.error('❌ 피드 로드 실패:', error);
   } finally {
     loading.value = false;
+  }
+};
+
+const handleReactionUpdate = ({ feedId, likeCount, hotCount, action, reactionType }) => {
+  console.log('🔄 리액션 업데이트:', { feedId, action, reactionType });
+
+  const newLikedSet = new Set(likedPosts.value);
+  const newHotSet = new Set(hotPosts.value);
+
+  if (reactionType === 'LIKE') {
+    if (action === 'added') {
+      newLikedSet.add(feedId);
+    } else if (action === 'removed') {
+      newLikedSet.delete(feedId);
+    }
+  } else if (reactionType === 'HOT') {
+    if (action === 'added') {
+      newHotSet.add(feedId);
+    } else if (action === 'removed') {
+      newHotSet.delete(feedId);
+    }
+  }
+
+  likedPosts.value = newLikedSet;
+  hotPosts.value = newHotSet;
+
+  // 피드 목록 업데이트
+  const feedIndex = feeds.value.findIndex(f => f.feedId === feedId);
+  if (feedIndex !== -1) {
+    feeds.value[feedIndex].likeCount = likeCount;
+    feeds.value[feedIndex].hotCount = hotCount;
+    feeds.value[feedIndex].userReactions = {
+      hasLike: newLikedSet.has(feedId),
+      hasHot: newHotSet.has(feedId)
+    };
   }
 };
 

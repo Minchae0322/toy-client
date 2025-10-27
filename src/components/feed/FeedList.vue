@@ -18,8 +18,7 @@
           :is-liked="likedPosts.has(feed.feedId)"
           :is-hot="hotPosts.has(feed.feedId)"
           :is-saved="savedPosts.has(feed.feedId)"
-          @like="handleLike"
-          @hot="handleHot"
+          @update="handleUpdate"
           @save="handleSave"
           @comment="handleComment"
           @click="handlePostClick"
@@ -216,15 +215,10 @@ const getEvaluationIconFill = (evaluation) => {
   return code === 'BEST' ? 'currentColor' : 'none';
 };
 
-const handleLike = (feedId) => {
-  console.log('👍 FeedList - Like:', feedId);
-  emit('like', feedId);
+const handleUpdate = (data) => {
+  emit('update', data);
 };
 
-const handleHot = (feedId) => {
-  console.log('🔥 FeedList - Hot:', feedId);
-  emit('hot', feedId);
-};
 
 const handleSave = (feedId) => {
   console.log('💾 FeedList - Save:', feedId);

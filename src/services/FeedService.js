@@ -270,7 +270,7 @@ class FeedService extends BaseApiService {
     return await this.delete(`/feeds/${feedId}`)
   }
 
-  // ==================== 피드 리액션 메서드 (⭐ 백엔드 응답 구조 업데이트) ====================
+  // ==================== 피드 리액션 메서드 (⭐ 수정 완료) ====================
 
   /**
    * 피드 리액션 토글 (좋아요 또는 핫)
@@ -279,7 +279,7 @@ class FeedService extends BaseApiService {
    * ⭐ 백엔드 응답 구조:
    * {
    *   reactionType: "LIKE" | "HOT",
-   *   action: "added" | "removed" | "changed",
+   *   action: "added" | "removed",
    *   message: "리액션이 추가되었습니다.",
    *   likeCount: 42,
    *   hotCount: 15
@@ -297,16 +297,17 @@ class FeedService extends BaseApiService {
       throw new Error('올바른 리액션 타입을 선택해주세요. (LIKE, HOT)')
     }
 
+    console.log(`🔄 [FEED_SERVICE] ${upperType} 토글 요청: feedId=${feedId}`)
+
     const response = await this.post(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
 
-    // ⭐ 응답 데이터 정규화
     if (response.success && response.data) {
       response.data = {
         ...response.data,
         likeCount: response.data.likeCount || 0,
         hotCount: response.data.hotCount || 0
       }
-      console.log(`✅ [FEED_SERVICE] 리액션 토글 완료:`, response.data)
+      console.log(`✅ [FEED_SERVICE] ${upperType} 토글 완료:`, response.data)
     }
 
     return response
@@ -315,15 +316,6 @@ class FeedService extends BaseApiService {
   /**
    * 특정 타입 리액션 제거
    * DELETE /api/feeds/{feedId}/reactions?reactionType={type}
-   *
-   * ⭐ 백엔드 응답 구조:
-   * {
-   *   reactionType: "LIKE" | "HOT",
-   *   action: "removed",
-   *   message: "리액션이 취소되었습니다.",
-   *   likeCount: 41,
-   *   hotCount: 15
-   * }
    */
   async removeFeedReaction(feedId, reactionType) {
     if (!feedId) {
@@ -337,46 +329,45 @@ class FeedService extends BaseApiService {
       throw new Error('올바른 리액션 타입을 선택해주세요. (LIKE, HOT)')
     }
 
+    console.log(`🗑️ [FEED_SERVICE] ${upperType} 제거 요청: feedId=${feedId}`)
+
     const response = await this.delete(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
 
-    // ⭐ 응답 데이터 정규화
     if (response.success && response.data) {
       response.data = {
         ...response.data,
         likeCount: response.data.likeCount || 0,
         hotCount: response.data.hotCount || 0
       }
-      console.log(`✅ [FEED_SERVICE] 리액션 제거 완료:`, response.data)
+      console.log(`✅ [FEED_SERVICE] ${upperType} 제거 완료:`, response.data)
     }
 
     return response
   }
 
   /**
-   * 좋아요 토글
-   * ⭐ 이미 좋아요를 눌렀다면 제거, 아니면 추가
+   * 좋아요 토글 (하트 아이콘)
    */
   async toggleLike(feedId) {
     return this.toggleFeedReaction(feedId, 'LIKE')
   }
 
   /**
-   * 핫 토글
-   * ⭐ 이미 핫을 눌렀다면 제거, 아니면 추가 (LIKE가 있으면 LIKE→HOT 변경)
+   * 핫 토글 (불꽃 아이콘)
    */
   async toggleHot(feedId) {
     return this.toggleFeedReaction(feedId, 'HOT')
   }
 
   /**
-   * 좋아요 제거 (직접 제거 - 일반적으로 토글 사용 권장)
+   * 좋아요 제거
    */
   async removeLike(feedId) {
     return this.removeFeedReaction(feedId, 'LIKE')
   }
 
   /**
-   * 핫 제거 (직접 제거 - 일반적으로 토글 사용 권장)
+   * 핫 제거
    */
   async removeHot(feedId) {
     return this.removeFeedReaction(feedId, 'HOT')
@@ -461,7 +452,6 @@ class FeedService extends BaseApiService {
 
   /**
    * 피드 목록 응답 정규화
-   * ⭐ 백엔드 응답 구조 변경: reactionStats 제거, 개별 필드 사용
    */
   normalizeFeedListResponse(feeds) {
     if (!Array.isArray(feeds)) return []
@@ -471,10 +461,10 @@ class FeedService extends BaseApiService {
       thumbnailUrl: feed.thumbnailUrl || null,
       hashtags: feed.hashtags || [],
       feedEvaluation: this.normalizeFeedEvaluation(feed.feedEvaluation),
-      // ⭐ 개별 카운트 필드로 변경
       likeCount: feed.likeCount || 0,
       hotCount: feed.hotCount || 0,
-      // ⭐ 사용자 리액션 상태 추가
+      commentCount: feed.commentCount || 0,
+      viewCount: feed.viewCount || 0,
       userReactions: feed.userReactions || {
         hasLike: false,
         hasHot: false
@@ -506,12 +496,10 @@ class FeedService extends BaseApiService {
   normalizeFeedEvaluation(evaluation) {
     if (!evaluation) return null
 
-    // 이미 정규화된 경우
     if (typeof evaluation === 'string') {
       return evaluation
     }
 
-    // { code: "BEST", description: "강추" } 형태인 경우
     if (evaluation.code) {
       return evaluation.code
     }
@@ -764,7 +752,7 @@ export function useFeed() {
     updateFeed: (id, data) => service.updateFeed(id, data),
     deleteFeed: (id) => service.deleteFeed(id),
 
-    // 리액션 (⭐ 업데이트됨)
+    // 리액션
     toggleLike: (id) => service.toggleLike(id),
     toggleHot: (id) => service.toggleHot(id),
     removeLike: (id) => service.removeLike(id),
