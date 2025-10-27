@@ -27,6 +27,9 @@ import FeedHomeView from '@/views/FeedHomeView.vue'
 import FeedDetailView from '@/views/FeedDetailView.vue'
 import FeedCreateView from '@/views/FeedCreateView.vue'
 
+// Battle Views import
+import BattleCreateView from '@/views/BattleCreateView.vue'
+
 const routes = [
   // ==================== 상품 관련 라우트 ====================
   {
@@ -130,6 +133,17 @@ const routes = [
       requiresAuth: false,
       public: true,
       title: '인증 상세'
+    }
+  },
+
+  // ==================== 배틀 관련 라우트 ====================
+  {
+    path: '/battle/create',
+    name: 'BattleCreate',
+    component: BattleCreateView,
+    meta: {
+      requiresAuth: true,
+      title: '배틀 만들기'
     }
   },
 
@@ -667,6 +681,24 @@ export const feedNavigation = {
   }
 }
 
+// ==================== 배틀 네비게이션 헬퍼 ====================
+export const battleNavigation = {
+  /**
+   * 배틀 생성 페이지로 이동
+   */
+  toCreate() {
+    return router.push({ name: 'BattleCreate' })
+  },
+
+  /**
+   * 배틀 관련 페이지인지 확인
+   */
+  isBattlePage() {
+    const route = router.currentRoute.value
+    return route.name?.startsWith('Battle')
+  }
+}
+
 // ==================== 통합 네비게이션 헬퍼 ====================
 export const navigation = {
   // 기존 채팅 네비게이션
@@ -680,6 +712,9 @@ export const navigation = {
 
   // 피드 네비게이션
   feed: feedNavigation,
+
+  // 배틀 네비게이션
+  battle: battleNavigation,
 
   /**
    * 홈으로 이동
