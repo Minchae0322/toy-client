@@ -6,20 +6,30 @@
     </div>
 
     <nav class="nav-menu">
-      <button class="nav-item active">
+      <router-link
+          to="/feed"
+          class="nav-item"
+          active-class="active"
+      >
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
         </svg>
         <span>홈</span>
-      </button>
-      <button class="nav-item">
+      </router-link>
+
+      <router-link
+          to="/battle"
+          class="nav-item"
+          active-class="active"
+      >
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
           <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.5 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-5-2a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
         </svg>
         <span>배틀</span>
         <span class="badge">12</span>
-      </button>
+      </router-link>
+
       <button class="nav-item">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
@@ -28,12 +38,14 @@
         <span>메시지</span>
         <span class="badge badge-red">3</span>
       </button>
+
       <button class="nav-item">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM13 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z"/>
         </svg>
         <span>컬렉션</span>
       </button>
+
       <button class="nav-item">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
@@ -142,6 +154,7 @@ const handleCreateFeed = () => {
   transition: all 0.2s;
   font-family: inherit;
   position: relative;
+  text-decoration: none;
 }
 
 .nav-item:hover {

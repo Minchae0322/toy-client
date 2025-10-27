@@ -59,7 +59,7 @@
 
     <!-- Bottom Navigation - Mobile Only -->
     <nav class="bottom-nav">
-      <button class="bottom-nav-item">
+      <button class="bottom-nav-item" @click="$router.push('/feed')">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
         </svg>
@@ -95,9 +95,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useBattle } from '@/services/BattleService';
+import {ref, onMounted, onUnmounted, watch} from 'vue';
+import {useRouter} from 'vue-router';
 
 import AppSidebar from '@/components/feed/AppSidebar.vue';
 import AppHeader from '@/components/battle/AppHeader.vue';
@@ -109,13 +108,57 @@ import TrendingBattles from '@/components/battle/TrendingBattles.vue';
 import DeadlineBattles from '@/components/battle/DeadlineBattles.vue';
 
 const router = useRouter();
-const battleService = useBattle();
+
+// ==================== 통일된 Mock 데이터 생성 함수 ====================
+const generateMockBattle = (id, isHot = false) => ({
+  battleId: id,
+  title: `${isHot ? '🔥 ' : ''}2024년 최고의 무선이어폰은?`,
+  description: '여러분이 생각하는 올해 최고의 무선이어폰을 투표해주세요!',
+  status: Math.random() > 0.3 ? 'ACTIVE' : 'ENDED',
+  startDate: '2024-10-01T00:00:00',
+  endDate: '2024-10-31T23:59:59',
+  totalVotes: Math.floor(Math.random() * 5000) + 100,
+  participantCount: Math.floor(Math.random() * 1000) + 50,
+  viewCount: Math.floor(Math.random() * 10000) + 500,
+
+  // ✅ 통일된 필드명 사용
+  categoryName: ['전자기기', '패션', '뷰티', '식품', '생활'][Math.floor(Math.random() * 5)],
+  battleType: Math.random() > 0.5 ? 'CURATION' : 'OPEN',
+
+  // ✅ createdBy 객체 구조 통일
+  createdBy: {
+    userId: Math.floor(Math.random() * 1000),
+    nickname: ['테크리뷰어', '가젯매니아', '얼리어답터', '디지털노마드'][Math.floor(Math.random() * 4)],
+    profileImage: null
+  },
+
+  // ✅ options 배열 항상 포함
+  options: [
+    {
+      optionId: id * 10 + 1,
+      title: 'AirPods Pro 2세대',
+      voteCount: Math.floor(Math.random() * 2000),
+      votePercentage: Math.floor(Math.random() * 40) + 20,
+      imageUrl: 'https://via.placeholder.com/400x300?text=Option+1'
+    },
+    {
+      optionId: id * 10 + 2,
+      title: 'Sony WF-1000XM5',
+      voteCount: Math.floor(Math.random() * 2000),
+      votePercentage: Math.floor(Math.random() * 40) + 20,
+      imageUrl: 'https://via.placeholder.com/400x300?text=Option+2'
+    }
+  ],
+
+  hotScore: isHot ? Math.random() * 100 + 50 : Math.random() * 50,
+  createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
+});
 
 // State
 const tabs = [
-  { id: 'ongoing', label: '진행중', count: 47 },
-  { id: 'ended', label: '종료됨', count: 128 },
-  { id: 'my', label: '내 배틀', count: 12 }
+  {id: 'ongoing', label: '진행중', count: 47},
+  {id: 'ended', label: '종료됨', count: 128},
+  {id: 'my', label: '내 배틀', count: 12}
 ];
 
 const activeTab = ref('ongoing');
@@ -133,12 +176,14 @@ const battleListRef = ref(null);
 const loadHotBattles = async () => {
   try {
     hotLoading.value = true;
-    const response = await battleService.getHotBattles({ limit: 2 });
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    if (response.success && response.data) {
-      hotBattles.value = response.data;
-      console.log('✅ HOT 배틀 로드 성공:', hotBattles.value);
-    }
+    hotBattles.value = [
+      generateMockBattle(1, true),
+      generateMockBattle(2, true)
+    ];
+
+    console.log('✅ HOT 배틀 로드 성공:', hotBattles.value);
   } catch (error) {
     console.error('❌ HOT 배틀 로드 실패:', error);
   } finally {
@@ -148,36 +193,35 @@ const loadHotBattles = async () => {
 
 const loadBattles = async () => {
   if (loading.value || !hasNext.value) {
-    console.log('⏸️ 로딩 중단:', { loading: loading.value, hasNext: hasNext.value });
     return;
   }
 
   try {
     loading.value = true;
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-    const searchCondition = {
-      status: activeTab.value === 'ongoing' ? 'ACTIVE' : activeTab.value === 'ended' ? 'ENDED' : null,
-      cursor: cursor.value,
-      size: 20
-    };
+    const currentLength = battles.value.length;
+    const newBattles = Array.from({length: 20}, (_, i) =>
+        generateMockBattle(currentLength + i + 100)
+    );
 
-    console.log('🔍 배틀 로드 요청:', searchCondition);
+    // 필터링 (activeTab 기반)
+    const filteredBattles = newBattles.filter(battle => {
+      if (activeTab.value === 'ongoing') return battle.status === 'ACTIVE';
+      if (activeTab.value === 'ended') return battle.status === 'ENDED';
+      return true;
+    });
 
-    const response = await battleService.getBattlesWithCursor(searchCondition);
+    battles.value = [...battles.value, ...filteredBattles];
 
-    console.log('📦 배틀 응답:', response);
-
-    if (response.success && response.data) {
-      battles.value = [...battles.value, ...response.data.battles];
-      cursor.value = response.data.nextCursor;
-      hasNext.value = response.data.hasNext;
-
-      console.log('✅ 배틀 로드 성공:', {
-        총배틀수: battles.value.length,
-        다음커서: cursor.value,
-        다음페이지: hasNext.value
-      });
+    if (battles.value.length >= 100) {
+      hasNext.value = false;
     }
+
+    console.log('✅ 배틀 로드 성공:', {
+      총배틀수: battles.value.length,
+      다음페이지: hasNext.value
+    });
   } catch (error) {
     console.error('❌ 배틀 로드 실패:', error);
   } finally {
@@ -187,12 +231,13 @@ const loadBattles = async () => {
 
 const loadTrendingBattles = async () => {
   try {
-    const response = await battleService.getTrendingBattles({ limit: 5 });
+    await new Promise(resolve => setTimeout(resolve, 300));
 
-    if (response.success && response.data) {
-      trendingBattles.value = response.data;
-      console.log('✅ 트렌딩 배틀 로드 성공:', trendingBattles.value);
-    }
+    trendingBattles.value = Array.from({length: 5}, (_, i) =>
+        generateMockBattle(200 + i, false)
+    );
+
+    console.log('✅ 트렌딩 배틀 로드 성공');
   } catch (error) {
     console.error('❌ 트렌딩 배틀 로드 실패:', error);
   }
@@ -200,12 +245,14 @@ const loadTrendingBattles = async () => {
 
 const loadDeadlineBattles = async () => {
   try {
-    const response = await battleService.getDeadlineBattles({ limit: 2 });
+    await new Promise(resolve => setTimeout(resolve, 300));
 
-    if (response.success && response.data) {
-      deadlineBattles.value = response.data;
-      console.log('✅ 마감 임박 배틀 로드 성공:', deadlineBattles.value);
-    }
+    deadlineBattles.value = Array.from({length: 2}, (_, i) => ({
+      ...generateMockBattle(300 + i, false),
+      endDate: new Date(Date.now() + Math.random() * 24 * 60 * 60 * 1000).toISOString()
+    }));
+
+    console.log('✅ 마감 임박 배틀 로드 성공');
   } catch (error) {
     console.error('❌ 마감 임박 배틀 로드 실패:', error);
   }
@@ -221,24 +268,31 @@ const resetAndLoadBattles = () => {
 
 const openBattle = (battleId) => {
   console.log('📖 배틀 상세 페이지로 이동:', battleId);
-  router.push({ name: 'BattleDetail', params: { id: battleId } });
+  alert(`배틀 상세 페이지 (ID: ${battleId})는 준비중입니다.`);
+  // router.push({ name: 'BattleDetail', params: { id: battleId } });
 };
 
 const handleCreateBattle = () => {
   console.log('✍️ 배틀 생성 페이지로 이동');
-  router.push({ name: 'BattleCreate' });
+  router.push({name: 'BattleCreate'});
 };
 
 const handleVote = (battleId) => {
   console.log('🗳️ 투표:', battleId);
-  router.push({ name: 'BattleDetail', params: { id: battleId }, hash: '#vote' });
+  alert(`투표 기능 (ID: ${battleId})은 준비중입니다.`);
 };
+
+// 탭 변경 시 배틀 리로드
+watch(activeTab, () => {
+  console.log('📌 탭 변경:', activeTab.value);
+  resetAndLoadBattles();
+});
 
 // Lifecycle
 let observer = null;
 
 onMounted(() => {
-  console.log('✅ BattleListView 마운트');
+  console.log('✅ BattleListView 마운트 (통일된 데이터 구조)');
 
   loadHotBattles();
   loadBattles();
@@ -292,7 +346,6 @@ onUnmounted(() => {
   min-height: 100vh;
 }
 
-/* 메인 컨텐츠 */
 .main-content {
   flex: 1;
   margin-left: 260px;
@@ -315,7 +368,6 @@ onUnmounted(() => {
   }
 }
 
-/* 컨텐츠 영역 */
 .content-area {
   padding: 40px;
 }
@@ -326,7 +378,6 @@ onUnmounted(() => {
   }
 }
 
-/* 섹션 헤더 */
 .section-header {
   margin-bottom: 24px;
 }
@@ -338,7 +389,6 @@ onUnmounted(() => {
   letter-spacing: -0.01em;
 }
 
-/* Bottom Navigation */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -435,16 +485,5 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   stroke-width: 2.5;
-}
-
-/* 유틸리티 */
-.dot-separator {
-  display: inline-block;
-  width: 2px;
-  height: 2px;
-  background: #D1D5DB;
-  border-radius: 50%;
-  margin: 0 8px;
-  vertical-align: middle;
 }
 </style>

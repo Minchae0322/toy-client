@@ -28,6 +28,7 @@ import FeedDetailView from '@/views/FeedDetailView.vue'
 import FeedCreateView from '@/views/FeedCreateView.vue'
 
 // Battle Views import
+import BattleListView from '@/views/BattleListView.vue'
 import BattleCreateView from '@/views/BattleCreateView.vue'
 
 const routes = [
@@ -137,6 +138,17 @@ const routes = [
   },
 
   // ==================== 배틀 관련 라우트 ====================
+  // 라우트 설정
+  {
+    path: '/battle',
+    name: 'BattleList',
+    component: BattleListView,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '월간 배틀'
+    }
+  },
   {
     path: '/battle/create',
     name: 'BattleCreate',
