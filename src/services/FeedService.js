@@ -171,7 +171,7 @@ class FeedService extends BaseApiService {
   }
 
   /**
-   * 핫 피드 목록 조회 ⭐ 신규 추가
+   * 핫 피드 목록 조회
    * GET /api/feeds/hot
    */
   async getHotFeeds(pageable = {}) {
@@ -270,11 +270,20 @@ class FeedService extends BaseApiService {
     return await this.delete(`/feeds/${feedId}`)
   }
 
-  // ==================== 피드 리액션 메서드 ⭐ 업데이트 ====================
+  // ==================== 피드 리액션 메서드 (⭐ 백엔드 응답 구조 업데이트) ====================
 
   /**
    * 피드 리액션 토글 (좋아요 또는 핫)
    * POST /api/feeds/{feedId}/reactions?reactionType={type}
+   *
+   * ⭐ 백엔드 응답 구조:
+   * {
+   *   reactionType: "LIKE" | "HOT",
+   *   action: "added" | "removed" | "changed",
+   *   message: "리액션이 추가되었습니다.",
+   *   likeCount: 42,
+   *   hotCount: 15
+   * }
    */
   async toggleFeedReaction(feedId, reactionType) {
     if (!feedId) {
@@ -288,12 +297,33 @@ class FeedService extends BaseApiService {
       throw new Error('올바른 리액션 타입을 선택해주세요. (LIKE, HOT)')
     }
 
-    return await this.post(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
+    const response = await this.post(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
+
+    // ⭐ 응답 데이터 정규화
+    if (response.success && response.data) {
+      response.data = {
+        ...response.data,
+        likeCount: response.data.likeCount || 0,
+        hotCount: response.data.hotCount || 0
+      }
+      console.log(`✅ [FEED_SERVICE] 리액션 토글 완료:`, response.data)
+    }
+
+    return response
   }
 
   /**
-   * 특정 타입 리액션 제거 ⭐ 업데이트
+   * 특정 타입 리액션 제거
    * DELETE /api/feeds/{feedId}/reactions?reactionType={type}
+   *
+   * ⭐ 백엔드 응답 구조:
+   * {
+   *   reactionType: "LIKE" | "HOT",
+   *   action: "removed",
+   *   message: "리액션이 취소되었습니다.",
+   *   likeCount: 41,
+   *   hotCount: 15
+   * }
    */
   async removeFeedReaction(feedId, reactionType) {
     if (!feedId) {
@@ -307,11 +337,24 @@ class FeedService extends BaseApiService {
       throw new Error('올바른 리액션 타입을 선택해주세요. (LIKE, HOT)')
     }
 
-    return await this.delete(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
+    const response = await this.delete(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
+
+    // ⭐ 응답 데이터 정규화
+    if (response.success && response.data) {
+      response.data = {
+        ...response.data,
+        likeCount: response.data.likeCount || 0,
+        hotCount: response.data.hotCount || 0
+      }
+      console.log(`✅ [FEED_SERVICE] 리액션 제거 완료:`, response.data)
+    }
+
+    return response
   }
 
   /**
    * 좋아요 토글
+   * ⭐ 이미 좋아요를 눌렀다면 제거, 아니면 추가
    */
   async toggleLike(feedId) {
     return this.toggleFeedReaction(feedId, 'LIKE')
@@ -319,20 +362,21 @@ class FeedService extends BaseApiService {
 
   /**
    * 핫 토글
+   * ⭐ 이미 핫을 눌렀다면 제거, 아니면 추가 (LIKE가 있으면 LIKE→HOT 변경)
    */
   async toggleHot(feedId) {
     return this.toggleFeedReaction(feedId, 'HOT')
   }
 
   /**
-   * 좋아요 제거
+   * 좋아요 제거 (직접 제거 - 일반적으로 토글 사용 권장)
    */
   async removeLike(feedId) {
     return this.removeFeedReaction(feedId, 'LIKE')
   }
 
   /**
-   * 핫 제거
+   * 핫 제거 (직접 제거 - 일반적으로 토글 사용 권장)
    */
   async removeHot(feedId) {
     return this.removeFeedReaction(feedId, 'HOT')
@@ -417,6 +461,7 @@ class FeedService extends BaseApiService {
 
   /**
    * 피드 목록 응답 정규화
+   * ⭐ 백엔드 응답 구조 변경: reactionStats 제거, 개별 필드 사용
    */
   normalizeFeedListResponse(feeds) {
     if (!Array.isArray(feeds)) return []
@@ -426,16 +471,19 @@ class FeedService extends BaseApiService {
       thumbnailUrl: feed.thumbnailUrl || null,
       hashtags: feed.hashtags || [],
       feedEvaluation: this.normalizeFeedEvaluation(feed.feedEvaluation),
-      reactionStats: feed.reactionStats || {
-        totalCount: 0,
-        likeCount: 0,
-        hotCount: 0
+      // ⭐ 개별 카운트 필드로 변경
+      likeCount: feed.likeCount || 0,
+      hotCount: feed.hotCount || 0,
+      // ⭐ 사용자 리액션 상태 추가
+      userReactions: feed.userReactions || {
+        hasLike: false,
+        hasHot: false
       }
     }))
   }
 
   /**
-   * 핫 피드 응답 정규화 ⭐ 신규 추가
+   * 핫 피드 응답 정규화
    */
   normalizeHotFeedResponse(feeds) {
     if (!Array.isArray(feeds)) return []
@@ -676,7 +724,7 @@ class FeedService extends BaseApiService {
     const validSorts = [
       'createdAt,DESC', 'createdAt,ASC',
       'viewCount,DESC', 'viewCount,ASC',
-      'likeCount,DESC', 'hotCount,DESC'  // ⭐ 추가
+      'likeCount,DESC', 'hotCount,DESC'
     ]
 
     const validated = {
@@ -716,17 +764,13 @@ export function useFeed() {
     updateFeed: (id, data) => service.updateFeed(id, data),
     deleteFeed: (id) => service.deleteFeed(id),
 
-    // 리액션
+    // 리액션 (⭐ 업데이트됨)
     toggleLike: (id) => service.toggleLike(id),
     toggleHot: (id) => service.toggleHot(id),
     removeLike: (id) => service.removeLike(id),
     removeHot: (id) => service.removeHot(id),
     toggleReaction: (id, type) => service.toggleFeedReaction(id, type),
     removeReaction: (id, type) => service.removeFeedReaction(id, type),
-
-    // ⭐ 별칭 추가 (하위 호환성)
-    likeFeed: (id) => service.likeFeed(id),
-    hotFeed: (id) => service.hotFeed(id),
 
     // 검색/필터
     searchFeeds: (keyword, condition, pageable) => service.searchFeeds(keyword, condition, pageable),
@@ -834,7 +878,6 @@ export const feedUtils = {
     return icons[code] || ''
   },
 
-  // ⭐ 핫 스코어 포맷팅 추가
   formatHotScore(score) {
     if (!score || score === 0) return '0.0'
     return parseFloat(score).toFixed(1)

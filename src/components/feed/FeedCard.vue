@@ -81,10 +81,8 @@
               :class="['action-btn', { hot: localIsHot }]"
               :disabled="isLoading"
           >
-            <svg class="icon" :fill="localIsHot ? 'currentColor' : 'none'" stroke="currentColor"
-                 viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            <svg class="icon" :fill="localIsHot ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
             </svg>
             <span>{{ formatCount(localHotCount) }}</span>
           </button>
@@ -92,8 +90,7 @@
           <!-- 댓글 버튼 -->
           <button @click="handleComment" class="action-btn">
             <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
             <span>{{ formatCount(feed.commentCount || 0) }}</span>
           </button>
@@ -105,10 +102,8 @@
             :class="['action-btn', 'save', { saved: localIsSaved }]"
             :disabled="isLoading"
         >
-          <svg class="icon" :fill="localIsSaved ? 'currentColor' : 'none'" stroke="currentColor"
-               viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+          <svg class="icon" :fill="localIsSaved ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
           </svg>
         </button>
       </div>
@@ -118,12 +113,9 @@
         <!-- 🔥 제목 + Evaluation Badge -->
         <div class="post-title-row">
           <h3 class="post-title">{{ feed.productName }}</h3>
-          <span v-if="feed.feedEvaluation"
-                :class="['evaluation-status', getEvaluationClass(feed.feedEvaluation)]">
-            <svg class="eval-icon-small" :fill="getEvaluationIconFill(feed.feedEvaluation)"
-                 stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    :d="getEvaluationIconPath(feed.feedEvaluation)"/>
+          <span v-if="feed.feedEvaluation" :class="['evaluation-status', getEvaluationClass(feed.feedEvaluation)]">
+            <svg class="eval-icon-small" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getEvaluationIconPath(feed.feedEvaluation)"/>
             </svg>
             {{ getEvaluationLabel(feed.feedEvaluation) }}
           </span>
@@ -141,12 +133,7 @@
 
         <!-- 해시태그 -->
         <div v-if="feed.hashtags && feed.hashtags.length > 0" class="post-hashtags">
-          <span
-              v-for="tag in feed.hashtags"
-              :key="tag"
-              class="hashtag"
-              @click="handleHashtagClick(tag, $event)"
-          >
+          <span v-for="tag in feed.hashtags" :key="tag" class="hashtag" @click="handleHashtagClick(tag, $event)">
             #{{ tag }}
           </span>
         </div>
@@ -156,8 +143,8 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue';
-import {feedService, feedUtils} from '@/services/FeedService';
+import { ref, computed } from 'vue';
+import { feedService, feedUtils } from '@/services/FeedService';
 
 const props = defineProps({
   feed: {
@@ -185,11 +172,14 @@ const emit = defineEmits([
 const showLikeAnimation = ref(false);
 const isLoading = ref(false);
 
-const localIsLiked = ref(props.isLiked);
-const localIsHot = ref(props.isHot);
+// ⭐ 초기 상태를 feed.userReactions에서 가져옴
+const localIsLiked = ref(props.feed.userReactions?.hasLike || props.isLiked);
+const localIsHot = ref(props.feed.userReactions?.hasHot || props.isHot);
 const localIsSaved = ref(props.isSaved);
-const localLikeCount = ref(props.feed.reactionStats?.likeCount || 0);
-const localHotCount = ref(props.feed.reactionStats?.hotCount || 0);
+
+// ⭐ likeCount, hotCount 직접 접근
+const localLikeCount = ref(props.feed.likeCount || 0);
+const localHotCount = ref(props.feed.hotCount || 0);
 
 const discountRate = computed(() => {
   const originalPrice = props.feed.product?.price;
@@ -248,44 +238,65 @@ const handleCardClick = (event) => {
   emit('click', props.feed.feedId);
 };
 
+// ⭐ 백엔드 응답 구조 반영
 const handleLike = async (event) => {
   event.stopPropagation();
   if (isLoading.value) return;
 
   const prevIsLiked = localIsLiked.value;
-  const prevCount = localLikeCount.value;
+  const prevIsHot = localIsHot.value;
+  const prevLikeCount = localLikeCount.value;
+  const prevHotCount = localHotCount.value;
 
+  // 낙관적 업데이트
   localIsLiked.value = !localIsLiked.value;
   localLikeCount.value += localIsLiked.value ? 1 : -1;
 
-  if (localIsHot.value) {
+  // LIKE 추가 시 HOT 제거 (백엔드 로직)
+  if (localIsLiked.value && localIsHot.value) {
     localIsHot.value = false;
     localHotCount.value = Math.max(0, localHotCount.value - 1);
   }
 
   try {
     isLoading.value = true;
-    const response = await feedService.likeFeed(props.feed.feedId);
+    const response = await feedService.toggleLike(props.feed.feedId);
 
     if (response.success && response.data) {
-      localIsLiked.value = response.data.isActive;
-      localLikeCount.value = response.data.likeCount || localLikeCount.value;
+      // ⭐ 백엔드 응답으로 정확한 상태 동기화
+      // response.data = { reactionType, action, message, likeCount, hotCount }
+      localLikeCount.value = response.data.likeCount;
+      localHotCount.value = response.data.hotCount;
+
+      // action 기반 상태 업데이트
+      if (response.data.action === 'added') {
+        localIsLiked.value = true;
+        localIsHot.value = false;
+      } else if (response.data.action === 'removed') {
+        localIsLiked.value = false;
+      } else if (response.data.action === 'changed') {
+        // HOT에서 LIKE로 변경
+        localIsLiked.value = true;
+        localIsHot.value = false;
+      }
 
       emit('update', {
         feedId: props.feed.feedId,
-        reactionStats: {
-          ...props.feed.reactionStats,
-          likeCount: response.data.likeCount,
-          hotCount: response.data.hotCount
-        }
+        likeCount: response.data.likeCount,
+        hotCount: response.data.hotCount
       });
+
+      console.log('✅ LIKE 완료:', response.data);
     }
 
     emit('like', props.feed.feedId);
   } catch (error) {
     console.error('❌ LIKE 실패:', error);
+    // 롤백
     localIsLiked.value = prevIsLiked;
-    localLikeCount.value = prevCount;
+    localIsHot.value = prevIsHot;
+    localLikeCount.value = prevLikeCount;
+    localHotCount.value = prevHotCount;
   } finally {
     isLoading.value = false;
   }
@@ -295,40 +306,60 @@ const handleHot = async (event) => {
   event.stopPropagation();
   if (isLoading.value) return;
 
+  const prevIsLiked = localIsLiked.value;
   const prevIsHot = localIsHot.value;
-  const prevCount = localHotCount.value;
+  const prevLikeCount = localLikeCount.value;
+  const prevHotCount = localHotCount.value;
 
+  // 낙관적 업데이트
   localIsHot.value = !localIsHot.value;
   localHotCount.value += localIsHot.value ? 1 : -1;
 
-  if (localIsLiked.value) {
+  // HOT 추가 시 LIKE 제거 (백엔드 로직)
+  if (localIsHot.value && localIsLiked.value) {
     localIsLiked.value = false;
     localLikeCount.value = Math.max(0, localLikeCount.value - 1);
   }
 
   try {
     isLoading.value = true;
-    const response = await feedService.hotFeed(props.feed.feedId);
+    const response = await feedService.toggleHot(props.feed.feedId);
 
     if (response.success && response.data) {
-      localIsHot.value = response.data.isActive;
-      localHotCount.value = response.data.hotCount || localHotCount.value;
+      // ⭐ 백엔드 응답으로 정확한 상태 동기화
+      // response.data = { reactionType, action, message, likeCount, hotCount }
+      localLikeCount.value = response.data.likeCount;
+      localHotCount.value = response.data.hotCount;
+
+      // action 기반 상태 업데이트
+      if (response.data.action === 'added') {
+        localIsHot.value = true;
+        localIsLiked.value = false;
+      } else if (response.data.action === 'removed') {
+        localIsHot.value = false;
+      } else if (response.data.action === 'changed') {
+        // LIKE에서 HOT으로 변경
+        localIsHot.value = true;
+        localIsLiked.value = false;
+      }
 
       emit('update', {
         feedId: props.feed.feedId,
-        reactionStats: {
-          ...props.feed.reactionStats,
-          likeCount: response.data.likeCount,
-          hotCount: response.data.hotCount
-        }
+        likeCount: response.data.likeCount,
+        hotCount: response.data.hotCount
       });
+
+      console.log('✅ HOT 완료:', response.data);
     }
 
     emit('hot', props.feed.feedId);
   } catch (error) {
     console.error('❌ HOT 실패:', error);
+    // 롤백
+    localIsLiked.value = prevIsLiked;
     localIsHot.value = prevIsHot;
-    localHotCount.value = prevCount;
+    localLikeCount.value = prevLikeCount;
+    localHotCount.value = prevHotCount;
   } finally {
     isLoading.value = false;
   }
@@ -336,10 +367,7 @@ const handleHot = async (event) => {
 
 const handleDoubleTapLike = () => {
   if (!localIsLiked.value) {
-    const mockEvent = {
-      stopPropagation: () => {
-      }
-    };
+    const mockEvent = { stopPropagation: () => {} };
     handleLike(mockEvent);
     showLikeAnimation.value = true;
     setTimeout(() => {
@@ -551,7 +579,6 @@ const formatCount = (count) => {
   }
 }
 
-/* 🔥 Evaluation Badge Overlay (이미지 위) */
 .evaluation-badge-overlay {
   position: absolute;
   top: 12px;
@@ -716,7 +743,6 @@ const formatCount = (count) => {
   gap: 8px;
 }
 
-/* 🔥 제목 + Evaluation Badge 한 줄에 */
 .post-title-row {
   display: flex;
   align-items: center;
@@ -739,7 +765,6 @@ const formatCount = (count) => {
   }
 }
 
-/* 🔥 Evaluation Status (제목 옆) */
 .evaluation-status {
   padding: 3px 10px;
   border-radius: 6px;
@@ -767,7 +792,6 @@ const formatCount = (count) => {
 .evaluation-status.eval-good {
   background: #D1FAE5;
   color: #059669;
-
 }
 
 .evaluation-status.eval-okay {

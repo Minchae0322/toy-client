@@ -16,8 +16,10 @@
           :key="feed.feedId"
           :feed="feed"
           :is-liked="likedPosts.has(feed.feedId)"
+          :is-hot="hotPosts.has(feed.feedId)"
           :is-saved="savedPosts.has(feed.feedId)"
           @like="handleLike"
+          @hot="handleHot"
           @save="handleSave"
           @comment="handleComment"
           @click="handlePostClick"
@@ -84,20 +86,20 @@
 
             <p class="list-review">{{ feed.reviewSummary }}</p>
 
-            <!-- 🔥 리액션 & 가격 정보 -->
+            <!-- 🔥 리액션 & 가격 정보 (백엔드 응답 구조 반영) -->
             <div class="list-meta">
               <div class="list-reactions">
                 <span class="reaction-item">
                   <svg class="icon-small fire-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
                   </svg>
-                  {{ feed.reactionStats?.likeCount || 0 }}
+                  {{ feed.likeCount || 0 }}
                 </span>
                 <span class="reaction-item">
                   <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                   </svg>
-                  {{ feed.reactionStats?.hotCount || 0 }}
+                  {{ feed.hotCount || 0 }}
                 </span>
                 <span class="reaction-item">
                   <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,10 +122,10 @@
     </div>
 
     <!-- Loading & Observer Target -->
-    <div ref="observerTarget" class="load-more">
-      <div v-if="loading" class="spinner">
-        <div class="spinner-icon"></div>
-        <p>로딩 중...</p>
+    <div ref="observerTarget" class="load-more-section">
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">로딩 중...</p>
       </div>
       <div v-else-if="!hasNext && feeds.length > 0" class="end-message">
         <svg class="end-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,13 +169,17 @@ const props = defineProps({
     type: Set,
     default: () => new Set()
   },
+  hotPosts: {
+    type: Set,
+    default: () => new Set()
+  },
   savedPosts: {
     type: Set,
     default: () => new Set()
   }
 });
 
-const emit = defineEmits(['like', 'save', 'comment', 'post-click']);
+const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click']);
 
 const sortOption = ref('latest');
 const observerTarget = ref(null);
@@ -215,6 +221,11 @@ const handleLike = (feedId) => {
   emit('like', feedId);
 };
 
+const handleHot = (feedId) => {
+  console.log('🔥 FeedList - Hot:', feedId);
+  emit('hot', feedId);
+};
+
 const handleSave = (feedId) => {
   console.log('💾 FeedList - Save:', feedId);
   emit('save', feedId);
@@ -244,6 +255,7 @@ defineExpose({
 </script>
 
 <style scoped>
+/* 기존 스타일 유지 */
 .feed-section {
   padding: 32px 20px;
 }
@@ -302,7 +314,6 @@ defineExpose({
   border-color: var(--primary);
 }
 
-/* Feed Grid */
 .feed-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -330,7 +341,6 @@ defineExpose({
   }
 }
 
-/* List View */
 .list-view {
   display: flex;
   flex-direction: column;
@@ -353,7 +363,6 @@ defineExpose({
   transform: translateY(-2px);
 }
 
-/* 🔥 List View - Image with Evaluation Badge */
 .list-image {
   position: relative;
   width: 180px;
@@ -535,7 +544,6 @@ defineExpose({
   gap: 8px;
 }
 
-/* 🔥 제목 + Evaluation Badge 한 줄에 */
 .list-title-row {
   display: flex;
   align-items: center;
@@ -551,7 +559,6 @@ defineExpose({
   flex: 0 1 auto;
 }
 
-/* 🔥 List View - Evaluation Status (제목 옆) */
 .list-evaluation-status {
   padding: 3px 10px;
   border-radius: 6px;
@@ -574,7 +581,6 @@ defineExpose({
 .list-evaluation-status.eval-best {
   background: #FFF7ED;
   color: #F97316;
-
 }
 
 .list-evaluation-status.eval-good {
@@ -602,7 +608,6 @@ defineExpose({
   overflow: hidden;
 }
 
-/* 🔥 리액션 & 가격 정보 */
 .list-meta {
   display: flex;
   align-items: center;
@@ -666,36 +671,48 @@ defineExpose({
   text-decoration: underline;
 }
 
-/* Loading & Empty States */
-.load-more {
+/* Loading Section */
+.load-more-section {
+  width: 100%;
   padding: 60px 20px;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
 }
 
-.spinner {
+.loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  color: var(--secondary);
+  justify-content: center;
+  gap: 20px;
 }
 
-.spinner-icon {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #E2E8F0;
+  border-top-color: #F97316;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spinner-rotate 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes spinner-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-.spinner p {
-  font-size: 14px;
+.loading-text {
+  font-size: 15px;
   font-weight: 600;
+  color: #64748B;
+  margin: 0;
+  padding: 0;
 }
 
 .end-message,
@@ -743,58 +760,6 @@ defineExpose({
   .list-image {
     width: 100%;
     height: 200px;
-  }
-
-  .list-evaluation-badge-overlay {
-    top: 8px;
-    left: 8px;
-  }
-
-  .list-evaluation-badge {
-    padding: 4px 8px;
-    font-size: 9px;
-    gap: 3px;
-  }
-
-  .list-eval-icon {
-    width: 10px;
-    height: 10px;
-  }
-
-  .list-title {
-    font-size: 16px;
-  }
-
-  .list-evaluation-status {
-    padding: 2px 8px;
-    font-size: 10px;
-  }
-
-  .list-eval-icon-small {
-    width: 11px;
-    height: 11px;
-  }
-
-  .list-meta {
-    flex-wrap: wrap;
-  }
-
-  .list-reactions {
-    gap: 6px;
-  }
-
-  .reaction-item {
-    font-size: 10px;
-    gap: 2px;
-  }
-
-  .icon-small {
-    width: 13px;
-    height: 13px;
-  }
-
-  .price {
-    font-size: 12px;
   }
 }
 </style>

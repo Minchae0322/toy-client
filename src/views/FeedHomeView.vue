@@ -24,8 +24,10 @@
           :has-next="hasNext"
           :view-mode="viewMode"
           :liked-posts="likedPosts"
+          :hot-posts="hotPosts"
           :saved-posts="savedPosts"
           @like="handleLike"
+          @hot="handleHot"
           @save="handleSave"
           @comment="handleComment"
           @post-click="openPost"
@@ -95,6 +97,7 @@ const cursor = ref(null);
 const hasNext = ref(true);
 const loading = ref(false);
 const likedPosts = ref(new Set());
+const hotPosts = ref(new Set());
 const savedPosts = ref(new Set());
 
 // localStorage에서 뷰 모드 불러오기
@@ -161,6 +164,16 @@ const loadFeeds = async () => {
       cursor.value = response.data.nextCursor;
       hasNext.value = response.data.hasNext;
 
+      // ⭐ userReactions 기반으로 상태 초기화
+      response.data.feeds.forEach(feed => {
+        if (feed.userReactions?.hasLike) {
+          likedPosts.value.add(feed.feedId);
+        }
+        if (feed.userReactions?.hasHot) {
+          hotPosts.value.add(feed.feedId);
+        }
+      });
+
       console.log('✅ 피드 로드 성공:', {
         총피드수: feeds.value.length,
         다음커서: cursor.value,
@@ -179,6 +192,8 @@ const resetAndLoadFeeds = () => {
   feeds.value = [];
   cursor.value = null;
   hasNext.value = true;
+  likedPosts.value.clear();
+  hotPosts.value.clear();
   loadFeeds();
 };
 
@@ -193,24 +208,84 @@ const handleLike = async (feedId) => {
     console.log('❤️ 좋아요 토글:', feedId);
     const response = await feedService.toggleLike(feedId);
 
-    if (response.success) {
-      const newSet = new Set(likedPosts.value);
-      if (newSet.has(feedId)) {
-        newSet.delete(feedId);
-      } else {
-        newSet.add(feedId);
-      }
-      likedPosts.value = newSet;
+    if (response.success && response.data) {
+      // ⭐ 백엔드 응답 구조: { reactionType, action, message, likeCount, hotCount }
+      const newLikedSet = new Set(likedPosts.value);
+      const newHotSet = new Set(hotPosts.value);
 
-      // 피드 목록 업데이트
+      if (response.data.action === 'added') {
+        newLikedSet.add(feedId);
+        // LIKE 추가 시 HOT 제거 (백엔드 로직)
+        newHotSet.delete(feedId);
+      } else if (response.data.action === 'removed') {
+        newLikedSet.delete(feedId);
+      } else if (response.data.action === 'changed') {
+        // LIKE로 변경 (HOT에서 LIKE로)
+        newLikedSet.add(feedId);
+        newHotSet.delete(feedId);
+      }
+
+      likedPosts.value = newLikedSet;
+      hotPosts.value = newHotSet;
+
+      // ⭐ 피드 목록 업데이트
       const feedIndex = feeds.value.findIndex(f => f.feedId === feedId);
       if (feedIndex !== -1) {
-        const feed = feeds.value[feedIndex];
-        feed.reactionStats.likeCount = response.data.likeCount;
+        feeds.value[feedIndex].likeCount = response.data.likeCount;
+        feeds.value[feedIndex].hotCount = response.data.hotCount;
+        feeds.value[feedIndex].userReactions = {
+          hasLike: newLikedSet.has(feedId),
+          hasHot: newHotSet.has(feedId)
+        };
       }
+
+      console.log('✅ 좋아요 완료:', response.data);
     }
   } catch (error) {
     console.error('❌ 좋아요 실패:', error);
+  }
+};
+
+const handleHot = async (feedId) => {
+  try {
+    console.log('🔥 핫 토글:', feedId);
+    const response = await feedService.toggleHot(feedId);
+
+    if (response.success && response.data) {
+      // ⭐ 백엔드 응답 구조: { reactionType, action, message, likeCount, hotCount }
+      const newLikedSet = new Set(likedPosts.value);
+      const newHotSet = new Set(hotPosts.value);
+
+      if (response.data.action === 'added') {
+        newHotSet.add(feedId);
+        // HOT 추가 시 LIKE 제거 (백엔드 로직)
+        newLikedSet.delete(feedId);
+      } else if (response.data.action === 'removed') {
+        newHotSet.delete(feedId);
+      } else if (response.data.action === 'changed') {
+        // HOT으로 변경 (LIKE에서 HOT으로)
+        newHotSet.add(feedId);
+        newLikedSet.delete(feedId);
+      }
+
+      likedPosts.value = newLikedSet;
+      hotPosts.value = newHotSet;
+
+      // ⭐ 피드 목록 업데이트
+      const feedIndex = feeds.value.findIndex(f => f.feedId === feedId);
+      if (feedIndex !== -1) {
+        feeds.value[feedIndex].likeCount = response.data.likeCount;
+        feeds.value[feedIndex].hotCount = response.data.hotCount;
+        feeds.value[feedIndex].userReactions = {
+          hasLike: newLikedSet.has(feedId),
+          hasHot: newHotSet.has(feedId)
+        };
+      }
+
+      console.log('✅ 핫 완료:', response.data);
+    }
+  } catch (error) {
+    console.error('❌ 핫 실패:', error);
   }
 };
 
@@ -241,7 +316,6 @@ const handleCreateFeed = () => {
 
 const handleSeeAllHot = () => {
   console.log('🔥 핫 피드 전체보기');
-  // TODO: 핫 피드 전체 페이지 라우트 추가
   alert('핫 피드 전체보기 페이지는 준비중입니다.');
 };
 
@@ -285,7 +359,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 전역 스타일은 App.vue나 main.js에서 관리하는 것이 좋습니다 */
+/* 기존 스타일 유지 */
 .app-container {
   background: #F8FAFC;
   min-height: 100vh;
@@ -312,7 +386,6 @@ onUnmounted(() => {
   }
 }
 
-/* Bottom Navigation */
 .bottom-nav {
   position: fixed;
   bottom: 0;
