@@ -154,7 +154,7 @@ const routes = [
     name: 'BattleCreate',
     component: BattleCreateView,
     meta: {
-      requiresAuth: true,
+      requiresAuth: false,
       title: '배틀 만들기'
     }
   },

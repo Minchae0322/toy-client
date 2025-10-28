@@ -1,0 +1,197 @@
+<template>
+  <div class="preview-section">
+    <div class="preview-label">미리보기</div>
+    <div class="preview-card">
+      <div
+          v-if="battleForm.type === 'curation' && selectedItems.length > 0"
+          class="preview-visual"
+          style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative; overflow: hidden;"
+      >
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; padding: 20px; height: 100%;">
+          <div style="grid-column: span 1; grid-row: span 2; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+            <div style="text-align: center;">
+              <div style="font-size: 36px; margin-bottom: 4px;">{{ selectedItems[0].emoji }}</div>
+              <div style="font-size: 11px; color: white; font-weight: 600;">{{ selectedItems[0].name }}</div>
+            </div>
+          </div>
+          <div
+              v-for="i in 2"
+              :key="i"
+              style="background: rgba(255,255,255,0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; backdrop-filter: blur(10px);"
+          >
+            {{ selectedItems[i]?.emoji || '👟' }}
+          </div>
+        </div>
+        <div style="position: absolute; top: 12px; right: 12px; background: rgba(26, 26, 26, 0.8); color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;">
+          큐레이션
+        </div>
+      </div>
+      <div v-else class="preview-visual">
+        <div class="preview-visual-placeholder">{{ previewEmoji }}</div>
+        <div class="preview-type-badge">{{ previewTypeName }}</div>
+      </div>
+
+      <div class="preview-content">
+        <div class="preview-category">{{ previewCategoryName }}</div>
+        <div class="preview-title">{{ battleForm.title || '배틀 제목을 입력해주세요' }}</div>
+        <div class="preview-stats">
+          <div class="preview-stat">
+            <div class="preview-stat-value">0</div>
+            <div class="preview-stat-label">참여자</div>
+          </div>
+          <div class="preview-stat">
+            <div class="preview-stat-value">0</div>
+            <div class="preview-stat-label">투표</div>
+          </div>
+          <div class="preview-stat">
+            <div class="preview-stat-value">{{ selectedItems.length }}</div>
+            <div class="preview-stat-label">제품</div>
+          </div>
+        </div>
+        <div class="preview-footer">
+          <div class="preview-creator">@your_username</div>
+          <div class="preview-date">{{ dateDiffText }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+defineProps({
+  battleForm: {
+    type: Object,
+    required: true
+  },
+  selectedItems: {
+    type: Array,
+    default: () => []
+  },
+  previewEmoji: {
+    type: String,
+    default: '📦'
+  },
+  previewTypeName: {
+    type: String,
+    default: ''
+  },
+  previewCategoryName: {
+    type: String,
+    default: ''
+  },
+  dateDiffText: {
+    type: String,
+    default: ''
+  }
+});
+</script>
+
+<style scoped>
+.preview-section {
+  width: 400px;
+  position: sticky;
+  top: 140px;
+  height: fit-content;
+}
+
+.preview-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6B7280;
+  margin-bottom: 16px;
+}
+
+.preview-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #F0F0F3;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.preview-visual {
+  height: 180px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.preview-visual-placeholder {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.preview-type-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 6px;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.preview-content {
+  padding: 24px;
+}
+
+.preview-category {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-bottom: 8px;
+}
+
+.preview-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 16px;
+  min-height: 50px;
+}
+
+.preview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid #F3F4F6;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.preview-stat {
+  text-align: center;
+}
+
+.preview-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.preview-stat-label {
+  font-size: 11px;
+  color: #9CA3AF;
+}
+
+.preview-footer {
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-creator {
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.preview-date {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+</style>
