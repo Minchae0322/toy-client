@@ -139,7 +139,14 @@ class FeedService extends BaseApiService {
     if (!feedId) {
       throw new Error('피드 ID가 필요합니다.')
     }
-    return await this.get(`/feeds/${feedId}`)
+
+    const response = await this.get(`/feeds/${feedId}`)
+
+    if (response.success && response.data) {
+      response.data = this.normalizeFeedDetailResponse(response.data)
+    }
+
+    return response
   }
 
   /**
@@ -270,20 +277,11 @@ class FeedService extends BaseApiService {
     return await this.delete(`/feeds/${feedId}`)
   }
 
-  // ==================== 피드 리액션 메서드 (⭐ 수정 완료) ====================
+  // ==================== 피드 리액션 메서드 ====================
 
   /**
    * 피드 리액션 토글 (좋아요 또는 핫)
    * POST /api/feeds/{feedId}/reactions?reactionType={type}
-   *
-   * ⭐ 백엔드 응답 구조:
-   * {
-   *   reactionType: "LIKE" | "HOT",
-   *   action: "added" | "removed",
-   *   message: "리액션이 추가되었습니다.",
-   *   likeCount: 42,
-   *   hotCount: 15
-   * }
    */
   async toggleFeedReaction(feedId, reactionType) {
     if (!feedId) {
@@ -458,6 +456,7 @@ class FeedService extends BaseApiService {
 
     return feeds.map(feed => ({
       ...feed,
+      userInfo: this.normalizeUserInfo(feed.userInfo),
       thumbnailUrl: feed.thumbnailUrl || null,
       hashtags: feed.hashtags || [],
       feedEvaluation: this.normalizeFeedEvaluation(feed.feedEvaluation),
@@ -470,6 +469,76 @@ class FeedService extends BaseApiService {
         hasHot: false
       }
     }))
+  }
+
+  /**
+   * 피드 상세 응답 정규화
+   */
+  normalizeFeedDetailResponse(feed) {
+    if (!feed) return null
+
+    return {
+      ...feed,
+      userInfo: this.normalizeUserInfo(feed.userInfo),
+      product: this.normalizeProduct(feed.product),
+      subCategoryDetail: this.normalizeSubCategoryDetail(feed.subCategoryDetail),
+      attachmentFiles: feed.attachmentFiles || [],
+      hashtags: feed.hashtags || [],
+      feedEvaluation: this.normalizeFeedEvaluation(feed.feedEvaluation),
+      likeCount: feed.likeCount || 0,
+      hotCount: feed.hotCount || 0,
+      viewCount: feed.viewCount || 0,
+      userReactions: feed.userReactions || {
+        hasLike: false,
+        hasHot: false
+      }
+    }
+  }
+
+  /**
+   * 사용자 정보 정규화
+   */
+  normalizeUserInfo(userInfo) {
+    if (!userInfo) return null
+
+    return {
+      userId: userInfo.userId,
+      nickname: userInfo.nickname || '알 수 없음',
+      email: userInfo.email || '',
+      profileImageFile: userInfo.profileImageFile || null,
+      role: userInfo.role || 'USER',
+      activated: userInfo.activated !== undefined ? userInfo.activated : true,
+      fcmToken: userInfo.fcmToken || null
+    }
+  }
+
+  /**
+   * 상품 정보 정규화
+   */
+  normalizeProduct(product) {
+    if (!product) return null
+
+    return {
+      id: product.id,
+      name: product.name || '상품명 없음',
+      brand: product.brand || '',
+      price: product.price || '0',
+      thumbnailDto: product.thumbnailDto || null
+    }
+  }
+
+  /**
+   * 카테고리 상세 정보 정규화
+   */
+  normalizeSubCategoryDetail(subCategoryDetail) {
+    if (!subCategoryDetail) return null
+
+    return {
+      categoryId: subCategoryDetail.categoryId,
+      subCategoryId: subCategoryDetail.subCategoryId,
+      categoryName: subCategoryDetail.categoryName || '',
+      subCategoryName: subCategoryDetail.subCategoryName || ''
+    }
   }
 
   /**
