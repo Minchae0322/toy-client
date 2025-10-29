@@ -12,38 +12,13 @@
           @category-change="handleCategoryChange"
       />
 
-      <!-- 뷰 토글 (Feed 전용) -->
-      <div class="view-toggle-section">
-        <div class="view-toggle">
-          <button
-              @click="viewMode = 'feed'"
-              :class="['view-btn', { active: viewMode === 'feed' }]"
-              title="피드 뷰"
-          >
-            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-            </svg>
-            <span>피드</span>
-          </button>
-          <button
-              @click="viewMode = 'list'"
-              :class="['view-btn', { active: viewMode === 'list' }]"
-              title="리스트 뷰"
-          >
-            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
-            </svg>
-            <span>리스트</span>
-          </button>
-        </div>
-      </div>
-
       <HotSection
           :limit="5"
           @feed-click="openPost"
           @see-all="handleSeeAllHot"
       />
 
+      <!-- ⭐ 뷰 토글을 FeedList로 이동 (props로 전달) -->
       <FeedList
           ref="feedListRef"
           :feeds="feeds"
@@ -57,6 +32,7 @@
           @save="handleSave"
           @comment="handleComment"
           @post-click="openPost"
+          @view-mode-change="viewMode = $event"
       />
     </main>
 
@@ -108,7 +84,7 @@ import { useFeed } from '@/services/FeedService';
 import AppSidebar from '@/components/feed/AppSidebar.vue';
 import AppHeader from '@/components/feed/AppHeader.vue';
 import RightSidebar from '@/components/feed/RightSidebar.vue';
-import CommonCategoryFilter from '@/components/feed/CategoryFilter.vue';
+import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue';
 import HotSection from '@/components/feed/HotSection.vue';
 import FeedList from '@/components/feed/FeedList.vue';
 
@@ -153,7 +129,7 @@ watch(viewMode, (newMode) => {
 // Methods
 const loadCategories = async () => {
   try {
-    const response = await categoryService.getCategories({ isActive: true });
+    const response = await categoryService.getCategories({isActive: true});
     if (response.success && response.data) {
       rootCategories.value = response.data;
       console.log('✅ 카테고리 로드 성공:', rootCategories.value);
@@ -165,7 +141,7 @@ const loadCategories = async () => {
 
 const loadFeeds = async () => {
   if (loading.value || !hasNext.value) {
-    console.log('⏸️ 로딩 중단:', { loading: loading.value, hasNext: hasNext.value });
+    console.log('⏸️ 로딩 중단:', {loading: loading.value, hasNext: hasNext.value});
     return;
   }
 
@@ -212,8 +188,8 @@ const loadFeeds = async () => {
   }
 };
 
-const handleReactionUpdate = ({ feedId, likeCount, hotCount, action, reactionType }) => {
-  console.log('🔄 리액션 업데이트:', { feedId, action, reactionType });
+const handleReactionUpdate = ({feedId, likeCount, hotCount, action, reactionType}) => {
+  console.log('🔄 리액션 업데이트:', {feedId, action, reactionType});
 
   const newLikedSet = new Set(likedPosts.value);
   const newHotSet = new Set(hotPosts.value);
@@ -256,7 +232,7 @@ const resetAndLoadFeeds = () => {
   loadFeeds();
 };
 
-const handleCategoryChange = ({ category, subCategory }) => {
+const handleCategoryChange = ({category, subCategory}) => {
   selectedCategoryId.value = subCategory?.categoryId || category?.categoryId;
   console.log('📌 카테고리 변경:', selectedCategoryId.value);
   resetAndLoadFeeds();
@@ -274,17 +250,17 @@ const handleSave = (feedId) => {
 
 const handleComment = (feedId) => {
   console.log('💬 댓글:', feedId);
-  router.push({ name: 'FeedDetail', params: { id: feedId }, hash: '#comments' });
+  router.push({name: 'FeedDetail', params: {id: feedId}, hash: '#comments'});
 };
 
 const openPost = (feedId) => {
   console.log('📖 피드 상세 페이지로 이동:', feedId);
-  router.push({ name: 'FeedDetail', params: { id: feedId } });
+  router.push({name: 'FeedDetail', params: {id: feedId}});
 };
 
 const handleCreateFeed = () => {
   console.log('✍️ 피드 작성 페이지로 이동');
-  router.push({ name: 'FeedCreate' });
+  router.push({name: 'FeedCreate'});
 };
 
 const handleSeeAllHot = () => {
@@ -332,6 +308,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
 :root {
   --primary: #222222;
   --secondary: #64748B;
@@ -342,10 +320,17 @@ onUnmounted(() => {
   --hover: #F1F5F9;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 .app-container {
   background: var(--bg);
   min-height: 100vh;
   color: var(--primary);
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .main-content {
@@ -366,65 +351,6 @@ onUnmounted(() => {
   .main-content {
     margin-right: 380px;
   }
-}
-
-/* 필터 래퍼: 카테고리 필터 + 뷰 토글 */
-.filter-wrapper {
-  position: relative;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-}
-
-/* 뷰 토글 - Feed 전용 */
-.view-toggle {
-  display: none;
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: var(--bg);
-  border-radius: 12px;
-  padding: 4px;
-  gap: 4px;
-  z-index: 10;
-}
-
-@media (min-width: 1024px) {
-  .view-toggle {
-    display: flex;
-    right: 40px;
-    top: 24px;
-  }
-}
-
-.view-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-}
-
-.view-btn:hover {
-  color: var(--primary);
-}
-
-.view-btn.active {
-  background: white;
-  color: var(--primary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.view-btn .icon {
-  width: 18px;
-  height: 18px;
 }
 
 /* Bottom Navigation */
@@ -461,7 +387,7 @@ onUnmounted(() => {
   color: var(--secondary);
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: inherit;
 }
 
 .bottom-nav-item.active {

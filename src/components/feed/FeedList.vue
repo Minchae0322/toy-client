@@ -1,12 +1,39 @@
 <template>
   <section class="feed-section">
+    <!-- ⭐ 개선된 섹션 헤더 (제목 + 뷰 토글 + 정렬) -->
     <div class="section-header">
       <h2 class="section-title">최신 인증</h2>
-      <select class="sort-select" v-model="sortOption">
-        <option value="latest">최신순</option>
-        <option value="popular">인기순</option>
-        <option value="discussed">댓글 많은순</option>
-      </select>
+
+      <div class="header-controls">
+        <!-- 뷰 토글 -->
+        <div class="view-toggle">
+          <button
+              @click="$emit('view-mode-change', 'feed')"
+              :class="['view-btn', { active: viewMode === 'feed' }]"
+              title="피드 뷰"
+          >
+            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+            </svg>
+          </button>
+          <button
+              @click="$emit('view-mode-change', 'list')"
+              :class="['view-btn', { active: viewMode === 'list' }]"
+              title="리스트 뷰"
+          >
+            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 정렬 옵션 -->
+        <select class="sort-select" v-model="sortOption">
+          <option value="latest">최신순</option>
+          <option value="popular">인기순</option>
+          <option value="discussed">댓글 많은순</option>
+        </select>
+      </div>
     </div>
 
     <!-- Feed Grid View -->
@@ -178,7 +205,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click']);
+const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click', 'view-mode-change']);
 
 const sortOption = ref('latest');
 const observerTarget = ref(null);
@@ -219,7 +246,6 @@ const handleUpdate = (data) => {
   emit('update', data);
 };
 
-
 const handleSave = (feedId) => {
   console.log('💾 FeedList - Save:', feedId);
   emit('save', feedId);
@@ -249,9 +275,27 @@ defineExpose({
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+:root {
+  --primary: #0F172A;
+  --secondary: #64748B;
+  --accent: #F97316;
+  --border: #E2E8F0;
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --hover: #F1F5F9;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 .feed-section {
   padding: 32px 20px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 @media (min-width: 1024px) {
@@ -260,20 +304,20 @@ defineExpose({
   }
 }
 
+/* ⭐ 개선된 섹션 헤더 */
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .section-title {
   font-size: 20px;
   font-weight: 700;
   color: var(--primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 @media (min-width: 1024px) {
@@ -282,6 +326,55 @@ defineExpose({
   }
 }
 
+/* ⭐ 헤더 컨트롤 (뷰 토글 + 정렬) */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ⭐ 뷰 토글 - 미니멀 디자인 */
+.view-toggle {
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.view-btn:hover {
+  color: var(--primary);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.view-btn.active {
+  background: white;
+  color: var(--primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.view-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* 정렬 셀렉트 */
 .sort-select {
   padding: 8px 32px 8px 14px;
   background: var(--bg);
@@ -306,8 +399,42 @@ defineExpose({
 .sort-select:focus {
   outline: none;
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.05);
 }
 
+/* 모바일 반응형 */
+@media (max-width: 767px) {
+  .section-header {
+    gap: 12px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    flex: 1 1 100%;
+  }
+
+  .header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .view-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .view-btn .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sort-select {
+    font-size: 13px;
+    padding: 7px 28px 7px 12px;
+  }
+}
+
+/* Feed Grid */
 .feed-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -335,6 +462,7 @@ defineExpose({
   }
 }
 
+/* List View */
 .list-view {
   display: flex;
   flex-direction: column;

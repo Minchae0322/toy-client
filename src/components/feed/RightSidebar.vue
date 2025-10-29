@@ -2,7 +2,23 @@
   <aside class="sidebar-right">
     <!-- Trending -->
     <section class="sidebar-section">
-      <h3 class="sidebar-title">🔥 실시간 트렌딩</h3>
+      <div class="section-header">
+        <h3 class="sidebar-title">🔥 실시간 트렌딩</h3>
+        <button
+            v-if="hotHashtags.length > 5 && !isExpanded"
+            @click="toggleExpand"
+            class="btn-expand"
+        >
+          +{{ Math.min(hotHashtags.length, 10) - 5 }}
+        </button>
+        <button
+            v-if="isExpanded && hotHashtags.length > 5"
+            @click="toggleExpand"
+            class="btn-expand"
+        >
+          접기
+        </button>
+      </div>
 
       <!-- 로딩 상태 -->
       <div v-if="loading" class="trending-loading">
@@ -18,19 +34,24 @@
 
       <!-- 해시태그 목록 -->
       <div v-else class="trending-list">
-        <div
-            v-for="(hashtag, idx) in hotHashtags"
-            :key="hashtag.id"
-            class="trending-item"
-            @click="onHashtagClick(hashtag.name)"
-        >
-          <span class="trend-rank" :class="getRankClass(idx)">{{ idx + 1 }}</span>
-          <div class="trend-info">
-            <p class="trend-tag">{{ formatHashtag(hashtag.name) }}</p>
-            <p class="trend-count">{{ formatUsageCount(hashtag.usageCount) }}</p>
+        <transition-group name="fade-slide" tag="div" class="trending-items">
+          <div
+              v-for="(hashtag, idx) in displayedHashtags"
+              :key="hashtag.id"
+              class="trending-item"
+              @click="onHashtagClick(hashtag.name)"
+              :style="{ transitionDelay: `${idx * 30}ms` }"
+          >
+            <span class="trend-rank" :class="getRankClass(idx)">
+              {{ idx + 1 }}
+            </span>
+            <div class="trend-info">
+              <p class="trend-tag">{{ formatHashtag(hashtag.name) }}</p>
+              <p class="trend-count">{{ formatUsageCount(hashtag.usageCount) }}</p>
+            </div>
+            <span v-if="idx < 3" class="trend-badge">HOT</span>
           </div>
-          <span v-if="idx < 3" class="trend-badge">HOT</span>
-        </div>
+        </transition-group>
 
         <!-- 데이터가 없을 때 -->
         <div v-if="hotHashtags.length === 0" class="trending-empty">
@@ -77,7 +98,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFeed, feedUtils } from '@/services/FeedService'
 
@@ -88,8 +109,15 @@ const { getHotHashtags } = useFeed()
 const hotHashtags = ref([])
 const loading = ref(false)
 const error = ref(null)
+const isExpanded = ref(false)
 
-// 추천 크리에이터 (기존 데이터)
+// 표시할 해시태그 계산 (최대 10위까지)
+const displayedHashtags = computed(() => {
+  const maxCount = Math.min(hotHashtags.value.length, 10)
+  return isExpanded.value ? hotHashtags.value.slice(0, maxCount) : hotHashtags.value.slice(0, 5)
+})
+
+// 추천 크리에이터
 const recommendedUsers = [
   {
     name: 'sneaker_master',
@@ -120,7 +148,7 @@ const loadHotHashtags = async () => {
 
   try {
     const response = await getHotHashtags(
-        {}, // searchCondition
+        {},
         {
           page: 0,
           size: 10,
@@ -143,13 +171,19 @@ const loadHotHashtags = async () => {
 }
 
 /**
+ * 확장/축소 토글
+ */
+const toggleExpand = () => {
+  isExpanded.value = !isExpanded.value
+}
+
+/**
  * 해시태그 클릭 핸들러
  */
 const onHashtagClick = (hashtag) => {
   console.log('해시태그 클릭:', hashtag)
-  // 해시태그 검색 페이지로 이동
   router.push({
-    name: 'FeedSearch', // 또는 적절한 라우트명
+    name: 'FeedSearch',
     query: { hashtag: hashtag }
   })
 }
@@ -169,7 +203,7 @@ const formatUsageCount = (count) => {
 }
 
 /**
- * 숫자 포맷팅 (팔로워)
+ * 숫자 포맷팅
  */
 const formatNumber = (num) => {
   if (num >= 1000) {
@@ -218,11 +252,38 @@ onMounted(() => {
   margin-bottom: 32px;
 }
 
+/* Section Header */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
 .sidebar-title {
   font-size: 18px;
   font-weight: 700;
   color: var(--primary);
-  margin-bottom: 16px;
+  margin: 0;
+}
+
+.btn-expand {
+  padding: 6px 12px;
+  background: var(--hover);
+  color: var(--accent);
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-expand:hover {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.05);
 }
 
 /* Loading State */
@@ -296,8 +357,13 @@ onMounted(() => {
   color: var(--secondary);
 }
 
-/* Trending */
+/* Trending List */
 .trending-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.trending-items {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -310,7 +376,7 @@ onMounted(() => {
   padding: 12px;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
@@ -372,6 +438,26 @@ onMounted(() => {
   border-radius: 6px;
   letter-spacing: 0.5px;
   flex-shrink: 0;
+}
+
+/* Transition Animations */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-slide-move {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Recommended */
