@@ -1,20 +1,12 @@
 <template>
   <div class="app-container">
-    <!-- 사이드바 -->
-    <BattleCreateSidebar />
-
-    <!-- 메인 컨텐츠 -->
     <main class="main-content">
-      <!-- 헤더 -->
+      <!-- 통합 헤더 (헤더 + 스텝) -->
       <BattleCreateHeader
-          @back="handleBack"
-          @save-draft="saveDraft"
-      />
-
-      <!-- 스텝 인디케이터 -->
-      <BattleCreateStepIndicator
           :steps="steps"
           :current-step="currentStep"
+          @back="handleBack"
+          @save-draft="saveDraft"
       />
 
       <!-- 컨텐츠 영역 -->
@@ -81,9 +73,8 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import BattleCreateSidebar from '@/components/battle/create/BattleCreateSidebar.vue';
+import { useRouter } from 'vue-router';
 import BattleCreateHeader from '@/components/battle/create/BattleCreateHeader.vue';
-import BattleCreateStepIndicator from '@/components/battle/create/BattleCreateStepIndicator.vue';
 import BattleCreatePreview from '@/components/battle/create/BattleCreatePreview.vue';
 import Step1BasicInfo from '@/components/battle/create/Step1BasicInfo.vue';
 import Step2ItemSetup from '@/components/battle/create/Step2ItemSetup.vue';
@@ -91,11 +82,11 @@ import Step3DetailSettings from '@/components/battle/create/Step3DetailSettings.
 import Step4FinalConfirmation from '@/components/battle/create/Step4FinalConfirmation.vue';
 import BattleCreateFooter from '@/components/battle/create/BattleCreateFooter.vue';
 
-// 스텝 정의
+const router = useRouter();
+
 const steps = ['기본 정보', '아이템 설정', '상세 설정', '최종 확인'];
 const currentStep = ref(1);
 
-// 배틀 타입 옵션
 const battleTypes = [
   {
     value: 'open',
@@ -111,7 +102,6 @@ const battleTypes = [
   }
 ];
 
-// 카테고리 옵션
 const categories = [
   { value: 'sneakers', emoji: '👟', name: '스니커즈' },
   { value: 'tech', emoji: '💻', name: '테크' },
@@ -123,7 +113,6 @@ const categories = [
   { value: 'etc', emoji: '📚', name: '기타' }
 ];
 
-// 배틀 폼 데이터
 const battleForm = ref({
   title: '',
   type: 'open',
@@ -142,14 +131,12 @@ const battleForm = ref({
   agreeTerms: false
 });
 
-// 선택된 아이템
 const selectedItems = ref([
   { id: 1, name: '나이키 덩크 로우', brand: 'Nike', emoji: '👟', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
   { id: 2, name: '조던 4 레트로', brand: 'Jordan', emoji: '👟', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
   { id: 3, name: '아디다스 예지', brand: 'Adidas', emoji: '👟', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }
 ]);
 
-// Computed
 const previewTypeName = computed(() => {
   const type = battleTypes.find(t => t.value === battleForm.value.type);
   return type ? type.title : '';
@@ -197,7 +184,6 @@ const canProceed = computed(() => {
   }
 });
 
-// Methods
 const handleNext = () => {
   if (currentStep.value < 4) {
     currentStep.value++;
@@ -210,15 +196,14 @@ const handlePrevious = () => {
   if (currentStep.value > 1) {
     currentStep.value--;
   } else {
-    if (confirm('배틀 생성을 취소하시겠습니까?')) {
+    if (confirm('배틀 생성을 취소하시겠습니까?\n작성 중인 내용이 저장되지 않습니다.')) {
       handleBack();
     }
   }
 };
 
 const handleBack = () => {
-  // 라우터 연동 시 사용
-  console.log('뒤로 가기');
+  router.push('/battles');
 };
 
 const saveDraft = () => {
@@ -229,18 +214,12 @@ const saveDraft = () => {
 const createBattle = () => {
   console.log('배틀 생성', battleForm.value);
   alert('배틀이 생성되었습니다!');
+  router.push('/battles');
 };
 </script>
 
 <style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 .app-container {
-  display: flex;
   min-height: 100vh;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background: #FAFBFC;
@@ -250,19 +229,35 @@ const createBattle = () => {
 }
 
 .main-content {
-  flex: 1;
-  margin-left: 260px;
+  width: 100%;
   background: #FAFBFC;
 }
 
 .content-area {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 40px;
+  padding: 32px 60px 80px;
 }
 
 .create-container {
   display: flex;
   gap: 32px;
+  align-items: flex-start;
+}
+
+@media (max-width: 1024px) {
+  .create-container {
+    flex-direction: column;
+  }
+
+  .content-area {
+    padding: 24px 24px 80px;
+  }
+}
+
+@media (max-width: 640px) {
+  .content-area {
+    padding: 20px 16px 80px;
+  }
 }
 </style>
