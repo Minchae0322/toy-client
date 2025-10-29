@@ -5,11 +5,38 @@
     <main class="main-content">
       <AppHeader />
 
-      <CategoryFilter
+      <!-- 카테고리 필터 -->
+      <CommonCategoryFilter
           :categories="rootCategories"
-          v-model:viewMode="viewMode"
+          :show-all-button="false"
           @category-change="handleCategoryChange"
       />
+
+      <!-- 뷰 토글 (Feed 전용) -->
+      <div class="view-toggle-section">
+        <div class="view-toggle">
+          <button
+              @click="viewMode = 'feed'"
+              :class="['view-btn', { active: viewMode === 'feed' }]"
+              title="피드 뷰"
+          >
+            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+            </svg>
+            <span>피드</span>
+          </button>
+          <button
+              @click="viewMode = 'list'"
+              :class="['view-btn', { active: viewMode === 'list' }]"
+              title="리스트 뷰"
+          >
+            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+            </svg>
+            <span>리스트</span>
+          </button>
+        </div>
+      </div>
 
       <HotSection
           :limit="5"
@@ -81,7 +108,7 @@ import { useFeed } from '@/services/FeedService';
 import AppSidebar from '@/components/feed/AppSidebar.vue';
 import AppHeader from '@/components/feed/AppHeader.vue';
 import RightSidebar from '@/components/feed/RightSidebar.vue';
-import CategoryFilter from '@/components/feed/CategoryFilter.vue';
+import CommonCategoryFilter from '@/components/feed/CategoryFilter.vue';
 import HotSection from '@/components/feed/HotSection.vue';
 import FeedList from '@/components/feed/FeedList.vue';
 
@@ -163,7 +190,6 @@ const loadFeeds = async () => {
       cursor.value = response.data.nextCursor;
       hasNext.value = response.data.hasNext;
 
-      // ⭐ userReactions 기반으로 상태 초기화
       response.data.feeds.forEach(feed => {
         if (feed.userReactions?.hasLike) {
           likedPosts.value.add(feed.feedId);
@@ -209,7 +235,6 @@ const handleReactionUpdate = ({ feedId, likeCount, hotCount, action, reactionTyp
   likedPosts.value = newLikedSet;
   hotPosts.value = newHotSet;
 
-  // 피드 목록 업데이트
   const feedIndex = feeds.value.findIndex(f => f.feedId === feedId);
   if (feedIndex !== -1) {
     feeds.value[feedIndex].likeCount = likeCount;
@@ -235,92 +260,6 @@ const handleCategoryChange = ({ category, subCategory }) => {
   selectedCategoryId.value = subCategory?.categoryId || category?.categoryId;
   console.log('📌 카테고리 변경:', selectedCategoryId.value);
   resetAndLoadFeeds();
-};
-
-const handleLike = async (feedId) => {
-  try {
-    console.log('❤️ 좋아요 토글:', feedId);
-    const response = await feedService.toggleLike(feedId);
-
-    if (response.success && response.data) {
-      // ⭐ 백엔드 응답 구조: { reactionType, action, message, likeCount, hotCount }
-      const newLikedSet = new Set(likedPosts.value);
-      const newHotSet = new Set(hotPosts.value);
-
-      if (response.data.action === 'added') {
-        newLikedSet.add(feedId);
-        // LIKE 추가 시 HOT 제거 (백엔드 로직)
-        newHotSet.delete(feedId);
-      } else if (response.data.action === 'removed') {
-        newLikedSet.delete(feedId);
-      } else if (response.data.action === 'changed') {
-        // LIKE로 변경 (HOT에서 LIKE로)
-        newLikedSet.add(feedId);
-        newHotSet.delete(feedId);
-      }
-
-      likedPosts.value = newLikedSet;
-      hotPosts.value = newHotSet;
-
-      // ⭐ 피드 목록 업데이트
-      const feedIndex = feeds.value.findIndex(f => f.feedId === feedId);
-      if (feedIndex !== -1) {
-        feeds.value[feedIndex].likeCount = response.data.likeCount;
-        feeds.value[feedIndex].hotCount = response.data.hotCount;
-        feeds.value[feedIndex].userReactions = {
-          hasLike: newLikedSet.has(feedId),
-          hasHot: newHotSet.has(feedId)
-        };
-      }
-
-      console.log('✅ 좋아요 완료:', response.data);
-    }
-  } catch (error) {
-    console.error('❌ 좋아요 실패:', error);
-  }
-};
-
-const handleHot = async (feedId) => {
-  try {
-    console.log('🔥 핫 토글:', feedId);
-    const response = await feedService.toggleHot(feedId);
-
-    if (response.success && response.data) {
-      // ⭐ 백엔드 응답 구조: { reactionType, action, message, likeCount, hotCount }
-      const newLikedSet = new Set(likedPosts.value);
-      const newHotSet = new Set(hotPosts.value);
-
-      if (response.data.action === 'added') {
-        newHotSet.add(feedId);
-        // HOT 추가 시 LIKE 제거 (백엔드 로직)
-        newLikedSet.delete(feedId);
-      } else if (response.data.action === 'removed') {
-        newHotSet.delete(feedId);
-      } else if (response.data.action === 'changed') {
-        // HOT으로 변경 (LIKE에서 HOT으로)
-        newHotSet.add(feedId);
-        newLikedSet.delete(feedId);
-      }
-
-      likedPosts.value = newLikedSet;
-      hotPosts.value = newHotSet;
-
-      // ⭐ 피드 목록 업데이트
-      const feedIndex = feeds.value.findIndex(f => f.feedId === feedId);
-      if (feedIndex !== -1) {
-        feeds.value[feedIndex].likeCount = response.data.likeCount;
-        feeds.value[feedIndex].hotCount = response.data.hotCount;
-        feeds.value[feedIndex].userReactions = {
-          hasLike: newLikedSet.has(feedId),
-          hasHot: newHotSet.has(feedId)
-        };
-      }
-
-      console.log('✅ 핫 완료:', response.data);
-    }
-  } catch (error) {
-    console.error('❌ 핫 실패:', error);
-  }
 };
 
 const handleSave = (feedId) => {
@@ -393,11 +332,20 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
+:root {
+  --primary: #222222;
+  --secondary: #64748B;
+  --accent: #F97316;
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --border: #E2E8F0;
+  --hover: #F1F5F9;
+}
+
 .app-container {
-  background: #F8FAFC;
+  background: var(--bg);
   min-height: 100vh;
-  color: #222222;
+  color: var(--primary);
 }
 
 .main-content {
@@ -420,13 +368,73 @@ onUnmounted(() => {
   }
 }
 
+/* 필터 래퍼: 카테고리 필터 + 뷰 토글 */
+.filter-wrapper {
+  position: relative;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+/* 뷰 토글 - Feed 전용 */
+.view-toggle {
+  display: none;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  z-index: 10;
+}
+
+@media (min-width: 1024px) {
+  .view-toggle {
+    display: flex;
+    right: 40px;
+    top: 24px;
+  }
+}
+
+.view-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+.view-btn:hover {
+  color: var(--primary);
+}
+
+.view-btn.active {
+  background: white;
+  color: var(--primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.view-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Bottom Navigation */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #FFFFFF;
-  border-top: 1px solid #E2E8F0;
+  background: var(--card);
+  border-top: 1px solid var(--border);
   z-index: 50;
   display: flex;
   align-items: center;
@@ -450,14 +458,14 @@ onUnmounted(() => {
   padding: 8px 12px;
   background: transparent;
   border: none;
-  color: #64748B;
+  color: var(--secondary);
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .bottom-nav-item.active {
-  color: #222222;
+  color: var(--primary);
 }
 
 .bottom-nav-item .icon {
@@ -490,7 +498,7 @@ onUnmounted(() => {
 .bottom-nav-fab {
   width: 56px;
   height: 56px;
-  background: #F97316;
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 28px;
