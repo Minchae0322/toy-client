@@ -3,13 +3,38 @@
     <!-- Trending -->
     <section class="sidebar-section">
       <h3 class="sidebar-title">🔥 실시간 트렌딩</h3>
-      <div class="trending-list">
-        <div v-for="(tag, idx) in trendingTags" :key="tag" class="trending-item">
-          <span class="trend-rank">{{ idx + 1 }}</span>
+
+      <!-- 로딩 상태 -->
+      <div v-if="loading" class="trending-loading">
+        <div class="loading-spinner"></div>
+        <p>트렌딩 해시태그 불러오는 중...</p>
+      </div>
+
+      <!-- 에러 상태 -->
+      <div v-else-if="error" class="trending-error">
+        <p>❌ {{ error }}</p>
+        <button @click="loadHotHashtags" class="btn-retry">다시 시도</button>
+      </div>
+
+      <!-- 해시태그 목록 -->
+      <div v-else class="trending-list">
+        <div
+            v-for="(hashtag, idx) in hotHashtags"
+            :key="hashtag.id"
+            class="trending-item"
+            @click="onHashtagClick(hashtag.name)"
+        >
+          <span class="trend-rank" :class="getRankClass(idx)">{{ idx + 1 }}</span>
           <div class="trend-info">
-            <p class="trend-tag">{{ tag }}</p>
-            <p class="trend-count">{{ Math.floor(Math.random() * 500) + 100 }}개 인증</p>
+            <p class="trend-tag">{{ formatHashtag(hashtag.name) }}</p>
+            <p class="trend-count">{{ formatUsageCount(hashtag.usageCount) }}</p>
           </div>
+          <span v-if="idx < 3" class="trend-badge">HOT</span>
+        </div>
+
+        <!-- 데이터가 없을 때 -->
+        <div v-if="hotHashtags.length === 0" class="trending-empty">
+          <p>아직 트렌딩 해시태그가 없습니다</p>
         </div>
       </div>
     </section>
@@ -52,8 +77,19 @@
 </template>
 
 <script setup>
-const trendingTags = ['#조던4', '#에어팟맥스', '#디올립글로우', '#아미', '#스니커즈'];
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useFeed, feedUtils } from '@/services/FeedService'
 
+const router = useRouter()
+const { getHotHashtags } = useFeed()
+
+// 상태 관리
+const hotHashtags = ref([])
+const loading = ref(false)
+const error = ref(null)
+
+// 추천 크리에이터 (기존 데이터)
 const recommendedUsers = [
   {
     name: 'sneaker_master',
@@ -73,14 +109,89 @@ const recommendedUsers = [
     followers: 5670,
     image: 'https://i.pravatar.cc/150?img=45'
   }
-];
+]
 
+/**
+ * 인기 해시태그 조회
+ */
+const loadHotHashtags = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    const response = await getHotHashtags(
+        {}, // searchCondition
+        {
+          page: 0,
+          size: 10,
+          sort: 'usageCount,DESC'
+        }
+    )
+
+    if (response.success) {
+      hotHashtags.value = response.data.content || response.data
+      console.log('✅ 인기 해시태그 로드 완료:', hotHashtags.value)
+    } else {
+      throw new Error(response.message || '해시태그를 불러오는데 실패했습니다.')
+    }
+  } catch (err) {
+    console.error('❌ 해시태그 로드 실패:', err)
+    error.value = err.message || '해시태그를 불러오는데 실패했습니다.'
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 해시태그 클릭 핸들러
+ */
+const onHashtagClick = (hashtag) => {
+  console.log('해시태그 클릭:', hashtag)
+  // 해시태그 검색 페이지로 이동
+  router.push({
+    name: 'FeedSearch', // 또는 적절한 라우트명
+    query: { hashtag: hashtag }
+  })
+}
+
+/**
+ * 해시태그 포맷팅
+ */
+const formatHashtag = (tag) => {
+  return feedUtils.formatHashtag(tag)
+}
+
+/**
+ * 사용 횟수 포맷팅
+ */
+const formatUsageCount = (count) => {
+  return feedUtils.formatUsageCount(count)
+}
+
+/**
+ * 숫자 포맷팅 (팔로워)
+ */
 const formatNumber = (num) => {
   if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
+    return (num / 1000).toFixed(1) + 'K'
   }
-  return num.toString();
-};
+  return num.toString()
+}
+
+/**
+ * 순위별 스타일 클래스
+ */
+const getRankClass = (index) => {
+  if (index === 0) return 'rank-gold'
+  if (index === 1) return 'rank-silver'
+  if (index === 2) return 'rank-bronze'
+  return ''
+}
+
+// 컴포넌트 마운트 시 데이터 로드
+onMounted(() => {
+  loadHotHashtags()
+})
 </script>
 
 <style scoped>
@@ -114,11 +225,82 @@ const formatNumber = (num) => {
   margin-bottom: 16px;
 }
 
+/* Loading State */
+.trending-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 12px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.trending-loading p {
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+/* Error State */
+.trending-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  gap: 12px;
+}
+
+.trending-error p {
+  font-size: 14px;
+  color: #EF4444;
+  text-align: center;
+}
+
+.btn-retry {
+  padding: 8px 16px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-retry:hover {
+  background: #1E293B;
+}
+
+/* Empty State */
+.trending-empty {
+  padding: 32px;
+  text-align: center;
+}
+
+.trending-empty p {
+  font-size: 14px;
+  color: var(--secondary);
+}
+
 /* Trending */
 .trending-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .trending-item {
@@ -128,11 +310,13 @@ const formatNumber = (num) => {
   padding: 12px;
   border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  position: relative;
 }
 
 .trending-item:hover {
   background: var(--hover);
+  transform: translateX(4px);
 }
 
 .trend-rank {
@@ -141,10 +325,27 @@ const formatNumber = (num) => {
   color: var(--secondary);
   width: 32px;
   text-align: center;
+  flex-shrink: 0;
+}
+
+.trend-rank.rank-gold {
+  color: #F59E0B;
+  font-size: 18px;
+}
+
+.trend-rank.rank-silver {
+  color: #9CA3AF;
+  font-size: 17px;
+}
+
+.trend-rank.rank-bronze {
+  color: #CD7F32;
+  font-size: 17px;
 }
 
 .trend-info {
   flex: 1;
+  min-width: 0;
 }
 
 .trend-tag {
@@ -152,11 +353,25 @@ const formatNumber = (num) => {
   font-weight: 700;
   color: var(--primary);
   margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .trend-count {
   font-size: 13px;
   color: var(--secondary);
+}
+
+.trend-badge {
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
 
 /* Recommended */
@@ -182,6 +397,7 @@ const formatNumber = (num) => {
 
 .recommended-info {
   flex: 1;
+  min-width: 0;
 }
 
 .recommended-name {
@@ -189,6 +405,9 @@ const formatNumber = (num) => {
   font-weight: 700;
   color: var(--primary);
   margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recommended-desc {
@@ -207,6 +426,7 @@ const formatNumber = (num) => {
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
+  flex-shrink: 0;
 }
 
 .btn-follow:hover {
@@ -286,5 +506,23 @@ const formatNumber = (num) => {
 .copyright {
   font-size: 12px;
   color: var(--secondary);
+}
+
+/* 스크롤바 스타일링 */
+.sidebar-right::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-right::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-right::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.sidebar-right::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
 }
 </style>

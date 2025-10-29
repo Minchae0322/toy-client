@@ -371,6 +371,38 @@ class FeedService extends BaseApiService {
     return this.removeFeedReaction(feedId, 'HOT')
   }
 
+  // ==================== 해시태그 메서드 ====================
+
+  /**
+   * 인기 해시태그 조회
+   * GET /api/hashtags/hot
+   */
+  async getHotHashtags(searchCondition = {}, pageable = {}) {
+    console.log('🔥 [FEED_SERVICE] 인기 해시태그 조회')
+
+    const validatedCondition = this.validateHashtagSearchCondition(searchCondition)
+    const validatedPageable = this.validatePageable(pageable)
+    const cleanedCondition = this.removeEmptyParams(validatedCondition)
+    const cleanedPageable = this.removeEmptyParams(validatedPageable)
+
+    const params = {
+      ...cleanedCondition,
+      ...cleanedPageable
+    }
+
+    const response = await this.get('/hashtags/hot', params)
+
+    if (response.success && response.data) {
+      if (response.data.content) {
+        response.data.content = this.normalizeHotHashtagResponse(response.data.content)
+      } else if (Array.isArray(response.data)) {
+        response.data = this.normalizeHotHashtagResponse(response.data)
+      }
+    }
+
+    return response
+  }
+
   // ==================== 검색 및 필터 메서드 ====================
 
   /**
@@ -556,6 +588,19 @@ class FeedService extends BaseApiService {
       hotCount: feed.hotCount || 0,
       viewCount: feed.viewCount || 0,
       hotScore: feed.hotScore || 0
+    }))
+  }
+
+  /**
+   * 인기 해시태그 응답 정규화
+   */
+  normalizeHotHashtagResponse(hashtags) {
+    if (!Array.isArray(hashtags)) return []
+
+    return hashtags.map(hashtag => ({
+      id: hashtag.id,
+      name: hashtag.name,
+      usageCount: hashtag.usageCount || 0
     }))
   }
 
@@ -767,6 +812,36 @@ class FeedService extends BaseApiService {
   }
 
   /**
+   * 해시태그 검색 조건 검증
+   */
+  validateHashtagSearchCondition(searchCondition) {
+    if (!searchCondition || typeof searchCondition !== 'object') {
+      return {}
+    }
+
+    const validated = { ...searchCondition }
+
+    // 키워드 검증
+    if (validated.keyword && validated.keyword.length > 50) {
+      validated.keyword = validated.keyword.substring(0, 50)
+    }
+
+    // 최소 사용 횟수 검증
+    if (validated.minUsageCount !== undefined && validated.minUsageCount !== null) {
+      validated.minUsageCount = Math.max(0, parseInt(validated.minUsageCount) || 0)
+    }
+
+    // 카테고리 ID 검증
+    if (validated.categoryId && isNaN(parseInt(validated.categoryId))) {
+      delete validated.categoryId
+    } else if (validated.categoryId) {
+      validated.categoryId = parseInt(validated.categoryId)
+    }
+
+    return validated
+  }
+
+  /**
    * 페이징 조건 검증
    */
   validatePageable(pageable) {
@@ -781,7 +856,8 @@ class FeedService extends BaseApiService {
     const validSorts = [
       'createdAt,DESC', 'createdAt,ASC',
       'viewCount,DESC', 'viewCount,ASC',
-      'likeCount,DESC', 'hotCount,DESC'
+      'likeCount,DESC', 'hotCount,DESC',
+      'usageCount,DESC', 'usageCount,ASC'
     ]
 
     const validated = {
@@ -834,6 +910,9 @@ export function useFeed() {
     getFeedsByCategory: (categoryId, pageable) => service.getFeedsByCategory(categoryId, pageable),
     getFeedsByHashtag: (hashtag, pageable) => service.getFeedsByHashtag(hashtag, pageable),
     getFeedsByEvaluation: (evaluation, condition, pageable) => service.getFeedsByEvaluation(evaluation, condition, pageable),
+
+    // 해시태그
+    getHotHashtags: (condition, pageable) => service.getHotHashtags(condition, pageable),
 
     // 유틸리티
     convertToAttachmentInfo: (response) => service.convertToAttachmentInfo(response)
@@ -938,5 +1017,51 @@ export const feedUtils = {
   formatHotScore(score) {
     if (!score || score === 0) return '0.0'
     return parseFloat(score).toFixed(1)
+  },
+
+  /**
+   * 해시태그 사용 횟수 포맷팅
+   */
+  formatUsageCount(count) {
+    if (!count || count === 0) return '0회'
+    const num = parseInt(count)
+
+    if (num >= 10000) {
+      return Math.floor(num / 10000) + '만+'
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'k'
+    }
+
+    return num.toString() + '회'
+  },
+
+  /**
+   * 해시태그 배열을 문자열로 변환
+   */
+  hashtagsToString(hashtags) {
+    if (!Array.isArray(hashtags) || hashtags.length === 0) return ''
+    return hashtags.map(tag => this.formatHashtag(tag)).join(' ')
+  },
+
+  /**
+   * 해시태그 유효성 검사
+   */
+  isValidHashtag(tag) {
+    if (!tag || typeof tag !== 'string') return false
+    const cleanTag = tag.replace('#', '').trim()
+    return cleanTag.length > 0 && cleanTag.length <= 50
+  },
+
+  /**
+   * 해시태그 배열 필터링 (중복 제거 및 유효성 검사)
+   */
+  filterHashtags(hashtags) {
+    if (!Array.isArray(hashtags)) return []
+
+    const uniqueTags = [...new Set(hashtags)]
+    return uniqueTags
+    .map(tag => tag.replace('#', '').trim())
+    .filter(tag => this.isValidHashtag(tag))
+    .slice(0, 20) // 최대 20개
   }
 }
