@@ -37,7 +37,7 @@
               {{ currentCategoryTitle }}
             </h2>
             <div class="section-info">
-              <span class="battle-count">{{ filteredBattles.length }}개</span>
+              <span class="battle-count">{{ totalCount }}개</span>
             </div>
           </div>
 
@@ -83,7 +83,7 @@
           <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
         </svg>
         <span>배틀</span>
-        <span class="nav-badge">3</span>
+        <span class="nav-badge">{{ activeBattleCount }}</span>
       </button>
       <button class="bottom-nav-fab" @click="handleCreateBattle">
         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,398 +107,404 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onUnmounted, watch} from 'vue';
-import {useRouter} from 'vue-router';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { battleService, battleUtils } from '@/services/BattleService'
+import { categoryService } from '@/services/CategoryService'
 
 // Components
-import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue';
-import AppSidebar from '@/components/feed/AppSidebar.vue';
-import AppHeader from '@/components/battle/AppHeader.vue';
-import RightSidebar from '@/components/battle/RightSidebar.vue';
-import BattleTabs from '@/components/battle/BattleTabs.vue';
-import HotBattleSection from '@/components/battle/HotBattleSection.vue';
-import BattleList from '@/components/battle/BattleList.vue';
-import TrendingBattles from '@/components/battle/TrendingBattles.vue';
-import DeadlineBattles from '@/components/battle/DeadlineBattles.vue';
+import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'
+import AppSidebar from '@/components/feed/AppSidebar.vue'
+import AppHeader from '@/components/battle/AppHeader.vue'
+import RightSidebar from '@/components/battle/RightSidebar.vue'
+import BattleTabs from '@/components/battle/BattleTabs.vue'
+import HotBattleSection from '@/components/battle/HotBattleSection.vue'
+import BattleList from '@/components/battle/BattleList.vue'
+import TrendingBattles from '@/components/battle/TrendingBattles.vue'
+import DeadlineBattles from '@/components/battle/DeadlineBattles.vue'
 
-const router = useRouter();
-
-// ==================== Mock 데이터 생성 ====================
-const generateMockBattle = (id, isHot = false, categoryId = null) => {
-  const randomCategoryId = categoryId || [
-    'tech', 'tech-mobile', 'tech-pc', 'tech-audio',
-    'fashion', 'fashion-men', 'fashion-women',
-    'beauty', 'beauty-skincare', 'beauty-makeup',
-    'food', 'food-fresh', 'food-beverage',
-    'living', 'living-furniture', 'living-kitchen'
-  ][Math.floor(Math.random() * 15)];
-
-  return {
-    battleId: id,
-    title: `${isHot ? '🔥 ' : ''}2024년 최고의 ${getCategoryProduct(randomCategoryId)}는?`,
-    description: '여러분이 생각하는 올해 최고의 제품을 투표해주세요!',
-    status: Math.random() > 0.3 ? 'ACTIVE' : 'ENDED',
-    startDate: '2024-10-01T00:00:00',
-    endDate: '2024-10-31T23:59:59',
-    totalVotes: Math.floor(Math.random() * 5000) + 100,
-    participantCount: Math.floor(Math.random() * 1000) + 50,
-    viewCount: Math.floor(Math.random() * 10000) + 500,
-
-    categoryId: randomCategoryId,
-    parentCategoryId: randomCategoryId.includes('-') ? randomCategoryId.split('-')[0] : randomCategoryId,
-
-    battleType: Math.random() > 0.5 ? 'CURATION' : 'OPEN',
-
-    createdBy: {
-      userId: Math.floor(Math.random() * 1000),
-      nickname: ['테크리뷰어', '가젯매니아', '얼리어답터', '디지털노마드'][Math.floor(Math.random() * 4)],
-      profileImage: null
-    },
-
-    options: [
-      {
-        optionId: id * 10 + 1,
-        title: getOptionTitle(randomCategoryId, 1),
-        voteCount: Math.floor(Math.random() * 2000),
-        votePercentage: Math.floor(Math.random() * 40) + 20,
-        imageUrl: 'https://via.placeholder.com/400x300?text=Option+1'
-      },
-      {
-        optionId: id * 10 + 2,
-        title: getOptionTitle(randomCategoryId, 2),
-        voteCount: Math.floor(Math.random() * 2000),
-        votePercentage: Math.floor(Math.random() * 40) + 20,
-        imageUrl: 'https://via.placeholder.com/400x300?text=Option+2'
-      }
-    ],
-
-    hotScore: isHot ? Math.random() * 100 + 50 : Math.random() * 50,
-    createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-  };
-};
-
-// Helper functions
-const getCategoryProduct = (categoryId) => {
-  const products = {
-    'tech': '전자제품',
-    'tech-mobile': '스마트폰',
-    'tech-pc': '노트북',
-    'tech-audio': '무선이어폰',
-    'fashion': '패션 아이템',
-    'fashion-men': '남성 재킷',
-    'fashion-women': '여성 가방',
-    'beauty': '뷰티 제품',
-    'beauty-skincare': '스킨케어',
-    'beauty-makeup': '파운데이션',
-    'food': '식품',
-    'food-fresh': '과일',
-    'food-beverage': '커피',
-    'living': '생활용품',
-    'living-furniture': '의자',
-    'living-kitchen': '프라이팬'
-  };
-  return products[categoryId] || '제품';
-};
-
-const getOptionTitle = (categoryId, index) => {
-  const options = {
-    'tech-mobile': ['아이폰 15 Pro', '갤럭시 S24 Ultra'],
-    'tech-audio': ['에어팟 프로 2', '소니 WF-1000XM5'],
-    'tech-pc': ['맥북 프로 M3', 'LG 그램 17'],
-    'fashion-men': ['노스페이스 눕시', '파타고니아 레트로X'],
-    'beauty-skincare': ['SK-II 에센스', '설화수 윤조에센스'],
-    'food-beverage': ['스타벅스 아메리카노', '블루보틀 라떼']
-  };
-
-  const defaultOptions = ['옵션 A', '옵션 B'];
-  return (options[categoryId] || defaultOptions)[index - 1];
-};
+const router = useRouter()
 
 // ==================== State ====================
-const tabs = [
-  {id: 'ongoing', label: '진행중', count: 47},
-  {id: 'ended', label: '종료됨', count: 128},
-  {id: 'my', label: '내 배틀', count: 12}
-];
+const tabs = ref([
+  { id: 'ongoing', label: '진행중', count: 0 },
+  { id: 'ended', label: '종료됨', count: 0 },
+  { id: 'my', label: '내 배틀', count: 0 }
+])
 
-const activeTab = ref('ongoing');
-const battles = ref([]);
-const hotBattles = ref([]);
-const trendingBattles = ref([]);
-const deadlineBattles = ref([]);
-const cursor = ref(null);
-const hasNext = ref(true);
-const loading = ref(false);
-const hotLoading = ref(false);
-const battleListRef = ref(null);
-const viewMode = ref('feed');
+const activeTab = ref('ongoing')
+const battles = ref([])
+const hotBattles = ref([])
+const trendingBattles = ref([])
+const deadlineBattles = ref([])
+const currentPage = ref(0)
+const totalPages = ref(0)
+const totalCount = ref(0)
+const hasNext = ref(true)
+const loading = ref(false)
+const hotLoading = ref(false)
+const battleListRef = ref(null)
+const viewMode = ref('feed')
 
 // 카테고리 상태
-const selectedCategory = ref(null);
-const selectedSubCategory = ref(null);
-const showSubCategories = ref(false);
-
-// 카테고리 데이터
-const categories = ref([
-  {
-    categoryId: 'tech',
-    categoryName: '테크/가전',
-    children: [
-      { categoryId: 'tech-mobile', categoryName: '모바일/태블릿' },
-      { categoryId: 'tech-pc', categoryName: 'PC/노트북' },
-      { categoryId: 'tech-audio', categoryName: '음향기기' },
-      { categoryId: 'tech-camera', categoryName: '카메라' },
-      { categoryId: 'tech-wearable', categoryName: '웨어러블' }
-    ]
-  },
-  {
-    categoryId: 'fashion',
-    categoryName: '패션',
-    children: [
-      { categoryId: 'fashion-men', categoryName: '남성패션' },
-      { categoryId: 'fashion-women', categoryName: '여성패션' },
-      { categoryId: 'fashion-shoes', categoryName: '신발' }
-    ]
-  },
-  {
-    categoryId: 'beauty',
-    categoryName: '뷰티',
-    children: [
-      { categoryId: 'beauty-skincare', categoryName: '스킨케어' },
-      { categoryId: 'beauty-makeup', categoryName: '메이크업' },
-      { categoryId: 'beauty-perfume', categoryName: '향수' }
-    ]
-  },
-  {
-    categoryId: 'food',
-    categoryName: '식품',
-    children: [
-      { categoryId: 'food-fresh', categoryName: '신선식품' },
-      { categoryId: 'food-processed', categoryName: '가공식품' },
-      { categoryId: 'food-beverage', categoryName: '음료' },
-      { categoryId: 'food-health', categoryName: '건강식품' }
-    ]
-  },
-  {
-    categoryId: 'living',
-    categoryName: '리빙/생활',
-    children: [
-      { categoryId: 'living-furniture', categoryName: '가구' },
-      { categoryId: 'living-kitchen', categoryName: '주방용품' },
-      { categoryId: 'living-interior', categoryName: '인테리어' }
-    ]
-  },
-  {
-    categoryId: 'sports',
-    categoryName: '스포츠/레저',
-    children: []
-  },
-  {
-    categoryId: 'culture',
-    categoryName: '문화/예술',
-    children: []
-  }
-]);
+const selectedCategory = ref(null)
+const selectedSubCategory = ref(null)
+const categories = ref([])
 
 // ==================== Computed ====================
 const currentCategoryTitle = computed(() => {
-  if (!selectedCategory.value) return '전체 배틀';
+  if (!selectedCategory.value) return '전체 배틀'
 
-  let title = selectedCategory.value.categoryName;
+  let title = selectedCategory.value.categoryName
   if (selectedSubCategory.value) {
-    title += ` > ${selectedSubCategory.value.categoryName}`;
+    title += ` > ${selectedSubCategory.value.subCategoryName}`
   }
-  return title;
-});
+  return title
+})
 
 const filteredBattles = computed(() => {
-  let result = battles.value;
+  return battles.value
+})
 
-  // 카테고리 필터링
-  if (selectedCategory.value) {
-    if (selectedSubCategory.value) {
-      // 서브 카테고리 선택됨
-      result = result.filter(b => b.categoryId === selectedSubCategory.value.categoryId);
-    } else {
-      // 부모 카테고리만 선택됨
-      result = result.filter(b => b.parentCategoryId === selectedCategory.value.categoryId);
+const activeBattleCount = computed(() => {
+  return tabs.value.find(tab => tab.id === 'ongoing')?.count || 0
+})
+
+// ==================== API Methods ====================
+
+/**
+ * 카테고리 목록 로드
+ */
+const loadCategories = async () => {
+  try {
+    console.log('📂 [BATTLE_LIST] 카테고리 로드 시작')
+    const response = await categoryService.getCategories()
+
+    if (response.success && response.data) {
+      categories.value = response.data
+      console.log('✅ [BATTLE_LIST] 카테고리 로드 성공:', categories.value.length)
     }
+  } catch (error) {
+    console.error('❌ [BATTLE_LIST] 카테고리 로드 실패:', error)
   }
+}
 
-  return result;
-});
-
-// ==================== Methods ====================
-const handleCategoryClick = (category) => {
-  selectedCategory.value = category;
-  selectedSubCategory.value = null;
-
-  if (category && category.children && category.children.length > 0) {
-    showSubCategories.value = true;
-  } else {
-    showSubCategories.value = false;
-  }
-
-  // 카테고리 변경 시 배틀 목록 리로드
-  resetAndLoadBattles();
-};
-
-const handleSubCategoryClick = (subCategory) => {
-  selectedSubCategory.value = subCategory;
-  resetAndLoadBattles();
-};
-
+/**
+ * HOT 배틀 로드 (인기 배틀)
+ */
 const loadHotBattles = async () => {
   try {
-    hotLoading.value = true;
-    await new Promise(resolve => setTimeout(resolve, 500));
+    hotLoading.value = true
+    console.log('🔥 [BATTLE_LIST] HOT 배틀 로드 시작')
 
-    hotBattles.value = [
-      generateMockBattle(1, true),
-      generateMockBattle(2, true)
-    ];
+    // 조회수와 투표수가 높은 배틀 조회
+    const response = await battleService.getBattles(
+        {
+          status: 'ACTIVE'
+        },
+        {
+          page: 0,
+          size: 2,
+          sort: 'totalVotes,DESC'
+        }
+    )
 
-    console.log('✅ HOT 배틀 로드 성공');
+    if (response.success && response.data) {
+      hotBattles.value = response.data.content || response.data
+      console.log('✅ [BATTLE_LIST] HOT 배틀 로드 성공:', hotBattles.value.length)
+    }
   } catch (error) {
-    console.error('❌ HOT 배틀 로드 실패:', error);
+    console.error('❌ [BATTLE_LIST] HOT 배틀 로드 실패:', error)
+    hotBattles.value = []
   } finally {
-    hotLoading.value = false;
+    hotLoading.value = false
   }
-};
+}
 
-const loadBattles = async () => {
-  if (loading.value || !hasNext.value) return;
+/**
+ * 배틀 목록 로드
+ */
+const loadBattles = async (reset = false) => {
+  if (loading.value) return
+  if (!reset && !hasNext.value) return
 
   try {
-    loading.value = true;
-    await new Promise(resolve => setTimeout(resolve, 800));
+    loading.value = true
 
-    const currentLength = battles.value.length;
-    const targetCategoryId = selectedSubCategory.value?.categoryId ||
-        selectedCategory.value?.categoryId ||
-        null;
-
-    const newBattles = Array.from({length: 20}, (_, i) =>
-        generateMockBattle(currentLength + i + 100, false, targetCategoryId)
-    );
-
-    // 탭 필터링
-    const filteredBattles = newBattles.filter(battle => {
-      if (activeTab.value === 'ongoing') return battle.status === 'ACTIVE';
-      if (activeTab.value === 'ended') return battle.status === 'ENDED';
-      return true;
-    });
-
-    battles.value = [...battles.value, ...filteredBattles];
-
-    if (battles.value.length >= 100) {
-      hasNext.value = false;
+    if (reset) {
+      currentPage.value = 0
+      battles.value = []
     }
 
-    console.log('✅ 배틀 로드 성공:', battles.value.length);
-  } catch (error) {
-    console.error('❌ 배틀 로드 실패:', error);
-  } finally {
-    loading.value = false;
-  }
-};
+    console.log('📋 [BATTLE_LIST] 배틀 목록 로드 시작', {
+      page: currentPage.value,
+      tab: activeTab.value,
+      category: selectedSubCategory.value?.subCategoryId || selectedCategory.value?.categoryId
+    })
 
+    // 검색 조건 구성
+    const searchCondition = {}
+
+    // 탭별 상태 필터
+    if (activeTab.value === 'ongoing') {
+      searchCondition.status = 'ACTIVE'
+    } else if (activeTab.value === 'ended') {
+      searchCondition.status = 'CLOSED'
+    }
+
+    // 카테고리 필터
+    if (selectedSubCategory.value) {
+      searchCondition.category = selectedSubCategory.value.subCategoryId
+    } else if (selectedCategory.value) {
+      searchCondition.category = selectedCategory.value.categoryId
+    }
+
+    // API 호출
+    const response = await battleService.getBattles(
+        searchCondition,
+        {
+          page: currentPage.value,
+          size: 20,
+          sort: 'createdAt,DESC'
+        }
+    )
+
+    if (response.success && response.data) {
+      const pageData = response.data.content ? response.data : { content: response.data }
+
+      battles.value = reset
+          ? pageData.content
+          : [...battles.value, ...pageData.content]
+
+      // 페이징 정보 업데이트
+      if (response.data.totalElements !== undefined) {
+        totalCount.value = response.data.totalElements
+        totalPages.value = response.data.totalPages
+        hasNext.value = !response.data.last
+      } else {
+        hasNext.value = false
+      }
+
+      currentPage.value++
+
+      console.log('✅ [BATTLE_LIST] 배틀 목록 로드 성공:', {
+        loaded: pageData.content.length,
+        total: battles.value.length,
+        hasNext: hasNext.value
+      })
+    }
+  } catch (error) {
+    console.error('❌ [BATTLE_LIST] 배틀 목록 로드 실패:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 트렌딩 배틀 로드 (사이드바)
+ */
 const loadTrendingBattles = async () => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    console.log('📈 [BATTLE_LIST] 트렌딩 배틀 로드 시작')
 
-    trendingBattles.value = Array.from({length: 5}, (_, i) =>
-        generateMockBattle(200 + i, false)
-    );
+    const response = await battleService.getBattles(
+        {
+          status: 'ACTIVE'
+        },
+        {
+          page: 0,
+          size: 5,
+          sort: 'totalViews,DESC'
+        }
+    )
 
-    console.log('✅ 트렌딩 배틀 로드 성공');
+    if (response.success && response.data) {
+      trendingBattles.value = response.data.content || response.data
+      console.log('✅ [BATTLE_LIST] 트렌딩 배틀 로드 성공:', trendingBattles.value.length)
+    }
   } catch (error) {
-    console.error('❌ 트렌딩 배틀 로드 실패:', error);
+    console.error('❌ [BATTLE_LIST] 트렌딩 배틀 로드 실패:', error)
+    trendingBattles.value = []
   }
-};
+}
 
+/**
+ * 마감 임박 배틀 로드 (사이드바)
+ */
 const loadDeadlineBattles = async () => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    console.log('⏰ [BATTLE_LIST] 마감 임박 배틀 로드 시작')
 
-    deadlineBattles.value = Array.from({length: 2}, (_, i) => ({
-      ...generateMockBattle(300 + i, false),
-      endDate: new Date(Date.now() + Math.random() * 24 * 60 * 60 * 1000).toISOString()
-    }));
+    const response = await battleService.getBattles(
+        {
+          status: 'ACTIVE'
+        },
+        {
+          page: 0,
+          size: 3,
+          sort: 'endDate,ASC'
+        }
+    )
 
-    console.log('✅ 마감 임박 배틀 로드 성공');
+    if (response.success && response.data) {
+      deadlineBattles.value = response.data.content || response.data
+      console.log('✅ [BATTLE_LIST] 마감 임박 배틀 로드 성공:', deadlineBattles.value.length)
+    }
   } catch (error) {
-    console.error('❌ 마감 임박 배틀 로드 실패:', error);
+    console.error('❌ [BATTLE_LIST] 마감 임박 배틀 로드 실패:', error)
+    deadlineBattles.value = []
   }
-};
+}
 
+/**
+ * 탭별 카운트 업데이트
+ */
+const updateTabCounts = async () => {
+  try {
+    console.log('🔢 [BATTLE_LIST] 탭 카운트 업데이트 시작')
+
+    // 진행중 배틀 수
+    const ongoingResponse = await battleService.getBattles(
+        { status: 'ACTIVE' },
+        { page: 0, size: 1 }
+    )
+    if (ongoingResponse.success && ongoingResponse.data.totalElements !== undefined) {
+      tabs.value[0].count = ongoingResponse.data.totalElements
+    }
+
+    // 종료된 배틀 수
+    const endedResponse = await battleService.getBattles(
+        { status: 'CLOSED' },
+        { page: 0, size: 1 }
+    )
+    if (endedResponse.success && endedResponse.data.totalElements !== undefined) {
+      tabs.value[1].count = endedResponse.data.totalElements
+    }
+
+    console.log('✅ [BATTLE_LIST] 탭 카운트 업데이트 완료:', {
+      ongoing: tabs.value[0].count,
+      ended: tabs.value[1].count
+    })
+  } catch (error) {
+    console.error('❌ [BATTLE_LIST] 탭 카운트 업데이트 실패:', error)
+  }
+}
+
+// ==================== Event Handlers ====================
+
+/**
+ * 카테고리 변경 핸들러
+ */
+const handleCategoryChange = ({ category, subCategory }) => {
+  console.log('🏷️ [BATTLE_LIST] 카테고리 변경:', { category, subCategory })
+
+  selectedCategory.value = category
+  selectedSubCategory.value = subCategory
+
+  resetAndLoadBattles()
+}
+
+/**
+ * 배틀 목록 초기화 및 재로드
+ */
 const resetAndLoadBattles = () => {
-  console.log('🔄 배틀 초기화');
-  battles.value = [];
-  cursor.value = null;
-  hasNext.value = true;
-  loadBattles();
-};
+  console.log('🔄 [BATTLE_LIST] 배틀 목록 초기화')
+  battles.value = []
+  currentPage.value = 0
+  hasNext.value = true
+  loadBattles(true)
+}
 
+/**
+ * 배틀 상세 페이지 이동
+ */
 const openBattle = (battleId) => {
-  console.log('📖 배틀 상세 페이지로 이동:', battleId);
-  alert(`배틀 상세 페이지 (ID: ${battleId})는 준비중입니다.`);
-};
+  console.log('📖 [BATTLE_LIST] 배틀 상세 페이지로 이동:', battleId)
+  router.push({ name: 'BattleDetail', params: { id: battleId } })
+}
 
-const handleCreateBattle = () => {
-  console.log('✍️ 배틀 생성 페이지로 이동');
-  router.push({name: 'BattleCreate'});
-};
+/**
+ * 배틀 생성 페이지 이동
+ */
+const handleCreateBattle = async () => {
+  try {
+    console.log('🔍 [BATTLE_LIST] 배틀 생성 권한 체크')
 
+    // 생성 권한 체크
+    const response = await battleService.validateCreation()
+
+    if (response.success) {
+      console.log('✅ [BATTLE_LIST] 생성 권한 확인 완료')
+      router.push({ name: 'BattleCreate' })
+    }
+  } catch (error) {
+    console.error('❌ [BATTLE_LIST] 생성 권한 체크 실패:', error)
+    alert(error.message || '배틀을 생성할 수 없습니다.')
+  }
+}
+
+/**
+ * 투표 핸들러
+ */
 const handleVote = (battleId) => {
-  console.log('🗳️ 투표:', battleId);
-  alert(`투표 기능 (ID: ${battleId})은 준비중입니다.`);
-};
+  console.log('🗳️ [BATTLE_LIST] 투표:', battleId)
+  router.push({ name: 'BattleDetail', params: { id: battleId } })
+}
 
 // ==================== Watchers ====================
 watch(activeTab, () => {
-  console.log('📌 탭 변경:', activeTab.value);
-  resetAndLoadBattles();
-});
+  console.log('📌 [BATTLE_LIST] 탭 변경:', activeTab.value)
+  resetAndLoadBattles()
+})
 
 // ==================== Lifecycle ====================
-let observer = null;
+let observer = null
 
-onMounted(() => {
-  console.log('✅ BattleListView 마운트');
+onMounted(async () => {
+  console.log('✅ [BATTLE_LIST] 컴포넌트 마운트')
 
-  loadHotBattles();
-  loadBattles();
-  loadTrendingBattles();
-  loadDeadlineBattles();
+  // 초기 데이터 로드
+  await Promise.all([
+    loadCategories(),
+    updateTabCounts()
+  ])
 
+  // 메인 콘텐츠 로드
+  await Promise.all([
+    loadHotBattles(),
+    loadBattles(true),
+    loadTrendingBattles(),
+    loadDeadlineBattles()
+  ])
+
+  // Intersection Observer 설정
   observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNext.value && !loading.value) {
-          console.log('👁️ 스크롤 감지 - 다음 페이지 로드');
-          loadBattles();
+          console.log('👁️ [BATTLE_LIST] 스크롤 감지 - 다음 페이지 로드')
+          loadBattles()
         }
       },
       {
         threshold: 0.5,
         rootMargin: '100px'
       }
-  );
+  )
 
   setTimeout(() => {
     if (battleListRef.value?.observerTarget) {
-      observer.observe(battleListRef.value.observerTarget);
-      console.log('✅ Intersection Observer 연결');
+      observer.observe(battleListRef.value.observerTarget)
+      console.log('✅ [BATTLE_LIST] Intersection Observer 연결')
     }
-  }, 100);
-});
+  }, 100)
+})
 
 onUnmounted(() => {
   if (observer) {
-    observer.disconnect();
-    console.log('🔌 Intersection Observer 해제');
+    observer.disconnect()
+    console.log('🔌 [BATTLE_LIST] Intersection Observer 해제')
   }
-});
+})
 </script>
 
 <style scoped>
@@ -552,166 +558,6 @@ onUnmounted(() => {
   }
 }
 
-/* Controls Section */
-.controls-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 20px 20px 0;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-}
-
-@media (min-width: 1024px) {
-  .controls-section {
-    padding: 24px 40px 0;
-  }
-}
-
-.category-tabs {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 16px;
-  scrollbar-width: none;
-  flex: 1;
-}
-
-.category-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.category-tab {
-  padding: 10px 18px;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--secondary);
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-}
-
-.category-tab:hover {
-  background: var(--hover);
-  color: var(--primary);
-}
-
-.category-tab.active {
-  background: var(--primary);
-  color: white;
-}
-
-.category-tab .chevron {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.2s;
-}
-
-.category-tab .chevron.rotated {
-  transform: rotate(180deg);
-}
-
-/* View Toggle */
-.view-toggle {
-  display: none;
-  background: var(--bg);
-  border-radius: 12px;
-  padding: 4px;
-  gap: 4px;
-}
-
-@media (min-width: 1024px) {
-  .view-toggle {
-    display: flex;
-  }
-}
-
-.view-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.view-btn:hover {
-  color: var(--primary);
-}
-
-.view-btn.active {
-  background: white;
-  color: var(--primary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.view-btn .icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* Sub Category */
-.sub-category-section {
-  display: flex;
-  gap: 8px;
-  padding: 16px 20px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.sub-category-section::-webkit-scrollbar {
-  display: none;
-}
-
-@media (min-width: 1024px) {
-  .sub-category-section {
-    padding: 16px 40px 20px;
-  }
-}
-
-.sub-tab {
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--secondary);
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.sub-tab:hover {
-  background: var(--hover);
-  color: var(--primary);
-}
-
-.sub-tab.active {
-  background: #FFF7ED;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-}
-
-/* Content Area */
 .content-area {
   padding: 40px;
 }
