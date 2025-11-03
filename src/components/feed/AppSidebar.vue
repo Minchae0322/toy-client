@@ -46,7 +46,7 @@
         <span>컬렉션</span>
       </button>
 
-      <!-- ⭐ 프로필 버튼 - 클릭 시 자신의 피드 목록으로 이동 -->
+      <!-- ⭐ 프로필 버튼 -->
       <button class="nav-item" @click="goToMyProfile">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
@@ -62,7 +62,7 @@
       <span>인증 올리기</span>
     </button>
 
-    <!-- ⭐ 레벨 카드 - 클릭 시 자신의 피드 목록으로 이동 -->
+    <!-- ⭐ 레벨 카드 -->
     <div class="level-card" @click="goToMyProfile">
       <div class="level-info">
         <div class="level-badge">
@@ -81,40 +81,55 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { feedNavigation } from '@/router';
-import * as authUtils from '@/utils/auth.js';
+import { useAuth } from '@/composables/useAuth'; // ⭐ useAuth 사용
 
 const router = useRouter();
+
+// ⭐ useAuth composable 사용
+const { user, isLoggedIn, userId } = useAuth();
 
 // 인증 올리기 버튼
 const handleCreateFeed = () => {
   router.push({ name: 'FeedCreate' });
 };
 
-// ⭐ 내 프로필(피드 목록)로 이동
-const goToMyProfile = () => {
-  try {
-    // localStorage에서 현재 로그인한 사용자 정보 가져오기
-    const userInfo = authUtils.getUserInfo();
+// ⭐ 내 프로필로 이동 - useAuth 사용 버전
+const goToMyProfile = async () => {
+  console.log('=== 프로필 클릭 (useAuth 버전) ===');
 
-    if (userInfo && userInfo.userId) {
-      console.log('👤 내 프로필로 이동:', userInfo.userId);
-      feedNavigation.toUserFeedList(userInfo.userId);
-    } else {
-      console.warn('⚠️ 로그인된 사용자 정보가 없습니다.');
-      // 로그인하지 않은 경우 로그인 페이지로 이동
-      router.push({
+  try {
+    // 1. useAuth의 전역 상태 확인
+    console.log('👤 현재 사용자:', user.value);
+    console.log('🔐 로그인 상태:', isLoggedIn.value);
+    console.log('🔑 userId:', userId.value);
+
+    // 2. 로그인 체크
+    if (!isLoggedIn.value || !userId.value) {
+      console.warn('⚠️ 로그인되지 않음');
+      await router.push({
         name: 'Login',
-        query: { redirect: '/feed' }
+        query: { redirect: router.currentRoute.value.fullPath }
       });
+      return;
     }
+
+    // 3. 프로필 페이지로 이동
+    console.log('🚀 프로필 페이지로 이동:', userId.value);
+    await router.push({
+      name: 'UserFeedList',
+      params: { userId: String(userId.value) }
+    });
+    console.log('✅ 이동 완료');
+
   } catch (error) {
     console.error('❌ 프로필 이동 실패:', error);
+    alert('프로필 페이지로 이동할 수 없습니다.');
   }
 };
 </script>
 
 <style scoped>
+/* 기존 스타일 유지 */
 .sidebar-left {
   position: fixed;
   left: 0;
@@ -261,7 +276,6 @@ const goToMyProfile = () => {
   stroke-width: 2.5;
 }
 
-/* ⭐ 레벨 카드 - 클릭 가능하도록 스타일 추가 */
 .level-card {
   margin-top: auto;
   padding: 20px;

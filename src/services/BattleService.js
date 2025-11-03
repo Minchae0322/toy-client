@@ -108,7 +108,7 @@ class BattleService extends BaseApiService {
     const requestData = {
       title: battleData.title.trim(),
       description: battleData.description?.trim() || null,
-      subCategoryId: parseInt(battleData.subCategoryId),
+      subCategoryId: parseInt(battleData.subCategoryId), // ⭐ 수정
       itemAddPermissionType: battleData.itemAddPermissionType?.toUpperCase() || 'CREATOR_ONLY',
       startDate: battleData.startDate,
       endDate: battleData.endDate,
@@ -288,19 +288,19 @@ class BattleService extends BaseApiService {
   /**
    * 카테고리별 배틀 조회
    */
-  async getBattlesByCategory(categoryId, pageable = {}) {
-    if (!categoryId) {
-      throw new Error('카테고리 ID가 필요합니다.')
+  async getBattlesByCategory(subCategoryId, pageable = {}) {
+    if (!subCategoryId) {
+      throw new Error('서브 카테고리 ID가 필요합니다.')
     }
 
-    return await this.getBattles({ category: categoryId }, pageable)
+    return await this.getBattles({ subCategoryId }, pageable) // ⭐ 수정
   }
 
   /**
    * 상태별 배틀 조회
    */
   async getBattlesByStatus(status, searchCondition = {}, pageable = {}) {
-    const validStatuses = ['SCHEDULED', 'ACTIVE', 'ENDED', 'CLOSED']
+    const validStatuses = ['SCHEDULED', 'ACTIVE', 'ENDED', 'CLOSED'] // ⭐ UPCOMING → SCHEDULED
     if (!validStatuses.includes(status?.toUpperCase())) {
       throw new Error('올바른 배틀 상태를 선택해주세요. (SCHEDULED, ACTIVE, ENDED, CLOSED)')
     }
@@ -373,8 +373,7 @@ class BattleService extends BaseApiService {
       topItemImages: battle.topItemImages || [],
       totalParticipants: battle.totalParticipants || 0,
       totalVotes: battle.totalVotes || 0,
-      totalViews: battle.totalViews || 0,
-      hotScore: battle.hotScore || 0
+      totalViews: battle.totalViews || 0
     }))
   }
 
@@ -391,8 +390,7 @@ class BattleService extends BaseApiService {
       items: battle.items ? this.normalizeBattleItemsResponse(battle.items) : [],
       totalParticipants: battle.totalParticipants || 0,
       totalVotes: battle.totalVotes || 0,
-      totalViews: battle.totalViews || 0,
-      hotScore: battle.hotScore || 0
+      totalViews: battle.totalViews || 0
     }
   }
 
@@ -478,8 +476,8 @@ class BattleService extends BaseApiService {
       }
     }
 
-    if (!battleData.subCategoryId) {
-      errors.push('카테고리를 선택해주세요.')
+    if (!battleData.subCategoryId) { // ⭐ 수정
+      errors.push('서브 카테고리를 선택해주세요.')
     }
 
     if (!battleData.itemAddPermissionType) {
@@ -633,14 +631,15 @@ class BattleService extends BaseApiService {
       validated.keyword = validated.keyword.substring(0, 100)
     }
 
-    if (validated.category && isNaN(parseInt(validated.category))) {
-      delete validated.category
-    } else if (validated.category) {
-      validated.category = parseInt(validated.category)
+    // ⭐ category → subCategoryId
+    if (validated.subCategoryId && isNaN(parseInt(validated.subCategoryId))) {
+      delete validated.subCategoryId
+    } else if (validated.subCategoryId) {
+      validated.subCategoryId = parseInt(validated.subCategoryId)
     }
 
     if (validated.status) {
-      const validStatuses = ['UPCOMING', 'ACTIVE', 'ENDED', 'CLOSED']
+      const validStatuses = ['SCHEDULED', 'ACTIVE', 'ENDED', 'CLOSED'] // ⭐ UPCOMING → SCHEDULED
       if (validStatuses.includes(validated.status.toUpperCase())) {
         validated.status = validated.status.toUpperCase()
       } else {
@@ -672,7 +671,6 @@ class BattleService extends BaseApiService {
     const validSorts = [
       'createdAt,DESC', 'createdAt,ASC',
       'updatedAt,DESC', 'updatedAt,ASC',
-      'hotScore,DESC', 'hotScore,ASC',
       'totalVotes,DESC', 'totalVotes,ASC',
       'totalViews,DESC', 'totalViews,ASC',
       'totalParticipants,DESC', 'totalParticipants,ASC',
@@ -714,7 +712,7 @@ export function useBattle() {
     // 배틀 조회
     getBattle: (id) => service.getBattle(id),
     getBattles: (condition, pageable) => service.getBattles(condition, pageable),
-    getBattlesByCategory: (categoryId, pageable) => service.getBattlesByCategory(categoryId, pageable),
+    getBattlesByCategory: (subCategoryId, pageable) => service.getBattlesByCategory(subCategoryId, pageable),
     getBattlesByStatus: (status, condition, pageable) => service.getBattlesByStatus(status, condition, pageable),
     getBattlesByCreator: (creatorId, pageable) => service.getBattlesByCreator(creatorId, pageable),
     searchBattles: (keyword, condition, pageable) => service.searchBattles(keyword, condition, pageable),
@@ -748,14 +746,6 @@ export const battleUtils = {
     return num.toString()
   },
 
-  formatHotScore(score) {
-    if (!score || score === 0) return '0'
-    if (score >= 1000) {
-      return (score / 1000).toFixed(1) + 'K'
-    }
-    return Math.floor(score).toString()
-  },
-
   formatDate(dateString) {
     if (!dateString) return ''
 
@@ -787,9 +777,10 @@ export const battleUtils = {
     })
   },
 
+  // ⭐ 백엔드 Enum에 맞춤
   getBattleStatusLabel(status) {
     const labels = {
-      'UPCOMING': '예정',
+      'SCHEDULED': '예정',  // UPCOMING → SCHEDULED
       'ACTIVE': '진행중',
       'ENDED': '종료',
       'CLOSED': '마감'
@@ -799,7 +790,7 @@ export const battleUtils = {
 
   getBattleStatusColor(status) {
     const colors = {
-      'UPCOMING': '#8B5CF6',
+      'SCHEDULED': '#8B5CF6',  // UPCOMING → SCHEDULED
       'ACTIVE': '#10B981',
       'ENDED': '#F59E0B',
       'CLOSED': '#64748B'

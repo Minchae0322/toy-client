@@ -16,7 +16,7 @@
           <Step1BasicInfo
               v-show="currentStep === 1"
               :battle-form="battleForm"
-              :battle-types="battleTypes"
+              :item-add-permission-types="itemAddPermissionTypes"
               :categories="categories"
               @update:battle-form="battleForm = $event"
           />
@@ -34,6 +34,7 @@
           <Step3DetailSettings
               v-show="currentStep === 3"
               :battle-form="battleForm"
+              :vote-types="voteTypes"
               @update:battle-form="battleForm = $event"
           />
 
@@ -41,8 +42,9 @@
           <Step4FinalConfirmation
               v-show="currentStep === 4"
               :battle-form="battleForm"
-              :preview-type-name="previewTypeName"
+              :preview-permission-type-name="previewPermissionTypeName"
               :preview-category-name="previewCategoryName"
+              :preview-vote-type-name="previewVoteTypeName"
               :date-diff="dateDiff"
               @update:battle-form="battleForm = $event"
           />
@@ -52,8 +54,9 @@
               :battle-form="battleForm"
               :selected-items="selectedItems"
               :preview-emoji="previewEmoji"
-              :preview-type-name="previewTypeName"
+              :preview-permission-type-name="previewPermissionTypeName"
               :preview-category-name="previewCategoryName"
+              :preview-vote-type-name="previewVoteTypeName"
               :date-diff-text="dateDiffText"
           />
         </div>
@@ -70,10 +73,11 @@
     </main>
   </div>
 </template>
-
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useBattle } from '@/services/BattleService';
+import { useCategory } from '@/services/CategoryService'; // ⭐ 추가
 import BattleCreateHeader from '@/components/battle/create/BattleCreateHeader.vue';
 import BattleCreatePreview from '@/components/battle/create/BattleCreatePreview.vue';
 import Step1BasicInfo from '@/components/battle/create/Step1BasicInfo.vue';
@@ -83,73 +87,92 @@ import Step4FinalConfirmation from '@/components/battle/create/Step4FinalConfirm
 import BattleCreateFooter from '@/components/battle/create/BattleCreateFooter.vue';
 
 const router = useRouter();
+const battleService = useBattle();
+const categoryService = useCategory(); // ⭐ 추가
 
+// ==================== 스텝 설정 ====================
 const steps = ['기본 정보', '아이템 설정', '상세 설정', '최종 확인'];
 const currentStep = ref(1);
 
-const battleTypes = [
+// ==================== 아이템 추가 권한 타입 (백엔드 Enum) ====================
+const itemAddPermissionTypes = [
   {
-    value: 'open',
-    icon: '🌐',
-    title: '오픈 배틀',
-    desc: '누구나 자유롭게 제품을 등록할 수 있어요'
+    value: 'CREATOR_ONLY',
+    icon: '🔒',
+    title: '생성자만 추가 가능',
+    desc: '배틀 생성자만 아이템을 추가할 수 있어요'
   },
   {
-    value: 'curation',
-    icon: '✨',
-    title: '큐레이션 배틀',
-    desc: '내가 직접 선정한 제품들만 투표 대상이 돼요'
+    value: 'PUBLIC_FREE',
+    icon: '🌐',
+    title: '누구나 추가 가능',
+    desc: '모든 사용자가 자유롭게 아이템을 추가할 수 있어요'
+  },
+  {
+    value: 'PUBLIC_APPROVAL',
+    icon: '✅',
+    title: '승인 후 추가 가능',
+    desc: '아이템 등록 후 생성자의 승인을 받아야 해요'
   }
 ];
 
-const categories = [
-  { value: 'sneakers', emoji: '👟', name: '스니커즈' },
-  { value: 'tech', emoji: '💻', name: '테크' },
-  { value: 'beauty', emoji: '💄', name: '뷰티' },
-  { value: 'fnb', emoji: '☕', name: 'F&B' },
-  { value: 'fashion', emoji: '👕', name: '패션' },
-  { value: 'living', emoji: '🛋️', name: '리빙' },
-  { value: 'game', emoji: '🎮', name: '게임' },
-  { value: 'etc', emoji: '📚', name: '기타' }
+// ==================== 투표 타입 (백엔드 Enum) ====================
+const voteTypes = [
+  {
+    value: 'SINGLE',
+    icon: '1️⃣',
+    title: '1인 1표',
+    desc: '한 명당 하나의 아이템에만 투표할 수 있어요'
+  },
+  {
+    value: 'MULTIPLE',
+    icon: '3️⃣',
+    title: '1인 3표 (순위)',
+    desc: '1위부터 3위까지 순위를 매겨 투표할 수 있어요'
+  }
 ];
 
+// ==================== 카테고리 (백엔드에서 로드) ====================
+const categories = ref([]);
+const loading = ref(false);
+
+// ==================== 배틀 폼 데이터 ====================
 const battleForm = ref({
   title: '',
-  type: 'open',
-  category: 'sneakers',
-  startDate: '2025-02-01',
-  endDate: '2025-02-28',
+  subCategoryId: null,
+  itemAddPermissionType: 'CREATOR_ONLY',
+  startDate: '',
+  endDate: '',
+  participationStartDate: '',
+  thumbnailFile: null,
   description: '',
-  minLevel: '',
-  maxProducts: '',
-  allowDuplicate: false,
-  voteType: 'single',
-  resultPublic: 'realtime',
-  hasAdditionalReward: false,
-  additionalReward: '',
-  rules: '',
+  voteType: 'SINGLE',
+  items: [],
   agreeTerms: false
 });
 
-const selectedItems = ref([
-  { id: 1, name: '나이키 덩크 로우', brand: 'Nike', emoji: '👟', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-  { id: 2, name: '조던 4 레트로', brand: 'Jordan', emoji: '👟', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-  { id: 3, name: '아디다스 예지', brand: 'Adidas', emoji: '👟', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }
-]);
+// ==================== 선택된 아이템 (UI용) ====================
+const selectedItems = ref([]);
 
-const previewTypeName = computed(() => {
-  const type = battleTypes.find(t => t.value === battleForm.value.type);
+// ==================== Computed ====================
+const previewPermissionTypeName = computed(() => {
+  const type = itemAddPermissionTypes.find(t => t.value === battleForm.value.itemAddPermissionType);
   return type ? type.title : '';
 });
 
 const previewCategoryName = computed(() => {
-  const category = categories.find(c => c.value === battleForm.value.category);
-  return category ? category.name : '';
+  const category = categories.value.find(c => c.subCategoryId === battleForm.value.subCategoryId);
+  return category ? category.subCategoryName : '';
 });
 
 const previewEmoji = computed(() => {
-  const category = categories.find(c => c.value === battleForm.value.category);
+  const category = categories.value.find(c => c.subCategoryId === battleForm.value.subCategoryId);
   return category ? category.emoji : '📦';
+});
+
+const previewVoteTypeName = computed(() => {
+  const type = voteTypes.find(t => t.value === battleForm.value.voteType);
+  return type ? type.title : '';
 });
 
 const dateDiff = computed(() => {
@@ -166,29 +189,108 @@ const dateDiffText = computed(() => {
 const canProceed = computed(() => {
   switch (currentStep.value) {
     case 1:
-      return battleForm.value.title.length > 0 &&
-          battleForm.value.category &&
+      return battleForm.value.title.trim().length >= 15 &&
+          battleForm.value.title.trim().length <= 50 &&
+          battleForm.value.subCategoryId !== null &&
           battleForm.value.startDate &&
-          battleForm.value.endDate;
+          battleForm.value.endDate &&
+          battleForm.value.participationStartDate &&
+          battleForm.value.thumbnailFile !== null;
+
     case 2:
-      if (battleForm.value.type === 'curation') {
-        return selectedItems.value.length >= 2;
-      }
-      return true;
+      return battleForm.value.items.length >= 2 &&
+          battleForm.value.items.length <= 20;
+
     case 3:
-      return true;
+      return (!battleForm.value.description ||
+          (battleForm.value.description.length >= 120 &&
+              battleForm.value.description.length <= 500));
+
     case 4:
       return battleForm.value.agreeTerms;
+
     default:
       return false;
   }
 });
 
-const handleNext = () => {
+// ==================== 메서드 ====================
+
+/**
+ * ⭐ 카테고리 목록 로드 (수정)
+ */
+const loadCategories = async () => {
+  try {
+    loading.value = true;
+    console.log('📂 카테고리 로드 시작...');
+
+    const response = await categoryService.getCategories();
+
+    console.log('📦 카테고리 응답:', response);
+
+    if (response.success && response.data) {
+      // ⭐ 백엔드 응답 구조에 맞게 처리
+      const categoryList = response.data;
+
+      // 평면 구조를 서브카테고리 목록으로 변환
+      categories.value = categoryList.map(category => ({
+        categoryId: category.categoryId,
+        subCategoryId: category.categoryId, // ⭐ 서브카테고리가 없으면 자기 자신을 사용
+        categoryName: category.categoryName,
+        subCategoryName: category.categoryName,
+        emoji: getEmojiForCategory(category.categoryName)
+      }));
+
+      console.log('✅ 카테고리 로드 완료:', categories.value);
+    } else {
+      console.warn('⚠️ 카테고리 응답이 없음, 기본값 사용');
+      categories.value = getDefaultCategories();
+    }
+  } catch (error) {
+    console.error('❌ 카테고리 로드 실패:', error);
+    categories.value = getDefaultCategories();
+    alert('카테고리를 불러오는데 실패했습니다. 기본 카테고리를 사용합니다.');
+  } finally {
+    loading.value = false;
+  }
+};
+
+/**
+ * 기본 카테고리 (백엔드 로드 실패시)
+ */
+const getDefaultCategories = () => [
+  { categoryId: 1, subCategoryId: 1, categoryName: '스니커즈', subCategoryName: '스니커즈', emoji: '👟' },
+  { categoryId: 2, subCategoryId: 2, categoryName: '테크', subCategoryName: '테크', emoji: '💻' },
+  { categoryId: 3, subCategoryId: 3, categoryName: '뷰티', subCategoryName: '뷰티', emoji: '💄' },
+  { categoryId: 4, subCategoryId: 4, categoryName: 'F&B', subCategoryName: 'F&B', emoji: '☕' },
+  { categoryId: 5, subCategoryId: 5, categoryName: '패션', subCategoryName: '패션', emoji: '👕' },
+  { categoryId: 6, subCategoryId: 6, categoryName: '리빙', subCategoryName: '리빙', emoji: '🛋️' },
+  { categoryId: 7, subCategoryId: 7, categoryName: '게임', subCategoryName: '게임', emoji: '🎮' },
+  { categoryId: 8, subCategoryId: 8, categoryName: '기타', subCategoryName: '기타', emoji: '📚' }
+];
+
+/**
+ * 카테고리 이름에 따른 이모지 반환
+ */
+const getEmojiForCategory = (categoryName) => {
+  const emojiMap = {
+    '스니커즈': '👟',
+    '테크': '💻',
+    '뷰티': '💄',
+    'F&B': '☕',
+    '패션': '👕',
+    '리빙': '🛋️',
+    '게임': '🎮',
+    '기타': '📚'
+  };
+  return emojiMap[categoryName] || '📦';
+};
+
+const handleNext = async () => {
   if (currentStep.value < 4) {
     currentStep.value++;
   } else {
-    createBattle();
+    await createBattle();
   }
 };
 
@@ -203,19 +305,112 @@ const handlePrevious = () => {
 };
 
 const handleBack = () => {
-  router.push('/battles');
+  router.push({ name: 'BattleList' });
 };
 
 const saveDraft = () => {
-  console.log('임시저장', battleForm.value);
+  const draftData = {
+    ...battleForm.value,
+    selectedItems: selectedItems.value,
+    savedAt: new Date().toISOString()
+  };
+
+  localStorage.setItem('battleDraft', JSON.stringify(draftData));
+  console.log('💾 임시저장:', draftData);
   alert('임시저장되었습니다');
 };
 
-const createBattle = () => {
-  console.log('배틀 생성', battleForm.value);
-  alert('배틀이 생성되었습니다!');
-  router.push('/battles');
+const loadDraft = () => {
+  try {
+    const draft = localStorage.getItem('battleDraft');
+    if (draft) {
+      const draftData = JSON.parse(draft);
+      if (confirm('임시저장된 데이터가 있습니다. 불러오시겠습니까?')) {
+        battleForm.value = { ...battleForm.value, ...draftData };
+        selectedItems.value = draftData.selectedItems || [];
+        console.log('✅ 임시저장 데이터 복원:', draftData);
+      }
+    }
+  } catch (error) {
+    console.error('❌ 임시저장 데이터 로드 실패:', error);
+  }
 };
+
+const createBattle = async () => {
+  try {
+    loading.value = true;
+    console.log('🚀 배틀 생성 시작...');
+
+    const battleData = {
+      title: battleForm.value.title.trim(),
+      description: battleForm.value.description?.trim() || null,
+      subCategoryId: battleForm.value.subCategoryId,
+      itemAddPermissionType: battleForm.value.itemAddPermissionType,
+      startDate: battleForm.value.startDate,
+      endDate: battleForm.value.endDate,
+      participationStartDate: battleForm.value.participationStartDate,
+      voteType: battleForm.value.voteType,
+      items: battleForm.value.items
+    };
+
+    console.log('📤 전송 데이터:', battleData);
+
+    const response = await battleService.createBattleWithFiles(
+        battleData,
+        battleForm.value.thumbnailFile
+    );
+
+    if (response.success) {
+      console.log('✅ 배틀 생성 성공:', response.data);
+      localStorage.removeItem('battleDraft');
+      alert('배틀이 성공적으로 생성되었습니다! 🎉');
+      router.push({
+        name: 'BattleDetail',
+        params: { id: response.data.id }
+      });
+    } else {
+      throw new Error(response.message || '배틀 생성에 실패했습니다.');
+    }
+  } catch (error) {
+    console.error('❌ 배틀 생성 실패:', error);
+    alert(error.message || '배틀 생성 중 오류가 발생했습니다.');
+  } finally {
+    loading.value = false;
+  }
+};
+
+const checkCreationPermission = async () => {
+  try {
+    const response = await battleService.validateCreation();
+
+    if (!response.success) {
+      alert('배틀을 생성할 권한이 없습니다.');
+      router.push({ name: 'BattleList' });
+    }
+  } catch (error) {
+    console.error('❌ 권한 체크 실패:', error);
+  }
+};
+
+// ==================== Lifecycle ====================
+onMounted(async () => {
+  console.log('✅ BattleCreateView 마운트');
+
+  await checkCreationPermission();
+  await loadCategories(); // ⭐ 카테고리 로드
+  loadDraft();
+
+  // 기본 날짜 설정
+  if (!battleForm.value.startDate) {
+    const today = new Date();
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(today.getMonth() + 1);
+
+    battleForm.value.startDate = today.toISOString().split('T')[0];
+    battleForm.value.endDate = nextMonth.toISOString().split('T')[0];
+    battleForm.value.participationStartDate = today.toISOString().split('T')[0];
+  }
+});
 </script>
 
 <style scoped>

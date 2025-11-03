@@ -13,20 +13,21 @@
           maxlength="50"
       >
       <div class="char-counter">{{ battleForm.title.length }} / 50</div>
-      <div class="form-hint">명확하고 흥미로운 제목을 작성해주세요</div>
+      <div class="form-hint">15~50자 사이로 명확하고 흥미로운 제목을 작성해주세요</div>
     </div>
 
+    <!-- ⭐ 아이템 추가 권한 타입 (백엔드 Enum) -->
     <div class="form-group">
       <label class="form-label">
-        배틀 타입 <span class="required">*</span>
+        아이템 추가 권한 <span class="required">*</span>
       </label>
-      <div class="battle-type-selector">
+      <div class="permission-type-selector">
         <div
-            v-for="type in battleTypes"
+            v-for="type in itemAddPermissionTypes"
             :key="type.value"
             class="type-option"
-            :class="{ selected: battleForm.type === type.value }"
-            @click="$emit('update:battleForm', { ...battleForm, type: type.value })"
+            :class="{ selected: battleForm.itemAddPermissionType === type.value }"
+            @click="$emit('update:battleForm', { ...battleForm, itemAddPermissionType: type.value })"
         >
           <div class="type-icon">{{ type.icon }}</div>
           <div class="type-title">{{ type.title }}</div>
@@ -35,6 +36,7 @@
       </div>
     </div>
 
+    <!-- ⭐ 서브 카테고리 (백엔드에서 로드) -->
     <div class="form-group">
       <label class="form-label">
         카테고리 <span class="required">*</span>
@@ -42,17 +44,19 @@
       <div class="category-grid">
         <div
             v-for="category in categories"
-            :key="category.value"
+            :key="category.subCategoryId"
             class="category-item"
-            :class="{ selected: battleForm.category === category.value }"
-            @click="$emit('update:battleForm', { ...battleForm, category: category.value })"
+            :class="{ selected: battleForm.subCategoryId === category.subCategoryId }"
+            @click="$emit('update:battleForm', { ...battleForm, subCategoryId: category.subCategoryId })"
         >
           <div class="category-emoji">{{ category.emoji }}</div>
-          <div class="category-name">{{ category.name }}</div>
+          <div class="category-name">{{ category.subCategoryName }}</div>
         </div>
       </div>
+      <div v-if="categories.length === 0" class="form-hint">카테고리를 불러오는 중...</div>
     </div>
 
+    <!-- ⭐ 배틀 기간 (startDate, endDate, participationStartDate) -->
     <div class="form-group">
       <label class="form-label">
         배틀 기간 <span class="required">*</span>
@@ -80,27 +84,60 @@
       <div class="form-hint">최소 7일, 최대 31일까지 설정 가능합니다</div>
     </div>
 
+    <!-- ⭐ 참여 시작일 (추가) -->
     <div class="form-group">
-      <label class="form-label">배틀 설명</label>
-      <textarea
-          :value="battleForm.description"
-          @input="$emit('update:battleForm', { ...battleForm, description: $event.target.value })"
-          class="form-input textarea"
-          placeholder="배틀에 대한 설명이나 투표 기준을 알려주세요 (선택)"
-          maxlength="200"
-      ></textarea>
-      <div class="char-counter">{{ battleForm.description.length }} / 200</div>
+      <label class="form-label">
+        참여 시작일 <span class="required">*</span>
+      </label>
+      <input
+          :value="battleForm.participationStartDate"
+          @input="$emit('update:battleForm', { ...battleForm, participationStartDate: $event.target.value })"
+          type="date"
+          class="form-input"
+      >
+      <div class="form-hint">투표를 시작할 수 있는 날짜를 설정하세요</div>
+    </div>
+
+    <!-- ⭐ 대표 이미지 업로드 (필수) -->
+    <div class="form-group">
+      <label class="form-label">
+        대표 이미지 <span class="required">*</span>
+      </label>
+      <div class="image-upload-area">
+        <div
+            v-if="!previewImage"
+            class="upload-placeholder"
+            @click="$refs.thumbnailInput.click()"
+        >
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-text">클릭하여 이미지 업로드</div>
+          <div class="upload-hint">JPG, PNG, GIF (최대 5MB)</div>
+        </div>
+        <div v-else class="image-preview">
+          <img :src="previewImage" alt="대표 이미지">
+          <button class="image-remove" @click="removeImage">×</button>
+        </div>
+      </div>
+      <input
+          ref="thumbnailInput"
+          type="file"
+          accept="image/*"
+          style="display: none;"
+          @change="handleImageUpload"
+      >
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { ref, computed } from 'vue';
+
+const props = defineProps({
   battleForm: {
     type: Object,
     required: true
   },
-  battleTypes: {
+  itemAddPermissionTypes: {
     type: Array,
     required: true
   },
@@ -110,7 +147,43 @@ defineProps({
   }
 });
 
-defineEmits(['update:battleForm']);
+const emit = defineEmits(['update:battleForm']);
+
+const thumbnailInput = ref(null);
+
+const previewImage = computed(() => {
+  if (!props.battleForm.thumbnailFile) return null;
+  return URL.createObjectURL(props.battleForm.thumbnailFile);
+});
+
+const handleImageUpload = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // 파일 크기 체크 (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('파일 크기는 5MB를 초과할 수 없습니다.');
+    return;
+  }
+
+  // 이미지 파일 체크
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드 가능합니다.');
+    return;
+  }
+
+  emit('update:battleForm', {
+    ...props.battleForm,
+    thumbnailFile: file
+  });
+};
+
+const removeImage = () => {
+  emit('update:battleForm', {
+    ...props.battleForm,
+    thumbnailFile: null
+  });
+};
 </script>
 
 <style scoped>
@@ -158,11 +231,6 @@ defineEmits(['update:battleForm']);
   border-color: #1A1A1A;
 }
 
-.textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
 .char-counter {
   text-align: right;
   font-size: 12px;
@@ -170,15 +238,15 @@ defineEmits(['update:battleForm']);
   margin-top: 4px;
 }
 
-.battle-type-selector {
+.permission-type-selector {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   margin-top: 12px;
 }
 
 .type-option {
-  padding: 20px;
+  padding: 16px;
   border: 2px solid #E5E7EB;
   border-radius: 12px;
   cursor: pointer;
@@ -196,15 +264,15 @@ defineEmits(['update:battleForm']);
 }
 
 .type-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background: #F3F4F6;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  margin-bottom: 12px;
+  font-size: 18px;
+  margin-bottom: 8px;
 }
 
 .type-option.selected .type-icon {
@@ -212,14 +280,14 @@ defineEmits(['update:battleForm']);
 }
 
 .type-title {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: #1A1A1A;
   margin-bottom: 4px;
 }
 
 .type-desc {
-  font-size: 13px;
+  font-size: 11px;
   color: #6B7280;
   line-height: 1.4;
 }
@@ -278,5 +346,92 @@ defineEmits(['update:battleForm']);
   font-size: 12px;
   color: #6B7280;
   font-weight: 500;
+}
+
+/* 이미지 업로드 */
+.image-upload-area {
+  margin-top: 12px;
+}
+
+.upload-placeholder {
+  border: 2px dashed #E5E7EB;
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upload-placeholder:hover {
+  border-color: #9CA3AF;
+  background: #FAFBFC;
+}
+
+.upload-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.upload-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 4px;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.image-preview {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.image-remove {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.image-remove:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .permission-type-selector {
+    grid-template-columns: 1fr;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .date-selector {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

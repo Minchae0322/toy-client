@@ -45,7 +45,10 @@
                     :class="{ 'product-selected': isProductSelected(product.id) }"
                     @click="selectProduct(product)"
                 >
-                  <div class="product-emoji">{{ product.emoji }}</div>
+                  <div class="product-image">
+                    <img v-if="product.thumbnailDto?.fileUrl" :src="product.thumbnailDto.fileUrl" :alt="product.name">
+                    <div v-else class="product-placeholder">📦</div>
+                  </div>
                   <div class="product-name">{{ product.name }}</div>
                   <div class="product-brand">{{ product.brand }}</div>
                   <div v-if="isProductSelected(product.id)" class="product-check">✓</div>
@@ -65,7 +68,7 @@
               <span>또는</span>
             </div>
 
-            <!-- 직접 입력 폼 -->
+            <!-- ⭐ 직접 입력 폼 (백엔드 ItemRequest 스펙) -->
             <div class="create-section">
               <div class="section-header">
                 <span class="section-title">✨ 직접 아이템 만들기</span>
@@ -77,39 +80,37 @@
                   <div class="form-field">
                     <label class="field-label">제품명 <span class="required">*</span></label>
                     <input
-                        v-model="newItem.name"
+                        v-model="newItem.customName"
                         type="text"
                         class="field-input"
-                        placeholder="예: 나이키 덩크 로우"
+                        placeholder="예: 나이키 덩크 로우 판다"
                         maxlength="30"
                     >
+                    <div class="field-hint">{{ newItem.customName.length }} / 30</div>
                   </div>
                   <div class="form-field">
                     <label class="field-label">브랜드 <span class="required">*</span></label>
                     <input
-                        v-model="newItem.brand"
+                        v-model="newItem.customBrand"
                         type="text"
                         class="field-input"
                         placeholder="예: Nike"
                         maxlength="20"
                     >
+                    <div class="field-hint">{{ newItem.customBrand.length }} / 20</div>
                   </div>
                 </div>
 
                 <div class="form-field">
-                  <label class="field-label">이모지 선택 <span class="required">*</span></label>
-                  <div class="emoji-selector">
-                    <button
-                        v-for="emoji in emojiOptions"
-                        :key="emoji"
-                        class="emoji-option"
-                        :class="{ selected: newItem.emoji === emoji }"
-                        @click="newItem.emoji = emoji"
-                        type="button"
-                    >
-                      {{ emoji }}
-                    </button>
-                  </div>
+                  <label class="field-label">이미지 URL (선택)</label>
+                  <input
+                      v-model="newItem.customImageUrl"
+                      type="text"
+                      class="field-input"
+                      placeholder="https://example.com/image.jpg"
+                      maxlength="500"
+                  >
+                  <div class="field-hint">이미지 URL을 입력하거나 비워두세요</div>
                 </div>
 
                 <button
@@ -119,7 +120,7 @@
                     type="button"
                 >
                   <span>➕</span>
-                  아이템 만들고 추가하기
+                  커스텀 아이템 추가하기
                 </button>
               </div>
             </div>
@@ -144,6 +145,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useProduct } from '@/composables/useProduct';
 
 const props = defineProps({
   modelValue: {
@@ -162,33 +164,21 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'confirm']);
 
+const productService = useProduct();
+
 // 상태
 const searchQuery = ref('');
 const tempSelectedItems = ref([]);
+const products = ref([]);
+const loading = ref(false);
 
-// 새 아이템 입력
+// ⭐ 백엔드 ItemRequest 스펙에 맞춤
 const newItem = ref({
-  name: '',
-  brand: '',
-  emoji: '👟'
+  productId: null,
+  customName: '',
+  customBrand: '',
+  customImageUrl: ''
 });
-
-// 이모지 옵션
-const emojiOptions = ['👟', '👕', '👔', '🎽', '👗', '👠', '👜', '🎒', '⌚', '👓', '🕶️', '💄', '💻', '📱', '🎮', '🎧'];
-
-// Mock 제품 목록 (실제로는 API에서 가져올 데이터)
-const products = ref([
-  { id: 1, name: '나이키 덩크 로우', brand: 'Nike', emoji: '👟' },
-  { id: 2, name: '조던 4 레트로', brand: 'Jordan', emoji: '👟' },
-  { id: 3, name: '아디다스 예지', brand: 'Adidas', emoji: '👟' },
-  { id: 4, name: '뉴발란스 550', brand: 'New Balance', emoji: '👟' },
-  { id: 5, name: '반스 올드스쿨', brand: 'Vans', emoji: '👟' },
-  { id: 6, name: '컨버스 척 70', brand: 'Converse', emoji: '👟' },
-  { id: 7, name: '나이키 에어포스 1', brand: 'Nike', emoji: '👟' },
-  { id: 8, name: '나이키 에어맥스 97', brand: 'Nike', emoji: '👟' },
-  { id: 9, name: '아디다스 삼바', brand: 'Adidas', emoji: '👟' },
-  { id: 10, name: '푸마 스웨이드', brand: 'Puma', emoji: '👟' }
-]);
 
 // Computed
 const filteredProducts = computed(() => {
@@ -201,77 +191,105 @@ const filteredProducts = computed(() => {
 });
 
 const isNewItemValid = computed(() => {
-  return newItem.value.name.trim() &&
-      newItem.value.brand.trim() &&
-      newItem.value.emoji;
+  return newItem.value.customName.trim().length > 0 &&
+      newItem.value.customBrand.trim().length > 0;
 });
 
 // Methods
-const handleSearch = () => {
-  // 검색 로직 (필요시 디바운싱 추가)
+const handleSearch = async () => {
+  if (!searchQuery.value || searchQuery.value.length < 2) {
+    products.value = [];
+    return;
+  }
+
+  try {
+    loading.value = true;
+    const response = await productService.getProducts({
+      keyword: searchQuery.value
+    }, {
+      page: 0,
+      size: 20
+    });
+
+    if (response.success && response.data) {
+      products.value = response.data.content || response.data;
+    }
+  } catch (error) {
+    console.error('❌ 상품 검색 실패:', error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 const isProductSelected = (productId) => {
-  return tempSelectedItems.value.some(item => item.id === productId);
+  return tempSelectedItems.value.some(item => item.productId === productId);
 };
 
 const selectProduct = (product) => {
-  const index = tempSelectedItems.value.findIndex(item => item.id === product.id);
+  const index = tempSelectedItems.value.findIndex(item => item.productId === product.id);
 
   if (index !== -1) {
-    // 이미 선택된 경우 제거
     tempSelectedItems.value.splice(index, 1);
   } else {
-    // 최대 개수 체크
     if (props.currentItems.length + tempSelectedItems.value.length >= props.maxItems) {
       alert(`최대 ${props.maxItems}개까지만 선택 가능합니다`);
       return;
     }
-    tempSelectedItems.value.push({ ...product });
+
+    // ⭐ 백엔드 ItemRequest 형식
+    tempSelectedItems.value.push({
+      productId: product.id,
+      customName: null,
+      customBrand: null,
+      customImageUrl: null,
+      // UI 표시용 추가 정보
+      _displayName: product.name,
+      _displayBrand: product.brand,
+      _displayImage: product.thumbnailDto?.fileUrl
+    });
   }
 };
 
 const createNewItem = () => {
   if (!isNewItemValid.value) return;
 
-  // 최대 개수 체크
   if (props.currentItems.length + tempSelectedItems.value.length >= props.maxItems) {
     alert(`최대 ${props.maxItems}개까지만 선택 가능합니다`);
     return;
   }
 
-  const newId = `custom-${Date.now()}`;
+  // ⭐ 백엔드 ItemRequest 형식 (커스텀 아이템)
   const item = {
-    id: newId,
-    name: newItem.value.name.trim(),
-    brand: newItem.value.brand.trim(),
-    emoji: newItem.value.emoji,
-    isCustom: true // 사용자가 직접 만든 아이템 표시
+    productId: null, // 커스텀 아이템이므로 null
+    customName: newItem.value.customName.trim(),
+    customBrand: newItem.value.customBrand.trim(),
+    customImageUrl: newItem.value.customImageUrl.trim() || null,
+    // UI 표시용
+    _displayName: newItem.value.customName.trim(),
+    _displayBrand: newItem.value.customBrand.trim(),
+    _displayImage: newItem.value.customImageUrl.trim() || null,
+    _isCustom: true
   };
 
   tempSelectedItems.value.push(item);
 
   // 폼 초기화
   newItem.value = {
-    name: '',
-    brand: '',
-    emoji: '👟'
+    productId: null,
+    customName: '',
+    customBrand: '',
+    customImageUrl: ''
   };
-
-  // 성공 피드백
-  // 필요시 토스트 메시지 추가
 };
 
 const confirmSelection = () => {
   if (tempSelectedItems.value.length === 0) return;
-
   emit('confirm', tempSelectedItems.value);
   handleClose();
 };
 
 const handleClose = () => {
   emit('update:modelValue', false);
-  // 약간의 딜레이 후 초기화 (애니메이션을 위해)
   setTimeout(() => {
     resetModal();
   }, 200);
@@ -280,14 +298,15 @@ const handleClose = () => {
 const resetModal = () => {
   tempSelectedItems.value = [];
   searchQuery.value = '';
+  products.value = [];
   newItem.value = {
-    name: '',
-    brand: '',
-    emoji: '👟'
+    productId: null,
+    customName: '',
+    customBrand: '',
+    customImageUrl: ''
   };
 };
 
-// 모달이 열릴 때 초기화
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
     resetModal();
@@ -296,7 +315,7 @@ watch(() => props.modelValue, (newVal) => {
 </script>
 
 <style scoped>
-/* Modal */
+/* 기존 스타일 유지 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -313,12 +332,8 @@ watch(() => props.modelValue, (newVal) => {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-container {
@@ -394,7 +409,6 @@ watch(() => props.modelValue, (newVal) => {
   flex-shrink: 0;
 }
 
-/* Search Section */
 .search-section {
   margin-bottom: 24px;
 }
@@ -447,7 +461,6 @@ watch(() => props.modelValue, (newVal) => {
   background: #D1D5DB;
 }
 
-/* Section Header */
 .section-header {
   margin-bottom: 16px;
 }
@@ -466,7 +479,6 @@ watch(() => props.modelValue, (newVal) => {
   color: #9CA3AF;
 }
 
-/* Product Grid */
 .search-results {
   margin-bottom: 24px;
 }
@@ -479,7 +491,7 @@ watch(() => props.modelValue, (newVal) => {
 
 .product-card {
   position: relative;
-  padding: 16px 12px;
+  padding: 12px;
   border: 2px solid #E5E7EB;
   border-radius: 10px;
   text-align: center;
@@ -499,9 +511,26 @@ watch(() => props.modelValue, (newVal) => {
   background: #FAFBFC;
 }
 
-.product-emoji {
-  font-size: 32px;
+.product-image {
+  width: 100%;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
   margin-bottom: 8px;
+  background: #F3F4F6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-placeholder {
+  font-size: 32px;
 }
 
 .product-name {
@@ -532,7 +561,6 @@ watch(() => props.modelValue, (newVal) => {
   font-size: 12px;
 }
 
-/* No Results */
 .no-results {
   text-align: center;
   padding: 40px 20px;
@@ -556,7 +584,6 @@ watch(() => props.modelValue, (newVal) => {
   font-size: 14px;
 }
 
-/* Divider */
 .divider {
   position: relative;
   text-align: center;
@@ -583,7 +610,6 @@ watch(() => props.modelValue, (newVal) => {
   font-weight: 500;
 }
 
-/* Create Section */
 .create-section {
   padding: 24px;
   background: #F8F9FA;
@@ -631,39 +657,12 @@ watch(() => props.modelValue, (newVal) => {
   border-color: #1A1A1A;
 }
 
-/* Emoji Selector */
-.emoji-selector {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 8px;
+.field-hint {
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-top: 4px;
 }
 
-.emoji-option {
-  width: 100%;
-  aspect-ratio: 1;
-  border: 2px solid #E5E7EB;
-  background: white;
-  border-radius: 8px;
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.emoji-option:hover {
-  border-color: #9CA3AF;
-  transform: scale(1.05);
-}
-
-.emoji-option.selected {
-  border-color: #1A1A1A;
-  background: #FAFBFC;
-  transform: scale(1.05);
-}
-
-/* Buttons */
 .btn-create {
   width: 100%;
   padding: 12px 20px;
@@ -736,7 +735,6 @@ watch(() => props.modelValue, (newVal) => {
   transform: none;
 }
 
-/* 반응형 */
 @media (max-width: 768px) {
   .modal-container {
     max-width: 100%;
@@ -746,10 +744,6 @@ watch(() => props.modelValue, (newVal) => {
 
   .product-grid {
     grid-template-columns: repeat(3, 1fr);
-  }
-
-  .emoji-selector {
-    grid-template-columns: repeat(6, 1fr);
   }
 
   .form-row {
