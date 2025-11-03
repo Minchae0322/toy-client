@@ -189,13 +189,12 @@ const dateDiffText = computed(() => {
 const canProceed = computed(() => {
   switch (currentStep.value) {
     case 1:
-      return battleForm.value.title.trim().length >= 15 &&
+      return battleForm.value.title.trim().length >= 5 &&
           battleForm.value.title.trim().length <= 50 &&
           battleForm.value.subCategoryId !== null &&
           battleForm.value.startDate &&
           battleForm.value.endDate &&
-          battleForm.value.participationStartDate &&
-          battleForm.value.thumbnailFile !== null;
+          battleForm.value.participationStartDate;
 
     case 2:
       return battleForm.value.items.length >= 2 &&
@@ -203,7 +202,7 @@ const canProceed = computed(() => {
 
     case 3:
       return (!battleForm.value.description ||
-          (battleForm.value.description.length >= 120 &&
+          (battleForm.value.description.length >= 1 &&
               battleForm.value.description.length <= 500));
 
     case 4:
@@ -335,20 +334,29 @@ const loadDraft = () => {
     console.error('❌ 임시저장 데이터 로드 실패:', error);
   }
 };
-
+/**
+ * 배틀 생성
+ */
 const createBattle = async () => {
   try {
     loading.value = true;
     console.log('🚀 배틀 생성 시작...');
+
+    // ⭐ 날짜를 LocalDateTime 형식으로 변환 (ISO 8601)
+    const formatToDateTime = (dateString) => {
+      if (!dateString) return null;
+      // "2025-11-03" → "2025-11-03T00:00:00"
+      return dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+    };
 
     const battleData = {
       title: battleForm.value.title.trim(),
       description: battleForm.value.description?.trim() || null,
       subCategoryId: battleForm.value.subCategoryId,
       itemAddPermissionType: battleForm.value.itemAddPermissionType,
-      startDate: battleForm.value.startDate,
-      endDate: battleForm.value.endDate,
-      participationStartDate: battleForm.value.participationStartDate,
+      startDate: formatToDateTime(battleForm.value.startDate),           // ⭐ 변환
+      endDate: formatToDateTime(battleForm.value.endDate),               // ⭐ 변환
+      participationStartDate: formatToDateTime(battleForm.value.participationStartDate), // ⭐ 변환
       voteType: battleForm.value.voteType,
       items: battleForm.value.items
     };
