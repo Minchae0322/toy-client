@@ -209,69 +209,76 @@ const ddayClass = computed(() => {
 </script>
 
 <style scoped>
-/* ==================== Design Tokens ==================== */
+/* ==================== Design System ==================== */
 :root {
-  /* Typography */
-  --font-xs: 0.688rem;     /* 11px */
-  --font-sm: 0.813rem;     /* 13px */
-  --font-base: 0.938rem;   /* 15px */
-  --font-md: 1.063rem;     /* 17px */
-  --font-lg: 1.25rem;      /* 20px */
-  --font-xl: 1.5rem;       /* 24px */
+  /* Typography Scale */
+  --text-2xs: 0.688rem;    /* 11px */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
 
-  /* Spacing */
+  /* Font Weights */
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Spacing Scale (8px base) */
   --space-1: 0.25rem;      /* 4px */
   --space-2: 0.5rem;       /* 8px */
   --space-3: 0.75rem;      /* 12px */
   --space-4: 1rem;         /* 16px */
   --space-5: 1.25rem;      /* 20px */
   --space-6: 1.5rem;       /* 24px */
-  --space-7: 2rem;         /* 32px */
+  --space-8: 2rem;         /* 32px */
 
-  /* Colors - Neutral */
-  --neutral-50: #FAFBFC;
-  --neutral-100: #F5F6F7;
-  --neutral-200: #EBEDF0;
-  --neutral-300: #DDE1E6;
-  --neutral-400: #C1C7CD;
-  --neutral-500: #9CA3AF;
-  --neutral-600: #6B7280;
-  --neutral-700: #4B5563;
-  --neutral-800: #374151;
-  --neutral-900: #1F2937;
-  --neutral-950: #111827;
+  /* Colors - Neutral Palette */
+  --neutral-white: #FFFFFF;
+  --neutral-50: #FAFAFA;
+  --neutral-100: #F5F5F5;
+  --neutral-200: #E5E5E5;
+  --neutral-300: #D4D4D4;
+  --neutral-400: #A3A3A3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
 
   /* Semantic Colors */
-  --text-primary: var(--neutral-950);
-  --text-secondary: var(--neutral-600);
-  --text-tertiary: var(--neutral-500);
-  --bg-primary: #FFFFFF;
-  --bg-secondary: var(--neutral-50);
-  --border-light: var(--neutral-200);
-  --border-default: var(--neutral-300);
+  --color-primary: var(--neutral-900);
+  --color-secondary: var(--neutral-600);
+  --color-tertiary: var(--neutral-500);
+  --color-border: var(--neutral-200);
+  --color-bg-subtle: var(--neutral-50);
 
-  /* Accent Colors */
-  --accent-curation-bg: #FEF3C7;
-  --accent-curation-text: #92400E;
-  --accent-open-bg: #DBEAFE;
-  --accent-open-text: #1E40AF;
-  --accent-approval-bg: #FCE7F3;
-  --accent-approval-text: #9D174D;
+  /* Badge Colors */
+  --badge-curation-bg: #FEF3C7;
+  --badge-curation-text: #92400E;
+  --badge-open-bg: #DBEAFE;
+  --badge-open-text: #1E40AF;
+  --badge-approval-bg: #F3E8FF;
+  --badge-approval-text: #6B21A8;
 
   /* Status Colors */
   --status-critical: #DC2626;
+  --status-critical-bg: #FEE2E2;
   --status-urgent: #EA580C;
+  --status-urgent-bg: #FFEDD5;
   --status-normal: var(--neutral-700);
   --status-ended: var(--neutral-500);
 
   /* Effects */
   --radius-sm: 0.375rem;   /* 6px */
   --radius-md: 0.5rem;     /* 8px */
-  --radius-lg: 1rem;       /* 16px */
+  --radius-lg: 0.75rem;    /* 12px */
+  --radius-xl: 1rem;       /* 16px */
+
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.12);
-  --shadow-hover: 0 16px 32px -8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.12);
 }
 
 /* ==================== Card Container ==================== */
@@ -279,47 +286,25 @@ const ddayClass = computed(() => {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
   padding: var(--space-6);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
+  background: var(--neutral-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
   cursor: pointer;
-  transition: all 280ms cubic-bezier(0.4, 0, 0.2, 1);
-  isolation: isolate;
-}
-
-.battle-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: var(--radius-lg);
-  padding: 1px;
-  background: linear-gradient(135deg, transparent, var(--border-default));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .battle-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
-  border-color: var(--border-default);
-}
-
-.battle-card:hover::before {
-  opacity: 1;
+  border-color: var(--neutral-300);
 }
 
 .battle-card:active {
   transform: translateY(0);
-  box-shadow: var(--shadow-md);
 }
 
-/* Focus state for accessibility */
 .battle-card:focus {
   outline: 2px solid var(--neutral-400);
   outline-offset: 2px;
@@ -334,13 +319,12 @@ const ddayClass = computed(() => {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  flex-wrap: wrap;
 }
 
 .category-label {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -349,46 +333,43 @@ const ddayClass = computed(() => {
   display: inline-flex;
   align-items: center;
   padding: var(--space-1) var(--space-2);
-  font-size: var(--font-xs);
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: var(--text-2xs);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.01em;
   border-radius: var(--radius-sm);
-  transition: all 180ms ease;
 }
 
 .badge-curation {
-  background: var(--accent-curation-bg);
-  color: var(--accent-curation-text);
+  background: var(--badge-curation-bg);
+  color: var(--badge-curation-text);
 }
 
 .badge-open {
-  background: var(--accent-open-bg);
-  color: var(--accent-open-text);
+  background: var(--badge-open-bg);
+  color: var(--badge-open-text);
 }
 
 .badge-approval {
-  background: var(--accent-approval-bg);
-  color: var(--accent-approval-text);
+  background: var(--badge-approval-bg);
+  color: var(--badge-approval-text);
 }
 
 /* ==================== Title ==================== */
 .card-title {
   margin: 0;
-  font-size: var(--font-md);
-  font-weight: 600;
-  line-height: 1.45;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  line-height: 1.4;
+  color: var(--color-primary);
+  letter-spacing: -0.01em;
 
-  /* Multi-line ellipsis */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   word-break: keep-all;
 
-  /* Minimum height for consistent card size */
-  min-height: calc(var(--font-md) * 1.45 * 2);
+  min-height: calc(var(--text-lg) * 1.4 * 2);
 }
 
 /* ==================== Statistics ==================== */
@@ -407,30 +388,28 @@ const ddayClass = computed(() => {
   flex-direction: column;
   align-items: center;
   gap: var(--space-1);
-  text-align: center;
 }
 
 .stat-value {
-  font-size: var(--font-lg);
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-  line-height: 1;
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
 
 .stat-label {
-  font-size: var(--font-xs);
-  font-weight: 500;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--color-tertiary);
 }
 
 .stat-divider {
   width: 1px;
-  height: 32px;
+  height: 28px;
   background: var(--neutral-200);
+  flex-shrink: 0;
 }
 
 /* ==================== Footer ==================== */
@@ -450,16 +429,16 @@ const ddayClass = computed(() => {
 }
 
 .creator-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--text-tertiary);
+  width: 14px;
+  height: 14px;
+  color: var(--color-tertiary);
   flex-shrink: 0;
 }
 
 .creator-name {
-  font-size: var(--font-sm);
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -470,41 +449,38 @@ const ddayClass = computed(() => {
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-3);
-  font-size: var(--font-sm);
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   letter-spacing: -0.01em;
   border-radius: var(--radius-md);
   background: var(--neutral-100);
+  color: var(--status-normal);
   white-space: nowrap;
   flex-shrink: 0;
-  transition: all 180ms ease;
 }
 
 .dday-icon {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 
 .dday-text {
   font-variant-numeric: tabular-nums;
 }
 
-/* D-Day Status Colors */
+/* D-Day Status Variants */
 .dday-critical {
-  background: #FEE2E2;
+  background: var(--status-critical-bg);
   color: var(--status-critical);
 }
 
-.dday-critical .dday-icon {
-  animation: pulse 2s ease-in-out infinite;
-}
-
 .dday-urgent {
-  background: #FFEDD5;
+  background: var(--status-urgent-bg);
   color: var(--status-urgent);
 }
 
 .dday-normal {
+  background: var(--neutral-100);
   color: var(--status-normal);
 }
 
@@ -513,65 +489,30 @@ const ddayClass = computed(() => {
   color: var(--status-ended);
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* ==================== Responsive Design ==================== */
+/* ==================== Responsive ==================== */
 @media (max-width: 640px) {
   .battle-card {
     padding: var(--space-5);
-    gap: var(--space-4);
+    gap: var(--space-3);
   }
 
   .card-title {
-    font-size: var(--font-base);
-    min-height: calc(var(--font-base) * 1.45 * 2);
-  }
-
-  .card-stats {
-    gap: var(--space-3);
-    padding: var(--space-3) 0;
+    font-size: var(--text-base);
+    min-height: calc(var(--text-base) * 1.4 * 2);
   }
 
   .stat-value {
-    font-size: var(--font-md);
+    font-size: var(--text-lg);
   }
 
-  .stat-divider {
-    height: 28px;
+  .stat-label {
+    font-size: var(--text-2xs);
   }
 }
 
-/* ==================== Accessibility ==================== */
 @media (prefers-reduced-motion: reduce) {
-  .battle-card,
-  .battle-card::before,
-  .permission-badge,
-  .dday-badge {
+  .battle-card {
     transition: none;
-  }
-
-  .dday-critical .dday-icon {
-    animation: none;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-primary: var(--neutral-50);
-    --text-secondary: var(--neutral-400);
-    --text-tertiary: var(--neutral-500);
-    --bg-primary: var(--neutral-900);
-    --bg-secondary: var(--neutral-800);
-    --border-light: var(--neutral-800);
-    --border-default: var(--neutral-700);
   }
 }
 </style>

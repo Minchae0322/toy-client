@@ -1,16 +1,16 @@
 <template>
-  <header class="main-header">
-    <div class="header-content">
-      <h1 class="page-title">{{ title }}</h1>
+  <header class="app-header">
+    <div class="header-container">
+      <h1 class="header-title">{{ title }}</h1>
       <button
           v-if="showCreateButton"
-          class="create-battle-btn"
+          class="create-button"
           @click="$emit('create')"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M12 5v14M5 12h14"/>
+        <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14" stroke-linecap="round"/>
         </svg>
-        {{ createButtonText }}
+        <span class="button-text">{{ createButtonText }}</span>
       </button>
     </div>
   </header>
@@ -36,61 +36,104 @@ defineEmits(['create']);
 </script>
 
 <style scoped>
-.main-header {
+.app-header {
   background: #FFFFFF;
-  padding: 28px 40px;
-  border-bottom: 1px solid #F0F0F3;
+  border-bottom: 1px solid #E5E5E5;
   position: sticky;
   top: 0;
   z-index: 30;
 }
 
-.header-content {
+.header-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 24px 40px;
+  max-width: 100%;
 }
 
-.page-title {
+.header-title {
+  margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1A1A1A;
+  color: #171717;
   letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-.create-battle-btn {
-  display: flex;
+.create-button {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: #1A1A1A;
-  color: white;
+  background: #171717;
+  color: #FFFFFF;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
+  letter-spacing: -0.01em;
   cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
 }
 
-.create-battle-btn:hover {
+.create-button:hover {
   background: #000000;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.create-button:active {
+  transform: translateY(0);
+}
+
+.create-button:focus-visible {
+  outline: 2px solid #525252;
+  outline-offset: 2px;
+}
+
+.button-icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
+}
+
+.button-text {
+  line-height: 1;
 }
 
 @media (max-width: 768px) {
-  .main-header {
+  .header-container {
     padding: 20px 16px;
   }
 
-  .page-title {
+  .header-title {
     font-size: 20px;
   }
 
-  .create-battle-btn {
+  .create-button {
     padding: 10px 16px;
     font-size: 13px;
+  }
+
+  .button-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .button-text {
+    display: none;
+  }
+
+  .create-button {
+    padding: 10px;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    justify-content: center;
   }
 }
 </style>

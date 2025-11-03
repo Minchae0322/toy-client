@@ -2,7 +2,7 @@
   <section class="hot-section">
     <div class="section-header">
       <h2 class="section-title">
-        <span class="title-icon">🔥</span>
+        <span class="title-icon"></span>
         지금 가장 핫한 인증
       </h2>
       <button class="see-all" @click="handleSeeAll">
@@ -26,7 +26,7 @@
 
     <!-- 데이터 없음 -->
     <div v-else-if="!hotFeeds || hotFeeds.length === 0" class="empty-state">
-      <span class="empty-icon">🔥</span>
+      <span class="empty-icon"></span>
       <p class="empty-text">아직 핫한 게시물이 없습니다</p>
     </div>
 
