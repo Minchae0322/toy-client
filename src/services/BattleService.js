@@ -373,7 +373,8 @@ class BattleService extends BaseApiService {
       topItemImages: battle.topItemImages || [],
       totalParticipants: battle.totalParticipants || 0,
       totalVotes: battle.totalVotes || 0,
-      totalViews: battle.totalViews || 0
+      totalViews: battle.totalViews || 0,
+      hotScore: battle.hotScore || 0
     }))
   }
 
@@ -390,7 +391,8 @@ class BattleService extends BaseApiService {
       items: battle.items ? this.normalizeBattleItemsResponse(battle.items) : [],
       totalParticipants: battle.totalParticipants || 0,
       totalVotes: battle.totalVotes || 0,
-      totalViews: battle.totalViews || 0
+      totalViews: battle.totalViews || 0,
+      hotScore: battle.hotScore || 0
     }
   }
 
@@ -638,7 +640,7 @@ class BattleService extends BaseApiService {
     }
 
     if (validated.status) {
-      const validStatuses = ['DRAFT', 'ACTIVE', 'CLOSED', 'EARLY_CLOSED']
+      const validStatuses = ['UPCOMING', 'ACTIVE', 'ENDED', 'CLOSED']
       if (validStatuses.includes(validated.status.toUpperCase())) {
         validated.status = validated.status.toUpperCase()
       } else {
@@ -669,10 +671,13 @@ class BattleService extends BaseApiService {
 
     const validSorts = [
       'createdAt,DESC', 'createdAt,ASC',
+      'updatedAt,DESC', 'updatedAt,ASC',
+      'hotScore,DESC', 'hotScore,ASC',
+      'totalVotes,DESC', 'totalVotes,ASC',
+      'totalViews,DESC', 'totalViews,ASC',
+      'totalParticipants,DESC', 'totalParticipants,ASC',
       'startDate,DESC', 'startDate,ASC',
-      'endDate,DESC', 'endDate,ASC',
-      'totalVotes,DESC', 'totalViews,DESC',
-      'totalParticipants,DESC'
+      'endDate,DESC', 'endDate,ASC'
     ]
 
     const validated = {
@@ -743,6 +748,14 @@ export const battleUtils = {
     return num.toString()
   },
 
+  formatHotScore(score) {
+    if (!score || score === 0) return '0'
+    if (score >= 1000) {
+      return (score / 1000).toFixed(1) + 'K'
+    }
+    return Math.floor(score).toString()
+  },
+
   formatDate(dateString) {
     if (!dateString) return ''
 
@@ -776,20 +789,20 @@ export const battleUtils = {
 
   getBattleStatusLabel(status) {
     const labels = {
-      'DRAFT': '임시저장',
+      'UPCOMING': '예정',
       'ACTIVE': '진행중',
-      'CLOSED': '정상 종료',
-      'EARLY_CLOSED': '조기 종료'
+      'ENDED': '종료',
+      'CLOSED': '마감'
     }
     return labels[status] || ''
   },
 
   getBattleStatusColor(status) {
     const colors = {
-      'DRAFT': '#64748B',
+      'UPCOMING': '#8B5CF6',
       'ACTIVE': '#10B981',
-      'CLOSED': '#F59E0B',
-      'EARLY_CLOSED': '#EF4444'
+      'ENDED': '#F59E0B',
+      'CLOSED': '#64748B'
     }
     return colors[status] || '#64748B'
   },

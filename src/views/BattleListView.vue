@@ -204,8 +204,8 @@ const loadHotBattles = async () => {
         },
         {
           page: 0,
-          size: 2,
-          sort: 'totalVotes,DESC'
+          size: 5,
+          sort: 'hotScore,DESC'
         }
     )
 
