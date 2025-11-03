@@ -26,6 +26,7 @@ import SalePostCreateView from '@/views/SalePostCreateView.vue'
 import FeedHomeView from '@/views/FeedHomeView.vue'
 import FeedDetailView from '@/views/FeedDetailView.vue'
 import FeedCreateView from '@/views/FeedCreateView.vue'
+import UserFeedListView from '@/views/UserFeedListView.vue' // ⭐ 추가
 
 // Battle Views import
 import BattleListView from '@/views/BattleListView.vue'
@@ -136,9 +137,20 @@ const routes = [
       title: '인증 상세'
     }
   },
+  // ⭐ 사용자 피드 목록 라우트 추가
+  {
+    path: '/user/:userId/feeds',
+    name: 'UserFeedList',
+    component: UserFeedListView,
+    props: true,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '사용자 피드'
+    }
+  },
 
   // ==================== 배틀 관련 라우트 ====================
-  // 라우트 설정
   {
     path: '/battle',
     name: 'BattleList',
@@ -402,6 +414,8 @@ router.afterEach((to) => {
     title = `게시글 ${to.params.id} | ToyChat`
   } else if (to.name === 'FeedDetail') {
     title = `인증 ${to.params.id} | ToyChat`
+  } else if (to.name === 'UserFeedList') {
+    title = `사용자 피드 | ToyChat` // ⭐ 추가
   }
 
   document.title = title
@@ -649,11 +663,22 @@ export const feedNavigation = {
   },
 
   /**
+   * ⭐ 사용자 피드 목록 페이지로 이동
+   */
+  toUserFeedList(userId) {
+    if (!userId) {
+      console.warn('사용자 ID가 없습니다')
+      return this.toFeedHome()
+    }
+    return router.push({ name: 'UserFeedList', params: { userId } })
+  },
+
+  /**
    * 피드 관련 페이지인지 확인
    */
   isFeedPage() {
     const route = router.currentRoute.value
-    return route.name?.startsWith('Feed')
+    return route.name?.startsWith('Feed') || route.name === 'UserFeedList'
   },
 
   /**
@@ -661,6 +686,14 @@ export const feedNavigation = {
    */
   getFeedUrl(feedId) {
     const route = router.resolve({ name: 'FeedDetail', params: { id: feedId } })
+    return window.location.origin + route.href
+  },
+
+  /**
+   * ⭐ 사용자 피드 URL 생성
+   */
+  getUserFeedUrl(userId) {
+    const route = router.resolve({ name: 'UserFeedList', params: { userId } })
     return window.location.origin + route.href
   },
 
@@ -686,10 +719,10 @@ export const feedNavigation = {
   },
 
   /**
-   * 유저별 피드 목록으로 이동
+   * 유저별 피드 목록으로 이동 (deprecated - toUserFeedList 사용 권장)
    */
   toFeedsByUser(userId) {
-    return this.toFeedHome({ userId })
+    return this.toUserFeedList(userId)
   }
 }
 
@@ -732,7 +765,7 @@ export const navigation = {
    * 홈으로 이동
    */
   toHome() {
-    return router.push({ name: 'Home' })
+    return router.push({ name: 'FeedHome' })
   },
 
   /**

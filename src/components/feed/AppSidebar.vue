@@ -46,7 +46,8 @@
         <span>컬렉션</span>
       </button>
 
-      <button class="nav-item">
+      <!-- ⭐ 프로필 버튼 - 클릭 시 자신의 피드 목록으로 이동 -->
+      <button class="nav-item" @click="goToMyProfile">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
         </svg>
@@ -61,7 +62,8 @@
       <span>인증 올리기</span>
     </button>
 
-    <div class="level-card">
+    <!-- ⭐ 레벨 카드 - 클릭 시 자신의 피드 목록으로 이동 -->
+    <div class="level-card" @click="goToMyProfile">
       <div class="level-info">
         <div class="level-badge">
           <span class="level-emoji">🔥</span>
@@ -79,11 +81,36 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
+import { feedNavigation } from '@/router';
+import * as authUtils from '@/utils/auth.js';
 
 const router = useRouter();
 
+// 인증 올리기 버튼
 const handleCreateFeed = () => {
   router.push({ name: 'FeedCreate' });
+};
+
+// ⭐ 내 프로필(피드 목록)로 이동
+const goToMyProfile = () => {
+  try {
+    // localStorage에서 현재 로그인한 사용자 정보 가져오기
+    const userInfo = authUtils.getUserInfo();
+
+    if (userInfo && userInfo.userId) {
+      console.log('👤 내 프로필로 이동:', userInfo.userId);
+      feedNavigation.toUserFeedList(userInfo.userId);
+    } else {
+      console.warn('⚠️ 로그인된 사용자 정보가 없습니다.');
+      // 로그인하지 않은 경우 로그인 페이지로 이동
+      router.push({
+        name: 'Login',
+        query: { redirect: '/feed' }
+      });
+    }
+  } catch (error) {
+    console.error('❌ 프로필 이동 실패:', error);
+  }
 };
 </script>
 
@@ -234,12 +261,24 @@ const handleCreateFeed = () => {
   stroke-width: 2.5;
 }
 
+/* ⭐ 레벨 카드 - 클릭 가능하도록 스타일 추가 */
 .level-card {
   margin-top: auto;
   padding: 20px;
   background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
   border-radius: 16px;
   border: 1px solid #FED7AA;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.level-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+}
+
+.level-card:active {
+  transform: translateY(0);
 }
 
 .level-info {
