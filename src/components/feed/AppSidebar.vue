@@ -30,7 +30,7 @@
         <span class="badge">12</span>
       </router-link>
 
-      <button class="nav-item">
+      <button class="nav-item" @click="handleProtectedRoute('messages')">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
           <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
@@ -39,15 +39,14 @@
         <span class="badge badge-red">3</span>
       </button>
 
-      <button class="nav-item">
+      <button class="nav-item" @click="handleProtectedRoute('collections')">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM13 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z"/>
         </svg>
         <span>컬렉션</span>
       </button>
 
-      <!-- ⭐ 프로필 버튼 -->
-      <button class="nav-item" @click="goToMyProfile">
+      <button class="nav-item" @click="handleProtectedRoute('profile')">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
         </svg>
@@ -55,15 +54,14 @@
       </button>
     </nav>
 
-    <button class="btn-create" @click="handleCreateFeed">
+    <button class="btn-create" @click="handleProtectedRoute('create')">
       <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
       <span>인증 올리기</span>
     </button>
 
-    <!-- ⭐ 레벨 카드 -->
-    <div class="level-card" @click="goToMyProfile">
+    <div class="level-card" @click="handleProtectedRoute('profile')">
       <div class="level-info">
         <div class="level-badge">
           <span class="level-emoji">🔥</span>
@@ -81,39 +79,63 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { useAuth } from '@/composables/useAuth'; // ⭐ useAuth 사용
+import { useAuth } from '@/composables/useAuth';
 
 const router = useRouter();
+const { isLoggedIn, userId } = useAuth();
 
-// ⭐ useAuth composable 사용
-const { user, isLoggedIn, userId } = useAuth();
+/**
+ * 로그인이 필요한 페이지 접근 처리
+ */
+const handleProtectedRoute = async (routeName) => {
+  console.log(`=== ${routeName} 클릭 ===`);
+  console.log('로그인 상태:', isLoggedIn.value);
 
-// 인증 올리기 버튼
-const handleCreateFeed = () => {
-  router.push({ name: 'FeedCreate' });
+  // 로그인된 경우 바로 이동
+  if (isLoggedIn.value) {
+    switch (routeName) {
+      case 'profile':
+        goToMyProfile();
+        break;
+      case 'create':
+        router.push({ name: 'FeedCreate' });
+        break;
+      case 'messages':
+        // TODO: 메시지 페이지 라우트 추가 필요
+        console.log('메시지 페이지로 이동');
+        break;
+      case 'collections':
+        // TODO: 컬렉션 페이지 라우트 추가 필요
+        console.log('컬렉션 페이지로 이동');
+        break;
+    }
+    return;
+  }
+
+  // 비로그인 시 확인 다이얼로그
+  const confirmed = confirm('로그인이 필요한 페이지입니다.\n로그인 페이지로 이동하시겠습니까?');
+
+  if (confirmed) {
+    console.log('✅ 로그인 페이지로 이동');
+    await router.push({
+      name: 'Login',
+      query: { redirect: router.currentRoute.value.fullPath }
+    });
+  } else {
+    console.log('❌ 취소됨');
+  }
 };
 
-// ⭐ 내 프로필로 이동 - useAuth 사용 버전
+/**
+ * 내 프로필로 이동
+ */
 const goToMyProfile = async () => {
-  console.log('=== 프로필 클릭 (useAuth 버전) ===');
-
   try {
-    // 1. useAuth의 전역 상태 확인
-    console.log('👤 현재 사용자:', user.value);
-    console.log('🔐 로그인 상태:', isLoggedIn.value);
-    console.log('🔑 userId:', userId.value);
-
-    // 2. 로그인 체크
-    if (!isLoggedIn.value || !userId.value) {
-      console.warn('⚠️ 로그인되지 않음');
-      await router.push({
-        name: 'Login',
-        query: { redirect: router.currentRoute.value.fullPath }
-      });
+    if (!userId.value) {
+      console.error('❌ userId가 없습니다');
       return;
     }
 
-    // 3. 프로필 페이지로 이동
     console.log('🚀 프로필 페이지로 이동:', userId.value);
     await router.push({
       name: 'UserFeedList',
