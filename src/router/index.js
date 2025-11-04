@@ -26,11 +26,12 @@ import SalePostCreateView from '@/views/SalePostCreateView.vue'
 import FeedHomeView from '@/views/FeedHomeView.vue'
 import FeedDetailView from '@/views/FeedDetailView.vue'
 import FeedCreateView from '@/views/FeedCreateView.vue'
-import UserFeedListView from '@/views/UserFeedListView.vue' // ⭐ 추가
+import UserFeedListView from '@/views/UserFeedListView.vue'
 
 // Battle Views import
 import BattleListView from '@/views/BattleListView.vue'
 import BattleCreateView from '@/views/BattleCreateView.vue'
+import BattleDetailView from '@/views/BattleDetailView.vue'
 
 const routes = [
   // ==================== 상품 관련 라우트 ====================
@@ -137,7 +138,6 @@ const routes = [
       title: '인증 상세'
     }
   },
-  // ⭐ 사용자 피드 목록 라우트 추가
   {
     path: '/user/:userId/feeds',
     name: 'UserFeedList',
@@ -168,6 +168,17 @@ const routes = [
     meta: {
       requiresAuth: false,
       title: '배틀 만들기'
+    }
+  },
+  {
+    path: '/battle/:id',
+    name: 'BattleDetail',
+    component: BattleDetailView,
+    props: true,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '배틀 상세'
     }
   },
 
@@ -415,7 +426,9 @@ router.afterEach((to) => {
   } else if (to.name === 'FeedDetail') {
     title = `인증 ${to.params.id} | ToyChat`
   } else if (to.name === 'UserFeedList') {
-    title = `사용자 피드 | ToyChat` // ⭐ 추가
+    title = `사용자 피드 | ToyChat`
+  } else if (to.name === 'BattleDetail') {
+    title = `배틀 상세 | ToyChat`
   }
 
   document.title = title
@@ -663,7 +676,7 @@ export const feedNavigation = {
   },
 
   /**
-   * ⭐ 사용자 피드 목록 페이지로 이동
+   * 사용자 피드 목록 페이지로 이동
    */
   toUserFeedList(userId) {
     if (!userId) {
@@ -690,7 +703,7 @@ export const feedNavigation = {
   },
 
   /**
-   * ⭐ 사용자 피드 URL 생성
+   * 사용자 피드 URL 생성
    */
   getUserFeedUrl(userId) {
     const route = router.resolve({ name: 'UserFeedList', params: { userId } })
@@ -729,6 +742,24 @@ export const feedNavigation = {
 // ==================== 배틀 네비게이션 헬퍼 ====================
 export const battleNavigation = {
   /**
+   * 배틀 목록 페이지로 이동
+   */
+  toList(query = {}) {
+    return router.push({ name: 'BattleList', query })
+  },
+
+  /**
+   * 배틀 상세 페이지로 이동
+   */
+  toDetail(battleId) {
+    if (!battleId) {
+      console.warn('배틀 ID가 없습니다')
+      return this.toList()
+    }
+    return router.push({ name: 'BattleDetail', params: { id: battleId } })
+  },
+
+  /**
    * 배틀 생성 페이지로 이동
    */
   toCreate() {
@@ -741,6 +772,61 @@ export const battleNavigation = {
   isBattlePage() {
     const route = router.currentRoute.value
     return route.name?.startsWith('Battle')
+  },
+
+  /**
+   * 배틀 URL 생성
+   */
+  getBattleUrl(battleId) {
+    const route = router.resolve({ name: 'BattleDetail', params: { id: battleId } })
+    return window.location.origin + route.href
+  },
+
+  /**
+   * 제품 등록 페이지로 이동
+   */
+  toSubmitProduct(battleId) {
+    if (!battleId) {
+      console.warn('배틀 ID가 없습니다')
+      return this.toList()
+    }
+    return router.push({ path: `/battle/${battleId}/submit` })
+  },
+
+  /**
+   * 투표 페이지로 이동
+   */
+  toVote(battleId) {
+    if (!battleId) {
+      console.warn('배틀 ID가 없습니다')
+      return this.toList()
+    }
+    return router.push({ path: `/battle/${battleId}/vote` })
+  },
+
+  /**
+   * 제품 상세 페이지로 이동
+   */
+  toProductDetail(battleId, productId) {
+    if (!battleId || !productId) {
+      console.warn('배틀 ID 또는 제품 ID가 없습니다')
+      return this.toList()
+    }
+    return router.push({ path: `/battle/${battleId}/products/${productId}` })
+  },
+
+  /**
+   * 카테고리별 배틀 목록으로 이동
+   */
+  toBattlesByCategory(categoryId) {
+    return this.toList({ categoryId })
+  },
+
+  /**
+   * 상태별 배틀 목록으로 이동
+   */
+  toBattlesByStatus(status) {
+    return this.toList({ status })
   }
 }
 
