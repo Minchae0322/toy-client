@@ -14,30 +14,29 @@
     <div v-else class="hot-battles-grid">
       <div
           v-for="(battle, index) in battles"
-          :key="battle.battleId"
+          :key="battle.id || battle.battleId"
           class="hot-battle-card"
           :class="{ 'rank-1': index === 0, 'rank-2': index === 1 }"
-          @click="$emit('battle-click', battle.battleId)"
+          @click="handleBattleClick(battle.id || battle.battleId)"
       >
         <div class="hot-rank">#{{ index + 1 }}</div>
         <div class="hot-title">{{ battle.title }}</div>
         <div class="hot-stats">
           <div class="hot-stat">
-            <span class="hot-stat-value">{{ formatNumber(battle.participantCount) }}</span>
+            <span class="hot-stat-value">{{ formatNumber(battle.totalParticipants || battle.participantCount) }}</span>
             <span class="hot-stat-label">참여</span>
           </div>
           <div class="hot-stat">
-            <span class="hot-stat-value">{{ formatNumber(battle.voteCount) }}</span>
+            <span class="hot-stat-value">{{ formatNumber(battle.totalVotes || battle.voteCount) }}</span>
             <span class="hot-stat-label">투표</span>
           </div>
           <div class="hot-stat">
-            <span class="hot-stat-value">{{ battle.productCount }}</span>
+            <span class="hot-stat-value">{{ getItemCount(battle) }}</span>
             <span class="hot-stat-label">제품</span>
           </div>
         </div>
         <div class="hot-creator">
-          <span>@{{ battle.creatorUsername }}</span>
-          <span class="creator-level">Lv.{{ battle.creatorLevel }}</span>
+          <span>@{{ getCreatorName(battle) }}</span>
         </div>
       </div>
     </div>
@@ -45,6 +44,10 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 defineProps({
   battles: {
     type: Array,
@@ -54,19 +57,43 @@ defineProps({
     type: Boolean,
     default: false
   }
-});
+})
 
-defineEmits(['battle-click']);
+const emit = defineEmits(['battle-click'])
 
 const formatNumber = (num) => {
+  if (!num || num === 0) return '0'
   if (num >= 10000) {
-    return Math.floor(num / 1000) / 10 + '만';
+    return Math.floor(num / 1000) / 10 + '만'
   }
   if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
+    return (num / 1000).toFixed(1) + 'K'
   }
-  return num;
-};
+  return num
+}
+
+const getItemCount = (battle) => {
+  if (battle?.items && Array.isArray(battle.items)) {
+    return battle.items.length
+  }
+  return battle?.itemCount || battle?.productCount || 0
+}
+
+const getCreatorName = (battle) => {
+  if (battle?.creatorUserInfo?.nickname) {
+    return battle.creatorUserInfo.nickname
+  }
+  if (battle?.creatorUsername) {
+    return battle.creatorUsername
+  }
+  return '알 수 없음'
+}
+
+const handleBattleClick = (battleId) => {
+  console.log('🔥 [HotBattle] 핫 배틀 클릭:', battleId)
+  router.push({ name: 'BattleDetail', params: { id: battleId } })
+  emit('battle-click', battleId)
+}
 </script>
 
 <style scoped>
@@ -242,18 +269,6 @@ const formatNumber = (num) => {
 
 .hot-battle-card.rank-2 .hot-creator {
   opacity: 0.6;
-}
-
-.creator-level {
-  padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 590;
-}
-
-.hot-battle-card.rank-2 .creator-level {
-  background: #F2F2F2;
 }
 
 @media (max-width: 640px) {

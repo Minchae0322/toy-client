@@ -1,4 +1,3 @@
-<!-- DeadlineBattles.vue -->
 <template>
   <section class="widget">
     <h3 class="widget-header">⏰ 마감 임박</h3>
@@ -9,14 +8,14 @@
 
     <div
         v-for="battle in battles"
-        :key="battle.battleId"
+        :key="battle.id || battle.battleId"
         class="deadline-item"
     >
-      <div class="deadline-info">
+      <div class="deadline-info" @click="handleBattleClick(battle.id || battle.battleId)">
         <div class="deadline-title">{{ battle.title }}</div>
-        <div class="deadline-time">{{ formatDeadline(battle.dDay) }}</div>
+        <div class="deadline-time">{{ formatDeadline(battle) }}</div>
       </div>
-      <button class="deadline-btn" @click="$emit('vote', battle.battleId)">
+      <button class="deadline-btn" @click.stop="handleVote(battle.id || battle.battleId)">
         투표
       </button>
     </div>
@@ -24,25 +23,47 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 defineProps({
   battles: {
     type: Array,
     default: () => []
   }
-});
+})
 
-defineEmits(['vote']);
+const emit = defineEmits(['vote'])
 
-const formatDeadline = (dDay) => {
-  if (dDay === 0) {
-    return '오늘 마감';
-  } else if (dDay < 1) {
-    const hours = Math.floor(dDay * 24);
-    return `${hours}시간 남음`;
+const formatDeadline = (battle) => {
+  if (!battle?.endDate) return '종료'
+
+  const endDate = new Date(battle.endDate)
+  const now = new Date()
+  const diff = endDate - now
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+
+  if (days <= 0) {
+    return '종료'
+  } else if (days === 0 || days < 1) {
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    return `${hours}시간 남음`
   } else {
-    return `${dDay}일 남음`;
+    return `${days}일 남음`
   }
-};
+}
+
+const handleBattleClick = (battleId) => {
+  console.log('⏰ [Deadline] 마감 임박 배틀 클릭:', battleId)
+  router.push({ name: 'BattleDetail', params: { id: battleId } })
+}
+
+const handleVote = (battleId) => {
+  console.log('🗳️ [Deadline] 투표 버튼 클릭:', battleId)
+  router.push({ name: 'BattleDetail', params: { id: battleId } })
+  emit('vote', battleId)
+}
 </script>
 
 <style scoped>
@@ -91,6 +112,11 @@ const formatDeadline = (dDay) => {
 .deadline-info {
   flex: 1;
   min-width: 0;
+  cursor: pointer;
+}
+
+.deadline-info:hover .deadline-title {
+  color: #DC2626;
 }
 
 .deadline-title {
@@ -102,6 +128,7 @@ const formatDeadline = (dDay) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 160ms ease;
 }
 
 .deadline-time {

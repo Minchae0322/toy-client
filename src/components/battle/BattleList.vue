@@ -47,7 +47,10 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import BattleCard from '@/components/battle/BattleCard.vue'
+
+const router = useRouter()
 
 defineProps({
   battles: {
@@ -73,6 +76,8 @@ const emit = defineEmits(['battle-click'])
 const observerTarget = ref(null)
 
 const handleBattleClick = (battleId) => {
+  console.log('🔍 [BattleList] 배틀 클릭:', battleId)
+  router.push({ name: 'BattleDetail', params: { id: battleId } })
   emit('battle-click', battleId)
 }
 

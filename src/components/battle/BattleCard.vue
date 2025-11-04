@@ -2,10 +2,10 @@
   <article
       v-if="battle && battle.title"
       class="battle-card"
-      @click="$emit('click', battle.id || battle.battleId)"
+      @click="handleClick"
       role="button"
       tabindex="0"
-      @keydown.enter="$emit('click', battle.id || battle.battleId)"
+      @keydown.enter="handleClick"
   >
     <header class="card-header">
       <span class="category-label">{{ categoryName }}</span>
@@ -52,6 +52,9 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const props = defineProps({
   battle: {
@@ -61,7 +64,14 @@ const props = defineProps({
   }
 })
 
-defineEmits(['click'])
+const emit = defineEmits(['click'])
+
+const handleClick = () => {
+  const battleId = props.battle.id || props.battle.battleId
+  console.log('🔍 [BattleCard] 배틀 카드 클릭:', battleId)
+  router.push({ name: 'BattleDetail', params: { id: battleId } })
+  emit('click', battleId)
+}
 
 const formatNumber = (num) => {
   if (!num || num === 0) return '0'

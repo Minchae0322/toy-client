@@ -8,17 +8,17 @@
 
     <div
         v-for="(battle, index) in battles"
-        :key="battle.battleId"
+        :key="battle.id || battle.battleId"
         class="trending-item"
-        @click="$emit('battle-click', battle.battleId)"
+        @click="handleBattleClick(battle.id || battle.battleId)"
     >
       <span class="trending-rank" :class="{ top: index < 3 }">{{ index + 1 }}</span>
       <div class="trending-content">
         <div class="trending-title">{{ battle.title }}</div>
         <div class="trending-meta">
-          <strong>{{ battle.participantCount }}</strong>명 참여
+          <strong>{{ battle.totalParticipants || battle.participantCount || 0 }}</strong>명 참여
           <span class="meta-divider">·</span>
-          <strong>{{ formatNumber(battle.voteCount) }}</strong> 투표
+          <strong>{{ formatNumber(battle.totalVotes || battle.voteCount || 0) }}</strong> 투표
         </div>
       </div>
     </div>
@@ -26,24 +26,35 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 defineProps({
   battles: {
     type: Array,
     default: () => []
   }
-});
+})
 
-defineEmits(['battle-click']);
+const emit = defineEmits(['battle-click'])
 
 const formatNumber = (num) => {
+  if (!num || num === 0) return '0'
   if (num >= 10000) {
-    return Math.floor(num / 1000) / 10 + '만';
+    return Math.floor(num / 1000) / 10 + '만'
   }
   if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
+    return (num / 1000).toFixed(1) + 'K'
   }
-  return num;
-};
+  return num
+}
+
+const handleBattleClick = (battleId) => {
+  console.log('📊 [Trending] 트렌딩 배틀 클릭:', battleId)
+  router.push({ name: 'BattleDetail', params: { id: battleId } })
+  emit('battle-click', battleId)
+}
 </script>
 
 <style scoped>
