@@ -16,7 +16,7 @@
       <div class="form-hint">15~50자 사이로 명확하고 흥미로운 제목을 작성해주세요</div>
     </div>
 
-    <!-- ⭐ 아이템 추가 권한 타입 (백엔드 Enum) -->
+    <!-- ⭐ 아이템 추가 권한 타입 -->
     <div class="form-group">
       <label class="form-label">
         아이템 추가 권한 <span class="required">*</span>
@@ -36,27 +36,66 @@
       </div>
     </div>
 
-    <!-- ⭐ 서브 카테고리 (백엔드에서 로드) -->
+    <!-- ⭐ 2depth 카테고리 선택 -->
     <div class="form-group">
       <label class="form-label">
         카테고리 <span class="required">*</span>
       </label>
-      <div class="category-grid">
-        <div
-            v-for="category in categories"
-            :key="category.subCategoryId"
-            class="category-item"
-            :class="{ selected: battleForm.subCategoryId === category.subCategoryId }"
-            @click="$emit('update:battleForm', { ...battleForm, subCategoryId: category.subCategoryId })"
-        >
-          <div class="category-emoji">{{ category.emoji }}</div>
-          <div class="category-name">{{ category.subCategoryName }}</div>
+
+      <!-- 1단계: 상위 카테고리 선택 -->
+      <div class="category-section">
+        <div class="section-title">상위 카테고리</div>
+        <div class="category-grid parent">
+          <div
+              v-for="category in categories"
+              :key="category.categoryId"
+              class="category-item"
+              :class="{ selected: selectedParentCategory?.categoryId === category.categoryId }"
+              @click="selectParentCategory(category)"
+          >
+            <div class="category-emoji">{{ category.emoji || '📁' }}</div>
+            <div class="category-name">{{ category.categoryName }}</div>
+            <div class="sub-count">{{ category.subCategories?.length || 0 }}개</div>
+          </div>
         </div>
       </div>
+
+      <!-- 2단계: 하위 카테고리 선택 (필수) -->
+      <div v-if="selectedParentCategory" class="category-section">
+        <div class="section-title">
+          하위 카테고리 선택
+          <span class="required-badge">필수</span>
+        </div>
+        <div class="category-grid sub">
+          <div
+              v-for="subCategory in selectedParentCategory.subCategories"
+              :key="subCategory.subCategoryId"
+              class="category-item sub-item"
+              :class="{ selected: battleForm.subCategoryId === subCategory.subCategoryId }"
+              @click="selectSubCategory(subCategory)"
+          >
+            <div class="category-emoji">{{ subCategory.emoji || '📄' }}</div>
+            <div class="category-name">{{ subCategory.subCategoryName }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 선택된 카테고리 표시 -->
+      <div v-if="selectedCategoryPath" class="selected-path">
+        <span class="path-icon">✓</span>
+        <span class="path-text">{{ selectedCategoryPath }}</span>
+      </div>
+
       <div v-if="categories.length === 0" class="form-hint">카테고리를 불러오는 중...</div>
+      <div v-else-if="!selectedParentCategory" class="form-hint">
+        먼저 상위 카테고리를 선택해주세요
+      </div>
+      <div v-else-if="!battleForm.subCategoryId" class="form-hint error">
+        하위 카테고리를 반드시 선택해야 합니다
+      </div>
     </div>
 
-    <!-- ⭐ 배틀 기간 (startDate, endDate, participationStartDate) -->
+    <!-- ⭐ 배틀 기간 -->
     <div class="form-group">
       <label class="form-label">
         배틀 기간 <span class="required">*</span>
@@ -84,7 +123,7 @@
       <div class="form-hint">최소 7일, 최대 31일까지 설정 가능합니다</div>
     </div>
 
-    <!-- ⭐ 참여 시작일 (추가) -->
+    <!-- ⭐ 참여 시작일 -->
     <div class="form-group">
       <label class="form-label">
         참여 시작일 <span class="required">*</span>
@@ -98,7 +137,7 @@
       <div class="form-hint">투표를 시작할 수 있는 날짜를 설정하세요</div>
     </div>
 
-    <!-- ⭐ 대표 이미지 업로드 (필수) -->
+    <!-- ⭐ 대표 이미지 업로드 -->
     <div class="form-group">
       <label class="form-label">
         대표 이미지 <span class="required">*</span>
@@ -150,23 +189,56 @@ const props = defineProps({
 const emit = defineEmits(['update:battleForm']);
 
 const thumbnailInput = ref(null);
+const selectedParentCategory = ref(null);
+
+// 선택된 카테고리 경로 표시
+const selectedCategoryPath = computed(() => {
+  if (!selectedParentCategory.value || !props.battleForm.subCategoryId) {
+    return null;
+  }
+
+  const subCategory = selectedParentCategory.value.subCategories?.find(
+      sub => sub.subCategoryId === props.battleForm.subCategoryId
+  );
+
+  if (!subCategory) return null;
+
+  return `${selectedParentCategory.value.categoryName} > ${subCategory.subCategoryName}`;
+});
 
 const previewImage = computed(() => {
   if (!props.battleForm.thumbnailFile) return null;
   return URL.createObjectURL(props.battleForm.thumbnailFile);
 });
 
+// 상위 카테고리 선택
+const selectParentCategory = (category) => {
+  selectedParentCategory.value = category;
+
+  // 상위 카테고리 변경 시 하위 카테고리 선택 초기화
+  emit('update:battleForm', {
+    ...props.battleForm,
+    subCategoryId: null
+  });
+};
+
+// 하위 카테고리 선택 (최종 선택)
+const selectSubCategory = (subCategory) => {
+  emit('update:battleForm', {
+    ...props.battleForm,
+    subCategoryId: subCategory.subCategoryId
+  });
+};
+
 const handleImageUpload = (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  // 파일 크기 체크 (5MB)
   if (file.size > 5 * 1024 * 1024) {
     alert('파일 크기는 5MB를 초과할 수 없습니다.');
     return;
   }
 
-  // 이미지 파일 체크
   if (!file.type.startsWith('image/')) {
     alert('이미지 파일만 업로드 가능합니다.');
     return;
@@ -217,6 +289,11 @@ const removeImage = () => {
   margin-top: 4px;
 }
 
+.form-hint.error {
+  color: #DC2626;
+  font-weight: 500;
+}
+
 .form-input {
   width: 100%;
   padding: 12px 16px;
@@ -251,7 +328,6 @@ const removeImage = () => {
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  position: relative;
 }
 
 .type-option:hover {
@@ -292,25 +368,62 @@ const removeImage = () => {
   line-height: 1.4;
 }
 
+/* ⭐ 2depth 카테고리 스타일 */
+.category-section {
+  margin-top: 16px;
+}
+
+.category-section:first-child {
+  margin-top: 12px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.required-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #FEE2E2;
+  color: #DC2626;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  margin-top: 12px;
+}
+
+.category-grid.parent {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.category-grid.sub {
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .category-item {
   padding: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1.5px solid #E5E7EB;
   border-radius: 8px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
+  background: white;
 }
 
 .category-item:hover {
   border-color: #9CA3AF;
   background: #FAFBFC;
+  transform: translateY(-1px);
 }
 
 .category-item.selected {
@@ -319,14 +432,56 @@ const removeImage = () => {
   color: white;
 }
 
+.sub-item {
+  padding: 10px;
+}
+
 .category-emoji {
   font-size: 24px;
   margin-bottom: 4px;
 }
 
+.sub-item .category-emoji {
+  font-size: 20px;
+}
+
 .category-name {
   font-size: 12px;
   font-weight: 500;
+}
+
+.sub-count {
+  font-size: 10px;
+  color: #9CA3AF;
+  margin-top: 2px;
+}
+
+.category-item.selected .sub-count {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* 선택된 경로 표시 */
+.selected-path {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.path-icon {
+  color: #16A34A;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.path-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #166534;
 }
 
 .date-selector {
@@ -426,7 +581,11 @@ const removeImage = () => {
     grid-template-columns: 1fr;
   }
 
-  .category-grid {
+  .category-grid.parent {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .category-grid.sub {
     grid-template-columns: repeat(3, 1fr);
   }
 

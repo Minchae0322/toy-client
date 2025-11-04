@@ -1,27 +1,99 @@
 <template>
   <div class="app-container">
-    <AppSidebar />
+    <!-- 사이드바 - 데스크탑 -->
+    <AppSidebar class="desktop-sidebar" />
 
+    <!-- 메인 컨텐츠 -->
     <main class="main-content">
-      <AppHeader
-          title="월간 배틀"
-          :show-create-button="true"
-          create-button-text="배틀 만들기"
-          @create="handleCreateBattle"
-      />
+      <!-- 통합 헤더 -->
+      <header class="main-header">
+        <div class="header-top">
+          <h1 class="header-title">
+            <span class="title-icon">⚔️</span>
+            월간 배틀
+          </h1>
 
-      <BattleTabs
-          :tabs="tabs"
-          v-model:active-tab="activeTab"
-      />
+          <div class="header-actions">
+            <!-- 검색 -->
+            <button class="header-search">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
 
-      <CommonCategoryFilter
-          :categories="categories"
-          :show-all-button="true"
-          @category-change="handleCategoryChange"
-      />
+            <!-- 알림 -->
+            <button class="header-notification">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/>
+                <path d="M8 16.5a2 2 0 104 0"/>
+              </svg>
+              <span class="notification-badge">3</span>
+            </button>
 
-      <div class="content-area">
+            <!-- 배틀 만들기 -->
+            <button class="create-battle-btn" @click="handleCreateBattle">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <span>배틀 만들기</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <nav class="tab-navigation">
+          <div class="tabs-group">
+            <button
+                v-for="tab in tabs"
+                :key="tab.id"
+                class="tab-button"
+                :class="{ active: activeTab === tab.id }"
+                @click="activeTab = tab.id"
+            >
+              <span class="tab-label">{{ tab.label }}</span>
+              <span v-if="tab.count" class="tab-count">{{ formatCount(tab.count) }}</span>
+            </button>
+          </div>
+
+          <!-- 뷰 모드 스위처 -->
+          <div class="view-switcher">
+            <button
+                class="view-btn"
+                :class="{ active: viewMode === 'grid' }"
+                @click="viewMode = 'grid'"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <rect x="1" y="1" width="6" height="6" rx="1"/>
+                <rect x="9" y="1" width="6" height="6" rx="1"/>
+                <rect x="1" y="9" width="6" height="6" rx="1"/>
+                <rect x="9" y="9" width="6" height="6" rx="1"/>
+              </svg>
+            </button>
+            <button
+                class="view-btn"
+                :class="{ active: viewMode === 'list' }"
+                @click="viewMode = 'list'"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <rect x="1" y="2" width="14" height="3" rx="0.5"/>
+                <rect x="1" y="7" width="14" height="3" rx="0.5"/>
+                <rect x="1" y="12" width="14" height="3" rx="0.5"/>
+              </svg>
+            </button>
+          </div>
+        </nav>
+
+        <!-- 카테고리 필터 -->
+        <CommonCategoryFilter
+            :categories="categories"
+            :show-all-button="true"
+            @category-change="handleCategoryChange"
+        />
+      </header>
+
+      <!-- 컨텐츠 영역 -->
+      <div class="content-wrapper">
         <!-- HOT 배틀 섹션 -->
         <HotBattleSection
             v-if="activeTab === 'ongoing' && !selectedCategory"
@@ -30,13 +102,20 @@
             @battle-click="openBattle"
         />
 
-        <!-- 전체 배틀 리스트 -->
-        <section>
+        <!-- 배틀 리스트 섹션 -->
+        <section class="battles-section">
           <div class="section-header">
-            <h2 class="section-title">{{ currentCategoryTitle }}</h2>
-            <div class="section-info">
-              <span class="battle-count">{{ formatCount(totalCount) }}</span>
-            </div>
+            <h2 class="section-title">
+              {{ currentCategoryTitle }}
+              <span class="section-count">{{ formatCount(totalCount) }}</span>
+            </h2>
+
+            <!-- 정렬 옵션 -->
+            <select class="sort-select">
+              <option value="latest">최신순</option>
+              <option value="popular">인기순</option>
+              <option value="ending">마감임박순</option>
+            </select>
           </div>
 
           <BattleList
@@ -51,52 +130,35 @@
       </div>
     </main>
 
-    <RightSidebar>
-      <template #trending>
-        <TrendingBattles
-            :battles="trendingBattles"
-            @battle-click="openBattle"
-        />
-      </template>
-
-      <template #deadline>
-        <DeadlineBattles
-            :battles="deadlineBattles"
-            @vote="handleVote"
-        />
-      </template>
-    </RightSidebar>
-
-    <!-- Bottom Navigation - Mobile Only -->
-    <nav class="bottom-nav">
-      <button class="bottom-nav-item" @click="$router.push('/feed')">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+    <!-- 모바일 하단 네비게이션 -->
+    <nav class="mobile-nav">
+      <button class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
         </svg>
         <span>홈</span>
       </button>
-      <button class="bottom-nav-item active">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-          <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
+      <button class="nav-item active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5V3M15 5V3M9 5h6"/>
         </svg>
         <span>배틀</span>
         <span class="nav-badge">{{ activeBattleCount }}</span>
       </button>
-      <button class="bottom-nav-fab" @click="handleCreateBattle">
-        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+      <button class="nav-fab" @click="handleCreateBattle">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
         </svg>
       </button>
-      <button class="bottom-nav-item">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+      <button class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/>
         </svg>
         <span>메시지</span>
       </button>
-      <button class="bottom-nav-item">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+      <button class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 21a8 8 0 10-16 0M12 13a4 4 0 100-8 4 4 0 000 8z"/>
         </svg>
         <span>MY</span>
       </button>
@@ -113,13 +175,8 @@ import { categoryService } from '@/services/CategoryService'
 // Components
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
-import AppHeader from '@/components/battle/AppHeader.vue'
-import RightSidebar from '@/components/battle/RightSidebar.vue'
-import BattleTabs from '@/components/battle/BattleTabs.vue'
 import HotBattleSection from '@/components/battle/HotBattleSection.vue'
 import BattleList from '@/components/battle/BattleList.vue'
-import TrendingBattles from '@/components/battle/TrendingBattles.vue'
-import DeadlineBattles from '@/components/battle/DeadlineBattles.vue'
 
 const router = useRouter()
 
@@ -131,10 +188,9 @@ const tabs = ref([
 ])
 
 const activeTab = ref('ongoing')
+const viewMode = ref('grid')
 const battles = ref([])
 const hotBattles = ref([])
-const trendingBattles = ref([])
-const deadlineBattles = ref([])
 const currentPage = ref(0)
 const totalPages = ref(0)
 const totalCount = ref(0)
@@ -142,7 +198,6 @@ const hasNext = ref(true)
 const loading = ref(false)
 const hotLoading = ref(false)
 const battleListRef = ref(null)
-const viewMode = ref('feed')
 
 const selectedCategory = ref(null)
 const selectedSubCategory = ref(null)
@@ -153,14 +208,12 @@ const currentCategoryTitle = computed(() => {
   if (!selectedCategory.value) return '전체 배틀'
   let title = selectedCategory.value.categoryName
   if (selectedSubCategory.value) {
-    title += ` > ${selectedSubCategory.value.subCategoryName}`
+    title += ` > ${selectedSubCategory.value.categoryName}`
   }
   return title
 })
 
-const filteredBattles = computed(() => {
-  return battles.value
-})
+const filteredBattles = computed(() => battles.value)
 
 const activeBattleCount = computed(() => {
   return tabs.value.find(tab => tab.id === 'ongoing')?.count || 0
@@ -168,13 +221,10 @@ const activeBattleCount = computed(() => {
 
 // Utils
 const formatCount = (num) => {
-  if (num >= 10000) {
-    return Math.floor(num / 1000) / 10 + '만'
-  }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K'
-  }
-  return num
+  if (!num) return '0'
+  if (num >= 10000) return `${Math.floor(num / 10000)}만`
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
+  return num.toString()
 }
 
 // API Methods
@@ -201,7 +251,6 @@ const loadHotBattles = async () => {
     }
   } catch (error) {
     console.error('HOT 배틀 로드 실패:', error)
-    hotBattles.value = []
   } finally {
     hotLoading.value = false
   }
@@ -220,7 +269,6 @@ const loadBattles = async (reset = false) => {
     }
 
     const searchCondition = {}
-
     if (activeTab.value === 'ongoing') {
       searchCondition.status = 'ACTIVE'
     } else if (activeTab.value === 'ended') {
@@ -228,7 +276,7 @@ const loadBattles = async (reset = false) => {
     }
 
     if (selectedSubCategory.value) {
-      searchCondition.category = selectedSubCategory.value.subCategoryId
+      searchCondition.category = selectedSubCategory.value.categoryId
     } else if (selectedCategory.value) {
       searchCondition.category = selectedCategory.value.categoryId
     }
@@ -240,10 +288,7 @@ const loadBattles = async (reset = false) => {
 
     if (response.success && response.data) {
       const pageData = response.data.content ? response.data : { content: response.data }
-
-      battles.value = reset
-          ? pageData.content
-          : [...battles.value, ...pageData.content]
+      battles.value = reset ? pageData.content : [...battles.value, ...pageData.content]
 
       if (response.data.totalElements !== undefined) {
         totalCount.value = response.data.totalElements
@@ -252,43 +297,12 @@ const loadBattles = async (reset = false) => {
       } else {
         hasNext.value = false
       }
-
       currentPage.value++
     }
   } catch (error) {
     console.error('배틀 목록 로드 실패:', error)
   } finally {
     loading.value = false
-  }
-}
-
-const loadTrendingBattles = async () => {
-  try {
-    const response = await battleService.getBattles(
-        { status: 'ACTIVE' },
-        { page: 0, size: 5, sort: 'totalViews,DESC' }
-    )
-    if (response.success && response.data) {
-      trendingBattles.value = response.data.content || response.data
-    }
-  } catch (error) {
-    console.error('트렌딩 배틀 로드 실패:', error)
-    trendingBattles.value = []
-  }
-}
-
-const loadDeadlineBattles = async () => {
-  try {
-    const response = await battleService.getBattles(
-        { status: 'ACTIVE' },
-        { page: 0, size: 3, sort: 'endDate,ASC' }
-    )
-    if (response.success && response.data) {
-      deadlineBattles.value = response.data.content || response.data
-    }
-  } catch (error) {
-    console.error('마감 임박 배틀 로드 실패:', error)
-    deadlineBattles.value = []
   }
 }
 
@@ -344,10 +358,6 @@ const handleCreateBattle = async () => {
   }
 }
 
-const handleVote = (battleId) => {
-  router.push({ name: 'BattleDetail', params: { id: battleId } })
-}
-
 // Watchers
 watch(activeTab, () => {
   resetAndLoadBattles()
@@ -360,9 +370,7 @@ onMounted(async () => {
   await Promise.all([loadCategories(), updateTabCounts()])
   await Promise.all([
     loadHotBattles(),
-    loadBattles(true),
-    loadTrendingBattles(),
-    loadDeadlineBattles()
+    loadBattles(true)
   ])
 
   observer = new IntersectionObserver(
@@ -389,21 +397,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-:root {
-  --neutral-0: #FFFFFF;
-  --neutral-50: #FAFAFA;
-  --neutral-100: #F2F2F2;
-  --neutral-200: #E8E8E8;
-  --neutral-300: #D4D4D4;
-  --neutral-400: #A3A3A3;
-  --neutral-500: #737373;
-  --neutral-600: #525252;
-  --neutral-700: #404040;
-  --neutral-900: #0A0A0A;
-  --bg: #FAFAFA;
-  --accent: #0A0A0A;
-}
-
+/* 기본 설정 */
 * {
   margin: 0;
   padding: 0;
@@ -411,188 +405,408 @@ onUnmounted(() => {
 }
 
 .app-container {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Pretendard', system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--neutral-900);
-  line-height: 1.45;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   display: flex;
   min-height: 100vh;
+  background: #FAFAFA;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
+/* 사이드바 */
+.desktop-sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .desktop-sidebar {
+    display: block;
+    width: 240px;
+    background: white;
+    border-right: 1px solid #E5E7EB;
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    top: 0;
+  }
+}
+
+/* 메인 컨텐츠 - 최대 너비 확장 */
 .main-content {
   flex: 1;
-  margin-left: 260px;
-  margin-right: 280px;
-  background: var(--bg);
-  min-height: 100vh;
-  padding-bottom: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 80px;
 }
 
-@media (max-width: 1280px) {
+@media (min-width: 1024px) {
   .main-content {
-    margin-right: 0;
+    margin-left: 240px;
+    padding-bottom: 40px;
   }
 }
 
-@media (max-width: 1024px) {
-  .main-content {
-    margin-left: 0;
-    padding-bottom: 68px;
-  }
+/* 메인 헤더 */
+.main-header {
+  background: white;
+  border-bottom: 1px solid #E5E7EB;
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 
-.content-area {
-  padding: 20px 24px;
-}
-
-@media (max-width: 768px) {
-  .content-area {
-    padding: 16px;
-  }
-}
-
-.section-header {
-  margin-bottom: 14px;
+.header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 16px 24px;
 }
 
-.section-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--neutral-900);
-  letter-spacing: -0.014em;
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.01em;
 }
 
-.section-info {
+.title-icon {
+  font-size: 24px;
+}
+
+.header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.battle-count {
-  font-size: 11.5px;
-  font-weight: 550;
-  color: var(--neutral-500);
-  padding: 2px 8px;
-  background: var(--neutral-100);
-  border-radius: 6px;
-  letter-spacing: -0.006em;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Bottom Navigation */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-top: 0.5px solid var(--neutral-200);
-  z-index: 50;
-  display: none;
+.header-search,
+.header-notification {
+  width: 36px;
+  height: 36px;
+  display: flex;
   align-items: center;
-  justify-content: space-around;
-  padding: 4px 0 6px;
-  box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.02);
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
 }
 
-@media (max-width: 1024px) {
-  .bottom-nav {
-    display: flex;
+.header-search:hover,
+.header-notification:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  background: #EF4444;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+.create-battle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #111827;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.create-battle-btn:hover {
+  background: #1F2937;
+}
+
+@media (max-width: 640px) {
+  .create-battle-btn span {
+    display: none;
+  }
+
+  .create-battle-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
   }
 }
 
-.bottom-nav-item {
-  position: relative;
+/* 탭 네비게이션 */
+.tab-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.tabs-group {
+  display: flex;
+  gap: 20px;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6B7280;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab-button:hover {
+  color: #374151;
+}
+
+.tab-button.active {
+  color: #111827;
+  border-bottom-color: #111827;
+}
+
+.tab-count {
+  padding: 2px 6px;
+  background: #F3F4F6;
+  color: #6B7280;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 4px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.tab-button.active .tab-count {
+  background: #111827;
+  color: white;
+}
+
+.view-switcher {
+  display: flex;
+  background: #F3F4F6;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.view-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.view-btn.active {
+  background: white;
+  color: #111827;
+}
+
+@media (max-width: 768px) {
+  .view-switcher {
+    display: none;
+  }
+}
+
+/* 컨텐츠 영역 */
+.content-wrapper {
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 20px 16px;
+  }
+}
+
+/* 배틀 섹션 */
+.battles-section {
+  margin-top: 24px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.01em;
+}
+
+.section-count {
+  padding: 3px 8px;
+  background: #F3F4F6;
+  color: #6B7280;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.sort-select {
+  padding: 6px 28px 6px 10px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: all 0.15s;
+}
+
+.sort-select:hover {
+  border-color: #D1D5DB;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: #9CA3AF;
+}
+
+/* 모바일 네비게이션 */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .mobile-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #E5E7EB;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    z-index: 40;
+  }
+}
+
+.nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 5px 8px;
+  gap: 4px;
+  padding: 6px;
   background: transparent;
   border: none;
-  color: var(--neutral-400);
+  color: #6B7280;
   cursor: pointer;
-  transition: color 160ms ease;
-  font-family: inherit;
+  position: relative;
+  transition: all 0.15s;
 }
 
-.bottom-nav-item.active {
-  color: var(--neutral-900);
+.nav-item.active {
+  color: #111827;
 }
 
-.bottom-nav-item .icon {
-  width: 20px;
-  height: 20px;
+.nav-item svg {
+  width: 22px;
+  height: 22px;
 }
 
-.bottom-nav-item span:not(.nav-badge) {
+.nav-item span {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: -0.006em;
 }
 
 .nav-badge {
   position: absolute;
   top: 2px;
-  right: 4px;
-  min-width: 15px;
-  height: 15px;
-  padding: 0 3px;
-  background: #FF3B30;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #EF4444;
   color: white;
   font-size: 9px;
   font-weight: 700;
-  border-radius: 7.5px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 2px rgba(255, 59, 48, 0.24);
-  font-variant-numeric: tabular-nums;
 }
 
-.bottom-nav-fab {
-  width: 48px;
-  height: 48px;
-  background: var(--accent);
+.nav-fab {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111827;
   color: white;
   border: none;
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(10, 10, 10, 0.16), 0 1px 3px rgba(10, 10, 10, 0.08);
-  margin-top: -24px;
-  transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: -18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.bottom-nav-fab:hover {
-  background: #000000;
-  transform: translateY(-0.5px) scale(1.01);
-  box-shadow: 0 6px 16px rgba(10, 10, 10, 0.2), 0 2px 4px rgba(10, 10, 10, 0.1);
+.nav-fab:active {
+  transform: scale(0.95);
 }
 
-.bottom-nav-fab:active {
-  transform: scale(0.97);
-  box-shadow: 0 2px 8px rgba(10, 10, 10, 0.12);
+/* 스크롤바 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-.bottom-nav-fab .icon {
-  width: 24px;
-  height: 24px;
-  stroke-width: 2.5;
+::-webkit-scrollbar-track {
+  background: #F9FAFB;
 }
 
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-nav {
-    padding-bottom: max(6px, env(safe-area-inset-bottom));
-  }
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
 }
 </style>
