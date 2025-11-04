@@ -47,33 +47,35 @@ const formatCount = (count) => {
 
 <style scoped>
 .tabs-container {
-  background: #FFFFFF;
-  border-bottom: 1px solid #E5E5E5;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid #EAEAEA;
   position: sticky;
-  top: 73px;
+  top: 49px;
   z-index: 20;
 }
 
 .tabs-wrapper {
   display: flex;
-  padding: 0 40px;
-  gap: 8px;
+  padding: 0 28px;
+  gap: 2px;
 }
 
 .tab-button {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 16px 20px;
+  gap: 5px;
+  padding: 12px 16px;
   background: transparent;
   border: none;
-  color: #737373;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  color: #6B6B6B;
+  font-size: 13.5px;
+  font-weight: 580;
+  letter-spacing: -0.008em;
   cursor: pointer;
-  transition: color 150ms ease;
+  transition: color 140ms ease;
   font-family: inherit;
   white-space: nowrap;
 }
@@ -81,21 +83,21 @@ const formatCount = (count) => {
 .tab-button::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: -1px;
   left: 0;
   right: 0;
   height: 2px;
-  background: #171717;
+  background: #0A0A0A;
   transform: scaleX(0);
-  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .tab-button:hover {
-  color: #171717;
+  color: #1A1A1A;
 }
 
 .tab-button.is-active {
-  color: #171717;
+  color: #0A0A0A;
 }
 
 .tab-button.is-active::after {
@@ -110,27 +112,29 @@ const formatCount = (count) => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  height: 20px;
-  padding: 0 6px;
-  background: #F5F5F5;
-  color: #525252;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 10px;
+  min-width: 19px;
+  height: 18px;
+  padding: 0 5px;
+  background: #F2F2F2;
+  color: #6B6B6B;
+  font-size: 11px;
+  font-weight: 650;
+  border-radius: 9px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  transition: all 140ms ease;
 }
 
 .tab-button.is-active .tab-count {
-  background: #171717;
+  background: #0A0A0A;
   color: #FFFFFF;
+  transform: scale(1.05);
 }
 
 @media (max-width: 768px) {
   .tabs-wrapper {
-    padding: 0 16px;
-    gap: 4px;
+    padding: 0 20px;
+    gap: 0;
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -141,14 +145,14 @@ const formatCount = (count) => {
   }
 
   .tab-button {
-    padding: 14px 16px;
-    font-size: 14px;
+    padding: 11px 14px;
+    font-size: 13px;
   }
 
   .tab-count {
-    min-width: 20px;
-    height: 18px;
-    font-size: 11px;
+    min-width: 18px;
+    height: 17px;
+    font-size: 10.5px;
   }
 }
 

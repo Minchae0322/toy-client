@@ -33,11 +33,9 @@
         <!-- 전체 배틀 리스트 -->
         <section>
           <div class="section-header">
-            <h2 class="section-title">
-              {{ currentCategoryTitle }}
-            </h2>
+            <h2 class="section-title">{{ currentCategoryTitle }}</h2>
             <div class="section-info">
-              <span class="battle-count">{{ totalCount }}개</span>
+              <span class="battle-count">{{ formatCount(totalCount) }}</span>
             </div>
           </div>
 
@@ -109,7 +107,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { battleService, battleUtils } from '@/services/BattleService'
+import { battleService } from '@/services/BattleService'
 import { categoryService } from '@/services/CategoryService'
 
 // Components
@@ -125,7 +123,7 @@ import DeadlineBattles from '@/components/battle/DeadlineBattles.vue'
 
 const router = useRouter()
 
-// ==================== State ====================
+// State
 const tabs = ref([
   { id: 'ongoing', label: '진행중', count: 0 },
   { id: 'ended', label: '종료됨', count: 0 },
@@ -146,15 +144,13 @@ const hotLoading = ref(false)
 const battleListRef = ref(null)
 const viewMode = ref('feed')
 
-// 카테고리 상태
 const selectedCategory = ref(null)
 const selectedSubCategory = ref(null)
 const categories = ref([])
 
-// ==================== Computed ====================
+// Computed
 const currentCategoryTitle = computed(() => {
   if (!selectedCategory.value) return '전체 배틀'
-
   let title = selectedCategory.value.categoryName
   if (selectedSubCategory.value) {
     title += ` > ${selectedSubCategory.value.subCategoryName}`
@@ -170,60 +166,47 @@ const activeBattleCount = computed(() => {
   return tabs.value.find(tab => tab.id === 'ongoing')?.count || 0
 })
 
-// ==================== API Methods ====================
+// Utils
+const formatCount = (num) => {
+  if (num >= 10000) {
+    return Math.floor(num / 1000) / 10 + '만'
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K'
+  }
+  return num
+}
 
-/**
- * 카테고리 목록 로드
- */
+// API Methods
 const loadCategories = async () => {
   try {
-    console.log('📂 [BATTLE_LIST] 카테고리 로드 시작')
     const response = await categoryService.getCategories()
-
     if (response.success && response.data) {
       categories.value = response.data
-      console.log('✅ [BATTLE_LIST] 카테고리 로드 성공:', categories.value.length)
     }
   } catch (error) {
-    console.error('❌ [BATTLE_LIST] 카테고리 로드 실패:', error)
+    console.error('카테고리 로드 실패:', error)
   }
 }
 
-/**
- * HOT 배틀 로드 (인기 배틀)
- */
 const loadHotBattles = async () => {
   try {
     hotLoading.value = true
-    console.log('🔥 [BATTLE_LIST] HOT 배틀 로드 시작')
-
-    // 조회수와 투표수가 높은 배틀 조회
     const response = await battleService.getBattles(
-        {
-          status: 'ACTIVE'
-        },
-        {
-          page: 0,
-          size: 5,
-          sort: 'hotScore,DESC'
-        }
+        { status: 'ACTIVE' },
+        { page: 0, size: 5, sort: 'hotScore,DESC' }
     )
-
     if (response.success && response.data) {
       hotBattles.value = response.data.content || response.data
-      console.log('✅ [BATTLE_LIST] HOT 배틀 로드 성공:', hotBattles.value.length)
     }
   } catch (error) {
-    console.error('❌ [BATTLE_LIST] HOT 배틀 로드 실패:', error)
+    console.error('HOT 배틀 로드 실패:', error)
     hotBattles.value = []
   } finally {
     hotLoading.value = false
   }
 }
 
-/**
- * 배틀 목록 로드
- */
 const loadBattles = async (reset = false) => {
   if (loading.value) return
   if (!reset && !hasNext.value) return
@@ -236,37 +219,23 @@ const loadBattles = async (reset = false) => {
       battles.value = []
     }
 
-    console.log('📋 [BATTLE_LIST] 배틀 목록 로드 시작', {
-      page: currentPage.value,
-      tab: activeTab.value,
-      category: selectedSubCategory.value?.subCategoryId || selectedCategory.value?.categoryId
-    })
-
-    // 검색 조건 구성
     const searchCondition = {}
 
-    // 탭별 상태 필터
     if (activeTab.value === 'ongoing') {
       searchCondition.status = 'ACTIVE'
     } else if (activeTab.value === 'ended') {
       searchCondition.status = 'CLOSED'
     }
 
-    // 카테고리 필터
     if (selectedSubCategory.value) {
       searchCondition.category = selectedSubCategory.value.subCategoryId
     } else if (selectedCategory.value) {
       searchCondition.category = selectedCategory.value.categoryId
     }
 
-    // API 호출
     const response = await battleService.getBattles(
         searchCondition,
-        {
-          page: currentPage.value,
-          size: 20,
-          sort: 'createdAt,DESC'
-        }
+        { page: currentPage.value, size: 20, sort: 'createdAt,DESC' }
     )
 
     if (response.success && response.data) {
@@ -276,7 +245,6 @@ const loadBattles = async (reset = false) => {
           ? pageData.content
           : [...battles.value, ...pageData.content]
 
-      // 페이징 정보 업데이트
       if (response.data.totalElements !== undefined) {
         totalCount.value = response.data.totalElements
         totalPages.value = response.data.totalPages
@@ -286,84 +254,46 @@ const loadBattles = async (reset = false) => {
       }
 
       currentPage.value++
-
-      console.log('✅ [BATTLE_LIST] 배틀 목록 로드 성공:', {
-        loaded: pageData.content.length,
-        total: battles.value.length,
-        hasNext: hasNext.value
-      })
     }
   } catch (error) {
-    console.error('❌ [BATTLE_LIST] 배틀 목록 로드 실패:', error)
+    console.error('배틀 목록 로드 실패:', error)
   } finally {
     loading.value = false
   }
 }
 
-/**
- * 트렌딩 배틀 로드 (사이드바)
- */
 const loadTrendingBattles = async () => {
   try {
-    console.log('📈 [BATTLE_LIST] 트렌딩 배틀 로드 시작')
-
     const response = await battleService.getBattles(
-        {
-          status: 'ACTIVE'
-        },
-        {
-          page: 0,
-          size: 5,
-          sort: 'totalViews,DESC'
-        }
+        { status: 'ACTIVE' },
+        { page: 0, size: 5, sort: 'totalViews,DESC' }
     )
-
     if (response.success && response.data) {
       trendingBattles.value = response.data.content || response.data
-      console.log('✅ [BATTLE_LIST] 트렌딩 배틀 로드 성공:', trendingBattles.value.length)
     }
   } catch (error) {
-    console.error('❌ [BATTLE_LIST] 트렌딩 배틀 로드 실패:', error)
+    console.error('트렌딩 배틀 로드 실패:', error)
     trendingBattles.value = []
   }
 }
 
-/**
- * 마감 임박 배틀 로드 (사이드바)
- */
 const loadDeadlineBattles = async () => {
   try {
-    console.log('⏰ [BATTLE_LIST] 마감 임박 배틀 로드 시작')
-
     const response = await battleService.getBattles(
-        {
-          status: 'ACTIVE'
-        },
-        {
-          page: 0,
-          size: 3,
-          sort: 'endDate,ASC'
-        }
+        { status: 'ACTIVE' },
+        { page: 0, size: 3, sort: 'endDate,ASC' }
     )
-
     if (response.success && response.data) {
       deadlineBattles.value = response.data.content || response.data
-      console.log('✅ [BATTLE_LIST] 마감 임박 배틀 로드 성공:', deadlineBattles.value.length)
     }
   } catch (error) {
-    console.error('❌ [BATTLE_LIST] 마감 임박 배틀 로드 실패:', error)
+    console.error('마감 임박 배틀 로드 실패:', error)
     deadlineBattles.value = []
   }
 }
 
-/**
- * 탭별 카운트 업데이트
- */
 const updateTabCounts = async () => {
   try {
-    console.log('🔢 [BATTLE_LIST] 탭 카운트 업데이트 시작')
-
-    // 진행중 배틀 수
     const ongoingResponse = await battleService.getBattles(
         { status: 'ACTIVE' },
         { page: 0, size: 1 }
@@ -372,7 +302,6 @@ const updateTabCounts = async () => {
       tabs.value[0].count = ongoingResponse.data.totalElements
     }
 
-    // 종료된 배틀 수
     const endedResponse = await battleService.getBattles(
         { status: 'CLOSED' },
         { page: 0, size: 1 }
@@ -380,96 +309,55 @@ const updateTabCounts = async () => {
     if (endedResponse.success && endedResponse.data.totalElements !== undefined) {
       tabs.value[1].count = endedResponse.data.totalElements
     }
-
-    console.log('✅ [BATTLE_LIST] 탭 카운트 업데이트 완료:', {
-      ongoing: tabs.value[0].count,
-      ended: tabs.value[1].count
-    })
   } catch (error) {
-    console.error('❌ [BATTLE_LIST] 탭 카운트 업데이트 실패:', error)
+    console.error('탭 카운트 업데이트 실패:', error)
   }
 }
 
-// ==================== Event Handlers ====================
-
-/**
- * 카테고리 변경 핸들러
- */
+// Event Handlers
 const handleCategoryChange = ({ category, subCategory }) => {
-  console.log('🏷️ [BATTLE_LIST] 카테고리 변경:', { category, subCategory })
-
   selectedCategory.value = category
   selectedSubCategory.value = subCategory
-
   resetAndLoadBattles()
 }
 
-/**
- * 배틀 목록 초기화 및 재로드
- */
 const resetAndLoadBattles = () => {
-  console.log('🔄 [BATTLE_LIST] 배틀 목록 초기화')
   battles.value = []
   currentPage.value = 0
   hasNext.value = true
   loadBattles(true)
 }
 
-/**
- * 배틀 상세 페이지 이동
- */
 const openBattle = (battleId) => {
-  console.log('📖 [BATTLE_LIST] 배틀 상세 페이지로 이동:', battleId)
   router.push({ name: 'BattleDetail', params: { id: battleId } })
 }
 
-/**
- * 배틀 생성 페이지 이동
- */
 const handleCreateBattle = async () => {
   try {
-    console.log('🔍 [BATTLE_LIST] 배틀 생성 권한 체크')
-
-    // 생성 권한 체크
     const response = await battleService.validateCreation()
-
     if (response.success) {
-      console.log('✅ [BATTLE_LIST] 생성 권한 확인 완료')
       router.push({ name: 'BattleCreate' })
     }
   } catch (error) {
-    console.error('❌ [BATTLE_LIST] 생성 권한 체크 실패:', error)
+    console.error('배틀 생성 권한 체크 실패:', error)
     alert(error.message || '배틀을 생성할 수 없습니다.')
   }
 }
 
-/**
- * 투표 핸들러
- */
 const handleVote = (battleId) => {
-  console.log('🗳️ [BATTLE_LIST] 투표:', battleId)
   router.push({ name: 'BattleDetail', params: { id: battleId } })
 }
 
-// ==================== Watchers ====================
+// Watchers
 watch(activeTab, () => {
-  console.log('📌 [BATTLE_LIST] 탭 변경:', activeTab.value)
   resetAndLoadBattles()
 })
 
-// ==================== Lifecycle ====================
+// Lifecycle
 let observer = null
 
 onMounted(async () => {
-  console.log('✅ [BATTLE_LIST] 컴포넌트 마운트')
-
-  // 초기 데이터 로드
-  await Promise.all([
-    loadCategories(),
-    updateTabCounts()
-  ])
-
-  // 메인 콘텐츠 로드
+  await Promise.all([loadCategories(), updateTabCounts()])
   await Promise.all([
     loadHotBattles(),
     loadBattles(true),
@@ -477,24 +365,18 @@ onMounted(async () => {
     loadDeadlineBattles()
   ])
 
-  // Intersection Observer 설정
   observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNext.value && !loading.value) {
-          console.log('👁️ [BATTLE_LIST] 스크롤 감지 - 다음 페이지 로드')
           loadBattles()
         }
       },
-      {
-        threshold: 0.5,
-        rootMargin: '100px'
-      }
+      { threshold: 0.5, rootMargin: '100px' }
   )
 
   setTimeout(() => {
     if (battleListRef.value?.observerTarget) {
       observer.observe(battleListRef.value.observerTarget)
-      console.log('✅ [BATTLE_LIST] Intersection Observer 연결')
     }
   }, 100)
 })
@@ -502,21 +384,24 @@ onMounted(async () => {
 onUnmounted(() => {
   if (observer) {
     observer.disconnect()
-    console.log('🔌 [BATTLE_LIST] Intersection Observer 해제')
   }
 })
 </script>
 
 <style scoped>
-/* CSS Variables */
 :root {
-  --primary: #1A1A1A;
-  --secondary: #737380;
-  --accent: #FF6B35;
-  --bg: #FAFBFC;
-  --card: #FFFFFF;
-  --border: #F0F0F3;
-  --hover: #F5F5F7;
+  --neutral-0: #FFFFFF;
+  --neutral-50: #FAFAFA;
+  --neutral-100: #F2F2F2;
+  --neutral-200: #E8E8E8;
+  --neutral-300: #D4D4D4;
+  --neutral-400: #A3A3A3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-900: #0A0A0A;
+  --bg: #FAFAFA;
+  --accent: #0A0A0A;
 }
 
 * {
@@ -526,10 +411,10 @@ onUnmounted(() => {
 }
 
 .app-container {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Pretendard', system-ui, sans-serif;
   background: var(--bg);
-  color: var(--primary);
-  line-height: 1.5;
+  color: var(--neutral-900);
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   display: flex;
@@ -539,10 +424,10 @@ onUnmounted(() => {
 .main-content {
   flex: 1;
   margin-left: 260px;
-  margin-right: 360px;
+  margin-right: 280px;
   background: var(--bg);
   min-height: 100vh;
-  padding-bottom: 40px;
+  padding-bottom: 24px;
 }
 
 @media (max-width: 1280px) {
@@ -554,46 +439,49 @@ onUnmounted(() => {
 @media (max-width: 1024px) {
   .main-content {
     margin-left: 0;
-    padding-bottom: 80px;
+    padding-bottom: 68px;
   }
 }
 
 .content-area {
-  padding: 40px;
+  padding: 20px 24px;
 }
 
 @media (max-width: 768px) {
   .content-area {
-    padding: 24px 16px;
+    padding: 16px;
   }
 }
 
 .section-header {
-  margin-bottom: 24px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 13.5px;
   font-weight: 600;
-  color: var(--primary);
-  letter-spacing: -0.01em;
+  color: var(--neutral-900);
+  letter-spacing: -0.014em;
 }
 
 .section-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .battle-count {
-  font-size: 14px;
-  color: var(--secondary);
-  padding: 4px 12px;
-  background: var(--hover);
-  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 550;
+  color: var(--neutral-500);
+  padding: 2px 8px;
+  background: var(--neutral-100);
+  border-radius: 6px;
+  letter-spacing: -0.006em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Bottom Navigation */
@@ -602,14 +490,16 @@ onUnmounted(() => {
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--card);
-  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 0.5px solid var(--neutral-200);
   z-index: 50;
   display: none;
   align-items: center;
   justify-content: space-around;
-  padding: 8px 0;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  padding: 4px 0 6px;
+  box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.02);
 }
 
 @media (max-width: 1024px) {
@@ -623,75 +513,86 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
+  gap: 2px;
+  padding: 5px 8px;
   background: transparent;
   border: none;
-  color: var(--secondary);
+  color: var(--neutral-400);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 160ms ease;
   font-family: inherit;
 }
 
 .bottom-nav-item.active {
-  color: var(--primary);
+  color: var(--neutral-900);
 }
 
 .bottom-nav-item .icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .bottom-nav-item span:not(.nav-badge) {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
+  letter-spacing: -0.006em;
 }
 
 .nav-badge {
   position: absolute;
-  top: 4px;
-  right: 8px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  background: #FF5850;
+  top: 2px;
+  right: 4px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  background: #FF3B30;
   color: white;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  border-radius: 9px;
+  border-radius: 7.5px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 1px 2px rgba(255, 59, 48, 0.24);
+  font-variant-numeric: tabular-nums;
 }
 
 .bottom-nav-fab {
-  width: 56px;
-  height: 56px;
-  background: var(--primary);
+  width: 48px;
+  height: 48px;
+  background: var(--accent);
   color: white;
   border: none;
-  border-radius: 28px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(26, 26, 26, 0.3);
-  margin-top: -28px;
-  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(10, 10, 10, 0.16), 0 1px 3px rgba(10, 10, 10, 0.08);
+  margin-top: -24px;
+  transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bottom-nav-fab:hover {
   background: #000000;
-  transform: translateY(-1px);
+  transform: translateY(-0.5px) scale(1.01);
+  box-shadow: 0 6px 16px rgba(10, 10, 10, 0.2), 0 2px 4px rgba(10, 10, 10, 0.1);
 }
 
 .bottom-nav-fab:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(10, 10, 10, 0.12);
 }
 
 .bottom-nav-fab .icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   stroke-width: 2.5;
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav {
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+  }
 }
 </style>

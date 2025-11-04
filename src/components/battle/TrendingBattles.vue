@@ -3,7 +3,7 @@
     <h3 class="widget-header">실시간 인기 배틀</h3>
 
     <div v-if="battles.length === 0" class="empty-message">
-      인기 배틀이 없습니다.
+      인기 배틀이 없습니다
     </div>
 
     <div
@@ -16,8 +16,8 @@
       <div class="trending-content">
         <div class="trending-title">{{ battle.title }}</div>
         <div class="trending-meta">
-          <strong>{{ battle.participantCount }}명</strong> 참여
-          <span class="dot-separator"></span>
+          <strong>{{ battle.participantCount }}</strong>명 참여
+          <span class="meta-divider">·</span>
           <strong>{{ formatNumber(battle.voteCount) }}</strong> 투표
         </div>
       </div>
@@ -36,6 +36,9 @@ defineProps({
 defineEmits(['battle-click']);
 
 const formatNumber = (num) => {
+  if (num >= 10000) {
+    return Math.floor(num / 1000) / 10 + '만';
+  }
   if (num >= 1000) {
     return (num / 1000).toFixed(1) + 'K';
   }
@@ -45,39 +48,43 @@ const formatNumber = (num) => {
 
 <style scoped>
 .widget {
-  margin-bottom: 40px;
+  margin-bottom: 28px;
 }
 
 .widget-header {
-  font-size: 14px;
+  font-size: 11.5px;
   font-weight: 600;
-  color: #1A1A1A;
-  margin-bottom: 20px;
+  color: #0A0A0A;
+  margin-bottom: 12px;
   letter-spacing: -0.01em;
+  text-transform: uppercase;
+  opacity: 0.8;
 }
 
 .empty-message {
-  font-size: 13px;
-  color: #9CA3AF;
+  font-size: 11.5px;
+  color: #A3A3A3;
   text-align: center;
-  padding: 20px 0;
+  padding: 16px 0;
+  font-weight: 500;
 }
 
 .trending-item {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  padding: 16px 0;
-  border-bottom: 1px solid #F9FAFB;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid #F2F2F2;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 160ms ease;
 }
 
 .trending-item:hover {
-  background: #FAFBFC;
-  margin: 0 -12px;
-  padding-left: 12px;
-  padding-right: 12px;
+  background: #FAFAFA;
+  margin: 0 -10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-radius: 6px;
 }
 
 .trending-item:last-child {
@@ -85,45 +92,49 @@ const formatNumber = (num) => {
 }
 
 .trending-rank {
-  min-width: 20px;
-  font-size: 14px;
+  min-width: 16px;
+  font-size: 12px;
   font-weight: 700;
-  color: #D1D5DB;
+  color: #D4D4D4;
+  font-variant-numeric: tabular-nums;
 }
 
 .trending-rank.top {
-  color: #1A1A1A;
+  color: #0A0A0A;
 }
 
 .trending-content {
   flex: 1;
+  min-width: 0;
 }
 
 .trending-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1A1A1A;
-  margin-bottom: 6px;
-  line-height: 1.4;
+  font-size: 12px;
+  font-weight: 550;
+  color: #0A0A0A;
+  margin-bottom: 3px;
+  line-height: 1.35;
+  letter-spacing: -0.008em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: keep-all;
 }
 
 .trending-meta {
-  font-size: 12px;
-  color: #9CA3AF;
+  font-size: 10.5px;
+  color: #A3A3A3;
+  font-weight: 500;
 }
 
 .trending-meta strong {
-  color: #6B7280;
+  color: #737373;
   font-weight: 600;
 }
 
-.dot-separator {
-  display: inline-block;
-  width: 2px;
-  height: 2px;
-  background: #D1D5DB;
-  border-radius: 50%;
-  margin: 0 8px;
-  vertical-align: middle;
+.meta-divider {
+  margin: 0 4px;
+  opacity: 0.5;
 }
 </style>

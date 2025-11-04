@@ -10,15 +10,15 @@
 
 <style scoped>
 .sidebar-right {
-  width: 360px;
+  width: 280px;
   background: #FFFFFF;
-  border-left: 1px solid #F0F0F3;
+  border-left: 0.5px solid #E8E8E8;
   position: fixed;
   height: 100vh;
   right: 0;
   top: 0;
   overflow-y: auto;
-  padding: 32px 24px;
+  padding: 24px 20px;
 }
 
 @media (max-width: 1280px) {
@@ -29,7 +29,7 @@
 
 /* 스크롤바 스타일 */
 .sidebar-right::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .sidebar-right::-webkit-scrollbar-track {
@@ -37,11 +37,11 @@
 }
 
 .sidebar-right::-webkit-scrollbar-thumb {
-  background: #E5E7EB;
-  border-radius: 3px;
+  background: #E8E8E8;
+  border-radius: 2px;
 }
 
 .sidebar-right::-webkit-scrollbar-thumb:hover {
-  background: #D1D5DB;
+  background: #D4D4D4;
 }
 </style>

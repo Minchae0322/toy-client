@@ -11,12 +11,16 @@
     <!-- 빈 상태 -->
     <div v-else-if="battles.length === 0" class="state-container">
       <div class="empty-state">
-        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-        </svg>
-        <h3 class="empty-title">진행 중인 배틀이 없습니다</h3>
-        <p class="empty-description">첫 번째 배틀을 만들어보세요</p>
+        <div class="empty-icon-wrapper">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div class="empty-content">
+          <h3 class="empty-title">배틀이 없습니다</h3>
+          <p class="empty-description">새로운 배틀을 만들어 시작해보세요</p>
+        </div>
       </div>
     </div>
 
@@ -78,62 +82,38 @@ defineExpose({
 </script>
 
 <style scoped>
-/* ==================== Design Tokens ==================== */
 :root {
-  /* Typography Scale (1.250 - Major Third) */
-  --font-size-xs: 0.64rem;      /* 10.24px */
-  --font-size-sm: 0.8rem;       /* 12.8px */
-  --font-size-base: 1rem;       /* 16px */
-  --font-size-md: 1.25rem;      /* 20px */
-  --font-size-lg: 1.563rem;     /* 25px */
-  --font-size-xl: 1.953rem;     /* 31.25px */
+  --font-xs: 10.5px;
+  --font-sm: 12px;
+  --font-base: 13px;
+  --font-md: 14px;
+  --font-lg: 15px;
 
-  /* Spacing Scale (8px base) */
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.5rem;    /* 24px */
-  --space-6: 2rem;      /* 32px */
-  --space-7: 2.5rem;    /* 40px */
-  --space-8: 3rem;      /* 48px */
-  --space-10: 4rem;     /* 64px */
-  --space-12: 6rem;     /* 96px */
+  --weight-medium: 500;
+  --weight-semibold: 550;
+  --weight-bold: 600;
 
-  /* Colors - Neutral */
-  --gray-50: #FAFBFC;
-  --gray-100: #F5F6F7;
-  --gray-200: #EBEDF0;
-  --gray-300: #DDE1E6;
-  --gray-400: #C1C7CD;
-  --gray-500: #9CA3AF;
-  --gray-600: #6B7280;
-  --gray-700: #4B5563;
-  --gray-800: #374151;
-  --gray-900: #1F2937;
-  --gray-950: #0A0D14;
+  --space-1: 3px;
+  --space-2: 6px;
+  --space-3: 10px;
+  --space-4: 14px;
+  --space-5: 18px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
 
-  /* Semantic Colors */
-  --color-text-primary: var(--gray-950);
-  --color-text-secondary: var(--gray-600);
-  --color-text-tertiary: var(--gray-500);
-  --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: var(--gray-50);
-  --color-border: var(--gray-200);
-
-  /* Elevation */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-
-  /* Animation */
-  --duration-fast: 150ms;
-  --duration-base: 250ms;
-  --duration-slow: 350ms;
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --neutral-0: #FFFFFF;
+  --neutral-50: #FAFAFA;
+  --neutral-100: #F2F2F2;
+  --neutral-200: #E8E8E8;
+  --neutral-300: #D4D4D4;
+  --neutral-400: #A3A3A3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-900: #0A0A0A;
 }
 
-/* ==================== Container ==================== */
 .battles-container {
   position: relative;
   width: 100%;
@@ -141,16 +121,14 @@ defineExpose({
   margin: 0 auto;
 }
 
-/* ==================== State Containers ==================== */
 .state-container {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 480px;
-  padding: var(--space-10);
+  padding: 80px 48px;
 }
 
-/* ==================== Loading State ==================== */
 .loading-spinner {
   display: flex;
   flex-direction: column;
@@ -159,17 +137,17 @@ defineExpose({
 }
 
 .spinner-icon {
-  width: 48px;
-  height: 48px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-text-primary);
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--neutral-100);
+  border-top-color: var(--neutral-900);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 .spinner-icon.small {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   border-width: 2px;
 }
 
@@ -180,126 +158,144 @@ defineExpose({
 }
 
 .loading-text {
-  font-size: var(--font-size-base);
+  font-size: var(--font-sm);
   font-weight: 500;
-  color: var(--color-text-secondary);
-  letter-spacing: -0.01em;
+  color: var(--neutral-500);
+  letter-spacing: -0.008em;
   margin: 0;
 }
 
-/* ==================== Empty State ==================== */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: 20px;
   text-align: center;
-  max-width: 400px;
+  max-width: 340px;
+}
+
+.empty-icon-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--neutral-50);
+  border-radius: 50%;
+  border: 1px solid var(--neutral-200);
 }
 
 .empty-icon {
-  width: 64px;
-  height: 64px;
-  color: var(--gray-300);
-  margin-bottom: var(--space-2);
+  width: 36px;
+  height: 36px;
+  color: var(--neutral-400);
+  stroke-width: 1.5;
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .empty-title {
-  font-size: var(--font-size-md);
+  font-size: 15px;
   font-weight: 600;
-  color: var(--color-text-primary);
-  letter-spacing: -0.02em;
+  color: var(--neutral-900);
+  letter-spacing: -0.014em;
   line-height: 1.3;
   margin: 0;
 }
 
 .empty-description {
-  font-size: var(--font-size-base);
-  font-weight: 400;
-  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--neutral-500);
   line-height: 1.5;
   margin: 0;
+  letter-spacing: -0.006em;
 }
 
-/* ==================== Battle Grid ==================== */
 .battles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
-  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--space-5);
   padding: var(--space-2) 0;
 }
 
-/* Responsive Grid */
 @media (min-width: 640px) {
   .battles-grid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 }
 
 @media (min-width: 1024px) {
   .battles-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-7);
+    gap: var(--space-5);
   }
 }
 
 @media (min-width: 1280px) {
   .battles-grid {
-    gap: var(--space-8);
+    gap: var(--space-6);
   }
 }
 
-/* ==================== Intersection Observer ==================== */
 .observer-target {
   width: 100%;
   height: 1px;
-  margin: var(--space-8) 0;
+  margin: var(--space-7) 0;
   pointer-events: none;
 }
 
-/* ==================== Loading More ==================== */
 .loading-more {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-3);
-  padding: var(--space-8) 0;
-  margin-top: var(--space-6);
+  padding: var(--space-6) 0;
+  margin-top: var(--space-5);
 }
 
 .loading-more-text {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-sm);
   font-weight: 500;
-  color: var(--color-text-tertiary);
-  letter-spacing: -0.01em;
+  color: var(--neutral-500);
+  letter-spacing: -0.006em;
 }
 
-/* ==================== Responsive Adjustments ==================== */
 @media (max-width: 768px) {
   .state-container {
-    min-height: 360px;
-    padding: var(--space-8);
+    min-height: 400px;
+    padding: 60px 32px;
+  }
+
+  .empty-icon-wrapper {
+    width: 72px;
+    height: 72px;
   }
 
   .empty-icon {
-    width: 48px;
-    height: 48px;
+    width: 32px;
+    height: 32px;
   }
 
   .empty-title {
-    font-size: var(--font-size-base);
+    font-size: 14px;
   }
 
   .empty-description {
-    font-size: var(--font-size-sm);
+    font-size: 12px;
   }
 
   .battles-grid {
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
 
   .loading-more {
-    padding: var(--space-6) 0;
+    padding: var(--space-5) 0;
     margin-top: var(--space-4);
   }
 }
@@ -311,22 +307,9 @@ defineExpose({
   }
 }
 
-/* ==================== Accessibility ==================== */
 @media (prefers-reduced-motion: reduce) {
   .spinner-icon {
     animation-duration: 1.5s;
-  }
-}
-
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-text-primary: var(--gray-50);
-    --color-text-secondary: var(--gray-400);
-    --color-text-tertiary: var(--gray-500);
-    --color-bg-primary: var(--gray-950);
-    --color-bg-secondary: var(--gray-900);
-    --color-border: var(--gray-800);
   }
 }
 </style>
