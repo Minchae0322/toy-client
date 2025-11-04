@@ -22,15 +22,30 @@
               <button
                   v-if="searchQuery"
                   class="search-clear"
-                  @click="searchQuery = ''"
+                  @click="clearSearch"
               >
                 ×
               </button>
+            </div>
+            <!-- 로딩 인디케이터 -->
+            <div v-if="loading" class="loading-indicator">
+              <span>검색 중...</span>
             </div>
           </div>
 
           <!-- 검색 결과 또는 직접 입력 -->
           <div class="modal-content">
+            <!-- 디버깅 정보 (개발 중에만 표시) -->
+            <div v-if="isDev" class="debug-info">
+              <details>
+                <summary>🔍 디버깅 정보</summary>
+                <pre>검색어: {{ searchQuery }}</pre>
+                <pre>검색 결과 수: {{ products.length }}</pre>
+                <pre>필터된 결과 수: {{ filteredProducts.length }}</pre>
+                <pre>첫 번째 상품: {{ JSON.stringify(products[0], null, 2) }}</pre>
+              </details>
+            </div>
+
             <!-- 검색 결과가 있을 때 -->
             <div v-if="filteredProducts.length > 0" class="search-results">
               <div class="section-header">
@@ -46,7 +61,12 @@
                     @click="selectProduct(product)"
                 >
                   <div class="product-image">
-                    <img v-if="product.thumbnailDto?.fileUrl" :src="product.thumbnailDto.fileUrl" :alt="product.name">
+                    <img
+                        v-if="getProductImage(product)"
+                        :src="getProductImage(product)"
+                        :alt="product.name"
+                        @error="handleImageError"
+                    >
                     <div v-else class="product-placeholder">📦</div>
                   </div>
                   <div class="product-name">{{ product.name }}</div>
@@ -57,7 +77,7 @@
             </div>
 
             <!-- 검색 결과 없음 -->
-            <div v-else-if="searchQuery && filteredProducts.length === 0" class="no-results">
+            <div v-else-if="searchQuery && !loading && filteredProducts.length === 0" class="no-results">
               <div class="no-results-icon">🔍</div>
               <div class="no-results-title">"{{ searchQuery }}" 검색 결과가 없어요</div>
               <div class="no-results-desc">아래에서 직접 아이템을 만들어보세요</div>
@@ -68,7 +88,7 @@
               <span>또는</span>
             </div>
 
-            <!-- ⭐ 직접 입력 폼 (백엔드 ItemRequest 스펙) -->
+            <!-- 직접 입력 폼 -->
             <div class="create-section">
               <div class="section-header">
                 <span class="section-title">✨ 직접 아이템 만들기</span>
@@ -101,26 +121,73 @@
                   </div>
                 </div>
 
+                <!-- 이미지 업로드 영역 -->
                 <div class="form-field">
-                  <label class="field-label">이미지 URL (선택)</label>
-                  <input
-                      v-model="newItem.customImageUrl"
-                      type="text"
-                      class="field-input"
-                      placeholder="https://example.com/image.jpg"
-                      maxlength="500"
-                  >
-                  <div class="field-hint">이미지 URL을 입력하거나 비워두세요</div>
+                  <label class="field-label">이미지 (선택)</label>
+
+                  <!-- 이미지 미리보기 -->
+                  <div v-if="newItem.customImagePreview || newItem.customImageUrl" class="image-preview-area">
+                    <div class="image-preview-wrapper">
+                      <img
+                          :src="newItem.customImagePreview || newItem.customImageUrl"
+                          alt="미리보기"
+                          class="image-preview"
+                          @error="handleImageError"
+                      >
+                      <button
+                          type="button"
+                          class="image-remove-btn"
+                          @click="removeCustomImage"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- 이미지 업로드 또는 URL 입력 -->
+                  <div v-else class="image-input-area">
+                    <!-- 파일 업로드 버튼 -->
+                    <label for="custom-image-input" class="image-upload-btn">
+                      <span class="upload-icon">📷</span>
+                      <span>이미지 파일 선택</span>
+                      <input
+                          id="custom-image-input"
+                          type="file"
+                          accept="image/*"
+                          style="display: none;"
+                          @change="handleImageSelect"
+                      >
+                    </label>
+
+                    <div class="divider-small">
+                      <span>또는</span>
+                    </div>
+
+                    <!-- URL 입력 -->
+                    <input
+                        v-model="newItem.customImageUrl"
+                        type="text"
+                        class="field-input"
+                        placeholder="이미지 URL을 입력하세요"
+                        maxlength="500"
+                        @input="handleUrlInput"
+                    >
+                  </div>
+
+                  <div class="field-hint">
+                    <span v-if="uploadingImage">⏳ 이미지 업로드 중...</span>
+                    <span v-else>파일 선택 또는 URL 입력 (최대 5MB)</span>
+                  </div>
                 </div>
 
                 <button
                     class="btn-create"
-                    :disabled="!isNewItemValid"
+                    :disabled="!isNewItemValid || uploadingImage"
                     @click="createNewItem"
                     type="button"
                 >
                   <span>➕</span>
-                  커스텀 아이템 추가하기
+                  {{ uploadingImage ? '업로드 중...' : '커스텀 아이템 추가하기' }}
                 </button>
               </div>
             </div>
@@ -145,7 +212,8 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useProduct } from '@/composables/useProduct';
+import productService from '@/services/ProductService';
+import fileService from '@/services/FileService';
 
 const props = defineProps({
   modelValue: {
@@ -164,30 +232,38 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'confirm']);
 
-const productService = useProduct();
+// 개발 모드 체크
+const isDev = import.meta.env.DEV;
 
 // 상태
 const searchQuery = ref('');
 const tempSelectedItems = ref([]);
 const products = ref([]);
 const loading = ref(false);
+const uploadingImage = ref(false);
 
-// ⭐ 백엔드 ItemRequest 스펙에 맞춤
 const newItem = ref({
   productId: null,
   customName: '',
   customBrand: '',
-  customImageUrl: ''
+  customImageUrl: '',
+  customImageFile: null,
+  customImagePreview: null
 });
+
+// 디바운스 타이머
+let searchTimeout = null;
 
 // Computed
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return [];
-  const query = searchQuery.value.toLowerCase();
-  return products.value.filter(p =>
-      p.name.toLowerCase().includes(query) ||
-      p.brand.toLowerCase().includes(query)
-  );
+
+  // 이미 검색된 결과가 있으면 그대로 반환
+  if (products.value.length > 0) {
+    return products.value;
+  }
+
+  return [];
 });
 
 const isNewItemValid = computed(() => {
@@ -195,8 +271,36 @@ const isNewItemValid = computed(() => {
       newItem.value.customBrand.trim().length > 0;
 });
 
+const hasImageInput = computed(() => {
+  return newItem.value.customImageUrl.trim().length > 0 ||
+      newItem.value.customImageFile !== null;
+});
+
+// 상품 이미지 가져오기
+const getProductImage = (product) => {
+  if (!product) return null;
+  return product.thumbnailDto?.fileUrl || null;
+};
+
+// 이미지 로드 실패 처리
+const handleImageError = (event) => {
+  console.warn('⚠️ 이미지 로드 실패:', event.target.src);
+  event.target.style.display = 'none';
+};
+
 // Methods
-const handleSearch = async () => {
+const handleSearch = () => {
+  // 디바운스 적용 (300ms)
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+
+  searchTimeout = setTimeout(async () => {
+    await performSearch();
+  }, 300);
+};
+
+const performSearch = async () => {
   if (!searchQuery.value || searchQuery.value.length < 2) {
     products.value = [];
     return;
@@ -204,20 +308,58 @@ const handleSearch = async () => {
 
   try {
     loading.value = true;
+    console.log('🔍 [MODAL] 검색 시작:', searchQuery.value);
+
+    // ProductService 직접 사용
     const response = await productService.getProducts({
-      keyword: searchQuery.value
+      keyword: searchQuery.value,
+      status: 'APPROVED'
     }, {
       page: 0,
-      size: 20
+      size: 20,
+      sort: 'createdAt,DESC'
+    });
+
+    console.log('📥 [MODAL] 검색 응답:', {
+      success: response.success,
+      hasData: !!response.data,
+      dataKeys: response.data ? Object.keys(response.data) : []
     });
 
     if (response.success && response.data) {
-      products.value = response.data.content || response.data;
+      // Spring Page 응답 처리 (content 필드)
+      if (response.data.content && Array.isArray(response.data.content)) {
+        products.value = response.data.content;
+        console.log('✅ [MODAL] 상품 로드 성공 (Spring Page):', products.value.length, '개');
+        console.log('📦 [MODAL] 첫 번째 상품:', products.value[0]);
+      }
+      // 배열 응답 처리
+      else if (Array.isArray(response.data)) {
+        products.value = response.data;
+        console.log('✅ [MODAL] 상품 로드 성공 (배열):', products.value.length, '개');
+      }
+      else {
+        console.warn('⚠️ [MODAL] 예상치 못한 응답 구조:', response.data);
+        products.value = [];
+      }
+    } else {
+      console.warn('⚠️ [MODAL] 검색 실패:', response.message);
+      products.value = [];
     }
   } catch (error) {
-    console.error('❌ 상품 검색 실패:', error);
+    console.error('❌ [MODAL] 상품 검색 오류:', error);
+    products.value = [];
+    alert('검색 중 오류가 발생했습니다. 다시 시도해주세요.');
   } finally {
     loading.value = false;
+  }
+};
+
+const clearSearch = () => {
+  searchQuery.value = '';
+  products.value = [];
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
   }
 };
 
@@ -226,31 +368,90 @@ const isProductSelected = (productId) => {
 };
 
 const selectProduct = (product) => {
+  console.log('🎯 [MODAL] 상품 선택:', product);
+
   const index = tempSelectedItems.value.findIndex(item => item.productId === product.id);
 
   if (index !== -1) {
     tempSelectedItems.value.splice(index, 1);
+    console.log('➖ [MODAL] 상품 선택 해제:', product.id);
   } else {
     if (props.currentItems.length + tempSelectedItems.value.length >= props.maxItems) {
       alert(`최대 ${props.maxItems}개까지만 선택 가능합니다`);
       return;
     }
 
-    // ⭐ 백엔드 ItemRequest 형식
-    tempSelectedItems.value.push({
+    // 백엔드 ItemRequest 형식
+    const item = {
       productId: product.id,
       customName: null,
       customBrand: null,
-      customImageUrl: null,
-      // UI 표시용 추가 정보
-      _displayName: product.name,
-      _displayBrand: product.brand,
-      _displayImage: product.thumbnailDto?.fileUrl
-    });
+      customImageUrl: null
+    };
+
+    tempSelectedItems.value.push(item);
+    console.log('➕ [MODAL] 상품 선택 추가:', item);
   }
 };
 
-const createNewItem = () => {
+// 이미지 파일 선택 핸들러
+const handleImageSelect = async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  // 이미지 파일 검증
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 선택 가능합니다.');
+    event.target.value = '';
+    return;
+  }
+
+  // 파일 크기 검증 (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('이미지 크기는 5MB 이하여야 합니다.');
+    event.target.value = '';
+    return;
+  }
+
+  // 미리보기 생성
+  try {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      newItem.value.customImagePreview = e.target.result;
+      newItem.value.customImageFile = file;
+      // 파일을 선택하면 URL 입력은 초기화
+      newItem.value.customImageUrl = '';
+      console.log('📷 [MODAL] 이미지 파일 선택:', file.name);
+    };
+    reader.readAsDataURL(file);
+  } catch (error) {
+    console.error('❌ [MODAL] 이미지 미리보기 생성 실패:', error);
+    alert('이미지 미리보기 생성에 실패했습니다.');
+  }
+};
+
+// 이미지 제거
+const removeCustomImage = () => {
+  newItem.value.customImageFile = null;
+  newItem.value.customImagePreview = null;
+  newItem.value.customImageUrl = '';
+
+  // 파일 input 초기화
+  const fileInput = document.getElementById('custom-image-input');
+  if (fileInput) {
+    fileInput.value = '';
+  }
+};
+
+// URL 입력 시 파일 입력 초기화
+const handleUrlInput = () => {
+  if (newItem.value.customImageUrl.trim()) {
+    newItem.value.customImageFile = null;
+    newItem.value.customImagePreview = null;
+  }
+};
+
+const createNewItem = async () => {
   if (!isNewItemValid.value) return;
 
   if (props.currentItems.length + tempSelectedItems.value.length >= props.maxItems) {
@@ -258,32 +459,68 @@ const createNewItem = () => {
     return;
   }
 
-  // ⭐ 백엔드 ItemRequest 형식 (커스텀 아이템)
-  const item = {
-    productId: null, // 커스텀 아이템이므로 null
-    customName: newItem.value.customName.trim(),
-    customBrand: newItem.value.customBrand.trim(),
-    customImageUrl: newItem.value.customImageUrl.trim() || null,
-    // UI 표시용
-    _displayName: newItem.value.customName.trim(),
-    _displayBrand: newItem.value.customBrand.trim(),
-    _displayImage: newItem.value.customImageUrl.trim() || null,
-    _isCustom: true
-  };
+  try {
+    uploadingImage.value = true;
+    let finalImageUrl = newItem.value.customImageUrl.trim() || null;
 
-  tempSelectedItems.value.push(item);
+    // ⭐ 파일이 선택된 경우 먼저 업로드
+    if (newItem.value.customImageFile) {
+      console.log('📤 [MODAL] 커스텀 이미지 업로드 시작...');
 
-  // 폼 초기화
+      const uploadResponse = await fileService.uploadImage(
+          newItem.value.customImageFile,
+          'BATTLE_ITEM'
+      );
+
+      if (uploadResponse.success && uploadResponse.data) {
+        finalImageUrl = uploadResponse.data.fileUrl;
+        console.log('✅ [MODAL] 이미지 업로드 성공:', finalImageUrl);
+      } else {
+        throw new Error('이미지 업로드에 실패했습니다.');
+      }
+    }
+
+    // 백엔드 ItemRequest 형식 (커스텀 아이템)
+    const item = {
+      productId: null,
+      customName: newItem.value.customName.trim(),
+      customBrand: newItem.value.customBrand.trim(),
+      customImageUrl: finalImageUrl
+    };
+
+    tempSelectedItems.value.push(item);
+    console.log('✨ [MODAL] 커스텀 아이템 추가:', item);
+
+    // 폼 초기화
+    resetNewItemForm();
+  } catch (error) {
+    console.error('❌ [MODAL] 커스텀 아이템 생성 실패:', error);
+    alert(error.message || '아이템 생성 중 오류가 발생했습니다.');
+  } finally {
+    uploadingImage.value = false;
+  }
+};
+
+const resetNewItemForm = () => {
   newItem.value = {
     productId: null,
     customName: '',
     customBrand: '',
-    customImageUrl: ''
+    customImageUrl: '',
+    customImageFile: null,
+    customImagePreview: null
   };
+
+  const fileInput = document.getElementById('custom-image-input');
+  if (fileInput) {
+    fileInput.value = '';
+  }
 };
 
 const confirmSelection = () => {
   if (tempSelectedItems.value.length === 0) return;
+
+  console.log('✅ [MODAL] 아이템 선택 확정:', tempSelectedItems.value);
   emit('confirm', tempSelectedItems.value);
   handleClose();
 };
@@ -299,23 +536,22 @@ const resetModal = () => {
   tempSelectedItems.value = [];
   searchQuery.value = '';
   products.value = [];
-  newItem.value = {
-    productId: null,
-    customName: '',
-    customBrand: '',
-    customImageUrl: ''
-  };
+  resetNewItemForm();
+
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
 };
 
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
     resetModal();
+    console.log('🔄 [MODAL] 모달 열림 - 초기화 완료');
   }
 });
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -459,6 +695,37 @@ watch(() => props.modelValue, (newVal) => {
 
 .search-clear:hover {
   background: #D1D5DB;
+}
+
+.loading-indicator {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 13px;
+  color: #9CA3AF;
+  padding: 8px;
+}
+
+.debug-info {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.debug-info summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #92400E;
+  margin-bottom: 8px;
+}
+
+.debug-info pre {
+  margin: 4px 0;
+  color: #78350F;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .section-header {
@@ -661,6 +928,104 @@ watch(() => props.modelValue, (newVal) => {
   font-size: 11px;
   color: #9CA3AF;
   margin-top: 4px;
+}
+
+/* 이미지 업로드 관련 스타일 */
+.image-preview-area {
+  margin-bottom: 12px;
+}
+
+.image-preview-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #E5E7EB;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.image-remove-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.image-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.image-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  border: 2px dashed #E5E7EB;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.image-upload-btn:hover {
+  border-color: #9CA3AF;
+  background: #F9FAFB;
+}
+
+.upload-icon {
+  font-size: 20px;
+}
+
+.divider-small {
+  position: relative;
+  text-align: center;
+  margin: 4px 0;
+}
+
+.divider-small::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #E5E7EB;
+}
+
+.divider-small span {
+  position: relative;
+  display: inline-block;
+  padding: 0 12px;
+  background: #F8F9FA;
+  color: #9CA3AF;
+  font-size: 12px;
 }
 
 .btn-create {

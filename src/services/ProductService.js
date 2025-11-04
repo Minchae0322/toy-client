@@ -45,7 +45,14 @@ class ProductService extends BaseApiService {
     if (!productId) {
       throw new Error('상품 ID가 필요합니다.')
     }
-    return await this.get(`/products/${productId}`)
+    const response = await this.get(`/products/${productId}`)
+
+    // ⭐ 단일 상품도 정규화
+    if (response.success && response.data) {
+      response.data = this.normalizeProduct(response.data)
+    }
+
+    return response
   }
 
   async getProducts(searchCondition = {}, pageable = {}) {
@@ -59,12 +66,24 @@ class ProductService extends BaseApiService {
       ...cleanedPageable
     }
 
+    console.log('📤 [PRODUCT_SERVICE] getProducts 요청 파라미터:', params)
     const response = await this.get('/products', params)
+    console.log('📥 [PRODUCT_SERVICE] getProducts 원본 응답:', {
+      success: response.success,
+      hasData: !!response.data,
+      dataType: Array.isArray(response.data) ? 'array' : typeof response.data,
+      firstItem: response.data?.content?.[0] || response.data?.[0]
+    })
 
+    // ⭐ 응답 정규화 (Spring Page 응답)
     if (response.success && response.data) {
-      if (response.data.content) {
+      if (response.data.content && Array.isArray(response.data.content)) {
+        // 페이징 응답 (Spring Page)
+        console.log('📦 [PRODUCT_SERVICE] Spring Page 응답 처리:', response.data.content.length, '개')
         response.data.content = this.normalizeProductListResponse(response.data.content)
       } else if (Array.isArray(response.data)) {
+        // 배열 응답
+        console.log('📦 [PRODUCT_SERVICE] 배열 응답 처리:', response.data.length, '개')
         response.data = this.normalizeProductListResponse(response.data)
       }
     }
@@ -154,7 +173,26 @@ class ProductService extends BaseApiService {
       ...cleanedPageable
     }
 
-    return await this.get('/products/search', params)
+    console.log('🔍 [PRODUCT_SERVICE] searchProducts 요청:', params)
+    const response = await this.get('/products/search', params)
+    console.log('📥 [PRODUCT_SERVICE] searchProducts 원본 응답:', JSON.stringify(response, null, 2))
+
+    // ⭐ 응답 정규화 - 검색 응답도 동일하게 처리
+    if (response.success && response.data) {
+      if (response.data.content) {
+        // 페이징 응답
+        console.log('📦 정규화 전 content:', response.data.content.length, '개')
+        response.data.content = this.normalizeProductListResponse(response.data.content)
+        console.log('✅ 정규화 후 content:', response.data.content.length, '개')
+      } else if (Array.isArray(response.data)) {
+        // 배열 응답
+        console.log('📦 정규화 전 array:', response.data.length, '개')
+        response.data = this.normalizeProductListResponse(response.data)
+        console.log('✅ 정규화 후 array:', response.data.length, '개')
+      }
+    }
+
+    return response
   }
 
   async getPopularProducts(params = {}) {
@@ -165,15 +203,20 @@ class ProductService extends BaseApiService {
     }
 
     const cleanedParams = this.removeEmptyParams(validatedParams)
-    return await this.get('/products/popular', cleanedParams)
+    const response = await this.get('/products/popular', cleanedParams)
+
+    // ⭐ 인기 상품도 정규화
+    if (response.success && response.data) {
+      if (Array.isArray(response.data)) {
+        response.data = this.normalizeProductListResponse(response.data)
+      }
+    }
+
+    return response
   }
 
   // ==================== 리뷰 관련 메서드 ====================
 
-  /**
-   * 상품 리뷰 등록
-   * POST /api/products/{id}/reviews
-   */
   async createReview(productId, reviewData) {
     if (!productId) {
       throw new Error('상품 ID가 필요합니다.')
@@ -195,10 +238,6 @@ class ProductService extends BaseApiService {
     return await this.post(`/products/${productId}/reviews`, requestData)
   }
 
-  /**
-   * 상품별 리뷰 목록 조회
-   * GET /api/products/{id}/reviews
-   */
   async getProductReviews(productId, pageable = {}) {
     if (!productId) {
       throw new Error('상품 ID가 필요합니다.')
@@ -211,9 +250,6 @@ class ProductService extends BaseApiService {
     return await this.get(`/products/${productId}/reviews`, params)
   }
 
-  /**
-   * 리뷰 조회
-   */
   async getReview(reviewId) {
     if (!reviewId) {
       throw new Error('리뷰 ID가 필요합니다.')
@@ -221,9 +257,6 @@ class ProductService extends BaseApiService {
     return await this.get(`/reviews/${reviewId}`)
   }
 
-  /**
-   * 내가 작성한 리뷰 목록 조회
-   */
   async getMyReviews(pageable = {}) {
     const validatedPageable = this.validateReviewPageable(pageable)
     const params = this.removeEmptyParams(validatedPageable)
@@ -231,9 +264,6 @@ class ProductService extends BaseApiService {
     return await this.get('/reviews/my', params)
   }
 
-  /**
-   * 리뷰 수정
-   */
   async updateReview(reviewId, reviewData) {
     if (!reviewId) {
       throw new Error('리뷰 ID가 필요합니다.')
@@ -253,9 +283,6 @@ class ProductService extends BaseApiService {
     return await this.put(`/reviews/${reviewId}`, requestData)
   }
 
-  /**
-   * 리뷰 삭제
-   */
   async deleteReview(reviewId) {
     if (!reviewId) {
       throw new Error('리뷰 ID가 필요합니다.')
@@ -263,9 +290,6 @@ class ProductService extends BaseApiService {
     return await this.delete(`/reviews/${reviewId}`)
   }
 
-  /**
-   * 리뷰 좋아요 토글
-   */
   async toggleReviewLike(reviewId) {
     if (!reviewId) {
       throw new Error('리뷰 ID가 필요합니다.')
@@ -273,9 +297,6 @@ class ProductService extends BaseApiService {
     return await this.post(`/reviews/${reviewId}/like`)
   }
 
-  /**
-   * 리뷰 신고
-   */
   async reportReview(reviewId, reason) {
     if (!reviewId) {
       throw new Error('리뷰 ID가 필요합니다.')
@@ -287,9 +308,6 @@ class ProductService extends BaseApiService {
     return await this.post(`/reviews/${reviewId}/report`, { reason: reason.trim() })
   }
 
-  /**
-   * 리뷰 통계 조회
-   */
   async getReviewStats(productId) {
     if (!productId) {
       throw new Error('상품 ID가 필요합니다.')
@@ -297,10 +315,6 @@ class ProductService extends BaseApiService {
     return await this.get(`/products/${productId}/reviews/stats`)
   }
 
-  /**
-   * 리뷰 이미지 업로드 (파일 서버로 직접 업로드)
-   * ProductCreate와 동일한 방식 사용
-   */
   async uploadReviewImage(file) {
     if (!file) {
       throw new Error('파일이 필요합니다.')
@@ -317,7 +331,6 @@ class ProductService extends BaseApiService {
     const formData = new FormData()
     formData.append('file', file)
 
-    // 파일 서버에 직접 업로드
     console.log('📤 [PRODUCT_SERVICE] 리뷰 이미지 업로드 시작')
     return await this.post('/files/upload', formData, {
       headers: {
@@ -349,20 +362,22 @@ class ProductService extends BaseApiService {
     return cleaned
   }
 
-  normalizeProductListResponse(products) {
-    if (!Array.isArray(products)) return []
+  // ⭐ 단일 상품 정규화 메서드 (백엔드 ProductList 스펙 반영)
+  normalizeProduct(product) {
+    if (!product) return null
 
-    return products.map(product => ({
-      ...product,
-      thumbnailUrl: product.thumbnailDto?.fileUrl || product.thumbnailUrl || null,
-      thumbnail: product.thumbnailDto ? {
-        id: product.thumbnailDto.id,
-        fileUrl: product.thumbnailDto.fileUrl,
-        orgFileNm: product.thumbnailDto.orgFileNm,
-        fileSize: product.thumbnailDto.fileSize,
-        contentType: product.thumbnailDto.contentType
-      } : null
-    }))
+    // ⭐ 백엔드 응답을 그대로 반환 (추가 필드 없이)
+    return product
+  }
+
+  // ⭐ 상품 목록 정규화 메서드
+  normalizeProductListResponse(products) {
+    if (!Array.isArray(products)) {
+      console.warn('⚠️ [PRODUCT_SERVICE] products가 배열이 아닙니다:', products)
+      return []
+    }
+
+    return products.map(product => this.normalizeProduct(product))
   }
 
   // ==================== 검증 메서드 ====================
