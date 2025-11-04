@@ -6,9 +6,9 @@
         <!-- 아바타 -->
         <div class="avatar-wrapper">
           <img
-              v-if="userInfo.profileImageUrl"
-              :src="userInfo.profileImageUrl"
-              :alt="userInfo.nickname"
+              v-if="profileData.profilePicture?.fileUrl"
+              :src="profileData.profilePicture.fileUrl"
+              :alt="profileData.nickname"
               class="avatar"
           />
           <div v-else class="avatar avatar-placeholder">
@@ -16,91 +16,166 @@
               <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
             </svg>
           </div>
-          <span class="level-tag">Lv.{{ userInfo.level || 1 }}</span>
         </div>
 
         <!-- 프로필 정보 -->
         <div class="profile-info">
-          <h1 class="username">{{ userInfo.nickname || '사용자' }}</h1>
-          <p v-if="userInfo.bio" class="bio">{{ userInfo.bio }}</p>
+          <h1 class="username">{{ profileData.nickname || '사용자' }}</h1>
+          <p v-if="profileData.description" class="bio">{{ profileData.description }}</p>
           <div class="meta-info">
             <span class="meta-text">
               <svg class="meta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
-              {{ userInfo.location || '위치 미설정' }}
+              {{ formatJoinDate(profileData.createdAt) }}
             </span>
-            <span class="divider">·</span>
-            <span class="meta-text">{{ userInfo.joinDate || '2024.01' }} 가입</span>
           </div>
         </div>
       </div>
 
       <!-- 팔로우 버튼 -->
       <button
+          v-if="!isOwnProfile"
           class="follow-btn"
-          :class="{ active: isFollowing }"
+          :class="{ active: profileData.isFollowing }"
           @click="handleFollow"
+          :disabled="isFollowLoading"
       >
-        <svg v-if="!isFollowing" class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg v-if="!profileData.isFollowing" class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        {{ isFollowing ? '팔로잉' : '팔로우' }}
+        {{ profileData.isFollowing ? '팔로잉' : '팔로우' }}
       </button>
     </div>
 
     <!-- 통계 바 -->
     <div class="stats-bar">
       <div class="stat">
-        <span class="stat-value">{{ userStats.feeds || 0 }}</span>
-        <span class="stat-label">게시물</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value">{{ formatNumber(userStats.followers) }}</span>
+        <span class="stat-value">{{ formatNumber(profileData.followerCount) }}</span>
         <span class="stat-label">팔로워</span>
       </div>
       <div class="stat">
-        <span class="stat-value">{{ formatNumber(userStats.following) }}</span>
+        <span class="stat-value">{{ formatNumber(profileData.followingCount) }}</span>
         <span class="stat-label">팔로잉</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value">{{ formatNumber(userStats.totalLikes) }}</span>
-        <span class="stat-label">좋아요</span>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { userService, userUtils } from '@/services/UserService'
+import { useAuth } from '@/composables/useAuth'
 
-const props = defineProps({
-  userInfo: {
-    type: Object,
-    required: true
-  },
-  userStats: {
-    type: Object,
-    required: true
-  },
-  isFollowing: {
-    type: Boolean,
-    default: false
+const route = useRoute()
+const router = useRouter()
+const { isLoggedIn, userId } = useAuth()
+
+const profileData = ref({
+  userId: null,
+  nickname: '',
+  description: '',
+  followerCount: 0,
+  followingCount: 0,
+  isFollowing: false,
+  profilePicture: null,
+  createdAt: null,
+  updatedAt: null
+})
+
+const isFollowLoading = ref(false)
+
+// 본인 프로필 여부
+const isOwnProfile = computed(() => {
+  return isLoggedIn.value && userId.value === profileData.value.userId
+})
+
+// 프로필 로드
+const loadProfile = async () => {
+  try {
+    const targetUserId = route.params.userId || userId.value
+
+    if (!targetUserId) {
+      console.error('사용자 ID를 찾을 수 없습니다.')
+      return
+    }
+
+    const response = await userService.getUserProfile(targetUserId)
+
+    if (response.success && response.data) {
+      profileData.value = response.data
+    }
+  } catch (error) {
+    console.error('프로필 로드 실패:', error)
   }
-});
+}
 
-const emit = defineEmits(['follow']);
+// 팔로우 토글
+const handleFollow = async () => {
+  console.log('=== 팔로우 버튼 클릭 ===')
+  console.log('로그인 상태:', isLoggedIn.value)
 
-const handleFollow = () => {
-  emit('follow');
-};
+  // 로그인 체크
+  if (!isLoggedIn.value) {
+    const confirmed = confirm('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?')
 
+    if (confirmed) {
+      console.log('✅ 로그인 페이지로 이동')
+      await router.push({
+        name: 'Login',
+        query: { redirect: route.fullPath }
+      })
+    } else {
+      console.log('❌ 취소됨')
+    }
+    return
+  }
+
+  if (isFollowLoading.value) return
+
+  try {
+    isFollowLoading.value = true
+
+    const response = await userService.toggleFollow(profileData.value.userId)
+
+    if (response.success && response.data) {
+      // 팔로우 상태 업데이트
+      profileData.value.isFollowing = response.data.isFollowing
+
+      // 팔로워 수 업데이트
+      if (response.data.isFollowing) {
+        profileData.value.followerCount++
+      } else {
+        profileData.value.followerCount--
+      }
+
+      console.log('✅ 팔로우 토글 완료:', response.data)
+    }
+  } catch (error) {
+    console.error('❌ 팔로우 토글 실패:', error)
+    alert('팔로우 처리 중 오류가 발생했습니다.')
+  } finally {
+    isFollowLoading.value = false
+  }
+}
+
+// 숫자 포맷팅
 const formatNumber = (num) => {
-  if (!num) return 0;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}k`;
-  return num;
-};
+  return userUtils.formatFollowCount(num)
+}
+
+// 가입일 포맷팅
+const formatJoinDate = (dateString) => {
+  if (!dateString) return '가입일 미상'
+
+  const date = new Date(dateString)
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')} 가입`
+}
+
+onMounted(() => {
+  loadProfile()
+})
 </script>
 
 <style scoped>
@@ -205,28 +280,6 @@ const formatNumber = (num) => {
   height: 40%;
 }
 
-/* 레벨 태그 */
-.level-tag {
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 2px 8px;
-  background: #F97316;
-  color: white;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 10px;
-  white-space: nowrap;
-}
-
-@media (min-width: 768px) {
-  .level-tag {
-    font-size: 11px;
-    padding: 3px 10px;
-  }
-}
-
 /* ==================== 프로필 정보 ==================== */
 .profile-info {
   flex: 1;
@@ -320,10 +373,6 @@ const formatNumber = (num) => {
   }
 }
 
-.divider {
-  color: #DBDBDB;
-}
-
 /* ==================== 팔로우 버튼 ==================== */
 .follow-btn {
   width: 100%;
@@ -352,8 +401,13 @@ const formatNumber = (num) => {
   }
 }
 
-.follow-btn:hover {
+.follow-btn:hover:not(:disabled) {
   background: #1877F2;
+}
+
+.follow-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .follow-btn.active {
@@ -362,7 +416,7 @@ const formatNumber = (num) => {
   border: 1px solid #DBDBDB;
 }
 
-.follow-btn.active:hover {
+.follow-btn.active:hover:not(:disabled) {
   background: #FAFAFA;
 }
 
@@ -374,8 +428,8 @@ const formatNumber = (num) => {
 /* ==================== 통계 바 ==================== */
 .stats-bar {
   display: flex;
-  justify-content: space-around;
-  gap: 16px;
+  justify-content: center;
+  gap: 40px;
   padding-top: 12px;
   border-top: 1px solid #EFEFEF;
 }
@@ -384,7 +438,7 @@ const formatNumber = (num) => {
 @media (min-width: 768px) {
   .stats-bar {
     justify-content: flex-start;
-    gap: 40px;
+    gap: 48px;
     padding-top: 16px;
   }
 }
@@ -392,7 +446,7 @@ const formatNumber = (num) => {
 /* 데스크탑 */
 @media (min-width: 1024px) {
   .stats-bar {
-    gap: 48px;
+    gap: 56px;
     padding-top: 20px;
   }
 }
@@ -478,7 +532,7 @@ const formatNumber = (num) => {
   }
 
   .stats-bar {
-    gap: 12px;
+    gap: 32px;
   }
 
   .stat-label {
