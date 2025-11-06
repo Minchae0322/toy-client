@@ -1,8 +1,7 @@
 <template>
-  <div>
-    <!-- Category & View Controls -->
+  <div class="filter-container">
+    <!-- 메인 필터 바 -->
     <div class="controls-section">
-      <!-- 전체 버튼 (showAllButton prop이 true일 때만) -->
       <div class="category-tabs">
         <button
             v-if="showAllButton"
@@ -19,17 +18,47 @@
             :class="['category-tab', { active: selectedCategory?.categoryId === category.categoryId }]"
         >
           {{ category.categoryName }}
-          <svg v-if="category.children && category.children.length > 0"
-               class="chevron"
-               :class="{ rotated: showSubCategories && selectedCategory?.categoryId === category.categoryId }"
-               viewBox="0 0 16 16"
-               fill="currentColor">
+          <svg
+              v-if="category.children && category.children.length > 0"
+              class="chevron"
+              :class="{ rotated: showSubCategories && selectedCategory?.categoryId === category.categoryId }"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+          >
             <path d="M4.293 5.293a1 1 0 011.414 0L8 7.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
           </svg>
         </button>
       </div>
 
-
+      <!-- View Toggle -->
+      <div v-if="showViewToggle" class="view-toggle">
+        <button
+            @click="$emit('update:viewMode', 'feed')"
+            :class="['view-btn', { active: viewMode === 'feed' }]"
+        >
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          피드
+        </button>
+        <button
+            @click="$emit('update:viewMode', 'grid')"
+            :class="['view-btn', { active: viewMode === 'grid' }]"
+        >
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          그리드
+        </button>
+      </div>
     </div>
 
     <!-- Sub-category -->
@@ -92,13 +121,13 @@ const handleAllClick = () => {
 };
 
 const handleCategoryClick = (category) => {
-  selectedCategory.value = category;
-  selectedSubCategory.value = null;
-
-  if (category.children && category.children.length > 0) {
-    showSubCategories.value = true;
+  // 이미 선택된 카테고리를 다시 클릭하면 서브카테고리 토글
+  if (selectedCategory.value?.categoryId === category.categoryId) {
+    showSubCategories.value = !showSubCategories.value;
   } else {
-    showSubCategories.value = false;
+    selectedCategory.value = category;
+    selectedSubCategory.value = null;
+    showSubCategories.value = category.children?.length > 0;
   }
 
   emit('category-change', {
@@ -117,28 +146,34 @@ const handleSubCategoryClick = (subCategory) => {
 </script>
 
 <style scoped>
-/* CSS Variables - 부모에서 정의된 변수 사용 */
+.filter-container {
+  background: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* 메인 컨트롤 섹션 */
 .controls-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 20px 20px 0;
-  background: var(--card, #FFFFFF);
-  border-bottom: 1px solid var(--border, #F0F0F3);
+  gap: 12px;
+  padding: 12px 20px 0;
+  background: #fafbfc;
+  border-bottom: 1px solid #e8e8e8;
 }
 
 @media (min-width: 1024px) {
   .controls-section {
-    padding: 24px 40px 0;
+    padding: 16px 40px 0;
   }
 }
 
+/* 카테고리 탭 */
 .category-tabs {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 16px;
+  padding-bottom: 12px;
   scrollbar-width: none;
   flex: 1;
 }
@@ -148,36 +183,42 @@ const handleSubCategoryClick = (subCategory) => {
 }
 
 .category-tab {
-  padding: 10px 18px;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--secondary, #737380);
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #666666;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .category-tab:hover {
-  background: var(--hover, #F5F5F7);
-  color: var(--primary, #1A1A1A);
+  background: #f5f5f5;
+  color: #333333;
 }
 
 .category-tab.active {
-  background: var(--primary, #1A1A1A);
-  color: white;
+  background: #2a2a2a;
+  color: #ffffff;
+  border-color: #2a2a2a;
+}
+
+.category-tab.active:hover {
+  background: #1a1a1a;
 }
 
 .category-tab .chevron {
   width: 16px;
   height: 16px;
-  transition: transform 0.2s;
+  transition: transform 0.15s;
+  opacity: 0.6;
 }
 
 .category-tab .chevron.rotated {
@@ -187,10 +228,10 @@ const handleSubCategoryClick = (subCategory) => {
 /* View Toggle */
 .view-toggle {
   display: none;
-  background: var(--bg, #FAFBFC);
-  border-radius: 12px;
-  padding: 4px;
-  gap: 4px;
+  gap: 2px;
+  padding: 2px;
+  background: #e8e8e8;
+  border-radius: 6px;
 }
 
 @media (min-width: 1024px) {
@@ -202,41 +243,42 @@ const handleSubCategoryClick = (subCategory) => {
 .view-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 4px;
+  padding: 7px 12px;
   background: transparent;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--secondary, #737380);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #999999;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   font-family: inherit;
 }
 
 .view-btn:hover {
-  color: var(--primary, #1A1A1A);
+  background: #d8d8d8;
+  color: #666666;
 }
 
 .view-btn.active {
-  background: white;
-  color: var(--primary, #1A1A1A);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  color: #333333;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .view-btn .icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
-/* Sub Category */
+/* 서브 카테고리 섹션 */
 .sub-category-section {
   display: flex;
-  gap: 8px;
-  padding: 16px 20px;
-  background: var(--card, #FFFFFF);
-  border-bottom: 1px solid var(--border, #F0F0F3);
+  gap: 6px;
+  padding: 12px 20px;
+  background: #f8f8f8;
+  border-bottom: 1px solid #e8e8e8;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -247,32 +289,38 @@ const handleSubCategoryClick = (subCategory) => {
 
 @media (min-width: 1024px) {
   .sub-category-section {
-    padding: 16px 40px 20px;
+    padding: 12px 40px 16px;
   }
 }
 
 .sub-tab {
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: var(--bg, #FAFBFC);
-  color: var(--secondary, #737380);
-  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #666666;
+  border: 1px solid #e0e0e0;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   font-family: inherit;
 }
 
 .sub-tab:hover {
-  background: var(--hover, #F5F5F7);
-  color: var(--primary, #1A1A1A);
+  border-color: #c0c0c0;
+  background: #fafafa;
+  color: #333333;
 }
 
 .sub-tab.active {
-  background: #FFF7ED;
-  color: var(--accent, #FF6B35);
-  border: 1px solid var(--accent, #FF6B35);
+  background: #4a4a4a;
+  color: #ffffff;
+  border-color: #4a4a4a;
+}
+
+.sub-tab.active:hover {
+  background: #3a3a3a;
+  border-color: #3a3a3a;
 }
 </style>
