@@ -7,40 +7,6 @@
     <main class="main-content">
       <!-- 통합 헤더 -->
       <header class="main-header">
-        <div class="header-top">
-          <h1 class="header-title">
-            <span class="title-icon">⚔️</span>
-            월간 배틀
-          </h1>
-
-          <div class="header-actions">
-            <!-- 검색 -->
-            <button class="header-search">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M9 17A8 8 0 109 1a8 8 0 000 16zM19 19l-4.35-4.35"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </button>
-
-            <!-- 알림 -->
-            <button class="header-notification">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/>
-                <path d="M8 16.5a2 2 0 104 0"/>
-              </svg>
-              <span class="notification-badge">3</span>
-            </button>
-
-            <!-- 배틀 만들기 -->
-            <button class="create-battle-btn" @click="handleCreateBattle">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              <span>배틀 만들기</span>
-            </button>
-          </div>
-        </div>
-
         <!-- 탭 네비게이션 -->
         <nav class="tab-navigation">
           <div class="tabs-group">
@@ -110,12 +76,22 @@
               <span class="section-count">{{ formatCount(totalCount) }}</span>
             </h2>
 
-            <!-- 정렬 옵션 -->
-            <select class="sort-select">
-              <option value="latest">최신순</option>
-              <option value="popular">인기순</option>
-              <option value="ending">마감임박순</option>
-            </select>
+            <div class="header-right">
+              <!-- 정렬 옵션 -->
+              <select class="sort-select">
+                <option value="latest">최신순</option>
+                <option value="popular">인기순</option>
+                <option value="ending">마감임박순</option>
+              </select>
+
+              <!-- 배틀 만들기 버튼 -->
+              <button class="create-battle-btn" @click="handleCreateBattle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>배틀 만들기</span>
+              </button>
+            </div>
           </div>
 
           <BattleList
@@ -429,7 +405,7 @@ onUnmounted(() => {
   }
 }
 
-/* 메인 컨텐츠 - 최대 너비 확장 */
+/* 메인 컨텐츠 */
 .main-content {
   flex: 1;
   max-width: 1400px;
@@ -452,104 +428,6 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   z-index: 30;
-}
-
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 20px;
-  font-weight: 700;
-  color: #111827;
-  letter-spacing: -0.01em;
-}
-
-.title-icon {
-  font-size: 24px;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.header-search,
-.header-notification {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
-  color: #6B7280;
-  cursor: pointer;
-  transition: all 0.15s;
-  position: relative;
-}
-
-.header-search:hover,
-.header-notification:hover {
-  background: #F9FAFB;
-  border-color: #D1D5DB;
-}
-
-.notification-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 16px;
-  height: 16px;
-  background: #EF4444;
-  color: white;
-  font-size: 9px;
-  font-weight: 700;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid white;
-}
-
-.create-battle-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: #111827;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.create-battle-btn:hover {
-  background: #1F2937;
-}
-
-@media (max-width: 640px) {
-  .create-battle-btn span {
-    display: none;
-  }
-
-  .create-battle-btn {
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    justify-content: center;
-  }
 }
 
 /* 탭 네비게이션 */
@@ -650,9 +528,14 @@ onUnmounted(() => {
   }
 }
 
-/* 배틀 섹션 */
+/* 배틀 섹션 - HOT 섹션이 있을 때 간격 조정 */
 .battles-section {
-  margin-top: 24px;
+  margin-top: 0;
+}
+
+/* HOT 섹션이 없을 때는 상단 간격 추가 */
+.content-wrapper > .battles-section:first-child {
+  margin-top: 0;
 }
 
 .section-header {
@@ -660,6 +543,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .section-title {
@@ -679,6 +568,64 @@ onUnmounted(() => {
   font-size: 11px;
   font-weight: 700;
   border-radius: 4px;
+}
+
+.create-battle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #111827;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.create-battle-btn:hover {
+  background: #1F2937;
+  transform: translateY(-1px);
+}
+
+.create-battle-btn:active {
+  transform: translateY(0);
+}
+
+.create-battle-btn svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .header-right {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 640px) {
+  .create-battle-btn span {
+    display: none;
+  }
+
+  .create-battle-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .section-title {
+    font-size: 15px;
+  }
+
+  .section-count {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
 }
 
 .sort-select {
