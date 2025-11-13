@@ -29,36 +29,6 @@
           </svg>
         </button>
       </div>
-
-      <!-- View Toggle -->
-      <div v-if="showViewToggle" class="view-toggle">
-        <button
-            @click="$emit('update:viewMode', 'feed')"
-            :class="['view-btn', { active: viewMode === 'feed' }]"
-        >
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6"></line>
-            <line x1="8" y1="12" x2="21" y2="12"></line>
-            <line x1="8" y1="18" x2="21" y2="18"></line>
-            <line x1="3" y1="6" x2="3.01" y2="6"></line>
-            <line x1="3" y1="12" x2="3.01" y2="12"></line>
-            <line x1="3" y1="18" x2="3.01" y2="18"></line>
-          </svg>
-          피드
-        </button>
-        <button
-            @click="$emit('update:viewMode', 'grid')"
-            :class="['view-btn', { active: viewMode === 'grid' }]"
-        >
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
-          그리드
-        </button>
-      </div>
     </div>
 
     <!-- Sub-category -->
