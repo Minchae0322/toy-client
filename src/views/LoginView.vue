@@ -1,489 +1,1638 @@
 <template>
-  <div class="login-wrapper">
-    <div class="login-container">
-      <h1 class="title">로그인</h1>
-      <p class="subtitle">계정에 로그인하세요</p>
+  <div class="auth-wrapper">
+    <div class="auth-container">
+      <!-- 로고 영역 -->
+      <div class="logo-area">
+        <div class="logo">
+          <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
+            <rect width="48" height="48" rx="12" fill="url(#gradient)"/>
+            <path d="M24 14L32 20V28L24 34L16 28V20L24 14Z" fill="white"/>
+            <defs>
+              <linearGradient id="gradient" x1="0" y1="0" x2="48" y2="48">
+                <stop offset="0%" stop-color="#5B5FCF"/>
+                <stop offset="100%" stop-color="#3F43A4"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h1 class="brand-name">SERVICE</h1>
+      </div>
 
-      <!-- 🚨 세션 만료 알림 -->
-      <div v-if="sessionExpired" class="alert alert-warning">
-        <div class="alert-icon">⏰</div>
-        <div>
-          <strong>세션이 만료되었습니다</strong>
-          <p>보안을 위해 다시 로그인해주세요.</p>
+      <!-- 탭 컨테이너 -->
+      <div class="tab-container">
+        <div class="tab-header">
+          <button
+              class="tab-btn"
+              :class="{ active: activeTab === 'login' }"
+              @click="switchTab('login')"
+          >
+            로그인
+          </button>
+          <button
+              class="tab-btn"
+              :class="{ active: activeTab === 'register' }"
+              @click="switchTab('register')"
+          >
+            회원가입
+          </button>
+        </div>
+
+        <!-- 탭 콘텐츠 영역 -->
+        <div class="tab-content">
+          <!-- 로그인 폼 -->
+          <transition name="fade" mode="out-in">
+            <form v-if="activeTab === 'login'" key="login" @submit.prevent="handleLogin" class="auth-form">
+              <!-- 세션 만료 알림 -->
+              <transition name="slide">
+                <div v-if="sessionExpired" class="notification warning">
+                  <div class="notification-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 3a1 1 0 011 1v4a1 1 0 01-2 0V6a1 1 0 011-1zm0 8a1 1 0 100-2 1 1 0 000 2z"/>
+                    </svg>
+                  </div>
+                  <div class="notification-content">
+                    <strong>세션 만료</strong>
+                    <p>보안을 위해 다시 로그인해주세요</p>
+                  </div>
+                </div>
+              </transition>
+
+              <!-- 이메일 입력 -->
+              <div class="input-group">
+                <label class="input-label">
+                  이메일 주소
+                  <span class="required">*</span>
+                </label>
+                <div class="input-wrapper">
+                  <input
+                      type="email"
+                      v-model="loginForm.email"
+                      placeholder="name@example.com"
+                      required
+                      autocomplete="email"
+                      :disabled="loading"
+                      :class="{ error: loginForm.emailError }"
+                      @blur="validateLoginEmail"
+                  />
+                  <div class="input-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" stroke="currentColor" stroke-width="1.5"/>
+                      <path d="M3 5l7 5 7-5" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                  </div>
+                </div>
+                <span v-if="loginForm.emailError" class="error-msg">
+                  올바른 이메일 형식을 입력해주세요
+                </span>
+              </div>
+
+              <!-- 비밀번호 입력 -->
+              <div class="input-group">
+                <div class="label-wrapper">
+                  <label class="input-label">
+                    비밀번호
+                    <span class="required">*</span>
+                  </label>
+                  <button type="button" class="text-btn" @click="handleForgotPassword">
+                    비밀번호를 잊으셨나요?
+                  </button>
+                </div>
+                <div class="input-wrapper">
+                  <input
+                      :type="loginForm.showPassword ? 'text' : 'password'"
+                      v-model="loginForm.password"
+                      placeholder="비밀번호를 입력하세요"
+                      required
+                      autocomplete="current-password"
+                      :disabled="loading"
+                  />
+                  <div class="input-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <rect x="5" y="9" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                      <path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <button
+                      type="button"
+                      class="toggle-btn"
+                      @click="loginForm.showPassword = !loginForm.showPassword"
+                      tabindex="-1"
+                  >
+                    <svg v-if="!loginForm.showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 3l18 18M10.5 10.677a2 2 0 002.823 2.823"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 로그인 옵션 -->
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="loginForm.rememberMe" />
+                  <span class="checkbox-box">
+                    <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                      <path d="M1 5L4.5 8.5L11 1.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>로그인 상태 유지</span>
+                </label>
+              </div>
+
+              <!-- 로그인 버튼 -->
+              <button type="submit" class="submit-btn primary" :disabled="loading || !canLogin">
+                <svg v-if="loading" class="spinner" width="20" height="20" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="40">
+                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                  </circle>
+                </svg>
+                <span>{{ loading ? '로그인 중...' : '로그인' }}</span>
+              </button>
+
+              <!-- 에러 메시지 -->
+              <transition name="shake">
+                <div v-if="loginForm.errorMessage" class="alert-box error">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 12H7v-2h2v2zm0-3H7V4h2v5z"/>
+                  </svg>
+                  {{ loginForm.errorMessage }}
+                </div>
+              </transition>
+
+              <!-- 소셜 로그인 섹션 -->
+              <div class="social-section">
+                <div class="divider-text">간편 로그인</div>
+                <div class="social-buttons">
+                  <button type="button" class="social-btn" @click="handleSocialLogin('google')">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Google
+                  </button>
+                  <button type="button" class="social-btn" @click="handleSocialLogin('github')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                    GitHub
+                  </button>
+                  <button type="button" class="social-btn kakao" @click="handleSocialLogin('kakao')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
+                      <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 01-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z"/>
+                    </svg>
+                    Kakao
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- 회원가입 폼 -->
+            <form v-else key="register" @submit.prevent="handleRegister" class="auth-form">
+              <!-- 이메일 입력 & 인증 -->
+              <div class="input-group">
+                <label class="input-label">
+                  이메일 주소
+                  <span class="required">*</span>
+                </label>
+                <div class="input-with-action">
+                  <div class="input-wrapper">
+                    <input
+                        type="email"
+                        v-model="registerForm.email"
+                        placeholder="name@example.com"
+                        required
+                        :disabled="loading || registerForm.emailVerified"
+                        :class="{ error: registerForm.emailError, success: registerForm.emailVerified }"
+                        @blur="validateRegisterEmail"
+                    />
+                    <div class="input-icon">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M3 5l7 5 7-5" stroke="currentColor" stroke-width="1.5"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <button
+                      type="button"
+                      class="action-btn"
+                      :class="{ success: registerForm.emailVerified }"
+                      :disabled="!registerForm.email || registerForm.emailError || registerForm.emailVerified || loading"
+                      @click="sendVerificationCode"
+                  >
+                    {{ registerForm.emailVerified ? '인증완료' : '인증번호 발송' }}
+                  </button>
+                </div>
+                <span v-if="registerForm.emailError" class="error-msg">
+                  올바른 이메일 형식을 입력해주세요
+                </span>
+              </div>
+
+              <!-- 인증번호 입력 영역 -->
+              <transition name="expand">
+                <div v-if="registerForm.verificationSent && !registerForm.emailVerified" class="verification-section">
+                  <div class="verification-header">
+                    <span class="verification-title">인증번호 입력</span>
+                    <span class="verification-timer" :class="{ warning: verificationTimer < 60 }">
+                      {{ formatTimer(verificationTimer) }}
+                    </span>
+                  </div>
+                  <div class="verification-inputs">
+                    <input
+                        v-for="(_, index) in 6"
+                        :key="index"
+                        :ref="el => verificationInputs[index] = el"
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric"
+                        pattern="[0-9]"
+                        class="code-input"
+                        :disabled="loading"
+                        @input="handleVerificationInput(index, $event)"
+                        @keydown="handleVerificationKeydown(index, $event)"
+                    />
+                  </div>
+                  <div class="verification-footer">
+                    <button type="button" class="text-btn" :disabled="loading" @click="verifyCode">
+                      인증하기
+                    </button>
+                    <span class="separator">·</span>
+                    <button type="button" class="text-btn" :disabled="loading" @click="sendVerificationCode">
+                      재발송
+                    </button>
+                  </div>
+                </div>
+              </transition>
+
+              <!-- 인증 성공 메시지 -->
+              <transition name="slide">
+                <div v-if="registerForm.emailVerified" class="notification success">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                  </svg>
+                  이메일 인증이 완료되었습니다
+                </div>
+              </transition>
+
+              <!-- 비밀번호 입력 -->
+              <div class="input-group">
+                <label class="input-label">
+                  비밀번호
+                  <span class="required">*</span>
+                </label>
+                <div class="input-wrapper">
+                  <input
+                      :type="registerForm.showPassword ? 'text' : 'password'"
+                      v-model="registerForm.password"
+                      placeholder="8자 이상, 영문/숫자/특수문자"
+                      required
+                      :disabled="loading"
+                      @input="checkPasswordStrength"
+                  />
+                  <div class="input-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <rect x="5" y="9" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                      <path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <button
+                      type="button"
+                      class="toggle-btn"
+                      @click="registerForm.showPassword = !registerForm.showPassword"
+                      tabindex="-1"
+                  >
+                    <svg v-if="!registerForm.showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 3l18 18M10.5 10.677a2 2 0 002.823 2.823"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- 비밀번호 강도 표시 -->
+                <div class="password-strength-container">
+                  <div class="strength-bars">
+                    <div class="strength-bar" :class="{ active: passwordStrength >= 1 }"></div>
+                    <div class="strength-bar" :class="{ active: passwordStrength >= 2 }"></div>
+                    <div class="strength-bar" :class="{ active: passwordStrength >= 3 }"></div>
+                  </div>
+                  <span class="strength-text" :class="passwordStrengthClass">
+                    {{ passwordStrengthText }}
+                  </span>
+                </div>
+
+                <!-- 비밀번호 체크리스트 -->
+                <div class="checklist">
+                  <div class="check-item" :class="{ checked: passwordChecks.length }">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <circle cx="8" cy="8" r="8" />
+                      <path d="M5 8L7 10L11 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>8자 이상</span>
+                  </div>
+                  <div class="check-item" :class="{ checked: passwordChecks.number }">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <circle cx="8" cy="8" r="8" />
+                      <path d="M5 8L7 10L11 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>숫자 포함</span>
+                  </div>
+                  <div class="check-item" :class="{ checked: passwordChecks.special }">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <circle cx="8" cy="8" r="8" />
+                      <path d="M5 8L7 10L11 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>특수문자 포함</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 비밀번호 확인 -->
+              <div class="input-group">
+                <label class="input-label">
+                  비밀번호 확인
+                  <span class="required">*</span>
+                </label>
+                <div class="input-wrapper">
+                  <input
+                      :type="registerForm.showPassword ? 'text' : 'password'"
+                      v-model="registerForm.passwordConfirm"
+                      placeholder="비밀번호를 다시 입력하세요"
+                      required
+                      :disabled="loading"
+                      :class="{ error: registerForm.passwordError && registerForm.passwordConfirm }"
+                      @blur="checkPasswordMatch"
+                  />
+                  <div class="input-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <rect x="5" y="9" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                      <path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      <path d="M10 13v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                </div>
+                <span v-if="registerForm.passwordError && registerForm.passwordConfirm" class="error-msg">
+                  비밀번호가 일치하지 않습니다
+                </span>
+              </div>
+
+              <!-- 약관 동의 -->
+              <div class="terms-section">
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="registerForm.agreeTerms" />
+                  <span class="checkbox-box">
+                    <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                      <path d="M1 5L4.5 8.5L11 1.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>
+                    <a href="#" class="link" @click.prevent>이용약관</a> 및
+                    <a href="#" class="link" @click.prevent>개인정보처리방침</a>에 동의합니다
+                  </span>
+                </label>
+              </div>
+
+              <!-- 회원가입 버튼 -->
+              <button type="submit" class="submit-btn primary" :disabled="loading || !canRegister">
+                <svg v-if="loading" class="spinner" width="20" height="20" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="40">
+                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                  </circle>
+                </svg>
+                <span>{{ loading ? '가입 중...' : '회원가입' }}</span>
+              </button>
+
+              <!-- 에러 메시지 -->
+              <transition name="shake">
+                <div v-if="registerForm.errorMessage" class="alert-box error">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 12H7v-2h2v2zm0-3H7V4h2v5z"/>
+                  </svg>
+                  {{ registerForm.errorMessage }}
+                </div>
+              </transition>
+            </form>
+          </transition>
         </div>
       </div>
 
-      <!-- 🔄 토큰 갱신 실패 알림 -->
-      <div v-if="tokenRefreshFailed" class="alert alert-error">
-        <div class="alert-icon">🔒</div>
-        <div>
-          <strong>인증이 만료되었습니다</strong>
-          <p>다시 로그인해주세요.</p>
-        </div>
-      </div>
-
-      <form @submit.prevent="handleLogin" class="login-form">
-        <div class="form-group">
-          <label for="email">이메일</label>
-          <input
-              id="email"
-              type="email"
-              v-model="email"
-              placeholder="name@example.com"
-              required
-              autocomplete="email"
-              :disabled="loading"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="password">비밀번호</label>
-          <input
-              id="password"
-              type="password"
-              v-model="password"
-              required
-              autocomplete="current-password"
-              :disabled="loading"
-          />
-        </div>
-
-        <button type="submit" class="submit-button" :disabled="loading">
-          <span v-if="loading" class="loading-spinner"></span>
-          {{ getLoadingText() }}
+      <!-- 개발자 도구 -->
+      <div v-if="isDev" class="dev-panel">
+        <button @click="debugAuth" class="dev-button">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          인증 상태
         </button>
-
-        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
-      </form>
-
-      <div class="divider">또는 다음으로 계속</div>
-
-      <button class="google-login" @click="handleSocialLogin('google')" :disabled="loading">
-        Google로 로그인
-      </button>
-
-      <button class="github-login" @click="handleSocialLogin('github')" :disabled="loading">
-        GitHub로 로그인
-      </button>
-
-      <div class="footer">
-        계정이 없으신가요?
-        <router-link to="/register" class="register-link">회원가입</router-link>
-      </div>
-
-      <!-- 🔧 개발용 디버그 버튼 -->
-      <div v-if="isDev" class="debug-section">
-        <button @click="debugAuth" class="debug-btn">인증 상태 디버그</button>
-        <button @click="clearAuth" class="debug-btn">인증 정보 초기화</button>
+        <button @click="clearAuth" class="dev-button">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"/>
+          </svg>
+          초기화
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import * as authUtils from '@/utils/auth.js'
-import { authService } from '@/services/AuthService.js'  // 추가
+import { authService } from '@/services/AuthService.js'
 
 const router = useRouter()
 const route = useRoute()
 const { login, isLoggedIn } = useAuth()
 
-// 반응형 데이터
-const email = ref('')
-const password = ref('')
-const errorMessage = ref('')
+// 탭 상태
+const activeTab = ref('login')
+
+// 로그인 폼
+const loginForm = ref({
+  email: '',
+  password: '',
+  rememberMe: false,
+  showPassword: false,
+  emailError: false,
+  errorMessage: ''
+})
+
+// 회원가입 폼
+const registerForm = ref({
+  email: '',
+  password: '',
+  passwordConfirm: '',
+  showPassword: false,
+  emailError: false,
+  passwordError: false,
+  emailVerified: false,
+  verificationSent: false,
+  verificationToken: '', // 이메일 인증 토큰 저장
+  agreeTerms: false,
+  errorMessage: ''
+})
+
+// 비밀번호 체크
+const passwordChecks = ref({
+  length: false,
+  number: false,
+  special: false
+})
+
+// 인증번호 관련
+const verificationInputs = ref([])
+const verificationTimer = ref(180)
+const timerInterval = ref(null)
+
+// 기타 상태
 const loading = ref(false)
-const wsConnecting = ref(false)
 
-// 컴퓨티드 속성
+// 계산된 속성
 const redirectPath = computed(() => route.query.redirect || '/home')
-
-// 🚨 세션 만료 체크
-const sessionExpired = computed(() => {
-  return route.query.reason === 'session_expired'
-})
-
-// 🔒 토큰 갱신 실패 체크
-const tokenRefreshFailed = computed(() => {
-  return route.query.reason === 'refresh_failed'
-})
-
-// 개발 환경 확인
+const sessionExpired = computed(() => route.query.reason === 'session_expired')
 const isDev = computed(() => import.meta.env.DEV)
 
-// ✅ 로딩 텍스트 동적 변경
-const getLoadingText = () => {
-  if (wsConnecting.value) {
-    return '실시간 연결 중...'
-  }
-  return loading.value ? '로그인 중...' : '로그인'
+const canLogin = computed(() =>
+    loginForm.value.email &&
+    loginForm.value.password &&
+    !loginForm.value.emailError
+)
+
+const canRegister = computed(() =>
+    registerForm.value.email &&
+    registerForm.value.password &&
+    registerForm.value.passwordConfirm &&
+    registerForm.value.emailVerified &&
+    !registerForm.value.emailError &&
+    !registerForm.value.passwordError &&
+    registerForm.value.agreeTerms &&
+    passwordStrength.value === 3
+)
+
+const passwordStrength = computed(() => {
+  return Object.values(passwordChecks.value).filter(Boolean).length
+})
+
+const passwordStrengthClass = computed(() => {
+  if (passwordStrength.value === 0) return ''
+  if (passwordStrength.value === 1) return 'weak'
+  if (passwordStrength.value === 2) return 'medium'
+  return 'strong'
+})
+
+const passwordStrengthText = computed(() => {
+  if (!registerForm.value.password) return ''
+  if (passwordStrength.value === 1) return '약함'
+  if (passwordStrength.value === 2) return '보통'
+  if (passwordStrength.value === 3) return '강함'
+  return ''
+})
+
+// 메서드
+const switchTab = (tab) => {
+  activeTab.value = tab
+  loginForm.value.errorMessage = ''
+  registerForm.value.errorMessage = ''
 }
 
-// 로그인 처리 (단순화된 버전)
-const handleLogin = async () => {
-  if (loading.value) return
+const validateLoginEmail = () => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (loginForm.value.email) {
+    loginForm.value.emailError = !emailRegex.test(loginForm.value.email)
+  }
+}
+
+const validateRegisterEmail = () => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (registerForm.value.email) {
+    registerForm.value.emailError = !emailRegex.test(registerForm.value.email)
+  }
+}
+
+const checkPasswordStrength = () => {
+  const password = registerForm.value.password
+  passwordChecks.value.length = password.length >= 8
+  passwordChecks.value.number = /\d/.test(password)
+  passwordChecks.value.special = /[@$!%*#?&]/.test(password)
+}
+
+const checkPasswordMatch = () => {
+  if (registerForm.value.passwordConfirm) {
+    registerForm.value.passwordError =
+        registerForm.value.password !== registerForm.value.passwordConfirm
+  }
+}
+
+// 1단계: 이메일 인증 코드 발송
+const sendVerificationCode = async () => {
+  if (registerForm.value.emailError || !registerForm.value.email) return
 
   loading.value = true
-  errorMessage.value = ''
+  registerForm.value.errorMessage = ''
 
   try {
-    console.log('🔑 [Login] 로그인 시작...')
+    const response = await authService.sendVerificationCode(registerForm.value.email)
 
+    if (response.success) {
+      console.log('✅ 인증번호 발송 성공')
+      registerForm.value.verificationSent = true
+
+      // 타이머 시작
+      verificationTimer.value = 180
+      if (timerInterval.value) clearInterval(timerInterval.value)
+      timerInterval.value = setInterval(() => {
+        if (verificationTimer.value > 0) {
+          verificationTimer.value--
+        } else {
+          clearInterval(timerInterval.value)
+          registerForm.value.verificationSent = false
+          registerForm.value.errorMessage = '인증 시간이 만료되었습니다. 다시 시도해주세요.'
+        }
+      }, 1000)
+    } else {
+      throw new Error(response.message || '인증 코드 발송에 실패했습니다')
+    }
+  } catch (error) {
+    console.error('❌ 인증 코드 발송 실패:', error)
+    registerForm.value.errorMessage = error.message || '인증 코드 발송 중 오류가 발생했습니다'
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleVerificationInput = (index, event) => {
+  const value = event.target.value
+
+  // 숫자만 입력 가능하도록
+  if (value && !/^\d$/.test(value)) {
+    event.target.value = ''
+    return
+  }
+
+  if (value && index < 5) {
+    verificationInputs.value[index + 1]?.focus()
+  }
+}
+
+const handleVerificationKeydown = (index, event) => {
+  if (event.key === 'Backspace' && !event.target.value && index > 0) {
+    verificationInputs.value[index - 1]?.focus()
+  }
+}
+
+// 2단계: 인증 코드 검증
+const verifyCode = async () => {
+  const code = verificationInputs.value
+  .map(input => input?.value || '')
+  .join('')
+
+  if (code.length !== 6) {
+    registerForm.value.errorMessage = '6자리 인증 코드를 입력해주세요'
+    return
+  }
+
+  loading.value = true
+  registerForm.value.errorMessage = ''
+
+  try {
+    const response = await authService.verifyEmailCode(registerForm.value.email, code)
+
+    if (response.success && response.data) {
+      console.log('✅ 이메일 인증 성공')
+      registerForm.value.emailVerified = true
+      registerForm.value.verificationToken = response.data
+      registerForm.value.verificationSent = false
+      clearInterval(timerInterval.value)
+    } else {
+      throw new Error(response.message || '인증 코드가 올바르지 않습니다')
+    }
+  } catch (error) {
+    console.error('❌ 인증 코드 검증 실패:', error)
+    registerForm.value.errorMessage = error.message || '인증 코드 확인 중 오류가 발생했습니다'
+
+    // 입력 필드 초기화
+    verificationInputs.value.forEach(input => {
+      if (input) input.value = ''
+    })
+    verificationInputs.value[0]?.focus()
+  } finally {
+    loading.value = false
+  }
+}
+
+const formatTimer = (seconds) => {
+  const min = Math.floor(seconds / 60)
+  const sec = seconds % 60
+  return `${min}:${sec.toString().padStart(2, '0')}`
+}
+
+const handleForgotPassword = () => {
+  console.log('비밀번호 찾기')
+}
+
+const handleLogin = async () => {
+  if (loading.value || !canLogin.value) return
+
+  loading.value = true
+  loginForm.value.errorMessage = ''
+
+  try {
     const response = await authService.login({
-      email: email.value,
-      password: password.value
+      email: loginForm.value.email,
+      password: loginForm.value.password
     })
 
-    // 토큰과 사용자 정보 추출
     const { accessToken, refreshToken, user } = response.data
 
     if (!accessToken) {
       throw new Error('액세스 토큰을 받지 못했습니다')
     }
 
-    // 사용자 정보 기본값 설정
     const userInfo = user || {
       id: Date.now(),
-      email: email.value,
-      nickname: email.value.split('@')[0],
+      email: loginForm.value.email,
+      nickname: loginForm.value.email.split('@')[0],
       role: 'USER',
       profileImage: null
     }
 
-    console.log('✅ [Login] 로그인 성공, 토큰 저장 중...')
-
-    // 🔥 useAuth를 통한 로그인 처리
     login({ accessToken, refreshToken }, userInfo)
-
-    console.log('🚀 [Login] 로그인 완료, 리다이렉트 중...')
-
-    // 🔥 즉시 리다이렉트 (WebSocket은 나중에)
     await router.push(redirectPath.value)
 
   } catch (error) {
-    console.error('❌ [Login] 로그인 오류:', error)
+    console.error('로그인 오류:', error)
 
     if (error.response?.status === 401) {
-      errorMessage.value = '이메일 또는 비밀번호가 올바르지 않습니다.'
+      loginForm.value.errorMessage = '이메일 또는 비밀번호가 올바르지 않습니다'
     } else if (error.response?.status === 403) {
-      errorMessage.value = '계정이 비활성화되었습니다. 관리자에게 문의하세요.'
-    } else if (error.response?.status >= 500) {
-      errorMessage.value = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      loginForm.value.errorMessage = '계정이 비활성화되었습니다'
     } else {
-      errorMessage.value = error.message || '로그인 중 오류가 발생했습니다.'
+      loginForm.value.errorMessage = '로그인 중 오류가 발생했습니다'
     }
   } finally {
     loading.value = false
-    wsConnecting.value = false
   }
 }
 
-// 소셜 로그인
+// 3단계: 회원가입
+const handleRegister = async () => {
+  if (loading.value || !canRegister.value) return
+
+  loading.value = true
+  registerForm.value.errorMessage = ''
+
+  try {
+    const response = await authService.signup({
+      email: registerForm.value.email,
+      password: registerForm.value.password,
+      verificationToken: registerForm.value.verificationToken
+    })
+
+    if (response.success) {
+      console.log('✅ 회원가입 성공:', response.data)
+      alert('회원가입이 완료되었습니다. 로그인해주세요.')
+
+      // 로그인 탭으로 전환하고 이메일 자동 입력
+      switchTab('login')
+      loginForm.value.email = registerForm.value.email
+
+      // 폼 초기화
+      registerForm.value = {
+        email: '',
+        password: '',
+        passwordConfirm: '',
+        showPassword: false,
+        emailError: false,
+        passwordError: false,
+        emailVerified: false,
+        verificationSent: false,
+        verificationToken: '',
+        agreeTerms: false,
+        errorMessage: ''
+      }
+    } else {
+      throw new Error(response.message || '회원가입에 실패했습니다')
+    }
+
+  } catch (error) {
+    console.error('회원가입 오류:', error)
+
+    if (error.response?.status === 409) {
+      registerForm.value.errorMessage = '이미 사용중인 이메일입니다'
+    } else if (error.response?.status === 400) {
+      registerForm.value.errorMessage = error.response?.data?.message || '입력 정보를 확인해주세요'
+    } else {
+      registerForm.value.errorMessage = error.message || '회원가입 중 오류가 발생했습니다'
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
 const handleSocialLogin = (provider) => {
   if (loading.value) return
-
-  console.log(`🔗 [Login] ${provider} 소셜 로그인 시작`)
 
   const AUTH_BASE_URL = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8081'
   const redirectUrl = `${AUTH_BASE_URL}/api/oauth2/authorization/${provider}`
 
-  // 리다이렉트 경로 저장
   sessionStorage.setItem('oauth_redirect', redirectPath.value)
-
-  // 소셜 로그인 페이지로 이동
   window.location.href = redirectUrl
 }
 
-// 🔧 개발용 디버깅 함수들
 const debugAuth = () => {
-  console.log('🔍 [Login] 인증 상태 디버그')
   authUtils.debugAuthStatus()
 }
 
 const clearAuth = () => {
-  if (confirm('모든 인증 정보를 삭제하시겠습니까?')) {
+  if (confirm('인증 정보를 초기화하시겠습니까?')) {
     authUtils.clearAllAuthData()
-    alert('인증 정보가 삭제되었습니다.')
-    window.location.reload() // 페이지 새로고침으로 상태 초기화
+    window.location.reload()
   }
 }
 
-// 🔥 단순화된 마운트 처리 (무한루프 방지)
 onMounted(async () => {
-  console.log('🔍 [Login] 마운트 시 상태 확인')
-
-  // 🔥 단순한 토큰 체크만 수행 (loadUserInfo 호출 없음)
   const hasValidTokens = () => {
     const accessToken = authUtils.getAccessToken()
     const refreshToken = authUtils.getRefreshToken()
 
     if (!accessToken || !refreshToken) return false
-
-    // RefreshToken이 유효하면 로그인된 것으로 간주
     return !authUtils.isTokenExpired(refreshToken)
   }
 
-  // 유효한 토큰이 있으면 리다이렉트
   if (hasValidTokens()) {
     try {
-      console.log('✅ [Login] 유효한 토큰 존재, 리다이렉트:', redirectPath.value)
       await router.replace(redirectPath.value)
     } catch (error) {
-      console.warn('❌ [Login] 리다이렉트 실패:', error)
+      console.warn('리다이렉트 실패:', error)
     }
   }
+})
 
-  // 알림 메시지 자동 제거
-  if (sessionExpired.value || tokenRefreshFailed.value) {
-    setTimeout(() => {
-      const newQuery = { ...route.query }
-      delete newQuery.reason
-      router.replace({ query: newQuery }).catch(() => {})
-    }, 5000)
+onUnmounted(() => {
+  if (timerInterval.value) {
+    clearInterval(timerInterval.value)
   }
 })
 </script>
 
 <style scoped>
-.login-wrapper {
+/* 디자인 토큰 */
+:root {
+  --primary: #5B5FCF;
+  --primary-hover: #4A4EBF;
+  --primary-light: #F0F0FF;
+  --primary-dark: #3F43A4;
+
+  --success: #22C55E;
+  --success-light: #DCFCE7;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --error: #EF4444;
+  --error-light: #FEE2E2;
+
+  --gray-50: #FAFAFA;
+  --gray-100: #F5F5F5;
+  --gray-200: #E5E5E5;
+  --gray-300: #D4D4D4;
+  --gray-400: #A3A3A3;
+  --gray-500: #737373;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
+
+  --border: #E5E7EB;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+}
+
+/* 전역 스타일 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 메인 래퍼 */
+.auth-wrapper {
   min-height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background-color: #fff;
+  justify-content: center;
+  background: linear-gradient(135deg, #F5F7FA 0%, #E9ECEF 100%);
+  padding: 20px;
 }
 
-.login-container {
+/* 컨테이너 */
+.auth-container {
   width: 100%;
-  max-width: 360px;
-  padding: 40px 24px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  max-width: 480px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+/* 로고 영역 */
+.logo-area {
+  padding: 36px 32px 28px;
   text-align: center;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--border);
 }
 
-.title {
-  font-size: 24px;
+.logo {
+  display: inline-flex;
+  margin-bottom: 12px;
+}
+
+.brand-name {
+  font-size: 18px;
   font-weight: 700;
-  margin-bottom: 8px;
-  color: #111;
+  color: var(--gray-800);
+  letter-spacing: 0.5px;
 }
 
-.subtitle {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 24px;
+/* 탭 컨테이너 */
+.tab-container {
+  background: white;
 }
 
-/* 🚨 알림 스타일 */
-.alert {
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+/* 탭 헤더 */
+.tab-header {
+  display: flex;
+  border-bottom: 2px solid var(--gray-100);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 18px;
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+  color: var(--gray-700);
+}
+
+.tab-btn.active {
+  color: var(--primary);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+  animation: tabSlide 0.3s ease;
+}
+
+@keyframes tabSlide {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* 탭 콘텐츠 */
+.tab-content {
+  padding: 32px;
+}
+
+/* 폼 스타일 */
+.auth-form {
+  width: 100%;
+}
+
+/* 알림 */
+.notification {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  text-align: left;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  border: 1px solid;
 }
 
-.alert-warning {
-  background-color: #fffbeb;
-  border: 1px solid #fed7aa;
-  color: #92400e;
+.notification.warning {
+  background: var(--warning-light);
+  border-color: #FCD34D;
+  color: #92400E;
 }
 
-.alert-error {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+.notification.success {
+  background: var(--success-light);
+  border-color: #86EFAC;
+  color: #166534;
 }
 
-.alert-icon {
-  font-size: 16px;
+.notification-icon {
   flex-shrink: 0;
 }
 
-.alert strong {
+.notification-content strong {
   display: block;
-  margin-bottom: 2px;
   font-weight: 600;
-  font-size: 13px;
+  margin-bottom: 2px;
 }
 
-.alert p {
+.notification-content p {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   opacity: 0.9;
 }
 
-.form-group {
-  margin-bottom: 16px;
-  text-align: left;
+/* 입력 그룹 */
+.input-group {
+  margin-bottom: 24px;
 }
 
-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #222222;
-  margin-bottom: 6px;
+.input-label {
   display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 8px;
 }
 
-input {
+.required {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+.label-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.text-btn {
+  font-size: 13px;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.text-btn:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* 입력 필드 */
+.input-wrapper {
+  position: relative;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"]:not(.code-input) {
   width: 100%;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  padding: 12px 44px;
+  font-size: 15px;
+  border: 2px solid var(--gray-300);  /* 더 진한 회색으로 변경 */
+  border-radius: 10px;
+  color: var(--gray-800);
+  background: white;
+  transition: all 0.2s ease;
   outline: none;
-  box-sizing: border-box;
-  background-color: #fff;
-  transition: border-color 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);  /* 그림자 추가 */
+}
+
+input::placeholder {
+  color: var(--gray-400);
+}
+
+input:hover:not(:focus):not(:disabled) {
+  border-color: var(--gray-400);  /* 호버 시 더 진하게 */
 }
 
 input:focus {
-  border-color: #1DCD9F;
+  border-color: var(--primary);
+  background: white;  /* 흰색 배경 유지 */
+  box-shadow: 0 0 0 4px var(--primary-light);  /* 포커스 링 효과 */
 }
 
 input:disabled {
-  background-color: #f5f5f5;
-  color: #999;
+  background: var(--gray-50);
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-color: var(--gray-200);
+}
+
+input.error {
+  border-color: var(--error);
+  background: white;
+  box-shadow: 0 0 0 4px var(--error-light);
+}
+
+input.success {
+  border-color: var(--success);
+  background: white;
+  box-shadow: 0 0 0 4px var(--success-light);
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+.toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.toggle-btn:hover {
+  color: var(--gray-600);
+}
+
+.error-msg {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--error);
+  font-weight: 500;
+}
+
+/* 이메일 인증 */
+.input-with-action {
+  display: flex;
+  gap: 10px;
+}
+
+.input-with-action .input-wrapper {
+  flex: 1;
+}
+
+.action-btn {
+  padding: 0 20px;
+  background: white;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+}
+
+.action-btn:disabled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  border-color: var(--gray-300);
   cursor: not-allowed;
 }
 
-.submit-button {
-  width: 100%;
-  padding: 12px;
-  background-color: #1DCD9F;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
+.action-btn.success {
+  background: var(--success);
+  color: white;
+  border-color: var(--success);
+}
+
+/* 인증번호 섹션 */
+.verification-section {
+  background: var(--gray-50);
+  border: 2px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.verification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.verification-title {
+  font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
+  color: var(--gray-700);
+}
+
+.verification-timer {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.verification-timer.warning {
+  color: var(--error);
+}
+
+.verification-inputs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.code-input {
+  flex: 1;
+  height: 52px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  border: 2px solid var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-800);
   transition: all 0.2s;
-  margin-top: 8px;
+}
+
+.code-input:focus {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  outline: none;
+}
+
+.verification-footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 12px;
 }
 
-.submit-button:hover:not(:disabled) {
-  background-color: #169976;
+.separator {
+  color: var(--gray-300);
 }
 
-.submit-button:disabled {
-  background-color: #ccc;
+/* 비밀번호 강도 */
+.password-strength-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+
+.strength-bars {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+.strength-bar.active:nth-child(1) { background: var(--error); }
+.strength-bar.active:nth-child(2) { background: var(--warning); }
+.strength-bar.active:nth-child(3) { background: var(--success); }
+
+.strength-text {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 40px;
+}
+
+.strength-text.weak { color: var(--error); }
+.strength-text.medium { color: var(--warning); }
+.strength-text.strong { color: var(--success); }
+
+/* 체크리스트 */
+.checklist {
+  display: flex;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--gray-500);
+  transition: color 0.2s;
+}
+
+.check-item svg {
+  fill: var(--gray-300);
+  transition: fill 0.2s;
+}
+
+.check-item.checked {
+  color: var(--success);
+}
+
+.check-item.checked svg {
+  fill: var(--success);
+}
+
+/* 체크박스 */
+.checkbox-group {
+  margin-bottom: 24px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  color: var(--gray-700);
+}
+
+.checkbox-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+}
+
+.checkbox-box {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--gray-300);
+  border-radius: 6px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background: white;
+}
+
+.checkbox-box svg {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s;
+}
+
+.checkbox-label input:checked ~ .checkbox-box {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkbox-label input:checked ~ .checkbox-box svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.checkbox-label:hover .checkbox-box {
+  border-color: var(--primary);
+}
+
+/* 약관 동의 */
+.terms-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 10px;
+}
+
+.link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* 제출 버튼 */
+.submit-btn {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.submit-btn.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.submit-btn.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -5px rgba(91, 95, 207, 0.35);
+}
+
+.submit-btn:disabled {
+  background: var(--gray-300);
+  color: var(--gray-500);
   cursor: not-allowed;
+  transform: none;
 }
 
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid #fff;
-  border-radius: 50%;
+.spinner {
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.error-message {
-  margin-top: 12px;
-  font-size: 13px;
-  color: #dc2626;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 4px;
-  padding: 8px;
-  text-align: left;
-}
-
-.divider {
-  margin: 24px 0 16px;
-  color: #999;
-  font-size: 13px;
-}
-
-.google-login,
-.github-login {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  color: #222222;
-  transition: background-color 0.2s;
-  margin-bottom: 8px;
-}
-
-.google-login:hover:not(:disabled),
-.github-login:hover:not(:disabled) {
-  background-color: #f5f5f5;
-}
-
-.google-login:disabled,
-.github-login:disabled {
-  background-color: #f9f9f9;
-  color: #ccc;
-  cursor: not-allowed;
-}
-
-.footer {
-  margin-top: 24px;
-  font-size: 13px;
-  color: #555;
-}
-
-.register-link {
-  margin-left: 4px;
-  color: #169976;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.register-link:hover {
-  text-decoration: underline;
-}
-
-/* 🔧 개발용 디버그 섹션 */
-.debug-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+/* 에러 박스 */
+.alert-box {
   display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.alert-box.error {
+  background: var(--error-light);
+  color: var(--error);
+  border: 1px solid #FCA5A5;
+}
+
+/* 소셜 로그인 */
+.social-section {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.divider-text {
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray-500);
+  font-weight: 500;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.divider-text::before,
+.divider-text::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: calc(50% - 60px);
+  height: 1px;
+  background: var(--gray-200);
+}
+
+.divider-text::before { left: 0; }
+.divider-text::after { right: 0; }
+
+.social-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.social-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid var(--gray-200);
+  background: white;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
-.debug-btn {
+.social-btn:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+  transform: translateY(-1px);
+}
+
+.social-btn.kakao {
+  background: #FEE500;
+  border-color: #FEE500;
+  color: #000000;
+}
+
+.social-btn.kakao:hover {
+  background: #FDD835;
+  border-color: #FDD835;
+}
+
+/* 개발자 패널 */
+.dev-panel {
+  padding: 20px 32px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+}
+
+.dev-button {
   flex: 1;
-  padding: 6px 10px;
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  font-size: 11px;
-  color: #495057;
+  padding: 10px 16px;
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
   cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.debug-btn:hover {
-  background-color: #e9ecef;
+.dev-button:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
 }
 
-/* 반응형 */
+/* 애니메이션 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  transform: scaleY(0.95);
+  opacity: 0;
+}
+
+.shake-enter-active {
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* 모바일 반응형 */
+@media (max-width: 640px) {
+  .auth-container {
+    max-width: 100%;
+    margin: 0 16px;
+  }
+
+  .tab-content {
+    padding: 24px 20px;
+  }
+
+  .social-buttons {
+    flex-direction: column;
+  }
+
+  .checklist {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .verification-inputs {
+    gap: 4px;
+  }
+
+  .code-input {
+    height: 46px;
+    font-size: 18px;
+  }
+}
+
 @media (max-width: 480px) {
-  .login-container {
-    margin: 20px;
-    padding: 32px 20px;
+  .auth-wrapper {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .auth-container {
+    margin: 0;
+    border-radius: 0;
+    min-height: 100vh;
+  }
+
+  .logo-area {
+    padding: 28px 20px 24px;
+  }
+
+  .tab-content {
+    padding: 20px 16px;
   }
 }
 </style>

@@ -3,6 +3,7 @@
 
 import { BaseApiService } from './BaseApiService.js'
 import * as authUtils from '@/utils/auth.js'
+import {ENV, getServiceUrl} from "@/config/env.js";
 
 /**
  * 인증 서비스
@@ -10,11 +11,10 @@ import * as authUtils from '@/utils/auth.js'
  */
 class AuthService extends BaseApiService {
   constructor() {
-    const baseURL = import.meta.env.DEV
-        ? 'http://localhost:8081/api'
-        : `${import.meta.env.VITE_AUTH_BASE_URL}/api`
-
+    const baseURL = `${getServiceUrl('AUTH')}/api`
     super(baseURL, 'AUTH')
+    console.log(`[AUTH] AUTH Server URL: ${this.baseURL}`)
+    console.log(`[AUTH] Environment: ${ENV.MODE}`)
   }
 
   // ==================== 인증 API ====================
@@ -26,12 +26,10 @@ class AuthService extends BaseApiService {
     const response = await this.post('/auth/login', credentials)
 
     if (response.success && response.data) {
-      // 토큰 저장
       if (response.data.accessToken && response.data.refreshToken) {
         authUtils.setTokens(response.data.accessToken, response.data.refreshToken)
       }
 
-      // 사용자 정보 저장
       if (response.data.user) {
         authUtils.setUserInfo(response.data.user)
       }
@@ -43,10 +41,56 @@ class AuthService extends BaseApiService {
   }
 
   /**
-   * 회원가입
+   * 1단계: 이메일 인증 코드 발송
+   * @param {string} email - 인증받을 이메일
+   */
+  async sendVerificationCode(email) {
+    return await this.post('/user/auth/email/send-code', { email })
+  }
+
+  /**
+   * 2단계: 이메일 인증 코드 검증
+   * @param {string} email - 인증받을 이메일
+   * @param {string} code - 6자리 인증 코드
+   * @returns {Promise<{success: boolean, data: string}>} 검증 토큰 반환
+   */
+  async verifyEmailCode(email, code) {
+    const response = await this.post('/user/auth/email/verify-code', {
+      email,
+      code
+    })
+
+    // 검증 토큰을 data에 담아서 반환
+    if (response.success && response.data) {
+      console.log('✅ [AUTH] 이메일 인증 성공')
+    }
+
+    return response
+  }
+
+  /**
+   * 3단계: 회원가입
+   * @param {Object} signupData - 회원가입 데이터
+   * @param {string} signupData.email - 이메일
+   * @param {string} signupData.password - 비밀번호 (8~20자, 영문+숫자+특수문자)
+   * @param {string} signupData.verificationToken - 이메일 인증 토큰
+   */
+  async signup(signupData) {
+    const response = await this.post('/user/auth/signup', signupData)
+
+    if (response.success && response.data) {
+      console.log('✅ [AUTH] 회원가입 성공:', response.data)
+    }
+
+    return response
+  }
+
+  /**
+   * 회원가입 (레거시 - 기존 코드와 호환성 유지)
+   * @deprecated signup() 메서드 사용 권장
    */
   async register(userData) {
-    return await this.post('/auth/register', userData)
+    return await this.signup(userData)
   }
 
   /**
@@ -65,7 +109,6 @@ class AuthService extends BaseApiService {
     } catch (error) {
       console.warn('⚠️ [AUTH] 백엔드 로그아웃 실패:', error.message)
     } finally {
-      // 로컬 인증 정보 정리
       authUtils.logout()
       console.log('✅ [AUTH] 로컬 로그아웃 완료')
     }
@@ -104,13 +147,6 @@ class AuthService extends BaseApiService {
   }
 
   /**
-   * 이메일 인증
-   */
-  async verifyEmail(token) {
-    return await this.post('/auth/verify-email', { token })
-  }
-
-  /**
    * 인증 이메일 재전송
    */
   async resendVerification(email) {
@@ -139,7 +175,6 @@ class AuthService extends BaseApiService {
   async deleteAccount() {
     const response = await this.delete('/users/profile')
 
-    // 계정 삭제 성공시 로컬 정보도 정리
     if (response.success) {
       authUtils.logout()
     }
@@ -183,17 +218,10 @@ class AuthService extends BaseApiService {
   // ==================== 팔로우 API ====================
 
   /**
-   * 사용자 팔로우
+   * 사용자 팔로우/언팔로우 토글
    */
-  async followUser(userId) {
-    return await this.post(`/users/${userId}/follow`)
-  }
-
-  /**
-   * 사용자 언팔로우
-   */
-  async unfollowUser(userId) {
-    return await this.delete(`/users/${userId}/follow`)
+  async toggleFollow(userId) {
+    return await this.post(`/user/${userId}/follow`)
   }
 
   /**
@@ -344,7 +372,6 @@ class AuthService extends BaseApiService {
     console.log('사용자 역할:', authUtils.getUserRole())
     console.log('인증 상태:', authUtils.isAuthenticated())
 
-    // 부모 클래스의 디버깅도 호출
     this.debugStatus()
 
     console.groupEnd()
@@ -387,19 +414,70 @@ export function useAuth() {
       return { success: true }
     } catch (error) {
       console.error('❌ [AUTH] 로그아웃 실패:', error)
-      // 로그아웃은 실패해도 로컬 정보는 정리
       authUtils.logout()
       return { success: false, error: error.message }
     }
   }
 
-  const register = async (userData) => {
+  /**
+   * 이메일 인증 코드 발송
+   */
+  const sendVerificationCode = async (email) => {
     try {
-      const response = await authService.register(userData)
+      const response = await authService.sendVerificationCode(email)
       return {
         success: response.success,
-        data: response.data,
-        message: response.message
+        message: response.message || '인증 코드가 발송되었습니다'
+      }
+    } catch (error) {
+      console.error('❌ [AUTH] 인증 코드 발송 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * 이메일 인증 코드 검증
+   */
+  const verifyEmailCode = async (email, code) => {
+    try {
+      const response = await authService.verifyEmailCode(email, code)
+
+      if (response.success) {
+        return {
+          success: true,
+          verificationToken: response.data,
+          message: response.message || '이메일 인증이 완료되었습니다'
+        }
+      } else {
+        throw new Error(response.message || '인증 코드가 올바르지 않습니다')
+      }
+    } catch (error) {
+      console.error('❌ [AUTH] 인증 코드 검증 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * 회원가입
+   */
+  const signup = async (signupData) => {
+    try {
+      const response = await authService.signup(signupData)
+
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data,
+          message: response.message || '회원가입이 완료되었습니다'
+        }
+      } else {
+        throw new Error(response.message || '회원가입에 실패했습니다')
       }
     } catch (error) {
       console.error('❌ [AUTH] 회원가입 실패:', error)
@@ -410,13 +488,20 @@ export function useAuth() {
     }
   }
 
+  /**
+   * 회원가입 (레거시)
+   * @deprecated signup() 사용 권장
+   */
+  const register = async (userData) => {
+    return await signup(userData)
+  }
+
   const checkAuth = async () => {
     try {
       if (!authService.isAuthenticated()) {
         return false
       }
 
-      // 서버에서 토큰 검증
       const response = await authService.verifyToken()
       return response.success
     } catch (error) {
@@ -439,7 +524,10 @@ export function useAuth() {
     // 메서드
     login,
     logout,
-    register,
+    sendVerificationCode,
+    verifyEmailCode,
+    signup,
+    register, // 레거시 호환성
     checkAuth,
     refreshToken,
 
@@ -456,8 +544,5 @@ export function useAuth() {
 
 // ==================== 싱글톤 인스턴스 ====================
 
-// 싱글톤 인스턴스 생성 및 내보내기
 export const authService = new AuthService()
-
-// 기본 내보내기
 export default authService
