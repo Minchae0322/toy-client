@@ -1,14 +1,16 @@
 // services/CategoryService.js
 import { BaseApiService } from './BaseApiService.js'
+import { ENV, getServiceUrl } from '@/config/env.js'
 
 class CategoryService extends BaseApiService {
   constructor() {
-    const baseURL = import.meta.env.DEV
-        ? 'http://localhost:8082/api'
-        : `${import.meta.env.VITE_CONTENT_BASE_URL}/api`
+    // 개발: http://54.180.89.70:8082/api (단일 서버)
+    // 프로덕션: https://content.yourdomain.com/api (MSA)
+    const baseURL = `${getServiceUrl('CONTENT')}/api`
 
     super(baseURL, 'CATEGORY')
-    console.log(`📂 [CATEGORY] Content Server URL: ${this.baseURL}`)
+    console.log(`⚔️ [CATEGORY] Content Server URL: ${this.baseURL}`)
+    console.log(`🌍 [CATEGORY] Environment: ${ENV.MODE}`)
   }
 
   // ==================== 카테고리 CRUD API ====================

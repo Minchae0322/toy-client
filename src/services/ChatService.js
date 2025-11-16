@@ -2,26 +2,36 @@
 // 채팅 관련 API 서비스 (Fetch API 기반)
 
 import { BaseApiService } from './BaseApiService.js'
+import { ENV, getServiceUrl } from '@/config/env.js'
 import * as authUtils from '@/utils/auth.js'
 
 /**
  * 채팅 서비스
- * Chat Server (8084)와의 통신을 담당
+ * Chat Server와의 통신을 담당
  */
 class ChatService extends BaseApiService {
   constructor() {
-    const baseURL = import.meta.env.DEV
-        ? 'http://localhost:8084/api'
-        : `${import.meta.env.VITE_CHAT_BASE_URL}/api`
+    // 개발: http://54.180.89.70:8082/api (단일 서버)
+    // 프로덕션: https://chat.yourdomain.com/api (MSA)
+    const baseURL = `${getServiceUrl('CHAT')}/api`
 
     super(baseURL, 'CHAT')
 
     // WebSocket URL 설정
-    this.wsURL = import.meta.env.DEV
-        ? 'ws://localhost:8084'
-        : import.meta.env.VITE_CHAT_WS_URL || 'wss://your-chat-server.com'
+    this.wsURL = ENV.WS_URL
 
-    console.log(`💬 [CHAT] WebSocket URL: ${this.wsURL}`)
+    console.log(`💬 [CHAT] Chat Server URL: ${this.baseURL}`)
+    console.log(`🔌 [CHAT] WebSocket URL: ${this.wsURL}`)
+    console.log(`🌍 [CHAT] Environment: ${ENV.MODE}`)
+  }
+
+  // ==================== WebSocket URL Getter ====================
+
+  /**
+   * WebSocket URL 반환
+   */
+  getWebSocketUrl() {
+    return this.wsURL
   }
 
   // ==================== 채팅방 API ====================
@@ -30,6 +40,8 @@ class ChatService extends BaseApiService {
    * 채팅 시작 (한입만 상세에서 채팅하기 클릭시)
    */
   async startChat(chatData) {
+    console.log(`💬 [CHAT] 채팅 시작:`, chatData)
+
     const requestData = {
       chatContext: chatData.chatContext || 'PRODUCT_TRADE',
       chatContextId: chatData.chatContextId,
@@ -46,6 +58,7 @@ class ChatService extends BaseApiService {
    */
   async getChatRooms(searchCondition = {}) {
     const validatedCondition = this.validateSearchCondition(searchCondition)
+    console.log(`📋 [CHAT] 채팅방 목록 조회:`, validatedCondition)
     return await this.get('/v1/chat/rooms', validatedCondition)
   }
 
@@ -68,6 +81,7 @@ class ChatService extends BaseApiService {
       thumbnailUrl: roomData.thumbnailUrl || null
     }
 
+    console.log(`➕ [CHAT] 채팅방 생성:`, requestData)
     return await this.post('/v1/chat/rooms', requestData)
   }
 
@@ -79,6 +93,7 @@ class ChatService extends BaseApiService {
       throw new Error('채팅방 ID가 필요합니다.')
     }
 
+    console.log(`🔍 [CHAT] 채팅방 상세 조회: roomId=${roomId}`)
     return await this.get(`/v1/chat/rooms/${roomId}`)
   }
 
@@ -90,6 +105,7 @@ class ChatService extends BaseApiService {
       deviceId: authUtils.getDeviceId()
     }
 
+    console.log(`🚪 [CHAT] 채팅방 입장: roomId=${roomId}`)
     return await this.post(`/v1/chat/rooms/${roomId}/join`, requestData)
   }
 
@@ -101,6 +117,7 @@ class ChatService extends BaseApiService {
       deviceId: authUtils.getDeviceId()
     }
 
+    console.log(`🚪 [CHAT] 채팅방 나가기: roomId=${roomId}`)
     return await this.post(`/v1/chat/rooms/${roomId}/leave`, requestData)
   }
 
@@ -108,6 +125,7 @@ class ChatService extends BaseApiService {
    * 채팅방 삭제
    */
   async deleteChatRoom(roomId) {
+    console.log(`🗑️ [CHAT] 채팅방 삭제: roomId=${roomId}`)
     return await this.delete(`/v1/chat/rooms/${roomId}`)
   }
 
@@ -115,6 +133,7 @@ class ChatService extends BaseApiService {
    * 채팅방 설정 변경
    */
   async updateChatRoomSettings(roomId, settings) {
+    console.log(`⚙️ [CHAT] 채팅방 설정 변경: roomId=${roomId}`, settings)
     return await this.put(`/v1/chat/rooms/${roomId}/settings`, settings)
   }
 
@@ -136,6 +155,7 @@ class ChatService extends BaseApiService {
       params.lastMessageId = cursorPageRequest.lastMessageId
     }
 
+    console.log(`📨 [CHAT] 메시지 목록 조회: roomId=${roomId}`, params)
     return await this.get(`/chat/${roomId}/messages`, params)
   }
 
@@ -155,6 +175,7 @@ class ChatService extends BaseApiService {
       metadata: messageData.metadata || null
     }
 
+    console.log(`📤 [CHAT] 메시지 전송 (HTTP): roomId=${roomId}`, requestData)
     return await this.post(`/chat/rooms/${roomId}/messages`, requestData)
   }
 
@@ -162,6 +183,7 @@ class ChatService extends BaseApiService {
    * 메시지 수정
    */
   async updateMessage(messageId, content) {
+    console.log(`✏️ [CHAT] 메시지 수정: messageId=${messageId}`)
     return await this.put(`/chat/messages/${messageId}`, { content })
   }
 
@@ -169,6 +191,7 @@ class ChatService extends BaseApiService {
    * 메시지 삭제
    */
   async deleteMessage(messageId) {
+    console.log(`🗑️ [CHAT] 메시지 삭제: messageId=${messageId}`)
     return await this.delete(`/chat/messages/${messageId}`)
   }
 
@@ -193,13 +216,15 @@ class ChatService extends BaseApiService {
       formData.append('description', options.description)
     }
 
-    return await this.uploadFile(`/v1/chat/rooms/${roomId}/upload`, formData)
+    console.log(`📎 [CHAT] 파일 업로드: roomId=${roomId}, file=${file.name}`)
+    return await super.uploadFile(`/v1/chat/rooms/${roomId}/upload`, formData)
   }
 
   /**
    * 이미지 업로드
    */
   async uploadImage(roomId, imageFile, description = '') {
+    console.log(`🖼️ [CHAT] 이미지 업로드: roomId=${roomId}, file=${imageFile.name}`)
     return await this.uploadFile(roomId, imageFile, {
       messageType: 'IMAGE',
       description
@@ -213,6 +238,7 @@ class ChatService extends BaseApiService {
    */
   async markAsRead(roomId, messageId = null) {
     const requestData = messageId ? { messageId } : {}
+    console.log(`✅ [CHAT] 메시지 읽음 처리: roomId=${roomId}`, requestData)
     return await this.post(`/v1/chat/rooms/${roomId}/read`, requestData)
   }
 
@@ -224,6 +250,7 @@ class ChatService extends BaseApiService {
         ? `/v1/chat/rooms/${roomId}/unread-count`
         : '/v1/chat/unread-count'
 
+    console.log(`🔔 [CHAT] 읽지 않은 메시지 개수 조회: ${url}`)
     return await this.get(url)
   }
 
@@ -231,6 +258,7 @@ class ChatService extends BaseApiService {
    * 전체 읽지 않은 메시지 개수 조회
    */
   async getTotalUnreadCount() {
+    console.log(`🔔 [CHAT] 전체 읽지 않은 메시지 개수 조회`)
     return await this.get('/v1/chat/unread-count')
   }
 
@@ -240,6 +268,7 @@ class ChatService extends BaseApiService {
    * 채팅방 멤버 목록 조회
    */
   async getChatRoomMembers(roomId, params = {}) {
+    console.log(`👥 [CHAT] 채팅방 멤버 목록 조회: roomId=${roomId}`)
     return await this.get(`/v1/chat/rooms/${roomId}/members`, params)
   }
 
@@ -247,6 +276,7 @@ class ChatService extends BaseApiService {
    * 채팅방에 멤버 초대
    */
   async inviteMembers(roomId, userIds) {
+    console.log(`➕ [CHAT] 멤버 초대: roomId=${roomId}, userIds=${userIds}`)
     return await this.post(`/v1/chat/rooms/${roomId}/members`, {
       userIds: Array.isArray(userIds) ? userIds : [userIds]
     })
@@ -256,6 +286,7 @@ class ChatService extends BaseApiService {
    * 채팅방에서 멤버 제거
    */
   async removeMember(roomId, userId) {
+    console.log(`➖ [CHAT] 멤버 제거: roomId=${roomId}, userId=${userId}`)
     return await this.delete(`/v1/chat/rooms/${roomId}/members/${userId}`)
   }
 
@@ -263,6 +294,7 @@ class ChatService extends BaseApiService {
    * 채팅방 멤버 역할 변경
    */
   async updateMemberRole(roomId, userId, role) {
+    console.log(`👑 [CHAT] 멤버 역할 변경: roomId=${roomId}, userId=${userId}, role=${role}`)
     return await this.put(`/v1/chat/rooms/${roomId}/members/${userId}/role`, { role })
   }
 
@@ -277,6 +309,7 @@ class ChatService extends BaseApiService {
       ...filters
     }
 
+    console.log(`🔍 [CHAT] 채팅방 검색:`, params)
     return await this.get('/v1/chat/rooms/search', params)
   }
 
@@ -284,6 +317,7 @@ class ChatService extends BaseApiService {
    * 메시지 검색
    */
   async searchMessages(roomId, keyword, params = {}) {
+    console.log(`🔍 [CHAT] 메시지 검색: roomId=${roomId}, keyword=${keyword}`)
     return await this.get(`/v1/chat/rooms/${roomId}/messages/search`, {
       keyword,
       ...params
@@ -296,6 +330,7 @@ class ChatService extends BaseApiService {
    * 샘플 채팅방 데이터 제공 (API 연결 실패시 폴백용)
    */
   getSampleChatRooms() {
+    console.log(`📦 [CHAT] 샘플 채팅방 데이터 반환`)
     return {
       success: true,
       data: [
@@ -333,6 +368,7 @@ class ChatService extends BaseApiService {
    * 샘플 메시지 데이터 제공
    */
   getSampleMessages(roomId) {
+    console.log(`📦 [CHAT] 샘플 메시지 데이터 반환: roomId=${roomId}`)
     const messages = [
       {
         messageId: `msg-${roomId}-1`,
@@ -518,7 +554,9 @@ class ChatService extends BaseApiService {
   debugChatStatus() {
     console.group('🔍 [CHAT] 채팅 서비스 상태')
 
-    console.log('=== 서버 정보 ===')
+    console.log('=== 환경 정보 ===')
+    console.log('Environment:', ENV.MODE)
+    console.log('Base URL:', this.baseURL)
     console.log('WebSocket URL:', this.wsURL)
 
     console.log('=== 중요 안내 ===')
@@ -533,24 +571,30 @@ class ChatService extends BaseApiService {
   }
 }
 
+// ==================== 싱글톤 인스턴스 ====================
+
+export const chatService = new ChatService()
+export const chatApi = chatService // 별칭 (기존 코드 호환성)
+export default chatService
+
 // ==================== Vue Composables ====================
 
 /**
  * Vue Composition API용 채팅 훅
  */
 export function useChat() {
-  const chatService = new ChatService()
+  const service = new ChatService()
 
   const getRooms = async (searchCondition = {}) => {
     try {
-      const response = await chatService.getChatRooms(searchCondition)
+      const response = await service.getChatRooms(searchCondition)
       return {
         success: true,
         data: response.data || [],
         message: response.message
       }
     } catch (error) {
-      console.error('[CHAT] 채팅방 목록 조회 실패:', error)
+      console.error('❌ [CHAT] 채팅방 목록 조회 실패:', error)
       return {
         success: false,
         error: error.message,
@@ -561,14 +605,14 @@ export function useChat() {
 
   const createRoom = async (roomData) => {
     try {
-      const response = await chatService.createChatRoom(roomData)
+      const response = await service.createChatRoom(roomData)
       return {
         success: true,
         data: response.data,
         message: response.message || '채팅방이 생성되었습니다'
       }
     } catch (error) {
-      console.error('[CHAT] 채팅방 생성 실패:', error)
+      console.error('❌ [CHAT] 채팅방 생성 실패:', error)
       return {
         success: false,
         error: error.message
@@ -578,14 +622,14 @@ export function useChat() {
 
   const sendMessage = async (roomId, messageData) => {
     try {
-      const response = await chatService.sendMessage(roomId, messageData)
+      const response = await service.sendMessage(roomId, messageData)
       return {
         success: true,
         data: response.data,
         message: response.message
       }
     } catch (error) {
-      console.error('[CHAT] 메시지 전송 실패:', error)
+      console.error('❌ [CHAT] 메시지 전송 실패:', error)
       return {
         success: false,
         error: error.message
@@ -595,14 +639,14 @@ export function useChat() {
 
   const uploadFile = async (roomId, file, options = {}) => {
     try {
-      const response = await chatService.uploadFile(roomId, file, options)
+      const response = await service.uploadFile(roomId, file, options)
       return {
         success: true,
         data: response.data,
         message: response.message
       }
     } catch (error) {
-      console.error('[CHAT] 파일 업로드 실패:', error)
+      console.error('❌ [CHAT] 파일 업로드 실패:', error)
       return {
         success: false,
         error: error.message
@@ -614,43 +658,33 @@ export function useChat() {
     // 채팅방 관리
     getRooms,
     createRoom,
-    getRoomDetail: (roomId) => chatService.getChatRoomDetail(roomId),
-    joinRoom: (roomId) => chatService.joinChatRoom(roomId),
-    leaveRoom: (roomId) => chatService.leaveChatRoom(roomId),
+    getRoomDetail: (roomId) => service.getChatRoomDetail(roomId),
+    joinRoom: (roomId) => service.joinChatRoom(roomId),
+    leaveRoom: (roomId) => service.leaveChatRoom(roomId),
 
     // 메시지 관리
-    getMessages: (roomId, params) => chatService.getChatMessages(roomId, params),
+    getMessages: (roomId, params) => service.getChatMessages(roomId, params),
     sendMessage,
 
     // 파일 관리
     uploadFile,
-    uploadImage: (roomId, imageFile, description) => chatService.uploadImage(roomId, imageFile, description),
+    uploadImage: (roomId, imageFile, description) => service.uploadImage(roomId, imageFile, description),
 
     // 읽음 처리
-    markAsRead: (roomId, messageId) => chatService.markAsRead(roomId, messageId),
-    getUnreadCount: (roomId) => chatService.getUnreadCount(roomId),
+    markAsRead: (roomId, messageId) => service.markAsRead(roomId, messageId),
+    getUnreadCount: (roomId) => service.getUnreadCount(roomId),
 
     // 유틸리티
-    transformRoom: (room) => chatService.transformChatRoomResponse(room),
-    transformMessage: (message) => chatService.transformMessageResponse(message),
-    sortRooms: (rooms, sortBy) => chatService.sortChatRooms(rooms, sortBy),
-    filterRooms: (rooms, filters) => chatService.filterChatRooms(rooms, filters),
+    getWebSocketUrl: () => service.getWebSocketUrl(),
+    transformRoom: (room) => service.transformChatRoomResponse(room),
+    transformMessage: (message) => service.transformMessageResponse(message),
+    sortRooms: (rooms, sortBy) => service.sortChatRooms(rooms, sortBy),
+    filterRooms: (rooms, filters) => service.filterChatRooms(rooms, filters),
 
     // 연결 테스트
-    testConnection: () => chatService.testConnection(),
+    testConnection: () => service.testConnection(),
 
     // 디버깅
-    debugStatus: () => chatService.debugChatStatus()
+    debugStatus: () => service.debugChatStatus()
   }
 }
-
-// ==================== 싱글톤 인스턴스 ====================
-
-// 싱글톤 인스턴스 생성 및 내보내기
-export const chatService = new ChatService()
-
-// 별칭 (기존 코드 호환성)
-export const chatApi = chatService
-
-// 기본 내보내기
-export default chatService

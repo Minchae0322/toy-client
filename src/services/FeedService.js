@@ -2,15 +2,17 @@
 
 import { BaseApiService } from './BaseApiService.js'
 import { fileService } from './FileService.js'
+import {ENV, getServiceUrl} from "@/config/env.js";
 
 class FeedService extends BaseApiService {
   constructor() {
-    const baseURL = import.meta.env.DEV
-        ? 'http://localhost:8082/api'
-        : `${import.meta.env.VITE_CONTENT_BASE_URL}/api`
+    // 개발: http://54.180.89.70:8082/api (단일 서버)
+    // 프로덕션: https://content.yourdomain.com/api (MSA)
+    const baseURL = `${getServiceUrl('CONTENT')}/api`
 
     super(baseURL, 'FEED')
-    console.log(`📰 [FEED] Content Server URL: ${this.baseURL}`)
+    console.log(`⚔️ [FEED] Content Server URL: ${this.baseURL}`)
+    console.log(`🌍 [FEED] Environment: ${ENV.MODE}`)
   }
 
   // ==================== 피드 CRUD 메서드 ====================

@@ -2,6 +2,7 @@
 // 파일 업로드/다운로드 관련 API 서비스 (Fetch API 기반)
 
 import { BaseApiService } from './BaseApiService.js'
+import { ENV, getServiceUrl } from '@/config/env.js'
 
 /**
  * 파일 관리 서비스
@@ -9,11 +10,13 @@ import { BaseApiService } from './BaseApiService.js'
  */
 class FileService extends BaseApiService {
   constructor() {
-    const baseURL = import.meta.env.DEV
-        ? 'http://localhost:8081/api'
-        : `${import.meta.env.VITE_API_BASE_URL}/api`
+    // 개발: http://54.180.89.70:8082/api (단일 서버)
+    // 프로덕션: https://auth.yourdomain.com/api (MSA - 파일 업로드는 인증 서버에서 처리)
+    const baseURL = `${getServiceUrl('AUTH')}/api`
 
     super(baseURL, 'FILE')
+    console.log(`📁 [FILE] File Server URL: ${this.baseURL}`)
+    console.log(`🌍 [FILE] Environment: ${ENV.MODE}`)
   }
 
   // ==================== 파일 업로드 API ====================
@@ -49,6 +52,8 @@ class FileService extends BaseApiService {
       formData.append('fileExplain', options.fileExplain)
     }
 
+    console.log(`📤 [FILE] 파일 업로드 시작: ${file.name} (${this.formatFileSize(file.size)})`)
+
     // BaseApiService의 uploadFile 메서드 호출
     return await super.uploadFile('/files/upload', formData)
   }
@@ -60,6 +65,8 @@ class FileService extends BaseApiService {
     if (!files || files.length === 0) {
       throw new Error('업로드할 파일이 필요합니다.')
     }
+
+    console.log(`📤 [FILE] 다중 파일 업로드 시작: ${files.length}개 파일`)
 
     const uploadPromises = Array.from(files).map(file =>
         this.uploadFile(file, options)
@@ -77,8 +84,10 @@ class FileService extends BaseApiService {
       .map(result => result.reason)
 
       if (failedResults.length > 0) {
-        console.warn('[FILE] 일부 파일 업로드 실패:', failedResults)
+        console.warn(`⚠️ [FILE] 일부 파일 업로드 실패: ${failedResults.length}개`, failedResults)
       }
+
+      console.log(`✅ [FILE] 다중 파일 업로드 완료: 성공 ${successResults.length}개, 실패 ${failedResults.length}개`)
 
       return {
         success: successResults.length > 0,
@@ -87,7 +96,7 @@ class FileService extends BaseApiService {
         errors: failedResults
       }
     } catch (error) {
-      console.error('[FILE] 다중 파일 업로드 실패:', error)
+      console.error('❌ [FILE] 다중 파일 업로드 실패:', error)
       throw error
     }
   }
@@ -99,6 +108,8 @@ class FileService extends BaseApiService {
     if (!this.isImageFile(imageFile)) {
       throw new Error('이미지 파일만 업로드 가능합니다.')
     }
+
+    console.log(`🖼️ [FILE] 이미지 업로드: ${imageFile.name}, 타입: ${imageType}`)
 
     return this.uploadFile(imageFile, {
       fileCode: imageType,
@@ -118,6 +129,8 @@ class FileService extends BaseApiService {
       throw new Error('유효한 이미지 파일이 없습니다.')
     }
 
+    console.log(`🖼️ [FILE] 다중 이미지 업로드: ${validImages.length}개 이미지, 타입: ${imageType}`)
+
     return await this.uploadFiles(validImages, {
       fileCode: imageType
     })
@@ -133,6 +146,8 @@ class FileService extends BaseApiService {
       throw new Error('파일 ID가 필요합니다.')
     }
 
+    console.log(`📥 [FILE] 파일 다운로드 시작: fileId=${fileId}`)
+
     try {
       const response = await this.fetch(`/files/download/${fileId}`, {
         method: 'GET',
@@ -147,13 +162,15 @@ class FileService extends BaseApiService {
       const contentDisposition = response.headers.get('content-disposition')
       const fileName = this.extractFileName(contentDisposition)
 
+      console.log(`✅ [FILE] 파일 다운로드 완료: ${fileName}`)
+
       return {
         blob,
         fileName,
         contentType: response.headers.get('content-type')
       }
     } catch (error) {
-      console.error('[FILE] 파일 다운로드 실패:', error)
+      console.error('❌ [FILE] 파일 다운로드 실패:', error)
       throw error
     }
   }
@@ -174,9 +191,9 @@ class FileService extends BaseApiService {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
 
-      console.log('[FILE] 파일 다운로드 시작:', fileName)
+      console.log(`💾 [FILE] 파일 다운로드 트리거 완료: ${fileName}`)
     } catch (error) {
-      console.error('[FILE] 파일 다운로드 트리거 실패:', error)
+      console.error('❌ [FILE] 파일 다운로드 트리거 실패:', error)
       throw error
     }
   }
@@ -189,6 +206,7 @@ class FileService extends BaseApiService {
       throw new Error('파일 ID가 필요합니다.')
     }
 
+    console.log(`🔍 [FILE] 파일 정보 조회: fileId=${fileId}`)
     return await this.get(`/files/${fileId}`)
   }
 
@@ -203,6 +221,7 @@ class FileService extends BaseApiService {
       ...params
     }
 
+    console.log(`📋 [FILE] 파일 목록 조회:`, queryParams)
     return await this.get('/files', queryParams)
   }
 
@@ -216,6 +235,7 @@ class FileService extends BaseApiService {
       throw new Error('파일 ID가 필요합니다.')
     }
 
+    console.log(`🗑️ [FILE] 파일 삭제: fileId=${fileId}`)
     return await this.delete(`/files/${fileId}`)
   }
 
@@ -227,6 +247,8 @@ class FileService extends BaseApiService {
       throw new Error('삭제할 파일 ID가 필요합니다.')
     }
 
+    console.log(`🗑️ [FILE] 다중 파일 삭제: ${fileIds.length}개 파일`)
+
     const deletePromises = fileIds.map(id => this.deleteFile(id))
 
     try {
@@ -235,13 +257,15 @@ class FileService extends BaseApiService {
       const successCount = results.filter(r => r.status === 'fulfilled').length
       const failedCount = results.filter(r => r.status === 'rejected').length
 
+      console.log(`✅ [FILE] 다중 파일 삭제 완료: 성공 ${successCount}개, 실패 ${failedCount}개`)
+
       return {
         success: successCount > 0,
         successCount,
         failedCount
       }
     } catch (error) {
-      console.error('[FILE] 다중 파일 삭제 실패:', error)
+      console.error('❌ [FILE] 다중 파일 삭제 실패:', error)
       throw error
     }
   }
@@ -294,7 +318,7 @@ class FileService extends BaseApiService {
       try {
         filename = decodeURIComponent(filename)
       } catch (e) {
-        console.warn('[FILE] 파일명 디코딩 실패:', e)
+        console.warn('⚠️ [FILE] 파일명 디코딩 실패:', e)
       }
 
       return filename
@@ -351,6 +375,8 @@ class FileService extends BaseApiService {
 
   debugFileStatus() {
     console.group('🔍 [FILE] 파일 서비스 상태')
+    console.log('Environment:', ENV.MODE)
+    console.log('Base URL:', this.baseURL)
     console.log('파일 업로드: 단일/다중 파일 지원')
     console.log('파일 다운로드: 브라우저 다운로드 트리거')
     console.log('이미지 처리: 이미지 전용 업로드 및 미리보기')
@@ -360,21 +386,26 @@ class FileService extends BaseApiService {
   }
 }
 
+// ==================== 싱글톤 인스턴스 ====================
+
+export const fileService = new FileService()
+export default fileService
+
 // ==================== Vue Composables ====================
 
 export function useFile() {
-  const fileService = new FileService()
+  const service = new FileService()
 
   const upload = async (file, options = {}) => {
     try {
-      const response = await fileService.uploadFile(file, options)
+      const response = await service.uploadFile(file, options)
       return {
         success: true,
         data: response.data,
         message: response.message || '파일이 업로드되었습니다.'
       }
     } catch (error) {
-      console.error('[FILE] 파일 업로드 실패:', error)
+      console.error('❌ [FILE] 파일 업로드 실패:', error)
       return {
         success: false,
         error: error.message
@@ -384,7 +415,7 @@ export function useFile() {
 
   const uploadMultiple = async (files, options = {}) => {
     try {
-      const response = await fileService.uploadFiles(files, options)
+      const response = await service.uploadFiles(files, options)
       return {
         success: response.success,
         data: response.data,
@@ -392,7 +423,7 @@ export function useFile() {
         message: `${response.data.length}개 파일이 업로드되었습니다.`
       }
     } catch (error) {
-      console.error('[FILE] 다중 파일 업로드 실패:', error)
+      console.error('❌ [FILE] 다중 파일 업로드 실패:', error)
       return {
         success: false,
         error: error.message
@@ -402,14 +433,14 @@ export function useFile() {
 
   const uploadImage = async (imageFile, imageType = 'PRODUCT') => {
     try {
-      const response = await fileService.uploadImage(imageFile, imageType)
+      const response = await service.uploadImage(imageFile, imageType)
       return {
         success: true,
         data: response.data,
         message: response.message || '이미지가 업로드되었습니다.'
       }
     } catch (error) {
-      console.error('[FILE] 이미지 업로드 실패:', error)
+      console.error('❌ [FILE] 이미지 업로드 실패:', error)
       return {
         success: false,
         error: error.message
@@ -419,13 +450,13 @@ export function useFile() {
 
   const download = async (fileId) => {
     try {
-      await fileService.triggerDownload(fileId)
+      await service.triggerDownload(fileId)
       return {
         success: true,
         message: '파일 다운로드를 시작합니다.'
       }
     } catch (error) {
-      console.error('[FILE] 파일 다운로드 실패:', error)
+      console.error('❌ [FILE] 파일 다운로드 실패:', error)
       return {
         success: false,
         error: error.message
@@ -435,13 +466,13 @@ export function useFile() {
 
   const remove = async (fileId) => {
     try {
-      const response = await fileService.deleteFile(fileId)
+      const response = await service.deleteFile(fileId)
       return {
         success: true,
         message: response.message || '파일이 삭제되었습니다.'
       }
     } catch (error) {
-      console.error('[FILE] 파일 삭제 실패:', error)
+      console.error('❌ [FILE] 파일 삭제 실패:', error)
       return {
         success: false,
         error: error.message
@@ -451,13 +482,13 @@ export function useFile() {
 
   const getInfo = async (fileId) => {
     try {
-      const response = await fileService.getFileInfo(fileId)
+      const response = await service.getFileInfo(fileId)
       return {
         success: true,
         data: response.data
       }
     } catch (error) {
-      console.error('[FILE] 파일 정보 조회 실패:', error)
+      console.error('❌ [FILE] 파일 정보 조회 실패:', error)
       return {
         success: false,
         error: error.message
@@ -467,13 +498,13 @@ export function useFile() {
 
   const createPreview = async (file) => {
     try {
-      const previewUrl = await fileService.createPreviewUrl(file)
+      const previewUrl = await service.createPreviewUrl(file)
       return {
         success: true,
         previewUrl
       }
     } catch (error) {
-      console.error('[FILE] 미리보기 생성 실패:', error)
+      console.error('❌ [FILE] 미리보기 생성 실패:', error)
       return {
         success: false,
         error: error.message
@@ -485,22 +516,19 @@ export function useFile() {
     upload,
     uploadMultiple,
     uploadImage,
-    uploadImages: (files, type) => fileService.uploadImages(files, type),
+    uploadImages: (files, type) => service.uploadImages(files, type),
     download,
-    downloadFile: (fileId) => fileService.downloadFile(fileId),
+    downloadFile: (fileId) => service.downloadFile(fileId),
     getInfo,
-    getList: (params) => fileService.getFileList(params),
+    getList: (params) => service.getFileList(params),
     remove,
-    removeMultiple: (fileIds) => fileService.deleteFiles(fileIds),
-    isImageFile: (file) => fileService.isImageFile(file),
-    formatFileSize: (bytes) => fileService.formatFileSize(bytes),
-    getFileIcon: (fileName) => fileService.getFileIcon(fileName),
-    getFileExtension: (fileName) => fileService.getFileExtension(fileName),
+    removeMultiple: (fileIds) => service.deleteFiles(fileIds),
+    isImageFile: (file) => service.isImageFile(file),
+    formatFileSize: (bytes) => service.formatFileSize(bytes),
+    getFileIcon: (fileName) => service.getFileIcon(fileName),
+    getFileExtension: (fileName) => service.getFileExtension(fileName),
     createPreview,
-    testConnection: () => fileService.testConnection(),
-    debugStatus: () => fileService.debugFileStatus()
+    testConnection: () => service.testConnection(),
+    debugStatus: () => service.debugFileStatus()
   }
 }
-
-export const fileService = new FileService()
-export default fileService
