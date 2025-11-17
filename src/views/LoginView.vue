@@ -316,7 +316,7 @@
                 </div>
 
                 <!-- 비밀번호 강도 표시 -->
-                <div class="password-strength-container">
+                <div v-if="registerForm.password" class="password-strength-container">
                   <div class="strength-bars">
                     <div class="strength-bar" :class="{ active: passwordStrength >= 1 }"></div>
                     <div class="strength-bar" :class="{ active: passwordStrength >= 2 }"></div>
@@ -367,6 +367,7 @@
                       required
                       :disabled="loading"
                       :class="{ error: registerForm.passwordError && registerForm.passwordConfirm }"
+                      @input="checkPasswordMatch"
                       @blur="checkPasswordMatch"
                   />
                   <div class="input-icon">
@@ -453,10 +454,8 @@ const router = useRouter()
 const route = useRoute()
 const { login, isLoggedIn } = useAuth()
 
-// 탭 상태
 const activeTab = ref('login')
 
-// 로그인 폼
 const loginForm = ref({
   email: '',
   password: '',
@@ -466,7 +465,6 @@ const loginForm = ref({
   errorMessage: ''
 })
 
-// 회원가입 폼
 const registerForm = ref({
   email: '',
   password: '',
@@ -476,27 +474,22 @@ const registerForm = ref({
   passwordError: false,
   emailVerified: false,
   verificationSent: false,
-  verificationToken: '', // 이메일 인증 토큰 저장
+  verificationToken: '',
   agreeTerms: false,
   errorMessage: ''
 })
 
-// 비밀번호 체크
 const passwordChecks = ref({
   length: false,
   number: false,
   special: false
 })
 
-// 인증번호 관련
 const verificationInputs = ref([])
 const verificationTimer = ref(180)
 const timerInterval = ref(null)
-
-// 기타 상태
 const loading = ref(false)
 
-// 계산된 속성
 const redirectPath = computed(() => route.query.redirect || '/home')
 const sessionExpired = computed(() => route.query.reason === 'session_expired')
 const isDev = computed(() => import.meta.env.DEV)
@@ -515,7 +508,9 @@ const canRegister = computed(() =>
     !registerForm.value.emailError &&
     !registerForm.value.passwordError &&
     registerForm.value.agreeTerms &&
-    passwordStrength.value === 3
+    passwordChecks.value.length &&
+    passwordChecks.value.number &&
+    passwordChecks.value.special
 )
 
 const passwordStrength = computed(() => {
@@ -537,7 +532,6 @@ const passwordStrengthText = computed(() => {
   return ''
 })
 
-// 메서드
 const switchTab = (tab) => {
   activeTab.value = tab
   loginForm.value.errorMessage = ''
@@ -562,7 +556,11 @@ const checkPasswordStrength = () => {
   const password = registerForm.value.password
   passwordChecks.value.length = password.length >= 8
   passwordChecks.value.number = /\d/.test(password)
-  passwordChecks.value.special = /[@$!%*#?&]/.test(password)
+  passwordChecks.value.special = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/;'`~]/.test(password)
+
+  if (registerForm.value.passwordConfirm) {
+    checkPasswordMatch()
+  }
 }
 
 const checkPasswordMatch = () => {
@@ -572,7 +570,6 @@ const checkPasswordMatch = () => {
   }
 }
 
-// 1단계: 이메일 인증 코드 발송
 const sendVerificationCode = async () => {
   if (registerForm.value.emailError || !registerForm.value.email) return
 
@@ -586,7 +583,6 @@ const sendVerificationCode = async () => {
       console.log('✅ 인증번호 발송 성공')
       registerForm.value.verificationSent = true
 
-      // 타이머 시작
       verificationTimer.value = 180
       if (timerInterval.value) clearInterval(timerInterval.value)
       timerInterval.value = setInterval(() => {
@@ -612,7 +608,6 @@ const sendVerificationCode = async () => {
 const handleVerificationInput = (index, event) => {
   const value = event.target.value
 
-  // 숫자만 입력 가능하도록
   if (value && !/^\d$/.test(value)) {
     event.target.value = ''
     return
@@ -629,7 +624,6 @@ const handleVerificationKeydown = (index, event) => {
   }
 }
 
-// 2단계: 인증 코드 검증
 const verifyCode = async () => {
   const code = verificationInputs.value
   .map(input => input?.value || '')
@@ -659,7 +653,6 @@ const verifyCode = async () => {
     console.error('❌ 인증 코드 검증 실패:', error)
     registerForm.value.errorMessage = error.message || '인증 코드 확인 중 오류가 발생했습니다'
 
-    // 입력 필드 초기화
     verificationInputs.value.forEach(input => {
       if (input) input.value = ''
     })
@@ -723,7 +716,6 @@ const handleLogin = async () => {
   }
 }
 
-// 3단계: 회원가입
 const handleRegister = async () => {
   if (loading.value || !canRegister.value) return
 
@@ -741,11 +733,9 @@ const handleRegister = async () => {
       console.log('✅ 회원가입 성공:', response.data)
       alert('회원가입이 완료되었습니다. 로그인해주세요.')
 
-      // 로그인 탭으로 전환하고 이메일 자동 입력
       switchTab('login')
       loginForm.value.email = registerForm.value.email
 
-      // 폼 초기화
       registerForm.value = {
         email: '',
         password: '',
@@ -825,153 +815,133 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 디자인 토큰 */
 :root {
   --primary: #5B5FCF;
   --primary-hover: #4A4EBF;
   --primary-light: #F0F0FF;
   --primary-dark: #3F43A4;
 
-  --success: #22C55E;
-  --success-light: #DCFCE7;
+  --success: #10B981;
+  --success-light: #D1FAE5;
   --warning: #F59E0B;
   --warning-light: #FEF3C7;
   --error: #EF4444;
   --error-light: #FEE2E2;
 
-  --gray-50: #FAFAFA;
-  --gray-100: #F5F5F5;
-  --gray-200: #E5E5E5;
-  --gray-300: #D4D4D4;
-  --gray-400: #A3A3A3;
-  --gray-500: #737373;
-  --gray-600: #525252;
-  --gray-700: #404040;
-  --gray-800: #262626;
-  --gray-900: #171717;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
 
-  --border: #E5E7EB;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --border: #D1D5DB;
+  --border-focus: #5B5FCF;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
 }
 
-/* 전역 스타일 */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* 메인 래퍼 */
 .auth-wrapper {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #F5F7FA 0%, #E9ECEF 100%);
-  padding: 20px;
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+  padding: 60px 40px;
 }
 
-/* 컨테이너 */
 .auth-container {
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   background: white;
-  border-radius: 16px;
-  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
 }
 
-/* 로고 영역 */
 .logo-area {
-  padding: 36px 32px 28px;
+  padding: 48px 48px 40px;
   text-align: center;
-  background: var(--gray-50);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--gray-200);
 }
 
 .logo {
   display: inline-flex;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .brand-name {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--gray-800);
-  letter-spacing: 0.5px;
+  letter-spacing: -0.02em;
 }
 
-/* 탭 컨테이너 */
 .tab-container {
   background: white;
 }
 
-/* 탭 헤더 */
 .tab-header {
   display: flex;
-  border-bottom: 2px solid var(--gray-100);
+  background: var(--gray-50);
+  padding: 4px;
+  gap: 4px;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 18px;
-  background: none;
+  padding: 12px 16px;
+  background: transparent;
   border: none;
   font-size: 15px;
   font-weight: 600;
-  color: var(--gray-500);
+  color: var(--gray-600);
   cursor: pointer;
   position: relative;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
+  border-radius: 6px;
 }
 
 .tab-btn:hover {
-  color: var(--gray-700);
+  color: var(--gray-900);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .tab-btn.active {
-  color: var(--primary);
+  color: var(--gray-900);
+  background: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--primary);
-  animation: tabSlide 0.3s ease;
-}
-
-@keyframes tabSlide {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
-/* 탭 콘텐츠 */
 .tab-content {
   padding: 32px;
 }
 
-/* 폼 스타일 */
 .auth-form {
   width: 100%;
 }
 
-/* 알림 */
 .notification {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
-  border-radius: 10px;
-  margin-bottom: 24px;
-  font-size: 14px;
-  border: 1px solid;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  border: 2px solid;
 }
 
 .notification.warning {
@@ -982,8 +952,8 @@ onUnmounted(() => {
 
 .notification.success {
   background: var(--success-light);
-  border-color: #86EFAC;
-  color: #166534;
+  border-color: #6EE7B7;
+  color: #065F46;
 }
 
 .notification-icon {
@@ -998,18 +968,17 @@ onUnmounted(() => {
 
 .notification-content p {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   opacity: 0.9;
 }
 
-/* 입력 그룹 */
 .input-group {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .input-label {
   display: block;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--gray-700);
   margin-bottom: 8px;
@@ -1028,7 +997,7 @@ onUnmounted(() => {
 }
 
 .text-btn {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--primary);
   background: none;
   border: none;
@@ -1040,10 +1009,8 @@ onUnmounted(() => {
 
 .text-btn:hover {
   opacity: 0.8;
-  text-decoration: underline;
 }
 
-/* 입력 필드 */
 .input-wrapper {
   position: relative;
 }
@@ -1052,15 +1019,14 @@ input[type="email"],
 input[type="password"],
 input[type="text"]:not(.code-input) {
   width: 100%;
-  padding: 12px 44px;
-  font-size: 15px;
-  border: 2px solid var(--gray-300);  /* 더 진한 회색으로 변경 */
-  border-radius: 10px;
+  padding: 11px 40px;
+  font-size: 14px;
+  border: 2px solid var(--gray-300);
+  border-radius: 8px;
   color: var(--gray-800);
   background: white;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
   outline: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);  /* 그림자 추가 */
 }
 
 input::placeholder {
@@ -1068,13 +1034,13 @@ input::placeholder {
 }
 
 input:hover:not(:focus):not(:disabled) {
-  border-color: var(--gray-400);  /* 호버 시 더 진하게 */
+  border-color: var(--gray-400);
 }
 
 input:focus {
   border-color: var(--primary);
-  background: white;  /* 흰색 배경 유지 */
-  box-shadow: 0 0 0 4px var(--primary-light);  /* 포커스 링 효과 */
+  background: white;
+  box-shadow: 0 0 0 3px rgba(91, 95, 207, 0.1);
 }
 
 input:disabled {
@@ -1087,18 +1053,24 @@ input:disabled {
 input.error {
   border-color: var(--error);
   background: white;
-  box-shadow: 0 0 0 4px var(--error-light);
+}
+
+input.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 input.success {
   border-color: var(--success);
   background: white;
-  box-shadow: 0 0 0 4px var(--success-light);
+}
+
+input.success:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .input-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--gray-400);
@@ -1107,7 +1079,7 @@ input.success {
 
 .toggle-btn {
   position: absolute;
-  right: 12px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -1125,15 +1097,14 @@ input.success {
 .error-msg {
   display: block;
   margin-top: 6px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--error);
   font-weight: 500;
 }
 
-/* 이메일 인증 */
 .input-with-action {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .input-with-action .input-wrapper {
@@ -1141,12 +1112,12 @@ input.success {
 }
 
 .action-btn {
-  padding: 0 20px;
+  padding: 0 16px;
   background: white;
-  color: var(--primary);
-  border: 2px solid var(--primary);
-  border-radius: 10px;
-  font-size: 14px;
+  color: var(--gray-700);
+  border: 2px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -1154,14 +1125,14 @@ input.success {
 }
 
 .action-btn:hover:not(:disabled) {
-  background: var(--primary);
-  color: white;
+  background: var(--gray-50);
+  border-color: var(--gray-400);
 }
 
 .action-btn:disabled {
   background: var(--gray-100);
   color: var(--gray-400);
-  border-color: var(--gray-300);
+  border-color: var(--gray-200);
   cursor: not-allowed;
 }
 
@@ -1171,30 +1142,29 @@ input.success {
   border-color: var(--success);
 }
 
-/* 인증번호 섹션 */
 .verification-section {
   background: var(--gray-50);
   border: 2px solid var(--gray-200);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 20px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .verification-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .verification-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--gray-700);
 }
 
 .verification-timer {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--primary);
 }
@@ -1206,12 +1176,12 @@ input.success {
 .verification-inputs {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .code-input {
   flex: 1;
-  height: 52px;
+  height: 50px;
   text-align: center;
   font-size: 20px;
   font-weight: 600;
@@ -1223,28 +1193,28 @@ input.success {
 
 .code-input:focus {
   border-color: var(--primary);
-  background: var(--primary-light);
+  background: white;
   outline: none;
+  box-shadow: 0 0 0 3px rgba(91, 95, 207, 0.1);
 }
 
 .verification-footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .separator {
   color: var(--gray-300);
 }
 
-/* 비밀번호 강도 */
 .password-strength-container {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 10px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 10px;
 }
 
 .strength-bars {
@@ -1255,7 +1225,7 @@ input.success {
 
 .strength-bar {
   flex: 1;
-  height: 4px;
+  height: 3px;
   background: var(--gray-200);
   border-radius: 2px;
   transition: all 0.3s;
@@ -1266,30 +1236,30 @@ input.success {
 .strength-bar.active:nth-child(3) { background: var(--success); }
 
 .strength-text {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  min-width: 40px;
+  min-width: 36px;
 }
 
 .strength-text.weak { color: var(--error); }
 .strength-text.medium { color: var(--warning); }
 .strength-text.strong { color: var(--success); }
 
-/* 체크리스트 */
 .checklist {
   display: flex;
-  gap: 16px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 12px 14px;
   background: var(--gray-50);
+  border: 2px solid var(--gray-200);
   border-radius: 8px;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .check-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: 5px;
+  font-size: 12px;
   color: var(--gray-500);
   transition: color 0.2s;
 }
@@ -1307,9 +1277,8 @@ input.success {
   fill: var(--success);
 }
 
-/* 체크박스 */
 .checkbox-group {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .checkbox-label {
@@ -1317,7 +1286,7 @@ input.success {
   align-items: center;
   cursor: pointer;
   user-select: none;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--gray-700);
 }
 
@@ -1327,11 +1296,11 @@ input.success {
 }
 
 .checkbox-box {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border: 2px solid var(--gray-300);
-  border-radius: 6px;
-  margin-right: 10px;
+  border-radius: 4px;
+  margin-right: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1359,56 +1328,60 @@ input.success {
   border-color: var(--primary);
 }
 
-/* 약관 동의 */
 .terms-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   padding: 16px;
   background: var(--gray-50);
-  border-radius: 10px;
+  border: 2px solid var(--gray-200);
+  border-radius: 8px;
 }
 
 .link {
-  color: var(--primary);
-  text-decoration: none;
+  color: var(--gray-900);
+  text-decoration: underline;
   font-weight: 500;
 }
 
 .link:hover {
-  text-decoration: underline;
+  opacity: 0.7;
 }
 
-/* 제출 버튼 */
 .submit-btn {
   width: 100%;
-  padding: 14px 24px;
+  padding: 13px 20px;
   border: none;
-  border-radius: 10px;
-  font-size: 16px;
+  border-radius: 8px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .submit-btn.primary {
   background: var(--primary);
   color: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .submit-btn.primary:hover:not(:disabled) {
   background: var(--primary-hover);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transform: translateY(-1px);
-  box-shadow: 0 10px 20px -5px rgba(91, 95, 207, 0.35);
+}
+
+.submit-btn.primary:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .submit-btn:disabled {
   background: var(--gray-300);
   color: var(--gray-500);
   cursor: not-allowed;
-  transform: none;
+  box-shadow: none;
 }
 
 .spinner {
@@ -1420,65 +1393,49 @@ input.success {
   to { transform: rotate(360deg); }
 }
 
-/* 에러 박스 */
 .alert-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin-top: 16px;
-  font-size: 14px;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .alert-box.error {
   background: var(--error-light);
-  color: var(--error);
-  border: 1px solid #FCA5A5;
+  color: #991B1B;
+  border: 2px solid #FCA5A5;
 }
 
-/* 소셜 로그인 */
 .social-section {
-  margin-top: 32px;
-  padding-top: 32px;
-  border-top: 1px solid var(--gray-100);
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid var(--gray-200);
 }
 
 .divider-text {
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--gray-500);
   font-weight: 500;
-  margin-bottom: 20px;
-  position: relative;
+  margin-bottom: 16px;
 }
-
-.divider-text::before,
-.divider-text::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: calc(50% - 60px);
-  height: 1px;
-  background: var(--gray-200);
-}
-
-.divider-text::before { left: 0; }
-.divider-text::after { right: 0; }
 
 .social-buttons {
   display: flex;
-  gap: 12px;
+  gap: 8px;
 }
 
 .social-btn {
   flex: 1;
-  padding: 12px 16px;
-  border: 2px solid var(--gray-200);
+  padding: 11px 14px;
+  border: 2px solid var(--gray-300);
   background: white;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--gray-700);
   cursor: pointer;
@@ -1486,13 +1443,14 @@ input.success {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .social-btn:hover {
   background: var(--gray-50);
-  border-color: var(--gray-300);
+  border-color: var(--gray-400);
   transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .social-btn.kakao {
@@ -1506,22 +1464,21 @@ input.success {
   border-color: #FDD835;
 }
 
-/* 개발자 패널 */
 .dev-panel {
-  padding: 20px 32px;
-  background: var(--gray-50);
-  border-top: 1px solid var(--border);
+  padding: 16px 32px;
+  background: white;
+  border-top: 1px solid var(--gray-200);
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .dev-button {
   flex: 1;
-  padding: 10px 16px;
+  padding: 8px 12px;
   background: white;
-  border: 1px solid var(--gray-300);
-  border-radius: 8px;
-  font-size: 13px;
+  border: 1px solid var(--gray-200);
+  border-radius: 2px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--gray-600);
   cursor: pointer;
@@ -1533,11 +1490,10 @@ input.success {
 }
 
 .dev-button:hover {
-  background: var(--gray-100);
-  border-color: var(--gray-400);
+  background: var(--gray-50);
+  border-color: var(--gray-300);
 }
 
-/* 애니메이션 */
 .fade-enter-active,
 .fade-leave-active {
   transition: all 0.2s ease;
@@ -1585,11 +1541,9 @@ input.success {
   75% { transform: translateX(4px); }
 }
 
-/* 모바일 반응형 */
 @media (max-width: 640px) {
-  .auth-container {
-    max-width: 100%;
-    margin: 0 16px;
+  .auth-wrapper {
+    padding: 20px 16px;
   }
 
   .tab-content {
@@ -1610,8 +1564,8 @@ input.success {
   }
 
   .code-input {
-    height: 46px;
-    font-size: 18px;
+    height: 44px;
+    font-size: 16px;
   }
 }
 
@@ -1622,13 +1576,14 @@ input.success {
   }
 
   .auth-container {
-    margin: 0;
+    max-width: 100%;
+    border: none;
     border-radius: 0;
     min-height: 100vh;
   }
 
   .logo-area {
-    padding: 28px 20px 24px;
+    padding: 32px 20px 28px;
   }
 
   .tab-content {
