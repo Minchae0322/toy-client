@@ -55,7 +55,7 @@
           >
             <div class="category-emoji">{{ category.emoji || '📁' }}</div>
             <div class="category-name">{{ category.categoryName }}</div>
-            <div class="sub-count">{{ category.subCategories?.length || 0 }}개</div>
+            <div class="sub-count">{{ (category.children?.length || 0) }}개</div>
           </div>
         </div>
       </div>
@@ -66,17 +66,22 @@
           하위 카테고리 선택
           <span class="required-badge">필수</span>
         </div>
-        <div class="category-grid sub">
+
+        <div v-if="selectedParentCategory.children && selectedParentCategory.children.length > 0" class="category-grid sub">
           <div
-              v-for="subCategory in selectedParentCategory.subCategories"
-              :key="subCategory.subCategoryId"
+              v-for="subCategory in selectedParentCategory.children"
+              :key="subCategory.categoryId"
               class="category-item sub-item"
-              :class="{ selected: battleForm.subCategoryId === subCategory.subCategoryId }"
+              :class="{ selected: battleForm.subCategoryId === subCategory.categoryId }"
               @click="selectSubCategory(subCategory)"
           >
             <div class="category-emoji">{{ subCategory.emoji || '📄' }}</div>
-            <div class="category-name">{{ subCategory.subCategoryName }}</div>
+            <div class="category-name">{{ subCategory.categoryName }}</div>
           </div>
+        </div>
+        <div v-else class="no-subcategory">
+          <div class="info-icon"></div>
+          <div class="info-text">하위 카테고리가 없습니다. 관리자에게 문의하세요.</div>
         </div>
       </div>
 
@@ -91,7 +96,7 @@
         먼저 상위 카테고리를 선택해주세요
       </div>
       <div v-else-if="!battleForm.subCategoryId" class="form-hint error">
-        하위 카테고리를 반드시 선택해야 합니다
+        ⚠️ 하위 카테고리를 반드시 선택해야 합니다
       </div>
     </div>
 
@@ -191,19 +196,28 @@ const emit = defineEmits(['update:battleForm']);
 const thumbnailInput = ref(null);
 const selectedParentCategory = ref(null);
 
+// 🔍 디버깅: categories prop 확인
+console.log('📦 전달받은 categories:', props.categories);
+console.log('📦 categories 타입:', typeof props.categories);
+console.log('📦 categories 배열 여부:', Array.isArray(props.categories));
+if (Array.isArray(props.categories) && props.categories.length > 0) {
+  console.log('📦 첫 번째 카테고리:', props.categories[0]);
+  console.log('📦 children 존재:', props.categories[0].children);
+}
+
 // 선택된 카테고리 경로 표시
 const selectedCategoryPath = computed(() => {
   if (!selectedParentCategory.value || !props.battleForm.subCategoryId) {
     return null;
   }
 
-  const subCategory = selectedParentCategory.value.subCategories?.find(
-      sub => sub.subCategoryId === props.battleForm.subCategoryId
+  const subCategory = selectedParentCategory.value.children?.find(
+      sub => sub.categoryId === props.battleForm.subCategoryId
   );
 
   if (!subCategory) return null;
 
-  return `${selectedParentCategory.value.categoryName} > ${subCategory.subCategoryName}`;
+  return `${selectedParentCategory.value.categoryName} > ${subCategory.categoryName}`;
 });
 
 const previewImage = computed(() => {
@@ -213,11 +227,15 @@ const previewImage = computed(() => {
 
 // 상위 카테고리 선택
 const selectParentCategory = (category) => {
+  console.log('🔍 선택된 상위 카테고리:', category);
+  console.log('📁 하위 카테고리 개수:', category.children?.length || 0);
+
   selectedParentCategory.value = category;
 
   // 상위 카테고리 변경 시 하위 카테고리 선택 초기화
   emit('update:battleForm', {
     ...props.battleForm,
+    categoryId: category.categoryId,
     subCategoryId: null
   });
 };
@@ -226,7 +244,7 @@ const selectParentCategory = (category) => {
 const selectSubCategory = (subCategory) => {
   emit('update:battleForm', {
     ...props.battleForm,
-    subCategoryId: subCategory.subCategoryId
+    subCategoryId: subCategory.categoryId
   });
 };
 
@@ -301,6 +319,7 @@ const removeImage = () => {
   border-radius: 8px;
   font-size: 14px;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
@@ -458,6 +477,28 @@ const removeImage = () => {
 
 .category-item.selected .sub-count {
   color: rgba(255, 255, 255, 0.7);
+}
+
+/* 하위 카테고리 없음 경고 */
+.no-subcategory {
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-icon {
+  font-size: 16px;
+}
+
+.info-text {
+  font-size: 13px;
+  color: #991B1B;
+  font-weight: 500;
 }
 
 /* 선택된 경로 표시 */

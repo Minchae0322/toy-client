@@ -73,11 +73,12 @@
     </main>
   </div>
 </template>
+
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBattle } from '@/services/BattleService';
-import { useCategory } from '@/services/CategoryService'; // ⭐ 추가
+import { useCategory } from '@/services/CategoryService';
 import BattleCreateHeader from '@/components/battle/create/BattleCreateHeader.vue';
 import BattleCreatePreview from '@/components/battle/create/BattleCreatePreview.vue';
 import Step1BasicInfo from '@/components/battle/create/Step1BasicInfo.vue';
@@ -88,7 +89,7 @@ import BattleCreateFooter from '@/components/battle/create/BattleCreateFooter.vu
 
 const router = useRouter();
 const battleService = useBattle();
-const categoryService = useCategory(); // ⭐ 추가
+const categoryService = useCategory();
 
 // ==================== 스텝 설정 ====================
 const steps = ['기본 정보', '아이템 설정', '상세 설정', '최종 확인'];
@@ -139,6 +140,7 @@ const loading = ref(false);
 // ==================== 배틀 폼 데이터 ====================
 const battleForm = ref({
   title: '',
+  categoryId: null,
   subCategoryId: null,
   itemAddPermissionType: 'CREATOR_ONLY',
   startDate: '',
@@ -161,13 +163,28 @@ const previewPermissionTypeName = computed(() => {
 });
 
 const previewCategoryName = computed(() => {
-  const category = categories.value.find(c => c.subCategoryId === battleForm.value.subCategoryId);
-  return category ? category.subCategoryName : '';
+  if (!battleForm.value.categoryId || !battleForm.value.subCategoryId) return '';
+
+  const parentCategory = categories.value.find(c => c.categoryId === battleForm.value.categoryId);
+  if (!parentCategory) return '';
+
+  const subCategory = parentCategory.children?.find(s => s.categoryId === battleForm.value.subCategoryId);
+  if (!subCategory) return '';
+
+  return `${parentCategory.categoryName} > ${subCategory.categoryName}`;
 });
 
 const previewEmoji = computed(() => {
-  const category = categories.value.find(c => c.subCategoryId === battleForm.value.subCategoryId);
-  return category ? category.emoji : '📦';
+  if (!battleForm.value.subCategoryId) return '📦';
+
+  const parentCategory = categories.value.find(c =>
+      c.children?.some(s => s.categoryId === battleForm.value.subCategoryId)
+  );
+
+  if (!parentCategory) return '📦';
+
+  const subCategory = parentCategory.children?.find(s => s.categoryId === battleForm.value.subCategoryId);
+  return subCategory?.emoji || parentCategory.emoji || '📦';
 });
 
 const previewVoteTypeName = computed(() => {
@@ -216,73 +233,31 @@ const canProceed = computed(() => {
 // ==================== 메서드 ====================
 
 /**
- * ⭐ 카테고리 목록 로드 (수정)
+ * ⭐ 카테고리 트리 로드 (수정)
  */
 const loadCategories = async () => {
   try {
     loading.value = true;
-    console.log('📂 카테고리 로드 시작...');
+    console.log('📂 카테고리 트리 로드 시작...');
 
     const response = await categoryService.getCategories();
 
-    console.log('📦 카테고리 응답:', response);
+    console.log('📦 카테고리 트리 응답:', response);
 
     if (response.success && response.data) {
-      // ⭐ 백엔드 응답 구조에 맞게 처리
-      const categoryList = response.data;
-
-      // 평면 구조를 서브카테고리 목록으로 변환
-      categories.value = categoryList.map(category => ({
-        categoryId: category.categoryId,
-        subCategoryId: category.categoryId, // ⭐ 서브카테고리가 없으면 자기 자신을 사용
-        categoryName: category.categoryName,
-        subCategoryName: category.categoryName,
-        emoji: getEmojiForCategory(category.categoryName)
-      }));
-
-      console.log('✅ 카테고리 로드 완료:', categories.value);
+      categories.value = response.data;
+      console.log('✅ 카테고리 트리 로드 완료:', categories.value);
     } else {
-      console.warn('⚠️ 카테고리 응답이 없음, 기본값 사용');
-      categories.value = getDefaultCategories();
+      console.warn('⚠️ 카테고리 응답이 없음');
+      categories.value = [];
     }
   } catch (error) {
     console.error('❌ 카테고리 로드 실패:', error);
-    categories.value = getDefaultCategories();
-    alert('카테고리를 불러오는데 실패했습니다. 기본 카테고리를 사용합니다.');
+    categories.value = [];
+    alert('카테고리를 불러오는데 실패했습니다.');
   } finally {
     loading.value = false;
   }
-};
-
-/**
- * 기본 카테고리 (백엔드 로드 실패시)
- */
-const getDefaultCategories = () => [
-  { categoryId: 1, subCategoryId: 1, categoryName: '스니커즈', subCategoryName: '스니커즈', emoji: '👟' },
-  { categoryId: 2, subCategoryId: 2, categoryName: '테크', subCategoryName: '테크', emoji: '💻' },
-  { categoryId: 3, subCategoryId: 3, categoryName: '뷰티', subCategoryName: '뷰티', emoji: '💄' },
-  { categoryId: 4, subCategoryId: 4, categoryName: 'F&B', subCategoryName: 'F&B', emoji: '☕' },
-  { categoryId: 5, subCategoryId: 5, categoryName: '패션', subCategoryName: '패션', emoji: '👕' },
-  { categoryId: 6, subCategoryId: 6, categoryName: '리빙', subCategoryName: '리빙', emoji: '🛋️' },
-  { categoryId: 7, subCategoryId: 7, categoryName: '게임', subCategoryName: '게임', emoji: '🎮' },
-  { categoryId: 8, subCategoryId: 8, categoryName: '기타', subCategoryName: '기타', emoji: '📚' }
-];
-
-/**
- * 카테고리 이름에 따른 이모지 반환
- */
-const getEmojiForCategory = (categoryName) => {
-  const emojiMap = {
-    '스니커즈': '👟',
-    '테크': '💻',
-    '뷰티': '💄',
-    'F&B': '☕',
-    '패션': '👕',
-    '리빙': '🛋️',
-    '게임': '🎮',
-    '기타': '📚'
-  };
-  return emojiMap[categoryName] || '📦';
 };
 
 const handleNext = async () => {
@@ -334,6 +309,7 @@ const loadDraft = () => {
     console.error('❌ 임시저장 데이터 로드 실패:', error);
   }
 };
+
 /**
  * 배틀 생성
  */
@@ -342,10 +318,8 @@ const createBattle = async () => {
     loading.value = true;
     console.log('🚀 배틀 생성 시작...');
 
-    // ⭐ 날짜를 LocalDateTime 형식으로 변환 (ISO 8601)
     const formatToDateTime = (dateString) => {
       if (!dateString) return null;
-      // "2025-11-03" → "2025-11-03T00:00:00"
       return dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
     };
 
@@ -354,9 +328,9 @@ const createBattle = async () => {
       description: battleForm.value.description?.trim() || null,
       subCategoryId: battleForm.value.subCategoryId,
       itemAddPermissionType: battleForm.value.itemAddPermissionType,
-      startDate: formatToDateTime(battleForm.value.startDate),           // ⭐ 변환
-      endDate: formatToDateTime(battleForm.value.endDate),               // ⭐ 변환
-      participationStartDate: formatToDateTime(battleForm.value.participationStartDate), // ⭐ 변환
+      startDate: formatToDateTime(battleForm.value.startDate),
+      endDate: formatToDateTime(battleForm.value.endDate),
+      participationStartDate: formatToDateTime(battleForm.value.participationStartDate),
       voteType: battleForm.value.voteType,
       items: battleForm.value.items
     };
@@ -405,7 +379,7 @@ onMounted(async () => {
   console.log('✅ BattleCreateView 마운트');
 
   await checkCreationPermission();
-  await loadCategories(); // ⭐ 카테고리 로드
+  await loadCategories();
   loadDraft();
 
   // 기본 날짜 설정
