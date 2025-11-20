@@ -11,10 +11,10 @@
     <!-- 인증 성공 메시지 -->
     <transition name="slide">
       <div v-if="form.emailVerified" class="notification success">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
         </svg>
-        이메일 인증이 완료되었습니다
+        이메일 인증 완료
       </div>
     </transition>
 
@@ -44,7 +44,7 @@
             @blur="checkPasswordMatch"
         />
         <div class="input-icon">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
             <rect x="5" y="9" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
             <path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             <path d="M10 13v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -65,7 +65,7 @@
             <path d="M1 5L4.5 8.5L11 1.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </span>
-        <span>
+        <span class="terms-text">
           <a href="#" class="link" @click.prevent>이용약관</a> 및
           <a href="#" class="link" @click.prevent>개인정보처리방침</a>에 동의합니다
         </span>
@@ -74,7 +74,7 @@
 
     <!-- 회원가입 버튼 -->
     <button type="submit" class="submit-btn primary" :disabled="loading || !canSubmit">
-      <svg v-if="loading" class="spinner" width="20" height="20" viewBox="0 0 24 24">
+      <svg v-if="loading" class="spinner" width="18" height="18" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="40">
           <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
         </circle>
@@ -85,7 +85,7 @@
     <!-- 에러 메시지 -->
     <transition name="shake">
       <div v-if="form.errorMessage" class="alert-box error">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
           <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 12H7v-2h2v2zm0-3H7V4h2v5z"/>
         </svg>
         {{ form.errorMessage }}
@@ -165,12 +165,13 @@ const handleSubmit = async () => {
 
 .notification {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 13px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 500;
   border: 2px solid;
 }
 
@@ -181,15 +182,15 @@ const handleSubmit = async () => {
 }
 
 .input-group {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .input-label {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .required {
@@ -204,10 +205,10 @@ const handleSubmit = async () => {
 input[type="password"],
 input[type="text"] {
   width: 100%;
-  padding: 11px 40px;
+  padding: 10px 36px;
   font-size: 14px;
   border: 2px solid #D1D5DB;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #1F2937;
   background: white;
   transition: all 0.2s;
@@ -246,7 +247,7 @@ input.error:focus {
 
 .input-icon {
   position: absolute;
-  left: 12px;
+  left: 11px;
   top: 50%;
   transform: translateY(-50%);
   color: #9CA3AF;
@@ -255,27 +256,28 @@ input.error:focus {
 
 .error-msg {
   display: block;
-  margin-top: 6px;
-  font-size: 12px;
+  margin-top: 4px;
+  font-size: 11px;
   color: #EF4444;
   font-weight: 500;
 }
 
 .terms-section {
-  margin-bottom: 20px;
-  padding: 16px;
+  margin-bottom: 12px;
+  padding: 12px;
   background: #F9FAFB;
   border: 2px solid #E5E7EB;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .checkbox-label {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   cursor: pointer;
   user-select: none;
-  font-size: 13px;
+  font-size: 12px;
   color: #374151;
+  line-height: 1.4;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -286,12 +288,13 @@ input.error:focus {
 }
 
 .checkbox-box {
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
   border: 2px solid #D1D5DB;
   border-radius: 4px;
   margin-right: 8px;
+  margin-top: 1px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -319,10 +322,14 @@ input.error:focus {
   border-color: #5B5FCF;
 }
 
+.terms-text {
+  flex: 1;
+}
+
 .link {
   color: #111827;
   text-decoration: underline;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .link:hover {
@@ -331,10 +338,10 @@ input.error:focus {
 
 .submit-btn {
   width: 100%;
-  padding: 13px 20px;
+  padding: 11px 20px;
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: 6px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -376,10 +383,10 @@ input.error:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  margin-top: 12px;
-  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 

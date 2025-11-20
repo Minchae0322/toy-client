@@ -88,7 +88,7 @@
     </div>
 
     <!-- 로그인 옵션 -->
-    <div class="checkbox-group">
+<!--    <div class="checkbox-group">
       <label class="checkbox-label">
         <input type="checkbox" v-model="form.rememberMe" />
         <span class="checkbox-box">
@@ -98,7 +98,7 @@
         </span>
         <span>로그인 상태 유지</span>
       </label>
-    </div>
+    </div>-->
 
     <!-- 로그인 버튼 -->
     <button type="submit" class="submit-btn primary" :disabled="loading || !canSubmit">

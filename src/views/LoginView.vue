@@ -4,7 +4,7 @@
       <!-- 로고 영역 -->
       <div class="logo-area">
         <div class="logo">
-          <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
+          <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
             <rect width="48" height="48" rx="12" fill="url(#gradient)"/>
             <path d="M24 14L32 20V28L24 34L16 28V20L24 14Z" fill="white"/>
             <defs>
@@ -186,7 +186,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* 기존 스타일 전체 유지 */
 :root {
   --primary: #5B5FCF;
   --primary-hover: #4A4EBF;
@@ -227,12 +226,12 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
-  padding: 60px 40px;
+  padding: 20px;
 }
 
 .auth-container {
   width: 100%;
-  max-width: 520px;
+  max-width: 420px;
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
@@ -241,18 +240,18 @@ onMounted(async () => {
 }
 
 .logo-area {
-  padding: 48px 48px 40px;
+  padding: 24px 24px 20px;
   text-align: center;
   border-bottom: 1px solid var(--gray-200);
 }
 
 .logo {
   display: inline-flex;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .brand-name {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--gray-800);
   letter-spacing: -0.02em;
@@ -271,10 +270,10 @@ onMounted(async () => {
 
 .tab-btn {
   flex: 1;
-  padding: 12px 16px;
+  padding: 10px 16px;
   background: transparent;
   border: none;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--gray-600);
   cursor: pointer;
@@ -295,7 +294,7 @@ onMounted(async () => {
 }
 
 .tab-content {
-  padding: 32px;
+  padding: 24px;
 }
 
 .dev-panel {
@@ -343,13 +342,28 @@ onMounted(async () => {
   transform: translateX(-10px);
 }
 
+/* 높이가 낮은 화면 최적화 */
+@media (max-height: 700px) {
+  .auth-wrapper {
+    padding: 16px;
+  }
+
+  .logo-area {
+    padding: 20px 24px 16px;
+  }
+
+  .tab-content {
+    padding: 20px 24px;
+  }
+}
+
 @media (max-width: 640px) {
   .auth-wrapper {
     padding: 20px 16px;
   }
 
   .tab-content {
-    padding: 24px 20px;
+    padding: 20px;
   }
 }
 
@@ -367,7 +381,7 @@ onMounted(async () => {
   }
 
   .logo-area {
-    padding: 32px 20px 28px;
+    padding: 28px 20px 24px;
   }
 
   .tab-content {
