@@ -27,20 +27,25 @@
             style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;"
         >
           <div
-              v-for="(item, index) in selectedItems"
+              v-for="(item, index) in displayItems"
               :key="index"
               class="selected-item"
           >
             <div class="selected-item-remove" @click="removeItem(index)">×</div>
             <div class="item-visual">
-              <img v-if="item._displayImage" :src="item._displayImage" :alt="item._displayName">
+              <img
+                  v-if="item.imageUrl"
+                  :src="item.imageUrl"
+                  :alt="item.name"
+                  @error="handleImageError"
+              >
               <div v-else class="item-placeholder">
-                {{ item._isCustom ? '✨' : '📦' }}
+                {{ item.isCustom ? '✨' : '📦' }}
               </div>
             </div>
-            <div class="item-name">{{ item._displayName }}</div>
-            <div class="item-brand">{{ item._displayBrand }}</div>
-            <div v-if="item._isCustom" class="item-badge">커스텀</div>
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-brand">{{ item.brand }}</div>
+            <div v-if="item.isCustom" class="item-badge">커스텀</div>
           </div>
 
           <!-- Add Button -->
@@ -54,14 +59,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Tip Box -->
-      <div v-if="selectedItems.length > 0" class="tip-box">
-        <span style="font-size: 14px;">💡</span>
-        <div style="font-size: 13px; color: #92400E;">
-          <strong>Tip:</strong> 커스텀 아이템은 제품명, 브랜드, 이미지로 표시됩니다.
-        </div>
-      </div>
     </div>
 
     <!-- Item Selection Modal -->
@@ -73,9 +70,8 @@
     />
   </div>
 </template>
-
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import ItemSelectionModal from './ItemSelectionModal.vue';
 
 const props = defineProps({
@@ -92,48 +88,52 @@ const props = defineProps({
 const emit = defineEmits(['update:battleForm', 'update:selectedItems']);
 
 const showModal = ref(false);
+const displayItems = computed(() => {
+  return props.selectedItems.map(item => {
+    // 커스텀 아이템인 경우
+    if (item.customName) {
+      return {
+        name: item.customName,
+        brand: item.customBrand || '커스텀',
+        imageUrl: item.imageUrl || null, // ⭐ 이미 설정된 미리보기 URL 사용
+        isCustom: true
+      };
+    }
 
-// Methods
+    // 기존 제품인 경우
+    return {
+      name: item.name || '알 수 없음',
+      brand: item.brand || '브랜드 없음',
+      imageUrl: item.thumbnailDto?.fileUrl || item.imageUrl || null,
+      isCustom: false
+    };
+  });
+});
+
 const handleItemsConfirm = (newItems) => {
-  // 기존 아이템 + 새로 추가된 아이템
   const updatedItems = [...props.selectedItems, ...newItems];
-
-  // ⭐ battleForm의 items도 업데이트 (백엔드 전송용)
-  const battleItems = updatedItems.map(item => ({
-    productId: item.productId || null,
-    customName: item.customName || null,
-    customBrand: item.customBrand || null,
-    customImageUrl: item.customImageUrl || null
-  }));
-
   emit('update:selectedItems', updatedItems);
   emit('update:battleForm', {
-    ...props.battleForm,
-    items: battleItems
+    ...props.battleForm
   });
 };
 
 const removeItem = (index) => {
   const newItems = [...props.selectedItems];
   newItems.splice(index, 1);
-
-  // ⭐ battleForm의 items도 업데이트
-  const battleItems = newItems.map(item => ({
-    productId: item.productId || null,
-    customName: item.customName || null,
-    customBrand: item.customBrand || null,
-    customImageUrl: item.customImageUrl || null
-  }));
-
   emit('update:selectedItems', newItems);
   emit('update:battleForm', {
-    ...props.battleForm,
-    items: battleItems
+    ...props.battleForm
   });
+};
+
+const handleImageError = (event) => {
+  event.target.style.display = 'none';
 };
 </script>
 
 <style scoped>
+/* 기존 스타일 유지 */
 .form-section {
   flex: 1;
   background: white;
@@ -300,16 +300,6 @@ const removeItem = (index) => {
 .add-item-button:hover {
   border-color: #9CA3AF;
   background: #F3F4F6;
-}
-
-.tip-box {
-  margin-top: 16px;
-  padding: 16px;
-  background: #FEF3C7;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 @media (max-width: 768px) {

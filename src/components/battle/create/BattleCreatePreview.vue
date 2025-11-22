@@ -2,8 +2,18 @@
   <div class="preview-section">
     <div class="preview-label">미리보기</div>
     <div class="preview-card">
+      <!-- ⭐ 대표 이미지가 있으면 표시 -->
       <div
-          v-if="battleForm.type === 'curation' && selectedItems.length > 0"
+          v-if="previewImageUrl"
+          class="preview-visual preview-image"
+          :style="{ backgroundImage: `url(${previewImageUrl})` }"
+      >
+        <div class="preview-type-badge">{{ previewTypeName }}</div>
+      </div>
+
+      <!-- 큐레이션 타입 시각화 -->
+      <div
+          v-else-if="battleForm.type === 'curation' && selectedItems.length > 0"
           class="preview-visual"
           style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative; overflow: hidden;"
       >
@@ -22,10 +32,10 @@
             {{ selectedItems[i]?.emoji || '👟' }}
           </div>
         </div>
-        <div style="position: absolute; top: 12px; right: 12px; background: rgba(26, 26, 26, 0.8); color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;">
-          큐레이션
-        </div>
+        <div class="preview-type-badge">큐레이션</div>
       </div>
+
+      <!-- 기본 플레이스홀더 -->
       <div v-else class="preview-visual">
         <div class="preview-visual-placeholder">{{ previewEmoji }}</div>
         <div class="preview-type-badge">{{ previewTypeName }}</div>
@@ -58,7 +68,9 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   battleForm: {
     type: Object,
     required: true
@@ -83,6 +95,12 @@ defineProps({
     type: String,
     default: ''
   }
+});
+
+// ⭐ 대표 이미지 URL 생성
+const previewImageUrl = computed(() => {
+  if (!props.battleForm.thumbnailFile) return null;
+  return URL.createObjectURL(props.battleForm.thumbnailFile);
 });
 </script>
 
@@ -116,6 +134,13 @@ defineProps({
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+/* ⭐ 업로드된 이미지 스타일 */
+.preview-image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .preview-visual-placeholder {

@@ -53,8 +53,8 @@
       <div class="summary-item">
         <span class="summary-label">등록된 아이템 수</span>
         <span class="summary-value">
-          {{ battleForm.items?.length || 0 }}개
-          <span v-if="battleForm.items?.length >= 2" class="summary-badge success">✓ 충족</span>
+          {{ selectedItemsCount }}개
+          <span v-if="selectedItemsCount >= 2" class="summary-badge success">✓ 충족</span>
           <span v-else class="summary-badge error">✗ 부족 (최소 2개)</span>
         </span>
       </div>
@@ -84,21 +84,21 @@
     <div class="checklist-box">
       <div class="checklist-title">✅ 최종 확인 체크리스트</div>
       <div class="checklist-items">
-        <div class="checklist-item" :class="{ checked: battleForm.title.length >= 15 }">
-          <span class="checklist-icon">{{ battleForm.title.length >= 15 ? '✓' : '○' }}</span>
-          <span>배틀 제목이 15자 이상입니다</span>
+        <div class="checklist-item" :class="{ checked: battleForm.title.length > 0 }">
+          <span class="checklist-icon">{{ battleForm.title.length > 0 ? '✓' : '○' }}</span>
+          <span>배틀 제목을 입력했습니다</span>
         </div>
         <div class="checklist-item" :class="{ checked: battleForm.subCategoryId }">
           <span class="checklist-icon">{{ battleForm.subCategoryId ? '✓' : '○' }}</span>
           <span>카테고리를 선택했습니다</span>
         </div>
-        <div class="checklist-item" :class="{ checked: battleForm.items?.length >= 2 }">
-          <span class="checklist-icon">{{ battleForm.items?.length >= 2 ? '✓' : '○' }}</span>
+        <div class="checklist-item" :class="{ checked: selectedItemsCount >= 2 }">
+          <span class="checklist-icon">{{ selectedItemsCount >= 2 ? '✓' : '○' }}</span>
           <span>아이템을 2개 이상 등록했습니다</span>
         </div>
         <div class="checklist-item" :class="{ checked: battleForm.thumbnailFile }">
           <span class="checklist-icon">{{ battleForm.thumbnailFile ? '✓' : '○' }}</span>
-          <span>대표 이미지를 업로드했습니다</span>
+          <span>대표 이미지를 업로드했습니다 (선택)</span>
         </div>
         <div class="checklist-item" :class="{ checked: dateDiff >= 7 && dateDiff <= 31 }">
           <span class="checklist-icon">{{ dateDiff >= 7 && dateDiff <= 31 ? '✓' : '○' }}</span>
@@ -128,12 +128,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-
 const props = defineProps({
   battleForm: {
     type: Object,
     required: true
+  },
+  selectedItemsCount: {  // ⭐ 새로 추가
+    type: Number,
+    default: 0
   },
   previewPermissionTypeName: {
     type: String,

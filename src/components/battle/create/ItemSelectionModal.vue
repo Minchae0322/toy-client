@@ -35,17 +35,6 @@
 
           <!-- 검색 결과 또는 직접 입력 -->
           <div class="modal-content">
-            <!-- 디버깅 정보 (개발 중에만 표시) -->
-            <div v-if="isDev" class="debug-info">
-              <details>
-                <summary>🔍 디버깅 정보</summary>
-                <pre>검색어: {{ searchQuery }}</pre>
-                <pre>검색 결과 수: {{ products.length }}</pre>
-                <pre>필터된 결과 수: {{ filteredProducts.length }}</pre>
-                <pre>첫 번째 상품: {{ JSON.stringify(products[0], null, 2) }}</pre>
-              </details>
-            </div>
-
             <!-- 검색 결과가 있을 때 -->
             <div v-if="filteredProducts.length > 0" class="search-results">
               <div class="section-header">
@@ -232,9 +221,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'confirm']);
 
-// 개발 모드 체크
-const isDev = import.meta.env.DEV;
-
 // 상태
 const searchQuery = ref('');
 const tempSelectedItems = ref([]);
@@ -257,12 +243,9 @@ let searchTimeout = null;
 // Computed
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return [];
-
-  // 이미 검색된 결과가 있으면 그대로 반환
   if (products.value.length > 0) {
     return products.value;
   }
-
   return [];
 });
 
@@ -284,13 +267,11 @@ const getProductImage = (product) => {
 
 // 이미지 로드 실패 처리
 const handleImageError = (event) => {
-  console.warn('⚠️ 이미지 로드 실패:', event.target.src);
   event.target.style.display = 'none';
 };
 
 // Methods
 const handleSearch = () => {
-  // 디바운스 적용 (300ms)
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
@@ -308,9 +289,7 @@ const performSearch = async () => {
 
   try {
     loading.value = true;
-    console.log('🔍 [MODAL] 검색 시작:', searchQuery.value);
 
-    // ProductService 직접 사용
     const response = await productService.getProducts({
       keyword: searchQuery.value,
       status: 'APPROVED'
@@ -320,34 +299,19 @@ const performSearch = async () => {
       sort: 'createdAt,DESC'
     });
 
-    console.log('📥 [MODAL] 검색 응답:', {
-      success: response.success,
-      hasData: !!response.data,
-      dataKeys: response.data ? Object.keys(response.data) : []
-    });
-
     if (response.success && response.data) {
-      // Spring Page 응답 처리 (content 필드)
       if (response.data.content && Array.isArray(response.data.content)) {
         products.value = response.data.content;
-        console.log('✅ [MODAL] 상품 로드 성공 (Spring Page):', products.value.length, '개');
-        console.log('📦 [MODAL] 첫 번째 상품:', products.value[0]);
-      }
-      // 배열 응답 처리
-      else if (Array.isArray(response.data)) {
+      } else if (Array.isArray(response.data)) {
         products.value = response.data;
-        console.log('✅ [MODAL] 상품 로드 성공 (배열):', products.value.length, '개');
-      }
-      else {
-        console.warn('⚠️ [MODAL] 예상치 못한 응답 구조:', response.data);
+      } else {
         products.value = [];
       }
     } else {
-      console.warn('⚠️ [MODAL] 검색 실패:', response.message);
       products.value = [];
     }
   } catch (error) {
-    console.error('❌ [MODAL] 상품 검색 오류:', error);
+    console.error('상품 검색 오류:', error);
     products.value = [];
     alert('검색 중 오류가 발생했습니다. 다시 시도해주세요.');
   } finally {
@@ -365,32 +329,30 @@ const clearSearch = () => {
 
 const isProductSelected = (productId) => {
   return tempSelectedItems.value.some(item => item.productId === productId);
-};
-
-const selectProduct = (product) => {
-  console.log('🎯 [MODAL] 상품 선택:', product);
-
+};const selectProduct = (product) => {
   const index = tempSelectedItems.value.findIndex(item => item.productId === product.id);
 
   if (index !== -1) {
     tempSelectedItems.value.splice(index, 1);
-    console.log('➖ [MODAL] 상품 선택 해제:', product.id);
   } else {
     if (props.currentItems.length + tempSelectedItems.value.length >= props.maxItems) {
       alert(`최대 ${props.maxItems}개까지만 선택 가능합니다`);
       return;
     }
 
-    // 백엔드 ItemRequest 형식
+    // ⭐ 제품의 전체 정보를 포함하여 저장 (화면 표시용)
     const item = {
       productId: product.id,
+      name: product.name,
+      brand: product.brand,
+      thumbnailDto: product.thumbnailDto, // ⭐ 썸네일 정보 포함
+      imageUrl: product.thumbnailDto?.fileUrl || null, // ⭐ 직접 URL도 포함
       customName: null,
       customBrand: null,
       customImageUrl: null
     };
 
     tempSelectedItems.value.push(item);
-    console.log('➕ [MODAL] 상품 선택 추가:', item);
   }
 };
 
@@ -399,33 +361,28 @@ const handleImageSelect = async (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
 
-  // 이미지 파일 검증
   if (!file.type.startsWith('image/')) {
     alert('이미지 파일만 선택 가능합니다.');
     event.target.value = '';
     return;
   }
 
-  // 파일 크기 검증 (5MB)
   if (file.size > 5 * 1024 * 1024) {
     alert('이미지 크기는 5MB 이하여야 합니다.');
     event.target.value = '';
     return;
   }
 
-  // 미리보기 생성
   try {
     const reader = new FileReader();
     reader.onload = (e) => {
       newItem.value.customImagePreview = e.target.result;
       newItem.value.customImageFile = file;
-      // 파일을 선택하면 URL 입력은 초기화
       newItem.value.customImageUrl = '';
-      console.log('📷 [MODAL] 이미지 파일 선택:', file.name);
     };
     reader.readAsDataURL(file);
   } catch (error) {
-    console.error('❌ [MODAL] 이미지 미리보기 생성 실패:', error);
+    console.error('이미지 미리보기 생성 실패:', error);
     alert('이미지 미리보기 생성에 실패했습니다.');
   }
 };
@@ -436,7 +393,6 @@ const removeCustomImage = () => {
   newItem.value.customImagePreview = null;
   newItem.value.customImageUrl = '';
 
-  // 파일 input 초기화
   const fileInput = document.getElementById('custom-image-input');
   if (fileInput) {
     fileInput.value = '';
@@ -449,9 +405,7 @@ const handleUrlInput = () => {
     newItem.value.customImageFile = null;
     newItem.value.customImagePreview = null;
   }
-};
-
-const createNewItem = async () => {
+};const createNewItem = async () => {
   if (!isNewItemValid.value) return;
 
   if (props.currentItems.length + tempSelectedItems.value.length >= props.maxItems) {
@@ -459,46 +413,25 @@ const createNewItem = async () => {
     return;
   }
 
-  try {
-    uploadingImage.value = true;
-    let finalImageUrl = newItem.value.customImageUrl.trim() || null;
-
-    // ⭐ 파일이 선택된 경우 먼저 업로드
-    if (newItem.value.customImageFile) {
-      console.log('📤 [MODAL] 커스텀 이미지 업로드 시작...');
-
-      const uploadResponse = await fileService.uploadImage(
-          newItem.value.customImageFile,
-          'BATTLE_ITEM'
-      );
-
-      if (uploadResponse.success && uploadResponse.data) {
-        finalImageUrl = uploadResponse.data.fileUrl;
-        console.log('✅ [MODAL] 이미지 업로드 성공:', finalImageUrl);
-      } else {
-        throw new Error('이미지 업로드에 실패했습니다.');
-      }
-    }
-
-    // 백엔드 ItemRequest 형식 (커스텀 아이템)
-    const item = {
-      productId: null,
-      customName: newItem.value.customName.trim(),
-      customBrand: newItem.value.customBrand.trim(),
-      customImageUrl: finalImageUrl
-    };
-
-    tempSelectedItems.value.push(item);
-    console.log('✨ [MODAL] 커스텀 아이템 추가:', item);
-
-    // 폼 초기화
-    resetNewItemForm();
-  } catch (error) {
-    console.error('❌ [MODAL] 커스텀 아이템 생성 실패:', error);
-    alert(error.message || '아이템 생성 중 오류가 발생했습니다.');
-  } finally {
-    uploadingImage.value = false;
+  // ⭐ 미리보기 URL 생성
+  let previewUrl = null;
+  if (newItem.value.customImageFile) {
+    previewUrl = URL.createObjectURL(newItem.value.customImageFile);
+  } else if (newItem.value.customImageUrl.trim()) {
+    previewUrl = newItem.value.customImageUrl.trim();
   }
+
+  const item = {
+    productId: null,
+    customName: newItem.value.customName.trim(),
+    customBrand: newItem.value.customBrand.trim(),
+    customImageFile: newItem.value.customImageFile, // ⭐ File 객체 저장 (업로드용)
+    customImageUrl: newItem.value.customImageUrl.trim() || null, // URL 입력한 경우
+    imageUrl: previewUrl // ⭐ 미리보기용 URL
+  };
+
+  tempSelectedItems.value.push(item);
+  resetNewItemForm();
 };
 
 const resetNewItemForm = () => {
@@ -519,8 +452,6 @@ const resetNewItemForm = () => {
 
 const confirmSelection = () => {
   if (tempSelectedItems.value.length === 0) return;
-
-  console.log('✅ [MODAL] 아이템 선택 확정:', tempSelectedItems.value);
   emit('confirm', tempSelectedItems.value);
   handleClose();
 };
@@ -546,7 +477,6 @@ const resetModal = () => {
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
     resetModal();
-    console.log('🔄 [MODAL] 모달 열림 - 초기화 완료');
   }
 });
 </script>

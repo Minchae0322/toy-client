@@ -42,13 +42,13 @@
           <Step4FinalConfirmation
               v-show="currentStep === 4"
               :battle-form="battleForm"
+              :selected-items-count="selectedItems.length"
               :preview-permission-type-name="previewPermissionTypeName"
               :preview-category-name="previewCategoryName"
               :preview-vote-type-name="previewVoteTypeName"
               :date-diff="dateDiff"
               @update:battle-form="battleForm = $event"
           />
-
           <!-- 우측 미리보기 -->
           <BattleCreatePreview
               :battle-form="battleForm"
@@ -62,7 +62,6 @@
         </div>
       </div>
 
-      <!-- 하단 액션 버튼 -->
       <BattleCreateFooter
           :steps="steps"
           :current-step="currentStep"
@@ -73,12 +72,12 @@
     </main>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBattle } from '@/services/BattleService';
 import { useCategory } from '@/services/CategoryService';
+import { useFile } from '@/services/FileService'; // ⭐ 수정
 import BattleCreateHeader from '@/components/battle/create/BattleCreateHeader.vue';
 import BattleCreatePreview from '@/components/battle/create/BattleCreatePreview.vue';
 import Step1BasicInfo from '@/components/battle/create/Step1BasicInfo.vue';
@@ -90,6 +89,7 @@ import BattleCreateFooter from '@/components/battle/create/BattleCreateFooter.vu
 const router = useRouter();
 const battleService = useBattle();
 const categoryService = useCategory();
+const fileService = useFile(); // ⭐ 추가
 
 // ==================== 스텝 설정 ====================
 const steps = ['기본 정보', '아이템 설정', '상세 설정', '최종 확인'];
@@ -206,21 +206,18 @@ const dateDiffText = computed(() => {
 const canProceed = computed(() => {
   switch (currentStep.value) {
     case 1:
-      return battleForm.value.title.trim().length >= 5 &&
-          battleForm.value.title.trim().length <= 50 &&
+      return battleForm.value.title.trim().length > 0 && // ⭐ 1자 이상만 체크
           battleForm.value.subCategoryId !== null &&
           battleForm.value.startDate &&
           battleForm.value.endDate &&
           battleForm.value.participationStartDate;
 
     case 2:
-      return battleForm.value.items.length >= 2 &&
-          battleForm.value.items.length <= 20;
+      return selectedItems.value.length >= 2 &&
+          selectedItems.value.length <= 20;
 
     case 3:
-      return (!battleForm.value.description ||
-          (battleForm.value.description.length >= 1 &&
-              battleForm.value.description.length <= 500));
+      return true; // ⭐ 설명은 선택 사항이므로 항상 true
 
     case 4:
       return battleForm.value.agreeTerms;
@@ -232,27 +229,19 @@ const canProceed = computed(() => {
 
 // ==================== 메서드 ====================
 
-/**
- * ⭐ 카테고리 트리 로드 (수정)
- */
 const loadCategories = async () => {
   try {
     loading.value = true;
-    console.log('📂 카테고리 트리 로드 시작...');
 
     const response = await categoryService.getCategories();
 
-    console.log('📦 카테고리 트리 응답:', response);
-
     if (response.success && response.data) {
       categories.value = response.data;
-      console.log('✅ 카테고리 트리 로드 완료:', categories.value);
     } else {
-      console.warn('⚠️ 카테고리 응답이 없음');
       categories.value = [];
     }
   } catch (error) {
-    console.error('❌ 카테고리 로드 실패:', error);
+    console.error('카테고리 로드 실패:', error);
     categories.value = [];
     alert('카테고리를 불러오는데 실패했습니다.');
   } finally {
@@ -290,7 +279,6 @@ const saveDraft = () => {
   };
 
   localStorage.setItem('battleDraft', JSON.stringify(draftData));
-  console.log('💾 임시저장:', draftData);
   alert('임시저장되었습니다');
 };
 
@@ -302,26 +290,66 @@ const loadDraft = () => {
       if (confirm('임시저장된 데이터가 있습니다. 불러오시겠습니까?')) {
         battleForm.value = { ...battleForm.value, ...draftData };
         selectedItems.value = draftData.selectedItems || [];
-        console.log('✅ 임시저장 데이터 복원:', draftData);
       }
     }
   } catch (error) {
-    console.error('❌ 임시저장 데이터 로드 실패:', error);
+    console.error('임시저장 데이터 로드 실패:', error);
   }
 };
 
 /**
- * 배틀 생성
+ * 배틀 생성 - 모든 이미지를 한 번에 업로드
  */
 const createBattle = async () => {
   try {
     loading.value = true;
-    console.log('🚀 배틀 생성 시작...');
 
     const formatToDateTime = (dateString) => {
       if (!dateString) return null;
       return dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
     };
+
+    // ⭐ 1. 대표 이미지 업로드 (있는 경우)
+    let thumbnailFile = battleForm.value.thumbnailFile;
+
+    // ⭐ 2. 커스텀 아이템의 이미지 파일들 업로드
+    const processedItems = [];
+
+    for (const item of selectedItems.value) {
+      if (item.customName) {
+        // 커스텀 아이템인 경우
+        let imageUrl = item.customImageUrl; // URL로 입력한 경우
+
+        // 파일로 업로드한 경우
+        if (item.customImageFile) {
+          const uploadResponse = await fileService.uploadImage(
+              item.customImageFile,
+              'BATTLE_ITEM'
+          );
+
+          if (uploadResponse.success && uploadResponse.data) {
+            imageUrl = uploadResponse.data.fileUrl;
+          } else {
+            throw new Error(`아이템 "${item.customName}" 이미지 업로드 실패`);
+          }
+        }
+
+        processedItems.push({
+          productId: null,
+          customName: item.customName,
+          customBrand: item.customBrand,
+          customImageUrl: imageUrl
+        });
+      } else {
+        // 기존 제품인 경우
+        processedItems.push({
+          productId: item.productId,
+          customName: null,
+          customBrand: null,
+          customImageUrl: null
+        });
+      }
+    }
 
     const battleData = {
       title: battleForm.value.title.trim(),
@@ -332,18 +360,15 @@ const createBattle = async () => {
       endDate: formatToDateTime(battleForm.value.endDate),
       participationStartDate: formatToDateTime(battleForm.value.participationStartDate),
       voteType: battleForm.value.voteType,
-      items: battleForm.value.items
+      items: processedItems
     };
-
-    console.log('📤 전송 데이터:', battleData);
 
     const response = await battleService.createBattleWithFiles(
         battleData,
-        battleForm.value.thumbnailFile
+        thumbnailFile
     );
 
     if (response.success) {
-      console.log('✅ 배틀 생성 성공:', response.data);
       localStorage.removeItem('battleDraft');
       alert('배틀이 성공적으로 생성되었습니다! 🎉');
       router.push({
@@ -354,7 +379,7 @@ const createBattle = async () => {
       throw new Error(response.message || '배틀 생성에 실패했습니다.');
     }
   } catch (error) {
-    console.error('❌ 배틀 생성 실패:', error);
+    console.error('배틀 생성 실패:', error);
     alert(error.message || '배틀 생성 중 오류가 발생했습니다.');
   } finally {
     loading.value = false;
@@ -370,14 +395,12 @@ const checkCreationPermission = async () => {
       router.push({ name: 'BattleList' });
     }
   } catch (error) {
-    console.error('❌ 권한 체크 실패:', error);
+    console.error('권한 체크 실패:', error);
   }
 };
 
 // ==================== Lifecycle ====================
 onMounted(async () => {
-  console.log('✅ BattleCreateView 마운트');
-
   await checkCreationPermission();
   await loadCategories();
   loadDraft();

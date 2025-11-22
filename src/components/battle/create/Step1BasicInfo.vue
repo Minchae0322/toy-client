@@ -10,11 +10,10 @@
           type="text"
           class="form-input"
           placeholder="예: 2025년 2월 최고의 스니커즈는?"
-          maxlength="50"
       >
-      <div class="char-counter">{{ battleForm.title.length }} / 50</div>
-      <div class="form-hint">15~50자 사이로 명확하고 흥미로운 제목을 작성해주세요</div>
+      <div class="form-hint">배틀을 대표하는 명확하고 흥미로운 제목을 작성해주세요</div>
     </div>
+
 
     <!-- ⭐ 아이템 추가 권한 타입 -->
     <div class="form-group">
@@ -142,10 +141,10 @@
       <div class="form-hint">투표를 시작할 수 있는 날짜를 설정하세요</div>
     </div>
 
-    <!-- ⭐ 대표 이미지 업로드 -->
+    <!-- ⭐ 대표 이미지 업로드 (선택) -->
     <div class="form-group">
       <label class="form-label">
-        대표 이미지 <span class="required">*</span>
+        대표 이미지
       </label>
       <div class="image-upload-area">
         <div
@@ -169,6 +168,7 @@
           style="display: none;"
           @change="handleImageUpload"
       >
+      <div class="form-hint">이미지를 등록하지 않으면 기본 이미지가 사용됩니다</div>
     </div>
   </div>
 </template>
