@@ -472,10 +472,9 @@ class BattleService extends BaseApiService {
       errors.push('배틀 제목은 15~50자 사이여야 합니다.')
     }
 
-    if (battleData.description) {
-      if (battleData.description.length < 120 || battleData.description.length > 500) {
-        errors.push('배틀 설명은 120~500자 사이여야 합니다.')
-      }
+    // ⭐ 제목 길이 제한 제거 (필수값만 체크)
+    if (!battleData.title || battleData.title.trim().length === 0) {
+      errors.push('배틀 제목을 입력해주세요.')
     }
 
     if (!battleData.subCategoryId) { // ⭐ 수정
@@ -512,10 +511,6 @@ class BattleService extends BaseApiService {
       errors.push('아이템 목록이 필요합니다.')
     } else if (battleData.items.length < 2 || battleData.items.length > 20) {
       errors.push('아이템은 2~20개 사이여야 합니다.')
-    }
-
-    if (!battleData.thumbnailAttachmentInfo) {
-      errors.push('대표이미지는 필수입니다.')
     }
 
     return {
