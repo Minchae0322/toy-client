@@ -110,7 +110,7 @@ class BattleService extends BaseApiService {
     const requestData = {
       title: battleData.title.trim(),
       description: battleData.description?.trim() || null,
-      subCategoryId: parseInt(battleData.subCategoryId), // ⭐ 수정
+      subCategoryId: parseInt(battleData.subCategoryId),
       itemAddPermissionType: battleData.itemAddPermissionType?.toUpperCase() || 'CREATOR_ONLY',
       startDate: battleData.startDate,
       endDate: battleData.endDate,
@@ -227,11 +227,11 @@ class BattleService extends BaseApiService {
 
   /**
    * 배틀 아이템 투표
-   * POST /api/battles/{battleId}/items/{battleItemId}/vote
+   * POST /api/battles/{battleId}/vote
    */
-  async voteBattleItem(battleItemId, voteData) {
-    if (!battleItemId) {
-      throw new Error('배틀 아이템 ID가 필요합니다.')
+  async voteBattleItem(battleId, voteData) {
+    if (!battleId) {
+      throw new Error('배틀 ID가 필요합니다.')
     }
 
     const validation = this.validateVoteData(voteData)
@@ -246,21 +246,21 @@ class BattleService extends BaseApiService {
       }))
     }
 
-    console.log(`🗳️ [BATTLE_SERVICE] 투표 요청: itemId=${battleItemId}`, requestData)
-    return await this.post(`/battles/${battleItemId}/items/${battleItemId}/vote`, requestData)
+    console.log(`🗳️ [BATTLE_SERVICE] 투표 요청: battleId=${battleId}`, requestData)
+    return await this.post(`/battles/${battleId}/vote`, requestData)
   }
 
   /**
    * 배틀 아이템 투표 취소
-   * DELETE /api/battles/{battleId}/items/{battleItemId}/vote
+   * DELETE /api/battles/{battleId}/vote
    */
-  async cancelVote(battleItemId) {
-    if (!battleItemId) {
-      throw new Error('배틀 아이템 ID가 필요합니다.')
+  async cancelVote(battleId) {
+    if (!battleId) {
+      throw new Error('배틀 ID가 필요합니다.')
     }
 
-    console.log(`🗑️ [BATTLE_SERVICE] 투표 취소: itemId=${battleItemId}`)
-    return await this.delete(`/battles/${battleItemId}/items/${battleItemId}/vote`)
+    console.log(`🗑️ [BATTLE_SERVICE] 투표 취소: battleId=${battleId}`)
+    return await this.delete(`/battles/${battleId}/vote`)
   }
 
   /**
@@ -295,16 +295,16 @@ class BattleService extends BaseApiService {
       throw new Error('서브 카테고리 ID가 필요합니다.')
     }
 
-    return await this.getBattles({ subCategoryId }, pageable) // ⭐ 수정
+    return await this.getBattles({ subCategoryId }, pageable)
   }
 
   /**
    * 상태별 배틀 조회
    */
   async getBattlesByStatus(status, searchCondition = {}, pageable = {}) {
-    const validStatuses = ['SCHEDULED', 'ACTIVE', 'ENDED', 'CLOSED'] // ⭐ UPCOMING → SCHEDULED
+    const validStatuses = ['DRAFT', 'ACTIVE', 'CLOSED', 'EARLY_CLOSED']
     if (!validStatuses.includes(status?.toUpperCase())) {
-      throw new Error('올바른 배틀 상태를 선택해주세요. (SCHEDULED, ACTIVE, ENDED, CLOSED)')
+      throw new Error('올바른 배틀 상태를 선택해주세요. (DRAFT, ACTIVE, CLOSED, EARLY_CLOSED)')
     }
 
     return await this.getBattles({
@@ -408,7 +408,9 @@ class BattleService extends BaseApiService {
       voteCount: item.voteCount || 0,
       votePercentage: item.votePercentage || 0,
       reportCount: item.reportCount || 0,
-      userBattleVote: item.userBattleVote || null
+      userBattleVote: item.userBattleVote || null,
+      // ⭐ status 객체 그대로 유지 (백엔드가 객체로 보냄)
+      status: item.status
     }))
   }
 
@@ -468,16 +470,9 @@ class BattleService extends BaseApiService {
 
     if (!battleData.title || battleData.title.trim().length === 0) {
       errors.push('배틀 제목을 입력해주세요.')
-    } else if (battleData.title.length < 15 || battleData.title.length > 50) {
-      errors.push('배틀 제목은 15~50자 사이여야 합니다.')
     }
 
-    // ⭐ 제목 길이 제한 제거 (필수값만 체크)
-    if (!battleData.title || battleData.title.trim().length === 0) {
-      errors.push('배틀 제목을 입력해주세요.')
-    }
-
-    if (!battleData.subCategoryId) { // ⭐ 수정
+    if (!battleData.subCategoryId) {
       errors.push('서브 카테고리를 선택해주세요.')
     }
 
@@ -628,7 +623,6 @@ class BattleService extends BaseApiService {
       validated.keyword = validated.keyword.substring(0, 100)
     }
 
-    // ⭐ category → subCategoryId
     if (validated.subCategoryId && isNaN(parseInt(validated.subCategoryId))) {
       delete validated.subCategoryId
     } else if (validated.subCategoryId) {
@@ -636,7 +630,7 @@ class BattleService extends BaseApiService {
     }
 
     if (validated.status) {
-      const validStatuses = ['SCHEDULED', 'ACTIVE', 'ENDED', 'CLOSED'] // ⭐ UPCOMING → SCHEDULED
+      const validStatuses = ['DRAFT', 'ACTIVE', 'CLOSED', 'EARLY_CLOSED']
       if (validStatuses.includes(validated.status.toUpperCase())) {
         validated.status = validated.status.toUpperCase()
       } else {
@@ -718,8 +712,8 @@ export function useBattle() {
     addBattleItems: (battleId, data) => service.addBattleItems(battleId, data),
     approveBattleItem: (battleId, itemId) => service.approveBattleItem(battleId, itemId),
     excludeBattleItem: (battleId, itemId) => service.excludeBattleItem(battleId, itemId),
-    voteBattleItem: (itemId, data) => service.voteBattleItem(itemId, data),
-    cancelVote: (itemId) => service.cancelVote(itemId),
+    voteBattleItem: (battleId, data) => service.voteBattleItem(battleId, data),
+    cancelVote: (battleId) => service.cancelVote(battleId),
     reportBattleItem: (battleId, itemId, data) => service.reportBattleItem(battleId, itemId, data),
 
     // 유틸리티
@@ -774,23 +768,22 @@ export const battleUtils = {
     })
   },
 
-  // ⭐ 백엔드 Enum에 맞춤
   getBattleStatusLabel(status) {
     const labels = {
-      'SCHEDULED': '예정',  // UPCOMING → SCHEDULED
+      'DRAFT': '임시저장',
       'ACTIVE': '진행중',
-      'ENDED': '종료',
-      'CLOSED': '마감'
+      'CLOSED': '종료',
+      'EARLY_CLOSED': '조기종료'
     }
     return labels[status] || ''
   },
 
   getBattleStatusColor(status) {
     const colors = {
-      'SCHEDULED': '#8B5CF6',  // UPCOMING → SCHEDULED
+      'DRAFT': '#6B7280',
       'ACTIVE': '#10B981',
-      'ENDED': '#F59E0B',
-      'CLOSED': '#64748B'
+      'CLOSED': '#F59E0B',
+      'EARLY_CLOSED': '#64748B'
     }
     return colors[status] || '#64748B'
   },
@@ -883,7 +876,7 @@ export const battleUtils = {
 
   isEnded(battle) {
     if (!battle) return false
-    return battle.status === 'ENDED' || battle.status === 'CLOSED'
+    return battle.status === 'CLOSED' || battle.status === 'EARLY_CLOSED'
   },
 
   canAddItem(battle, userId) {

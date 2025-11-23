@@ -171,7 +171,7 @@ const routes = [
     }
   },
   {
-    path: '/battle/:id',
+    path: '/battles/:id',
     name: 'BattleDetail',
     component: BattleDetailView,
     props: true,

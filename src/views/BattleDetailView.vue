@@ -1,241 +1,273 @@
 <template>
   <div class="battle-detail">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-content">
-        <button class="btn btn-back">
-          <span class="icon">←</span>
-          목록
-        </button>
+    <!-- Loading -->
+    <div v-if="loading" class="loading-container">
+      <div class="spinner"></div>
+      <p>배틀 정보를 불러오는 중...</p>
+    </div>
 
-        <div class="header-actions">
-          <button class="btn btn-icon">
-            <span class="icon">↗</span>
+    <!-- Error -->
+    <div v-else-if="error" class="error-container">
+      <p class="error-message">{{ error }}</p>
+      <button @click="loadBattle" class="btn-retry">다시 시도</button>
+    </div>
+
+    <!-- Content -->
+    <template v-else-if="battle">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <button @click="goBack" class="btn btn-back">
+            <span class="icon">←</span>
+            목록
+          </button>
+
+          <div class="header-actions">
+            <button @click="shareBattle" class="btn btn-icon">
+              <span class="icon">↗</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="container">
+        <!-- Battle Info -->
+        <div class="battle-info">
+          <div class="battle-info-main">
+            <div class="battle-info-left">
+              <div class="tags">
+                <span class="tag">{{ battle.subCategoryDetail?.subCategoryName || '카테고리' }}</span>
+                <span v-if="isWeightedVote" class="tag tag-primary">
+                  순위 투표 (1위 3점, 2위 2점, 3위 1점)
+                </span>
+                <span :class="['tag', 'tag-status', getStatusClass(battle.status?.title || battle.status)]">
+                  {{ getBattleStatusLabel(battle.status) }}
+                </span>
+              </div>
+              <h1 class="title">{{ battle.title }}</h1>
+              <p v-if="battle.description" class="description">{{ battle.description }}</p>
+            </div>
+
+            <div class="battle-stats">
+              <div class="stat">
+                <div class="stat-value">{{ battleUtils.formatDaysLeft(battle.endDate) }}</div>
+                <div class="stat-label">남은 기간</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value">{{ battleUtils.formatCount(battle.totalParticipants) }}</div>
+                <div class="stat-label">참여</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value">{{ battleUtils.formatCount(battle.totalVotes) }}</div>
+                <div class="stat-label">투표</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Product Button -->
+          <button
+              v-if="canUserAddItem && !hasVoted"
+              @click="showAddModal = true"
+              class="btn-add-product"
+          >
+            <span class="icon">+</span>
+            내가 아는 좋은 제품 추가하기
           </button>
         </div>
-      </div>
-    </header>
 
-    <div class="container">
-      <!-- Battle Info -->
-      <div class="battle-info">
-        <div class="battle-info-main">
-          <div class="battle-info-left">
-            <div class="tags">
-              <span class="tag">{{ mockBattle.category }}</span>
-              <span v-if="isWeighted" class="tag tag-primary">
-                순위 투표 (1위 3점, 2위 2점, 3위 1점)
+        <!-- Vote Selection Sticky Bar -->
+        <div v-if="canVote && hasSelectedItems" class="vote-bar">
+          <div class="vote-bar-content">
+            <div class="vote-selected">
+              <span class="vote-label">선택:</span>
+              <div v-if="isWeightedVote" class="vote-ranks">
+                <div v-for="rank in [1, 2, 3]" :key="rank" class="vote-rank-item">
+                  <span :class="['rank-badge', `rank-${rank}`]">
+                    {{ rank }}위
+                  </span>
+                  <span class="vote-product-name">
+                    {{ getSelectedProductName(rank) }}
+                  </span>
+                </div>
+              </div>
+              <span v-else class="vote-product-name">
+                {{ getSelectedProductName(1) }}
               </span>
             </div>
-            <h1 class="title">{{ mockBattle.title }}</h1>
-            <p class="description">{{ mockBattle.description }}</p>
-          </div>
 
-          <div class="battle-stats">
-            <div class="stat">
-              <div class="stat-value">{{ mockBattle.daysLeft }}</div>
-              <div class="stat-label">일 남음</div>
-            </div>
-            <div class="stat">
-              <div class="stat-value">{{ (mockBattle.totalParticipants / 1000).toFixed(1) }}K</div>
-              <div class="stat-label">참여</div>
-            </div>
+            <button @click="submitVote" :disabled="submitting" class="btn-submit">
+              {{ submitting ? '투표 중...' : '투표 완료하기' }}
+            </button>
           </div>
         </div>
 
-        <!-- Add Product Button -->
-        <button
-            v-if="mockBattle.allowUserSubmit && !hasVoted"
-            @click="showAddModal = true"
-            class="btn-add-product"
-        >
-          <span class="icon">+</span>
-          내가 아는 좋은 제품 추가하기
-        </button>
-      </div>
-
-      <!-- Vote Selection Sticky Bar -->
-      <div v-if="!hasVoted && hasSelectedItems" class="vote-bar">
-        <div class="vote-bar-content">
-          <div class="vote-selected">
-            <span class="vote-label">선택:</span>
-            <div v-if="isWeighted" class="vote-ranks">
-              <div v-for="rank in [1, 2, 3]" :key="rank" class="vote-rank-item">
-                <span :class="['rank-badge', `rank-${rank}`]">
-                  {{ rank }}위
-                </span>
-                <span class="vote-product-name">
-                  {{ getSelectedProductName(rank) }}
-                </span>
+        <!-- Product Grid -->
+        <div class="product-grid">
+          <div
+              v-for="(item, index) in sortedItems"
+              :key="item.id"
+              :class="['product-card', { 'selected': getProductRank(item.id) !== null }]"
+          >
+            <!-- Rank Badge -->
+            <div class="product-image-wrapper">
+              <div :class="['product-rank-badge', `rank-${index + 1}`]">
+                {{ index + 1 }}
               </div>
-            </div>
-            <span v-else class="vote-product-name">
-              {{ getSelectedProductName(1) }}
-            </span>
-          </div>
 
-          <button @click="submitVote" class="btn-submit">
-            투표 완료하기
-          </button>
-        </div>
-      </div>
-
-      <!-- Product Grid -->
-      <div class="product-grid">
-        <div
-            v-for="(product, index) in sortedItems"
-            :key="product.id"
-            :class="['product-card', { 'selected': getProductRank(product.id) !== null }]"
-        >
-          <!-- Rank Badge -->
-          <div class="product-image-wrapper">
-            <div :class="['product-rank-badge', `rank-${index + 1}`]">
-              {{ index + 1 }}
-            </div>
-
-            <!-- Product Image -->
-            <div class="product-image">
-              <img :src="product.imageUrl" :alt="product.name" />
-            </div>
-          </div>
-
-          <!-- Product Info -->
-          <div class="product-content">
-            <h3 class="product-name">{{ product.name }}</h3>
-            <p class="product-brand">{{ product.brand }}</p>
-
-            <!-- Score -->
-            <div class="product-score">
-              <div class="score-number">
-                <span class="score-value">{{ product.totalWeightedScore.toLocaleString() }}</span>
-                <span class="score-unit">점</span>
-              </div>
-              <div class="score-bar-wrapper">
-                <div class="score-bar">
-                  <div class="score-fill" :style="{ width: `${getPercentage(product)}%` }"></div>
-                </div>
-                <span class="score-percent">{{ getPercentage(product) }}%</span>
-              </div>
-            </div>
-
-            <!-- Vote Buttons -->
-            <div v-if="!hasVoted" class="vote-buttons">
-              <div v-if="isWeighted" class="vote-buttons-weighted">
-                <button
-                    v-for="r in [1, 2, 3]"
-                    :key="r"
-                    @click="handleVote(product.id, r)"
-                    :class="['btn-vote-rank', { 'active': getProductRank(product.id) === r }, `rank-${r}`]"
-                >
-                  {{ r }}위 선택
-                </button>
-              </div>
-              <button
-                  v-else
-                  @click="handleVote(product.id, 1)"
-                  :class="['btn-vote-simple', { 'active': getProductRank(product.id) !== null }]"
-              >
-                {{ getProductRank(product.id) !== null ? '✓ 선택됨' : '투표하기' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add Product Modal -->
-    <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal = false">
-      <div class="modal">
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <h2 class="modal-title">제품 추가하기</h2>
-          <button @click="showAddModal = false" class="btn-close">
-            <span class="icon">×</span>
-          </button>
-        </div>
-
-        <!-- Modal Body -->
-        <div class="modal-body">
-          <!-- Image Upload -->
-          <div class="form-group">
-            <label class="form-label">제품 사진 *</label>
-            <div class="image-upload">
-              <div v-if="newProduct.imagePreview" class="image-preview">
-                <img :src="newProduct.imagePreview" alt="Preview" />
-                <button @click="clearImage" class="btn-remove-image">
-                  <span class="icon">×</span>
-                </button>
-              </div>
-              <label v-else class="image-upload-label">
-                <span class="icon upload-icon">⬆</span>
-                <span class="upload-text">사진 업로드</span>
-                <span class="upload-hint">클릭하여 선택</span>
-                <input
-                    type="file"
-                    accept="image/*"
-                    @change="handleImageUpload"
-                    style="display: none"
+              <!-- Product Image -->
+              <div class="product-image">
+                <img
+                    :src="getItemImage(item)"
+                    :alt="getItemName(item)"
+                    @error="handleImageError"
                 />
-              </label>
+              </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-content">
+              <h3 class="product-name">{{ getItemName(item) }}</h3>
+              <p class="product-brand">{{ getItemBrand(item) }}</p>
+
+              <!-- Score -->
+              <div class="product-score">
+                <div class="score-number">
+                  <span class="score-value">{{ item.totalWeightedScore || item.voteCount || 0 }}</span>
+                  <span class="score-unit">{{ isWeightedVote ? '점' : '표' }}</span>
+                </div>
+                <div class="score-bar-wrapper">
+                  <div class="score-bar">
+                    <div class="score-fill" :style="{ width: `${getPercentage(item)}%` }"></div>
+                  </div>
+                  <span class="score-percent">{{ getPercentage(item) }}%</span>
+                </div>
+              </div>
+
+              <!-- Vote Buttons -->
+              <div v-if="canVote" class="vote-buttons">
+                <div v-if="isWeightedVote" class="vote-buttons-weighted">
+                  <button
+                      v-for="r in [1, 2, 3]"
+                      :key="r"
+                      @click="handleVote(item.id, r)"
+                      :disabled="submitting"
+                      :class="['btn-vote-rank', { 'active': getProductRank(item.id) === r }, `rank-${r}`]"
+                  >
+                    {{ r }}위 선택
+                  </button>
+                </div>
+                <button
+                    v-else
+                    @click="handleVote(item.id, 1)"
+                    :disabled="submitting"
+                    :class="['btn-vote-simple', { 'active': getProductRank(item.id) !== null }]"
+                >
+                  {{ getProductRank(item.id) !== null ? '✓ 선택됨' : '투표하기' }}
+                </button>
+              </div>
+
+              <!-- Already Voted -->
+              <div v-else-if="hasVoted" class="voted-badge">
+                투표 완료
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Product Modal -->
+      <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
+        <div class="modal">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h2 class="modal-title">제품 추가하기</h2>
+            <button @click="closeAddModal" class="btn-close">
+              <span class="icon">×</span>
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <!-- Image Upload -->
+            <div class="form-group">
+              <label class="form-label">제품 사진 *</label>
+              <div class="image-upload">
+                <div v-if="newProduct.imagePreview" class="image-preview">
+                  <img :src="newProduct.imagePreview" alt="Preview" />
+                  <button @click="clearImage" class="btn-remove-image">
+                    <span class="icon">×</span>
+                  </button>
+                </div>
+                <label v-else class="image-upload-label">
+                  <span class="icon upload-icon">⬆</span>
+                  <span class="upload-text">사진 업로드</span>
+                  <span class="upload-hint">클릭하여 선택</span>
+                  <input
+                      type="file"
+                      accept="image/*"
+                      @change="handleImageUpload"
+                      style="display: none"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <!-- Product Name -->
+            <div class="form-group">
+              <label class="form-label">제품명 *</label>
+              <input
+                  v-model="newProduct.name"
+                  type="text"
+                  placeholder="예: AirPods Pro 2"
+                  maxlength="30"
+                  class="form-input"
+              />
+            </div>
+
+            <!-- Brand -->
+            <div class="form-group">
+              <label class="form-label">브랜드 *</label>
+              <input
+                  v-model="newProduct.brand"
+                  type="text"
+                  placeholder="예: Apple"
+                  maxlength="20"
+                  class="form-input"
+              />
             </div>
           </div>
 
-          <!-- Product Name -->
-          <div class="form-group">
-            <label class="form-label">제품명 *</label>
-            <input
-                v-model="newProduct.name"
-                type="text"
-                placeholder="예: AirPods Pro 2"
-                class="form-input"
-            />
+          <!-- Modal Footer -->
+          <div class="modal-footer">
+            <button @click="closeAddModal" class="btn-cancel">
+              취소
+            </button>
+            <button @click="submitNewProduct" :disabled="submitting" class="btn-confirm">
+              {{ submitting ? '등록 중...' : '제품 등록' }}
+            </button>
           </div>
-
-          <!-- Brand -->
-          <div class="form-group">
-            <label class="form-label">브랜드 *</label>
-            <input
-                v-model="newProduct.brand"
-                type="text"
-                placeholder="예: Apple"
-                class="form-input"
-            />
-          </div>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="modal-footer">
-          <button @click="showAddModal = false" class="btn-cancel">
-            취소
-          </button>
-          <button @click="submitNewProduct" class="btn-confirm">
-            제품 등록
-          </button>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script>
+import { battleService, battleUtils } from '@/services/BattleService.js'
+import { fileService } from '@/services/FileService.js'
+
 export default {
   name: 'BattleDetail',
   data() {
     return {
-      mockBattle: {
-        id: 1,
-        title: "2025 최고의 무선 이어폰",
-        description: "음질, 배터리, 디자인까지 고려한 베스트 제품을 선택해주세요.",
-        category: "테크·가전",
-        votingType: "WEIGHTED",
-        allowUserSubmit: true,
-        status: "ACTIVE",
-        daysLeft: 39,
-        totalParticipants: 2847,
-        items: []
-      },
+      battleUtils,
+      battleId: null,
+      battle: null,
+      loading: true,
+      error: null,
       selectedRanks: { 1: null, 2: null, 3: null },
       hasVoted: false,
+      submitting: false,
       showAddModal: false,
       newProduct: {
         name: '',
@@ -243,122 +275,386 @@ export default {
         imageFile: null,
         imagePreview: null
       }
-    };
+    }
   },
   computed: {
-    isWeighted() {
-      return this.mockBattle.votingType === 'WEIGHTED';
+    isWeightedVote() {
+      const voteType = this.battle?.voteType?.title || this.battle?.voteType
+      return voteType === 'MULTIPLE'
+    },
+    canVote() {
+      if (!this.battle || this.hasVoted) return false
+
+      const status = this.battle.status?.title || this.battle.status
+      if (status !== 'ACTIVE') return false
+
+      const now = new Date()
+      const startDate = new Date(this.battle.participationStartDate)
+      const endDate = new Date(this.battle.endDate)
+
+      return now >= startDate && now <= endDate
+    },
+    canUserAddItem() {
+      if (!this.battle) return false
+      const userId = this.$store?.state?.auth?.user?.userId
+      const status = this.battle.status?.title || this.battle.status
+      const permissionType = this.battle.itemAddPermissionType?.code || this.battle.itemAddPermissionType
+
+      if (status !== 'ACTIVE') return false
+      if (permissionType === 'CREATOR_ONLY') {
+        return this.battle.creatorUserInfo?.userId === userId
+      }
+      return true
     },
     sortedItems() {
-      return [...this.mockBattle.items].sort((a, b) => b.totalWeightedScore - a.totalWeightedScore);
+      if (!this.battle?.items) return []
+
+      return [...this.battle.items]
+      .filter(item => item.status === 'ACTIVE')
+      .sort((a, b) => {
+        const scoreA = this.calculateItemScore(a)
+        const scoreB = this.calculateItemScore(b)
+        return scoreB - scoreA
+      })
     },
     totalScore() {
-      return this.sortedItems.reduce((sum, item) => sum + item.totalWeightedScore, 0);
+      return this.sortedItems.reduce((sum, item) => {
+        return sum + this.calculateItemScore(item)
+      }, 0)
     },
     hasSelectedItems() {
-      return Object.values(this.selectedRanks).some(v => v !== null);
+      return Object.values(this.selectedRanks).some(v => v !== null)
     }
   },
   created() {
-    // Initialize mock data
-    this.mockBattle.items = Array.from({ length: 12 }, (_, i) => ({
-      id: i + 1,
-      name: `AirPods Pro ${i + 1}`,
-      brand: ['Apple', 'Samsung', 'Sony', 'Bose', 'Sennheiser'][i % 5],
-      firstPlaceVotes: Math.floor(Math.random() * 2000) + 500,
-      secondPlaceVotes: Math.floor(Math.random() * 1500) + 400,
-      thirdPlaceVotes: Math.floor(Math.random() * 1000) + 300,
-      imageUrl: `https://images.unsplash.com/photo-160684183723${i}?w=400`,
-      submitter: `user${i + 1}`
-    }));
-
-    // Calculate weighted scores
-    this.mockBattle.items.forEach(item => {
-      item.totalWeightedScore = (item.firstPlaceVotes * 3) + (item.secondPlaceVotes * 2) + (item.thirdPlaceVotes * 1);
-    });
+    this.battleId = this.$route.params.id || this.$route.query.id
+    if (this.battleId) {
+      this.loadBattle()
+    } else {
+      this.error = '배틀 ID가 없습니다.'
+      this.loading = false
+    }
   },
   methods: {
-    handleVote(productId, rank) {
-      if (this.hasVoted) return;
+    async loadBattle() {
+      this.loading = true
+      this.error = null
 
-      const newRanks = { ...this.selectedRanks };
+      try {
+        const response = await battleService.getBattle(this.battleId)
 
-      if (this.isWeighted) {
-        Object.keys(newRanks).forEach(key => {
-          if (newRanks[key] === productId) newRanks[key] = null;
-        });
+        if (response.success && response.data) {
+          this.battle = response.data
+          console.log('✅ 배틀 정보 로드 완료:', this.battle)
 
-        if (this.selectedRanks[rank] === productId) {
-          newRanks[rank] = null;
+          // 이미 투표한 경우 체크
+          this.checkUserVote()
         } else {
-          newRanks[rank] = productId;
+          throw new Error(response.message || '배틀 정보를 불러올 수 없습니다.')
+        }
+      } catch (err) {
+        console.error('❌ 배틀 정보 로드 실패:', err)
+        this.error = err.message || '배틀 정보를 불러오는데 실패했습니다.'
+      } finally {
+        this.loading = false
+      }
+    },
+
+    checkUserVote() {
+      // 사용자가 이미 투표한 경우 체크
+      if (this.battle?.items) {
+        const hasUserVote = this.battle.items.some(item => item.userBattleVote !== null)
+        this.hasVoted = hasUserVote
+      }
+    },
+
+    calculateItemScore(item) {
+      // 백엔드에서 voteCount로 통합 관리
+      return item.voteCount || 0
+    },
+
+    handleVote(itemId, rank) {
+      if (this.hasVoted || this.submitting) return
+
+      const newRanks = { ...this.selectedRanks }
+
+      if (this.isWeightedVote) {
+        // 가중치 투표: 같은 아이템이 다른 순위에 있으면 제거
+        Object.keys(newRanks).forEach(key => {
+          if (newRanks[key] === itemId) newRanks[key] = null
+        })
+
+        // 선택/해제 토글
+        if (this.selectedRanks[rank] === itemId) {
+          newRanks[rank] = null
+        } else {
+          newRanks[rank] = itemId
         }
       } else {
-        newRanks[1] = this.selectedRanks[1] === productId ? null : productId;
+        // 단순 투표: 토글
+        newRanks[1] = this.selectedRanks[1] === itemId ? null : itemId
       }
 
-      this.selectedRanks = newRanks;
+      this.selectedRanks = newRanks
     },
-    submitVote() {
-      if (this.isWeighted) {
+
+    async submitVote() {
+      if (this.submitting) return
+
+      // 검증
+      if (this.isWeightedVote) {
         if (!this.selectedRanks[1] || !this.selectedRanks[2] || !this.selectedRanks[3]) {
-          alert('1위, 2위, 3위를 모두 선택해주세요');
-          return;
+          alert('1위, 2위, 3위를 모두 선택해주세요')
+          return
         }
       } else {
         if (!this.selectedRanks[1]) {
-          alert('제품을 선택해주세요');
-          return;
+          alert('제품을 선택해주세요')
+          return
         }
       }
-      this.hasVoted = true;
-      this.selectedRanks = { 1: null, 2: null, 3: null };
-      alert('투표가 완료되었습니다!');
-    },
-    getProductRank(productId) {
-      const entry = Object.entries(this.selectedRanks).find(([_, id]) => id === productId);
-      return entry ? parseInt(entry[0]) : null;
-    },
-    getPercentage(product) {
-      return ((product.totalWeightedScore / this.totalScore) * 100).toFixed(1);
-    },
-    getSelectedProductName(rank) {
-      const productId = this.selectedRanks[rank];
-      const product = this.sortedItems.find(p => p.id === productId);
-      return product ? product.name : '미선택';
-    },
-    handleImageUpload(e) {
-      const file = e.target.files?.[0];
-      if (file) {
-        this.newProduct.imageFile = file;
-        this.newProduct.imagePreview = URL.createObjectURL(file);
+
+      this.submitting = true
+
+      try {
+        const votes = []
+
+        if (this.isWeightedVote) {
+          votes.push(
+              { itemId: this.selectedRanks[1], rank: 1 },
+              { itemId: this.selectedRanks[2], rank: 2 },
+              { itemId: this.selectedRanks[3], rank: 3 }
+          )
+        } else {
+          votes.push({ itemId: this.selectedRanks[1], rank: 1 })
+        }
+
+        const response = await battleService.voteBattleItem(this.battleId, { votes })
+
+        if (response.success) {
+          alert('투표가 완료되었습니다!')
+          this.hasVoted = true
+          this.selectedRanks = { 1: null, 2: null, 3: null }
+
+          // 배틀 정보 다시 로드
+          await this.loadBattle()
+        } else {
+          throw new Error(response.message || '투표에 실패했습니다.')
+        }
+      } catch (err) {
+        console.error('❌ 투표 실패:', err)
+        alert(err.message || '투표에 실패했습니다.')
+      } finally {
+        this.submitting = false
       }
     },
-    clearImage() {
-      if (this.newProduct.imagePreview) {
-        URL.revokeObjectURL(this.newProduct.imagePreview);
-      }
-      this.newProduct.imageFile = null;
-      this.newProduct.imagePreview = null;
-    },
-    submitNewProduct() {
+
+    async submitNewProduct() {
+      if (this.submitting) return
+
       if (!this.newProduct.name || !this.newProduct.brand || !this.newProduct.imageFile) {
-        alert('모든 필드를 입력해주세요');
-        return;
+        alert('모든 필드를 입력해주세요')
+        return
       }
 
-      alert('제품이 등록되었습니다!');
-      this.showAddModal = false;
-      this.newProduct = { name: '', brand: '', imageFile: null, imagePreview: null };
+      this.submitting = true
+
+      try {
+        // 1. 이미지 업로드
+        const imageResponse = await fileService.uploadImage(this.newProduct.imageFile, 'BATTLE_ITEM')
+
+        if (!imageResponse.success) {
+          throw new Error('이미지 업로드에 실패했습니다.')
+        }
+
+        // 2. 아이템 추가
+        const itemData = {
+          items: [{
+            customName: this.newProduct.name,
+            customBrand: this.newProduct.brand,
+            customImageUrl: imageResponse.data.fileUrl
+          }]
+        }
+
+        const response = await battleService.addBattleItems(this.battleId, itemData)
+
+        if (response.success) {
+          alert('제품이 등록되었습니다!')
+          this.closeAddModal()
+
+          // 배틀 정보 다시 로드
+          await this.loadBattle()
+        } else {
+          throw new Error(response.message || '제품 등록에 실패했습니다.')
+        }
+      } catch (err) {
+        console.error('❌ 제품 등록 실패:', err)
+        alert(err.message || '제품 등록에 실패했습니다.')
+      } finally {
+        this.submitting = false
+      }
+    },
+
+    getProductRank(itemId) {
+      const entry = Object.entries(this.selectedRanks).find(([_, id]) => id === itemId)
+      return entry ? parseInt(entry[0]) : null
+    },
+
+    getPercentage(item) {
+      // 백엔드에서 계산된 votePercentage 사용 (0.0~1.0)
+      if (item.votePercentage !== undefined && item.votePercentage !== null) {
+        return (item.votePercentage * 100).toFixed(1)
+      }
+
+      // fallback: 직접 계산
+      if (!this.totalScore || this.totalScore === 0) return 0
+      const score = this.calculateItemScore(item)
+      return ((score / this.totalScore) * 100).toFixed(1)
+    },
+
+    getSelectedProductName(rank) {
+      const itemId = this.selectedRanks[rank]
+      const item = this.sortedItems.find(i => i.id === itemId)
+      return item ? this.getItemName(item) : '미선택'
+    },
+
+    getItemName(item) {
+      return item.battleItemProduct?.name || item.customName || '제품명 없음'
+    },
+
+    getItemBrand(item) {
+      return item.battleItemProduct?.brand || item.customBrand || ''
+    },
+
+    getItemImage(item) {
+      return item.battleItemProduct?.thumbnailDto?.storedPath ||
+          item.customImageUrl ||
+          'https://via.placeholder.com/400?text=No+Image'
+    },
+
+    getStatusClass(status) {
+      const statusTitle = status?.title || status
+      const classes = {
+        'DRAFT': 'status-draft',
+        'ACTIVE': 'status-active',
+        'CLOSED': 'status-closed',
+        'EARLY_CLOSED': 'status-early-closed'
+      }
+      return classes[statusTitle] || ''
+    },
+
+    getBattleStatusLabel(status) {
+      const statusTitle = status?.title || status
+      const labels = {
+        'DRAFT': '임시저장',
+        'ACTIVE': '진행중',
+        'CLOSED': '종료',
+        'EARLY_CLOSED': '조기종료'
+      }
+      return labels[statusTitle] || ''
+    },
+
+    handleImageUpload(e) {
+      const file = e.target.files?.[0]
+      if (file) {
+        // 파일 크기 체크 (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('파일 크기는 5MB 이하여야 합니다.')
+          return
+        }
+
+        this.newProduct.imageFile = file
+        this.newProduct.imagePreview = URL.createObjectURL(file)
+      }
+    },
+
+    clearImage() {
+      if (this.newProduct.imagePreview) {
+        URL.revokeObjectURL(this.newProduct.imagePreview)
+      }
+      this.newProduct.imageFile = null
+      this.newProduct.imagePreview = null
+    },
+
+    closeAddModal() {
+      this.showAddModal = false
+      this.newProduct = { name: '', brand: '', imageFile: null, imagePreview: null }
+    },
+
+    handleImageError(e) {
+      e.target.src = 'https://via.placeholder.com/400?text=No+Image'
+    },
+
+    goBack() {
+      this.$router.back()
+    },
+
+    shareBattle() {
+      if (navigator.share) {
+        navigator.share({
+          title: this.battle.title,
+          text: this.battle.description,
+          url: window.location.href
+        }).catch(console.error)
+      } else {
+        // 복사 기능
+        navigator.clipboard.writeText(window.location.href)
+        alert('링크가 복사되었습니다!')
+      }
+    }
+  },
+  beforeUnmount() {
+    if (this.newProduct.imagePreview) {
+      URL.revokeObjectURL(this.newProduct.imagePreview)
     }
   }
-};
+}
 </script>
 
 <style scoped>
 .battle-detail {
   min-height: 100vh;
   background-color: #f9fafb;
+}
+
+/* Loading & Error */
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-message {
+  font-size: 16px;
+  color: #ef4444;
+}
+
+.btn-retry {
+  padding: 10px 20px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 /* Header */
@@ -394,8 +690,13 @@ export default {
   font-family: inherit;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   background-color: #f3f4f6;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-back {
@@ -449,6 +750,7 @@ export default {
   display: flex;
   gap: 8px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .tag {
@@ -465,6 +767,30 @@ export default {
   color: #2563eb;
 }
 
+.tag-status {
+  font-weight: 600;
+}
+
+.status-draft {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.status-active {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.status-closed {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-early-closed {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
 .title {
   font-size: 24px;
   font-weight: bold;
@@ -475,6 +801,7 @@ export default {
 .description {
   font-size: 14px;
   color: #6b7280;
+  line-height: 1.5;
 }
 
 .battle-stats {
@@ -488,7 +815,7 @@ export default {
 }
 
 .stat-value {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
   color: #111827;
 }
@@ -496,6 +823,7 @@ export default {
 .stat-label {
   font-size: 12px;
   color: #6b7280;
+  margin-top: 2px;
 }
 
 .btn-add-product {
@@ -544,6 +872,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
 }
 
 .vote-label {
@@ -555,6 +884,7 @@ export default {
 .vote-ranks {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .vote-rank-item {
@@ -602,9 +932,10 @@ export default {
   cursor: pointer;
   transition: background-color 0.2s;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
 }
 
-.btn-submit:hover {
+.btn-submit:hover:not(:disabled) {
   background-color: #2563eb;
 }
 
@@ -704,6 +1035,7 @@ export default {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.4;
 }
 
 .product-brand {
@@ -785,8 +1117,13 @@ export default {
   color: #6b7280;
 }
 
-.btn-vote-rank:hover {
+.btn-vote-rank:hover:not(:disabled) {
   background-color: #e5e7eb;
+}
+
+.btn-vote-rank:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-vote-rank.active.rank-1 {
@@ -820,15 +1157,31 @@ export default {
   color: #374151;
 }
 
-.btn-vote-simple:hover {
+.btn-vote-simple:hover:not(:disabled) {
   background-color: #eff6ff;
   color: #2563eb;
+}
+
+.btn-vote-simple:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-vote-simple.active {
   background-color: #3b82f6;
   color: white;
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.voted-badge {
+  margin-top: 8px;
+  padding: 10px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
 }
 
 /* Modal */
@@ -1029,8 +1382,13 @@ export default {
   transition: background-color 0.2s;
 }
 
-.btn-confirm:hover {
+.btn-confirm:hover:not(:disabled) {
   background-color: #2563eb;
+}
+
+.btn-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Responsive */
@@ -1053,6 +1411,17 @@ export default {
   .battle-stats {
     margin-left: 0;
   }
+
+  .vote-bar-content {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .vote-selected {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1062,6 +1431,14 @@ export default {
 
   .container {
     padding: 16px;
+  }
+
+  .battle-info {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 20px;
   }
 }
 </style>
