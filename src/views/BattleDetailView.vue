@@ -310,7 +310,11 @@ export default {
       if (!this.battle?.items) return []
 
       return [...this.battle.items]
-      .filter(item => item.status === 'ACTIVE')
+      .filter(item => {
+        // ⭐ 핵심 수정: status 객체의 title 속성 확인
+        const statusTitle = item.status?.title || item.status
+        return statusTitle === 'ACTIVE'
+      })
       .sort((a, b) => {
         const scoreA = this.calculateItemScore(a)
         const scoreB = this.calculateItemScore(b)
@@ -346,6 +350,12 @@ export default {
         if (response.success && response.data) {
           this.battle = response.data
           console.log('✅ 배틀 정보 로드 완료:', this.battle)
+          console.log('📦 아이템 목록:', this.battle.items)
+
+          // 디버깅: 각 아이템의 status 확인
+          this.battle.items?.forEach(item => {
+            console.log(`Item ${item.id} status:`, item.status, 'Title:', item.status?.title)
+          })
 
           // 이미 투표한 경우 체크
           this.checkUserVote()
@@ -365,6 +375,7 @@ export default {
       if (this.battle?.items) {
         const hasUserVote = this.battle.items.some(item => item.userBattleVote !== null)
         this.hasVoted = hasUserVote
+        console.log('🗳️ 투표 여부:', this.hasVoted)
       }
     },
 
@@ -396,6 +407,7 @@ export default {
       }
 
       this.selectedRanks = newRanks
+      console.log('📌 선택된 순위:', this.selectedRanks)
     },
 
     async submitVote() {
@@ -429,6 +441,7 @@ export default {
           votes.push({ itemId: this.selectedRanks[1], rank: 1 })
         }
 
+        console.log('🗳️ 투표 데이터:', votes)
         const response = await battleService.voteBattleItem(this.battleId, { votes })
 
         if (response.success) {
@@ -461,11 +474,14 @@ export default {
 
       try {
         // 1. 이미지 업로드
+        console.log('🖼️ 이미지 업로드 시작:', this.newProduct.imageFile.name)
         const imageResponse = await fileService.uploadImage(this.newProduct.imageFile, 'BATTLE_ITEM')
 
         if (!imageResponse.success) {
           throw new Error('이미지 업로드에 실패했습니다.')
         }
+
+        console.log('✅ 이미지 업로드 완료:', imageResponse.data)
 
         // 2. 아이템 추가
         const itemData = {
@@ -476,6 +492,7 @@ export default {
           }]
         }
 
+        console.log('📦 아이템 추가 데이터:', itemData)
         const response = await battleService.addBattleItems(this.battleId, itemData)
 
         if (response.success) {
