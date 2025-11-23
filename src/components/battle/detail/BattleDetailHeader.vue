@@ -1,23 +1,21 @@
 <template>
-  <header class="detail-header">
-    <div class="header-content">
-      <button class="back-btn" @click="$emit('back')">
+  <header class="battle-header">
+    <div class="header-container">
+      <button @click="$emit('back')" class="back-button">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
-        배틀 목록
+        목록
       </button>
+
       <div class="header-actions">
-        <button class="share-btn" @click="$emit('share')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
-          </svg>
-        </button>
-        <button class="more-btn" @click="$emit('more')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="1"/>
-            <circle cx="19" cy="12" r="1"/>
-            <circle cx="5" cy="12" r="1"/>
+        <button @click="$emit('share')" class="share-button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
           </svg>
         </button>
       </div>
@@ -26,50 +24,48 @@
 </template>
 
 <script setup>
-defineEmits(['back', 'share', 'more'])
+defineEmits(['back', 'share'])
 </script>
 
 <style scoped>
-.detail-header {
-  background: white;
-  border-bottom: 1px solid #E8E8E8;
+.battle-header {
   position: sticky;
   top: 0;
-  z-index: 30;
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.95);
+  background: white;
+  border-bottom: 1px solid #E5E7EB;
+  z-index: 50;
 }
 
-.header-content {
-  max-width: 1280px;
+.header-container {
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 16px 32px;
+  padding: 0 24px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.back-btn {
+.back-button {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 8px;
+  padding: 4px 8px;
+  margin-left: -8px;
   background: transparent;
-  border: 1px solid #D4D4D4;
-  border-radius: 8px;
-  color: #737373;
+  border: none;
+  color: #374151;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+  transition: all 0.15s ease;
   font-family: inherit;
 }
 
-.back-btn:hover {
-  border-color: #A3A3A3;
-  background: #FAFAFA;
-  color: #0A0A0A;
-  transform: translateX(-2px);
+.back-button:hover {
+  background: #F9FAFB;
+  color: #111827;
 }
 
 .header-actions {
@@ -77,22 +73,26 @@ defineEmits(['back', 'share', 'more'])
   gap: 8px;
 }
 
-.share-btn, .more-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #E8E8E8;
-  background: white;
-  border-radius: 8px;
+.share-button {
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: #6B7280;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.share-btn:hover, .more-btn:hover {
-  border-color: #A3A3A3;
-  background: #FAFAFA;
-  transform: translateY(-1px);
+.share-button:hover {
+  background: #F9FAFB;
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 16px;
+  }
 }
 </style>
