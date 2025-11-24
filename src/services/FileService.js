@@ -1,5 +1,5 @@
 // services/FileService.js
-// 파일 업로드/다운로드 관련 API 서비스 (Fetch API 기반)
+// 파일 업로드/다운로드 관련 API 서비스 (Batch 업로드 최적화)
 
 import { BaseApiService } from './BaseApiService.js'
 import { ENV, getServiceUrl } from '@/config/env.js'
@@ -10,10 +10,7 @@ import { ENV, getServiceUrl } from '@/config/env.js'
  */
 class FileService extends BaseApiService {
   constructor() {
-    // 개발: http://54.180.89.70:8082/api (단일 서버)
-    // 프로덕션: https://auth.yourdomain.com/api (MSA - 파일 업로드는 인증 서버에서 처리)
     const baseURL = `${getServiceUrl('AUTH')}/api`
-
     super(baseURL, 'FILE')
     console.log(`📁 [FILE] File Server URL: ${this.baseURL}`)
     console.log(`🌍 [FILE] Environment: ${ENV.MODE}`)
@@ -22,27 +19,38 @@ class FileService extends BaseApiService {
   // ==================== 파일 업로드 API ====================
 
   /**
-   * 단일 파일 업로드
+   * 단일/다중 파일 업로드 (통합 - Batch 처리)
+   * @param {File|File[]} files - 단일 파일 또는 파일 배열
+   * @param {Object} options - 업로드 옵션
+   * @returns {Promise} 업로드 결과
    */
-  async uploadFile(file, options = {}) {
-    if (!file) {
+  async uploadFiles(files, options = {}) {
+    // 단일 파일을 배열로 변환
+    const fileArray = Array.isArray(files) ? files : [files]
+
+    if (fileArray.length === 0) {
       throw new Error('업로드할 파일이 필요합니다.')
     }
 
-    // 기본 검증만 수행
-    if (file.size === 0) {
-      throw new Error('빈 파일은 업로드할 수 없습니다.')
-    }
-
+    // 파일 검증
     const maxSize = 10 * 1024 * 1024 // 10MB
-    if (file.size > maxSize) {
-      throw new Error(`파일 크기는 ${this.formatFileSize(maxSize)} 이하여야 합니다.`)
-    }
+    fileArray.forEach(file => {
+      if (file.size === 0) {
+        throw new Error(`빈 파일은 업로드할 수 없습니다: ${file.name}`)
+      }
+      if (file.size > maxSize) {
+        throw new Error(
+            `파일 크기는 ${this.formatFileSize(maxSize)} 이하여야 합니다: ${file.name}`
+        )
+      }
+    })
 
     const formData = new FormData()
 
-    // 원본 파일 그대로 전송 (서버에서 파일명 처리)
-    formData.append('file', file)
+    // 모든 파일을 'files' 키로 추가 (서버에서 List<MultipartFile>로 받음)
+    fileArray.forEach(file => {
+      formData.append('files', file)
+    })
 
     if (options.fileCode) {
       formData.append('fileCode', options.fileCode)
@@ -52,57 +60,32 @@ class FileService extends BaseApiService {
       formData.append('fileExplain', options.fileExplain)
     }
 
-    console.log(`📤 [FILE] 파일 업로드 시작: ${file.name} (${this.formatFileSize(file.size)})`)
-
-    // BaseApiService의 uploadFile 메서드 호출
-    return await super.uploadFile('/files/upload', formData)
-  }
-
-  /**
-   * 다중 파일 업로드
-   */
-  async uploadFiles(files, options = {}) {
-    if (!files || files.length === 0) {
-      throw new Error('업로드할 파일이 필요합니다.')
-    }
-
-    console.log(`📤 [FILE] 다중 파일 업로드 시작: ${files.length}개 파일`)
-
-    const uploadPromises = Array.from(files).map(file =>
-        this.uploadFile(file, options)
+    console.log(
+        `📤 [FILE] 파일 업로드 시작: ${fileArray.length}개 파일 ` +
+        `(총 ${this.formatFileSize(fileArray.reduce((sum, f) => sum + f.size, 0))})`
     )
 
-    try {
-      const results = await Promise.allSettled(uploadPromises)
+    // BaseApiService의 uploadFile 메서드 호출 (Batch로 한 번에 전송)
+    const response = await super.uploadFile('/files/bulk', formData)
 
-      const successResults = results
-      .filter(result => result.status === 'fulfilled')
-      .map(result => result.value.data)
+    console.log(`✅ [FILE] 파일 업로드 완료: ${fileArray.length}개 파일`)
 
-      const failedResults = results
-      .filter(result => result.status === 'rejected')
-      .map(result => result.reason)
-
-      if (failedResults.length > 0) {
-        console.warn(`⚠️ [FILE] 일부 파일 업로드 실패: ${failedResults.length}개`, failedResults)
-      }
-
-      console.log(`✅ [FILE] 다중 파일 업로드 완료: 성공 ${successResults.length}개, 실패 ${failedResults.length}개`)
-
-      return {
-        success: successResults.length > 0,
-        data: successResults,
-        failedCount: failedResults.length,
-        errors: failedResults
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 다중 파일 업로드 실패:', error)
-      throw error
+    // 단일 파일인 경우 배열이 아닌 단일 객체 반환
+    return {
+      ...response,
+      data: fileArray.length === 1 ? response.data[0] : response.data
     }
   }
 
   /**
-   * 이미지 파일 업로드 (이미지 전용)
+   * 단일 파일 업로드 (하위 호환성 유지)
+   */
+  async uploadFile(file, options = {}) {
+    return this.uploadFiles(file, options)
+  }
+
+  /**
+   * 이미지 파일 업로드
    */
   async uploadImage(imageFile, imageType = 'PRODUCT') {
     if (!this.isImageFile(imageFile)) {
@@ -111,7 +94,7 @@ class FileService extends BaseApiService {
 
     console.log(`🖼️ [FILE] 이미지 업로드: ${imageFile.name}, 타입: ${imageType}`)
 
-    return this.uploadFile(imageFile, {
+    return this.uploadFiles(imageFile, {
       fileCode: imageType,
       fileExplain: `${imageType} 이미지`
     })
@@ -129,9 +112,11 @@ class FileService extends BaseApiService {
       throw new Error('유효한 이미지 파일이 없습니다.')
     }
 
-    console.log(`🖼️ [FILE] 다중 이미지 업로드: ${validImages.length}개 이미지, 타입: ${imageType}`)
+    console.log(
+        `🖼️ [FILE] 다중 이미지 업로드: ${validImages.length}개 이미지, 타입: ${imageType}`
+    )
 
-    return await this.uploadFiles(validImages, {
+    return this.uploadFiles(validImages, {
       fileCode: imageType
     })
   }
@@ -240,7 +225,7 @@ class FileService extends BaseApiService {
   }
 
   /**
-   * 다중 파일 삭제
+   * 다중 파일 삭제 (Batch)
    */
   async deleteFiles(fileIds) {
     if (!fileIds || fileIds.length === 0) {
@@ -249,6 +234,10 @@ class FileService extends BaseApiService {
 
     console.log(`🗑️ [FILE] 다중 파일 삭제: ${fileIds.length}개 파일`)
 
+    // 서버에 Batch 삭제 API가 있다면 사용
+    // return await this.delete('/files/batch', { ids: fileIds })
+
+    // 없다면 Promise.allSettled 사용
     const deletePromises = fileIds.map(id => this.deleteFile(id))
 
     try {
@@ -257,7 +246,9 @@ class FileService extends BaseApiService {
       const successCount = results.filter(r => r.status === 'fulfilled').length
       const failedCount = results.filter(r => r.status === 'rejected').length
 
-      console.log(`✅ [FILE] 다중 파일 삭제 완료: 성공 ${successCount}개, 실패 ${failedCount}개`)
+      console.log(
+          `✅ [FILE] 다중 파일 삭제 완료: 성공 ${successCount}개, 실패 ${failedCount}개`
+      )
 
       return {
         success: successCount > 0,
@@ -278,7 +269,10 @@ class FileService extends BaseApiService {
   isImageFile(file) {
     if (!file) return false
 
-    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    const imageTypes = [
+      'image/jpeg', 'image/jpg', 'image/png',
+      'image/gif', 'image/webp'
+    ]
     return imageTypes.includes(file.type)
   }
 
@@ -377,7 +371,7 @@ class FileService extends BaseApiService {
     console.group('🔍 [FILE] 파일 서비스 상태')
     console.log('Environment:', ENV.MODE)
     console.log('Base URL:', this.baseURL)
-    console.log('파일 업로드: 단일/다중 파일 지원')
+    console.log('파일 업로드: Batch 방식 (단일/다중 통합)')
     console.log('파일 다운로드: 브라우저 다운로드 트리거')
     console.log('이미지 처리: 이미지 전용 업로드 및 미리보기')
     console.log('파일 관리: 조회, 삭제 기능')
@@ -398,7 +392,7 @@ export function useFile() {
 
   const upload = async (file, options = {}) => {
     try {
-      const response = await service.uploadFile(file, options)
+      const response = await service.uploadFiles(file, options)
       return {
         success: true,
         data: response.data,
@@ -416,11 +410,12 @@ export function useFile() {
   const uploadMultiple = async (files, options = {}) => {
     try {
       const response = await service.uploadFiles(files, options)
+      const fileCount = Array.isArray(response.data) ? response.data.length : 1
+
       return {
-        success: response.success,
+        success: true,
         data: response.data,
-        failedCount: response.failedCount,
-        message: `${response.data.length}개 파일이 업로드되었습니다.`
+        message: `${fileCount}개 파일이 업로드되었습니다.`
       }
     } catch (error) {
       console.error('❌ [FILE] 다중 파일 업로드 실패:', error)

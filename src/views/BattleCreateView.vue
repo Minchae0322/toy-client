@@ -298,7 +298,7 @@ const loadDraft = () => {
 };
 
 /**
- * 배틀 생성 - 모든 이미지를 한 번에 업로드
+ * 배틀 생성 - 배치 업로드 후 customImageUrl에 매핑
  */
 const createBattle = async () => {
   try {
@@ -309,48 +309,116 @@ const createBattle = async () => {
       return dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
     };
 
-    // ⭐ 1. 대표 이미지 업로드 (있는 경우)
-    let thumbnailFile = battleForm.value.thumbnailFile;
+    // ⭐ 1. 업로드할 파일만 수집
+    const thumbnailFiles = [];
+    const itemFiles = [];
+    const fileIndexMap = new Map();
 
-    // ⭐ 2. 커스텀 아이템의 이미지 파일들 업로드
-    const processedItems = [];
+    // Step1의 대표 이미지
+    if (battleForm.value.thumbnailFile) {
+      thumbnailFiles.push(battleForm.value.thumbnailFile);
+    }
 
-    for (const item of selectedItems.value) {
+    // Step2의 커스텀 아이템 이미지 중 파일만 수집
+    selectedItems.value.forEach((item, index) => {
+      if (item.customImageFile) {
+        fileIndexMap.set(itemFiles.length, index);
+        itemFiles.push(item.customImageFile);
+      }
+    });
+
+    // ⭐ 2. 대표 이미지 배치 업로드 (BATTLE_THUMBNAIL)
+    let thumbnailAttachmentInfo = null;
+    if (thumbnailFiles.length > 0) {
+      console.log(`📤 [BATTLE] 대표 이미지 업로드 시작`);
+
+      const thumbnailResponse = await fileService.uploadMultiple(
+          thumbnailFiles,
+          { fileCode: 'BATTLE' }
+      );
+
+      if (!thumbnailResponse.success) {
+        throw new Error('대표 이미지 업로드에 실패했습니다.');
+      }
+
+      const uploadedData = thumbnailResponse.data;
+      const uploadedFile = Array.isArray(uploadedData) ? uploadedData[0] : uploadedData;
+
+      if (uploadedFile) {
+        thumbnailAttachmentInfo = {
+          fileId: uploadedFile.id,
+          fileUrl: uploadedFile.fileUrl,
+          orgFileNm: uploadedFile.orgFileNm,
+          fileSize: uploadedFile.fileSize
+        };
+      }
+
+      console.log(`✅ [BATTLE] 대표 이미지 업로드 완료`);
+    }
+
+    // ⭐ 3. 아이템 이미지 배치 업로드 (BATTLE_ITEM)
+    let itemImageUrlMap = new Map();
+    if (itemFiles.length > 0) {
+      console.log(`📤 [BATTLE] ${itemFiles.length}개 아이템 이미지 배치 업로드 시작`);
+
+      const itemUploadResponse = await fileService.uploadMultiple(
+          itemFiles,
+          { fileCode: 'BATTLE_ITEM' }
+      );
+
+      if (!itemUploadResponse.success) {
+        throw new Error('아이템 이미지 업로드에 실패했습니다.');
+      }
+
+      const uploadedData = Array.isArray(itemUploadResponse.data)
+          ? itemUploadResponse.data
+          : [itemUploadResponse.data];
+
+      // ⭐ 업로드된 파일의 fileUrl을 매핑
+      fileIndexMap.forEach((itemIndex, fileIndex) => {
+        const uploadedFile = uploadedData[fileIndex];
+
+        if (uploadedFile && uploadedFile.fileUrl) {
+          itemImageUrlMap.set(itemIndex, uploadedFile.fileUrl);
+        }
+      });
+
+      console.log(`✅ [BATTLE] ${itemImageUrlMap.size}개 아이템 이미지 업로드 완료`);
+    }
+
+    // ⭐ 4. 아이템 데이터 처리
+    const processedItems = selectedItems.value.map((item, index) => {
       if (item.customName) {
-        // 커스텀 아이템인 경우
-        let imageUrl = item.customImageUrl; // URL로 입력한 경우
+        // 커스텀 아이템
+        let customImageUrl = null;
 
-        // 파일로 업로드한 경우
-        if (item.customImageFile) {
-          const uploadResponse = await fileService.uploadImage(
-              item.customImageFile,
-              'BATTLE_ITEM'
-          );
-
-          if (uploadResponse.success && uploadResponse.data) {
-            imageUrl = uploadResponse.data.fileUrl;
-          } else {
-            throw new Error(`아이템 "${item.customName}" 이미지 업로드 실패`);
-          }
+        // 우선순위: 파일 업로드 > URL 입력
+        if (itemImageUrlMap.has(index)) {
+          // ⭐ 파일 업로드한 경우 - fileUrl을 customImageUrl에 저장
+          customImageUrl = itemImageUrlMap.get(index);
+        } else if (item.customImageUrl && item.customImageUrl.trim()) {
+          // URL 직접 입력한 경우
+          customImageUrl = item.customImageUrl.trim();
         }
 
-        processedItems.push({
+        return {
           productId: null,
           customName: item.customName,
           customBrand: item.customBrand,
-          customImageUrl: imageUrl
-        });
+          customImageUrl: customImageUrl
+        };
       } else {
-        // 기존 제품인 경우
-        processedItems.push({
+        // 기존 제품
+        return {
           productId: item.productId,
           customName: null,
           customBrand: null,
           customImageUrl: null
-        });
+        };
       }
-    }
+    });
 
+    // ⭐ 5. 배틀 생성 DTO
     const battleData = {
       title: battleForm.value.title.trim(),
       description: battleForm.value.description?.trim() || null,
@@ -360,13 +428,14 @@ const createBattle = async () => {
       endDate: formatToDateTime(battleForm.value.endDate),
       participationStartDate: formatToDateTime(battleForm.value.participationStartDate),
       voteType: battleForm.value.voteType,
+      thumbnailAttachmentInfo: thumbnailAttachmentInfo,
       items: processedItems
     };
 
-    const response = await battleService.createBattleWithFiles(
-        battleData,
-        thumbnailFile
-    );
+    console.log('📤 [BATTLE] 배틀 생성 요청:', JSON.stringify(battleData, null, 2));
+
+    // ⭐ 6. 배틀 생성 API 호출
+    const response = await battleService.createBattle(battleData);
 
     if (response.success) {
       localStorage.removeItem('battleDraft');
@@ -385,6 +454,7 @@ const createBattle = async () => {
     loading.value = false;
   }
 };
+
 
 const checkCreationPermission = async () => {
   try {
