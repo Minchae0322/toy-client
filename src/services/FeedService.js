@@ -6,8 +6,6 @@ import {ENV, getServiceUrl} from "@/config/env.js";
 
 class FeedService extends BaseApiService {
   constructor() {
-    // 개발: http://54.180.89.70:8082/api (단일 서버)
-    // 프로덕션: https://content.yourdomain.com/api (MSA)
     const baseURL = `${getServiceUrl('CONTENT')}/api`
 
     super(baseURL, 'FEED')
@@ -18,7 +16,10 @@ class FeedService extends BaseApiService {
   // ==================== 피드 CRUD 메서드 ====================
 
   /**
-   * 피드 생성 (파일 업로드 포함)
+   * 피드 생성 (파일 배치 업로드)
+   */
+  /**
+   * 피드 생성 (파일 배치 업로드)
    */
   async createFeedWithFiles(feedData, thumbnailFile, additionalFiles = []) {
     console.log('🚀 [FEED_SERVICE] 피드 생성 프로세스 시작')
@@ -27,45 +28,67 @@ class FeedService extends BaseApiService {
     console.log('📎 추가 이미지 개수:', additionalFiles.length)
 
     try {
-      // 1. 대표 이미지 업로드
-      console.log('1️⃣ 대표 이미지 업로드 중...')
-      const thumbnailResponse = await fileService.uploadImage(thumbnailFile, 'FEED')
+      // ⭐ 1. 업로드할 모든 파일 수집
+      const thumbnailFiles = thumbnailFile ? [thumbnailFile] : [];
+      const allAdditionalFiles = additionalFiles.filter(f => f);
 
-      if (!thumbnailResponse.success) {
-        throw new Error('대표 이미지 업로드에 실패했습니다.')
-      }
+      let thumbnailInfo = null;
+      let attachmentFileInfos = [];
 
-      const thumbnailInfo = this.convertToAttachmentInfo(thumbnailResponse.data)
-      console.log('✅ 대표 이미지 업로드 완료:', thumbnailInfo)
+      // ⭐ 2. 대표 이미지 배치 업로드 (FEED_THUMBNAIL)
+      if (thumbnailFiles.length > 0) {
+        console.log('1️⃣ 대표 이미지 배치 업로드 중...');
 
-      // 2. 추가 이미지 업로드
-      let attachmentFileInfos = []
-      if (additionalFiles && additionalFiles.length > 0) {
-        console.log('2️⃣ 추가 이미지 업로드 중...')
-        const uploadResults = await fileService.uploadImages(additionalFiles, 'FEED')
+        // ⭐ fileService 직접 호출
+        const thumbnailResponse = await fileService.uploadFiles(
+            thumbnailFiles,
+            { fileCode: 'FEED' }
+        );
 
-        if (uploadResults.success && uploadResults.data) {
-          attachmentFileInfos = uploadResults.data
-          .map(fileData => this.convertToAttachmentInfo(fileData))
+        const uploadedData = thumbnailResponse.data;
+        const uploadedFile = Array.isArray(uploadedData) ? uploadedData[0] : uploadedData;
 
-          console.log(`✅ 추가 이미지 ${attachmentFileInfos.length}개 업로드 완료`)
+        if (uploadedFile) {
+          thumbnailInfo = this.convertToAttachmentInfo(uploadedFile);
+          console.log('✅ 대표 이미지 업로드 완료:', thumbnailInfo);
         }
       }
 
-      // 3. 피드 생성 요청
-      console.log('3️⃣ 피드 생성 요청 중...')
+      // ⭐ 3. 추가 이미지 배치 업로드 (FEED)
+      if (allAdditionalFiles.length > 0) {
+        console.log(`2️⃣ ${allAdditionalFiles.length}개 추가 이미지 배치 업로드 중...`);
+
+        // ⭐ fileService 직접 호출
+        const additionalResponse = await fileService.uploadFiles(
+            allAdditionalFiles,
+            { fileCode: 'FEED' }
+        );
+
+        const uploadedData = Array.isArray(additionalResponse.data)
+            ? additionalResponse.data
+            : [additionalResponse.data];
+
+        attachmentFileInfos = uploadedData
+        .filter(file => file)
+        .map(file => this.convertToAttachmentInfo(file));
+
+        console.log(`✅ 추가 이미지 ${attachmentFileInfos.length}개 업로드 완료`);
+      }
+
+      // ⭐ 4. 피드 생성 요청
+      console.log('3️⃣ 피드 생성 요청 중...');
       const feedCreateData = {
         ...feedData,
         thumbnailAttachmentInfo: thumbnailInfo,
         attachmentFileInfos: attachmentFileInfos
-      }
+      };
 
-      console.log('📤 최종 피드 생성 데이터:', JSON.stringify(feedCreateData, null, 2))
-      return await this.createFeed(feedCreateData)
+      console.log('📤 최종 피드 생성 데이터:', JSON.stringify(feedCreateData, null, 2));
+      return await this.createFeed(feedCreateData);
 
     } catch (error) {
-      console.error('❌ [FEED_SERVICE] 피드 생성 실패:', error)
-      throw error
+      console.error('❌ [FEED_SERVICE] 피드 생성 실패:', error);
+      throw error;
     }
   }
 
@@ -74,19 +97,21 @@ class FeedService extends BaseApiService {
    */
   convertToAttachmentInfo(fileResponse) {
     if (!fileResponse) {
-      throw new Error('파일 응답이 없습니다.')
+      throw new Error('파일 응답이 없습니다.');
     }
 
-    console.log('🔄 파일 응답 변환:', fileResponse)
+    console.log('🔄 파일 응답 변환:', fileResponse);
 
+    // 이미 변환된 경우
     if (fileResponse.fileId && fileResponse.storedPath) {
-      console.log('✅ 이미 변환된 AttachmentInfo:', fileResponse)
-      return fileResponse
+      console.log('✅ 이미 변환된 AttachmentInfo:', fileResponse);
+      return fileResponse;
     }
 
+    // AttachmentFileResponse 구조 확인
     if (!fileResponse.id || !fileResponse.fileUrl) {
-      console.error('❌ 잘못된 파일 응답 구조:', fileResponse)
-      throw new Error('파일 응답 형식이 올바르지 않습니다.')
+      console.error('❌ 잘못된 파일 응답 구조:', fileResponse);
+      throw new Error('파일 응답 형식이 올바르지 않습니다.');
     }
 
     const attachmentInfo = {
@@ -96,10 +121,10 @@ class FeedService extends BaseApiService {
       fileSize: fileResponse.fileSize,
       contentType: `image/${fileResponse.fileExt}`,
       fileExplain: fileResponse.fileExplain || 'FEED 이미지'
-    }
+    };
 
-    console.log('✅ 변환된 AttachmentInfo:', attachmentInfo)
-    return attachmentInfo
+    console.log('✅ 변환된 AttachmentInfo:', attachmentInfo);
+    return attachmentInfo;
   }
 
   /**

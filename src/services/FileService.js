@@ -386,7 +386,6 @@ export const fileService = new FileService()
 export default fileService
 
 // ==================== Vue Composables ====================
-
 export function useFile() {
   const service = new FileService()
 
@@ -409,7 +408,7 @@ export function useFile() {
 
   const uploadMultiple = async (files, options = {}) => {
     try {
-      const response = await service.uploadFiles(files, options)
+      const response = await service.uploadFiles(files, options) // ⭐ uploadFiles 호출
       const fileCount = Array.isArray(response.data) ? response.data.length : 1
 
       return {
@@ -436,6 +435,26 @@ export function useFile() {
       }
     } catch (error) {
       console.error('❌ [FILE] 이미지 업로드 실패:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  // ⭐ uploadImages도 추가
+  const uploadImages = async (imageFiles, imageType = 'PRODUCT') => {
+    try {
+      const response = await service.uploadImages(imageFiles, imageType)
+      const fileCount = Array.isArray(response.data) ? response.data.length : 1
+
+      return {
+        success: true,
+        data: response.data,
+        message: `${fileCount}개 이미지가 업로드되었습니다.`
+      }
+    } catch (error) {
+      console.error('❌ [FILE] 다중 이미지 업로드 실패:', error)
       return {
         success: false,
         error: error.message
@@ -509,9 +528,9 @@ export function useFile() {
 
   return {
     upload,
-    uploadMultiple,
+    uploadMultiple,      // ⭐ 노출
     uploadImage,
-    uploadImages: (files, type) => service.uploadImages(files, type),
+    uploadImages,        // ⭐ 노출
     download,
     downloadFile: (fileId) => service.downloadFile(fileId),
     getInfo,
