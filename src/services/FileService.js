@@ -21,11 +21,10 @@ class FileService extends BaseApiService {
   /**
    * 단일/다중 파일 업로드 (통합 - Batch 처리)
    * @param {File|File[]} files - 단일 파일 또는 파일 배열
-   * @param {Object} options - 업로드 옵션
+   * @param {Object} options - 업로드 옵션 { fileCode, fileExplain }
    * @returns {Promise} 업로드 결과
    */
   async uploadFiles(files, options = {}) {
-    // 단일 파일을 배열로 변환
     const fileArray = Array.isArray(files) ? files : [files]
 
     if (fileArray.length === 0) {
@@ -47,7 +46,7 @@ class FileService extends BaseApiService {
 
     const formData = new FormData()
 
-    // 모든 파일을 'files' 키로 추가 (서버에서 List<MultipartFile>로 받음)
+    // 모든 파일을 'files' 키로 추가
     fileArray.forEach(file => {
       formData.append('files', file)
     })
@@ -65,7 +64,6 @@ class FileService extends BaseApiService {
         `(총 ${this.formatFileSize(fileArray.reduce((sum, f) => sum + f.size, 0))})`
     )
 
-    // BaseApiService의 uploadFile 메서드 호출 (Batch로 한 번에 전송)
     const response = await super.uploadFile('/files/bulk', formData)
 
     console.log(`✅ [FILE] 파일 업로드 완료: ${fileArray.length}개 파일`)
@@ -75,50 +73,6 @@ class FileService extends BaseApiService {
       ...response,
       data: fileArray.length === 1 ? response.data[0] : response.data
     }
-  }
-
-  /**
-   * 단일 파일 업로드 (하위 호환성 유지)
-   */
-  async uploadFile(file, options = {}) {
-    return this.uploadFiles(file, options)
-  }
-
-  /**
-   * 이미지 파일 업로드
-   */
-  async uploadImage(imageFile, imageType = 'PRODUCT') {
-    if (!this.isImageFile(imageFile)) {
-      throw new Error('이미지 파일만 업로드 가능합니다.')
-    }
-
-    console.log(`🖼️ [FILE] 이미지 업로드: ${imageFile.name}, 타입: ${imageType}`)
-
-    return this.uploadFiles(imageFile, {
-      fileCode: imageType,
-      fileExplain: `${imageType} 이미지`
-    })
-  }
-
-  /**
-   * 다중 이미지 업로드
-   */
-  async uploadImages(imageFiles, imageType = 'PRODUCT') {
-    const validImages = Array.from(imageFiles).filter(file =>
-        this.isImageFile(file)
-    )
-
-    if (validImages.length === 0) {
-      throw new Error('유효한 이미지 파일이 없습니다.')
-    }
-
-    console.log(
-        `🖼️ [FILE] 다중 이미지 업로드: ${validImages.length}개 이미지, 타입: ${imageType}`
-    )
-
-    return this.uploadFiles(validImages, {
-      fileCode: imageType
-    })
   }
 
   // ==================== 파일 다운로드 API ====================
@@ -133,30 +87,25 @@ class FileService extends BaseApiService {
 
     console.log(`📥 [FILE] 파일 다운로드 시작: fileId=${fileId}`)
 
-    try {
-      const response = await this.fetch(`/files/download/${fileId}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders()
-      })
+    const response = await this.fetch(`/files/download/${fileId}`, {
+      method: 'GET',
+      headers: this.getAuthHeaders()
+    })
 
-      if (!response.ok) {
-        throw new Error('파일 다운로드에 실패했습니다.')
-      }
+    if (!response.ok) {
+      throw new Error('파일 다운로드에 실패했습니다.')
+    }
 
-      const blob = await response.blob()
-      const contentDisposition = response.headers.get('content-disposition')
-      const fileName = this.extractFileName(contentDisposition)
+    const blob = await response.blob()
+    const contentDisposition = response.headers.get('content-disposition')
+    const fileName = this.extractFileName(contentDisposition)
 
-      console.log(`✅ [FILE] 파일 다운로드 완료: ${fileName}`)
+    console.log(`✅ [FILE] 파일 다운로드 완료: ${fileName}`)
 
-      return {
-        blob,
-        fileName,
-        contentType: response.headers.get('content-type')
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 파일 다운로드 실패:', error)
-      throw error
+    return {
+      blob,
+      fileName,
+      contentType: response.headers.get('content-type')
     }
   }
 
@@ -164,23 +113,18 @@ class FileService extends BaseApiService {
    * 파일 다운로드 트리거 (브라우저 다운로드 시작)
    */
   async triggerDownload(fileId) {
-    try {
-      const { blob, fileName } = await this.downloadFile(fileId)
+    const { blob, fileName } = await this.downloadFile(fileId)
 
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = fileName || 'download'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName || 'download'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
 
-      console.log(`💾 [FILE] 파일 다운로드 트리거 완료: ${fileName}`)
-    } catch (error) {
-      console.error('❌ [FILE] 파일 다운로드 트리거 실패:', error)
-      throw error
-    }
+    console.log(`💾 [FILE] 파일 다운로드 트리거 완료: ${fileName}`)
   }
 
   /**
@@ -225,7 +169,7 @@ class FileService extends BaseApiService {
   }
 
   /**
-   * 다중 파일 삭제 (Batch)
+   * 다중 파일 삭제
    */
   async deleteFiles(fileIds) {
     if (!fileIds || fileIds.length === 0) {
@@ -234,30 +178,20 @@ class FileService extends BaseApiService {
 
     console.log(`🗑️ [FILE] 다중 파일 삭제: ${fileIds.length}개 파일`)
 
-    // 서버에 Batch 삭제 API가 있다면 사용
-    // return await this.delete('/files/batch', { ids: fileIds })
-
-    // 없다면 Promise.allSettled 사용
     const deletePromises = fileIds.map(id => this.deleteFile(id))
+    const results = await Promise.allSettled(deletePromises)
 
-    try {
-      const results = await Promise.allSettled(deletePromises)
+    const successCount = results.filter(r => r.status === 'fulfilled').length
+    const failedCount = results.filter(r => r.status === 'rejected').length
 
-      const successCount = results.filter(r => r.status === 'fulfilled').length
-      const failedCount = results.filter(r => r.status === 'rejected').length
+    console.log(
+        `✅ [FILE] 다중 파일 삭제 완료: 성공 ${successCount}개, 실패 ${failedCount}개`
+    )
 
-      console.log(
-          `✅ [FILE] 다중 파일 삭제 완료: 성공 ${successCount}개, 실패 ${failedCount}개`
-      )
-
-      return {
-        success: successCount > 0,
-        successCount,
-        failedCount
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 다중 파일 삭제 실패:', error)
-      throw error
+    return {
+      success: successCount > 0,
+      successCount,
+      failedCount
     }
   }
 
@@ -268,11 +202,7 @@ class FileService extends BaseApiService {
    */
   isImageFile(file) {
     if (!file) return false
-
-    const imageTypes = [
-      'image/jpeg', 'image/jpg', 'image/png',
-      'image/gif', 'image/webp'
-    ]
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
     return imageTypes.includes(file.type)
   }
 
@@ -281,7 +211,6 @@ class FileService extends BaseApiService {
    */
   getFileExtension(fileName) {
     if (!fileName) return ''
-
     const lastDot = fileName.lastIndexOf('.')
     return lastDot !== -1 ? fileName.substring(lastDot + 1).toLowerCase() : ''
   }
@@ -291,11 +220,9 @@ class FileService extends BaseApiService {
    */
   formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes'
-
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
   }
 
@@ -308,13 +235,11 @@ class FileService extends BaseApiService {
     const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition)
     if (matches && matches[1]) {
       let filename = matches[1].replace(/['"]/g, '')
-
       try {
         filename = decodeURIComponent(filename)
       } catch (e) {
         console.warn('⚠️ [FILE] 파일명 디코딩 실패:', e)
       }
-
       return filename
     }
 
@@ -331,15 +256,8 @@ class FileService extends BaseApiService {
 
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
-
-      reader.onload = (e) => {
-        resolve(e.target.result)
-      }
-
-      reader.onerror = (error) => {
-        reject(error)
-      }
-
+      reader.onload = (e) => resolve(e.target.result)
+      reader.onerror = (error) => reject(error)
       reader.readAsDataURL(file)
     })
   }
@@ -349,7 +267,6 @@ class FileService extends BaseApiService {
    */
   getFileIcon(fileName) {
     const ext = this.getFileExtension(fileName)
-
     const iconMap = {
       jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', webp: 'image',
       pdf: 'file-pdf', doc: 'file-word', docx: 'file-word',
@@ -361,188 +278,40 @@ class FileService extends BaseApiService {
       mp4: 'file-video', avi: 'file-video', mov: 'file-video',
       mp3: 'file-audio', wav: 'file-audio'
     }
-
     return iconMap[ext] || 'file'
-  }
-
-  // ==================== 디버깅 ====================
-
-  debugFileStatus() {
-    console.group('🔍 [FILE] 파일 서비스 상태')
-    console.log('Environment:', ENV.MODE)
-    console.log('Base URL:', this.baseURL)
-    console.log('파일 업로드: Batch 방식 (단일/다중 통합)')
-    console.log('파일 다운로드: 브라우저 다운로드 트리거')
-    console.log('이미지 처리: 이미지 전용 업로드 및 미리보기')
-    console.log('파일 관리: 조회, 삭제 기능')
-    this.debugStatus()
-    console.groupEnd()
   }
 }
 
-// ==================== 싱글톤 인스턴스 ====================
+// ==================== Export ====================
 
 export const fileService = new FileService()
 export default fileService
 
 // ==================== Vue Composables ====================
+
 export function useFile() {
-  const service = new FileService()
-
-  const upload = async (file, options = {}) => {
-    try {
-      const response = await service.uploadFiles(file, options)
-      return {
-        success: true,
-        data: response.data,
-        message: response.message || '파일이 업로드되었습니다.'
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 파일 업로드 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  }
-
-  const uploadMultiple = async (files, options = {}) => {
-    try {
-      const response = await service.uploadFiles(files, options) // ⭐ uploadFiles 호출
-      const fileCount = Array.isArray(response.data) ? response.data.length : 1
-
-      return {
-        success: true,
-        data: response.data,
-        message: `${fileCount}개 파일이 업로드되었습니다.`
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 다중 파일 업로드 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  }
-
-  const uploadImage = async (imageFile, imageType = 'PRODUCT') => {
-    try {
-      const response = await service.uploadImage(imageFile, imageType)
-      return {
-        success: true,
-        data: response.data,
-        message: response.message || '이미지가 업로드되었습니다.'
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 이미지 업로드 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  }
-
-  // ⭐ uploadImages도 추가
-  const uploadImages = async (imageFiles, imageType = 'PRODUCT') => {
-    try {
-      const response = await service.uploadImages(imageFiles, imageType)
-      const fileCount = Array.isArray(response.data) ? response.data.length : 1
-
-      return {
-        success: true,
-        data: response.data,
-        message: `${fileCount}개 이미지가 업로드되었습니다.`
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 다중 이미지 업로드 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  }
-
-  const download = async (fileId) => {
-    try {
-      await service.triggerDownload(fileId)
-      return {
-        success: true,
-        message: '파일 다운로드를 시작합니다.'
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 파일 다운로드 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  }
-
-  const remove = async (fileId) => {
-    try {
-      const response = await service.deleteFile(fileId)
-      return {
-        success: true,
-        message: response.message || '파일이 삭제되었습니다.'
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 파일 삭제 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  }
-
-  const getInfo = async (fileId) => {
-    try {
-      const response = await service.getFileInfo(fileId)
-      return {
-        success: true,
-        data: response.data
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 파일 정보 조회 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  }
-
-  const createPreview = async (file) => {
-    try {
-      const previewUrl = await service.createPreviewUrl(file)
-      return {
-        success: true,
-        previewUrl
-      }
-    } catch (error) {
-      console.error('❌ [FILE] 미리보기 생성 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  }
-
   return {
-    upload,
-    uploadMultiple,      // ⭐ 노출
-    uploadImage,
-    uploadImages,        // ⭐ 노출
-    download,
-    downloadFile: (fileId) => service.downloadFile(fileId),
-    getInfo,
-    getList: (params) => service.getFileList(params),
-    remove,
-    removeMultiple: (fileIds) => service.deleteFiles(fileIds),
-    isImageFile: (file) => service.isImageFile(file),
-    formatFileSize: (bytes) => service.formatFileSize(bytes),
-    getFileIcon: (fileName) => service.getFileIcon(fileName),
-    getFileExtension: (fileName) => service.getFileExtension(fileName),
-    createPreview,
-    testConnection: () => service.testConnection(),
-    debugStatus: () => service.debugFileStatus()
+    // 파일 업로드
+    upload: (file, options) => fileService.uploadFiles(file, options),
+    uploadMultiple: (files, options) => fileService.uploadFiles(files, options),
+
+    // 파일 다운로드
+    download: (fileId) => fileService.triggerDownload(fileId),
+    downloadFile: (fileId) => fileService.downloadFile(fileId),
+
+    // 파일 조회
+    getInfo: (fileId) => fileService.getFileInfo(fileId),
+    getList: (params) => fileService.getFileList(params),
+
+    // 파일 삭제
+    remove: (fileId) => fileService.deleteFile(fileId),
+    removeMultiple: (fileIds) => fileService.deleteFiles(fileIds),
+
+    // 유틸리티
+    isImageFile: (file) => fileService.isImageFile(file),
+    formatFileSize: (bytes) => fileService.formatFileSize(bytes),
+    getFileIcon: (fileName) => fileService.getFileIcon(fileName),
+    getFileExtension: (fileName) => fileService.getFileExtension(fileName),
+    createPreview: (file) => fileService.createPreviewUrl(file)
   }
 }

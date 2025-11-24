@@ -26,22 +26,18 @@ class BattleService extends BaseApiService {
     return await this.get('/battles/creation/validation')
   }
 
-  /**
-   * 배틀 생성 (파일 업로드 포함)
-   */
   async createBattleWithFiles(battleData, thumbnailFile) {
     console.log('🚀 [BATTLE_SERVICE] 배틀 생성 프로세스 시작')
     console.log('📝 배틀 데이터:', battleData)
     console.log('🖼️ 대표 이미지:', thumbnailFile?.name)
 
     try {
-      // 1. 대표 이미지 업로드
+      // ✅ uploadFiles 사용으로 변경
       console.log('1️⃣ 대표 이미지 업로드 중...')
-      const thumbnailResponse = await fileService.uploadImage(thumbnailFile, 'BATTLE')
-
-      if (!thumbnailResponse.success) {
-        throw new Error('대표 이미지 업로드에 실패했습니다.')
-      }
+      const thumbnailResponse = await fileService.uploadFiles(
+          thumbnailFile,
+          { fileCode: 'BATTLE' }
+      )
 
       const thumbnailInfo = this.convertToAttachmentInfo(thumbnailResponse.data)
       console.log('✅ 대표 이미지 업로드 완료:', thumbnailInfo)
