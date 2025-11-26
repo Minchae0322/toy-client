@@ -9,14 +9,12 @@ const {userInfo, isLoggedIn, isAdmin, logout} = useAuth()
 
 const isLoggingOut = ref(false)
 const wsConnected = ref(false)
-const showDebug = ref(import.meta.env.DEV)
+const showMobileMenu = ref(false)
 
-// 인증 페이지 여부
 const isAuthPage = computed(() =>
     ['/login', '/register', '/oauth/callback'].includes(route.path)
 )
 
-// WebSocket 연결 상태 감시
 const monitorWebSocketStatus = () => {
   wsConnected.value = webSocketService.isConnected()
   webSocketService.onConnectionChange((connected) => {
@@ -24,7 +22,6 @@ const monitorWebSocketStatus = () => {
   })
 }
 
-// 로그아웃 처리
 const handleLogout = async () => {
   isLoggingOut.value = true
   try {
@@ -54,72 +51,110 @@ onUnmounted(() => webSocketService.disconnect())
 </script>
 
 <template>
-  <!-- 디버그 정보 -->
-  <div v-if="showDebug && !isAuthPage" class="debug-info">
-    <div>로그인: {{ isLoggedIn }}</div>
-    <div>관리자: {{ isAdmin }}</div>
-    <div>사용자: {{ userInfo?.username }}</div>
-    <div>WebSocket: {{ wsConnected ? '🟢' : '🔴' }}</div>
-  </div>
-
   <!-- 헤더 -->
-  <header v-if="!isAuthPage" class="app-header">
-    <div class="header-container">
+  <header v-if="!isAuthPage" class="header">
+    <div class="header-content">
       <!-- 로고 -->
-      <div class="logo">
-        <RouterLink to="/home" class="logo-link">
-          <span class="logo-icon">🍽️</span>
-          <span class="logo-text">한입만</span>
-        </RouterLink>
-      </div>
+      <RouterLink to="/home" class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="logo-text">한입만</span>
+      </RouterLink>
 
-      <!-- 메인 네비게이션 -->
-      <nav class="main-nav">
+      <!-- 데스크톱 네비게이션 -->
+      <nav class="nav">
         <template v-if="!isLoggedIn">
-          <div class="nav-items">
-            <RouterLink to="/one-mouth/list" class="nav-link">둘러보기</RouterLink>
-          </div>
-          <div class="auth-buttons">
-            <RouterLink to="/login" class="btn-login">로그인</RouterLink>
-            <RouterLink to="/register" class="btn-register">회원가입</RouterLink>
-          </div>
+          <RouterLink to="/one-mouth/list" class="nav-item">둘러보기</RouterLink>
+          <div class="nav-divider"></div>
+          <RouterLink to="/login" class="nav-item">로그인</RouterLink>
+          <RouterLink to="/register" class="btn-primary">시작하기</RouterLink>
         </template>
 
         <template v-else>
-          <div class="nav-items">
-            <RouterLink to="/home" class="nav-link">홈</RouterLink>
-            <RouterLink to="/products" class="nav-link">제품</RouterLink>
-            <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
-            <RouterLink to="/one-mouth/create" class="nav-link btn-sell">판매하기</RouterLink>
-          </div>
-
           <!-- 관리자 메뉴 -->
-          <div v-if="isAdmin" class="admin-dropdown">
-            <button class="admin-toggle">관리자 ▾</button>
-            <div class="admin-menu">
-              <RouterLink to="/admin" class="admin-item">대시보드</RouterLink>
-              <RouterLink to="/admin/users" class="admin-item">사용자 관리</RouterLink>
-              <RouterLink to="/admin/category" class="admin-item">카테고리 관리</RouterLink>
+          <div v-if="isAdmin" class="dropdown">
+            <button class="dropdown-trigger">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+            <div class="dropdown-menu">
+              <RouterLink to="/admin" class="dropdown-item">대시보드</RouterLink>
+              <RouterLink to="/admin/users" class="dropdown-item">사용자</RouterLink>
+              <RouterLink to="/admin/category" class="dropdown-item">카테고리</RouterLink>
             </div>
           </div>
 
-          <!-- 사용자 정보 -->
+          <div class="nav-divider"></div>
+
+          <!-- 사용자 메뉴 -->
           <div class="user-menu">
+            <div class="ws-status" :class="{ connected: wsConnected }" title="WebSocket 연결 상태">
+              <span class="ws-dot"></span>
+            </div>
             <div class="user-info">
-              <span class="user-avatar">{{ userInfo?.username?.charAt(0).toUpperCase() }}</span>
+              <div class="user-avatar">{{ userInfo?.username?.charAt(0).toUpperCase() }}</div>
               <span class="user-name">{{ userInfo?.username }}</span>
             </div>
-            <button @click="handleLogout" class="btn-logout" :disabled="isLoggingOut">
-              {{ isLoggingOut ? '로그아웃 중...' : '로그아웃' }}
+            <button @click="handleLogout" class="btn-ghost" :disabled="isLoggingOut">
+              {{ isLoggingOut ? '...' : '로그아웃' }}
             </button>
           </div>
         </template>
       </nav>
+
+      <!-- 모바일 메뉴 버튼 -->
+      <button class="mobile-menu-btn" @click="showMobileMenu = !showMobileMenu">
+        <svg v-if="!showMobileMenu" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
+
+    <!-- 모바일 메뉴 -->
+    <Transition name="mobile-menu">
+      <div v-if="showMobileMenu" class="mobile-menu">
+        <template v-if="!isLoggedIn">
+          <RouterLink to="/one-mouth/list" class="mobile-menu-item" @click="showMobileMenu = false">둘러보기</RouterLink>
+          <RouterLink to="/login" class="mobile-menu-item" @click="showMobileMenu = false">로그인</RouterLink>
+          <RouterLink to="/register" class="mobile-menu-item primary" @click="showMobileMenu = false">시작하기</RouterLink>
+        </template>
+        <template v-else>
+          <div v-if="isAdmin" class="mobile-menu-section">
+            <div class="mobile-menu-label">관리자</div>
+            <RouterLink to="/admin" class="mobile-menu-item" @click="showMobileMenu = false">대시보드</RouterLink>
+            <RouterLink to="/admin/users" class="mobile-menu-item" @click="showMobileMenu = false">사용자</RouterLink>
+            <RouterLink to="/admin/category" class="mobile-menu-item" @click="showMobileMenu = false">카테고리</RouterLink>
+          </div>
+          <div class="mobile-menu-footer">
+            <div class="mobile-user-info">
+              <div class="ws-status mobile" :class="{ connected: wsConnected }">
+                <span class="ws-dot"></span>
+                <span class="ws-label">{{ wsConnected ? '연결됨' : '연결 끊김' }}</span>
+              </div>
+              <div class="user-avatar">{{ userInfo?.username?.charAt(0).toUpperCase() }}</div>
+              <span>{{ userInfo?.username }}</span>
+            </div>
+            <button @click="handleLogout" class="btn-ghost" :disabled="isLoggingOut">
+              {{ isLoggingOut ? '...' : '로그아웃' }}
+            </button>
+          </div>
+        </template>
+      </div>
+    </Transition>
   </header>
 
   <!-- 메인 컨텐츠 -->
-  <main :class="['app-main', { 'no-padding': isAuthPage }]">
+  <main :class="['main', { 'auth-page': isAuthPage }]">
     <RouterView/>
   </main>
 </template>
@@ -131,216 +166,193 @@ onUnmounted(() => webSocketService.disconnect())
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* 디버그 정보 */
-.debug-info {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.85);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 11px;
-  z-index: 9999;
-  line-height: 1.6;
-  backdrop-filter: blur(10px);
-}
-
-.debug-info div {
-  margin: 2px 0;
-}
-
 /* 헤더 */
-.app-header {
-  background: white;
-  border-bottom: 1px solid #f0f0f0;
+.header {
   position: sticky;
   top: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   z-index: 1000;
 }
 
-.header-container {
-  max-width: 1400px;
+.header-content {
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 60px;
+  padding: 0 32px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
 }
 
 /* 로고 */
-.logo-link {
+.logo {
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
+  color: #000;
   transition: opacity 0.2s;
 }
 
-.logo-link:hover {
-  opacity: 0.8;
+.logo:hover {
+  opacity: 0.7;
 }
 
 .logo-icon {
-  font-size: 28px;
-  display: flex;
-  align-items: center;
+  width: 24px;
+  height: 24px;
 }
 
 .logo-text {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
-  color: #000;
   letter-spacing: -0.5px;
 }
 
-/* 메인 네비게이션 */
-.main-nav {
+/* 네비게이션 */
+.nav {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 4px;
 }
 
-.nav-items {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.nav-link {
+.nav-item {
   text-decoration: none;
-  color: #666;
+  color: rgba(0, 0, 0, 0.6);
   font-size: 14px;
   font-weight: 500;
   padding: 8px 16px;
   border-radius: 8px;
   transition: all 0.2s;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 
-.nav-link:hover {
+.nav-item:hover {
   color: #000;
-  background: #f8f8f8;
+  background: rgba(0, 0, 0, 0.04);
 }
 
-.nav-link.router-link-active {
-  color: #1DCD9F;
-  background: rgba(29, 205, 159, 0.08);
-}
-
-/* 판매하기 버튼 */
-.btn-sell {
-  background: #1DCD9F;
-  color: white;
-  font-weight: 600;
-  margin-left: 8px;
-}
-
-.btn-sell:hover {
-  background: #169976;
-  color: white;
-}
-
-/* 인증 버튼 */
-.auth-buttons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-login {
-  text-decoration: none;
-  color: #666;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.btn-login:hover {
+.nav-item.router-link-active {
   color: #000;
-  background: #f8f8f8;
+  background: rgba(0, 0, 0, 0.06);
 }
 
-.btn-register {
+.nav-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0 8px;
+}
+
+/* 버튼 */
+.btn-primary {
   text-decoration: none;
-  background: #000;
-  color: white;
+  background: #9333ea;
+  color: #fff;
   font-size: 14px;
   font-weight: 600;
   padding: 8px 20px;
   border-radius: 8px;
   transition: all 0.2s;
+  letter-spacing: -0.2px;
 }
 
-.btn-register:hover {
-  background: #333;
+.btn-primary:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
 }
 
-/* 관리자 드롭다운 */
-.admin-dropdown {
+.btn-ghost {
+  background: transparent;
+  color: rgba(0, 0, 0, 0.6);
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: -0.2px;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: #000;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.btn-ghost:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 드롭다운 */
+.dropdown {
   position: relative;
 }
 
-.admin-toggle {
-  background: #ff6b35;
-  color: white;
+.dropdown-trigger {
+  background: transparent;
   border: none;
-  padding: 8px 16px;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 8px;
   border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.admin-toggle:hover {
-  background: #e55a2b;
+.dropdown-trigger:hover {
+  color: #000;
+  background: rgba(0, 0, 0, 0.04);
 }
 
-.admin-menu {
+.dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
   background: white;
-  border: 1px solid #f0f0f0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   padding: 8px;
-  min-width: 180px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-4px);
+  transform: translateY(-8px);
   transition: all 0.2s;
 }
 
-.admin-dropdown:hover .admin-menu {
+.dropdown:hover .dropdown-menu {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
 
-.admin-item {
+.dropdown-item {
   display: block;
   text-decoration: none;
-  color: #333;
-  font-size: 13px;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 14px;
   font-weight: 500;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: all 0.2s;
+  letter-spacing: -0.2px;
 }
 
-.admin-item:hover {
-  background: #f8f8f8;
-  color: #ff6b35;
+.dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #000;
 }
 
-.admin-item.router-link-active {
-  background: rgba(255, 107, 53, 0.1);
-  color: #ff6b35;
+.dropdown-item.router-link-active {
+  background: rgba(0, 0, 0, 0.06);
+  color: #000;
 }
 
 /* 사용자 메뉴 */
@@ -348,100 +360,218 @@ onUnmounted(() => webSocketService.disconnect())
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-left: 24px;
-  border-left: 1px solid #f0f0f0;
+}
+
+.ws-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.ws-status.connected {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.ws-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.ws-status.connected .ws-dot {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .user-avatar {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #1DCD9F, #169976);
-  color: white;
+  background: linear-gradient(135deg, #9333ea, #7c3aed);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 500;
-  color: #333;
-  letter-spacing: -0.3px;
+  color: #000;
+  letter-spacing: -0.2px;
 }
 
-.btn-logout {
+/* 모바일 메뉴 */
+.mobile-menu-btn {
+  display: none;
   background: transparent;
-  color: #999;
-  border: 1px solid #e0e0e0;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
+  border: none;
+  color: #000;
+  padding: 8px;
   cursor: pointer;
+  border-radius: 8px;
   transition: all 0.2s;
 }
 
-.btn-logout:hover:not(:disabled) {
-  color: #666;
-  border-color: #ccc;
-  background: #f8f8f8;
+.mobile-menu-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
-.btn-logout:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.mobile-menu {
+  display: none;
+  background: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 16px;
+}
+
+.mobile-menu-item {
+  display: block;
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  letter-spacing: -0.3px;
+}
+
+.mobile-menu-item:hover,
+.mobile-menu-item.router-link-active {
+  background: rgba(0, 0, 0, 0.04);
+  color: #000;
+}
+
+.mobile-menu-item.primary {
+  background: #9333ea;
+  color: #fff;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.mobile-menu-item.primary:hover {
+  background: #7c3aed;
+}
+
+.mobile-menu-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.mobile-menu-label {
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 16px 8px;
+}
+
+.mobile-menu-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.mobile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+
+.mobile-user-info span {
+  font-size: 15px;
+  font-weight: 600;
+  color: #000;
+}
+
+.ws-status.mobile {
+  width: auto;
+  padding: 6px 12px;
+  border-radius: 20px;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.ws-status.mobile.connected {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.ws-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.ws-status.mobile.connected .ws-label {
+  color: #10b981;
+}
+
+/* 모바일 메뉴 애니메이션 */
+.mobile-menu-enter-active,
+.mobile-menu-leave-active {
+  transition: all 0.3s;
+}
+
+.mobile-menu-enter-from,
+.mobile-menu-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 /* 메인 컨텐츠 */
-.app-main {
+.main {
   min-height: calc(100vh - 64px);
   background: #fafafa;
 }
 
-.app-main.no-padding {
-  padding: 0;
+.main.auth-page {
   background: white;
 }
 
 /* 반응형 */
-@media (max-width: 1024px) {
-  .header-container {
-    padding: 0 40px;
-  }
-
-  .nav-items {
-    gap: 4px;
-  }
-
-  .nav-link {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-}
-
 @media (max-width: 768px) {
-  .header-container {
-    padding: 0 20px;
+  .header-content {
+    padding: 0 16px;
   }
 
-  .main-nav {
-    gap: 16px;
+  .user-menu {
+    gap: 8px;
   }
 
-  .nav-items {
+  .nav {
     display: none;
   }
 
-  .user-name {
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .mobile-menu {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text {
     display: none;
   }
 }

@@ -387,23 +387,6 @@ onUnmounted(() => {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
-/* 사이드바 */
-.desktop-sidebar {
-  display: none;
-}
-
-@media (min-width: 1024px) {
-  .desktop-sidebar {
-    display: block;
-    width: 240px;
-    background: white;
-    border-right: 1px solid #E5E7EB;
-    position: fixed;
-    height: 100vh;
-    left: 0;
-    top: 0;
-  }
-}
 
 /* 메인 컨텐츠 */
 .main-content {

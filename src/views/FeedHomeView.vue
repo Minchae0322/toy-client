@@ -342,7 +342,7 @@ onUnmounted(() => {
 
 @media (min-width: 1024px) {
   .main-content {
-    margin-left: 280px;
+    margin-left: 240px;
     padding-bottom: 40px;
   }
 }

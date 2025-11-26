@@ -475,7 +475,7 @@ export default {
       try {
         // 1. 이미지 업로드
         console.log('🖼️ 이미지 업로드 시작:', this.newProduct.imageFile.name)
-        const imageResponse = await fileService.uploadImage(this.newProduct.imageFile, 'BATTLE_ITEM')
+        const imageResponse = await fileService.uploadFiles(this.newProduct.imageFile, 'BATTLE_ITEM')
 
         if (!imageResponse.success) {
           throw new Error('이미지 업로드에 실패했습니다.')

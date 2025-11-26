@@ -243,7 +243,7 @@ class BattleService extends BaseApiService {
     }
 
     console.log(`🗳️ [BATTLE_SERVICE] 투표 요청: battleId=${battleId}`, requestData)
-    return await this.post(`/battles/${battleId}/vote`, requestData)
+    return await this.post(`/battles/${battleId}/items/vote`, requestData)
   }
 
   /**
