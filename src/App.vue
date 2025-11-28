@@ -61,7 +61,7 @@ onUnmounted(() => webSocketService.disconnect())
           <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="logo-text">한입만</span>
+        <span class="logo-text">HYPE BATTLE</span>
       </RouterLink>
 
       <!-- 데스크톱 네비게이션 -->
@@ -170,7 +170,7 @@ onUnmounted(() => webSocketService.disconnect())
 .header {
   position: sticky;
   top: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgb(255, 255, 255);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   z-index: 1000;
@@ -179,7 +179,7 @@ onUnmounted(() => webSocketService.disconnect())
 .header-content {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 0 10px;
   height: 64px;
   display: flex;
   align-items: center;
@@ -540,7 +540,7 @@ onUnmounted(() => webSocketService.disconnect())
 /* 메인 컨텐츠 */
 .main {
   min-height: calc(100vh - 64px);
-  background: #fafafa;
+  background: #ffffff;
 }
 
 .main.auth-page {

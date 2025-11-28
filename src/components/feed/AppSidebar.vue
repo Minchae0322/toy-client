@@ -1,9 +1,6 @@
 <template>
   <aside class="sidebar-left">
-    <div class="sidebar-header">
-      <h1 class="logo">HYPE BATTLE</h1>
-      <span class="logo-beta">BETA</span>
-    </div>
+
 
     <nav class="nav-menu">
       <!-- 메인 메뉴 섹션 -->
@@ -160,12 +157,8 @@ const goToMyProfile = async () => {
   }
 };
 </script>
-
 <style scoped>
 .sidebar-left {
-  position: fixed;
-  left: 0;
-  top: 0;
   width: 240px;
   height: 100vh;
   background: #ffffff;
@@ -175,9 +168,12 @@ const goToMyProfile = async () => {
   flex-direction: column;
   overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .sidebar-left {
     display: flex;
   }

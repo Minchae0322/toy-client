@@ -36,7 +36,7 @@
       />
     </main>
 
-    <RightSidebar />
+    <!-- RightSidebar 제거됨 -->
 
     <!-- Bottom Navigation - Mobile Only -->
     <nav class="bottom-nav">
@@ -83,7 +83,6 @@ import { useFeed } from '@/services/FeedService';
 
 import AppSidebar from '@/components/feed/AppSidebar.vue';
 import AppHeader from '@/components/feed/AppHeader.vue';
-import RightSidebar from '@/components/feed/RightSidebar.vue';
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue';
 import HotSection from '@/components/feed/HotSection.vue';
 import FeedList from '@/components/feed/FeedList.vue';
@@ -314,10 +313,11 @@ onUnmounted(() => {
   --primary: #222222;
   --secondary: #64748B;
   --accent: #F97316;
-  --bg: #F8FAFC;
+  --bg: #FFFFFF;
   --card: #FFFFFF;
   --border: #E2E8F0;
-  --hover: #F1F5F9;
+  --hover: #F8FAFC;
+  --shadow: rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -331,25 +331,31 @@ onUnmounted(() => {
   min-height: 100vh;
   color: var(--primary);
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  display: flex;
+  margin: 0 20px;
 }
 
-.main-content {
-  margin-left: 0;
-  margin-right: 0;
-  min-height: 100vh;
-  padding-bottom: 80px;
-}
-
-@media (min-width: 1024px) {
-  .main-content {
-    margin-left: 240px;
-    padding-bottom: 40px;
+@media (min-width: 768px) {
+  .app-container {
+    margin: 0 32px;
   }
 }
 
 @media (min-width: 1280px) {
+  .app-container {
+    margin: 0 60px;
+  }
+}
+
+.main-content {
+  flex: 1;
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+@media (min-width: 768px) {
   .main-content {
-    margin-right: 380px;
+    padding-bottom: 40px;
   }
 }
 

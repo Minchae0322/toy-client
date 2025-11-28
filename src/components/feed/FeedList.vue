@@ -273,6 +273,7 @@ defineExpose({
   observerTarget
 });
 </script>
+/* FeedList.vue - style 부분만 수정 */
 
 <style scoped>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -282,9 +283,10 @@ defineExpose({
   --secondary: #64748B;
   --accent: #F97316;
   --border: #E2E8F0;
-  --bg: #F8FAFC;
+  --bg: #FFFFFF;
   --card: #FFFFFF;
-  --hover: #F1F5F9;
+  --hover: #F8FAFC;
+  --shadow: rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -294,13 +296,14 @@ defineExpose({
 }
 
 .feed-section {
-  padding: 32px 20px;
+  padding: 32px 0;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg);
 }
 
 @media (min-width: 1024px) {
   .feed-section {
-    padding: 40px 32px;
+    padding: 40px 0;
   }
 }
 
@@ -312,6 +315,16 @@ defineExpose({
   margin-bottom: 24px;
   gap: 16px;
   flex-wrap: wrap;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+}
+
+@media (min-width: 1024px) {
+  .section-header {
+    padding: 0 32px;
+    padding-bottom: 24px;
+  }
 }
 
 .section-title {
@@ -336,10 +349,10 @@ defineExpose({
 /* ⭐ 뷰 토글 - 미니멀 디자인 */
 .view-toggle {
   display: flex;
-  background: var(--bg);
+  background: var(--hover);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 2px;
+  border-radius: 10px;
+  padding: 3px;
   gap: 2px;
 }
 
@@ -347,11 +360,11 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--secondary);
   cursor: pointer;
   transition: all 0.2s;
@@ -360,13 +373,13 @@ defineExpose({
 
 .view-btn:hover {
   color: var(--primary);
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .view-btn.active {
   background: white;
   color: var(--primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .view-btn .icon {
@@ -376,10 +389,10 @@ defineExpose({
 
 /* 정렬 셀렉트 */
 .sort-select {
-  padding: 8px 32px 8px 14px;
-  background: var(--bg);
+  padding: 10px 36px 10px 16px;
+  background: var(--hover);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   color: var(--primary);
@@ -387,13 +400,15 @@ defineExpose({
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 5L6 8L9 5' stroke='%2364748B' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
+  background-position: right 14px center;
   font-family: inherit;
   transition: all 0.2s;
 }
 
 .sort-select:hover {
+  background: white;
   border-color: var(--primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .sort-select:focus {
@@ -406,6 +421,8 @@ defineExpose({
 @media (max-width: 767px) {
   .section-header {
     gap: 12px;
+    padding: 0 16px;
+    padding-bottom: 16px;
   }
 
   .section-title {
@@ -419,8 +436,8 @@ defineExpose({
   }
 
   .view-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
   }
 
   .view-btn .icon {
@@ -430,7 +447,7 @@ defineExpose({
 
   .sort-select {
     font-size: 13px;
-    padding: 7px 28px 7px 12px;
+    padding: 8px 30px 8px 12px;
   }
 }
 
@@ -439,12 +456,14 @@ defineExpose({
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
+  padding: 0 20px;
 }
 
 @media (min-width: 768px) {
   .feed-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
+    padding: 0 20px;
   }
 }
 
@@ -452,6 +471,7 @@ defineExpose({
   .feed-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
+    padding: 0 32px;
   }
 }
 
@@ -466,23 +486,33 @@ defineExpose({
 .list-view {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+@media (min-width: 1024px) {
+  .list-view {
+    gap: 20px;
+    padding: 0 32px;
+  }
 }
 
 .list-item {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 16px;
   padding: 20px;
   display: flex;
   gap: 20px;
-  transition: all 0.3s;
+  transition: all 0.25s;
   cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .list-item:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px var(--shadow);
   transform: translateY(-2px);
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 .list-image {
@@ -490,7 +520,7 @@ defineExpose({
   width: 180px;
   height: 180px;
   flex-shrink: 0;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--hover);
 }
@@ -517,12 +547,12 @@ defineExpose({
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 10px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px;
   font-weight: 700;
   backdrop-filter: blur(8px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .list-eval-icon {
@@ -556,7 +586,7 @@ defineExpose({
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -570,14 +600,14 @@ defineExpose({
 .list-author-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
 }
 
 .author-avatar-small {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
   display: flex;
@@ -596,8 +626,8 @@ defineExpose({
 }
 
 .avatar-placeholder svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .author-name-row {
@@ -626,7 +656,7 @@ defineExpose({
 }
 
 .list-category {
-  padding: 2px 8px;
+  padding: 3px 8px;
   background: #EFF6FF;
   color: #1D4ED8;
   border-radius: 6px;
@@ -663,7 +693,7 @@ defineExpose({
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .list-title-row {
@@ -682,8 +712,8 @@ defineExpose({
 }
 
 .list-evaluation-status {
-  padding: 3px 10px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
   font-size: 11px;
   font-weight: 700;
   display: inline-flex;
@@ -703,27 +733,31 @@ defineExpose({
 .list-evaluation-status.eval-best {
   background: #FFF7ED;
   color: #F97316;
+  border: 1px solid #FDBA74;
 }
 
 .list-evaluation-status.eval-good {
   background: #D1FAE5;
   color: #059669;
+  border: 1px solid #6EE7B7;
 }
 
 .list-evaluation-status.eval-okay {
   background: #DBEAFE;
   color: #2563EB;
+  border: 1px solid #93C5FD;
 }
 
 .list-evaluation-status.eval-bad {
   background: #FEE2E2;
   color: #DC2626;
+  border: 1px solid #FCA5A5;
 }
 
 .list-review {
   font-size: 14px;
   color: var(--secondary);
-  line-height: 1.5;
+  line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -735,40 +769,42 @@ defineExpose({
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 0;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
 }
 
 .list-reactions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .reaction-item {
   display: flex;
   align-items: center;
-  gap: 3px;
-  font-size: 11px;
+  gap: 4px;
+  font-size: 12px;
   color: var(--primary);
   font-weight: 600;
 }
 
 .icon-small {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   stroke-width: 2;
   flex-shrink: 0;
+  color: var(--secondary);
 }
 
 .icon-small.fire-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
 }
 
 .price {
   font-weight: 700;
   color: var(--primary);
-  font-size: 13px;
+  font-size: 14px;
   white-space: nowrap;
   margin-left: auto;
 }
@@ -776,21 +812,24 @@ defineExpose({
 .list-hashtags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   padding-top: 4px;
 }
 
 .hashtag {
-  font-size: 11px;
+  font-size: 12px;
   color: #1D4ED8;
   font-weight: 500;
   cursor: pointer;
   transition: color 0.2s;
+  background: #EFF6FF;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
 
 .hashtag:hover {
   color: #1E40AF;
-  text-decoration: underline;
+  background: #DBEAFE;
 }
 
 /* Loading Section */
@@ -845,6 +884,7 @@ defineExpose({
   gap: 12px;
   padding: 32px 20px;
   background: var(--hover);
+  border: 1px solid var(--border);
   border-radius: 16px;
   max-width: 400px;
   margin: 0 auto;
@@ -867,11 +907,12 @@ defineExpose({
 
 @media (max-width: 767px) {
   .feed-section {
-    padding: 24px 16px;
+    padding: 24px 0;
   }
 
   .list-view {
-    gap: 16px;
+    gap: 12px;
+    padding: 0 16px;
   }
 
   .list-item {
