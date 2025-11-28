@@ -372,6 +372,10 @@ onUnmounted(() => {
 })
 </script>
 
+/* BattleHomeView.vue - style 부분만 수정 */
+
+/* BattleHomeView.vue - style 부분만 수정 */
+
 <style scoped>
 /* 기본 설정 */
 * {
@@ -383,10 +387,22 @@ onUnmounted(() => {
 .app-container {
   display: flex;
   min-height: 100vh;
-  background: #FAFAFA;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: #FFFFFF;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  margin: 0 20px;
 }
 
+@media (min-width: 768px) {
+  .app-container {
+    margin: 0 32px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-container {
+    margin: 0 60px;
+  }
+}
 
 /* 메인 컨텐츠 */
 .main-content {
@@ -397,9 +413,8 @@ onUnmounted(() => {
   padding-bottom: 80px;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .main-content {
-    margin-left: 240px;
     padding-bottom: 40px;
   }
 }
@@ -407,7 +422,7 @@ onUnmounted(() => {
 /* 메인 헤더 */
 .main-header {
   background: white;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #E2E8F0;
   position: sticky;
   top: 0;
   z-index: 30;
@@ -419,82 +434,104 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .tabs-group {
   display: flex;
-  gap: 20px;
+  gap: 24px;
 }
 
 .tab-button {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 14px 0;
+  padding: 16px 0;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #6B7280;
+  color: #64748B;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s;
+  font-family: inherit;
 }
 
 .tab-button:hover {
-  color: #374151;
+  color: #0F172A;
 }
 
 .tab-button.active {
-  color: #111827;
-  border-bottom-color: #111827;
+  color: #0F172A;
+  border-bottom-color: #0F172A;
 }
 
 .tab-count {
-  padding: 2px 6px;
-  background: #F3F4F6;
-  color: #6B7280;
+  padding: 3px 8px;
+  background: #F8FAFC;
+  color: #64748B;
   font-size: 11px;
   font-weight: 700;
-  border-radius: 4px;
-  min-width: 18px;
+  border-radius: 6px;
+  min-width: 20px;
   text-align: center;
+  border: 1px solid #E2E8F0;
 }
 
 .tab-button.active .tab-count {
-  background: #111827;
+  background: #0F172A;
   color: white;
+  border-color: #0F172A;
 }
 
 .view-switcher {
   display: flex;
-  background: #F3F4F6;
-  border-radius: 6px;
-  padding: 2px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  padding: 3px;
   gap: 2px;
+  border: 1px solid #E2E8F0;
 }
 
 .view-btn {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: none;
-  border-radius: 4px;
-  color: #6B7280;
+  border-radius: 6px;
+  color: #64748B;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s;
+}
+
+.view-btn:hover {
+  color: #0F172A;
 }
 
 .view-btn.active {
   background: white;
-  color: #111827;
+  color: #0F172A;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 @media (max-width: 768px) {
+  .tab-navigation {
+    padding: 0 16px;
+  }
+
+  .tabs-group {
+    gap: 16px;
+  }
+
+  .tab-button {
+    padding: 14px 0;
+    font-size: 13px;
+  }
+
   .view-switcher {
     display: none;
   }
@@ -502,22 +539,17 @@ onUnmounted(() => {
 
 /* 컨텐츠 영역 */
 .content-wrapper {
-  padding: 24px;
+  padding: 24px 0;
 }
 
 @media (max-width: 768px) {
   .content-wrapper {
-    padding: 20px 16px;
+    padding: 20px 0;
   }
 }
 
-/* 배틀 섹션 - HOT 섹션이 있을 때 간격 조정 */
+/* 배틀 섹션 */
 .battles-section {
-  margin-top: 0;
-}
-
-/* HOT 섹션이 없을 때는 상단 간격 추가 */
-.content-wrapper > .battles-section:first-child {
   margin-top: 0;
 }
 
@@ -525,54 +557,65 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .section-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  color: #111827;
-  letter-spacing: -0.01em;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 1024px) {
+  .section-title {
+    font-size: 20px;
+  }
 }
 
 .section-count {
-  padding: 3px 8px;
-  background: #F3F4F6;
-  color: #6B7280;
-  font-size: 11px;
+  padding: 4px 10px;
+  background: #F8FAFC;
+  color: #64748B;
+  font-size: 12px;
   font-weight: 700;
-  border-radius: 4px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
 }
 
 .create-battle-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  background: #111827;
+  padding: 10px 18px;
+  background: #0F172A;
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s;
   white-space: nowrap;
   font-family: inherit;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .create-battle-btn:hover {
-  background: #1F2937;
+  background: #1E293B;
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 .create-battle-btn:active {
@@ -585,55 +628,68 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .header-right {
-    gap: 6px;
+    gap: 8px;
+  }
+
+  .create-battle-btn {
+    padding: 8px 14px;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 640px) {
+  .section-header {
+    margin-bottom: 16px;
+  }
+
   .create-battle-btn span {
     display: none;
   }
 
   .create-battle-btn {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     padding: 0;
     justify-content: center;
   }
 
   .section-title {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .section-count {
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 11px;
+    padding: 3px 8px;
   }
 }
 
 .sort-select {
-  padding: 6px 28px 6px 10px;
-  background: white;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
-  color: #111827;
+  padding: 8px 32px 8px 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  color: #0F172A;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748B' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 10px center;
-  transition: all 0.15s;
+  background-position: right 12px center;
+  transition: all 0.2s;
+  font-family: inherit;
 }
 
 .sort-select:hover {
-  border-color: #D1D5DB;
+  background: white;
+  border-color: #CBD5E1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .sort-select:focus {
   outline: none;
-  border-color: #9CA3AF;
+  border-color: #0F172A;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.05);
 }
 
 /* 모바일 네비게이션 */
@@ -651,9 +707,10 @@ onUnmounted(() => {
     left: 0;
     right: 0;
     background: white;
-    border-top: 1px solid #E5E7EB;
+    border-top: 1px solid #E2E8F0;
     padding: 8px 0 max(8px, env(safe-area-inset-bottom));
     z-index: 40;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
   }
 }
 
@@ -662,59 +719,61 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 6px;
+  padding: 6px 12px;
   background: transparent;
   border: none;
-  color: #6B7280;
+  color: #64748B;
   cursor: pointer;
   position: relative;
-  transition: all 0.15s;
+  transition: all 0.2s;
+  font-family: inherit;
 }
 
 .nav-item.active {
-  color: #111827;
+  color: #0F172A;
 }
 
 .nav-item svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .nav-item span {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .nav-badge {
   position: absolute;
   top: 2px;
-  right: 2px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
+  right: 6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   background: #EF4444;
   color: white;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  border-radius: 8px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .nav-fab {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #111827;
+  background: #0F172A;
   color: white;
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  margin-top: -18px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: -24px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s;
 }
 
 .nav-fab:active {
@@ -723,20 +782,20 @@ onUnmounted(() => {
 
 /* 스크롤바 */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F9FAFB;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
-  border-radius: 3px;
+  background: #E2E8F0;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9CA3AF;
+  background: #CBD5E1;
 }
 </style>
