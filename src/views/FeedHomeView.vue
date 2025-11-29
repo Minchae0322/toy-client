@@ -36,8 +36,6 @@
       />
     </main>
 
-    <!-- RightSidebar 제거됨 -->
-
     <!-- Bottom Navigation - Mobile Only -->
     <nav class="bottom-nav">
       <button class="bottom-nav-item active">
@@ -332,30 +330,50 @@ onUnmounted(() => {
   color: var(--primary);
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
-  margin: 0 20px;
+  max-width: 100vw;
+  /* overflow-x: hidden 제거 - 전체 스크롤 허용 */
 }
 
+/* 모바일: 작은 여백 */
+.app-container {
+  padding: 0 1rem;
+}
+
+/* 태블릿: 중간 여백 */
 @media (min-width: 768px) {
   .app-container {
-    margin: 0 32px;
+    padding: 0 2rem;
   }
 }
 
+/* 데스크톱: 큰 여백 */
 @media (min-width: 1280px) {
   .app-container {
-    margin: 0 60px;
+    padding: 0 3rem;
+    max-width: 1920px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* 대형 화면: 더 큰 여백 */
+@media (min-width: 1920px) {
+  .app-container {
+    padding: 0 4rem;
   }
 }
 
 .main-content {
   flex: 1;
+  min-width: 0;
   min-height: 100vh;
-  padding-bottom: 80px;
+  padding-bottom: 5rem;
+  /* overflow-y: auto 제거 - body 스크롤 사용 */
 }
 
 @media (min-width: 768px) {
   .main-content {
-    padding-bottom: 40px;
+    padding-bottom: 2.5rem;
   }
 }
 
@@ -371,7 +389,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 8px 0;
+  padding: 0.5rem 0;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 }
 
@@ -386,14 +405,15 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
   background: transparent;
   border: none;
   color: var(--secondary);
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
+  min-width: 3.5rem;
 }
 
 .bottom-nav-item.active {
@@ -401,46 +421,50 @@ onUnmounted(() => {
 }
 
 .bottom-nav-item .icon {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
 }
 
 .bottom-nav-item span:not(.nav-badge) {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .nav-badge {
   position: absolute;
-  top: 4px;
-  right: 8px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  top: 0.25rem;
+  right: 0.5rem;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.3125rem;
   background: #DC2626;
   color: white;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
-  border-radius: 9px;
+  border-radius: 0.5625rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .bottom-nav-fab {
-  width: 56px;
-  height: 56px;
+  width: 3.5rem;
+  height: 3.5rem;
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: 28px;
+  border-radius: 1.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
-  margin-top: -28px;
+  box-shadow: 0 0.5rem 1.25rem rgba(249, 115, 22, 0.4);
+  margin-top: -1.75rem;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .bottom-nav-fab:active {
@@ -448,8 +472,22 @@ onUnmounted(() => {
 }
 
 .bottom-nav-fab .icon {
-  width: 28px;
-  height: 28px;
+  width: 1.75rem;
+  height: 1.75rem;
   stroke-width: 2.5;
+  flex-shrink: 0;
+}
+
+/* 고해상도 디스플레이 대응 */
+@media (max-resolution: 1dppx) {
+  .bottom-nav-item .icon {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  .bottom-nav-fab {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
 }
 </style>

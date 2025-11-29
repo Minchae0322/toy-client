@@ -905,7 +905,7 @@ onBeforeUnmount(() => {
   --secondary: #64748B;
   --accent: #F97316;
   --border: #E2E8F0;
-  --bg: #F8FAFC;
+  --bg: #ffffff;
   --card: #FFFFFF;
   --hover: #F1F5F9;
 }

@@ -1,7 +1,5 @@
 <template>
   <aside class="sidebar-left">
-
-
     <nav class="nav-menu">
       <!-- 메인 메뉴 섹션 -->
       <div class="nav-section">
@@ -157,10 +155,12 @@ const goToMyProfile = async () => {
   }
 };
 </script>
+
 <style scoped>
 .sidebar-left {
   width: 240px;
-  height: 100vh;
+  height: calc(100vh - 64px);  /* 헤더 높이 빼기 */
+  top: 64px;                   /* 헤더 아래부터 시작 */
   background: #ffffff;
   border-right: 1px solid rgba(0, 0, 0, 0.06);
   padding: 28px 16px;
@@ -168,9 +168,13 @@ const goToMyProfile = async () => {
   flex-direction: column;
   overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* 핵심: sticky 설정 */
   position: sticky;
-  top: 0;
+  align-self: flex-start;  /* Flexbox에서 sticky 작동을 위한 필수 속성 */
+
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
@@ -215,7 +219,6 @@ const goToMyProfile = async () => {
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-/* 섹션 구분 */
 .nav-section {
   display: flex;
   flex-direction: column;
@@ -266,7 +269,6 @@ const goToMyProfile = async () => {
   stroke-width: 2.5;
 }
 
-/* 텍스트에만 밑줄 */
 .nav-text {
   font-size: 13px;
   font-weight: 500;
@@ -344,7 +346,7 @@ const goToMyProfile = async () => {
 }
 
 .level-card {
-  margin-top: auto;
+  margin-top: 30px;
   padding: 16px;
   background: #fafafa;
   border-radius: 12px;
