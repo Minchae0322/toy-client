@@ -48,77 +48,55 @@ export class BaseApiService {
 
   // ==================== 토큰 갱신 ====================
 
-  /**
-   * 토큰 갱신 처리
-   */
   async refreshToken() {
     if (this.isRefreshing) {
-      // 이미 갱신 중이면 기존 Promise 반환
       return new Promise((resolve, reject) => {
         this.failedQueue.push({ resolve, reject })
       })
     }
 
-    const refreshTokenValue = authUtils.getRefreshToken()
-
-    if (!refreshTokenValue) {
-      throw new Error('RefreshToken이 없습니다')
-    }
-
-    if (authUtils.isTokenExpired(refreshTokenValue)) {
-      throw new Error('RefreshToken이 만료되었습니다')
-    }
-
+    // ⭐ RefreshToken은 쿠키에 있으므로 localStorage 확인 제거
     this.isRefreshing = true
 
     try {
       console.log(`🔄 [${this.serviceName}] 토큰 갱신 시작...`)
 
-      // Auth Server로 토큰 갱신 요청
       const authBaseURL = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8081'
       const response = await fetch(`${authBaseURL}/api/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: 'include',
-        body: JSON.stringify({
-          refreshToken: refreshTokenValue
-        })
+        credentials: 'include' // ⭐ 쿠키 포함 (RefreshToken이 여기 있음!)
+        // body 제거 - RefreshToken은 쿠키에서 자동으로 전송됨
       })
 
       if (!response.ok) {
-        throw new Error(`토큰 갱신 실패: ${response.status} ${response.statusText}`)
+        throw new Error(`토큰 갱신 실패: ${response.status}`)
       }
 
       const responseData = await response.json()
       const data = responseData.data || responseData
-      const { accessToken, refreshToken: newRefreshToken } = data
+      const { accessToken } = data
 
       if (!accessToken) {
         throw new Error('새로운 AccessToken을 받지 못했습니다')
       }
 
-      // 새 토큰들 저장
-      authUtils.setTokens(accessToken, newRefreshToken || refreshTokenValue)
+      // AccessToken만 저장 (RefreshToken은 쿠키로 갱신됨)
+      authUtils.setTokens(accessToken, null)
 
       console.log(`✅ [${this.serviceName}] 토큰 갱신 완료`)
 
-      // 대기 중인 요청들 처리
       this.processQueue(null, accessToken)
 
       return accessToken
 
     } catch (error) {
       console.error(`❌ [${this.serviceName}] 토큰 갱신 실패:`, error)
-
-      // 실패한 요청들 처리
       this.processQueue(error, null)
-
-      // 토큰 갱신 실패시 로그아웃 처리
       authUtils.logout()
 
-      // 로그인 페이지로 리다이렉트
       if (window.location.pathname !== '/login') {
         window.location.href = '/login?reason=token_expired'
       }
@@ -151,24 +129,22 @@ export class BaseApiService {
   async request(url, options = {}) {
     const { retryOnAuth = true, includeAuth = true, ...fetchOptions } = options
 
-    // URL 처리
     const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`
 
     try {
-      // 헤더 설정
       let headers = {
         ...this.getDefaultHeaders(includeAuth),
         ...fetchOptions.headers
       }
 
-      // FormData인 경우 Content-Type 제거 (브라우저가 자동으로 boundary 포함해서 설정)
       if (fetchOptions.body instanceof FormData) {
         delete headers['Content-Type']
       }
 
       const requestOptions = {
         ...fetchOptions,
-        headers
+        headers,
+        credentials: 'include' // ⭐ 모든 요청에 쿠키 포함
       }
 
       // 요청 로깅

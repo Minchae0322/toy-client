@@ -1,7 +1,8 @@
-// src/composables/useAuth.js - 통합된 인증 Composable
+// src/composables/useAuth.js - 통합된 인증 Composable (HttpOnly 쿠키 버전)
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import * as authUtils from '@/utils/auth.js'
+import { authService } from '@/services/AuthService.js'
 
 // 전역 상태 (모든 컴포넌트에서 공유)
 const globalUser = ref(null)
@@ -69,7 +70,7 @@ export function useAuth() {
         console.log('🔐 [useAuth] 로그인 처리 시작...')
 
         try {
-            // 토큰 저장
+            // 토큰 저장 (RefreshToken은 쿠키로 관리)
             authUtils.setTokens(tokens.accessToken, tokens.refreshToken)
 
             // 사용자 정보 보완 (토큰에서 추출)
@@ -220,15 +221,20 @@ export function useAuth() {
         }
     }
 
-    // 페이지 가시성 변경 감지 (탭 전환시 토큰 만료 체크)
+    // 페이지 가시성 변경 감지 (HttpOnly 쿠키 버전에서는 비활성화)
     const handleVisibilityChange = () => {
         if (!document.hidden && globalIsLoggedIn.value) {
-            console.log('👁️ [useAuth] 페이지 활성화 - RefreshToken 상태 확인')
+            console.log('👁️ [useAuth] 페이지 활성화')
 
-            const refreshToken = authUtils.getRefreshToken()
-            if (!refreshToken || authUtils.isTokenExpired(refreshToken)) {
-                console.log('🚨 [useAuth] RefreshToken 만료 감지 - 로그아웃 처리')
+            // RefreshToken은 HttpOnly 쿠키로 관리되므로 만료 체크 안 함
+            // AccessToken 만료시 다음 API 요청에서 자동으로 갱신됨
+            const accessToken = authUtils.getAccessToken()
+            if (!accessToken) {
+                console.log('⚠️ [useAuth] AccessToken 없음 - 로그아웃 필요')
                 logout()
+            } else if (authUtils.isTokenExpired(accessToken)) {
+                console.log('⏰ [useAuth] AccessToken 만료 - 다음 요청시 자동 갱신')
+                // 로그아웃하지 않음 - BaseApiService가 자동으로 갱신
             }
         }
     }
@@ -248,15 +254,14 @@ export function useAuth() {
     // 토큰 만료 시간 확인
     const getTokenInfo = () => {
         const accessToken = authUtils.getAccessToken()
-        const refreshToken = authUtils.getRefreshToken()
 
         return {
             hasAccessToken: !!accessToken,
-            hasRefreshToken: !!refreshToken,
+            hasRefreshToken: true, // 쿠키로 관리
             accessTokenExpiry: accessToken ? authUtils.getTokenExpiryTime(accessToken) : null,
-            refreshTokenExpiry: refreshToken ? authUtils.getTokenExpiryTime(refreshToken) : null,
+            refreshTokenExpiry: '쿠키로 관리됨',
             accessTokenTimeLeft: accessToken ? authUtils.getTokenTimeLeft(accessToken) : 0,
-            refreshTokenTimeLeft: refreshToken ? authUtils.getTokenTimeLeft(refreshToken) : 0
+            refreshTokenTimeLeft: '쿠키로 관리됨'
         }
     }
 
@@ -278,7 +283,8 @@ export function useAuth() {
             window.addEventListener('storage', storageEventListener)
         }
 
-        document.addEventListener('visibilitychange', handleVisibilityChange)
+        // visibilitychange는 선택적으로 활성화 (쿠키 기반에서는 덜 중요)
+        // document.addEventListener('visibilitychange', handleVisibilityChange)
 
         isInitialized = true
         console.log('✅ [useAuth] 전역 인증 시스템 초기화 완료')
@@ -293,7 +299,7 @@ export function useAuth() {
             storageEventListener = null
         }
 
-        document.removeEventListener('visibilitychange', handleVisibilityChange)
+        // document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
 
     // 디버깅 함수

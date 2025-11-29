@@ -19,15 +19,16 @@ class AuthService extends BaseApiService {
 
   // ==================== 인증 API ====================
 
-  /**
-   * 로그인
-   */
+  // AuthService.js 수정
   async login(credentials) {
-    const response = await this.post('/login', credentials)
+    const response = await this.post('/login', credentials, {
+      credentials: 'include' // ⭐ 쿠키 포함
+    })
 
     if (response.success && response.data) {
-      if (response.data.accessToken && response.data.refreshToken) {
-        authUtils.setTokens(response.data.accessToken, response.data.refreshToken)
+      // AccessToken만 localStorage에 저장
+      if (response.data.accessToken) {
+        authUtils.setTokens(response.data.accessToken, null) // RefreshToken은 null
       }
 
       if (response.data.user) {

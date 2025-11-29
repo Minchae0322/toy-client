@@ -1,21 +1,42 @@
-// src/utils/auth.js - 중앙화된 인증 유틸리티
+// src/utils/auth.js - 중앙화된 인증 유틸리티 (HttpOnly 쿠키 버전)
+
 export const STORAGE_KEYS = {
     ACCESS_TOKEN: 'access_token',
-    REFRESH_TOKEN: 'refresh_token',
+    REFRESH_TOKEN: 'refresh_token', // 사용 안 하지만 호환성 유지
     USER_INFO: 'user_info',
     DEVICE_ID: 'device_id'
 }
 
-// 토큰 관리 함수들
-export const getAccessToken = () => localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-export const getRefreshToken = () => localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+// ==================== 토큰 관리 ====================
 
-export const setTokens = (accessToken, refreshToken) => {
+/**
+ * AccessToken 가져오기 (localStorage)
+ */
+export const getAccessToken = () => localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+
+/**
+ * RefreshToken 가져오기 (HttpOnly 쿠키에서 관리되므로 더미 값 반환)
+ */
+export const getRefreshToken = () => {
+    // RefreshToken은 HttpOnly 쿠키에 저장되어 JavaScript로 접근 불가
+    // 서버가 자동으로 쿠키에서 읽음
+    return 'cookie-based'
+}
+
+/**
+ * 토큰 저장
+ * @param {string} accessToken - AccessToken (localStorage에 저장)
+ * @param {string|null} refreshToken - RefreshToken (무시됨, 쿠키로 관리)
+ */
+export const setTokens = (accessToken, refreshToken = null) => {
     if (accessToken) {
         localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
+        console.log('✅ AccessToken 저장 완료')
     }
+
+    // refreshToken은 HttpOnly 쿠키로 관리되므로 무시
     if (refreshToken) {
-        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken)
+        console.log('ℹ️ RefreshToken은 HttpOnly 쿠키로 관리됩니다')
     }
 
     // 다른 탭에 토큰 변경 알림
@@ -25,10 +46,15 @@ export const setTokens = (accessToken, refreshToken) => {
     }))
 }
 
+/**
+ * 모든 토큰 및 사용자 정보 삭제
+ */
 export const clearTokens = () => {
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
-    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN) // 호환성
     localStorage.removeItem(STORAGE_KEYS.USER_INFO)
+
+    console.log('🗑️ 로컬 인증 정보 삭제 완료')
 
     // 다른 탭에 로그아웃 알림
     window.dispatchEvent(new StorageEvent('storage', {
@@ -37,33 +63,50 @@ export const clearTokens = () => {
     }))
 }
 
-// 사용자 정보 관리
+// ==================== 사용자 정보 관리 ====================
+
+/**
+ * 저장된 사용자 정보 가져오기
+ */
 export const getUserInfo = () => {
     try {
         const userInfo = localStorage.getItem(STORAGE_KEYS.USER_INFO)
         return userInfo ? JSON.parse(userInfo) : null
     } catch (error) {
-        console.error('사용자 정보 파싱 실패:', error)
+        console.error('❌ 사용자 정보 파싱 실패:', error)
         return null
     }
 }
 
+/**
+ * 사용자 정보 저장
+ */
 export const setUserInfo = (user) => {
     if (user) {
         localStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user))
+        console.log('✅ 사용자 정보 저장 완료:', user.email || user.username)
     }
 }
 
+/**
+ * 사용자 정보 삭제
+ */
 export const clearUserInfo = () => {
     localStorage.removeItem(STORAGE_KEYS.USER_INFO)
 }
 
-// JWT 토큰 유틸리티
+// ==================== JWT 토큰 유틸리티 ====================
+
+/**
+ * JWT 토큰 파싱
+ */
 export const parseJwtToken = (token) => {
-    if (!token) return null
+    if (!token || token === 'cookie-based') return null
 
     try {
         const base64Url = token.split('.')[1]
+        if (!base64Url) return null
+
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
         const jsonPayload = decodeURIComponent(
             atob(base64).split('').map(c => {
@@ -72,13 +115,19 @@ export const parseJwtToken = (token) => {
         )
         return JSON.parse(jsonPayload)
     } catch (error) {
-        console.error('JWT 토큰 파싱 실패:', error)
+        console.error('❌ JWT 토큰 파싱 실패:', error)
         return null
     }
 }
 
+/**
+ * 토큰 만료 여부 확인
+ */
 export const isTokenExpired = (token) => {
     if (!token) return true
+
+    // ⭐ 쿠키 기반 토큰은 만료 체크 안 함 (서버가 관리)
+    if (token === 'cookie-based') return false
 
     const payload = parseJwtToken(token)
     if (!payload || !payload.exp) return true
@@ -88,13 +137,44 @@ export const isTokenExpired = (token) => {
     return payload.exp < (currentTime + buffer)
 }
 
-// 인증 상태 확인
+/**
+ * 토큰 갱신이 필요한지 확인 (만료 5분 전)
+ */
+export const shouldRefreshToken = (token) => {
+    if (!token || token === 'cookie-based') return false
+
+    const payload = parseJwtToken(token)
+    if (!payload || !payload.exp) return false
+
+    const currentTime = Date.now() / 1000
+    const fiveMinutes = 5 * 60
+    return payload.exp < (currentTime + fiveMinutes)
+}
+
+/**
+ * 토큰 남은 시간 (분)
+ */
+export const getTokenTimeRemaining = (token) => {
+    if (!token || token === 'cookie-based') return 0
+
+    const payload = parseJwtToken(token)
+    if (!payload || !payload.exp) return 0
+
+    const currentTime = Date.now() / 1000
+    const remaining = payload.exp - currentTime
+    return Math.max(0, Math.floor(remaining / 60))
+}
+
+// ==================== 인증 상태 확인 ====================
+
+/**
+ * 사용자 인증 여부 확인
+ */
 export const isAuthenticated = () => {
     const accessToken = getAccessToken()
-    const refreshToken = getRefreshToken()
 
     if (!accessToken) {
-        console.log('AccessToken이 없습니다')
+        console.log('❌ AccessToken이 없습니다')
         return false
     }
 
@@ -103,32 +183,27 @@ export const isAuthenticated = () => {
         return true
     }
 
-    // AccessToken 만료시 RefreshToken 확인
-    if (!refreshToken) {
-        console.log('RefreshToken이 없습니다')
-        return false
-    }
-
-    if (isTokenExpired(refreshToken)) {
-        console.log('RefreshToken이 만료되었습니다')
-        return false
-    }
-
-    console.log('RefreshToken은 유효합니다 (AccessToken 갱신 필요)')
+    // AccessToken 만료 - RefreshToken은 HttpOnly 쿠키에서 관리
+    console.log('⏰ AccessToken 만료 (RefreshToken은 쿠키로 관리)')
+    // 서버가 쿠키 확인 후 401 응답하면 자동으로 갱신 시도
     return true
 }
 
-// 사용자 정보 추출 및 관리
+// ==================== 사용자 정보 추출 ====================
+
+/**
+ * 현재 로그인한 사용자 정보 가져오기
+ */
 export const getCurrentUser = () => {
-    // 저장된 사용자 정보 우선 확인
+    // 1. 저장된 사용자 정보 우선 확인
     let user = getUserInfo()
     if (user?.id) {
         return user
     }
 
-    // 토큰에서 사용자 정보 추출
+    // 2. AccessToken에서 사용자 정보 추출
     const token = getAccessToken()
-    if (!token) {
+    if (!token || token === 'cookie-based') {
         return null
     }
 
@@ -137,7 +212,7 @@ export const getCurrentUser = () => {
         return null
     }
 
-    // 토큰에서 사용자 정보 구성
+    // 3. 토큰 페이로드에서 사용자 정보 구성
     user = {
         id: payload.sub || payload.userId || payload.id || payload.user_id,
         email: payload.email,
@@ -151,7 +226,7 @@ export const getCurrentUser = () => {
         iat: payload.iat
     }
 
-    // 유효한 사용자 정보가 있으면 저장 후 반환
+    // 4. 유효한 사용자 정보가 있으면 저장 후 반환
     if (user.id) {
         setUserInfo(user)
         return user
@@ -160,16 +235,25 @@ export const getCurrentUser = () => {
     return null
 }
 
+/**
+ * 사용자 역할 가져오기
+ */
 export const getUserRole = () => {
     const user = getCurrentUser()
     return user?.role || null
 }
 
+/**
+ * 사용자 ID 가져오기
+ */
 export const getUserId = () => {
     const user = getCurrentUser()
     return user?.id || null
 }
 
+/**
+ * 특정 역할 소유 여부 확인
+ */
 export const hasRole = (role) => {
     const user = getCurrentUser()
     if (!user) return false
@@ -183,7 +267,11 @@ export const hasRole = (role) => {
     return false
 }
 
-// 디바이스 ID 관리
+// ==================== 디바이스 관리 ====================
+
+/**
+ * 디바이스 ID 가져오기 (없으면 생성)
+ */
 export const getDeviceId = () => {
     let deviceId = localStorage.getItem(STORAGE_KEYS.DEVICE_ID)
     if (!deviceId) {
@@ -193,34 +281,46 @@ export const getDeviceId = () => {
     return deviceId
 }
 
-// 로그아웃 처리
+// ==================== 로그아웃 ====================
+
+/**
+ * 로컬 로그아웃 (토큰 및 사용자 정보 삭제)
+ */
 export const logout = () => {
-    console.log('로컬 인증 정보 정리 중...')
+    console.log('🚪 로컬 인증 정보 정리 중...')
     clearTokens()
     clearUserInfo()
+    console.log('✅ 로컬 로그아웃 완료')
 }
 
-// 백엔드 로그아웃 (별도 처리)
-export const logoutWithBackend = async () => {
-    // 이 함수는 axios.js에서 구현
-    throw new Error('백엔드 로그아웃은 authService.logout()을 사용하세요')
+/**
+ * 모든 인증 데이터 삭제 (디버깅용)
+ */
+export const clearAllAuthData = () => {
+    console.log('🗑️ 모든 인증 데이터 삭제 중...')
+    localStorage.clear()
+    console.log('✅ 완료')
 }
 
-// 토큰 검증
+// ==================== 토큰 검증 ====================
+
+/**
+ * 토큰 상태 검증
+ */
 export const validateTokens = () => {
     const accessToken = getAccessToken()
-    const refreshToken = getRefreshToken()
 
     const result = {
         hasAccessToken: !!accessToken,
-        hasRefreshToken: !!refreshToken,
+        hasRefreshToken: true, // 쿠키로 관리되므로 항상 true로 가정
         accessTokenValid: accessToken ? !isTokenExpired(accessToken) : false,
-        refreshTokenValid: refreshToken ? !isTokenExpired(refreshToken) : false,
+        refreshTokenValid: true, // 서버가 검증
         needsRefresh: false,
         isAuthenticated: false
     }
 
     if (!accessToken) {
+        result.hasRefreshToken = false
         return result
     }
 
@@ -229,51 +329,28 @@ export const validateTokens = () => {
         return result
     }
 
-    // AccessToken 만료, RefreshToken 확인
-    if (refreshToken && !isTokenExpired(refreshToken)) {
-        result.needsRefresh = true
-        result.isAuthenticated = true
-    }
+    // AccessToken 만료 - RefreshToken은 쿠키에서 관리
+    result.needsRefresh = true
+    result.isAuthenticated = true // 서버가 쿠키 검증
 
     return result
 }
 
-// 디버깅 함수
-export const debugAuthStatus = () => {
-    console.group('🔍 인증 상태 디버깅')
+// ==================== 토큰 만료 시간 ====================
 
-    const accessToken = getAccessToken()
-    const refreshToken = getRefreshToken()
-    const user = getCurrentUser()
-    const validation = validateTokens()
-
-    console.log('Access Token:', accessToken ? '존재' : '없음')
-    console.log('Refresh Token:', refreshToken ? '존재' : '없음')
-    console.log('사용자 정보:', user)
-    console.log('인증 상태:', isAuthenticated())
-    console.log('토큰 검증 결과:', validation)
-
-    if (accessToken) {
-        const payload = parseJwtToken(accessToken)
-        console.log('Access Token 만료:', isTokenExpired(accessToken))
-        console.log('Access Token 만료 시간:', payload?.exp ? new Date(payload.exp * 1000) : 'N/A')
-    }
-
-    if (refreshToken) {
-        const payload = parseJwtToken(refreshToken)
-        console.log('Refresh Token 만료:', isTokenExpired(refreshToken))
-        console.log('Refresh Token 만료 시간:', payload?.exp ? new Date(payload.exp * 1000) : 'N/A')
-    }
-
-    console.groupEnd()
-}
-
-// 토큰 만료 시간 계산
+/**
+ * 토큰 만료 시간 가져오기
+ */
 export const getTokenExpiryTime = (token) => {
+    if (!token || token === 'cookie-based') return null
+
     const payload = parseJwtToken(token)
     return payload?.exp ? new Date(payload.exp * 1000) : null
 }
 
+/**
+ * 토큰 남은 시간 (밀리초)
+ */
 export const getTokenTimeLeft = (token) => {
     const expiryTime = getTokenExpiryTime(token)
     if (!expiryTime) return 0
@@ -283,27 +360,78 @@ export const getTokenTimeLeft = (token) => {
     return Math.max(0, timeLeft)
 }
 
-// OAuth 관련 유틸리티
+// ==================== OAuth 관련 ====================
+
+/**
+ * OAuth 사용자 여부 확인
+ */
 export const isOAuthUser = () => {
     const user = getCurrentUser()
     return user?.provider && user.provider !== 'local'
 }
 
+/**
+ * OAuth 제공자 가져오기
+ */
 export const getOAuthProvider = () => {
     const user = getCurrentUser()
     return user?.provider || 'local'
 }
 
-// API 헤더 생성
+// ==================== API 헤더 ====================
+
+/**
+ * API 요청용 헤더 생성
+ */
 export const getApiHeaders = () => {
     const headers = {
         'Content-Type': 'application/json'
     }
 
     const accessToken = getAccessToken()
-    if (accessToken) {
+    if (accessToken && accessToken !== 'cookie-based') {
         headers['Authorization'] = `Bearer ${accessToken}`
     }
 
     return headers
+}
+
+// ==================== 디버깅 ====================
+
+/**
+ * 인증 상태 디버깅
+ */
+export const debugAuthStatus = () => {
+    console.group('🔍 인증 상태 디버깅')
+
+    const accessToken = getAccessToken()
+    const user = getCurrentUser()
+    const validation = validateTokens()
+
+    console.log('=== 토큰 정보 ===')
+    console.log('Access Token:', accessToken ? '존재 ✅' : '없음 ❌')
+    console.log('Refresh Token:', 'HttpOnly 쿠키로 관리 🍪')
+
+    if (accessToken && accessToken !== 'cookie-based') {
+        const payload = parseJwtToken(accessToken)
+        console.log('Access Token 만료:', isTokenExpired(accessToken) ? '만료됨 ⏰' : '유효함 ✅')
+        console.log('Access Token 만료 시간:', payload?.exp ? new Date(payload.exp * 1000) : 'N/A')
+        console.log('남은 시간:', getTokenTimeRemaining(accessToken), '분')
+    }
+
+    console.log('=== 사용자 정보 ===')
+    console.log('사용자:', user)
+    console.log('사용자 ID:', getUserId())
+    console.log('사용자 역할:', getUserRole())
+    console.log('OAuth 사용자:', isOAuthUser())
+    console.log('제공자:', getOAuthProvider())
+
+    console.log('=== 인증 상태 ===')
+    console.log('인증됨:', isAuthenticated())
+    console.log('토큰 검증 결과:', validation)
+
+    console.log('=== 기타 ===')
+    console.log('디바이스 ID:', getDeviceId())
+
+    console.groupEnd()
 }
