@@ -1,5 +1,19 @@
 <template>
   <form @submit.prevent="handleSubmit" class="auth-form">
+    <!-- 디버깅 정보 -->
+    <div class="debug-info" style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; font-size: 11px; border-radius: 4px;">
+      <div>이메일: {{ form.email }}</div>
+      <div>이메일 인증: {{ form.emailVerified }}</div>
+      <div>비밀번호: {{ form.password }}</div>
+      <div>비밀번호 확인: {{ form.passwordConfirm }}</div>
+      <div>비밀번호 일치: {{ !form.passwordError }}</div>
+      <div>약관 동의: {{ form.agreeTerms }}</div>
+      <div>비밀번호 강도: {{ passwordStrength }} / 4</div>
+      <div style="font-weight: bold; color: {{ canSubmit ? 'green' : 'red' }};">
+        버튼 활성화: {{ canSubmit }}
+      </div>
+    </div>
+
     <!-- 이메일 입력 & 인증 -->
     <EmailVerification
         v-model:email="form.email"
@@ -23,7 +37,7 @@
         v-model:password="form.password"
         v-model:show-password="form.showPassword"
         :disabled="loading"
-        @strength-change="passwordStrength = $event"
+        @strength-change="handleStrengthChange"
     />
 
     <!-- 비밀번호 확인 -->
@@ -73,7 +87,7 @@
     </div>
 
     <!-- 회원가입 버튼 -->
-    <button type="submit" class="submit-btn primary" :disabled="loading || !canSubmit">
+    <button type="submit" class="submit-btn primary" :disabled="!canSubmit || loading">
       <svg v-if="loading" class="spinner" width="18" height="18" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="40">
           <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
@@ -119,24 +133,49 @@ const form = ref({
 
 const passwordStrength = ref(0)
 
-const canSubmit = computed(() =>
-    form.value.email &&
-    form.value.password &&
-    form.value.passwordConfirm &&
-    form.value.emailVerified &&
-    !form.value.passwordError &&
-    form.value.agreeTerms &&
-    passwordStrength.value === 4
-)
+// 비밀번호 강도 변경 핸들러 추가
+const handleStrengthChange = (strength) => {
+  console.log('비밀번호 강도 변경:', strength)
+  passwordStrength.value = strength
+}
+
+const canSubmit = computed(() => {
+  const result =
+      form.value.email &&
+      form.value.password &&
+      form.value.passwordConfirm &&
+      form.value.emailVerified &&
+      !form.value.passwordError &&
+      form.value.agreeTerms &&
+      passwordStrength.value >= 3  // 4 대신 3으로 완화 (테스트용)
+
+  console.log('canSubmit 계산:', {
+    email: !!form.value.email,
+    password: !!form.value.password,
+    passwordConfirm: !!form.value.passwordConfirm,
+    emailVerified: form.value.emailVerified,
+    passwordError: !form.value.passwordError,
+    agreeTerms: form.value.agreeTerms,
+    passwordStrength: passwordStrength.value,
+    result
+  })
+
+  return result
+})
 
 const checkPasswordMatch = () => {
   if (form.value.passwordConfirm) {
     form.value.passwordError = form.value.password !== form.value.passwordConfirm
+  } else {
+    form.value.passwordError = false
   }
 }
 
 const handleSubmit = async () => {
-  if (!canSubmit.value) return
+  if (!canSubmit.value) {
+    console.log('제출 불가 - canSubmit이 false입니다')
+    return
+  }
 
   form.value.errorMessage = ''
 

@@ -23,7 +23,7 @@ class AuthService extends BaseApiService {
    * 로그인
    */
   async login(credentials) {
-    const response = await this.post('/auth/login', credentials)
+    const response = await this.post('/login', credentials)
 
     if (response.success && response.data) {
       if (response.data.accessToken && response.data.refreshToken) {
