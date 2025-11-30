@@ -5,10 +5,10 @@
     <main class="main-content">
       <AppHeader />
 
-      <!-- 카테고리 필터 -->
+      <!-- 카테고리 필터 - ⭐ show-all-button 제거, initial-selected 추가 -->
       <CommonCategoryFilter
           :categories="rootCategories"
-          :show-all-button="false"
+          :initial-selected="selectedCategoryId"
           @category-change="handleCategoryChange"
       />
 
@@ -18,7 +18,6 @@
           @see-all="handleSeeAllHot"
       />
 
-      <!-- ⭐ 뷰 토글을 FeedList로 이동 (props로 전달) -->
       <FeedList
           ref="feedListRef"
           :feeds="feeds"
@@ -111,7 +110,7 @@ const getStoredViewMode = () => {
 
 const viewMode = ref(getStoredViewMode());
 const feedListRef = ref(null);
-const selectedCategoryId = ref(null);
+const selectedCategoryId = ref(null); // ⭐ 초기값 null = 전체
 
 // viewMode 변경 감지 및 저장
 watch(viewMode, (newMode) => {
@@ -146,7 +145,7 @@ const loadFeeds = async () => {
     loading.value = true;
 
     const searchCondition = {
-      categoryId: selectedCategoryId.value,
+      categoryId: selectedCategoryId.value, // null이면 전체 조회
       cursor: cursor.value,
       size: 20,
       isActive: true
@@ -229,9 +228,16 @@ const resetAndLoadFeeds = () => {
   loadFeeds();
 };
 
+// ⭐ handleCategoryChange 수정 - 전체 선택 처리
 const handleCategoryChange = ({category, subCategory}) => {
-  selectedCategoryId.value = subCategory?.categoryId || category?.categoryId;
-  console.log('📌 카테고리 변경:', selectedCategoryId.value);
+  // 전체 선택 시 null
+  if (!category && !subCategory) {
+    selectedCategoryId.value = null;
+  } else {
+    selectedCategoryId.value = subCategory?.categoryId || category?.categoryId;
+  }
+
+  console.log('📌 카테고리 변경:', selectedCategoryId.value || '전체');
   resetAndLoadFeeds();
 };
 
@@ -331,7 +337,6 @@ onUnmounted(() => {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
   max-width: 100vw;
-  /* overflow-x: hidden 제거 - 전체 스크롤 허용 */
 }
 
 /* 모바일: 작은 여백 */
@@ -368,7 +373,6 @@ onUnmounted(() => {
   min-width: 0;
   min-height: 100vh;
   padding-bottom: 5rem;
-  /* overflow-y: auto 제거 - body 스크롤 사용 */
 }
 
 @media (min-width: 768px) {

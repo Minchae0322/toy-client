@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!-- 사이드바 - 데스크탑 -->
-    <AppSidebar class="desktop-sidebar" />
+    <AppSidebar />
 
     <!-- 메인 컨텐츠 -->
     <main class="main-content">
@@ -50,10 +50,10 @@
           </div>
         </nav>
 
-        <!-- 카테고리 필터 -->
+        <!-- 카테고리 필터 - ⭐ show-all-button 제거하고 initial-selected 추가 -->
         <CommonCategoryFilter
             :categories="categories"
-            :show-all-button="true"
+            :initial-selected="selectedCategoryId"
             @category-change="handleCategoryChange"
         />
       </header>
@@ -107,34 +107,35 @@
     </main>
 
     <!-- 모바일 하단 네비게이션 -->
-    <nav class="mobile-nav">
-      <button class="nav-item">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+    <nav class="bottom-nav">
+      <button class="bottom-nav-item">
+        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
         </svg>
         <span>홈</span>
       </button>
-      <button class="nav-item active">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5V3M15 5V3M9 5h6"/>
+      <button class="bottom-nav-item active">
+        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+          <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
         </svg>
         <span>배틀</span>
         <span class="nav-badge">{{ activeBattleCount }}</span>
       </button>
-      <button class="nav-fab" @click="handleCreateBattle">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <button class="bottom-nav-fab" @click="handleCreateBattle">
+        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
         </svg>
       </button>
-      <button class="nav-item">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/>
+      <button class="bottom-nav-item">
+        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
         </svg>
         <span>메시지</span>
       </button>
-      <button class="nav-item">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M20 21a8 8 0 10-16 0M12 13a4 4 0 100-8 4 4 0 000 8z"/>
+      <button class="bottom-nav-item">
+        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
         </svg>
         <span>MY</span>
       </button>
@@ -175,8 +176,10 @@ const loading = ref(false)
 const hotLoading = ref(false)
 const battleListRef = ref(null)
 
+// ⭐ 선택된 카테고리 상태 추가
 const selectedCategory = ref(null)
 const selectedSubCategory = ref(null)
+const selectedCategoryId = ref(null) // 초기값 null = 전체
 const categories = ref([])
 
 // Computed
@@ -209,9 +212,10 @@ const loadCategories = async () => {
     const response = await categoryService.getCategories()
     if (response.success && response.data) {
       categories.value = response.data
+      console.log('✅ 카테고리 로드 성공:', categories.value)
     }
   } catch (error) {
-    console.error('카테고리 로드 실패:', error)
+    console.error('❌ 카테고리 로드 실패:', error)
   }
 }
 
@@ -224,9 +228,10 @@ const loadHotBattles = async () => {
     )
     if (response.success && response.data) {
       hotBattles.value = response.data.content || response.data
+      console.log('✅ HOT 배틀 로드 성공:', hotBattles.value.length)
     }
   } catch (error) {
-    console.error('HOT 배틀 로드 실패:', error)
+    console.error('❌ HOT 배틀 로드 실패:', error)
   } finally {
     hotLoading.value = false
   }
@@ -251,11 +256,15 @@ const loadBattles = async (reset = false) => {
       searchCondition.status = 'CLOSED'
     }
 
+    // ⭐ 카테고리 필터 적용
     if (selectedSubCategory.value) {
       searchCondition.category = selectedSubCategory.value.categoryId
     } else if (selectedCategory.value) {
       searchCondition.category = selectedCategory.value.categoryId
     }
+    // selectedCategoryId가 null이면 전체 배틀 조회
+
+    console.log('🔍 배틀 로드 요청:', searchCondition)
 
     const response = await battleService.getBattles(
         searchCondition,
@@ -274,9 +283,15 @@ const loadBattles = async (reset = false) => {
         hasNext.value = false
       }
       currentPage.value++
+
+      console.log('✅ 배틀 로드 성공:', {
+        총배틀수: battles.value.length,
+        전체개수: totalCount.value,
+        다음페이지: hasNext.value
+      })
     }
   } catch (error) {
-    console.error('배틀 목록 로드 실패:', error)
+    console.error('❌ 배틀 목록 로드 실패:', error)
   } finally {
     loading.value = false
   }
@@ -299,19 +314,37 @@ const updateTabCounts = async () => {
     if (endedResponse.success && endedResponse.data.totalElements !== undefined) {
       tabs.value[1].count = endedResponse.data.totalElements
     }
+
+    console.log('✅ 탭 카운트 업데이트:', tabs.value)
   } catch (error) {
-    console.error('탭 카운트 업데이트 실패:', error)
+    console.error('❌ 탭 카운트 업데이트 실패:', error)
   }
 }
 
 // Event Handlers
 const handleCategoryChange = ({ category, subCategory }) => {
-  selectedCategory.value = category
-  selectedSubCategory.value = subCategory
+  // ⭐ 전체 선택 시 null 처리
+  if (!category && !subCategory) {
+    selectedCategoryId.value = null
+    selectedCategory.value = null
+    selectedSubCategory.value = null
+  } else {
+    selectedCategory.value = category
+    selectedSubCategory.value = subCategory
+    selectedCategoryId.value = subCategory?.categoryId || category?.categoryId
+  }
+
+  console.log('📌 카테고리 변경:', {
+    category: category?.categoryName || '전체',
+    subCategory: subCategory?.categoryName,
+    selectedCategoryId: selectedCategoryId.value
+  })
+
   resetAndLoadBattles()
 }
 
 const resetAndLoadBattles = () => {
+  console.log('🔄 배틀 목록 초기화')
   battles.value = []
   currentPage.value = 0
   hasNext.value = true
@@ -319,6 +352,7 @@ const resetAndLoadBattles = () => {
 }
 
 const openBattle = (battleId) => {
+  console.log('📖 배틀 상세 페이지로 이동:', battleId)
   router.push({ name: 'BattleDetail', params: { id: battleId } })
 }
 
@@ -326,16 +360,18 @@ const handleCreateBattle = async () => {
   try {
     const response = await battleService.validateCreation()
     if (response.success) {
+      console.log('✍️ 배틀 생성 페이지로 이동')
       router.push({ name: 'BattleCreate' })
     }
   } catch (error) {
-    console.error('배틀 생성 권한 체크 실패:', error)
+    console.error('❌ 배틀 생성 권한 체크 실패:', error)
     alert(error.message || '배틀을 생성할 수 없습니다.')
   }
 }
 
 // Watchers
 watch(activeTab, () => {
+  console.log('📑 탭 변경:', activeTab.value)
   resetAndLoadBattles()
 })
 
@@ -343,6 +379,8 @@ watch(activeTab, () => {
 let observer = null
 
 onMounted(async () => {
+  console.log('✅ BattleHomeView 마운트')
+
   await Promise.all([loadCategories(), updateTabCounts()])
   await Promise.all([
     loadHotBattles(),
@@ -352,6 +390,7 @@ onMounted(async () => {
   observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNext.value && !loading.value) {
+          console.log('👁️ 스크롤 감지 - 다음 페이지 로드')
           loadBattles()
         }
       },
@@ -361,6 +400,7 @@ onMounted(async () => {
   setTimeout(() => {
     if (battleListRef.value?.observerTarget) {
       observer.observe(battleListRef.value.observerTarget)
+      console.log('✅ Intersection Observer 연결')
     }
   }, 100)
 })
@@ -368,14 +408,13 @@ onMounted(async () => {
 onUnmounted(() => {
   if (observer) {
     observer.disconnect()
+    console.log('🔌 Intersection Observer 해제')
   }
 })
 </script>
 
-/* BattleHomeView.vue - style 부분만 수정 */
-
-/* BattleHomeView.vue - style 부분만 수정 */
 <style scoped>
+/* ... 기존 스타일 동일 ... */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
 :root {
@@ -396,6 +435,7 @@ onUnmounted(() => {
   box-sizing: border-box;
 }
 
+/* ⭐ FeedHomeView와 동일하게 수정 */
 .app-container {
   background: var(--bg);
   min-height: 100vh;
@@ -434,7 +474,7 @@ onUnmounted(() => {
   }
 }
 
-/* 메인 컨텐츠 */
+/* ⭐ FeedHomeView와 동일하게 수정 */
 .main-content {
   flex: 1;
   min-width: 0;
@@ -572,10 +612,6 @@ onUnmounted(() => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-/* 컨텐츠 영역 */
-.content-wrapper {
-  padding: 1.5rem 0;
-}
 
 @media (max-width: 768px) {
   .content-wrapper {
@@ -735,8 +771,8 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-/* 모바일 네비게이션 */
-.mobile-nav {
+/* ⭐ FeedHomeView와 동일하게 수정 - bottom-nav */
+.bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -753,12 +789,12 @@ onUnmounted(() => {
 }
 
 @media (min-width: 1024px) {
-  .mobile-nav {
+  .bottom-nav {
     display: none;
   }
 }
 
-.nav-item {
+.bottom-nav-item {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -774,17 +810,17 @@ onUnmounted(() => {
   min-width: 3.5rem;
 }
 
-.nav-item.active {
+.bottom-nav-item.active {
   color: var(--primary);
 }
 
-.nav-item svg {
+.bottom-nav-item .icon {
   width: 1.5rem;
   height: 1.5rem;
   flex-shrink: 0;
 }
 
-.nav-item span:not(.nav-badge) {
+.bottom-nav-item span:not(.nav-badge) {
   font-size: 0.6875rem;
   font-weight: 600;
   white-space: nowrap;
@@ -808,7 +844,7 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.nav-fab {
+.bottom-nav-fab {
   width: 3.5rem;
   height: 3.5rem;
   background: var(--accent);
@@ -820,51 +856,29 @@ onUnmounted(() => {
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 0.5rem 1.25rem rgba(249, 115, 22, 0.4);
+
   margin-top: -1.75rem;
   transition: all 0.2s;
   flex-shrink: 0;
 }
-
-.nav-fab:active {
+.bottom-nav-fab:active {
   transform: scale(0.95);
 }
-
-.nav-fab svg {
+.bottom-nav-fab .icon {
   width: 1.75rem;
   height: 1.75rem;
   stroke-width: 2.5;
   flex-shrink: 0;
 }
-
 /* 고해상도 디스플레이 대응 */
 @media (max-resolution: 1dppx) {
-  .nav-item svg {
+  .bottom-nav-item .icon {
     width: 1.375rem;
     height: 1.375rem;
   }
-
-  .nav-fab {
+  .bottom-nav-fab {
     width: 3.25rem;
     height: 3.25rem;
   }
-}
-
-/* 스크롤바 */
-::-webkit-scrollbar {
-  width: 0.5rem;
-  height: 0.5rem;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 0.25rem;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #CBD5E1;
 }
 </style>

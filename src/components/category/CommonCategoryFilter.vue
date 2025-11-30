@@ -52,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 
 const props = defineProps({
   categories: {
@@ -69,7 +69,11 @@ const props = defineProps({
   },
   showAllButton: {
     type: Boolean,
-    default: false
+    default: true  // ⭐ 기본값을 true로 변경
+  },
+  initialSelected: {  // ⭐ 초기 선택 카테고리 ID
+    type: [Number, String, null],
+    default: null
   }
 });
 
@@ -79,10 +83,29 @@ const selectedCategory = ref(null);
 const selectedSubCategory = ref(null);
 const showSubCategories = ref(false);
 
+// ⭐ 초기 선택 상태 설정
+onMounted(() => {
+  if (props.initialSelected === null) {
+    // 전체 선택 상태
+    handleAllClick();
+  }
+});
+
+// ⭐ initialSelected 변경 감지
+watch(() => props.initialSelected, (newVal) => {
+  if (newVal === null) {
+    selectedCategory.value = null;
+    selectedSubCategory.value = null;
+    showSubCategories.value = false;
+  }
+});
+
 const handleAllClick = () => {
   selectedCategory.value = null;
   selectedSubCategory.value = null;
   showSubCategories.value = false;
+
+  console.log('📌 전체 선택');
 
   emit('category-change', {
     category: null,
@@ -100,6 +123,8 @@ const handleCategoryClick = (category) => {
     showSubCategories.value = category.children?.length > 0;
   }
 
+  console.log('📌 카테고리 선택:', category.categoryName);
+
   emit('category-change', {
     category: category,
     subCategory: null
@@ -108,6 +133,9 @@ const handleCategoryClick = (category) => {
 
 const handleSubCategoryClick = (subCategory) => {
   selectedSubCategory.value = subCategory;
+
+  console.log('📌 서브카테고리 선택:', subCategory?.categoryName || '전체');
+
   emit('category-change', {
     category: selectedCategory.value,
     subCategory: subCategory
