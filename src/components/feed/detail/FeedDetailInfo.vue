@@ -1,3 +1,162 @@
+<!-- FeedDetailInfo.vue 수정 - ChatService 직접 사용 -->
+<script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { feedUtils } from '@/services/FeedService'
+import { chatService } from '@/services/ChatService'
+import FeedDetailAuthor from './FeedDetailAuthor.vue'
+
+const router = useRouter()
+
+const props = defineProps({
+  feed: {
+    type: Object,
+    required: true
+  },
+  isFollowing: {
+    type: Boolean,
+    default: false
+  },
+  isSaved: {
+    type: Boolean,
+    default: false
+  },
+  comments: {
+    type: Array,
+    default: () => []
+  },
+  commentSort: {
+    type: String,
+    default: 'popular'
+  }
+})
+
+// emit 정의 (send-message 제거)
+defineEmits([
+  'follow',
+  'unfollow',
+  'like',
+  'hot',
+  'save',
+  'search-store',
+  'search-hashtag',
+  'submit-comment',
+  'reply-comment',
+  'like-comment',
+  'update:comment-sort'
+])
+
+// 채팅 상태
+const isCreatingChatRoom = ref(false)
+const newComment = ref('')
+
+const getProductName = computed(() => {
+  return props.feed?.product?.name || props.feed?.productName || '상품명 없음'
+})
+
+const sortedComments = computed(() => {
+  if (props.commentSort === 'popular') {
+    return [...props.comments].sort((a, b) => b.fire - a.fire)
+  }
+  return props.comments
+})
+
+const submitComment = () => {
+  if (!newComment.value.trim()) return
+  newComment.value = ''
+}
+
+// 현재 사용자 ID 가져오기
+const getCurrentUserId = () => {
+  try {
+    const token = localStorage.getItem('access_token')
+    if (!token) return null
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.userId || payload.sub
+  } catch {
+    return null
+  }
+}
+
+// 글 작성자에게 문의하기 핸들러
+const handleSendMessage = async () => {
+  if (isCreatingChatRoom.value) return
+
+  try {
+    isCreatingChatRoom.value = true
+
+    // 1. 로그인 확인
+    const currentUserId = getCurrentUserId()
+    if (!currentUserId) {
+      alert('로그인이 필요한 서비스입니다.')
+      router.push({
+        name: 'Login',
+        query: { redirect: router.currentRoute.value.fullPath }
+      })
+      return
+    }
+
+    // 2. 본인 게시글 확인
+    if (currentUserId === props.feed.userInfo?.userId) {
+      alert('본인의 게시글에는 문의할 수 없습니다.')
+      return
+    }
+
+    // 3. ChatService로 채팅방 생성
+    // ✅ participantIds에 글 작성자 + 현재 로그인 유저 둘 다 포함
+    const chatData = {
+      chatContext: 'PRODUCT_TRADE',
+      chatContextId: props.feed.feedId,
+      creatorId: props.feed.userInfo.userId,
+      participantIds: [props.feed.userInfo.userId, currentUserId]
+    }
+
+    console.log('💬 채팅 시작 요청:', chatData)
+
+    const response = await chatService.startChat(chatData)
+
+    if (!response.success) {
+      throw new Error(response.error || '채팅방 생성에 실패했습니다.')
+    }
+
+    // 4. 채팅방으로 이동
+    const chatRoom = response.data
+    console.log('✅ 채팅방 생성/조회 완료:', chatRoom)
+
+    router.push({
+      name: 'ChatWithRoom',  // ✅ 올바른 라우트 이름
+      params: { roomId: chatRoom.roomId },
+      query: {
+        userName: props.feed.userInfo.nickname || props.feed.userInfo.userName,
+        feedId: props.feed.feedId,
+        productName: getProductName.value
+      }
+    })
+
+  } catch (error) {
+    console.error('❌ 채팅 시작 실패:', error)
+    alert(error.message || '채팅방 생성에 실패했습니다. 잠시 후 다시 시도해주세요.')
+  } finally {
+    isCreatingChatRoom.value = false
+  }
+}
+
+// Utility functions
+const formatPrice = (price) => feedUtils.formatPrice(price)
+const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation)
+
+const getEvaluationClass = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
+  const classMap = {
+    'BEST': 'eval-best',
+    'GOOD': 'eval-good',
+    'OKAY': 'eval-okay',
+    'BAD': 'eval-bad'
+  }
+  return classMap[code] || ''
+}
+</script>
+
 <template>
   <div class="info-section">
     <!-- Author Info -->
@@ -97,12 +256,52 @@
           </button>
         </div>
 
-        <!-- Message Button -->
-        <button class="btn-message" @click="$emit('send-message')">
-          <svg class="message-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        <!-- ⭐ Message Button - ChatService 직접 사용 -->
+        <button
+            class="btn-message"
+            @click="handleSendMessage"
+            :disabled="isCreatingChatRoom"
+        >
+          <svg
+              v-if="!isCreatingChatRoom"
+              class="message-icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+          >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
           </svg>
-          <span>판매자에게 문의하기</span>
+
+          <!-- 로딩 스피너 -->
+          <svg
+              v-else
+              class="spinner-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+          >
+            <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+            ></circle>
+            <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+
+          <span>
+            {{ isCreatingChatRoom ? '채팅방 생성 중...' : '작성자에게 문의하기' }}
+          </span>
         </button>
       </div>
 
@@ -215,84 +414,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, computed } from 'vue'
-import { feedUtils } from '@/services/FeedService'
-import FeedDetailAuthor from './FeedDetailAuthor.vue'
-
-const props = defineProps({
-  feed: {
-    type: Object,
-    required: true
-  },
-  isFollowing: {
-    type: Boolean,
-    default: false
-  },
-  isSaved: {
-    type: Boolean,
-    default: false
-  },
-  comments: {
-    type: Array,
-    default: () => []
-  },
-  commentSort: {
-    type: String,
-    default: 'popular'
-  }
-})
-
-defineEmits([
-  'follow',
-  'unfollow',
-  'like',
-  'hot',
-  'save',
-  'send-message',
-  'search-store',
-  'search-hashtag',
-  'submit-comment',
-  'reply-comment',
-  'like-comment',
-  'update:comment-sort'
-])
-
-const newComment = ref('')
-
-const getProductName = computed(() => {
-  return props.feed?.product?.name || props.feed?.productName || '상품명 없음'
-})
-
-const sortedComments = computed(() => {
-  if (props.commentSort === 'popular') {
-    return [...props.comments].sort((a, b) => b.fire - a.fire)
-  }
-  return props.comments
-})
-
-const submitComment = () => {
-  if (!newComment.value.trim()) return
-  // emit은 부모에서 처리
-  newComment.value = ''
-}
-
-// Utility functions
-const formatPrice = (price) => feedUtils.formatPrice(price)
-const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation)
-
-const getEvaluationClass = (evaluation) => {
-  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
-  const classMap = {
-    'BEST': 'eval-best',
-    'GOOD': 'eval-good',
-    'OKAY': 'eval-okay',
-    'BAD': 'eval-bad'
-  }
-  return classMap[code] || ''
-}
-</script>
 
 <style scoped>
 .info-section {
@@ -627,20 +748,40 @@ const getEvaluationClass = (evaluation) => {
   letter-spacing: -0.02em;
 }
 
-.btn-message:hover {
+.btn-message:hover:not(:disabled) {
   background: #000000;
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-.btn-message:active {
+.btn-message:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.btn-message:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .message-icon {
   width: 20px;
   height: 20px;
   stroke-width: 2;
+}
+
+.spinner-icon {
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Comment Section */

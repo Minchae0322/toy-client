@@ -35,7 +35,7 @@ class WebSocketService {
     }
 
     this.destinations = {
-      sendMessage: '/app/chat/send',
+      sendMessage: '/chat/send',
       leaveRoom: '/app/chat/leave',
       sendTyping: '/app/typing',
       ping: '/app/ping'

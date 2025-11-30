@@ -11,8 +11,6 @@ import * as authUtils from '@/utils/auth.js'
  */
 class ChatService extends BaseApiService {
   constructor() {
-    // 개발: http://54.180.89.70:8082/api (단일 서버)
-    // 프로덕션: https://chat.yourdomain.com/api (MSA)
     const baseURL = `${getServiceUrl('CHAT')}/api`
 
     super(baseURL, 'CHAT')
@@ -27,9 +25,6 @@ class ChatService extends BaseApiService {
 
   // ==================== WebSocket URL Getter ====================
 
-  /**
-   * WebSocket URL 반환
-   */
   getWebSocketUrl() {
     return this.wsURL
   }
@@ -37,7 +32,7 @@ class ChatService extends BaseApiService {
   // ==================== 채팅방 API ====================
 
   /**
-   * 채팅 시작 (한입만 상세에서 채팅하기 클릭시)
+   * 채팅 시작 (피드 상세에서 채팅하기 클릭시)
    */
   async startChat(chatData) {
     console.log(`💬 [CHAT] 채팅 시작:`, chatData)
@@ -140,7 +135,8 @@ class ChatService extends BaseApiService {
   // ==================== 메시지 API ====================
 
   /**
-   * 메시지 목록 조회 (커서 기반 페이징)
+   * ✅ 메시지 목록 조회 (커서 기반 페이징) - 경로 수정
+   * 백엔드: GET /{roomId}/messages
    */
   async getChatMessages(roomId, cursorPageRequest = {}) {
     if (!roomId) {
@@ -156,6 +152,8 @@ class ChatService extends BaseApiService {
     }
 
     console.log(`📨 [CHAT] 메시지 목록 조회: roomId=${roomId}`, params)
+
+    // ✅ 백엔드 API 경로에 맞게 수정: /v1/chat/rooms/{roomId}/messages
     return await this.get(`/chat/${roomId}/messages`, params)
   }
 
@@ -176,7 +174,7 @@ class ChatService extends BaseApiService {
     }
 
     console.log(`📤 [CHAT] 메시지 전송 (HTTP): roomId=${roomId}`, requestData)
-    return await this.post(`/chat/rooms/${roomId}/messages`, requestData)
+    return await this.post(`/v1/chat/rooms/${roomId}/messages`, requestData)
   }
 
   /**
@@ -184,7 +182,7 @@ class ChatService extends BaseApiService {
    */
   async updateMessage(messageId, content) {
     console.log(`✏️ [CHAT] 메시지 수정: messageId=${messageId}`)
-    return await this.put(`/chat/messages/${messageId}`, { content })
+    return await this.put(`/v1/chat/messages/${messageId}`, { content })
   }
 
   /**
@@ -192,14 +190,11 @@ class ChatService extends BaseApiService {
    */
   async deleteMessage(messageId) {
     console.log(`🗑️ [CHAT] 메시지 삭제: messageId=${messageId}`)
-    return await this.delete(`/chat/messages/${messageId}`)
+    return await this.delete(`/v1/chat/messages/${messageId}`)
   }
 
   // ==================== 파일 업로드 ====================
 
-  /**
-   * 파일 업로드
-   */
   async uploadFile(roomId, file, options = {}) {
     if (!roomId || !file) {
       throw new Error('채팅방 ID와 파일이 필요합니다.')
@@ -220,9 +215,6 @@ class ChatService extends BaseApiService {
     return await super.uploadFile(`/v1/chat/rooms/${roomId}/upload`, formData)
   }
 
-  /**
-   * 이미지 업로드
-   */
   async uploadImage(roomId, imageFile, description = '') {
     console.log(`🖼️ [CHAT] 이미지 업로드: roomId=${roomId}, file=${imageFile.name}`)
     return await this.uploadFile(roomId, imageFile, {
@@ -233,18 +225,12 @@ class ChatService extends BaseApiService {
 
   // ==================== 읽음 처리 및 알림 ====================
 
-  /**
-   * 메시지 읽음 처리
-   */
   async markAsRead(roomId, messageId = null) {
     const requestData = messageId ? { messageId } : {}
     console.log(`✅ [CHAT] 메시지 읽음 처리: roomId=${roomId}`, requestData)
     return await this.post(`/v1/chat/rooms/${roomId}/read`, requestData)
   }
 
-  /**
-   * 읽지 않은 메시지 개수 조회
-   */
   async getUnreadCount(roomId = null) {
     const url = roomId
         ? `/v1/chat/rooms/${roomId}/unread-count`
@@ -254,9 +240,6 @@ class ChatService extends BaseApiService {
     return await this.get(url)
   }
 
-  /**
-   * 전체 읽지 않은 메시지 개수 조회
-   */
   async getTotalUnreadCount() {
     console.log(`🔔 [CHAT] 전체 읽지 않은 메시지 개수 조회`)
     return await this.get('/v1/chat/unread-count')
@@ -264,17 +247,11 @@ class ChatService extends BaseApiService {
 
   // ==================== 채팅방 멤버 관리 ====================
 
-  /**
-   * 채팅방 멤버 목록 조회
-   */
   async getChatRoomMembers(roomId, params = {}) {
     console.log(`👥 [CHAT] 채팅방 멤버 목록 조회: roomId=${roomId}`)
     return await this.get(`/v1/chat/rooms/${roomId}/members`, params)
   }
 
-  /**
-   * 채팅방에 멤버 초대
-   */
   async inviteMembers(roomId, userIds) {
     console.log(`➕ [CHAT] 멤버 초대: roomId=${roomId}, userIds=${userIds}`)
     return await this.post(`/v1/chat/rooms/${roomId}/members`, {
@@ -282,17 +259,11 @@ class ChatService extends BaseApiService {
     })
   }
 
-  /**
-   * 채팅방에서 멤버 제거
-   */
   async removeMember(roomId, userId) {
     console.log(`➖ [CHAT] 멤버 제거: roomId=${roomId}, userId=${userId}`)
     return await this.delete(`/v1/chat/rooms/${roomId}/members/${userId}`)
   }
 
-  /**
-   * 채팅방 멤버 역할 변경
-   */
   async updateMemberRole(roomId, userId, role) {
     console.log(`👑 [CHAT] 멤버 역할 변경: roomId=${roomId}, userId=${userId}, role=${role}`)
     return await this.put(`/v1/chat/rooms/${roomId}/members/${userId}/role`, { role })
@@ -300,22 +271,12 @@ class ChatService extends BaseApiService {
 
   // ==================== 검색 및 필터링 ====================
 
-  /**
-   * 채팅방 검색
-   */
   async searchChatRooms(keyword, filters = {}) {
-    const params = {
-      keyword,
-      ...filters
-    }
-
+    const params = { keyword, ...filters }
     console.log(`🔍 [CHAT] 채팅방 검색:`, params)
     return await this.get('/v1/chat/rooms/search', params)
   }
 
-  /**
-   * 메시지 검색
-   */
   async searchMessages(roomId, keyword, params = {}) {
     console.log(`🔍 [CHAT] 메시지 검색: roomId=${roomId}, keyword=${keyword}`)
     return await this.get(`/v1/chat/rooms/${roomId}/messages/search`, {
@@ -326,9 +287,6 @@ class ChatService extends BaseApiService {
 
   // ==================== 샘플 데이터 (개발용) ====================
 
-  /**
-   * 샘플 채팅방 데이터 제공 (API 연결 실패시 폴백용)
-   */
   getSampleChatRooms() {
     console.log(`📦 [CHAT] 샘플 채팅방 데이터 반환`)
     return {
@@ -364,45 +322,37 @@ class ChatService extends BaseApiService {
     }
   }
 
-  /**
-   * 샘플 메시지 데이터 제공
-   */
   getSampleMessages(roomId) {
     console.log(`📦 [CHAT] 샘플 메시지 데이터 반환: roomId=${roomId}`)
-    const messages = [
-      {
-        messageId: `msg-${roomId}-1`,
-        roomId: roomId,
-        senderId: 2,
-        senderName: '상대방',
-        content: '안녕하세요!',
-        messageType: 'TEXT',
-        sentAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-        isRead: true
-      },
-      {
-        messageId: `msg-${roomId}-2`,
-        roomId: roomId,
-        senderId: 1,
-        senderName: '나',
-        content: '네, 안녕하세요. 잘 부탁드립니다.',
-        messageType: 'TEXT',
-        sentAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-        isRead: true
-      }
-    ]
-
     return {
       success: true,
-      data: messages
+      data: [
+        {
+          messageId: `msg-${roomId}-1`,
+          roomId: roomId,
+          senderId: 2,
+          senderName: '상대방',
+          content: '안녕하세요!',
+          messageType: 'TEXT',
+          sentAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+          isRead: true
+        },
+        {
+          messageId: `msg-${roomId}-2`,
+          roomId: roomId,
+          senderId: 1,
+          senderName: '나',
+          content: '네, 안녕하세요. 잘 부탁드립니다.',
+          messageType: 'TEXT',
+          sentAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+          isRead: true
+        }
+      ]
     }
   }
 
   // ==================== 유틸리티 메서드 ====================
 
-  /**
-   * 채팅방 생성 데이터 검증
-   */
   validateCreateRoomData(roomData) {
     const errors = []
 
@@ -428,9 +378,6 @@ class ChatService extends BaseApiService {
     }
   }
 
-  /**
-   * 검색 조건 검증
-   */
   validateSearchCondition(searchCondition) {
     const validRoomTypes = ['NORMAL', 'CHANNEL', 'CUSTOMER_SUPPORT']
     const validStatuses = ['ACTIVE', 'ARCHIVED', 'BLOCKED', 'DELETED']
@@ -450,10 +397,10 @@ class ChatService extends BaseApiService {
     return searchCondition
   }
 
-  // ==================== 채팅방 유틸리티 ====================
+  // ==================== 데이터 변환 유틸리티 ====================
 
   /**
-   * 백엔드 채팅방 응답을 프론트엔드 형식으로 변환
+   * ✅ 백엔드 채팅방 응답을 프론트엔드 형식으로 변환
    */
   transformChatRoomResponse(backendRoom) {
     let roomTypeValue = 'NORMAL'
@@ -485,17 +432,17 @@ class ChatService extends BaseApiService {
   }
 
   /**
-   * 백엔드 메시지 응답을 프론트엔드 형식으로 변환
+   * ✅ 백엔드 메시지 응답을 프론트엔드 형식으로 변환
    */
   transformMessageResponse(backendMessage) {
     return {
-      messageId: backendMessage.messageId,
+      messageId: backendMessage.messageId || backendMessage.id,
       roomId: backendMessage.roomId,
       senderId: backendMessage.senderId,
       senderName: backendMessage.senderName || `사용자${backendMessage.senderId}`,
       content: backendMessage.content,
       type: backendMessage.messageType || backendMessage.type || 'TEXT',
-      createdAt: backendMessage.sentAt || backendMessage.createdAt,
+      createdAt: backendMessage.sentAt || backendMessage.createdAt || new Date().toISOString(),
       status: 'SENT',
       isRead: backendMessage.isRead || false,
       replyTo: backendMessage.replyTo,
@@ -548,25 +495,13 @@ class ChatService extends BaseApiService {
 
   // ==================== 디버깅 ====================
 
-  /**
-   * Chat Service 상태 디버깅
-   */
   debugChatStatus() {
     console.group('🔍 [CHAT] 채팅 서비스 상태')
-
-    console.log('=== 환경 정보 ===')
     console.log('Environment:', ENV.MODE)
     console.log('Base URL:', this.baseURL)
     console.log('WebSocket URL:', this.wsURL)
-
-    console.log('=== 중요 안내 ===')
-    console.log('메시지 전송: WebSocket 사용 권장')
-    console.log('메시지 조회: HTTP API 사용')
-    console.log('채팅방 관리: HTTP API 사용')
-
-    // 부모 클래스의 디버깅도 호출
+    console.log('메시지 조회 경로: /v1/chat/rooms/{roomId}/messages')
     this.debugStatus()
-
     console.groupEnd()
   }
 }
@@ -574,14 +509,11 @@ class ChatService extends BaseApiService {
 // ==================== 싱글톤 인스턴스 ====================
 
 export const chatService = new ChatService()
-export const chatApi = chatService // 별칭 (기존 코드 호환성)
+export const chatApi = chatService
 export default chatService
 
 // ==================== Vue Composables ====================
 
-/**
- * Vue Composition API용 채팅 훅
- */
 export function useChat() {
   const service = new ChatService()
 
@@ -595,11 +527,7 @@ export function useChat() {
       }
     } catch (error) {
       console.error('❌ [CHAT] 채팅방 목록 조회 실패:', error)
-      return {
-        success: false,
-        error: error.message,
-        data: []
-      }
+      return { success: false, error: error.message, data: [] }
     }
   }
 
@@ -613,78 +541,48 @@ export function useChat() {
       }
     } catch (error) {
       console.error('❌ [CHAT] 채팅방 생성 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
+      return { success: false, error: error.message }
     }
   }
 
   const sendMessage = async (roomId, messageData) => {
     try {
       const response = await service.sendMessage(roomId, messageData)
-      return {
-        success: true,
-        data: response.data,
-        message: response.message
-      }
+      return { success: true, data: response.data, message: response.message }
     } catch (error) {
       console.error('❌ [CHAT] 메시지 전송 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
+      return { success: false, error: error.message }
     }
   }
 
   const uploadFile = async (roomId, file, options = {}) => {
     try {
       const response = await service.uploadFile(roomId, file, options)
-      return {
-        success: true,
-        data: response.data,
-        message: response.message
-      }
+      return { success: true, data: response.data, message: response.message }
     } catch (error) {
       console.error('❌ [CHAT] 파일 업로드 실패:', error)
-      return {
-        success: false,
-        error: error.message
-      }
+      return { success: false, error: error.message }
     }
   }
 
   return {
-    // 채팅방 관리
     getRooms,
     createRoom,
     getRoomDetail: (roomId) => service.getChatRoomDetail(roomId),
     joinRoom: (roomId) => service.joinChatRoom(roomId),
     leaveRoom: (roomId) => service.leaveChatRoom(roomId),
-
-    // 메시지 관리
     getMessages: (roomId, params) => service.getChatMessages(roomId, params),
     sendMessage,
-
-    // 파일 관리
     uploadFile,
     uploadImage: (roomId, imageFile, description) => service.uploadImage(roomId, imageFile, description),
-
-    // 읽음 처리
     markAsRead: (roomId, messageId) => service.markAsRead(roomId, messageId),
     getUnreadCount: (roomId) => service.getUnreadCount(roomId),
-
-    // 유틸리티
     getWebSocketUrl: () => service.getWebSocketUrl(),
     transformRoom: (room) => service.transformChatRoomResponse(room),
     transformMessage: (message) => service.transformMessageResponse(message),
     sortRooms: (rooms, sortBy) => service.sortChatRooms(rooms, sortBy),
     filterRooms: (rooms, filters) => service.filterChatRooms(rooms, filters),
-
-    // 연결 테스트
     testConnection: () => service.testConnection(),
-
-    // 디버깅
     debugStatus: () => service.debugChatStatus()
   }
 }

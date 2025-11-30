@@ -72,16 +72,17 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onUnmounted, nextTick, watch, computed} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
-import {AlertCircle} from 'lucide-vue-next'
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { AlertCircle } from 'lucide-vue-next'
 import ChatHeader from '@/components/chat/detail/ChatHeader.vue'
 import MessagesArea from '@/components/chat/detail/MessagesArea.vue'
 import MessageInput from '@/components/chat/detail/MessageInput.vue'
 import ChatRoomMenu from '@/components/chat/detail/ChatRoomMenu.vue'
 import ProductInfoCard from '@/components/chat/detail/ProductInfoCard.vue'
-import {webSocketService} from '@/services/webSocketService.js'
+import { webSocketService } from '@/services/webSocketService.js'
 import { chatService } from '@/services/ChatService.js'
+
 const props = defineProps(['roomId', 'initialRoomId'])
 const emit = defineEmits(['back-to-list', 'new-message'])
 
@@ -155,6 +156,11 @@ const getCurrentUserId = () => {
   }
 }
 
+// ✅ 메시지 변환 함수 (chatService 메서드 사용)
+const transformMessage = (msg) => {
+  return chatService.transformMessageResponse(msg)
+}
+
 // 메시지 조회 함수 (HTTP API - 기존 메시지 로딩용)
 const fetchMessages = async (lastMessageId = null, append = false) => {
   try {
@@ -167,7 +173,7 @@ const fetchMessages = async (lastMessageId = null, append = false) => {
       lastMessageId: lastMessageId
     }
 
-    console.log('기존 메시지 HTTP 조회 요청:', {
+    console.log('📨 기존 메시지 HTTP 조회 요청:', {
       roomId: actualRoomId.value,
       params: cursorPageRequest
     })
@@ -175,15 +181,13 @@ const fetchMessages = async (lastMessageId = null, append = false) => {
     // 백엔드 채팅 메시지 조회 API 호출 (HTTP)
     const response = await chatService.getChatMessages(actualRoomId.value, cursorPageRequest)
 
-    console.log('기존 메시지 HTTP 조회 응답:', response)
+    console.log('📨 기존 메시지 HTTP 조회 응답:', response)
 
     // API 응답 구조에 맞게 데이터 추출
     const messagesList = response.data || []
 
-    // 메시지 데이터 변환 (백엔드 응답을 프론트엔드 형식으로)
-    const transformedMessages = messagesList.map(msg =>
-        chatRoomUtils.transformMessageResponse(msg)
-    )
+    // ✅ 메시지 데이터 변환 (chatService 메서드 사용)
+    const transformedMessages = messagesList.map(msg => transformMessage(msg))
 
     if (append) {
       // 이전 메시지 추가 (역순으로 받아서 앞에 추가)
@@ -203,7 +207,7 @@ const fetchMessages = async (lastMessageId = null, append = false) => {
     hasMoreMessages.value = messagesList.length === pageSize
 
   } catch (error) {
-    console.error('기존 메시지 조회 실패:', error)
+    console.error('❌ 기존 메시지 조회 실패:', error)
 
     // 404 에러인 경우 (채팅방이 존재하지 않거나 메시지가 없음)
     if (error.status === 404) {
@@ -214,16 +218,11 @@ const fetchMessages = async (lastMessageId = null, append = false) => {
 
     // 에러 상황에서 빈 메시지 표시하지 않고 재시도 옵션 제공
     if (!append) {
-      const shouldRetry = confirm('메시지를 불러오는데 실패했습니다. 다시 시도하시겠습니까?')
-      if (shouldRetry) {
-        return fetchMessages(lastMessageId, append)
-      } else {
-        // 빈 메시지 목록으로 설정
-        messages.value = []
-      }
+      // 샘플 데이터로 폴백 (개발 편의)
+      console.warn('⚠️ 메시지 조회 실패, 빈 목록으로 시작')
+      messages.value = []
+      hasMoreMessages.value = false
     }
-
-    throw error
   } finally {
     if (append) loadingMore.value = false
     else loading.value = false
@@ -240,22 +239,11 @@ const initializeChatRoom = async () => {
       throw new Error('채팅방 ID가 없습니다.')
     }
 
-    // 🔥 연결 테스트 먼저 실행 (개발 모드에서만)
-    if (import.meta.env.DEV) {
-      await webSocketService.testConnection()
-    }
-
     // 🔥 WebSocket 연결을 최우선으로 처리
     if (!webSocketService.isConnected()) {
       console.log('🔌 WebSocket 연결 시도...')
       try {
         connectionState.value.connecting = true
-
-        // 🔥 연결 전 환경 정보 로깅
-        console.log('🔌 WebSocket 환경 정보:')
-        console.log('  - VITE_WS_BASE_URL:', import.meta.env.VITE_WS_BASE_URL)
-        console.log('  - Current URL:', window.location.href)
-        console.log('  - User Agent:', navigator.userAgent)
 
         await webSocketService.connect()
 
@@ -270,28 +258,12 @@ const initializeChatRoom = async () => {
         connectionState.value.status = 'error'
         connectionState.value.error = error.message
 
-        // 🔥 더 구체적인 에러 메시지 제공
-        let errorMessage = '실시간 채팅 연결에 실패했습니다.\n'
-
-        if (error.message.includes('ERR_CONNECTION_REFUSED')) {
-          errorMessage += '백엔드 서버가 실행되지 않았거나 포트가 잘못되었습니다.\n'
-          errorMessage += `연결 시도 URL: ${webSocketService.baseURL}/api/ws`
-        } else if (error.message.includes('시간 초과')) {
-          errorMessage += '서버 응답이 너무 느립니다. 네트워크를 확인해주세요.'
-        } else if (error.message.includes('STOMP')) {
-          errorMessage += 'WebSocket 프로토콜 오류입니다. 인증을 확인해주세요.'
-        } else {
-          errorMessage += `오류 내용: ${error.message}`
-        }
-
-        // 🔥 WebSocket 연결 실패해도 채팅방 상세는 유지 (HTTP로 메시지 조회 가능)
-        console.warn('⚠️ WebSocket 연결 실패했지만 채팅방 계속 진행 (메시지 전송 불가)')
-
-        // 사용자에게 알림만 표시하고 계속 진행
-        setTimeout(() => {
-          alert('실시간 채팅 연결에 실패했습니다.\n기존 메시지 확인은 가능하지만 새 메시지 전송은 제한됩니다.')
-        }, 1000)
+        // WebSocket 연결 실패해도 채팅방 상세는 유지 (HTTP로 메시지 조회 가능)
+        console.warn('⚠️ WebSocket 연결 실패했지만 채팅방 계속 진행')
       }
+    } else {
+      connectionState.value.connected = true
+      connectionState.value.status = 'connected'
     }
 
     // 🔥 WebSocket이 연결된 경우에만 채팅방 구독
@@ -302,11 +274,10 @@ const initializeChatRoom = async () => {
         console.log('✅ 채팅방 구독 완료:', actualRoomId.value)
       } catch (error) {
         console.error('❌ 채팅방 구독 오류:', error)
-        alert('채팅방 연결에 실패했습니다.')
       }
     }
 
-    // 채팅방 정보 조회 (HTTP API는 유지 - 메타데이터용)
+    // 채팅방 정보 조회 (HTTP API)
     try {
       const roomResponse = await chatService.getChatRoomDetail(actualRoomId.value)
       const roomData = roomResponse.data
@@ -322,7 +293,6 @@ const initializeChatRoom = async () => {
       }
     } catch (error) {
       console.warn('⚠️ 채팅방 정보 조회 실패, 기본 정보 사용:', error)
-      // 기본 정보로 설정
       roomInfo.value = {
         title: productInfo.value.name
             ? `${productInfo.value.name} 관련 채팅`
@@ -334,11 +304,10 @@ const initializeChatRoom = async () => {
       }
     }
 
-    // 🔥 메시지 로딩은 HTTP API 사용 (기존 메시지 조회용)
+    // 🔥 메시지 로딩 (HTTP API 사용)
     await fetchMessages(null, false)
 
     console.log('✅ 채팅방 초기화 완료, 메시지 수:', messages.value.length)
-    console.log('📡 WebSocket 연결 상태:', webSocketService.isConnected())
 
   } catch (error) {
     console.error('❌ 채팅방 초기화 실패:', error)
@@ -378,8 +347,6 @@ const sendMessage = async (messageData) => {
       type: messageData.type || 'TEXT',
       createdAt: new Date().toISOString(),
       status: 'SENDING',
-
-      // 답장 관련
       replyToMessageId: messageData.replyToMessageId || null,
       replyToContent: messageData.replyToContent || null,
       replyToSender: messageData.replyToSender || null
@@ -392,7 +359,7 @@ const sendMessage = async (messageData) => {
 
     console.log('📤 WebSocket으로 메시지 전송:', messageData)
 
-    // 🔥 WebSocket으로만 전송 (HTTP API 제거)
+    // 🔥 WebSocket으로만 전송
     if (webSocketService.isConnected()) {
       await webSocketService.sendMessage(actualRoomId.value, messageData)
 
@@ -420,12 +387,7 @@ const sendMessage = async (messageData) => {
       }
     }
 
-    let errorMessage = '메시지 전송에 실패했습니다.'
-    if (error.message.includes('연결')) {
-      errorMessage = 'WebSocket 연결을 확인해주세요.'
-    }
-
-    alert(errorMessage)
+    alert('메시지 전송에 실패했습니다.')
   } finally {
     sending.value = false
   }
@@ -455,7 +417,8 @@ const handleNewMessage = (message) => {
     }
 
     console.log('📨 새 메시지 추가:', message)
-    const transformedMessage = chatRoomUtils.transformMessageResponse(message)
+    // ✅ chatService 메서드 사용
+    const transformedMessage = transformMessage(message)
     messages.value.push(transformedMessage)
 
     nextTick(() => {
@@ -489,7 +452,6 @@ const handleTypingStart = () => {
     clearTimeout(typingTimer.value)
   }
 
-  // WebSocket으로 타이핑 상태 전송
   if (webSocketService.isConnected()) {
     webSocketService.sendTypingStatus(actualRoomId.value, true)
   }
@@ -505,7 +467,6 @@ const handleTypingStop = () => {
     typingTimer.value = null
   }
 
-  // WebSocket으로 타이핑 중단 전송
   if (webSocketService.isConnected()) {
     webSocketService.sendTypingStatus(actualRoomId.value, false)
   }
@@ -525,13 +486,14 @@ const retryMessage = async (messageId) => {
       content: failedMessage.content,
       type: failedMessage.type
     }
-    await sendMessage(messageData)
 
     // 실패한 메시지 제거
     const index = messages.value.findIndex(m => m.messageId === messageId)
     if (index !== -1) {
       messages.value.splice(index, 1)
     }
+
+    await sendMessage(messageData)
   }
 }
 
@@ -602,7 +564,6 @@ const leaveRoom = async () => {
   if (confirm('정말 채팅방을 나가시겠습니까?')) {
     if (webSocketService.isConnected()) {
       webSocketService.unsubscribeFromChatRoom(actualRoomId.value)
-      console.log('채팅방 구독 해제:', actualRoomId.value)
     }
 
     try {
@@ -636,11 +597,13 @@ let connectionCheckInterval = null
 // 라이프사이클
 onMounted(async () => {
   currentUserId.value = getCurrentUserId()
-  console.log('현재 사용자 ID:', currentUserId.value)
-  console.log('상품 정보:', productInfo.value)
+  console.log('👤 현재 사용자 ID:', currentUserId.value)
+  console.log('📦 상품 정보:', productInfo.value)
 
   // 디바이스 정보 업데이트
-  deviceInfo.value = webSocketService.getDeviceInfo()
+  if (webSocketService.getDeviceInfo) {
+    deviceInfo.value = webSocketService.getDeviceInfo()
+  }
 
   await initializeChatRoom()
 
@@ -651,7 +614,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  console.log('✅ [ChatDetailView] 컴포넌트 해제 시작')
+  console.log('🧹 [ChatDetailView] 컴포넌트 해제 시작')
 
   // 타이핑 타이머 정리
   if (typingTimer.value) {
@@ -666,13 +629,9 @@ onUnmounted(() => {
   }
 
   // WebSocket 구독 해제
-  if (actualRoomId.value) {
+  if (actualRoomId.value && webSocketService.unsubscribeFromChatRoom) {
     webSocketService.unsubscribeFromChatRoom(actualRoomId.value)
   }
-
-  // 전역 핸들러 정리
-  webSocketService.offMessage('chat-message')
-  webSocketService.offMessage('connection-change')
 
   console.log('✅ [ChatDetailView] 컴포넌트 정리 완료')
 })
@@ -680,7 +639,7 @@ onUnmounted(() => {
 // roomId 변경 감지
 watch(actualRoomId, async (newRoomId, oldRoomId) => {
   if (newRoomId && newRoomId !== oldRoomId) {
-    console.log('채팅방 변경:', oldRoomId, '=>', newRoomId)
+    console.log('🔄 채팅방 변경:', oldRoomId, '=>', newRoomId)
 
     if (typingTimer.value) {
       handleTypingStop()
@@ -688,7 +647,6 @@ watch(actualRoomId, async (newRoomId, oldRoomId) => {
 
     if (oldRoomId && webSocketService.isConnected()) {
       webSocketService.unsubscribeFromChatRoom(oldRoomId)
-      console.log('이전 채팅방 구독 해제:', oldRoomId)
     }
 
     messages.value = []
@@ -759,7 +717,6 @@ watch(actualRoomId, async (newRoomId, oldRoomId) => {
   100% { transform: rotate(360deg); }
 }
 
-/* 다크 모드 지원 */
 @media (prefers-color-scheme: dark) {
   .chat-detail-container {
     background: #1f2937;
