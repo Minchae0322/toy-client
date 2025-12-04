@@ -3,22 +3,14 @@
     <nav class="nav-menu">
       <!-- 메인 메뉴 섹션 -->
       <div class="nav-section">
-        <router-link
-            to="/feed"
-            class="nav-item"
-            active-class="active"
-        >
+        <router-link to="/feed" class="nav-item" active-class="active">
           <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
           </svg>
           <span class="nav-text">홈</span>
         </router-link>
 
-        <router-link
-            to="/battle"
-            class="nav-item"
-            active-class="active"
-        >
+        <router-link to="/battle" class="nav-item" active-class="active">
           <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
             <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
             <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.5 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-5-2a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
@@ -47,13 +39,20 @@
         </button>
       </div>
 
-      <!-- 프로필 섹션 -->
-      <div class="nav-section">
+      <!-- 프로필 섹션 (로그인 시에만 표시) -->
+      <div v-if="isLoggedIn" class="nav-section">
         <button class="nav-item" @click="handleProtectedRoute('profile')">
           <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
           </svg>
           <span class="nav-text">프로필</span>
+        </button>
+
+        <button class="nav-item" @click="handleProtectedRoute('mypage')">
+          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+          </svg>
+          <span class="nav-text">마이페이지</span>
         </button>
       </div>
     </nav>
@@ -65,7 +64,8 @@
       <span>인증 올리기</span>
     </button>
 
-    <div class="level-card" @click="handleProtectedRoute('profile')">
+    <!-- 레벨 카드도 로그인 시에만 표시 -->
+    <div v-if="isLoggedIn" class="level-card" @click="handleProtectedRoute('profile')">
       <div class="level-info">
         <div class="level-badge">
           <span class="level-emoji">🔥</span>
@@ -108,6 +108,9 @@ const handleProtectedRoute = async (routeName) => {
     switch (routeName) {
       case 'profile':
         goToMyProfile();
+        break;
+      case 'mypage':
+        router.push({ name: 'MyPage' });
         break;
       case 'create':
         router.push({ name: 'FeedCreate' });
@@ -159,8 +162,8 @@ const goToMyProfile = async () => {
 <style scoped>
 .sidebar-left {
   width: 240px;
-  height: calc(100vh - 64px);  /* 헤더 높이 빼기 */
-  top: 64px;                   /* 헤더 아래부터 시작 */
+  height: calc(100vh - 64px);
+  top: 64px;
   background: #ffffff;
   border-right: 1px solid rgba(0, 0, 0, 0.06);
   padding: 28px 16px;
@@ -168,44 +171,14 @@ const goToMyProfile = async () => {
   flex-direction: column;
   overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
-  /* 핵심: sticky 설정 */
   position: sticky;
-  align-self: flex-start;  /* Flexbox에서 sticky 작동을 위한 필수 속성 */
-
+  align-self: flex-start;
   flex-shrink: 0;
   box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
-  .sidebar-left {
-    display: flex;
-  }
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 40px;
-}
-
-.logo {
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #000;
-  margin: 0;
-}
-
-.logo-beta {
-  padding: 2px 6px;
-  background: rgba(0, 0, 0, 0.04);
-  color: rgba(0, 0, 0, 0.5);
-  font-size: 8px;
-  font-weight: 700;
-  border-radius: 3px;
-  letter-spacing: 0.05em;
+  .sidebar-left { display: flex; }
 }
 
 .nav-menu {
@@ -227,14 +200,8 @@ const goToMyProfile = async () => {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.nav-section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.nav-section:first-child {
-  padding-top: 0;
-}
+.nav-section:last-child { border-bottom: none; padding-bottom: 0; }
+.nav-section:first-child { padding-top: 0; }
 
 .nav-item {
   width: 100%;
@@ -247,42 +214,15 @@ const goToMyProfile = async () => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
   text-decoration: none;
   font-family: inherit;
 }
 
-.nav-item:hover {
-  background: #ffffff;
-}
-
-.nav-item .icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  color: rgba(0, 0, 0, 0.4);
-  stroke-width: 2;
-}
-
-.nav-item.active .icon {
-  color: #9333ea;
-  stroke-width: 2.5;
-}
-
-.nav-text {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
-  letter-spacing: -0.01em;
-  transition: all 0.2s;
-}
-
-.nav-item.active .nav-text {
-  color: #9333ea;
-  font-weight: 600;
-  border-bottom: 2px solid #9333ea;
-  padding-bottom: 2px;
-}
+.nav-item:hover { background: #ffffff; }
+.nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; color: rgba(0, 0, 0, 0.4); }
+.nav-item.active .icon { color: #9333ea; }
+.nav-text { font-size: 13px; font-weight: 500; color: rgba(0, 0, 0, 0.6); }
+.nav-item.active .nav-text { color: #9333ea; font-weight: 600; border-bottom: 2px solid #9333ea; padding-bottom: 2px; }
 
 .badge {
   margin-left: auto;
@@ -297,17 +237,7 @@ const goToMyProfile = async () => {
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-.badge-red {
-  background: #fef2f2;
-  color: #dc2626;
-  border-color: #fecaca;
-}
-
-.nav-item.active .badge {
-  background: rgba(147, 51, 234, 0.08);
-  color: #9333ea;
-  border-color: rgba(147, 51, 234, 0.2);
-}
+.badge-red { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
 
 .btn-create {
   width: 100%;
@@ -329,21 +259,8 @@ const goToMyProfile = async () => {
   box-shadow: 0 1px 3px rgba(147, 51, 234, 0.2);
 }
 
-.btn-create:hover {
-  transform: translateY(-1px);
-  background: #7c3aed;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
-}
-
-.btn-create:active {
-  transform: translateY(0);
-}
-
-.btn-create .icon {
-  width: 18px;
-  height: 18px;
-  stroke-width: 2.5;
-}
+.btn-create:hover { transform: translateY(-1px); background: #7c3aed; box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3); }
+.btn-create .icon { width: 18px; height: 18px; }
 
 .level-card {
   margin-top: 30px;
@@ -355,100 +272,19 @@ const goToMyProfile = async () => {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.level-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  background: #f5f5f5;
-}
-
-.level-card:active {
-  transform: translateY(0);
-}
-
-.level-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.level-badge {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.level-emoji {
-  font-size: 16px;
-}
-
-.level-text {
-  font-size: 13px;
-  font-weight: 700;
-  color: #000;
-  letter-spacing: -0.01em;
-}
-
-.level-number {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.5);
-}
-
-.trending-icon {
-  color: rgba(0, 0, 0, 0.4);
-  opacity: 0.8;
-}
-
-.progress-section {
-  margin-bottom: 10px;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 5px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 6px;
-}
-
-.progress-fill {
-  width: 73%;
-  height: 100%;
-  background: linear-gradient(90deg, #9333ea 0%, #c084fc 100%);
-  border-radius: 999px;
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.progress-info {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.progress-percent {
-  font-size: 12px;
-  font-weight: 700;
-  color: #000;
-}
-
-.progress-divider {
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.3);
-}
-
-.progress-points {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.5);
-}
-
-.level-desc {
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.5);
-  margin: 0;
-  letter-spacing: -0.01em;
-}
+.level-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); background: #f5f5f5; }
+.level-info { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.level-badge { display: flex; align-items: center; gap: 5px; }
+.level-emoji { font-size: 16px; }
+.level-text { font-size: 13px; font-weight: 700; color: #000; }
+.level-number { font-size: 13px; font-weight: 600; color: rgba(0, 0, 0, 0.5); }
+.trending-icon { color: rgba(0, 0, 0, 0.4); opacity: 0.8; }
+.progress-section { margin-bottom: 10px; }
+.progress-bar { width: 100%; height: 5px; background: rgba(0, 0, 0, 0.08); border-radius: 999px; overflow: hidden; margin-bottom: 6px; }
+.progress-fill { width: 73%; height: 100%; background: linear-gradient(90deg, #9333ea 0%, #c084fc 100%); border-radius: 999px; }
+.progress-info { display: flex; align-items: center; gap: 5px; }
+.progress-percent { font-size: 12px; font-weight: 700; color: #000; }
+.progress-divider { font-size: 12px; color: rgba(0, 0, 0, 0.3); }
+.progress-points { font-size: 12px; font-weight: 500; color: rgba(0, 0, 0, 0.5); }
+.level-desc { font-size: 11px; font-weight: 500; color: rgba(0, 0, 0, 0.5); margin: 0; }
 </style>

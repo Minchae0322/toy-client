@@ -1,15 +1,14 @@
 // services/UserService.js
 
 import { BaseApiService } from './BaseApiService.js'
+import { ENV, getServiceUrl } from '@/config/env.js'
 
 class UserService extends BaseApiService {
   constructor() {
-    const baseURL = import.meta.env.DEV
-        ? 'http://localhost:8081/api'
-        : `${import.meta.env.VITE_USER_BASE_URL}/api`
-
+    const baseURL = `${getServiceUrl('AUTH')}/api`
     super(baseURL, 'USER')
-    console.log(`👤 [USER] User Server URL: ${this.baseURL}`)
+    console.log(`[USER] AUTH Server URL: ${this.baseURL}`)
+    console.log(`[USER] Environment: ${ENV.MODE}`)
   }
 
   // ==================== 사용자 프로필 메서드 ====================
@@ -30,6 +29,39 @@ class UserService extends BaseApiService {
     if (response.success && response.data) {
       response.data = this.normalizeUserProfile(response.data)
       console.log('✅ [USER_SERVICE] 프로필 조회 완료:', response.data)
+    }
+
+    return response
+  }
+
+  /**
+   * 사용자 프로필 수정
+   * PUT /api/user/{userId}
+   *
+   * @param {number} userId - 사용자 ID
+   * @param {Object} updateDto - 수정할 프로필 정보
+   * @param {string} [updateDto.nickname] - 변경할 닉네임
+   * @param {string} [updateDto.description] - 변경할 소개
+   * @param {Object} [updateDto.profileImgInfo] - 프로필 이미지 정보
+   * @param {number} [updateDto.profileImgInfo.attachmentFileId] - 첨부파일 ID
+   */
+  async updateUser(userId, updateDto) {
+    if (!userId) {
+      throw new Error('사용자 ID가 필요합니다.')
+    }
+
+    console.log(`✏️ [USER_SERVICE] 프로필 수정: userId=${userId}`, updateDto)
+
+    const cleanedDto = this.removeEmptyParams({
+      nickname: updateDto.nickname,
+      description: updateDto.description,
+      profileImgInfo: updateDto.profileImgInfo
+    })
+
+    const response = await this.put(`/user/${userId}`, cleanedDto)
+
+    if (response.success && response.data) {
+      console.log('✅ [USER_SERVICE] 프로필 수정 완료:', response.data)
     }
 
     return response
@@ -254,6 +286,7 @@ export function useUser() {
   return {
     // 프로필
     getUserProfile: (userId) => service.getUserProfile(userId),
+    updateUser: (userId, updateDto) => service.updateUser(userId, updateDto),
 
     // 팔로우
     toggleFollow: (userId) => service.toggleFollow(userId),
@@ -314,7 +347,7 @@ export const userUtils = {
    */
   getProfileImageUrl(profilePicture) {
     if (!profilePicture || !profilePicture.fileUrl) {
-      return '/images/default-profile.png' // 기본 프로필 이미지
+      return '/images/default-profile.png'
     }
     return profilePicture.fileUrl
   },

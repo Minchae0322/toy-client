@@ -1,14 +1,14 @@
 // src/router/index.js
-import {createRouter, createWebHistory} from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import * as authUtils from '@/utils/auth.js'
 
 // Views import (기존 구조 유지)
 import LoginView from '@/views/LoginView.vue'
 import OAuthCallback from '@/views/OAuth2Callback.vue'
 import OneMouthView from '@/views/OneMouthView.vue'
-import OneMouthListView from "@/views/OneMouthListView.vue"
-import OneMouthDetailView from "@/views/OneMouthDetailView.vue"
-import CategoryAdminView from "@/views/CategoryAdminView.vue"
+import OneMouthListView from '@/views/OneMouthListView.vue'
+import OneMouthDetailView from '@/views/OneMouthDetailView.vue'
+import CategoryAdminView from '@/views/CategoryAdminView.vue'
 
 // Chat Views import
 import ChatApp from '@/views/ChatApp.vue'
@@ -22,7 +22,7 @@ import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
 // Sale Post Views import
 import SalePostCreateView from '@/views/SalePostCreateView.vue'
 
-// Feed Views import (FeedHomeView를 홈으로 사용)
+// Feed Views import
 import FeedHomeView from '@/views/FeedHomeView.vue'
 import FeedDetailView from '@/views/FeedDetailView.vue'
 import FeedCreateView from '@/views/FeedCreateView.vue'
@@ -32,6 +32,9 @@ import UserFeedListView from '@/views/UserFeedListView.vue'
 import BattleListView from '@/views/BattleListView.vue'
 import BattleCreateView from '@/views/BattleCreateView.vue'
 import BattleDetailView from '@/views/BattleDetailView.vue'
+
+// User Views import
+import MyPageView from '@/views/MyPageView.vue'
 
 const routes = [
   // ==================== 상품 관련 라우트 ====================
@@ -150,6 +153,28 @@ const routes = [
     }
   },
 
+  // ==================== 마이페이지 관련 라우트 ====================
+  {
+    path: '/mypage',
+    name: 'MyPage',
+    component: MyPageView,
+    meta: {
+      requiresAuth: true,
+      title: '마이페이지'
+    }
+  },
+  {
+    path: '/user/:userId',
+    name: 'UserProfile',
+    component: MyPageView,
+    props: true,
+    meta: {
+      requiresAuth: false,
+      public: true,
+      title: '프로필'
+    }
+  },
+
   // ==================== 배틀 관련 라우트 ====================
   {
     path: '/battle',
@@ -232,8 +257,6 @@ const routes = [
   },
 
   // ==================== 보호된 페이지 (인증 필요) ====================
-
-  // ===== 채팅 관련 라우트 (인증 필요) =====
   {
     path: '/chat',
     name: 'Chat',
@@ -264,7 +287,7 @@ const routes = [
   // ==================== 리다이렉트 ====================
   {
     path: '/',
-    redirect: '/feed' // 메인 페이지를 피드로 변경
+    redirect: '/feed'
   },
   {
     path: '/:pathMatch(.*)*',
@@ -288,31 +311,23 @@ const router = createRouter({
 
 // ==================== 개선된 인증 가드 (OAuth 호환) ====================
 
-/**
- * OAuth 호환 인증 체크 함수
- */
 const checkAuthenticationStatus = () => {
   const accessToken = authUtils.getAccessToken()
   const userInfo = authUtils.getUserInfo()
 
-  // 기본 정보 확인
   if (!accessToken || !userInfo) {
     console.log('❌ [AuthCheck] 기본 인증 정보 없음')
     return false
   }
 
-  // AccessToken 만료 확인
   if (authUtils.isTokenExpired(accessToken)) {
     console.log('⏰ [AuthCheck] AccessToken 만료됨')
 
-    // RefreshToken 확인
     const refreshToken = authUtils.getRefreshToken()
 
     if (!refreshToken) {
-      // OAuth의 경우 RefreshToken이 없을 수 있음
       console.log('⚠️ [AuthCheck] RefreshToken 없음 - OAuth 로그인으로 추정')
 
-      // AccessToken이 최근에 발급되었으면 유효한 것으로 간주 (1시간 이내)
       const tokenPayload = authUtils.parseJwtToken(accessToken)
       if (tokenPayload && tokenPayload.iat) {
         const tokenAge = Date.now() / 1000 - tokenPayload.iat
@@ -328,7 +343,6 @@ const checkAuthenticationStatus = () => {
       return false
     }
 
-    // RefreshToken이 있으면 만료 확인
     if (authUtils.isTokenExpired(refreshToken)) {
       console.log('❌ [AuthCheck] RefreshToken도 만료됨')
       return false
@@ -342,35 +356,28 @@ const checkAuthenticationStatus = () => {
   return true
 }
 
-/**
- * 스마트 인증 가드 - OAuth 호환 버전
- */
 router.beforeEach(async (to, from, next) => {
   console.log(`🧭 [Router] 라우트 이동: ${from.path} → ${to.path}`)
 
-  // 1단계: 공개 페이지 체크
   if (to.meta.requiresAuth === false || to.meta.public === true) {
     console.log('🌍 [Router] 공개 페이지 접근 허용:', to.path)
     next()
     return
   }
 
-  // 2단계: 보호된 페이지 - OAuth 호환 인증 체크
   if (to.meta.requiresAuth === true) {
     console.log('🛡️ [Router] 보호된 페이지 - 인증 확인:', to.path)
 
     try {
-      // OAuth 호환 인증 체크
       const isAuthenticated = checkAuthenticationStatus()
 
       if (isAuthenticated) {
-        // 관리자 권한 체크 (필요한 경우)
         if (to.meta.requiresAdmin === true) {
           const userRole = authUtils.getUserRole()
           if (userRole !== 'ADMIN') {
             console.log('🚫 [Router] 관리자 권한 부족')
             next({
-              name: 'Home',
+              name: 'FeedHome',
               query: { error: '관리자 권한이 필요합니다' }
             })
             return
@@ -382,7 +389,6 @@ router.beforeEach(async (to, from, next) => {
       } else {
         console.log('🚫 [Router] 인증 실패 - Login 페이지로')
 
-        // 기존 인증 정보 정리
         authUtils.logout()
 
         next({
@@ -405,13 +411,11 @@ router.beforeEach(async (to, from, next) => {
       })
     }
   } else {
-    // 3단계: requiresAuth가 undefined인 경우 기본 처리
     console.log('❓ [Router] requiresAuth 미지정 - 공개 페이지로 처리:', to.path)
     next()
   }
 })
 
-// 페이지 타이틀 설정
 router.afterEach((to) => {
   let title = 'ToyChat'
 
@@ -429,13 +433,14 @@ router.afterEach((to) => {
     title = `사용자 피드 | ToyChat`
   } else if (to.name === 'BattleDetail') {
     title = `배틀 상세 | ToyChat`
+  } else if (to.name === 'UserProfile') {
+    title = `프로필 | ToyChat`
   }
 
   document.title = title
   console.log(`✅ [Router] 라우트 이동 완료: ${to.path}`)
 })
 
-// 라우트 에러 처리
 router.onError((error) => {
   console.error('❌ [Router] 라우트 오류:', error)
 
@@ -480,16 +485,10 @@ export const chatNavigation = {
 
 // ==================== 상품 네비게이션 헬퍼 ====================
 export const productNavigation = {
-  /**
-   * 상품 목록 페이지로 이동
-   */
   toProductList(query = {}) {
     return router.push({ name: 'ProductList', query })
   },
 
-  /**
-   * 상품 상세 페이지로 이동
-   */
   toProductDetail(productId) {
     if (!productId) {
       console.warn('상품 ID가 없습니다')
@@ -498,16 +497,10 @@ export const productNavigation = {
     return router.push({ name: 'ProductDetail', params: { id: productId } })
   },
 
-  /**
-   * 상품 등록 페이지로 이동
-   */
   toProductCreate() {
     return router.push({ name: 'ProductCreate' })
   },
 
-  /**
-   * 판매 단계별 페이지로 이동
-   */
   toSellStep2() {
     return router.push({ name: 'SellStep2' })
   },
@@ -516,9 +509,6 @@ export const productNavigation = {
     return router.push({ name: 'SellStep3' })
   },
 
-  /**
-   * 상품 수정 페이지로 이동
-   */
   toProductEdit(productId) {
     if (!productId) {
       console.warn('상품 ID가 없습니다')
@@ -527,25 +517,16 @@ export const productNavigation = {
     return router.push({ name: 'ProductEdit', params: { id: productId } })
   },
 
-  /**
-   * 상품 관련 페이지인지 확인
-   */
   isProductPage() {
     const route = router.currentRoute.value
     return route.name?.startsWith('Product') || route.name?.startsWith('Sell')
   },
 
-  /**
-   * 상품 URL 생성
-   */
   getProductUrl(productId) {
     const route = router.resolve({ name: 'ProductDetail', params: { id: productId } })
     return window.location.origin + route.href
   },
 
-  /**
-   * 카테고리별 상품 목록으로 이동
-   */
   toProductsByCategory(categoryId, categoryName) {
     return this.toProductList({
       categoryId: categoryId,
@@ -553,44 +534,25 @@ export const productNavigation = {
     })
   },
 
-  /**
-   * 브랜드별 상품 목록으로 이동
-   */
   toProductsByBrand(brand) {
-    return this.toProductList({
-      brand: brand
-    })
+    return this.toProductList({ brand: brand })
   },
 
-  /**
-   * 검색 결과 페이지로 이동
-   */
   toProductSearch(keyword) {
-    return this.toProductList({
-      keyword: keyword
-    })
+    return this.toProductList({ keyword: keyword })
   }
 }
 
 // ==================== 한입만 거래 네비게이션 헬퍼 ====================
 export const salePostNavigation = {
-  /**
-   * 한입만 거래 목록으로 이동
-   */
   toList(query = {}) {
     return router.push({ name: 'OneMouthList', query })
   },
 
-  /**
-   * 판매 게시글 등록 페이지로 이동
-   */
   toCreate() {
     return router.push({ name: 'SalePostCreate' })
   },
 
-  /**
-   * 판매 게시글 상세 페이지로 이동
-   */
   toDetail(postId) {
     if (!postId) {
       console.warn('게시글 ID가 없습니다')
@@ -599,9 +561,6 @@ export const salePostNavigation = {
     return router.push({ name: 'OneMouthDetail', params: { id: postId } })
   },
 
-  /**
-   * 판매 게시글 수정 페이지로 이동
-   */
   toEdit(postId) {
     if (!postId) {
       console.warn('게시글 ID가 없습니다')
@@ -610,39 +569,24 @@ export const salePostNavigation = {
     return router.push({ name: 'SalePostEdit', params: { id: postId } })
   },
 
-  /**
-   * 한입만 관련 페이지인지 확인
-   */
   isOneMouthPage() {
     const route = router.currentRoute.value
     return route.name?.startsWith('OneMouth') || route.name?.startsWith('SalePost')
   },
 
-  /**
-   * 게시글 URL 생성
-   */
   getPostUrl(postId) {
     const route = router.resolve({ name: 'OneMouthDetail', params: { id: postId } })
     return window.location.origin + route.href
   },
 
-  /**
-   * 카테고리별 게시글 목록으로 이동
-   */
   toPostsByCategory(categoryId) {
     return this.toList({ categoryId })
   },
 
-  /**
-   * 판매 방식별 게시글 목록으로 이동
-   */
   toPostsBySaleType(saleType) {
     return this.toList({ saleType })
   },
 
-  /**
-   * 검색 결과 페이지로 이동
-   */
   toSearch(keyword) {
     return this.toList({ keyword })
   }
@@ -650,16 +594,10 @@ export const salePostNavigation = {
 
 // ==================== 피드(인증) 네비게이션 헬퍼 ====================
 export const feedNavigation = {
-  /**
-   * 피드 홈으로 이동
-   */
   toFeedHome(query = {}) {
     return router.push({ name: 'FeedHome', query })
   },
 
-  /**
-   * 피드 상세 페이지로 이동
-   */
   toFeedDetail(feedId) {
     if (!feedId) {
       console.warn('피드 ID가 없습니다')
@@ -668,16 +606,10 @@ export const feedNavigation = {
     return router.push({ name: 'FeedDetail', params: { id: feedId } })
   },
 
-  /**
-   * 피드 작성 페이지로 이동
-   */
   toFeedCreate() {
     return router.push({ name: 'FeedCreate' })
   },
 
-  /**
-   * 사용자 피드 목록 페이지로 이동
-   */
   toUserFeedList(userId) {
     if (!userId) {
       console.warn('사용자 ID가 없습니다')
@@ -686,54 +618,33 @@ export const feedNavigation = {
     return router.push({ name: 'UserFeedList', params: { userId } })
   },
 
-  /**
-   * 피드 관련 페이지인지 확인
-   */
   isFeedPage() {
     const route = router.currentRoute.value
     return route.name?.startsWith('Feed') || route.name === 'UserFeedList'
   },
 
-  /**
-   * 피드 URL 생성
-   */
   getFeedUrl(feedId) {
     const route = router.resolve({ name: 'FeedDetail', params: { id: feedId } })
     return window.location.origin + route.href
   },
 
-  /**
-   * 사용자 피드 URL 생성
-   */
   getUserFeedUrl(userId) {
     const route = router.resolve({ name: 'UserFeedList', params: { userId } })
     return window.location.origin + route.href
   },
 
-  /**
-   * 카테고리별 피드 목록으로 이동
-   */
   toFeedsByCategory(category) {
     return this.toFeedHome({ category })
   },
 
-  /**
-   * 태그별 피드 목록으로 이동
-   */
   toFeedsByTag(tag) {
     return this.toFeedHome({ tag })
   },
 
-  /**
-   * 검색 결과 페이지로 이동
-   */
   toFeedSearch(keyword) {
     return this.toFeedHome({ keyword })
   },
 
-  /**
-   * 유저별 피드 목록으로 이동 (deprecated - toUserFeedList 사용 권장)
-   */
   toFeedsByUser(userId) {
     return this.toUserFeedList(userId)
   }
@@ -741,16 +652,10 @@ export const feedNavigation = {
 
 // ==================== 배틀 네비게이션 헬퍼 ====================
 export const battleNavigation = {
-  /**
-   * 배틀 목록 페이지로 이동
-   */
   toList(query = {}) {
     return router.push({ name: 'BattleList', query })
   },
 
-  /**
-   * 배틀 상세 페이지로 이동
-   */
   toDetail(battleId) {
     if (!battleId) {
       console.warn('배틀 ID가 없습니다')
@@ -759,32 +664,20 @@ export const battleNavigation = {
     return router.push({ name: 'BattleDetail', params: { id: battleId } })
   },
 
-  /**
-   * 배틀 생성 페이지로 이동
-   */
   toCreate() {
     return router.push({ name: 'BattleCreate' })
   },
 
-  /**
-   * 배틀 관련 페이지인지 확인
-   */
   isBattlePage() {
     const route = router.currentRoute.value
     return route.name?.startsWith('Battle')
   },
 
-  /**
-   * 배틀 URL 생성
-   */
   getBattleUrl(battleId) {
     const route = router.resolve({ name: 'BattleDetail', params: { id: battleId } })
     return window.location.origin + route.href
   },
 
-  /**
-   * 제품 등록 페이지로 이동
-   */
   toSubmitProduct(battleId) {
     if (!battleId) {
       console.warn('배틀 ID가 없습니다')
@@ -793,9 +686,6 @@ export const battleNavigation = {
     return router.push({ path: `/battle/${battleId}/submit` })
   },
 
-  /**
-   * 투표 페이지로 이동
-   */
   toVote(battleId) {
     if (!battleId) {
       console.warn('배틀 ID가 없습니다')
@@ -804,9 +694,6 @@ export const battleNavigation = {
     return router.push({ path: `/battle/${battleId}/vote` })
   },
 
-  /**
-   * 제품 상세 페이지로 이동
-   */
   toProductDetail(battleId, productId) {
     if (!battleId || !productId) {
       console.warn('배틀 ID 또는 제품 ID가 없습니다')
@@ -815,70 +702,100 @@ export const battleNavigation = {
     return router.push({ path: `/battle/${battleId}/products/${productId}` })
   },
 
-  /**
-   * 카테고리별 배틀 목록으로 이동
-   */
   toBattlesByCategory(categoryId) {
     return this.toList({ categoryId })
   },
 
-  /**
-   * 상태별 배틀 목록으로 이동
-   */
   toBattlesByStatus(status) {
     return this.toList({ status })
   }
 }
 
+// ==================== 마이페이지 네비게이션 헬퍼 ====================
+export const userNavigation = {
+  toMyPage() {
+    return router.push({ name: 'MyPage' })
+  },
+
+  toUserProfile(userId) {
+    if (!userId) {
+      console.warn('사용자 ID가 없습니다')
+      return this.toMyPage()
+    }
+    return router.push({ name: 'UserProfile', params: { userId } })
+  },
+
+  isMyPage() {
+    const route = router.currentRoute.value
+    return route.name === 'MyPage'
+  },
+
+  isUserProfilePage() {
+    const route = router.currentRoute.value
+    return route.name === 'UserProfile'
+  },
+
+  isProfilePage() {
+    const route = router.currentRoute.value
+    return route.name === 'MyPage' || route.name === 'UserProfile'
+  },
+
+  getProfileUrl(userId) {
+    const route = router.resolve({ name: 'UserProfile', params: { userId } })
+    return window.location.origin + route.href
+  },
+
+  toUserFeeds(userId) {
+    return feedNavigation.toUserFeedList(userId)
+  },
+
+  toFollowers(userId) {
+    return router.push({
+      name: 'UserProfile',
+      params: { userId },
+      query: { tab: 'followers' }
+    })
+  },
+
+  toFollowings(userId) {
+    return router.push({
+      name: 'UserProfile',
+      params: { userId },
+      query: { tab: 'followings' }
+    })
+  }
+}
+
 // ==================== 통합 네비게이션 헬퍼 ====================
 export const navigation = {
-  // 기존 채팅 네비게이션
   chat: chatNavigation,
-
-  // 상품 네비게이션
   product: productNavigation,
-
-  // 한입만 거래 네비게이션
   salePost: salePostNavigation,
-
-  // 피드 네비게이션
   feed: feedNavigation,
-
-  // 배틀 네비게이션
   battle: battleNavigation,
+  user: userNavigation,
 
-  /**
-   * 홈으로 이동
-   */
   toHome() {
     return router.push({ name: 'FeedHome' })
   },
 
-  /**
-   * 로그인 페이지로 이동
-   */
+  toMyPage() {
+    return userNavigation.toMyPage()
+  },
+
   toLogin(redirectPath) {
     const query = redirectPath ? { redirect: redirectPath } : {}
     return router.push({ name: 'Login', query })
   },
 
-  /**
-   * 현재 경로 정보
-   */
   getCurrentRoute() {
     return router.currentRoute.value
   },
 
-  /**
-   * 이전 페이지로 이동
-   */
   goBack() {
     return router.go(-1)
   },
 
-  /**
-   * 페이지 새로고침 (SPA 방식)
-   */
   refresh() {
     const current = router.currentRoute.value
     return router.replace({ path: '/redirect' + current.fullPath })
