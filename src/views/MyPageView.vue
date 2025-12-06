@@ -338,24 +338,9 @@ const saveProfile = async () => {
       throw new Error(response.message || '프로필 수정에 실패했습니다.')
     }
 
-    // 3. 성공 시 상태 갱신
-    if (response.data) {
-      Object.assign(profile, response.data)
-      previewImage.value = null
-      imageKey.value = Date.now()
-    } else {
-      profile.nickname = editForm.nickname
-      profile.description = editForm.description
-
-      if (profileImgInfo) {
-        profile.profilePicture = profileImgInfo
-        previewImage.value = uploadedImageUrl
-      }
-    }
-
-    selectedFile.value = null
-    isEditing.value = false
+    // 3. 성공 시 페이지 새로고침
     console.log('[PROFILE] 프로필 저장 완료')
+    window.location.reload()
 
   } catch (err) {
     console.error('[PROFILE] 프로필 저장 실패:', err)
