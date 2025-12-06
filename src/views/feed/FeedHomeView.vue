@@ -75,8 +75,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useCategory } from '@/services/CategoryService';
-import { useFeed } from '@/services/FeedService';
+import { useCategory } from '@/services/CategoryService.js';
+import { useFeed } from '@/services/FeedService.js';
 
 import AppSidebar from '@/components/feed/AppSidebar.vue';
 import AppHeader from '@/components/feed/AppHeader.vue';

@@ -61,7 +61,7 @@
 <script setup>
 import {ref, computed, onMounted} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
-import {feedService, feedUtils} from '@/services/FeedService'
+import {feedService, feedUtils} from '@/services/FeedService.js'
 
 import FeedDetailHeader from '@/components/feed/detail/FeedDetailHeader.vue'
 import FeedDetailImageGallery from '@/components/feed/detail/FeedDetailImageGallery.vue'

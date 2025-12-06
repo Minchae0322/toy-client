@@ -146,8 +146,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { battleService } from '@/services/BattleService'
-import { categoryService } from '@/services/CategoryService'
+import { battleService } from '@/services/BattleService.js'
+import { categoryService } from '@/services/CategoryService.js'
 
 // Components
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'

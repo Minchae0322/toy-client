@@ -429,9 +429,9 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
-import { useFeed } from '@/services/FeedService';
-import { useCategory } from '@/services/CategoryService';
-import { getUserId } from '@/utils/auth';
+import { useFeed } from '@/services/FeedService.js';
+import { useCategory } from '@/services/CategoryService.js';
+import { getUserId } from '@/utils/auth.js';
 
 const router = useRouter();
 const feedService = useFeed();

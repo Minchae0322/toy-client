@@ -23,15 +23,15 @@ import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
 import SalePostCreateView from '@/views/SalePostCreateView.vue'
 
 // Feed Views import
-import FeedHomeView from '@/views/FeedHomeView.vue'
-import FeedDetailView from '@/views/FeedDetailView.vue'
-import FeedCreateView from '@/views/FeedCreateView.vue'
+import FeedHomeView from '@/views/feed/FeedHomeView.vue'
+import FeedDetailView from '@/views/feed/FeedDetailView.vue'
+import FeedCreateView from '@/views/feed/FeedCreateView.vue'
 import UserFeedListView from '@/views/UserFeedListView.vue'
 
 // Battle Views import
-import BattleListView from '@/views/BattleListView.vue'
-import BattleCreateView from '@/views/BattleCreateView.vue'
-import BattleDetailView from '@/views/BattleDetailView.vue'
+import BattleListView from '@/views/battle/BattleListView.vue'
+import BattleCreateView from '@/views/battle/BattleCreateView.vue'
+import BattleDetailView from '@/views/battle/BattleDetailView.vue'
 
 // User Views import
 import MyPageView from '@/views/MyPageView.vue'

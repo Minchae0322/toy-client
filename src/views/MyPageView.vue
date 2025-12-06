@@ -1,9 +1,7 @@
 <template>
   <div class="app-container">
-    <!-- Sidebar -->
     <AppSidebar />
 
-    <!-- Main Content -->
     <main class="main-content">
       <div class="content-inner">
         <div class="content-header">
@@ -30,8 +28,9 @@
               <div class="avatar-wrapper">
                 <div class="avatar">
                   <img
-                      v-if="previewImage || profileImageUrl"
-                      :src="previewImage || profileImageUrl"
+                      v-if="displayImageUrl"
+                      :src="displayImageUrl"
+                      :key="imageKey"
                       alt="프로필"
                       @error="handleImageError"
                   />
@@ -56,12 +55,12 @@
                 </div>
 
                 <div class="follow-stats">
-                <span class="stat-item" @click="showFollowers">
-                  <strong>{{ formatFollowCount(profile.followerCount) }}</strong> 팔로워
-                </span>
+                  <span class="stat-item" @click="showFollowers">
+                    <strong>{{ formatFollowCount(profile.followerCount) }}</strong> 팔로워
+                  </span>
                   <span class="stat-item" @click="showFollowings">
-                  <strong>{{ formatFollowCount(profile.followingCount) }}</strong> 팔로잉
-                </span>
+                    <strong>{{ formatFollowCount(profile.followingCount) }}</strong> 팔로잉
+                  </span>
                 </div>
               </div>
             </div>
@@ -70,11 +69,7 @@
             <div v-if="isEditing" class="edit-form">
               <div class="form-group">
                 <label>닉네임</label>
-                <input
-                    v-model="editForm.nickname"
-                    type="text"
-                    maxlength="20"
-                />
+                <input v-model="editForm.nickname" type="text" maxlength="20" />
                 <span class="char-count">{{ editForm.nickname?.length || 0 }}/20</span>
               </div>
 
@@ -120,48 +115,32 @@
           <!-- Menu Section -->
           <div class="menu-section">
             <button class="menu-item" @click="goToMyFeeds">
-              <div class="menu-left">
-                <FileText :size="18" />
-                <span>내 피드</span>
-              </div>
+              <div class="menu-left"><FileText :size="18" /><span>내 피드</span></div>
               <ChevronRight :size="18" />
             </button>
-
             <button class="menu-item" @click="goToSavedPosts">
-              <div class="menu-left">
-                <Bookmark :size="18" />
-                <span>저장한 글</span>
-              </div>
+              <div class="menu-left"><Bookmark :size="18" /><span>저장한 글</span></div>
               <ChevronRight :size="18" />
             </button>
-
             <button class="menu-item" @click="goToNotificationSettings">
-              <div class="menu-left">
-                <Bell :size="18" />
-                <span>알림 설정</span>
-              </div>
+              <div class="menu-left"><Bell :size="18" /><span>알림 설정</span></div>
               <ChevronRight :size="18" />
             </button>
-
             <button class="menu-item" @click="goToAccountSettings">
-              <div class="menu-left">
-                <Settings :size="18" />
-                <span>계정 설정</span>
-              </div>
+              <div class="menu-left"><Settings :size="18" /><span>계정 설정</span></div>
               <ChevronRight :size="18" />
             </button>
           </div>
 
           <!-- Logout -->
           <button class="btn-logout" @click="handleLogout">
-            <LogOut :size="18" />
-            <span>로그아웃</span>
+            <LogOut :size="18" /><span>로그아웃</span>
           </button>
         </template>
       </div>
     </main>
 
-    <!-- Bottom Navigation - Mobile Only -->
+    <!-- Bottom Navigation -->
     <nav class="bottom-nav">
       <button class="bottom-nav-item" @click="$router.push('/feed')">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
@@ -207,10 +186,12 @@ import {
 } from 'lucide-vue-next'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import { useUser, userUtils } from '@/services/UserService.js'
+import { useFile } from '@/services/FileService.js'
 import { getUserInfo, logout as authLogout } from '@/utils/auth.js'
 
 const router = useRouter()
 const userService = useUser()
+const fileService = useFile()
 
 // ==================== State ====================
 const loading = ref(true)
@@ -219,6 +200,7 @@ const error = ref(null)
 const isEditing = ref(false)
 const previewImage = ref(null)
 const selectedFile = ref(null)
+const imageKey = ref(Date.now())
 
 const profile = reactive({
   userId: null,
@@ -241,7 +223,18 @@ const editForm = reactive({
 const currentUser = computed(() => getUserInfo())
 
 const profileImageUrl = computed(() => {
-  return userUtils.getProfileImageUrl(profile.profilePicture)
+  const url = userUtils.getProfileImageUrl(profile.profilePicture)
+  if (url && !url.includes('default-profile')) {
+    return `${url}?t=${imageKey.value}`
+  }
+  return url
+})
+
+const displayImageUrl = computed(() => {
+  if (previewImage.value) {
+    return previewImage.value
+  }
+  return profileImageUrl.value
 })
 
 // ==================== Methods ====================
@@ -261,12 +254,13 @@ const loadProfile = async () => {
 
     if (response.success && response.data) {
       Object.assign(profile, response.data)
-      console.log('✅ 프로필 로드 완료:', profile)
+      imageKey.value = Date.now()
+      console.log('[PROFILE] 프로필 로드 완료:', profile)
     } else {
       throw new Error(response.message || '프로필을 불러올 수 없습니다.')
     }
   } catch (err) {
-    console.error('❌ 프로필 로드 실패:', err)
+    console.error('[PROFILE] 프로필 로드 실패:', err)
     error.value = err.message || '프로필을 불러오는 중 오류가 발생했습니다.'
   } finally {
     loading.value = false
@@ -299,28 +293,72 @@ const saveProfile = async () => {
 
   try {
     let profileImgInfo = null
+    let uploadedImageUrl = null
+
+    // 1. 파일 업로드 처리 (실패 시 early return)
     if (selectedFile.value) {
-      // TODO: 파일 업로드 API 호출
+      console.log('[PROFILE] 프로필 이미지 업로드 시작...')
+
+      const uploadResult = await fileService.upload(selectedFile.value, {
+        fileCode: 'FEED'
+      })
+
+      // ✅ 업로드 실패 시 즉시 중단 - 프로필 업데이트 진행 안 함
+      if (!uploadResult.success || !uploadResult.data) {
+        const errorMsg = uploadResult.message || '이미지 업로드에 실패했습니다.'
+        console.error('[PROFILE] 이미지 업로드 실패:', errorMsg)
+        alert(errorMsg)
+        return
+      }
+
+      profileImgInfo = {
+        fileId: uploadResult.data.attchFileId,
+        storedPath: uploadResult.data.fileUrl,
+        originName: uploadResult.data.orgFileNm,
+        fileSize: uploadResult.data.fileSize,
+        contentType: uploadResult.data.contentType || uploadResult.data.fileExt,
+        fileExplain: '프로필 이미지'
+      }
+      uploadedImageUrl = uploadResult.data.fileUrl
+      console.log('[PROFILE] 프로필 이미지 업로드 완료:', profileImgInfo)
     }
 
+    // 2. 프로필 업데이트 (파일 업로드 성공 후에만 도달)
     const updateDto = {
       nickname: editForm.nickname,
       description: editForm.description,
-      profileImgInfo: profileImgInfo
+      profileImgInfo
     }
+
+    console.log('[PROFILE] 프로필 업데이트 요청:', updateDto)
 
     const response = await userService.updateUser(profile.userId, updateDto)
 
-    if (response.success) {
-      profile.nickname = editForm.nickname
-      profile.description = editForm.description
-      isEditing.value = false
-      console.log('✅ 프로필 저장 완료')
-    } else {
+    if (!response.success) {
       throw new Error(response.message || '프로필 수정에 실패했습니다.')
     }
+
+    // 3. 성공 시 상태 갱신
+    if (response.data) {
+      Object.assign(profile, response.data)
+      previewImage.value = null
+      imageKey.value = Date.now()
+    } else {
+      profile.nickname = editForm.nickname
+      profile.description = editForm.description
+
+      if (profileImgInfo) {
+        profile.profilePicture = profileImgInfo
+        previewImage.value = uploadedImageUrl
+      }
+    }
+
+    selectedFile.value = null
+    isEditing.value = false
+    console.log('[PROFILE] 프로필 저장 완료')
+
   } catch (err) {
-    console.error('❌ 프로필 저장 실패:', err)
+    console.error('[PROFILE] 프로필 저장 실패:', err)
     alert(err.message || '프로필 저장에 실패했습니다.')
   } finally {
     saving.value = false
@@ -344,32 +382,16 @@ const handleImageChange = (e) => {
 }
 
 const handleImageError = (e) => {
+  console.warn('[PROFILE] 이미지 로드 실패:', e.target.src)
   e.target.style.display = 'none'
 }
 
-const showFollowers = () => {
-  console.log('팔로워 목록')
-}
-
-const showFollowings = () => {
-  console.log('팔로잉 목록')
-}
-
-const goToMyFeeds = () => {
-  router.push({ name: 'UserFeedList', params: { userId: profile.userId } })
-}
-
-const goToSavedPosts = () => {
-  console.log('저장한 글')
-}
-
-const goToNotificationSettings = () => {
-  console.log('알림 설정')
-}
-
-const goToAccountSettings = () => {
-  console.log('계정 설정')
-}
+const showFollowers = () => console.log('팔로워 목록')
+const showFollowings = () => console.log('팔로잉 목록')
+const goToMyFeeds = () => router.push({ name: 'UserFeedList', params: { userId: profile.userId } })
+const goToSavedPosts = () => console.log('저장한 글')
+const goToNotificationSettings = () => console.log('알림 설정')
+const goToAccountSettings = () => console.log('계정 설정')
 
 const handleLogout = () => {
   if (confirm('로그아웃 하시겠습니까?')) {
@@ -414,16 +436,11 @@ onMounted(() => {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
   max-width: 100vw;
-}
-
-.app-container {
   padding: 0 1rem;
 }
 
 @media (min-width: 768px) {
-  .app-container {
-    padding: 0 2rem;
-  }
+  .app-container { padding: 0 2rem; }
 }
 
 @media (min-width: 1280px) {
@@ -436,9 +453,7 @@ onMounted(() => {
 }
 
 @media (min-width: 1920px) {
-  .app-container {
-    padding: 0 4rem;
-  }
+  .app-container { padding: 0 4rem; }
 }
 
 .main-content {
@@ -449,9 +464,7 @@ onMounted(() => {
 }
 
 @media (min-width: 768px) {
-  .main-content {
-    padding-bottom: 2.5rem;
-  }
+  .main-content { padding-bottom: 2.5rem; }
 }
 
 .content-inner {
@@ -461,14 +474,10 @@ onMounted(() => {
 }
 
 @media (min-width: 768px) {
-  .content-inner {
-    padding: 0;
-  }
+  .content-inner { padding: 0; }
 }
 
-.content-header {
-  padding: 24px 0 20px;
-}
+.content-header { padding: 24px 0 20px; }
 
 .page-title {
   font-size: 20px;
@@ -494,9 +503,7 @@ onMounted(() => {
   margin: 0 auto 16px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .btn-retry {
   margin-top: 16px;
@@ -571,9 +578,7 @@ onMounted(() => {
   color: white;
 }
 
-.avatar-edit input {
-  display: none;
-}
+.avatar-edit input { display: none; }
 
 .profile-info {
   flex: 1;
@@ -612,9 +617,7 @@ onMounted(() => {
   transition: all 0.15s;
 }
 
-.btn-edit:hover {
-  background: #faf5ff;
-}
+.btn-edit:hover { background: #faf5ff; }
 
 .follow-stats {
   display: flex;
@@ -628,9 +631,7 @@ onMounted(() => {
   transition: color 0.15s;
 }
 
-.stat-item:hover {
-  color: var(--accent);
-}
+.stat-item:hover { color: var(--accent); }
 
 .follow-stats strong {
   color: var(--primary);
@@ -638,13 +639,9 @@ onMounted(() => {
 }
 
 /* Edit Form */
-.edit-form {
-  padding-top: 20px;
-}
+.edit-form { padding-top: 20px; }
 
-.form-group {
-  margin-bottom: 16px;
-}
+.form-group { margin-bottom: 16px; }
 
 .form-group label {
   display: block;
@@ -710,9 +707,7 @@ onMounted(() => {
   color: var(--secondary);
 }
 
-.btn-cancel:hover:not(:disabled) {
-  background: #e5e7eb;
-}
+.btn-cancel:hover:not(:disabled) { background: #e5e7eb; }
 
 .btn-save {
   background: var(--accent);
@@ -720,9 +715,7 @@ onMounted(() => {
   color: white;
 }
 
-.btn-save:hover:not(:disabled) {
-  opacity: 0.9;
-}
+.btn-save:hover:not(:disabled) { opacity: 0.9; }
 
 .btn-cancel:disabled,
 .btn-save:disabled {
@@ -749,9 +742,7 @@ onMounted(() => {
   line-height: 1.6;
 }
 
-.bio-section p.empty {
-  color: var(--secondary);
-}
+.bio-section p.empty { color: var(--secondary); }
 
 /* Meta Section */
 .meta-section {
@@ -799,13 +790,9 @@ onMounted(() => {
   font-family: inherit;
 }
 
-.menu-item:last-child {
-  border-bottom: none;
-}
+.menu-item:last-child { border-bottom: none; }
 
-.menu-item:hover {
-  background: var(--hover);
-}
+.menu-item:hover { background: var(--hover); }
 
 .menu-left {
   display: flex;
@@ -813,9 +800,7 @@ onMounted(() => {
   gap: 10px;
 }
 
-.menu-left svg {
-  color: var(--secondary);
-}
+.menu-left svg { color: var(--secondary); }
 
 .menu-item > svg {
   color: var(--secondary);
@@ -847,9 +832,7 @@ onMounted(() => {
   color: #dc2626;
 }
 
-.btn-logout svg {
-  color: currentColor;
-}
+.btn-logout svg { color: currentColor; }
 
 /* Bottom Navigation */
 .bottom-nav {
@@ -869,9 +852,7 @@ onMounted(() => {
 }
 
 @media (min-width: 1024px) {
-  .bottom-nav {
-    display: none;
-  }
+  .bottom-nav { display: none; }
 }
 
 .bottom-nav-item {
@@ -890,9 +871,7 @@ onMounted(() => {
   min-width: 3.5rem;
 }
 
-.bottom-nav-item.active {
-  color: var(--primary);
-}
+.bottom-nav-item.active { color: var(--primary); }
 
 .bottom-nav-item .icon {
   width: 1.5rem;
@@ -941,9 +920,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.bottom-nav-fab:active {
-  transform: scale(0.95);
-}
+.bottom-nav-fab:active { transform: scale(0.95); }
 
 .bottom-nav-fab .icon {
   width: 1.75rem;

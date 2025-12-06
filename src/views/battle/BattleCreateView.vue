@@ -75,9 +75,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useBattle } from '@/services/BattleService';
-import { useCategory } from '@/services/CategoryService';
-import { useFile } from '@/services/FileService'; // ⭐ 수정
+import { useBattle } from '@/services/BattleService.js';
+import { useCategory } from '@/services/CategoryService.js';
+import { useFile } from '@/services/FileService.js'; // ⭐ 수정
 import BattleCreateHeader from '@/components/battle/create/BattleCreateHeader.vue';
 import BattleCreatePreview from '@/components/battle/create/BattleCreatePreview.vue';
 import Step1BasicInfo from '@/components/battle/create/Step1BasicInfo.vue';
