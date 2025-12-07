@@ -36,51 +36,31 @@
         <span></span>
         <span></span>
       </div>
-      <span class="typing-text">
-        {{ getTypingText() }}
-      </span>
+      <span class="typing-text">{{ getTypingText() }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import {ref} from 'vue'
+import { ref } from 'vue'
 import ChatMessage from '@/components/chat/ChatMessage.vue'
 
 const props = defineProps({
-  messages: {
-    type: Array,
-    default: () => []
-  },
-  loading: {
-    type: Boolean,
-    default: false
-  },
-  loadingMore: {
-    type: Boolean,
-    default: false
-  },
-  typingUsers: {
-    type: Array,
-    default: () => []
-  },
-  currentUserId: {
-    type: [String, Number],
-    required: true
-  }
+  messages: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false },
+  loadingMore: { type: Boolean, default: false },
+  typingUsers: { type: Array, default: () => [] },
+  currentUserId: { type: [String, Number], required: true }
 })
 
 const emit = defineEmits(['scroll', 'message-click', 'retry', 'delete'])
-
 const messagesContainer = ref(null)
 
-// 스크롤 처리
 const handleScroll = () => {
   if (!messagesContainer.value) return
   emit('scroll')
 }
 
-// 스크롤 유틸리티 메서드
 const scrollToBottom = () => {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
@@ -89,8 +69,7 @@ const scrollToBottom = () => {
 
 const isAtBottom = () => {
   if (!messagesContainer.value) return false
-
-  const {scrollTop, scrollHeight, clientHeight} = messagesContainer.value
+  const { scrollTop, scrollHeight, clientHeight } = messagesContainer.value
   return scrollTop + clientHeight >= scrollHeight - 50
 }
 
@@ -99,9 +78,7 @@ const isAtTop = () => {
   return messagesContainer.value.scrollTop === 0
 }
 
-const getScrollHeight = () => {
-  return messagesContainer.value?.scrollHeight || 0
-}
+const getScrollHeight = () => messagesContainer.value?.scrollHeight || 0
 
 const restoreScrollPosition = (previousScrollHeight) => {
   if (messagesContainer.value) {
@@ -110,50 +87,32 @@ const restoreScrollPosition = (previousScrollHeight) => {
   }
 }
 
-// 발신자 표시 여부 결정
 const shouldShowSender = (message) => {
-  const messageIndex = props.messages.findIndex(m => m.messageId === message.messageId)
-  if (messageIndex === 0) return true
-
-  const prevMessage = props.messages[messageIndex - 1]
-  if (!prevMessage) return true
-
-  const timeDiff = new Date(message.createdAt) - new Date(prevMessage.createdAt)
-  return prevMessage.senderId !== message.senderId || timeDiff > 5 * 60 * 1000
+  const idx = props.messages.findIndex(m => m.messageId === message.messageId)
+  if (idx === 0) return true
+  const prev = props.messages[idx - 1]
+  if (!prev) return true
+  const timeDiff = new Date(message.createdAt) - new Date(prev.createdAt)
+  return prev.senderId !== message.senderId || timeDiff > 5 * 60 * 1000
 }
 
-// 시간 표시 여부 결정
 const shouldShowTime = (message) => {
-  const messageIndex = props.messages.findIndex(m => m.messageId === message.messageId)
-  if (messageIndex === props.messages.length - 1) return true
-
-  const nextMessage = props.messages[messageIndex + 1]
-  if (!nextMessage) return true
-
-  const timeDiff = new Date(nextMessage.createdAt) - new Date(message.createdAt)
+  const idx = props.messages.findIndex(m => m.messageId === message.messageId)
+  if (idx === props.messages.length - 1) return true
+  const next = props.messages[idx + 1]
+  if (!next) return true
+  const timeDiff = new Date(next.createdAt) - new Date(message.createdAt)
   return timeDiff > 5 * 60 * 1000
 }
 
-// 타이핑 텍스트 생성
 const getTypingText = () => {
   const count = props.typingUsers.length
-  if (count === 1) {
-    return `${props.typingUsers[0].userName}님이 입력 중...`
-  } else if (count === 2) {
-    return `${props.typingUsers[0].userName}님, ${props.typingUsers[1].userName}님이 입력 중...`
-  } else {
-    return `${props.typingUsers[0].userName}님 외 ${count - 1}명이 입력 중...`
-  }
+  if (count === 1) return `${props.typingUsers[0].userName}님이 입력 중...`
+  if (count === 2) return `${props.typingUsers[0].userName}님, ${props.typingUsers[1].userName}님이 입력 중...`
+  return `${props.typingUsers[0].userName}님 외 ${count - 1}명이 입력 중...`
 }
 
-// 외부에서 호출할 수 있도록 expose
-defineExpose({
-  scrollToBottom,
-  isAtBottom,
-  isAtTop,
-  getScrollHeight,
-  restoreScrollPosition
-})
+defineExpose({ scrollToBottom, isAtBottom, isAtTop, getScrollHeight, restoreScrollPosition })
 </script>
 
 <style scoped>
@@ -161,7 +120,7 @@ defineExpose({
   flex: 1;
   overflow-y: auto;
   padding: 20px;
-  background: #f8fafc;
+  background: #FAFAFA;
 }
 
 .loading-more {
@@ -169,8 +128,8 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: 16px;
-  color: #64748b;
-  font-size: 14px;
+  color: #666;
+  font-size: 13px;
   gap: 8px;
 }
 
@@ -180,26 +139,26 @@ defineExpose({
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: #64748b;
+  color: #666;
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e2e8f0;
-  border-top: 3px solid #667eea;
+  width: 36px;
+  height: 36px;
+  border: 3px solid #F3E8FF;
+  border-top: 3px solid #9333EA;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
   margin-bottom: 16px;
 }
 
 .spinner-small {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #e2e8f0;
-  border-top: 2px solid #667eea;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #F3E8FF;
+  border-top: 2px solid #9333EA;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -210,18 +169,18 @@ defineExpose({
 .messages-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .typing-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 12px 16px;
-  margin-top: 16px;
-  background: white;
-  border-radius: 18px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin-top: 12px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   width: fit-content;
 }
 
@@ -231,9 +190,9 @@ defineExpose({
 }
 
 .typing-animation span {
-  width: 6px;
-  height: 6px;
-  background: #94a3b8;
+  width: 7px;
+  height: 7px;
+  background: #9333EA;
   border-radius: 50%;
   animation: typing 1.4s ease-in-out infinite both;
 }
@@ -242,103 +201,27 @@ defineExpose({
 .typing-animation span:nth-child(2) { animation-delay: -0.16s; }
 
 @keyframes typing {
-  0%, 80%, 100% {
-    transform: scale(0);
-    opacity: 0.5;
-  }
-  40% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
 }
 
 .typing-text {
-  font-size: 14px;
-  color: #64748b;
+  font-size: 13px;
+  color: #666;
   font-style: italic;
 }
 
-.message-enter-active, .message-leave-active {
-  transition: all 0.3s ease;
-}
+.message-enter-active, .message-leave-active { transition: all 0.3s ease; }
+.message-enter-from { opacity: 0; transform: translateY(20px); }
+.message-leave-to { opacity: 0; transform: translateY(-20px); }
 
-.message-enter-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.message-leave-to {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-
-/* 반응형 디자인 */
 @media (max-width: 768px) {
-  .messages-container {
-    padding: 16px;
-  }
+  .messages-container { padding: 16px; }
 }
 
 /* 스크롤바 스타일 */
-.messages-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* 다크 모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .messages-container {
-    background: #111827;
-  }
-
-  .typing-indicator {
-    background: #374151;
-  }
-}
-
-/* 고해상도 디스플레이 지원 */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .spinner,
-  .spinner-small {
-    border-width: 1px;
-  }
-}
-
-/* 프린트 스타일 */
-@media print {
-  .messages-container {
-    overflow: visible !important;
-    height: auto !important;
-    padding: 0 !important;
-  }
-
-  .typing-indicator {
-    display: none !important;
-  }
-}
-
-/* 애니메이션 감소 설정 지원 */
-@media (prefers-reduced-motion: reduce) {
-  .spinner,
-  .spinner-small,
-  .typing-animation span,
-  .message-enter-active,
-  .message-leave-active {
-    animation: none !important;
-    transition: none !important;
-  }
-}
+.messages-container::-webkit-scrollbar { width: 6px; }
+.messages-container::-webkit-scrollbar-track { background: transparent; }
+.messages-container::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 3px; }
+.messages-container::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
 </style>

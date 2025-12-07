@@ -1,6 +1,7 @@
 // composables/useChat.js
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { webSocketService } from '@/services/websocketService'
+import { chatService } from '@/services/ChatService'
 import { useRouter } from 'vue-router'
 
 export function useChat(roomId = null) {
@@ -16,7 +17,7 @@ export function useChat(roomId = null) {
   const error = ref(null)
 
   // WebSocket 연결 상태
-  const connectionState = websocketService.getConnectionState()
+  const connectionState = webSocketService.getConnectionState()
 
   // 메시지 통계
   const messageStats = computed(() => ({
@@ -53,8 +54,8 @@ export function useChat(roomId = null) {
       isLoading.value = true
       error.value = null
 
-      if (!websocketService.isConnected()) {
-        await websocketService.connect()
+      if (!webSocketService.isConnected()) {
+        await webSocketService.connect()
       }
 
       // 메시지 핸들러 등록
@@ -76,16 +77,16 @@ export function useChat(roomId = null) {
    */
   const setupMessageHandlers = () => {
     // 채팅 메시지 핸들러
-    websocketService.onMessage('chat-message', handleChatMessage)
+    webSocketService.onMessage('chat-message', handleChatMessage)
 
     // 시스템 알림 핸들러
-    websocketService.onMessage('system-notification', handleSystemNotification)
+    webSocketService.onMessage('system-notification', handleSystemNotification)
 
     // 접속 상태 업데이트 핸들러
-    websocketService.onMessage('presence-update', handlePresenceUpdate)
+    webSocketService.onMessage('presence-update', handlePresenceUpdate)
 
     // 개인 메시지 핸들러
-    websocketService.onMessage('private-message', handlePrivateMessage)
+    webSocketService.onMessage('private-message', handlePrivateMessage)
   }
 
   /**
@@ -199,12 +200,12 @@ export function useChat(roomId = null) {
       }
 
       // WebSocket 연결 확인
-      if (!websocketService.isConnected()) {
-        await websocketService.connect()
+      if (!webSocketService.isConnected()) {
+        await webSocketService.connect()
       }
 
       // 채팅방 입장
-      await websocketService.joinChatRoom(roomId)
+      await webSocketService.joinChatRoom(roomId)
       currentRoom.value = roomId
 
       // 메시지 초기화
@@ -231,7 +232,7 @@ export function useChat(roomId = null) {
     if (!currentRoom.value) return
 
     try {
-      await websocketService.leaveChatRoom(currentRoom.value)
+      await webSocketService.leaveChatRoom(currentRoom.value)
       console.log(`🚪 채팅방 퇴장: ${currentRoom.value}`)
 
       currentRoom.value = null
@@ -252,7 +253,7 @@ export function useChat(roomId = null) {
     }
 
     try {
-      await websocketService.sendChatMessage(currentRoom.value, content.trim(), type)
+      await webSocketService.sendChatMessage(currentRoom.value, content.trim(), type)
 
       // 입력창 비우기
       messageInput.value = ''
@@ -299,7 +300,7 @@ export function useChat(roomId = null) {
     if (!currentRoom.value) return
 
     try {
-      websocketService.sendMessage('/app/chat/typing', {
+      webSocketService.sendMessage('/app/chat/typing', {
         roomId: currentRoom.value,
         isTyping: isTyping,
         timestamp: Date.now()
@@ -310,30 +311,33 @@ export function useChat(roomId = null) {
   }
 
   /**
-   * 채팅방 메시지 로드 (REST API)
+   * ✅ 채팅방 메시지 로드 (chatService 사용)
+   * 백엔드: GET /api/chats/{roomId}/messages
    */
-  const loadRoomMessages = async (roomId, page = 0, size = 50) => {
+  const loadRoomMessages = async (roomId, lastMessageId = null, size = 50) => {
     try {
-      const response = await fetch(`/api/chat/rooms/${roomId}/messages?page=${page}&size=${size}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
+      const response = await chatService.getChatMessages(roomId, {
+        lastMessageId,
+        size
       })
 
-      if (!response.ok) {
-        throw new Error('메시지 로드 실패')
-      }
-
-      const data = await response.json()
+      // 응답 데이터 변환
+      const newMessages = (response.data || []).map(msg =>
+          chatService.transformMessageResponse(msg)
+      )
 
       // 기존 메시지와 합치기
-      if (page === 0) {
-        messages.value = data.messages || []
+      if (!lastMessageId) {
+        // 첫 로드: 메시지 교체
+        messages.value = newMessages
       } else {
-        messages.value = [...(data.messages || []), ...messages.value]
+        // 추가 로드: 앞에 추가 (이전 메시지)
+        messages.value = [...newMessages, ...messages.value]
       }
 
-      return data
+      console.log(`📨 메시지 로드 완료: ${newMessages.length}개`)
+
+      return response
 
     } catch (err) {
       console.error('❌ 메시지 로드 실패:', err)
@@ -367,11 +371,20 @@ export function useChat(roomId = null) {
   }
 
   /**
-   * 파일 업로드 (Mock)
+   * 파일 업로드
    */
   const uploadFile = async (file) => {
-    // 실제 구현에서는 파일 업로드 API 사용
-    return Promise.resolve(`/uploads/${file.name}`)
+    if (!currentRoom.value || !file) {
+      throw new Error('채팅방 ID와 파일이 필요합니다')
+    }
+
+    try {
+      const response = await chatService.uploadFile(currentRoom.value, file)
+      return response.data?.fileUrl || `/uploads/${file.name}`
+    } catch (err) {
+      console.error('❌ 파일 업로드 실패:', err)
+      throw err
+    }
   }
 
   /**
@@ -387,10 +400,10 @@ export function useChat(roomId = null) {
   const cleanup = async () => {
     try {
       // 메시지 핸들러 제거
-      websocketService.offMessage('chat-message', handleChatMessage)
-      websocketService.offMessage('system-notification', handleSystemNotification)
-      websocketService.offMessage('presence-update', handlePresenceUpdate)
-      websocketService.offMessage('private-message', handlePrivateMessage)
+      webSocketService.offMessage('chat-message', handleChatMessage)
+      webSocketService.offMessage('system-notification', handleSystemNotification)
+      webSocketService.offMessage('presence-update', handlePresenceUpdate)
+      webSocketService.offMessage('private-message', handlePrivateMessage)
 
       // 채팅방 퇴장
       await leaveRoom()

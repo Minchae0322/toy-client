@@ -154,7 +154,7 @@ class ChatService extends BaseApiService {
     console.log(`📨 [CHAT] 메시지 목록 조회: roomId=${roomId}`, params)
 
     // ✅ 백엔드 API 경로에 맞게 수정: /v1/chat/rooms/{roomId}/messages
-    return await this.get(`/chat/${roomId}/messages`, params)
+    return await this.get(`/chats/${roomId}/messages`, params)
   }
 
   /**
