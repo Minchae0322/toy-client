@@ -9,7 +9,8 @@ export const apiClient = axios.create({
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true  // 🔥 HttpOnly 쿠키 자동 전송
 })
 
 /**

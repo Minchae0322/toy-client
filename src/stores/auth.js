@@ -36,31 +36,29 @@ export const useAuthStore = defineStore('auth', {
         authProvider: (state) => state.user?.provider || 'local',
 
         // 토큰 관련
+        // RefreshToken은 HttpOnly 쿠키로 관리되므로 JS에서 체크 불가
         hasValidToken: () => {
             const accessToken = authUtils.getAccessToken()
-            const refreshToken = authUtils.getRefreshToken()
 
             if (!accessToken) return false
 
             // AccessToken이 유효하면 OK
-            if (!authUtils.isTokenExpired(accessToken)) return true
-
-            // AccessToken 만료시 RefreshToken 확인
-            return refreshToken && !authUtils.isTokenExpired(refreshToken)
+            // AccessToken 만료 시에는 API 요청 시 자동으로 갱신 시도
+            return !authUtils.isTokenExpired(accessToken)
         },
 
         // 토큰 상태 정보
+        // RefreshToken은 HttpOnly 쿠키로 관리됨
         tokenInfo: () => {
             const accessToken = authUtils.getAccessToken()
-            const refreshToken = authUtils.getRefreshToken()
 
             return {
                 hasAccessToken: !!accessToken,
-                hasRefreshToken: !!refreshToken,
+                hasRefreshToken: 'HttpOnly 쿠키로 관리',
                 accessTokenExpired: accessToken ? authUtils.isTokenExpired(accessToken) : true,
-                refreshTokenExpired: refreshToken ? authUtils.isTokenExpired(refreshToken) : true,
+                refreshTokenExpired: '서버에서 검증',
                 accessTokenExpiry: accessToken ? authUtils.getTokenExpiryTime(accessToken) : null,
-                refreshTokenExpiry: refreshToken ? authUtils.getTokenExpiryTime(refreshToken) : null
+                refreshTokenExpiry: 'HttpOnly 쿠키로 관리'
             }
         }
     },
@@ -75,9 +73,8 @@ export const useAuthStore = defineStore('auth', {
             try {
                 this.loading = true
 
-                // 기본 토큰 확인
+                // AccessToken 확인
                 const accessToken = authUtils.getAccessToken()
-                const refreshToken = authUtils.getRefreshToken()
 
                 if (!accessToken) {
                     console.log('❌ [AuthStore] AccessToken 없음')
@@ -85,15 +82,10 @@ export const useAuthStore = defineStore('auth', {
                     return false
                 }
 
-                // AccessToken 만료 체크 및 갱신
+                // AccessToken 만료 시 갱신 시도
+                // RefreshToken은 HttpOnly 쿠키로 관리되므로 JS에서 체크 불가
                 if (authUtils.isTokenExpired(accessToken)) {
-                    if (!refreshToken || authUtils.isTokenExpired(refreshToken)) {
-                        console.log('🚨 [AuthStore] 모든 토큰 만료')
-                        this.clearAuthState()
-                        return false
-                    }
-
-                    // RefreshToken으로 AccessToken 갱신
+                    console.log('⏰ [AuthStore] AccessToken 만료 - 갱신 시도')
                     try {
                         await this.refreshAccessToken()
                     } catch (error) {
