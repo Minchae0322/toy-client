@@ -116,7 +116,7 @@ const handleProtectedRoute = async (routeName) => {
         router.push({ name: 'FeedCreate' });
         break;
       case 'messages':
-        console.log('메시지 페이지로 이동');
+        router.push({ name: 'Chat' });
         break;
       case 'collections':
         console.log('컬렉션 페이지로 이동');

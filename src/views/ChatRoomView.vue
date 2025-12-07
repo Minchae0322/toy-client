@@ -1,1131 +1,857 @@
 <template>
   <div class="chat-container">
-    <ChatRoomHeader
-        @toggle-search="toggleSearch"
-        @create-room="showCreateModal = true"
-    />
-
-    <SearchBar
-        v-if="showSearch"
-        v-model:search-query="searchQuery"
-        @search="handleSearch"
-    />
-
-    <ChatRoomTabs
-        :active-tab="activeTab"
-        @update-tab="updateTab"
-        :tabs="chatRoomTabs"
-        :unread-count="unreadCount"
-    />
-
-    <!-- 디버깅용 정보 표시 (개발환경에서만) - 간소화됨 -->
-    <div v-if="isDev" class="debug-info">
-      <p>총 채팅방: {{ allChatRooms.length }}개</p>
-      <p>현재 탭: {{ activeTab }}</p>
-      <p>API 연동: {{ apiConnected ? '✅' : '❌' }}</p>
-      <p>마지막 API 호출: {{ lastApiCall || '없음' }}</p>
-
-      <!-- 간소화된 디버깅 버튼들 -->
-      <div class="debug-controls" style="margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap;">
-        <button @click="debugAllAuthInfo" class="debug-button">인증 정보</button>
-        <button @click="forceTokenRefresh" class="debug-button">토큰 갱신</button>
-        <button @click="loadChatRooms" class="debug-button">채팅방 새로고침</button>
-      </div>
-    </div>
-
-    <div class="chat-list">
-      <!-- 로딩 상태 -->
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>채팅방 목록을 불러오는 중...</p>
-        <p v-if="authStore.refreshing" class="refresh-status">🔄 토큰 갱신 중...</p>
-      </div>
-
-      <!-- 새로고침 버튼 (오류 시) -->
-      <div v-else-if="error" class="error-state">
-        <div class="error-icon">⚠️</div>
-        <div class="error-title">채팅방을 불러올 수 없습니다</div>
-        <div class="error-message">{{ error }}</div>
-        <button @click="loadChatRooms" class="retry-button">
-          다시 시도
+    <!-- 헤더 -->
+    <header class="header">
+      <h1 class="header-title">메시지</h1>
+      <div class="header-actions">
+        <button @click="toggleSearch" class="icon-btn" :class="{ active: showSearch }">
+          <Search :size="20" />
         </button>
-        <button v-if="error.includes('인증')" @click="forceTokenRefresh" class="refresh-button">
-          토큰 갱신 시도
+        <button @click="showCreateModal = true" class="icon-btn primary desktop-only">
+          <Plus :size="20" />
         </button>
       </div>
+    </header>
 
-      <!-- 채팅방 목록 -->
-      <TransitionGroup v-else name="fade" tag="div">
-        <ChatRoomCard
-            v-for="room in filteredRooms"
-            :key="room.id"
-            :room="room"
-            @select-room="handleRoomSelect"
-            @archive-room="(roomId) => updateChatRoomStatus(roomId, 'ARCHIVED')"
-            @restore-room="(roomId) => updateChatRoomStatus(roomId, 'ACTIVE')"
-            class="room-card"
-            :data-room-type="room.type"
-            :data-room-status="room.status"
-            :data-has-unread="room.unreadCount > 0"
-        >
-          <!-- 채팅방 타입 아이콘 표시 -->
-          <template #type-icon>
-            <span class="room-type-icon">{{ getRoomTypeIcon(room.type) }}</span>
-          </template>
+    <!-- 검색바 -->
+    <Transition name="slide">
+      <div v-if="showSearch" class="search-wrapper">
+        <div class="search-box">
+          <Search :size="18" class="search-icon" />
+          <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="채팅방 검색..."
+              class="search-input"
+              @input="handleSearch"
+          />
+          <button v-if="searchQuery" @click="searchQuery = ''" class="clear-btn">
+            <X :size="16" />
+          </button>
+        </div>
+      </div>
+    </Transition>
 
-          <!-- 상태 뱃지 표시 -->
-          <template #status-badge>
-            <span
-                v-if="room.status !== 'ACTIVE'"
-                class="status-badge"
-                :class="getStatusBadgeColor(room.status)"
-            >
-              {{ getStatusText(room.status) }}
-            </span>
-          </template>
-        </ChatRoomCard>
-      </TransitionGroup>
+    <!-- 탭 -->
+    <nav class="tabs">
+      <button
+          v-for="tab in visibleTabs"
+          :key="tab.key"
+          @click="activeTab = tab.key"
+          class="tab"
+          :class="{ active: activeTab === tab.key }"
+      >
+        <span class="tab-label">{{ tab.label }}</span>
+        <span v-if="tab.count > 0" class="tab-badge">{{ tab.count }}</span>
+      </button>
+    </nav>
+
+    <!-- 채팅방 목록 -->
+    <main class="chat-list">
+      <!-- 로딩 -->
+      <div v-if="loading" class="state-container">
+        <div class="loader"></div>
+        <p class="state-text">불러오는 중...</p>
+      </div>
+
+      <!-- 에러 -->
+      <div v-else-if="error" class="state-container">
+        <div class="error-circle">
+          <AlertCircle :size="24" />
+        </div>
+        <p class="state-title">연결할 수 없습니다</p>
+        <p class="state-text">{{ error }}</p>
+        <button @click="loadChatRooms" class="btn-primary">다시 시도</button>
+      </div>
+
+      <!-- 채팅방 리스트 -->
+      <div v-else-if="filteredRooms.length > 0" class="room-list">
+        <TransitionGroup name="list">
+          <div
+              v-for="room in filteredRooms"
+              :key="room.id"
+              @click="handleRoomSelect(room.id)"
+              class="room-item"
+              :class="{ unread: room.unreadCount > 0 }"
+          >
+            <div class="room-avatar" :class="getRoomTypeClass(room.type)">
+              <span>{{ getAvatarText(room) }}</span>
+            </div>
+            <div class="room-info">
+              <div class="room-header">
+                <h3 class="room-name">{{ room.name }}</h3>
+                <span class="room-time">{{ formatTime(room.lastMessageAt) }}</span>
+              </div>
+              <div class="room-footer">
+                <p class="room-message">{{ room.lastMessage || '메시지가 없습니다' }}</p>
+                <span v-if="room.unreadCount > 0" class="unread-badge">
+                  {{ room.unreadCount > 99 ? '99+' : room.unreadCount }}
+                </span>
+              </div>
+            </div>
+            <button @click.stop="toggleRoomMenu(room.id)" class="room-menu-btn">
+              <MoreVertical :size="16" />
+            </button>
+          </div>
+        </TransitionGroup>
+      </div>
 
       <!-- 빈 상태 -->
-      <div v-if="!loading && !error && filteredRooms.length === 0" class="empty-state">
-        <div class="empty-icon">{{ getEmptyStateIcon() }}</div>
-        <div class="empty-title">
-          {{ getEmptyStateTitle() }}
-        </div>
-        <div class="empty-message">
-          {{ getEmptyStateMessage() }}
-        </div>
-        <button
-            v-if="activeTab === 'all' && !searchQuery"
-            @click="showCreateModal = true"
-            class="create-room-button"
-        >
-          새 채팅방 만들기
+      <div v-else class="state-container">
+        <div class="empty-icon">{{ getEmptyIcon() }}</div>
+        <p class="state-title">{{ getEmptyTitle() }}</p>
+        <p class="state-text">{{ getEmptyMessage() }}</p>
+        <button v-if="activeTab === 'all' && !searchQuery" @click="showCreateModal = true" class="btn-primary">
+          새 채팅 시작
         </button>
       </div>
-    </div>
+    </main>
 
-    <!-- 하단 플로팅 버튼 -->
+    <!-- 플로팅 버튼 (데스크톱) -->
     <button
-        v-if="!loading && !error && filteredRooms.length > 0"
+        v-if="!loading && filteredRooms.length > 0"
         @click="showCreateModal = true"
-        class="floating-create-button"
-        :title="'새 채팅방 만들기'"
+        class="fab desktop-only"
     >
       <Plus :size="24" />
     </button>
 
-    <!-- 채팅방 생성 모달 -->
+    <!-- 생성 모달 -->
     <Teleport to="body">
-      <CreateChatRoomModal
-          v-if="showCreateModal"
-          @close="showCreateModal = false"
-          @created="handleRoomCreated"
-      />
+      <Transition name="modal">
+        <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
+          <div class="modal">
+            <div class="modal-header">
+              <h2>새 채팅방</h2>
+              <button @click="showCreateModal = false" class="close-btn">
+                <X :size="20" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>채팅방 이름</label>
+                <input v-model="newRoomName" type="text" placeholder="이름을 입력하세요" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label>유형</label>
+                <div class="type-selector">
+                  <button
+                      v-for="type in roomTypes"
+                      :key="type.value"
+                      @click="newRoomType = type.value"
+                      class="type-option"
+                      :class="{ selected: newRoomType === type.value }"
+                  >
+                    <span class="type-icon">{{ type.icon }}</span>
+                    <span>{{ type.label }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button @click="showCreateModal = false" class="btn-secondary">취소</button>
+              <button @click="createRoom" class="btn-primary" :disabled="!newRoomName.trim()">생성</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </Teleport>
 
-    <!-- 성공 토스트 -->
+    <!-- 토스트 -->
     <Transition name="toast">
-      <div v-if="showSuccessToast" class="success-toast" @click="showSuccessToast = false">
-        <div class="toast-content">
-          <Check :size="20" class="toast-icon" />
-          <span>{{ successMessage }}</span>
-        </div>
+      <div v-if="toast.show" class="toast" :class="toast.type">
+        <Check v-if="toast.type === 'success'" :size="18" />
+        <AlertCircle v-else :size="18" />
+        <span>{{ toast.message }}</span>
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { Plus, Check } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth.js'
-import ChatRoomHeader from '@/components/chat/ChatRoomHeader.vue'
-import SearchBar from '@/components/chat/SearchBar.vue'
-import ChatRoomTabs from '@/components/chat/ChatRoomTabs.vue'
-import ChatRoomCard from '@/components/chat/ChatRoomCard.vue'
-import CreateChatRoomModal from '@/components/chat/CreateChatRoomModal.vue'
+import { ref, computed, onMounted } from 'vue'
+import { Search, Plus, X, MoreVertical, AlertCircle, Check } from 'lucide-vue-next'
 import { chatService } from '@/services/ChatService.js'
-import * as authUtils from '@/utils/auth.js'
 
-// Pinia 스토어 사용
-const authStore = useAuthStore()
+const emit = defineEmits(['room-selected'])
 
-// 이벤트 정의
-const emit = defineEmits(['room-selected', 'message-received'])
-
-// Props
-const props = defineProps({
-  connectionState: {
-    type: Object,
-    default: () => ({
-      connected: false,
-      connecting: false,
-      status: 'disconnected',
-      error: null
-    })
-  }
-})
-
-// 백엔드 enum 상수 정의
-const CHAT_ROOM_TYPES = {
-  NORMAL: 'NORMAL',
-  CHANNEL: 'CHANNEL',
-  CUSTOMER_SUPPORT: 'CUSTOMER_SUPPORT'
-}
-
-const CHAT_ROOM_STATUS = {
-  ACTIVE: 'ACTIVE',
-  ARCHIVED: 'ARCHIVED',
-  BLOCKED: 'BLOCKED',
-  DELETED: 'DELETED'
-}
-
-// 반응형 데이터
+// 상태
 const activeTab = ref('all')
 const showSearch = ref(false)
 const searchQuery = ref('')
 const loading = ref(false)
 const error = ref('')
-const isDev = ref(import.meta.env.DEV)
 const showCreateModal = ref(false)
-const showSuccessToast = ref(false)
-const successMessage = ref('')
-const lastApiCall = ref('')
+const newRoomName = ref('')
+const newRoomType = ref('NORMAL')
+const toast = ref({ show: false, message: '', type: 'success' })
 
-// 연결 상태 관리 (간소화됨)
-const apiConnected = ref(false)
-
-// 채팅방 목록 데이터
+// 채팅방 데이터
 const allChatRooms = ref([])
-const searchResults = ref([])
 
-// 검색 관련
-const isSearching = ref(false)
-let searchTimer = null
-
-// 토큰 만료 체크 함수
-const isTokenExpired = (token) => {
-  if (!token) return true
-
-  try {
-    const cleanToken = token.replace('Bearer ', '')
-    const payload = JSON.parse(atob(cleanToken.split('.')[1]))
-    const currentTime = Date.now() / 1000
-
-    return payload.exp <= currentTime
-  } catch (error) {
-    console.warn('토큰 파싱 실패:', error)
-    return true
-  }
-}
-
-// 토큰 갱신 필요 여부 체크 (5분 버퍼)
-const shouldRefreshToken = (token) => {
-  if (!token) return true
-
-  try {
-    const cleanToken = token.replace('Bearer ', '')
-    const payload = JSON.parse(atob(cleanToken.split('.')[1]))
-    const currentTime = Date.now() / 1000
-    const bufferTime = 5 * 60 // 5분 버퍼
-
-    return payload.exp <= (currentTime + bufferTime)
-  } catch (error) {
-    return true
-  }
-}
-
-// 채팅방 타입별 통계 정보 계산
-const getChatRoomStats = computed(() => {
-  const stats = {
-    total: allChatRooms.value.length,
-    normal: 0,
-    channel: 0,
-    support: 0,
-    active: 0,
-    archived: 0,
-    unread: 0
-  }
-
-  allChatRooms.value.forEach(room => {
-    if (room.type === CHAT_ROOM_TYPES.NORMAL) stats.normal++
-    else if (room.type === CHAT_ROOM_TYPES.CHANNEL) stats.channel++
-    else if (room.type === CHAT_ROOM_TYPES.CUSTOMER_SUPPORT) stats.support++
-
-    if (room.status === CHAT_ROOM_STATUS.ACTIVE) stats.active++
-    else if (room.status === CHAT_ROOM_STATUS.ARCHIVED) stats.archived++
-
-    if (room.unreadCount > 0) stats.unread++
-  })
-
-  return stats
-})
-
-// ChatRoomTabs 컴포넌트에서 사용할 탭 설정
-const chatRoomTabs = computed(() => [
-  {
-    key: 'all',
-    label: '전체',
-    count: getChatRoomStats.value.total,
-    icon: '💬'
-  },
-  {
-    key: 'unread',
-    label: '읽지않음',
-    count: getChatRoomStats.value.unread,
-    icon: '🔴'
-  },
-  {
-    key: 'dm',
-    label: '1:1 채팅',
-    count: getChatRoomStats.value.normal,
-    icon: '👤'
-  },
-  {
-    key: 'channel',
-    label: '채널',
-    count: getChatRoomStats.value.channel,
-    icon: '📢'
-  },
-  {
-    key: 'support',
-    label: '고객지원',
-    count: getChatRoomStats.value.support,
-    icon: '🎧'
-  },
-  {
-    key: 'archived',
-    label: '보관함',
-    count: getChatRoomStats.value.archived,
-    icon: '📦'
-  }
+// 탭 설정
+const visibleTabs = computed(() => [
+  { key: 'all', label: '전체', count: allChatRooms.value.length },
+  { key: 'unread', label: '안읽음', count: allChatRooms.value.filter(r => r.unreadCount > 0).length },
+  { key: 'dm', label: '1:1', count: allChatRooms.value.filter(r => r.type === 'NORMAL').length },
+  { key: 'channel', label: '채널', count: allChatRooms.value.filter(r => r.type === 'CHANNEL').length },
 ])
 
-// 필터링된 채팅방 목록
+const roomTypes = [
+  { value: 'NORMAL', label: '1:1 채팅', icon: '👤' },
+  { value: 'CHANNEL', label: '채널', icon: '📢' },
+  { value: 'CUSTOMER_SUPPORT', label: '고객지원', icon: '🎧' },
+]
+
+// 필터링
 const filteredRooms = computed(() => {
-  if (searchQuery.value && searchResults.value.length > 0) {
-    return filterByTab(searchResults.value)
+  let rooms = [...allChatRooms.value]
+
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    rooms = rooms.filter(r =>
+        r.name.toLowerCase().includes(q) || r.lastMessage?.toLowerCase().includes(q)
+    )
   }
-  return filterByTab(allChatRooms.value)
-})
-
-// 읽지 않은 메시지 수 계산
-const unreadCount = computed(() => {
-  return allChatRooms.value.reduce((total, room) => total + (room.unreadCount || 0), 0)
-})
-
-// 메서드
-const filterByTab = (rooms) => {
-  let filtered = [...rooms]
 
   switch (activeTab.value) {
     case 'unread':
-      filtered = filtered.filter(room => room.unreadCount > 0)
-      break
+      return rooms.filter(r => r.unreadCount > 0)
     case 'dm':
-      filtered = filtered.filter(room => room.type === CHAT_ROOM_TYPES.NORMAL)
-      break
+      return rooms.filter(r => r.type === 'NORMAL')
     case 'channel':
-      filtered = filtered.filter(room => room.type === CHAT_ROOM_TYPES.CHANNEL)
-      break
-    case 'support':
-      filtered = filtered.filter(room => room.type === CHAT_ROOM_TYPES.CUSTOMER_SUPPORT)
-      break
-    case 'active':
-      filtered = filtered.filter(room => room.status === CHAT_ROOM_STATUS.ACTIVE)
-      break
-    case 'archived':
-      filtered = filtered.filter(room => room.status === CHAT_ROOM_STATUS.ARCHIVED)
-      break
+      return rooms.filter(r => r.type === 'CHANNEL')
+    default:
+      return rooms
   }
+})
 
-  return chatRoomUtils.sortChatRooms(filtered, 'lastMessage')
-}
-
+// 메서드
 const toggleSearch = () => {
   showSearch.value = !showSearch.value
-  if (!showSearch.value) {
-    searchQuery.value = ''
-    searchResults.value = []
-  }
+  if (!showSearch.value) searchQuery.value = ''
 }
 
-const updateTab = (tab) => {
-  activeTab.value = tab
-}
+const handleSearch = () => {}
 
-const getEmptyStateIcon = () => {
-  switch (activeTab.value) {
-    case 'unread': return '✅'
-    case 'channel': return '📢'
-    case 'dm': return '👤'
-    case 'support': return '🎧'
-    case 'archived': return '📦'
-    default: return '💬'
-  }
-}
+const handleRoomSelect = (id) => emit('room-selected', id)
 
-const getEmptyStateTitle = () => {
-  if (searchQuery.value) {
-    return '검색 결과가 없습니다'
-  }
+// ✅ API 연동된 채팅방 목록 조회
+const loadChatRooms = async () => {
+  loading.value = true
+  error.value = ''
 
-  switch (activeTab.value) {
-    case 'unread': return '읽지 않은 메시지가 없습니다'
-    case 'channel': return '채널이 없습니다'
-    case 'dm': return '1:1 채팅방이 없습니다'
-    case 'support': return '고객지원 채팅방이 없습니다'
-    case 'archived': return '보관된 채팅방이 없습니다'
-    default: return '채팅방이 없습니다'
-  }
-}
-
-const getEmptyStateMessage = () => {
-  if (searchQuery.value) {
-    return `"${searchQuery.value}"에 대한 검색 결과가 없습니다`
-  }
-
-  switch (activeTab.value) {
-    case 'unread': return '모든 메시지를 확인했습니다! 👍'
-    case 'channel': return '새로운 채널을 만들어보세요'
-    case 'dm': return '새로운 1:1 대화를 시작해보세요'
-    case 'support': return '고객지원이 필요하시면 채팅을 시작해보세요'
-    case 'archived': return '보관된 채팅방이 없습니다'
-    default: return '새로운 채팅을 시작해보세요!'
-  }
-}
-
-const getRoomTypeIcon = (roomType) => {
-  switch (roomType) {
-    case CHAT_ROOM_TYPES.NORMAL: return '👤'
-    case CHAT_ROOM_TYPES.CHANNEL: return '📢'
-    case CHAT_ROOM_TYPES.CUSTOMER_SUPPORT: return '🎧'
-    default: return '💬'
-  }
-}
-
-const getStatusBadgeColor = (status) => {
-  switch (status) {
-    case CHAT_ROOM_STATUS.ACTIVE: return 'bg-green-100 text-green-800'
-    case CHAT_ROOM_STATUS.ARCHIVED: return 'bg-gray-100 text-gray-800'
-    case CHAT_ROOM_STATUS.BLOCKED: return 'bg-red-100 text-red-800'
-    case CHAT_ROOM_STATUS.DELETED: return 'bg-red-200 text-red-900'
-    default: return 'bg-blue-100 text-blue-800'
-  }
-}
-
-const getStatusText = (status) => {
-  switch (status) {
-    case CHAT_ROOM_STATUS.ACTIVE: return '활성'
-    case CHAT_ROOM_STATUS.ARCHIVED: return '보관'
-    case CHAT_ROOM_STATUS.BLOCKED: return '차단'
-    case CHAT_ROOM_STATUS.DELETED: return '삭제'
-    default: return '알 수 없음'
-  }
-}
-
-// API 연결 테스트
-const testApiConnection = async () => {
   try {
-    const isConnected = await chatService.testConnection()
-    apiConnected.value = isConnected
-    return isConnected
-  } catch (error) {
-    console.error('API 연결 테스트 실패:', error)
-    apiConnected.value = false
-    return false
-  }
-}
+    console.log('📋 [ChatRoomView] 채팅방 목록 조회 시작...')
 
-// 채팅방 목록 로드
-const loadChatRooms = async (showLoadingIndicator = true) => {
-  try {
-    if (showLoadingIndicator) {
-      loading.value = true
-    }
-    error.value = ''
-
-    console.log('📋 채팅방 목록 로드 시작')
-    lastApiCall.value = new Date().toLocaleTimeString()
-
-    // Auth Store 초기화
-    try {
-      await authStore.loadUserInfo()
-    } catch (authError) {
-      console.warn('Auth Store 초기화 실패:', authError)
+    const searchCondition = {
+      status: 'ACTIVE',
+      roomType: 'NORMAL'
     }
 
-    const accessToken = authUtils.getAccessToken()
-    const refreshToken = authUtils.getRefreshToken()
+    const response = await chatService.getChatRooms(searchCondition)
+    console.log('📋 [ChatRoomView] API 응답:', response)
 
-    // 토큰 갱신 로직
-    if (!accessToken || shouldRefreshToken(accessToken)) {
-      if (refreshToken) {
-        console.log('🔄 토큰 갱신 시도...')
-        try {
-          if (authUtils.refreshTokenWithBackend) {
-            const refreshResult = await authUtils.refreshTokenWithBackend()
-            if (refreshResult.success) {
-              console.log('✅ 백엔드 방식 토큰 갱신 완료')
-              await authStore.loadUserInfo()
-            } else {
-              await authStore.refreshToken()
-            }
-          } else {
-            await authStore.refreshToken()
-          }
-        } catch (refreshError) {
-          console.error('❌ 토큰 갱신 실패:', refreshError)
-          error.value = '인증이 만료되었습니다. 다시 로그인해주세요.'
-          return
-        }
-      } else {
-        console.warn('⚠️ Refresh Token이 없어 샘플 데이터를 사용합니다.')
-        loadSampleData()
-        return
-      }
+    if (response.success && response.data) {
+      const backendRooms = Array.isArray(response.data) ? response.data : []
+      allChatRooms.value = backendRooms.map(room =>
+          chatService.transformChatRoomResponse(room)
+      )
+      allChatRooms.value = chatService.sortChatRooms(allChatRooms.value, 'lastMessage')
+      console.log('✅ [ChatRoomView] 채팅방 목록 로드 완료:', allChatRooms.value.length, '개')
+    } else {
+      throw new Error(response.message || '채팅방 목록을 불러올 수 없습니다')
     }
+  } catch (err) {
+    console.error('❌ [ChatRoomView] 채팅방 목록 로드 실패:', err)
 
-    try {
-      const isApiConnected = await testApiConnection()
-      if (!isApiConnected) {
-        throw new Error('Chat API 서버에 연결할 수 없습니다')
-      }
+    // API 실패 시 샘플 데이터로 폴백
+    console.log('⚠️ [ChatRoomView] 샘플 데이터로 대체합니다')
+    const sampleData = chatService.getSampleChatRooms()
+    allChatRooms.value = sampleData.data.map(room =>
+        chatService.transformChatRoomResponse(room)
+    )
 
-      const searchCondition = chatRoomUtils.validateSearchCondition({
-        status: CHAT_ROOM_STATUS.ACTIVE,
-        keyword: null,
-        roomType: null
-      })
-
-      const response = await chatService.getChatRooms(searchCondition)
-
-      if (response.success && response.data) {
-        const backendRooms = Array.isArray(response.data) ? response.data : []
-        allChatRooms.value = backendRooms.map(chatRoomUtils.transformChatRoomResponse)
-        console.log('✅ 백엔드에서 채팅방 목록 로드 완료:', allChatRooms.value.length, '개')
-        apiConnected.value = true
-        error.value = ''
-      } else {
-        throw new Error(response.message || 'Chat API 응답이 실패했습니다')
-      }
-
-    } catch (apiError) {
-      console.error('❌ Chat API 호출 실패:', apiError)
-      apiConnected.value = false
-
-      if (apiError.status === 401) {
-        console.log('🔄 401 에러 감지, 토큰 갱신 재시도...')
-        try {
-          if (authUtils.refreshTokenWithBackend && !apiError._retried) {
-            const refreshResult = await authUtils.refreshTokenWithBackend()
-            if (refreshResult.success) {
-              apiError._retried = true
-              return await loadChatRooms(showLoadingIndicator)
-            }
-          }
-        } catch (retryError) {
-          console.error('❌ 토큰 갱신 재시도 실패:', retryError)
-        }
-        error.value = '인증이 만료되었습니다. 다시 로그인해주세요.'
-        return
-      }
-
-      if (apiError.status >= 500 || !apiError.status) {
-        console.warn('⚠️ 서버 오류로 인해 샘플 데이터를 사용합니다.')
-        loadSampleData()
-      } else {
-        error.value = apiError.message || '채팅방 목록을 불러올 수 없습니다'
-      }
+    if (import.meta.env.DEV) {
+      error.value = err.message
     }
-
-  } catch (generalError) {
-    console.error('❌ 채팅방 목록 로드 실패:', generalError)
-    error.value = generalError.message || '알 수 없는 오류가 발생했습니다'
-    apiConnected.value = false
-    loadSampleData()
   } finally {
     loading.value = false
   }
 }
 
-// 샘플 데이터 로드
-const loadSampleData = () => {
-  const sampleData = chatService.getSampleChatRooms()
-  allChatRooms.value = sampleData.data.map(chatRoomUtils.transformChatRoomResponse)
-  apiConnected.value = false
-}
+// ✅ 채팅방 생성
+const createRoom = async () => {
+  if (!newRoomName.value.trim()) return
 
-// 디버깅 함수들 (간소화됨)
-const debugAllAuthInfo = () => {
-  console.group('🔍 전체 인증 정보 디버깅')
-
-  if (authStore.debugTokenStatus) {
-    authStore.debugTokenStatus()
-  }
-
-  if (authUtils.debugAuthStatus) {
-    authUtils.debugAuthStatus()
-  }
-
-  console.groupEnd()
-}
-
-const forceTokenRefresh = async () => {
-  console.log('🔄 강제 토큰 갱신 시도...')
   try {
-    const backendResult = await authUtils.refreshTokenWithBackend()
-    if (backendResult.success) {
-      console.log('✅ 백엔드 방식 토큰 갱신 성공')
-      await authStore.loadUserInfo()
-      showSuccessToast.value = true
-      successMessage.value = '토큰이 성공적으로 갱신되었습니다!'
-      setTimeout(() => showSuccessToast.value = false, 3000)
-      await loadChatRooms(false)
-      return
+    const roomData = {
+      title: newRoomName.value.trim(),
+      roomType: newRoomType.value,
+      participantUserIds: [],
+      isPrivate: false
     }
 
-    const storeResult = await authStore.refreshToken()
-    if (storeResult) {
-      showSuccessToast.value = true
-      successMessage.value = '토큰이 갱신되었습니다!'
-      setTimeout(() => showSuccessToast.value = false, 3000)
-      await loadChatRooms(false)
+    console.log('➕ [ChatRoomView] 채팅방 생성 요청:', roomData)
+    const response = await chatService.createChatRoom(roomData)
+
+    if (response.success && response.data) {
+      const newRoom = chatService.transformChatRoomResponse(response.data)
+      allChatRooms.value.unshift(newRoom)
+
+      showCreateModal.value = false
+      newRoomName.value = ''
+      newRoomType.value = 'NORMAL'
+      showToast('채팅방이 생성되었습니다', 'success')
+
+      emit('room-selected', newRoom.id)
     } else {
-      showErrorToast('토큰 갱신에 실패했습니다.')
+      throw new Error(response.message || '채팅방 생성에 실패했습니다')
     }
-  } catch (error) {
-    console.error('강제 토큰 갱신 실패:', error)
-    showErrorToast('토큰 갱신 중 오류가 발생했습니다.')
+  } catch (err) {
+    console.error('❌ [ChatRoomView] 채팅방 생성 실패:', err)
+    showToast(err.message || '채팅방 생성에 실패했습니다', 'error')
   }
 }
 
-const showErrorToast = (message) => {
-  console.error('🚨 Error:', message)
-  if (window.confirm(`${message}\n\n다시 시도하시겠습니까?`)) {
-    if (message.includes('토큰') || message.includes('인증')) {
-      forceTokenRefresh()
-    } else if (message.includes('채팅방')) {
-      loadChatRooms()
-    }
-  }
+const showToast = (message, type = 'success') => {
+  toast.value = { show: true, message, type }
+  setTimeout(() => toast.value.show = false, 3000)
 }
 
-// 이벤트 핸들러
-const handleRoomSelect = async (roomId) => {
-  console.log('📋 ChatRoomView - 채팅방 선택:', roomId)
-  try {
-    await authStore.ensureValidToken()
-  } catch (error) {
-    console.warn('토큰 확인 실패:', error)
-  }
-  emit('room-selected', roomId)
+const formatTime = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  const now = new Date()
+  const diff = now - d
+
+  if (diff < 60000) return '방금'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}분`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}시간`
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)}일`
+  return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
 }
 
-const handleSearch = (query) => {
-  if (searchTimer) {
-    clearTimeout(searchTimer)
-  }
+const getAvatarText = (room) => room.name?.charAt(0) || '?'
 
-  searchTimer = setTimeout(async () => {
-    if (!query || query.trim().length === 0) {
-      searchResults.value = []
-      return
-    }
-
-    try {
-      isSearching.value = true
-      const localResults = allChatRooms.value.filter(room =>
-          room.name.toLowerCase().includes(query.toLowerCase()) ||
-          (room.lastMessage && room.lastMessage.toLowerCase().includes(query.toLowerCase()))
-      )
-      searchResults.value = localResults
-    } catch (error) {
-      console.error('검색 처리 실패:', error)
-      searchResults.value = []
-    } finally {
-      isSearching.value = false
-    }
-  }, 300)
-}
-
-const handleRoomCreated = async (createdRoom) => {
-  console.log('✅ 새 채팅방 생성됨:', createdRoom)
-  showCreateModal.value = false
-  successMessage.value = '채팅방이 성공적으로 생성되었습니다!'
-  showSuccessToast.value = true
-
-  setTimeout(() => {
-    showSuccessToast.value = false
-  }, 3000)
-
-  await loadChatRooms()
-
-  if (createdRoom.roomId) {
-    setTimeout(() => {
-      handleRoomSelect(createdRoom.roomId)
-    }, 500)
-  }
-}
-
-const updateChatRoomStatus = async (roomId, newStatus) => {
-  try {
-    console.log(`📋 채팅방 상태 변경: ${roomId} -> ${newStatus}`)
-
-    // 로컬 상태 업데이트
-    const roomIndex = allChatRooms.value.findIndex(room => room.id === roomId)
-    if (roomIndex !== -1) {
-      allChatRooms.value[roomIndex].status = newStatus
-    }
-
-    const statusText = newStatus === CHAT_ROOM_STATUS.ARCHIVED ? '보관' : '복원'
-    successMessage.value = `채팅방이 ${statusText}되었습니다.`
-    showSuccessToast.value = true
-
-    setTimeout(() => {
-      showSuccessToast.value = false
-    }, 3000)
-
-  } catch (error) {
-    console.error('❌ 채팅방 상태 변경 실패:', error)
-    showErrorToast(error.message || '채팅방 상태 변경에 실패했습니다')
-  }
-}
-
-// 자동 새로고침
-let refreshInterval = null
-
-const startAutoRefresh = () => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-  }
-
-  refreshInterval = setInterval(() => {
-    if (!loading.value && !error.value && apiConnected.value && authStore.hasValidToken) {
-      loadChatRooms(false)
-    }
-  }, 30000)
-}
-
-const stopAutoRefresh = () => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-    refreshInterval = null
-  }
-}
-
-// Watchers
-watch(searchQuery, (newQuery) => {
-  if (newQuery !== undefined) {
-    handleSearch(newQuery)
-  }
+const getRoomTypeClass = (type) => ({
+  'type-normal': type === 'NORMAL',
+  'type-channel': type === 'CHANNEL',
+  'type-support': type === 'CUSTOMER_SUPPORT',
 })
 
-watch(() => authStore.isAuthenticated, (newValue) => {
-  console.log(`🔑 인증 상태 변경: ${newValue ? '인증됨' : '인증 해제'}`)
-})
+const getEmptyIcon = () => {
+  const icons = { all: '💬', unread: '✅', dm: '👤', channel: '📢' }
+  return icons[activeTab.value] || '💬'
+}
 
-watch(() => authStore.refreshing, (newValue) => {
-  console.log(`🔄 토큰 갱신 상태: ${newValue ? '진행 중' : '완료'}`)
-})
-
-watch(() => authStore.hasValidToken, (newValue) => {
-  console.log(`🎫 토큰 유효성: ${newValue ? '유효' : '무효'}`)
-})
-
-// 컴포넌트 라이프사이클
-onMounted(async () => {
-  console.log('🏠 ChatRoomView 컴포넌트 마운트됨')
-
-  try {
-    await authStore.loadUserInfo()
-    console.log('✅ Auth Store 초기화 완료')
-  } catch (error) {
-    console.warn('⚠️ Auth Store 초기화 실패:', error)
+const getEmptyTitle = () => {
+  if (searchQuery.value) return '검색 결과 없음'
+  const titles = {
+    all: '채팅방이 없습니다',
+    unread: '모두 읽었습니다',
+    dm: '1:1 채팅 없음',
+    channel: '채널 없음'
   }
+  return titles[activeTab.value] || '채팅방 없음'
+}
 
-  if (isDev.value) {
-    debugAllAuthInfo()
-  }
+const getEmptyMessage = () => {
+  if (searchQuery.value) return `"${searchQuery.value}"에 대한 결과가 없습니다`
+  return '새로운 대화를 시작해보세요'
+}
 
-  await loadChatRooms()
-  startAutoRefresh()
-})
+const toggleRoomMenu = (id) => console.log('Menu:', id)
 
-onUnmounted(() => {
-  console.log('🏠 ChatRoomView 컴포넌트 언마운트됨')
-  stopAutoRefresh()
-
-  if (searchTimer) {
-    clearTimeout(searchTimer)
-  }
+// ✅ 컴포넌트 마운트 시 API 호출
+onMounted(() => {
+  console.log('🚀 [ChatRoomView] 컴포넌트 마운트됨')
+  loadChatRooms()
 })
 </script>
 
 <style scoped>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+:root {
+  --primary: #222222;
+  --secondary: #64748B;
+  --accent: #9333ea;
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --border: #E2E8F0;
+  --hover: #F8FAFC;
+}
+
+* { box-sizing: border-box; }
+
 .chat-container {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
   min-height: 100vh;
-  background: white;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  background: var(--bg);
   position: relative;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  color: var(--primary);
 }
 
-.debug-info {
-  padding: 10px;
-  background: #f0f9ff;
-  border: 1px solid #0ea5e9;
-  margin: 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #0c4a6e;
-}
-
-.debug-info p {
-  margin: 4px 0;
-}
-
-.debug-button {
-  padding: 4px 8px;
-  font-size: 11px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.debug-button:hover {
-  background: #2563eb;
-}
-
-.debug-button:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-.chat-list {
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  color: #64748b;
-}
-
-.refresh-status {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #f59e0b;
-  font-weight: 500;
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e2e8f0;
-  border-top: 3px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  color: #64748b;
-}
-
-.error-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.error-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #dc2626;
-  margin-bottom: 8px;
-}
-
-.error-message {
-  font-size: 14px;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-.retry-button, .refresh-button {
-  padding: 12px 24px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin: 4px;
-}
-
-.retry-button:hover, .refresh-button:hover {
-  background: #2563eb;
-}
-
-.refresh-button {
-  background: #f59e0b;
-}
-
-.refresh-button:hover {
-  background: #d97706;
-}
-
-.room-card {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.room-card:hover {
-  background-color: #f8fafc;
-  transform: translateX(2px);
-}
-
-.room-card:active {
-  background-color: #e2e8f0;
-  transform: translateX(0);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #64748b;
-}
-
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.empty-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #374151;
-}
-
-.empty-message {
-  font-size: 14px;
-  margin-bottom: 24px;
-}
-
-.create-room-button {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
-}
-
-.create-room-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
-.floating-create-button {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+/* 헤더 */
+.header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 100;
+  justify-content: space-between;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
 }
 
-.floating-create-button:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+.header-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0;
 }
 
-.floating-create-button:active {
-  transform: translateY(-1px) scale(0.98);
-}
+.header-actions { display: flex; gap: 8px; }
 
-.success-toast {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  max-width: 350px;
-  background: white;
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  border: 1px solid #bbf7d0;
-  border-left: 4px solid #10b981;
+  background: #f5f5f7;
+  color: var(--secondary);
   cursor: pointer;
-  z-index: 999;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.success-toast:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-}
-
-.toast-content {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
-.toast-icon {
-  color: #10b981;
+.icon-btn:hover { background: #eee; }
+.icon-btn.active { background: #f3e8ff; color: #9333ea; }
+.icon-btn.primary { background: #9333ea; color: #fff; }
+.icon-btn.primary:hover { background: #7c22ce; }
+
+/* 검색 */
+.search-wrapper { padding: 16px 0; }
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 0 16px;
+  height: 48px;
+}
+
+.search-icon { color: #999; margin-right: 12px; }
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 15px;
+  color: var(--primary);
+  outline: none;
+  font-family: inherit;
+}
+
+.search-input::placeholder { color: #999; }
+
+.clear-btn {
+  border: none;
+  background: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+}
+
+/* 탭 */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 16px 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  background: #f5f5f7;
+  color: var(--secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.tab:hover { background: #eee; }
+.tab.active { background: #9333ea; color: #fff; }
+
+.tab-badge {
+  background: rgba(0,0,0,0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.tab.active .tab-badge { background: rgba(255,255,255,0.25); }
+
+/* 채팅방 리스트 */
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 100px;
+}
+
+@media (min-width: 1024px) {
+  .chat-list { padding-bottom: 20px; }
+}
+
+.room-list { padding: 8px 0; }
+
+.room-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 8px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.room-item:hover { background: var(--hover); }
+.room-item.unread { background: #faf5ff; }
+
+.room-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
   flex-shrink: 0;
 }
 
-.toast-content span {
+.room-avatar.type-normal { background: linear-gradient(135deg, #9333ea, #a855f7); }
+.room-avatar.type-channel { background: linear-gradient(135deg, #7c3aed, #9333ea); }
+.room-avatar.type-support { background: linear-gradient(135deg, #a855f7, #c084fc); }
+
+.room-info { flex: 1; min-width: 0; }
+
+.room-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.room-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-time { font-size: 12px; color: #999; flex-shrink: 0; }
+
+.room-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.room-message {
+  font-size: 14px;
+  color: var(--secondary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unread-badge {
+  background: #9333ea;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.room-menu-btn {
+  border: none;
+  background: none;
+  color: #ccc;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  opacity: 0;
+  transition: all 0.2s;
+}
+
+.room-item:hover .room-menu-btn { opacity: 1; }
+.room-menu-btn:hover { background: #f0f0f0; color: var(--secondary); }
+
+/* 상태 컨테이너 */
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+}
+
+.loader {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #f3e8ff;
+  border-top-color: #9333ea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.state-title { font-size: 17px; font-weight: 600; color: var(--primary); margin: 0 0 8px; }
+.state-text { font-size: 14px; color: var(--secondary); margin: 0 0 24px; }
+
+/* 버튼 */
+.btn-primary {
+  padding: 12px 28px;
+  background: #9333ea;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-primary:hover { background: #7c22ce; }
+.btn-primary:disabled { background: #d8b4fe; cursor: not-allowed; }
+
+.btn-secondary {
+  padding: 12px 28px;
+  background: #f5f5f7;
+  color: var(--secondary);
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-secondary:hover { background: #eee; }
+
+/* FAB */
+.fab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 56px;
+  height: 56px;
+  background: #9333ea;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(147, 51, 234, 0.5);
+}
+
+.desktop-only { display: none; }
+
+@media (min-width: 1024px) {
+  .desktop-only { display: flex; }
+}
+
+/* 모달 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+@media (min-width: 768px) {
+  .modal-overlay { align-items: center; }
+}
+
+.modal {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .modal { border-radius: 24px; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 { font-size: 18px; font-weight: 700; margin: 0; }
+
+.close-btn {
+  border: none;
+  background: #f5f5f7;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary);
+}
+
+.modal-body { padding: 24px; }
+
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.form-input:focus { border-color: #9333ea; box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1); }
+
+.type-selector { display: flex; gap: 10px; }
+
+.type-option {
+  flex: 1;
+  padding: 14px 12px;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--secondary);
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.type-option:hover { border-color: #c4b5fd; }
+.type-option.selected { border-color: #9333ea; background: #faf5ff; color: #9333ea; }
+.type-icon { font-size: 24px; }
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.modal-footer button { flex: 1; }
+
+/* 토스트 */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: #111;
+  color: #fff;
+  border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
-  color: #1e293b;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 1001;
+}
+
+.toast.success { background: #059669; }
+.toast.error { background: #dc2626; }
+
+@media (min-width: 1024px) {
+  .toast { bottom: 40px; }
 }
 
 /* 트랜지션 */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
+.slide-enter-active, .slide-leave-active { transition: all 0.3s ease; }
+.slide-enter-from, .slide-leave-to { opacity: 0; transform: translateY(-10px); }
 
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
+.list-enter-active, .list-leave-active { transition: all 0.3s ease; }
+.list-enter-from, .list-leave-to { opacity: 0; transform: translateX(-20px); }
 
-.toast-enter-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
+.modal-enter-active, .modal-leave-active { transition: all 0.3s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
+.modal-enter-from .modal, .modal-leave-to .modal { transform: translateY(100%); }
 
-.toast-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 1, 1);
-}
-
-.toast-enter-from {
-  opacity: 0;
-  transform: translateX(100%) scale(0.8);
-}
-
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(100%) scale(0.8);
-}
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .chat-container {
-    box-shadow: none;
-  }
-
-  .debug-info {
-    margin: 5px;
-    font-size: 11px;
-  }
-
-  .debug-button {
-    padding: 3px 6px;
-    font-size: 10px;
-  }
-
-  .floating-create-button {
-    bottom: 20px;
-    right: 20px;
-    width: 48px;
-    height: 48px;
-  }
-
-  .success-toast {
-    right: 12px;
-    left: 12px;
-    max-width: none;
-  }
-}
-
-/* 다크 모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .chat-container {
-    background-color: #1f2937;
-    color: #f9fafb;
-  }
-
-  .debug-info {
-    background: #1e3a8a;
-    border-color: #3b82f6;
-    color: #dbeafe;
-  }
-
-  .debug-button {
-    background: #1e40af;
-  }
-
-  .debug-button:hover {
-    background: #1d4ed8;
-  }
-}
-
-/* 채팅방 타입별 스타일 */
-.room-card[data-room-type="NORMAL"] {
-  border-left: 3px solid #10b981;
-}
-
-.room-card[data-room-type="CHANNEL"] {
-  border-left: 3px solid #3b82f6;
-}
-
-.room-card[data-room-type="CUSTOMER_SUPPORT"] {
-  border-left: 3px solid #f59e0b;
-}
-
-/* 읽지 않은 메시지 강조 */
-.room-card[data-has-unread="true"] {
-  background: linear-gradient(90deg, #fef7cd 0%, transparent 100%);
-  border-left-color: #f59e0b !important;
-  border-left-width: 4px !important;
-}
-
-/* 애니메이션 감소 설정 지원 */
-@media (prefers-reduced-motion: reduce) {
-  .spinner,
-  .room-card,
-  .floating-create-button,
-  .success-toast {
-    animation: none !important;
-    transition: none !important;
-  }
-}
+.toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 20px); }
 </style>
