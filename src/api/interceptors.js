@@ -78,35 +78,21 @@ const handleLogout = async (reason = 'Token expired') => {
 }
 
 /**
- * 백엔드 RefreshJwtFilter를 통한 토큰 갱신 (Cookie 사용)
+ * 백엔드 RefreshJwtFilter를 통한 토큰 갱신 (HttpOnly Cookie 사용)
+ * - RefreshToken은 백엔드가 HttpOnly 쿠키로 설정하므로 JS에서 접근 불가
+ * - withCredentials: true로 요청하면 브라우저가 자동으로 쿠키 전송
  */
 const refreshTokenViaBackend = async () => {
-  const refreshToken = authUtils.getRefreshToken()
-
-  if (!refreshToken) {
-    throw new Error('No refresh token available')
-  }
-
-  // 🔥 RefreshToken 만료 체크 (갱신 시도 전에)
-  if (authUtils.isTokenExpired(refreshToken)) {
-    console.log('🚨 [Interceptor] RefreshToken이 이미 만료됨')
-    throw new Error('Refresh token expired')
-  }
-
   console.log('🔄 [Interceptor] RefreshJwtFilter를 통한 토큰 갱신 시도')
 
   try {
-    // 🍪 RefreshToken을 Cookie에 설정
-    document.cookie = `refreshToken=${refreshToken}; path=/; SameSite=Lax`;
-
-    console.log('🍪 [Interceptor] RefreshToken Cookie 설정 완료')
-
     // 🌐 보호된 엔드포인트 호출 (RefreshJwtFilter가 처리)
+    // HttpOnly 쿠키는 브라우저가 자동으로 전송함
     const response = await authClient.get('/api/v1/users/profile', {
       headers: {
         'X-Device-ID': authUtils.getDeviceId()
       },
-      withCredentials: true  // 🔥 Cookie 전송 필수!
+      withCredentials: true  // 🔥 HttpOnly 쿠키 자동 전송
     })
 
     console.log(`📡 [Interceptor] 응답 상태: ${response.status}`)
@@ -131,16 +117,13 @@ const refreshTokenViaBackend = async () => {
       data: error.response?.data
     })
 
-    // 🚨 401 에러면 RefreshToken 만료!
+    // 🚨 401 에러면 RefreshToken 만료 또는 없음
     if (error.response?.status === 401) {
-      console.log('🚨 [Interceptor] RefreshToken 만료 확인됨')
+      console.log('🚨 [Interceptor] RefreshToken 만료 또는 없음')
       throw new Error('Refresh token expired')
     }
 
     throw error
-  } finally {
-    // 🧹 Cookie 정리 (보안상 좋음)
-    document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }
 }
 
@@ -216,14 +199,8 @@ const errorInterceptor = async (error) => {
   isRefreshing = true
 
   try {
-    // 🔥 RefreshToken 사전 체크
-    const refreshToken = authUtils.getRefreshToken()
-    if (!refreshToken || authUtils.isTokenExpired(refreshToken)) {
-      console.log('🚨 [Interceptor] RefreshToken 없거나 만료됨')
-      throw new Error('Refresh token expired')
-    }
-
-    // RefreshToken으로 갱신 시도
+    // HttpOnly 쿠키는 JS에서 체크 불가 - 바로 갱신 시도
+    // 쿠키가 없거나 만료되면 백엔드가 401 응답
     const newAccessToken = await refreshTokenViaBackend()
 
     if (newAccessToken) {

@@ -15,12 +15,16 @@ export const STORAGE_KEYS = {
 export const getAccessToken = () => localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
 
 /**
- * RefreshToken 가져오기 (HttpOnly 쿠키에서 관리되므로 더미 값 반환)
+ * RefreshToken 가져오기
+ * - HttpOnly 쿠키로 관리되므로 JavaScript에서 직접 접근 불가
+ * - 브라우저가 withCredentials: true 요청 시 자동으로 쿠키 전송
+ * - 쿠키 존재 여부는 서버 응답(401)으로만 확인 가능
+ * @returns {null} HttpOnly 쿠키는 JS에서 읽을 수 없음
  */
 export const getRefreshToken = () => {
-    // RefreshToken은 HttpOnly 쿠키에 저장되어 JavaScript로 접근 불가
-    // 서버가 자동으로 쿠키에서 읽음
-    return 'cookie-based'
+    // HttpOnly 쿠키는 JavaScript로 접근 불가
+    // 존재 여부 확인이 필요하면 서버에 요청해야 함
+    return null
 }
 
 /**
@@ -101,7 +105,7 @@ export const clearUserInfo = () => {
  * JWT 토큰 파싱
  */
 export const parseJwtToken = (token) => {
-    if (!token || token === 'cookie-based') return null
+    if (!token) return null
 
     try {
         const base64Url = token.split('.')[1]
@@ -122,12 +126,10 @@ export const parseJwtToken = (token) => {
 
 /**
  * 토큰 만료 여부 확인
+ * @param {string|null} token - JWT 토큰 (null이면 만료로 처리)
  */
 export const isTokenExpired = (token) => {
     if (!token) return true
-
-    // ⭐ 쿠키 기반 토큰은 만료 체크 안 함 (서버가 관리)
-    if (token === 'cookie-based') return false
 
     const payload = parseJwtToken(token)
     if (!payload || !payload.exp) return true
@@ -141,7 +143,7 @@ export const isTokenExpired = (token) => {
  * 토큰 갱신이 필요한지 확인 (만료 5분 전)
  */
 export const shouldRefreshToken = (token) => {
-    if (!token || token === 'cookie-based') return false
+    if (!token) return false
 
     const payload = parseJwtToken(token)
     if (!payload || !payload.exp) return false
@@ -155,7 +157,7 @@ export const shouldRefreshToken = (token) => {
  * 토큰 남은 시간 (분)
  */
 export const getTokenTimeRemaining = (token) => {
-    if (!token || token === 'cookie-based') return 0
+    if (!token) return 0
 
     const payload = parseJwtToken(token)
     if (!payload || !payload.exp) return 0
@@ -203,7 +205,7 @@ export const getCurrentUser = () => {
 
     // 2. AccessToken에서 사용자 정보 추출
     const token = getAccessToken()
-    if (!token || token === 'cookie-based') {
+    if (!token) {
         return null
     }
 
@@ -342,7 +344,7 @@ export const validateTokens = () => {
  * 토큰 만료 시간 가져오기
  */
 export const getTokenExpiryTime = (token) => {
-    if (!token || token === 'cookie-based') return null
+    if (!token) return null
 
     const payload = parseJwtToken(token)
     return payload?.exp ? new Date(payload.exp * 1000) : null
@@ -389,7 +391,7 @@ export const getApiHeaders = () => {
     }
 
     const accessToken = getAccessToken()
-    if (accessToken && accessToken !== 'cookie-based') {
+    if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`
     }
 
@@ -412,7 +414,7 @@ export const debugAuthStatus = () => {
     console.log('Access Token:', accessToken ? '존재 ✅' : '없음 ❌')
     console.log('Refresh Token:', 'HttpOnly 쿠키로 관리 🍪')
 
-    if (accessToken && accessToken !== 'cookie-based') {
+    if (accessToken) {
         const payload = parseJwtToken(accessToken)
         console.log('Access Token 만료:', isTokenExpired(accessToken) ? '만료됨 ⏰' : '유효함 ✅')
         console.log('Access Token 만료 시간:', payload?.exp ? new Date(payload.exp * 1000) : 'N/A')

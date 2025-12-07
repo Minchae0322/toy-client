@@ -167,15 +167,11 @@ const clearAuth = () => {
 }
 
 onMounted(async () => {
-  const hasValidTokens = () => {
-    const accessToken = authUtils.getAccessToken()
-    const refreshToken = authUtils.getRefreshToken()
+  // AccessToken이 유효하면 리다이렉트
+  // RefreshToken은 HttpOnly 쿠키로 관리되므로 JS에서 체크 불가
+  const accessToken = authUtils.getAccessToken()
 
-    if (!accessToken || !refreshToken) return false
-    return !authUtils.isTokenExpired(refreshToken)
-  }
-
-  if (hasValidTokens()) {
+  if (accessToken && !authUtils.isTokenExpired(accessToken)) {
     try {
       await router.replace(redirectPath.value)
     } catch (error) {
