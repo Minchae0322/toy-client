@@ -216,7 +216,7 @@ export const getCurrentUser = () => {
 
     // 3. 토큰 페이로드에서 사용자 정보 구성
     user = {
-        id: payload.sub || payload.userId || payload.id || payload.user_id,
+        id: payload.userId || payload.user_id || payload.id || payload.sub,
         email: payload.email,
         username: payload.username || payload.name || payload.sub,
         nickname: payload.nickname || payload.username || payload.name,
