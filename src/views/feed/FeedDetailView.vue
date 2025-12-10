@@ -1,12 +1,12 @@
 <template>
   <div class="detail-container">
-    <!-- Loading State -->
+    <!-- Loading -->
     <div v-if="loading" class="loading-container">
       <div class="spinner"></div>
       <p class="loading-text">로딩 중...</p>
     </div>
 
-    <!-- Error State -->
+    <!-- Error -->
     <div v-else-if="error" class="error-container">
       <p class="error-text">{{ error }}</p>
       <button @click="loadFeedDetail" class="btn-retry">다시 시도</button>
@@ -14,7 +14,6 @@
 
     <!-- Content -->
     <template v-else-if="feed">
-      <!-- Header -->
       <FeedDetailHeader
           @back="goBack"
           @share="handleShare"
@@ -22,17 +21,14 @@
           @report="handleReport"
       />
 
-      <!-- Main Content (2 Column Layout on Desktop) -->
       <main class="detail-main">
         <div class="detail-wrapper">
-          <!-- Left: Image Gallery -->
           <FeedDetailImageGallery
               :images="imageList"
               :product-name="getProductName"
               @like="handleLike"
           />
 
-          <!-- Right: Info Section -->
           <FeedDetailInfo
               :feed="feed"
               :is-following="isFollowing"
@@ -44,7 +40,6 @@
               @like="handleLike"
               @hot="handleHot"
               @save="handleSave"
-              @send-message="sendMessage"
               @search-store="searchByStore"
               @search-hashtag="searchByHashtag"
               @submit-comment="submitComment"
@@ -59,9 +54,9 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from 'vue'
-import {useRouter, useRoute} from 'vue-router'
-import {feedService, feedUtils} from '@/services/FeedService.js'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { feedService } from '@/services/FeedService.js'
 
 import FeedDetailHeader from '@/components/feed/detail/FeedDetailHeader.vue'
 import FeedDetailImageGallery from '@/components/feed/detail/FeedDetailImageGallery.vue'
@@ -70,7 +65,6 @@ import FeedDetailInfo from '@/components/feed/detail/FeedDetailInfo.vue'
 const router = useRouter()
 const route = useRoute()
 
-// State
 const loading = ref(true)
 const error = ref(null)
 const feed = ref(null)
@@ -79,190 +73,98 @@ const isFollowing = ref(false)
 const commentSort = ref('popular')
 const comments = ref([])
 
-// Computed
-const imageList = computed(() => {
-  if (!feed.value?.attachmentFiles) return []
-  return feed.value.attachmentFiles
-})
+const imageList = computed(() => feed.value?.attachmentFiles || [])
+const getProductName = computed(() => feed.value?.product?.name || feed.value?.productName || '상품명 없음')
 
-const getProductName = computed(() => {
-  return feed.value?.product?.name || feed.value?.productName || '상품명 없음'
-})
-
-// Methods
 const loadFeedDetail = async () => {
   try {
     loading.value = true
     error.value = null
-
-    const feedId = route.params.id
-    console.log('🔍 [FEED_DETAIL] 피드 상세 조회 시작:', feedId)
-
-    const response = await feedService.getFeed(feedId)
-
+    const response = await feedService.getFeed(route.params.id)
     if (response.success && response.data) {
       feed.value = response.data
-      console.log('✅ [FEED_DETAIL] 피드 상세 조회 성공:', feed.value)
     } else {
       throw new Error(response.message || '피드를 불러오는데 실패했습니다.')
     }
   } catch (err) {
-    console.error('❌ [FEED_DETAIL] 피드 조회 실패:', err)
     error.value = err.message || '피드를 불러오는데 실패했습니다.'
   } finally {
     loading.value = false
   }
 }
 
-const goBack = () => {
-  router.back()
-}
+const goBack = () => router.back()
 
 const handleLike = async () => {
   try {
     const response = await feedService.toggleLike(feed.value.feedId)
-
     if (response.success && response.data) {
       feed.value.likeCount = response.data.likeCount
-      feed.value.userReactions = {
-        ...feed.value.userReactions,
-        hasLike: response.data.action === 'added'
-      }
-      console.log('✅ [FEED_DETAIL] 좋아요 토글 완료')
+      feed.value.userReactions = { ...feed.value.userReactions, hasLike: response.data.action === 'added' }
     }
   } catch (err) {
-    console.error('❌ [FEED_DETAIL] 좋아요 실패:', err)
+    console.error('좋아요 실패:', err)
   }
 }
 
 const handleHot = async () => {
   try {
     const response = await feedService.toggleHot(feed.value.feedId)
-
     if (response.success && response.data) {
       feed.value.hotCount = response.data.hotCount
-      feed.value.userReactions = {
-        ...feed.value.userReactions,
-        hasHot: response.data.action === 'added'
-      }
-      console.log('✅ [FEED_DETAIL] 핫 토글 완료')
+      feed.value.userReactions = { ...feed.value.userReactions, hasHot: response.data.action === 'added' }
     }
   } catch (err) {
-    console.error('❌ [FEED_DETAIL] 핫 실패:', err)
+    console.error('핫 실패:', err)
   }
 }
 
-const handleSave = () => {
-  isSaved.value = !isSaved.value
-}
-
-const handleFollow = () => {
-  isFollowing.value = true
-}
-
-const handleUnfollow = () => {
-  isFollowing.value = false
-}
+const handleSave = () => { isSaved.value = !isSaved.value }
+const handleFollow = () => { isFollowing.value = true }
+const handleUnfollow = () => { isFollowing.value = false }
 
 const handleShare = () => {
-  if (navigator.share) {
-    navigator.share({
-      title: getProductName.value,
-      url: window.location.href
-    }).catch(err => console.log('Share failed:', err))
-  }
+  if (navigator.share) navigator.share({ title: getProductName.value, url: window.location.href })
 }
 
 const handleCopyLink = () => {
-  navigator.clipboard.writeText(window.location.href)
-  .then(() => alert('링크가 복사되었습니다!'))
-  .catch(err => console.error('Copy failed:', err))
+  navigator.clipboard.writeText(window.location.href).then(() => alert('링크가 복사되었습니다!'))
 }
 
-const handleReport = () => {
-  console.log('Report feed')
-}
+const handleReport = () => console.log('Report feed')
+const searchByStore = () => console.log('Search by store:', feed.value?.buyPlace)
+const searchByHashtag = (tag) => router.push({ path: '/feed', query: { hashtag: tag } })
 
-const searchByStore = () => {
-  console.log('Search by store:', feed.value?.buyPlace)
-}
-
-const searchByHashtag = (tag) => {
-  console.log('Search by hashtag:', tag)
-  router.push({path: '/feed', query: {hashtag: tag}})
-}
-
-const sendMessage = () => {
-  console.log('Send DM to:', feed.value?.userInfo?.userId)
-}
-
-const submitComment = (commentText) => {
-  const comment = {
+const submitComment = (text) => {
+  comments.value.unshift({
     id: Date.now(),
-    author: {
-      name: 'current_user',
-      image: 'https://i.pravatar.cc/150?img=12',
-      level: 'LV.5'
-    },
-    text: commentText,
+    author: { name: 'current_user', image: 'https://i.pravatar.cc/150?img=12' },
+    text,
     time: '방금',
     fire: 0,
     isLiked: false,
-    isAuthor: false,
-    showReplies: false,
-    replies: []
-  }
-
-  comments.value.unshift(comment)
+    isAuthor: false
+  })
 }
 
-const replyToComment = (commentId) => {
-  console.log('Reply to comment:', commentId)
+const replyToComment = (id) => console.log('Reply to:', id)
+const likeComment = (id) => {
+  const c = comments.value.find(x => x.id === id)
+  if (c) { c.isLiked = !c.isLiked; c.fire += c.isLiked ? 1 : -1 }
 }
 
-const likeComment = (commentId) => {
-  const comment = comments.value.find(c => c.id === commentId)
-  if (comment) {
-    comment.isLiked = !comment.isLiked
-    comment.fire += comment.isLiked ? 1 : -1
-  }
-}
-
-onMounted(() => {
-  loadFeedDetail()
-})
+onMounted(() => loadFeedDetail())
 </script>
 
 <style scoped>
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-:root {
-  --primary: #1A1A1A;
-  --secondary: #666666;
-  --tertiary: #999999;
-  --accent: #FF6B35;
-  --border: #E5E5E5;
-  --bg: #FAFAFA;
-  --card: #FFFFFF;
-  --hover: #F5F5F5;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 .detail-container {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--bg);
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fff;
   min-height: 100vh;
-  color: var(--primary);
+  color: #111827;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Loading & Error States */
 .loading-container,
 .error-container {
   display: flex;
@@ -274,82 +176,57 @@ onMounted(() => {
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
+  width: 36px;
+  height: 36px;
+  border: 3px solid #f3f4f6;
+  border-top-color: #9333ea;
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .loading-text {
-  margin-top: 20px;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--secondary);
-  letter-spacing: -0.02em;
+  margin-top: 14px;
+  font-size: 14px;
+  color: #6b7280;
 }
 
 .error-text {
-  color: #DC2626;
-  font-size: 16px;
-  font-weight: 500;
-  margin-bottom: 24px;
+  color: #dc2626;
+  font-size: 15px;
+  margin-bottom: 20px;
   text-align: center;
-  line-height: 1.5;
 }
 
 .btn-retry {
-  padding: 14px 32px;
-  background: var(--accent);
+  padding: 12px 24px;
+  background: #9333ea;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: 9999px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s;
-  letter-spacing: -0.02em;
+  transition: background 0.2s;
 }
 
-.btn-retry:hover {
-  background: #E55A2B;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
-}
+.btn-retry:hover { background: #7c22ce; }
 
-/* Main Content */
 .detail-main {
-  max-width: 1440px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0;
 }
 
 .detail-wrapper {
   display: flex;
   flex-direction: column;
-  background: var(--card);
 }
 
-/* Desktop: 2 Column Layout */
 @media (min-width: 1024px) {
-  .detail-main {
-    padding: 32px;
-  }
-
   .detail-wrapper {
     flex-direction: row;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
-    min-height: calc(100vh - 140px);
+    min-height: calc(100vh - 56px);
   }
 }
 </style>

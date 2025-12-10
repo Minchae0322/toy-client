@@ -7,17 +7,21 @@
           class="author-avatar"
       />
       <div class="author-details">
-        <div class="author-name-wrapper">
+        <div class="author-name-row">
           <span class="author-name">{{ userInfo?.nickname || '알 수 없음' }}</span>
-          <span class="author-badge">인증</span>
+          <span v-if="userInfo?.verified" class="verified-badge">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+            </svg>
+          </span>
         </div>
         <div class="author-meta">
-          <span class="meta-item">{{ formatDate(createdAt) }}</span>
-          <span class="meta-divider"></span>
-          <span class="meta-item view-count">
-            <svg class="meta-icon" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"/>
+          <span>{{ formatDate(createdAt) }}</span>
+          <span class="meta-dot"></span>
+          <span class="view-count">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
             </svg>
             {{ formatCount(viewCount) }}
           </span>
@@ -25,14 +29,14 @@
       </div>
     </div>
 
-    <button v-if="!isFollowing" class="btn-follow" @click="$emit('follow')">
-      <span>팔로우</span>
-    </button>
-    <button v-else class="btn-following" @click="$emit('unfollow')">
-      <svg class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+    <button
+        @click="isFollowing ? $emit('unfollow') : $emit('follow')"
+        :class="['btn-follow', { 'btn-follow--active': isFollowing }]"
+    >
+      <svg v-if="isFollowing" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
       </svg>
-      <span>팔로잉</span>
+      {{ isFollowing ? '팔로잉' : '팔로우' }}
     </button>
   </div>
 </template>
@@ -76,18 +80,12 @@ const formatCount = (count) => feedUtils.formatCount(count)
 
 <style scoped>
 .author-section {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-}
-
-@media (min-width: 1024px) {
-  .author-section {
-    padding: 24px 28px;
-  }
+  gap: 12px;
+  border-bottom: 1px solid #f9fafb;
 }
 
 .author-info {
@@ -100,18 +98,16 @@ const formatCount = (count) => feedUtils.formatCount(count)
 }
 
 .author-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
   object-fit: cover;
   flex-shrink: 0;
-  border: 2px solid var(--border);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s;
 }
 
 .author-info:hover .author-avatar {
   transform: scale(1.05);
-  border-color: var(--accent);
 }
 
 .author-details {
@@ -119,126 +115,89 @@ const formatCount = (count) => feedUtils.formatCount(count)
   min-width: 0;
 }
 
-.author-name-wrapper {
+.author-name-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 6px;
+  margin-bottom: 2px;
 }
 
 .author-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--primary);
+  color: #111827;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: -0.03em;
 }
 
-.author-badge {
-  padding: 2px 8px;
-  background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
-  color: white;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+.verified-badge {
   flex-shrink: 0;
+}
+
+.verified-badge svg {
+  width: 16px;
+  height: 16px;
+  color: #9333ea;
 }
 
 .author-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  font-size: 12px;
+  color: #9ca3af;
 }
 
-.meta-item {
-  font-size: 13px;
-  color: var(--secondary);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-.meta-divider {
-  width: 1px;
-  height: 12px;
-  background: var(--border);
+.meta-dot {
+  width: 2px;
+  height: 2px;
+  border-radius: 9999px;
+  background: #d1d5db;
 }
 
 .view-count {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
-.meta-icon {
+.view-count svg {
   width: 14px;
   height: 14px;
-  color: var(--tertiary);
-}
-
-.btn-follow,
-.btn-following {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: inherit;
-  flex-shrink: 0;
-  letter-spacing: -0.02em;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .btn-follow {
-  background: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  background: #9333ea;
   color: white;
 }
 
 .btn-follow:hover {
-  background: #E55A2B;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  background: #7c22ce;
 }
 
-.btn-follow:active {
-  transform: translateY(0);
+.btn-follow--active {
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
-.btn-following {
-  background: var(--hover);
-  color: var(--secondary);
-  border: 1px solid var(--border);
+.btn-follow--active:hover {
+  background: #e5e7eb;
 }
 
-.btn-following:hover {
-  background: var(--bg);
-  border-color: var(--secondary);
-}
-
-.check-icon {
-  width: 16px;
-  height: 16px;
-}
-
-@media (max-width: 640px) {
-  .author-section {
-    padding: 16px 20px;
-  }
-
-  .author-name {
-    font-size: 15px;
-  }
-
-  .btn-follow,
-  .btn-following {
-    padding: 8px 16px;
-    font-size: 13px;
-  }
+.btn-follow svg {
+  width: 14px;
+  height: 14px;
 }
 </style>

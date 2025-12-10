@@ -199,7 +199,8 @@ export const isAuthenticated = () => {
 export const getCurrentUser = () => {
     // 1. 저장된 사용자 정보 우선 확인
     let user = getUserInfo()
-    if (user?.id) {
+    if (user?.id && typeof user.id === 'number' && user.id < 1000000000) {
+        // 유효한 userId인지 확인 (타임스탬프가 아닌지)
         return user
     }
 
@@ -214,18 +215,15 @@ export const getCurrentUser = () => {
         return null
     }
 
-    // 3. 토큰 페이로드에서 사용자 정보 구성
+    // 3. 토큰 페이로드에서 사용자 정보 구성 - userId를 명시적으로 사용
     user = {
-        id: payload.userId || payload.user_id || payload.id || payload.sub,
-        email: payload.email,
-        username: payload.username || payload.name || payload.sub,
-        nickname: payload.nickname || payload.username || payload.name,
-        role: payload.role || payload.auth || payload.authority || 'USER',
-        roles: payload.roles || payload.authorities || [],
+        id: payload.userId,  // 명시적으로 userId만 사용
+        email: payload.email || payload.username,
+        username: payload.username || payload.sub,
+        nickname: payload.nickname || payload.username,
+        role: payload.role || payload.auth || 'USER',
         provider: payload.provider || 'local',
-        profileImage: payload.picture || payload.avatar_url || null,
-        exp: payload.exp,
-        iat: payload.iat
+        profileImage: null
     }
 
     // 4. 유효한 사용자 정보가 있으면 저장 후 반환
