@@ -1,11 +1,8 @@
 <template>
   <section class="feed-section">
-    <!-- ⭐ 개선된 섹션 헤더 (제목 + 뷰 토글 + 정렬) -->
     <div class="section-header">
       <h2 class="section-title">최신 인증</h2>
-
       <div class="header-controls">
-        <!-- 뷰 토글 -->
         <div class="view-toggle">
           <button
               @click="$emit('view-mode-change', 'feed')"
@@ -26,8 +23,6 @@
             </svg>
           </button>
         </div>
-
-        <!-- 정렬 옵션 -->
         <select class="sort-select" v-model="sortOption">
           <option value="latest">최신순</option>
           <option value="popular">인기순</option>
@@ -57,7 +52,6 @@
       <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="handlePostClick(feed.feedId)">
         <div class="list-image">
           <img :src="feed.thumbnailUrl?.fileUrl || 'https://via.placeholder.com/400'" :alt="feed.productName" />
-          <!-- 🔥 Evaluation Badge Overlay (List View) -->
           <div v-if="feed.feedEvaluation" class="list-evaluation-badge-overlay">
             <span :class="['list-evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
               <svg class="list-eval-icon" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,6 +62,7 @@
           </div>
         </div>
         <div class="list-content">
+          <!-- 컴팩트 헤더 -->
           <div class="list-header">
             <div class="list-author-info">
               <div class="author-avatar-small">
@@ -78,18 +73,10 @@
                   </svg>
                 </span>
               </div>
-              <div>
-                <div class="author-name-row">
-                  <span class="author-name">{{ feed.userInfo?.nickname || '익명' }}</span>
-                  <span class="author-level-badge">
-                    <svg class="level-icon" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                  </span>
-                  <span class="list-category">{{ feed.categoryName }}</span>
-                </div>
-                <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
-              </div>
+              <span class="author-name">{{ feed.userInfo?.nickname || '익명' }}</span>
+              <span class="list-category">{{ feed.categoryName }}</span>
+              <span class="dot-separator">·</span>
+              <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
             </div>
             <button class="btn-more" @click.stop>
               <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
@@ -99,20 +86,8 @@
           </div>
 
           <div class="list-main">
-            <!-- 🔥 제목 + Evaluation Badge -->
-            <div class="list-title-row">
-              <h3 class="list-title">{{ feed.productName }}</h3>
-              <span v-if="feed.feedEvaluation" :class="['list-evaluation-status', getEvaluationClass(feed.feedEvaluation)]">
-                <svg class="list-eval-icon-small" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getEvaluationIconPath(feed.feedEvaluation)"/>
-                </svg>
-                {{ getEvaluationLabel(feed.feedEvaluation) }}
-              </span>
-            </div>
-
+            <h3 class="list-title">{{ feed.productName }}</h3>
             <p class="list-review">{{ feed.reviewSummary }}</p>
-
-            <!-- 🔥 리액션 & 가격 정보 (백엔드 응답 구조 반영) -->
             <div class="list-meta">
               <div class="list-reactions">
                 <span class="reaction-item">
@@ -136,7 +111,6 @@
               </div>
               <span v-if="feed.price" class="price">{{ formatPrice(feed.price) }}</span>
             </div>
-
             <div class="list-hashtags" v-if="feed.hashtags && feed.hashtags.length > 0">
               <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="hashtag" @click.stop>
                 #{{ tag }}
@@ -175,34 +149,13 @@ import FeedCard from './FeedCard.vue';
 import { feedUtils } from '@/services/FeedService';
 
 const props = defineProps({
-  feeds: {
-    type: Array,
-    default: () => []
-  },
-  loading: {
-    type: Boolean,
-    default: false
-  },
-  hasNext: {
-    type: Boolean,
-    default: true
-  },
-  viewMode: {
-    type: String,
-    default: 'feed'
-  },
-  likedPosts: {
-    type: Set,
-    default: () => new Set()
-  },
-  hotPosts: {
-    type: Set,
-    default: () => new Set()
-  },
-  savedPosts: {
-    type: Set,
-    default: () => new Set()
-  }
+  feeds: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false },
+  hasNext: { type: Boolean, default: true },
+  viewMode: { type: String, default: 'feed' },
+  likedPosts: { type: Set, default: () => new Set() },
+  hotPosts: { type: Set, default: () => new Set() },
+  savedPosts: { type: Set, default: () => new Set() }
 });
 
 const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click', 'view-mode-change']);
@@ -210,20 +163,11 @@ const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click', 'view-
 const sortOption = ref('latest');
 const observerTarget = ref(null);
 
-// 🔥 Evaluation 유틸리티 메서드
-const getEvaluationLabel = (evaluation) => {
-  return feedUtils.getEvaluationLabel(evaluation);
-};
+const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation);
 
 const getEvaluationClass = (evaluation) => {
   const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
-  const classMap = {
-    'BEST': 'eval-best',
-    'GOOD': 'eval-good',
-    'OKAY': 'eval-okay',
-    'BAD': 'eval-bad'
-  };
-  return classMap[code] || '';
+  return { 'BEST': 'eval-best', 'GOOD': 'eval-good', 'OKAY': 'eval-okay', 'BAD': 'eval-bad' }[code] || '';
 };
 
 const getEvaluationIconPath = (evaluation) => {
@@ -242,38 +186,15 @@ const getEvaluationIconFill = (evaluation) => {
   return code === 'BEST' ? 'currentColor' : 'none';
 };
 
-const handleUpdate = (data) => {
-  emit('update', data);
-};
+const handleUpdate = (data) => emit('update', data);
+const handleSave = (feedId) => emit('save', feedId);
+const handleComment = (feedId) => emit('comment', feedId);
+const handlePostClick = (feedId) => emit('post-click', feedId);
+const formatDate = (dateString) => feedUtils.formatDate(dateString);
+const formatPrice = (price) => feedUtils.formatPrice(price);
 
-const handleSave = (feedId) => {
-  console.log('💾 FeedList - Save:', feedId);
-  emit('save', feedId);
-};
-
-const handleComment = (feedId) => {
-  console.log('💬 FeedList - Comment:', feedId);
-  emit('comment', feedId);
-};
-
-const handlePostClick = (feedId) => {
-  console.log('🎯 FeedList - Post Click:', feedId);
-  emit('post-click', feedId);
-};
-
-const formatDate = (dateString) => {
-  return feedUtils.formatDate(dateString);
-};
-
-const formatPrice = (price) => {
-  return feedUtils.formatPrice(price);
-};
-
-defineExpose({
-  observerTarget
-});
+defineExpose({ observerTarget });
 </script>
-/* FeedList.vue - style 부분만 수정 */
 
 <style scoped>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -289,11 +210,7 @@ defineExpose({
   --shadow: rgba(0, 0, 0, 0.08);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 .feed-section {
   padding: 32px 0;
@@ -302,12 +219,9 @@ defineExpose({
 }
 
 @media (min-width: 1024px) {
-  .feed-section {
-    padding: 40px 0;
-  }
+  .feed-section { padding: 40px 0; }
 }
 
-/* ⭐ 개선된 섹션 헤더 */
 .section-header {
   display: flex;
   align-items: center;
@@ -315,16 +229,12 @@ defineExpose({
   margin-bottom: 24px;
   gap: 16px;
   flex-wrap: wrap;
-  padding: 0 20px;
+  padding: 0 20px 20px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 20px;
 }
 
 @media (min-width: 1024px) {
-  .section-header {
-    padding: 0 32px;
-    padding-bottom: 24px;
-  }
+  .section-header { padding: 0 32px 24px; }
 }
 
 .section-title {
@@ -334,19 +244,15 @@ defineExpose({
 }
 
 @media (min-width: 1024px) {
-  .section-title {
-    font-size: 24px;
-  }
+  .section-title { font-size: 24px; }
 }
 
-/* ⭐ 헤더 컨트롤 (뷰 토글 + 정렬) */
 .header-controls {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* ⭐ 뷰 토글 - 미니멀 디자인 */
 .view-toggle {
   display: flex;
   background: var(--hover);
@@ -382,12 +288,8 @@ defineExpose({
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-.view-btn .icon {
-  width: 18px;
-  height: 18px;
-}
+.view-btn .icon { width: 18px; height: 18px; }
 
-/* 정렬 셀렉트 */
 .sort-select {
   padding: 10px 36px 10px 16px;
   background: var(--hover);
@@ -417,41 +319,15 @@ defineExpose({
   box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.05);
 }
 
-/* 모바일 반응형 */
 @media (max-width: 767px) {
-  .section-header {
-    gap: 12px;
-    padding: 0 16px;
-    padding-bottom: 16px;
-  }
-
-  .section-title {
-    font-size: 18px;
-    flex: 1 1 100%;
-  }
-
-  .header-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .view-btn {
-    width: 34px;
-    height: 34px;
-  }
-
-  .view-btn .icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .sort-select {
-    font-size: 13px;
-    padding: 8px 30px 8px 12px;
-  }
+  .section-header { gap: 12px; padding: 0 16px 16px; }
+  .section-title { font-size: 18px; flex: 1 1 100%; }
+  .header-controls { width: 100%; justify-content: space-between; }
+  .view-btn { width: 34px; height: 34px; }
+  .view-btn .icon { width: 16px; height: 16px; }
+  .sort-select { font-size: 13px; padding: 8px 30px 8px 12px; }
 }
 
-/* Feed Grid */
 .feed-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -460,29 +336,17 @@ defineExpose({
 }
 
 @media (min-width: 768px) {
-  .feed-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    padding: 0 20px;
-  }
+  .feed-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 1024px) {
-  .feed-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-    padding: 0 32px;
-  }
+  .feed-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; padding: 0 32px; }
 }
 
 @media (min-width: 1600px) {
-  .feed-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
+  .feed-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* List View */
 .list-view {
   display: flex;
   flex-direction: column;
@@ -491,10 +355,7 @@ defineExpose({
 }
 
 @media (min-width: 1024px) {
-  .list-view {
-    gap: 20px;
-    padding: 0 32px;
-  }
+  .list-view { gap: 20px; padding: 0 32px; }
 }
 
 .list-item {
@@ -532,9 +393,7 @@ defineExpose({
   transition: transform 0.3s;
 }
 
-.list-item:hover .list-image img {
-  transform: scale(1.05);
-}
+.list-item:hover .list-image img { transform: scale(1.05); }
 
 .list-evaluation-badge-overlay {
   position: absolute;
@@ -547,40 +406,19 @@ defineExpose({
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 10px;
+  padding: 4px 10px;
   border-radius: 8px;
   font-size: 11px;
   font-weight: 700;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
 }
 
-.list-eval-icon {
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
-  stroke-width: 2;
-}
+.list-eval-icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 2; }
 
-.list-evaluation-badge.eval-best {
-  background: rgba(249, 115, 22, 0.95);
-  color: white;
-}
-
-.list-evaluation-badge.eval-good {
-  background: rgba(16, 185, 129, 0.95);
-  color: white;
-}
-
-.list-evaluation-badge.eval-okay {
-  background: rgba(59, 130, 246, 0.95);
-  color: white;
-}
-
-.list-evaluation-badge.eval-bad {
-  background: rgba(239, 68, 68, 0.95);
-  color: white;
-}
+.list-evaluation-badge.eval-best { background: #FFF7ED; color: #F97316; border: 1px solid #FDBA74; }
+.list-evaluation-badge.eval-good { background: #D1FAE5; color: #059669; border: 1px solid #6EE7B7; }
+.list-evaluation-badge.eval-okay { background: #DBEAFE; color: #2563EB; border: 1px solid #93C5FD; }
+.list-evaluation-badge.eval-bad { background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; }
 
 .list-content {
   flex: 1;
@@ -590,104 +428,75 @@ defineExpose({
   min-width: 0;
 }
 
+/* 컴팩트 헤더 */
 .list-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
 .list-author-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
 
 .author-avatar-small {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
   flex-shrink: 0;
   overflow: hidden;
   color: white;
 }
 
-.author-avatar-small img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.author-avatar-small img { width: 100%; height: 100%; object-fit: cover; }
 
-.avatar-placeholder svg {
-  width: 22px;
-  height: 22px;
-}
-
-.author-name-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
+.avatar-placeholder svg { width: 14px; height: 14px; }
 
 .author-name {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--primary);
-}
-
-.author-level-badge {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.level-icon {
-  width: 14px;
-  height: 14px;
-  color: #F59E0B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
 }
 
 .list-category {
-  padding: 3px 8px;
+  padding: 2px 6px;
   background: #EFF6FF;
   color: #1D4ED8;
-  border-radius: 6px;
-  font-size: 11px;
+  border-radius: 4px;
+  font-size: 10px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
-.list-time {
-  font-size: 12px;
-  color: var(--secondary);
-}
+.dot-separator { color: var(--secondary); font-size: 12px; }
+
+.list-time { font-size: 12px; color: var(--secondary); white-space: nowrap; }
 
 .btn-more {
-  padding: 6px;
+  padding: 4px;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background 0.2s;
   flex-shrink: 0;
 }
 
-.btn-more:hover {
-  background: var(--hover);
-}
-
-.btn-more .icon {
-  width: 18px;
-  height: 18px;
-  color: var(--secondary);
-}
+.btn-more:hover { background: var(--hover); }
+.btn-more .icon { width: 16px; height: 16px; color: var(--secondary); }
 
 .list-main {
   flex: 1;
@@ -696,62 +505,11 @@ defineExpose({
   gap: 10px;
 }
 
-.list-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .list-title {
   font-size: 17px;
   font-weight: 700;
   color: var(--primary);
   line-height: 1.4;
-  flex: 0 1 auto;
-}
-
-.list-evaluation-status {
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.list-eval-icon-small {
-  width: 13px;
-  height: 13px;
-  flex-shrink: 0;
-  stroke-width: 2;
-}
-
-.list-evaluation-status.eval-best {
-  background: #FFF7ED;
-  color: #F97316;
-  border: 1px solid #FDBA74;
-}
-
-.list-evaluation-status.eval-good {
-  background: #D1FAE5;
-  color: #059669;
-  border: 1px solid #6EE7B7;
-}
-
-.list-evaluation-status.eval-okay {
-  background: #DBEAFE;
-  color: #2563EB;
-  border: 1px solid #93C5FD;
-}
-
-.list-evaluation-status.eval-bad {
-  background: #FEE2E2;
-  color: #DC2626;
-  border: 1px solid #FCA5A5;
 }
 
 .list-review {
@@ -773,11 +531,7 @@ defineExpose({
   border-top: 1px solid var(--border);
 }
 
-.list-reactions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.list-reactions { display: flex; align-items: center; gap: 12px; }
 
 .reaction-item {
   display: flex;
@@ -788,18 +542,8 @@ defineExpose({
   font-weight: 600;
 }
 
-.icon-small {
-  width: 16px;
-  height: 16px;
-  stroke-width: 2;
-  flex-shrink: 0;
-  color: var(--secondary);
-}
-
-.icon-small.fire-icon {
-  width: 17px;
-  height: 17px;
-}
+.icon-small { width: 16px; height: 16px; stroke-width: 2; flex-shrink: 0; color: var(--secondary); }
+.icon-small.fire-icon { width: 17px; height: 17px; }
 
 .price {
   font-weight: 700;
@@ -809,12 +553,7 @@ defineExpose({
   margin-left: auto;
 }
 
-.list-hashtags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 4px;
-}
+.list-hashtags { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
 
 .hashtag {
   font-size: 12px;
@@ -827,12 +566,8 @@ defineExpose({
   border-radius: 6px;
 }
 
-.hashtag:hover {
-  color: #1E40AF;
-  background: #DBEAFE;
-}
+.hashtag:hover { color: #1E40AF; background: #DBEAFE; }
 
-/* Loading Section */
 .load-more-section {
   width: 100%;
   padding: 60px 20px;
@@ -860,24 +595,13 @@ defineExpose({
 }
 
 @keyframes spinner-rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.loading-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: #64748B;
-  margin: 0;
-  padding: 0;
-}
+.loading-text { font-size: 15px; font-weight: 600; color: #64748B; margin: 0; }
 
-.end-message,
-.empty-message {
+.end-message, .empty-message {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -890,39 +614,17 @@ defineExpose({
   margin: 0 auto;
 }
 
-.end-icon,
-.empty-icon {
-  width: 48px;
-  height: 48px;
-  color: var(--secondary);
-}
-
-.end-message p,
-.empty-message p {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--secondary);
-  margin: 0;
-}
+.end-icon, .empty-icon { width: 48px; height: 48px; color: var(--secondary); }
+.end-message p, .empty-message p { font-size: 15px; font-weight: 600; color: var(--secondary); margin: 0; }
 
 @media (max-width: 767px) {
-  .feed-section {
-    padding: 24px 0;
-  }
-
-  .list-view {
-    gap: 12px;
-    padding: 0 16px;
-  }
-
-  .list-item {
-    flex-direction: column;
-    padding: 16px;
-  }
-
-  .list-image {
-    width: 100%;
-    height: 200px;
-  }
+  .feed-section { padding: 24px 0; }
+  .list-view { gap: 12px; padding: 0 16px; }
+  .list-item { flex-direction: column; padding: 16px; }
+  .list-image { width: 100%; height: 200px; }
+  .author-avatar-small { width: 24px; height: 24px; }
+  .avatar-placeholder svg { width: 12px; height: 12px; }
+  .author-name { font-size: 12px; max-width: 80px; }
+  .list-category { font-size: 9px; padding: 2px 5px; }
 }
 </style>

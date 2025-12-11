@@ -28,6 +28,15 @@
               <span class="photo-count">{{ selectedPhotos.length }}/5</span>
             </div>
 
+            <!-- Processing Indicator -->
+            <div v-if="isProcessingImage" class="processing-indicator">
+              <svg class="spinner" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+              <span>이미지 처리 중...</span>
+            </div>
+
             <div v-if="selectedPhotos.length > 0" class="photo-grid">
               <div
                   v-for="(photo, index) in selectedPhotos"
@@ -52,14 +61,14 @@
             </div>
 
             <div class="photo-actions">
-              <label class="btn-photo-action" :class="{ disabled: selectedPhotos.length >= 5 }">
-                <input type="file" accept="image/*" multiple @change="handleFileSelect" style="display: none;" :disabled="selectedPhotos.length >= 5" />
+              <label class="btn-photo-action" :class="{ disabled: selectedPhotos.length >= 5 || isProcessingImage }">
+                <input type="file" accept="image/*" multiple @change="handleFileSelect" style="display: none;" :disabled="selectedPhotos.length >= 5 || isProcessingImage" />
                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <span>갤러리</span>
               </label>
-              <button class="btn-photo-action" @click="openCamera" :disabled="selectedPhotos.length >= 5">
+              <button class="btn-photo-action" @click="openCamera" :disabled="selectedPhotos.length >= 5 || isProcessingImage">
                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -67,7 +76,7 @@
                 <span>카메라</span>
               </button>
             </div>
-            <p class="hint-text">사진을 드래그하여 순서를 변경할 수 있습니다</p>
+            <p class="hint-text">사진을 드래그하여 순서를 변경할 수 있습니다 (최대 1920px로 자동 최적화)</p>
           </section>
 
           <!-- Product Name -->
@@ -284,6 +293,7 @@ const selectedPhotos = ref([])
 const showCancelDialog = ref(false)
 const showSuccessToast = ref(false)
 const isSubmitting = ref(false)
+const isProcessingImage = ref(false)
 const errorMessage = ref('')
 const hashtagInput = ref('')
 const productSuggestions = ref([])
@@ -327,8 +337,71 @@ const canSubmit = computed(() => {
       formData.value.subCategoryId &&
       formData.value.review.trim() &&
       formData.value.evaluation &&
-      !isSubmitting.value
+      !isSubmitting.value &&
+      !isProcessingImage.value
 })
+
+// 이미지 리사이징 유틸 함수
+const resizeImage = (file, maxSize = 1920, quality = 0.85) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+
+      let { width, height } = img
+
+      // 이미 충분히 작으면 원본 반환
+      if (width <= maxSize && height <= maxSize) {
+        resolve(file)
+        return
+      }
+
+      // 비율 유지하면서 리사이징
+      if (width > height) {
+        height = Math.round((height / width) * maxSize)
+        width = maxSize
+      } else {
+        width = Math.round((width / height) * maxSize)
+        height = maxSize
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+
+      const ctx = canvas.getContext('2d')
+      // 고품질 리샘플링
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const resizedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              })
+              resolve(resizedFile)
+            } else {
+              reject(new Error('이미지 변환 실패'))
+            }
+          },
+          'image/jpeg',
+          quality
+      )
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('이미지 로드 실패'))
+    }
+
+    img.src = objectUrl
+  })
+}
 
 // Category Methods
 const loadCategories = async () => {
@@ -381,19 +454,40 @@ const handleDrop = (e, dropIndex) => {
   dragOverIndex.value = null
 }
 
-const handleFileSelect = (e) => {
+const handleFileSelect = async (e) => {
   const files = Array.from(e.target.files)
   const remaining = 5 - selectedPhotos.value.length
-  for (const file of files.slice(0, remaining)) {
-    if (!file.type.startsWith('image/')) continue
-    if (file.size > 10 * 1024 * 1024) { showError('파일 크기는 10MB 이하만 가능합니다.'); continue }
-    selectedPhotos.value.push({
-      id: Date.now() + Math.random(),
-      file,
-      preview: URL.createObjectURL(file)
-    })
+
+  if (files.length === 0) return
+
+  isProcessingImage.value = true
+
+  try {
+    for (const file of files.slice(0, remaining)) {
+      if (!file.type.startsWith('image/')) continue
+      if (file.size > 10 * 1024 * 1024) {
+        showError('파일 크기는 10MB 이하만 가능합니다.')
+        continue
+      }
+
+      try {
+        // 리사이징 적용 (최대 1920px, 품질 85%)
+        const resizedFile = await resizeImage(file, 1920, 0.85)
+
+        selectedPhotos.value.push({
+          id: Date.now() + Math.random(),
+          file: resizedFile,
+          preview: URL.createObjectURL(resizedFile)
+        })
+      } catch (error) {
+        console.error('Image resize error:', error)
+        showError('이미지 처리 중 오류가 발생했습니다.')
+      }
+    }
+  } finally {
+    isProcessingImage.value = false
+    e.target.value = ''
   }
-  e.target.value = ''
 }
 
 const removePhoto = (index) => {
@@ -563,6 +657,21 @@ onBeforeUnmount(() => {
 .section-icon { width: 20px; height: 20px; color: var(--accent); }
 .card-title { font-size: 16px; font-weight: 700; flex: 1; }
 .photo-count { font-size: 14px; color: var(--secondary); }
+
+/* Processing Indicator */
+.processing-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  background: #f3e8ff;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+}
 
 /* Photo Grid */
 .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }

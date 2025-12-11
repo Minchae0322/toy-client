@@ -10,6 +10,7 @@
           :src="getCurrentImage"
           :alt="productName"
           class="main-image"
+          loading="lazy"
       />
 
       <!-- Like Animation -->
@@ -133,6 +134,9 @@ const handleLike = () => {
   object-fit: cover;
   display: block;
   user-select: none;
+  /* 이미지 렌더링 품질 개선 */
+  image-rendering: auto;
+  image-rendering: high-quality;
 }
 
 @media (min-width: 1024px) {
@@ -224,8 +228,13 @@ const handleLike = () => {
   transform: translateY(-50%) scale(0.95);
 }
 
-.nav-btn.prev { left: 16px; }
-.nav-btn.next { right: 16px; }
+.nav-btn.prev {
+  left: 16px;
+}
+
+.nav-btn.next {
+  right: 16px;
+}
 
 .nav-icon {
   width: 20px;
