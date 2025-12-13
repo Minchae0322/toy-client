@@ -16,7 +16,7 @@
 
         <!-- Price + Store -->
         <div class="price-row">
-          <span class="price">{{ formatPrice(feed.buyPrice) }}</span>
+          <span class="buy-price">{{ formatPrice(feed.buyPrice) }}</span>
           <div v-if="feed.buyPlace" class="store" @click="$emit('search-store')">
             <svg class="store-icon" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"/>
@@ -312,7 +312,7 @@ const handleSendMessage = async () => {
   margin-bottom: 20px;
 }
 
-.price {
+.buy-price {
   font-size: 24px;
   font-weight: 700;
   color: #9333ea;
@@ -339,6 +339,7 @@ const handleSendMessage = async () => {
   color: #4b5563;
   line-height: 1.7;
   margin-bottom: 16px;
+  white-space: pre-line;
 }
 
 .hashtags {

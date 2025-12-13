@@ -54,7 +54,7 @@
 
         <!-- 가격 -->
         <div class="price-section">
-          <span class="price">{{ product.displayPrice }}</span>
+          <span class="buy-price">{{ product.displayPrice }}</span>
         </div>
 
         <!-- 통계 -->
@@ -129,7 +129,7 @@
         <!-- 우측 액션 영역 -->
         <div class="action-section">
           <div class="price-section">
-            <span class="price">{{ product.displayPrice }}</span>
+            <span class="buy-price">{{ product.displayPrice }}</span>
           </div>
 
           <div class="stats">
@@ -363,7 +363,7 @@ const formatDate = (dateString) => {
   margin-bottom: 0.75rem;
 }
 
-.grid-layout .price {
+.grid-layout .buy-price {
   font-size: 1.125rem;
   font-weight: 700;
   color: #1e293b;
@@ -511,7 +511,7 @@ const formatDate = (dateString) => {
   text-align: right;
 }
 
-.list-layout .price {
+.list-layout .buy-price {
   font-size: 1.25rem;
   font-weight: 700;
   color: #1e293b;
@@ -631,7 +631,7 @@ const formatDate = (dateString) => {
     color: #9ca3af;
   }
 
-  .price {
+  .buy-price {
     color: #f9fafb;
   }
 

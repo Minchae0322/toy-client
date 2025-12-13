@@ -80,7 +80,7 @@
         <p v-if="feed.reviewSummary" class="post-review">{{ feed.reviewSummary }}</p>
         <div v-if="feed.price || feed.buyPlace" class="post-details">
           <span v-if="feed.buyPlace" class="store">{{ feed.buyPlace }}</span>
-          <span v-if="feed.price" class="price">{{ formatPrice(feed.price) }}</span>
+          <span v-if="feed.price" class="buy-price">{{ formatPrice(feed.price) }}</span>
           <span v-if="showDiscount" class="discount">{{ discountRate }}%</span>
         </div>
         <div v-if="feed.hashtags && feed.hashtags.length > 0" class="post-hashtags">
@@ -510,7 +510,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
 }
 
 .store { color: var(--secondary); }
-.price { font-weight: 600; color: var(--secondary); }
+.buy-price { font-weight: 600; color: var(--secondary); }
 .discount { padding: 2px 5px; background: #FEE2E2; color: #DC2626; border-radius: 4px; font-size: 10px; font-weight: 700; }
 
 .post-hashtags {

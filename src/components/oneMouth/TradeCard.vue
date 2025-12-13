@@ -49,7 +49,7 @@
 
       <!-- 가격 -->
       <div class="price-wrap">
-        <span class="price">{{ formatPrice(trade.sellingPrice) }}원</span>
+        <span class="buy-price">{{ formatPrice(trade.sellingPrice) }}원</span>
         <span v-if="trade.originalPrice && trade.originalPrice > trade.sellingPrice" class="price-original">
           {{ formatPrice(trade.originalPrice) }}원
         </span>
@@ -364,7 +364,7 @@ const toggleFavorite = () => {
   margin-bottom: 0.75rem;
 }
 
-.price {
+.buy-price {
   font-size: 1.25rem;
   font-weight: 700;
   color: #1A1A1A;

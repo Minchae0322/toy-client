@@ -62,7 +62,6 @@
           </div>
         </div>
         <div class="list-content">
-          <!-- 컴팩트 헤더 -->
           <div class="list-header">
             <div class="list-author-info">
               <div class="author-avatar-small">
@@ -75,7 +74,6 @@
               </div>
               <span class="author-name">{{ feed.userInfo?.nickname || '익명' }}</span>
               <span class="list-category">{{ feed.categoryName }}</span>
-              <span class="dot-separator">·</span>
               <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
             </div>
             <button class="btn-more" @click.stop>
@@ -87,7 +85,7 @@
 
           <div class="list-main">
             <h3 class="list-title">{{ feed.productName }}</h3>
-            <p class="list-review">{{ feed.reviewSummary }}</p>
+            <p class="list-review" v-html="formatReview(feed.reviewSummary)"></p>
             <div class="list-meta">
               <div class="list-reactions">
                 <span class="reaction-item">
@@ -109,7 +107,9 @@
                   {{ feed.commentCount || 0 }}
                 </span>
               </div>
-              <span v-if="feed.price" class="price">{{ formatPrice(feed.price) }}</span>
+              <div class="price-place">
+                <span v-if="feed.buyPrice" class="buy-price">{{ formatBuyPrice(feed.buyPrice) }}</span>
+              </div>
             </div>
             <div class="list-hashtags" v-if="feed.hashtags && feed.hashtags.length > 0">
               <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="hashtag" @click.stop>
@@ -191,7 +191,11 @@ const handleSave = (feedId) => emit('save', feedId);
 const handleComment = (feedId) => emit('comment', feedId);
 const handlePostClick = (feedId) => emit('post-click', feedId);
 const formatDate = (dateString) => feedUtils.formatDate(dateString);
-const formatPrice = (price) => feedUtils.formatPrice(price);
+const formatBuyPrice = (price) => feedUtils.formatPrice(price);
+const formatReview = (text) => {
+  if (!text) return '';
+  return text.replace(/\n/g, '<br>');
+};
 
 defineExpose({ observerTarget });
 </script>
@@ -424,11 +428,11 @@ defineExpose({ observerTarget });
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
+  min-height: 180px;
 }
 
-/* 컴팩트 헤더 */
 .list-header {
   display: flex;
   align-items: center;
@@ -502,7 +506,6 @@ defineExpose({ observerTarget });
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 .list-title {
@@ -510,6 +513,7 @@ defineExpose({ observerTarget });
   font-weight: 700;
   color: var(--primary);
   line-height: 1.4;
+  margin-bottom: 6px;
 }
 
 .list-review {
@@ -520,6 +524,9 @@ defineExpose({ observerTarget });
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  margin-bottom: auto;
 }
 
 .list-meta {
@@ -527,8 +534,9 @@ defineExpose({ observerTarget });
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 0;
+  padding: 10px 0;
   border-top: 1px solid var(--border);
+  margin-top: auto;
 }
 
 .list-reactions { display: flex; align-items: center; gap: 12px; }
@@ -545,15 +553,24 @@ defineExpose({ observerTarget });
 .icon-small { width: 16px; height: 16px; stroke-width: 2; flex-shrink: 0; color: var(--secondary); }
 .icon-small.fire-icon { width: 17px; height: 17px; }
 
-.price {
+.price-place {
+  display: flex;
+  align-items: center;
+}
+
+.buy-price {
   font-weight: 700;
   color: var(--primary);
   font-size: 14px;
   white-space: nowrap;
-  margin-left: auto;
 }
 
-.list-hashtags { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+.list-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
 
 .hashtag {
   font-size: 12px;
@@ -622,6 +639,7 @@ defineExpose({ observerTarget });
   .list-view { gap: 12px; padding: 0 16px; }
   .list-item { flex-direction: column; padding: 16px; }
   .list-image { width: 100%; height: 200px; }
+  .list-content { min-height: auto; }
   .author-avatar-small { width: 24px; height: 24px; }
   .avatar-placeholder svg { width: 12px; height: 12px; }
   .author-name { font-size: 12px; max-width: 80px; }
