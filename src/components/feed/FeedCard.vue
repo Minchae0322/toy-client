@@ -76,7 +76,10 @@
       </div>
 
       <div class="post-info">
-        <h3 class="post-title">{{ feed.productName }}</h3>
+        <div class="post-title-row">
+          <h3 class="post-title">{{ feed.productName }}</h3>
+          <span v-if="feed.price" class="post-price">{{ formatPrice(feed.price) }}</span>
+        </div>
         <p v-if="feed.reviewSummary" class="post-review">{{ feed.reviewSummary }}</p>
         <div v-if="feed.price || feed.buyPlace" class="post-details">
           <span v-if="feed.buyPlace" class="store">{{ feed.buyPlace }}</span>
@@ -330,17 +333,24 @@ const formatCount = (count) => feedUtils.formatCount(count);
   color: var(--secondary);
 }
 
-/* 이미지 */
+/* ========== 이미지 - 수정됨 ========== */
 .post-image-container {
   position: relative;
   width: 100%;
+  aspect-ratio: 4 / 3;
   user-select: none;
+  overflow: hidden;
+  background: #f1f5f9;
 }
 
 .post-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 300px;
+  height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
 }
 
@@ -349,6 +359,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   position: absolute;
   top: 10px;
   left: 10px;
+  z-index: 1;
 }
 
 .evaluation-status {
@@ -371,27 +382,31 @@ const formatCount = (count) => feedUtils.formatCount(count);
 
 /* 평가 타입별 색상 */
 .evaluation-status.eval-best {
-  background: #FFF7ED;
+  background: rgba(255, 247, 237, 0.85);
   color: #F97316;
-  border: 1px solid #FDBA74;
+  border: 1px solid rgba(253, 186, 116, 0.8);
+  backdrop-filter: blur(4px);
 }
 
 .evaluation-status.eval-good {
-  background: #D1FAE5;
+  background: rgba(209, 250, 229, 0.85);
   color: #059669;
-  border: 1px solid #6EE7B7;
+  border: 1px solid rgba(110, 231, 183, 0.8);
+  backdrop-filter: blur(4px);
 }
 
 .evaluation-status.eval-okay {
-  background: #DBEAFE;
+  background: rgba(219, 234, 254, 0.85);
   color: #2563EB;
-  border: 1px solid #93C5FD;
+  border: 1px solid rgba(147, 197, 253, 0.8);
+  backdrop-filter: blur(4px);
 }
 
 .evaluation-status.eval-bad {
-  background: #FEE2E2;
+  background: rgba(254, 226, 226, 0.85);
   color: #DC2626;
-  border: 1px solid #FCA5A5;
+  border: 1px solid rgba(252, 165, 165, 0.8);
+  backdrop-filter: blur(4px);
 }
 
 /* 좋아요 애니메이션 */
@@ -402,6 +417,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   transform: translate(-50%, -50%);
   animation: likeZoom 0.6s ease-out;
   pointer-events: none;
+  z-index: 2;
 }
 
 .heart-anim {
@@ -483,11 +499,28 @@ const formatCount = (count) => feedUtils.formatCount(count);
   gap: 6px;
 }
 
+.post-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .post-title {
   font-size: 15px;
   font-weight: 700;
   color: var(--primary);
   line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+
+.post-price {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .post-review {
@@ -530,9 +563,8 @@ const formatCount = (count) => feedUtils.formatCount(count);
   text-decoration: underline;
 }
 
-/* 반응형 */
+/* ========== 반응형 - 이미지 고정 height 제거됨 ========== */
 @media (min-width: 1024px) {
-  .post-image { height: 260px; }
   .post-title { font-size: 16px; }
 }
 
@@ -544,7 +576,6 @@ const formatCount = (count) => feedUtils.formatCount(count);
   .category-badge { font-size: 9px; padding: 1px 5px; }
   .post-time { font-size: 10px; }
   .more-icon { width: 12px; height: 12px; }
-  .post-image { height: 280px; }
 
   /* 모바일 평가 배지 */
   .evaluation-status {

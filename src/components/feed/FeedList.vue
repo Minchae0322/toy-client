@@ -324,7 +324,7 @@ defineExpose({ observerTarget });
 }
 
 @media (max-width: 767px) {
-  .section-header { gap: 12px; padding: 0 16px 16px; }
+  .section-header { gap: 12px; padding: 0 12px 16px; }
   .section-title { font-size: 18px; flex: 1 1 100%; }
   .header-controls { width: 100%; justify-content: space-between; }
   .view-btn { width: 34px; height: 34px; }
@@ -349,6 +349,10 @@ defineExpose({ observerTarget });
 
 @media (min-width: 1600px) {
   .feed-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .feed-grid { padding: 0 8px; gap: 12px; }
 }
 
 .list-view {
@@ -419,10 +423,33 @@ defineExpose({ observerTarget });
 
 .list-eval-icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 2; }
 
-.list-evaluation-badge.eval-best { background: #FFF7ED; color: #F97316; border: 1px solid #FDBA74; }
-.list-evaluation-badge.eval-good { background: #D1FAE5; color: #059669; border: 1px solid #6EE7B7; }
-.list-evaluation-badge.eval-okay { background: #DBEAFE; color: #2563EB; border: 1px solid #93C5FD; }
-.list-evaluation-badge.eval-bad { background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; }
+.list-evaluation-badge.eval-best {
+  background: rgba(255, 247, 237, 0.85);
+  color: #F97316;
+  border: 1px solid rgba(253, 186, 116, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.list-evaluation-badge.eval-good {
+  background: rgba(209, 250, 229, 0.85);
+  color: #059669;
+  border: 1px solid rgba(110, 231, 183, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.list-evaluation-badge.eval-okay {
+  background: rgba(219, 234, 254, 0.85);
+  color: #2563EB;
+  border: 1px solid rgba(147, 197, 253, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.list-evaluation-badge.eval-bad {
+  background: rgba(254, 226, 226, 0.85);
+  color: #DC2626;
+  border: 1px solid rgba(252, 165, 165, 0.8);
+  backdrop-filter: blur(4px);
+}
 
 .list-content {
   flex: 1;
@@ -636,7 +663,7 @@ defineExpose({ observerTarget });
 
 @media (max-width: 767px) {
   .feed-section { padding: 24px 0; }
-  .list-view { gap: 12px; padding: 0 16px; }
+  .list-view { gap: 12px; padding: 0 8px; }
   .list-item { flex-direction: column; padding: 16px; }
   .list-image { width: 100%; height: 200px; }
   .list-content { min-height: auto; }
