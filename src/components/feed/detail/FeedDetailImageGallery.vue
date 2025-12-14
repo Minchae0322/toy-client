@@ -122,7 +122,7 @@ const handleLike = () => {
 .image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   background: #f9fafb;
   cursor: pointer;
@@ -134,7 +134,6 @@ const handleLike = () => {
   object-fit: cover;
   display: block;
   user-select: none;
-  /* 이미지 렌더링 품질 개선 */
   image-rendering: auto;
   image-rendering: high-quality;
 }
@@ -153,8 +152,8 @@ const handleLike = () => {
 
   .image-container {
     width: 100%;
-    max-width: calc(100vh - 56px);
-    aspect-ratio: 1 / 1;
+    max-width: calc((100vh - 56px) * 4 / 3);
+    aspect-ratio: 4 / 3;
   }
 
   .main-image {

@@ -418,8 +418,8 @@ defineExpose({ observerTarget });
 
 .list-image {
   position: relative;
-  width: 180px;
-  height: 180px;
+  width: 200px;
+  aspect-ratio: 4 / 3;
   flex-shrink: 0;
   border-radius: 12px;
   overflow: hidden;
@@ -696,7 +696,7 @@ defineExpose({ observerTarget });
   .feed-section { padding: 24px 0; }
   .list-view { gap: 12px; padding: 0 8px; }
   .list-item { flex-direction: column; padding: 16px; }
-  .list-image { width: 100%; height: 200px; }
+  .list-image { width: 100%; aspect-ratio: 4 / 3; }
   .list-content { min-height: auto; }
   .author-avatar-small { width: 24px; height: 24px; }
   .avatar-placeholder svg { width: 12px; height: 12px; }
