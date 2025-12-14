@@ -347,9 +347,10 @@ const createBattle = async () => {
       if (uploadedFile) {
         thumbnailAttachmentInfo = {
           fileId: uploadedFile.id,
-          fileUrl: uploadedFile.fileUrl,
-          orgFileNm: uploadedFile.orgFileNm,
-          fileSize: uploadedFile.fileSize
+          storedPath: uploadedFile.fileUrl,    // ✅ fileUrl → storedPath
+          originName: uploadedFile.orgFileNm,  // ✅ orgFileNm → originName
+          fileSize: uploadedFile.fileSize,
+          contentType: uploadedFile.contentType || null
         };
       }
 
