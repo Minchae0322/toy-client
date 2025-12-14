@@ -50,7 +50,7 @@
           </div>
         </nav>
 
-        <!-- 카테고리 필터 - ⭐ show-all-button 제거하고 initial-selected 추가 -->
+        <!-- 카테고리 필터 -->
         <CommonCategoryFilter
             :categories="categories"
             :initial-selected="selectedCategoryId"
@@ -176,10 +176,9 @@ const loading = ref(false)
 const hotLoading = ref(false)
 const battleListRef = ref(null)
 
-// ⭐ 선택된 카테고리 상태 추가
 const selectedCategory = ref(null)
 const selectedSubCategory = ref(null)
-const selectedCategoryId = ref(null) // 초기값 null = 전체
+const selectedCategoryId = ref(null)
 const categories = ref([])
 
 // Computed
@@ -212,10 +211,9 @@ const loadCategories = async () => {
     const response = await categoryService.getCategories()
     if (response.success && response.data) {
       categories.value = response.data
-      console.log('✅ 카테고리 로드 성공:', categories.value)
     }
   } catch (error) {
-    console.error('❌ 카테고리 로드 실패:', error)
+    console.error('카테고리 로드 실패:', error)
   }
 }
 
@@ -228,10 +226,9 @@ const loadHotBattles = async () => {
     )
     if (response.success && response.data) {
       hotBattles.value = response.data.content || response.data
-      console.log('✅ HOT 배틀 로드 성공:', hotBattles.value.length)
     }
   } catch (error) {
-    console.error('❌ HOT 배틀 로드 실패:', error)
+    console.error('HOT 배틀 로드 실패:', error)
   } finally {
     hotLoading.value = false
   }
@@ -256,15 +253,11 @@ const loadBattles = async (reset = false) => {
       searchCondition.status = 'CLOSED'
     }
 
-    // ⭐ 카테고리 필터 적용
     if (selectedSubCategory.value) {
       searchCondition.category = selectedSubCategory.value.categoryId
     } else if (selectedCategory.value) {
       searchCondition.category = selectedCategory.value.categoryId
     }
-    // selectedCategoryId가 null이면 전체 배틀 조회
-
-    console.log('🔍 배틀 로드 요청:', searchCondition)
 
     const response = await battleService.getBattles(
         searchCondition,
@@ -283,15 +276,9 @@ const loadBattles = async (reset = false) => {
         hasNext.value = false
       }
       currentPage.value++
-
-      console.log('✅ 배틀 로드 성공:', {
-        총배틀수: battles.value.length,
-        전체개수: totalCount.value,
-        다음페이지: hasNext.value
-      })
     }
   } catch (error) {
-    console.error('❌ 배틀 목록 로드 실패:', error)
+    console.error('배틀 목록 로드 실패:', error)
   } finally {
     loading.value = false
   }
@@ -314,16 +301,13 @@ const updateTabCounts = async () => {
     if (endedResponse.success && endedResponse.data.totalElements !== undefined) {
       tabs.value[1].count = endedResponse.data.totalElements
     }
-
-    console.log('✅ 탭 카운트 업데이트:', tabs.value)
   } catch (error) {
-    console.error('❌ 탭 카운트 업데이트 실패:', error)
+    console.error('탭 카운트 업데이트 실패:', error)
   }
 }
 
 // Event Handlers
 const handleCategoryChange = ({ category, subCategory }) => {
-  // ⭐ 전체 선택 시 null 처리
   if (!category && !subCategory) {
     selectedCategoryId.value = null
     selectedCategory.value = null
@@ -333,18 +317,10 @@ const handleCategoryChange = ({ category, subCategory }) => {
     selectedSubCategory.value = subCategory
     selectedCategoryId.value = subCategory?.categoryId || category?.categoryId
   }
-
-  console.log('📌 카테고리 변경:', {
-    category: category?.categoryName || '전체',
-    subCategory: subCategory?.categoryName,
-    selectedCategoryId: selectedCategoryId.value
-  })
-
   resetAndLoadBattles()
 }
 
 const resetAndLoadBattles = () => {
-  console.log('🔄 배틀 목록 초기화')
   battles.value = []
   currentPage.value = 0
   hasNext.value = true
@@ -352,7 +328,6 @@ const resetAndLoadBattles = () => {
 }
 
 const openBattle = (battleId) => {
-  console.log('📖 배틀 상세 페이지로 이동:', battleId)
   router.push({ name: 'BattleDetail', params: { id: battleId } })
 }
 
@@ -360,18 +335,16 @@ const handleCreateBattle = async () => {
   try {
     const response = await battleService.validateCreation()
     if (response.success) {
-      console.log('✍️ 배틀 생성 페이지로 이동')
       router.push({ name: 'BattleCreate' })
     }
   } catch (error) {
-    console.error('❌ 배틀 생성 권한 체크 실패:', error)
+    console.error('배틀 생성 권한 체크 실패:', error)
     alert(error.message || '배틀을 생성할 수 없습니다.')
   }
 }
 
 // Watchers
 watch(activeTab, () => {
-  console.log('📑 탭 변경:', activeTab.value)
   resetAndLoadBattles()
 })
 
@@ -379,8 +352,6 @@ watch(activeTab, () => {
 let observer = null
 
 onMounted(async () => {
-  console.log('✅ BattleHomeView 마운트')
-
   await Promise.all([loadCategories(), updateTabCounts()])
   await Promise.all([
     loadHotBattles(),
@@ -390,7 +361,6 @@ onMounted(async () => {
   observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNext.value && !loading.value) {
-          console.log('👁️ 스크롤 감지 - 다음 페이지 로드')
           loadBattles()
         }
       },
@@ -400,7 +370,6 @@ onMounted(async () => {
   setTimeout(() => {
     if (battleListRef.value?.observerTarget) {
       observer.observe(battleListRef.value.observerTarget)
-      console.log('✅ Intersection Observer 연결')
     }
   }, 100)
 })
@@ -408,56 +377,51 @@ onMounted(async () => {
 onUnmounted(() => {
   if (observer) {
     observer.disconnect()
-    console.log('🔌 Intersection Observer 해제')
   }
 })
 </script>
 
 <style scoped>
-/* ... 기존 스타일 동일 ... */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
 :root {
-  --primary: #222222;
-  --secondary: #64748B;
-  --accent: #F97316;
-  --bg: #FFFFFF;
-  --card: #FFFFFF;
-  --border: #E2E8F0;
-  --hover: #F8FAFC;
-  --shadow: rgba(0, 0, 0, 0.04);
+  --primary: #0f172a;
+  --primary-accent: #9333ea;
+  --secondary: #64748b;
+  --bg: #ffffff;
+  --card: #ffffff;
+  --border: #f1f5f9;
+  --border-hover: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
 }
 
-/* 기본 설정 */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* ⭐ FeedHomeView와 동일하게 수정 */
 .app-container {
   background: var(--bg);
   min-height: 100vh;
-  color: var(--primary);
+  color: var(--text-primary);
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
   max-width: 100vw;
 }
 
-/* 모바일: 작은 여백 */
 .app-container {
   padding: 0 1rem;
 }
 
-/* 태블릿: 중간 여백 */
 @media (min-width: 768px) {
   .app-container {
     padding: 0 2rem;
   }
 }
 
-/* 데스크톱: 큰 여백 */
 @media (min-width: 1280px) {
   .app-container {
     padding: 0 3rem;
@@ -467,14 +431,12 @@ onUnmounted(() => {
   }
 }
 
-/* 대형 화면: 더 큰 여백 */
 @media (min-width: 1920px) {
   .app-container {
     padding: 0 4rem;
   }
 }
 
-/* ⭐ FeedHomeView와 동일하게 수정 */
 .main-content {
   flex: 1;
   min-width: 0;
@@ -490,7 +452,7 @@ onUnmounted(() => {
 
 /* 메인 헤더 */
 .main-header {
-  background: white;
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -531,9 +493,9 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: var(--secondary);
+  color: var(--text-muted);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
@@ -547,39 +509,33 @@ onUnmounted(() => {
 }
 
 .tab-button:hover {
-  color: var(--primary);
+  color: var(--text-secondary);
 }
 
 .tab-button.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+  color: var(--text-primary);
+  font-weight: 600;
+  border-bottom-color: var(--text-primary);
 }
 
 .tab-count {
-  padding: 0.1875rem 0.5rem;
-  background: var(--hover);
-  color: var(--secondary);
+  padding: 0.125rem 0.375rem;
   font-size: 0.6875rem;
-  font-weight: 700;
-  border-radius: 0.375rem;
-  min-width: 1.25rem;
-  text-align: center;
-  border: 1px solid var(--border);
+  font-weight: 600;
+  border-radius: 0.25rem;
+  color: var(--text-muted);
 }
 
 .tab-button.active .tab-count {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
+  color: var(--primary-accent);
 }
 
 .view-switcher {
   display: flex;
-  background: var(--hover);
+  background: var(--border);
   border-radius: 0.5rem;
-  padding: 0.1875rem;
+  padding: 0.125rem;
   gap: 0.125rem;
-  border: 1px solid var(--border);
 }
 
 @media (max-width: 768px) {
@@ -589,158 +545,128 @@ onUnmounted(() => {
 }
 
 .view-btn {
-  width: 2.125rem;
-  height: 2.125rem;
+  width: 2rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: none;
   border-radius: 0.375rem;
-  color: var(--secondary);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .view-btn:hover {
-  color: var(--primary);
+  color: var(--text-secondary);
 }
 
 .view-btn.active {
-  background: white;
-  color: var(--primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  background: var(--bg);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
-
 
 @media (max-width: 768px) {
   .content-wrapper {
-    padding: 1.25rem 0;
+    padding: 0;
   }
 }
 
 /* 배틀 섹션 */
 .battles-section {
   margin-top: 0;
+  padding: 20px 16px;
+}
+
+@media (min-width: 768px) {
+  .battles-section {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .battles-section {
+    padding: 24px 32px;
+  }
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
-  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border);
 }
 
 @media (max-width: 640px) {
   .section-header {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
   }
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-}
-
-@media (max-width: 768px) {
-  .header-right {
-    gap: 0.5rem;
-  }
+  gap: 0.75rem;
 }
 
 .section-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--primary);
-  letter-spacing: -0.02em;
-}
-
-@media (min-width: 1024px) {
-  .section-title {
-    font-size: 1.25rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .section-title {
-    font-size: 1rem;
-  }
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .section-count {
-  padding: 0.25rem 0.625rem;
-  background: var(--hover);
-  color: var(--secondary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 0.5rem;
-  border: 1px solid var(--border);
-}
-
-@media (max-width: 640px) {
-  .section-count {
-    font-size: 0.6875rem;
-    padding: 0.1875rem 0.5rem;
-  }
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .sort-select {
-  padding: 0.5rem 2rem 0.5rem 0.75rem;
-  background: var(--hover);
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  color: var(--primary);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  padding: 0.375rem 1.5rem 0.375rem 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748B' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  transition: all 0.2s;
+  background-position: right 0 center;
   font-family: inherit;
-}
-
-.sort-select:hover {
-  background: white;
-  border-color: #CBD5E1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .sort-select:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.05);
 }
 
 .create-battle-btn {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.625rem 1.125rem;
-  background: var(--primary);
+  gap: 0.25rem;
+  padding: 0.5rem 0.875rem;
+  background: var(--primary-accent);
   color: white;
   border: none;
-  border-radius: 0.625rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
   font-family: inherit;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 @media (max-width: 768px) {
   .create-battle-btn {
-    padding: 0.5rem 0.875rem;
-    font-size: 0.8125rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -750,34 +676,29 @@ onUnmounted(() => {
   }
 
   .create-battle-btn {
-    width: 2.375rem;
-    height: 2.375rem;
+    width: 2.25rem;
+    height: 2.25rem;
     padding: 0;
     justify-content: center;
+    border-radius: 0.5rem;
   }
 }
 
 .create-battle-btn:hover {
-  background: #1E293B;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-}
-
-.create-battle-btn:active {
-  transform: translateY(0);
+  background: #7e22ce;
 }
 
 .create-battle-btn svg {
   flex-shrink: 0;
 }
 
-/* ⭐ FeedHomeView와 동일하게 수정 - bottom-nav */
+/* 하단 네비게이션 */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--card);
+  background: var(--bg);
   border-top: 1px solid var(--border);
   z-index: 50;
   display: flex;
@@ -785,7 +706,6 @@ onUnmounted(() => {
   justify-content: space-around;
   padding: 0.5rem 0;
   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 }
 
 @media (min-width: 1024px) {
@@ -803,7 +723,7 @@ onUnmounted(() => {
   padding: 0.5rem 0.75rem;
   background: transparent;
   border: none;
-  color: var(--secondary);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
@@ -811,18 +731,18 @@ onUnmounted(() => {
 }
 
 .bottom-nav-item.active {
-  color: var(--primary);
+  color: var(--primary-accent);
 }
 
 .bottom-nav-item .icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
   flex-shrink: 0;
 }
 
 .bottom-nav-item span:not(.nav-badge) {
-  font-size: 0.6875rem;
-  font-weight: 600;
+  font-size: 0.625rem;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -830,14 +750,14 @@ onUnmounted(() => {
   position: absolute;
   top: 0.25rem;
   right: 0.5rem;
-  min-width: 1.125rem;
-  height: 1.125rem;
-  padding: 0 0.3125rem;
-  background: #DC2626;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  background: var(--primary-accent);
   color: white;
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   font-weight: 700;
-  border-radius: 0.5625rem;
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -845,40 +765,29 @@ onUnmounted(() => {
 }
 
 .bottom-nav-fab {
-  width: 3.5rem;
-  height: 3.5rem;
-  background: var(--accent);
+  width: 2.75rem;
+  height: 2.75rem;
+  background: var(--primary-accent);
   color: white;
   border: none;
-  border-radius: 1.75rem;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 0.5rem 1.25rem rgba(249, 115, 22, 0.4);
-
-  margin-top: -1.75rem;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+  margin-top: -1.25rem;
   transition: all 0.2s;
   flex-shrink: 0;
 }
+
 .bottom-nav-fab:active {
   transform: scale(0.95);
 }
+
 .bottom-nav-fab .icon {
-  width: 1.75rem;
-  height: 1.75rem;
-  stroke-width: 2.5;
+  width: 1.25rem;
+  height: 1.25rem;
   flex-shrink: 0;
-}
-/* 고해상도 디스플레이 대응 */
-@media (max-resolution: 1dppx) {
-  .bottom-nav-item .icon {
-    width: 1.375rem;
-    height: 1.375rem;
-  }
-  .bottom-nav-fab {
-    width: 3.25rem;
-    height: 3.25rem;
-  }
 }
 </style>

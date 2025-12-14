@@ -135,7 +135,7 @@ const profileImageUrl = computed(() => {
   if (!userInfo) return null;
 
   // 가능한 모든 필드명 체크
-  return userInfo.profileImageUrl
+  return userInfo.profileImageFile?.fileUrl
       || userInfo.profileImgUrl
       || userInfo.profilePictureUrl
       || userInfo.profilePicture?.fileUrl

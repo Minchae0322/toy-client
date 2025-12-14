@@ -18,96 +18,42 @@
           loading="lazy"
       >
       <div v-else class="thumbnail-placeholder">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <rect x="4" y="6" width="24" height="20" rx="2" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
-          <circle cx="10" cy="12" r="2" fill="currentColor" opacity="0.3"/>
-          <path d="M4 22l6-6 4 4 8-8 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
         </svg>
       </div>
 
-      <!-- VS 배지 -->
-      <div class="vs-badge">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 0l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z"/>
-        </svg>
-        <span>VS</span>
-      </div>
-
-      <!-- 상태/마감 정보 -->
-      <div class="info-badges">
+      <!-- 상태 배지 -->
+      <div class="badges-top">
         <span class="status-badge" :class="statusClass">{{ statusText }}</span>
-        <span v-if="showDeadline" class="deadline-badge" :class="deadlineClass">{{ dDayText }}</span>
+        <span v-if="battle.voteType === 'MULTIPLE'" class="vote-type-badge">순위</span>
       </div>
+
+      <!-- D-Day -->
+      <span v-if="showDeadline" class="dday-badge" :class="ddayClass">
+        {{ dDayText }}
+      </span>
     </div>
 
     <!-- 컨텐츠 영역 -->
     <div class="card-content">
-      <!-- 카테고리 & 권한 -->
-      <div class="card-header">
-        <span class="category">{{ categoryName }}</span>
-        <span class="separator">·</span>
-        <span class="permission">{{ permissionLabel }}</span>
+      <p class="category">{{ categoryName }}</p>
+      <h3 class="title">{{ battle.title }}</h3>
+
+      <div class="stats">
+        <span>{{ itemCount }}개 참여</span>
+        <span>{{ formatNumber(battle.totalVotes) }} 투표</span>
       </div>
 
-      <!-- 배틀 제목 - 강조 -->
-      <h3 class="battle-title">
-        <span class="title-icon">⚔️</span>
-        {{ battle.title }}
-      </h3>
-
-      <!-- 배틀 통계 바 -->
-      <div class="battle-stats-bar">
-        <div class="stat-group">
-          <div class="stat-icon">👥</div>
-          <div class="stat-content">
-            <span class="stat-value">{{ formatNumber(battle.totalParticipants || battle.participantCount) }}</span>
-            <span class="stat-label">참여자</span>
-          </div>
-        </div>
-
-        <div class="stat-divider"></div>
-
-        <div class="stat-group">
-          <div class="stat-icon">🗳️</div>
-          <div class="stat-content">
-            <span class="stat-value">{{ formatNumber(battle.totalVotes) }}</span>
-            <span class="stat-label">투표</span>
-          </div>
-        </div>
-
-        <div class="stat-divider"></div>
-
-        <div class="stat-group">
-          <div class="stat-icon">📊</div>
-          <div class="stat-content">
-            <span class="stat-value">{{ itemCount }}</span>
-            <span class="stat-label">항목</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 하단 정보 -->
       <div class="card-footer">
         <div class="creator">
-          <img
-              v-if="creatorProfileImage"
-              :src="creatorProfileImage"
-              :alt="creatorNickname"
-              class="creator-avatar"
-              @error="handleAvatarError"
-          >
-          <div v-else class="creator-avatar-placeholder">
-            {{ creatorNickname.charAt(0).toUpperCase() }}
+          <div v-if="creatorProfileImage" class="creator-avatar">
+            <img :src="creatorProfileImage" :alt="creatorNickname" @error="handleAvatarError">
           </div>
+          <div v-else class="creator-avatar placeholder"></div>
           <span class="creator-name">{{ creatorNickname }}</span>
         </div>
-
-        <div class="action-hint">
-          <span>투표하기</span>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-            <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          </svg>
-        </div>
+        <span class="action-hint">참여하기 →</span>
       </div>
     </div>
   </article>
@@ -138,27 +84,22 @@ const handleClick = () => {
   emit('click', battleId)
 }
 
-const handleImageError = () => {
-  imageError.value = true
-}
-
-const handleAvatarError = () => {
-  avatarError.value = true
-}
+const handleImageError = () => imageError.value = true
+const handleAvatarError = () => avatarError.value = true
 
 const formatNumber = (num) => {
   if (!num || num === 0) return '0'
   if (num >= 10000) return `${Math.floor(num / 10000)}만`
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}k`
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
   return num.toString()
 }
 
 const thumbnailUrl = computed(() => {
   if (imageError.value) return null
-  if (props.battle?.thumbnailDto?.fileUrl) return props.battle.thumbnailDto.fileUrl
-  if (props.battle?.thumbnailFile?.fileUrl) return props.battle.thumbnailFile.fileUrl
-  if (props.battle?.topItemImages?.[0]) return props.battle.topItemImages[0]
-  return null
+  return props.battle?.thumbnailDto?.fileUrl
+      || props.battle?.thumbnailFile?.fileUrl
+      || props.battle?.topItemImages?.[0]
+      || null
 })
 
 const creatorProfileImage = computed(() => {
@@ -167,66 +108,49 @@ const creatorProfileImage = computed(() => {
 })
 
 const categoryName = computed(() => {
-  return props.battle?.subCategoryDetail?.subCategoryName ||
-      props.battle?.categoryName ||
-      '기타'
+  return props.battle?.subCategoryDetail?.subCategoryName
+      || props.battle?.categoryName
+      || '기타'
 })
 
 const statusText = computed(() => {
   const status = props.battle?.status?.title || props.battle?.status
-  if (status === 'ACTIVE') return '진행중'
-  if (status === 'SCHEDULED') return '예정'
-  if (status === 'CLOSED' || status === 'ENDED') return '종료'
-  return '대기'
+  const map = { ACTIVE: '진행중', SCHEDULED: '예정', CLOSED: '종료', ENDED: '종료', EARLY_CLOSED: '조기종료' }
+  return map[status] || '대기'
 })
 
 const statusClass = computed(() => {
   const status = props.battle?.status?.title || props.battle?.status
-  if (status === 'ACTIVE') return 'active'
-  if (status === 'SCHEDULED') return 'scheduled'
-  if (status === 'CLOSED' || status === 'ENDED') return 'ended'
-  return 'draft'
-})
-
-const permissionLabel = computed(() => {
-  const type = props.battle?.itemAddPermissionType?.code || props.battle?.itemAddPermissionType
-  if (type === 'CREATOR_ONLY') return '큐레이션'
-  if (type === 'PUBLIC_FREE') return '오픈'
-  if (type === 'PUBLIC_APPROVAL') return '승인제'
-  return '큐레이션'
+  const map = { ACTIVE: 'active', SCHEDULED: 'scheduled', CLOSED: 'ended', ENDED: 'ended', EARLY_CLOSED: 'ended' }
+  return map[status] || 'draft'
 })
 
 const itemCount = computed(() => {
-  return props.battle?.items?.length ||
-      props.battle?.options?.length ||
-      props.battle?.itemCount ||
-      0
+  return props.battle?.items?.length
+      || props.battle?.options?.length
+      || props.battle?.itemCount
+      || 0
 })
 
 const creatorNickname = computed(() => {
-  return props.battle?.creatorUserInfo?.nickname ||
-      props.battle?.createdBy?.nickname ||
-      '알 수 없음'
+  return props.battle?.creatorUserInfo?.nickname
+      || props.battle?.createdBy?.nickname
+      || '알 수 없음'
 })
 
 const dDay = computed(() => {
   if (!props.battle?.endDate) return null
-  const endDate = new Date(props.battle.endDate)
-  const now = new Date()
-  const diff = endDate - now
+  const diff = new Date(props.battle.endDate) - new Date()
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 })
 
 const dDayText = computed(() => {
   const status = props.battle?.status?.title || props.battle?.status
   if (status === 'CLOSED' || status === 'ENDED') return '종료'
-
   const days = dDay.value
   if (days === null) return ''
   if (days < 0) return '종료'
   if (days === 0) return '오늘 마감'
-  if (days === 1) return '내일 마감'
-  if (days <= 7) return `${days}일 남음`
   return `D-${days}`
 })
 
@@ -235,10 +159,9 @@ const showDeadline = computed(() => {
   return status === 'ACTIVE' && dDay.value !== null
 })
 
-const deadlineClass = computed(() => {
+const ddayClass = computed(() => {
   const days = dDay.value
   if (days === null) return ''
-  if (days <= 1) return 'critical'
   if (days <= 3) return 'urgent'
   return 'normal'
 })
@@ -246,129 +169,105 @@ const deadlineClass = computed(() => {
 
 <style scoped>
 .battle-card {
-  position: relative;
-  background: white;
-  border: 2px solid #E5E7EB;
-  border-radius: 8px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .battle-card:hover {
-  border-color: #EF4444;
-  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.12);
-  transform: translateY(-3px);
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 /* 썸네일 */
 .card-thumbnail {
   position: relative;
-  width: 100%;
-  padding-bottom: 56%;
-  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+  aspect-ratio: 16 / 10;
+  background: #f8fafc;
   overflow: hidden;
 }
 
 .thumbnail-image {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.battle-card:hover .thumbnail-image {
-  transform: scale(1.04);
 }
 
 .thumbnail-placeholder {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #D1D5DB;
+  color: #cbd5e1;
 }
 
-/* VS 배지 */
-.vs-badge {
+/* 배지 */
+.badges-top {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 8px;
+  left: 8px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: rgba(239, 68, 68, 0.95);
-  color: white;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-  backdrop-filter: blur(8px);
-}
-
-/* 상태 배지들 */
-.info-badges {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  gap: 4px;
 }
 
 .status-badge {
-  padding: 5px 10px;
-  background: rgba(255, 255, 255, 0.95);
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
   border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  backdrop-filter: blur(8px);
 }
 
 .status-badge.active {
-  background: #10B981;
-  color: white;
+  background: #10b981;
+  color: #fff;
 }
 
 .status-badge.scheduled {
-  background: #F59E0B;
-  color: white;
+  background: #f59e0b;
+  color: #fff;
 }
 
 .status-badge.ended {
-  background: #6B7280;
-  color: white;
+  background: #64748b;
+  color: #fff;
 }
 
-.deadline-badge {
-  padding: 5px 10px;
-  background: rgba(255, 255, 255, 0.95);
+.status-badge.draft {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.vote-type-badge {
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 500;
   border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  backdrop-filter: blur(8px);
-  color: #111827;
+  background: #f3e8ff;
+  color: #9333ea;
 }
 
-.deadline-badge.critical {
-  background: #EF4444;
-  color: white;
+.dday-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
 }
 
-.deadline-badge.urgent {
-  background: #F97316;
-  color: white;
+.dday-badge.normal {
+  background: rgba(255, 255, 255, 0.95);
+  color: #475569;
+}
+
+.dday-badge.urgent {
+  background: #ef4444;
+  color: #fff;
 }
 
 /* 컨텐츠 */
@@ -376,99 +275,30 @@ const deadlineClass = computed(() => {
   padding: 16px;
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
 .category {
   font-size: 11px;
-  font-weight: 700;
-  color: #EF4444;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin: 0 0 4px;
 }
 
-.separator {
-  color: #D1D5DB;
-  font-weight: 300;
+.title {
+  font-size: 15px;
+  font-weight: 1500;
+  color: #0f172a;
+  line-height: 1.5;
+  margin: 0 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  letter-spacing: -0.02em;
 }
 
-.permission {
+.stats {
+  display: flex;
+  gap: 12px;
   font-size: 11px;
-  font-weight: 600;
-  color: #9CA3AF;
-}
-
-/* 배틀 제목 강조 */
-.battle-title {
-  margin: 0 0 14px;
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: #111827;
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  min-height: 44px;
-}
-
-.title-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-/* 배틀 통계 바 */
-.battle-stats-bar {
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
-  margin-bottom: 12px;
-}
-
-.stat-group {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.stat-icon {
-  font-size: 18px;
-  line-height: 1;
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stat-value {
-  font-size: 16px;
-  font-weight: 700;
-  color: #111827;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: #6B7280;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 30px;
-  background: #E5E7EB;
-  margin: 0 4px;
+  color: #94a3b8;
 }
 
 /* 푸터 */
@@ -476,53 +306,40 @@ const deadlineClass = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .creator {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.creator-avatar,
-.creator-avatar-placeholder {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  flex-shrink: 0;
+  gap: 8px;
 }
 
 .creator-avatar {
-  object-fit: cover;
-  border: 1px solid #E5E7EB;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e2e8f0;
 }
 
-.creator-avatar-placeholder {
-  background: #9CA3AF;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: 700;
+.creator-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .creator-name {
-  font-size: 12px;
-  font-weight: 500;
-  color: #6B7280;
+  font-size: 11px;
+  color: #94a3b8;
 }
 
 .action-hint {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  background: #EF4444;
-  color: white;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 500;
+  color: #9333ea;
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -537,34 +354,16 @@ const deadlineClass = computed(() => {
     padding: 14px;
   }
 
-  .battle-title {
-    font-size: 16px;
-    min-height: 42px;
-  }
-
-  .stat-icon {
-    font-size: 16px;
-  }
-
-  .stat-value {
-    font-size: 15px;
+  .title {
+    font-size: 14px;
   }
 }
 
 /* 접근성 */
 @media (prefers-reduced-motion: reduce) {
   .battle-card,
-  .thumbnail-image,
   .action-hint {
     transition: none;
-  }
-
-  .battle-card:hover {
-    transform: none;
-  }
-
-  .battle-card:hover .thumbnail-image {
-    transform: none;
   }
 }
 </style>

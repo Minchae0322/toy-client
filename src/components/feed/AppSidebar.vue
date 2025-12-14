@@ -57,11 +57,20 @@
       </div>
     </nav>
 
+    <!-- 인증 올리기 버튼 -->
     <button class="btn-create" @click="handleProtectedRoute('create')">
       <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
       <span>인증 올리기</span>
+    </button>
+
+    <!-- 배틀 등록하기 버튼 -->
+    <button class="btn-create-battle" @click="handleProtectedRoute('createBattle')">
+      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      <span>배틀 등록하기</span>
     </button>
 
     <!-- 레벨 카드도 로그인 시에만 표시 -->
@@ -114,6 +123,9 @@ const handleProtectedRoute = async (routeName) => {
         break;
       case 'create':
         router.push({ name: 'FeedCreate' });
+        break;
+      case 'createBattle':
+        router.push({ name: 'BattleCreate' });
         break;
       case 'messages':
         router.push({ name: 'Chat' });
@@ -239,6 +251,7 @@ const goToMyProfile = async () => {
 
 .badge-red { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
 
+/* 인증 올리기 버튼 */
 .btn-create {
   width: 100%;
   display: flex;
@@ -254,13 +267,47 @@ const goToMyProfile = async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-family: inherit;
   box-shadow: 0 1px 3px rgba(147, 51, 234, 0.2);
 }
 
-.btn-create:hover { transform: translateY(-1px); background: #7c3aed; box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3); }
+.btn-create:hover {
+  transform: translateY(-1px);
+  background: #7e22ce;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+}
+
 .btn-create .icon { width: 18px; height: 18px; }
+
+/* 배틀 등록하기 버튼 */
+.btn-create-battle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 20px;
+  font-family: inherit;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+}
+
+.btn-create-battle:hover {
+  transform: translateY(-1px);
+  background: #1e293b;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
+}
+
+.btn-create-battle .icon { width: 18px; height: 18px; }
 
 .level-card {
   margin-top: 30px;
