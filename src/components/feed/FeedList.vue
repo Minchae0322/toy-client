@@ -65,15 +65,15 @@
           <div class="list-header">
             <div class="list-author-info">
               <div class="author-avatar-small">
-                <img v-if="feed.userInfo?.profileImageFile.fileUrl" :src="feed.userInfo?.profileImageFile.fileUrl" alt="User" />
+                <img v-if="getProfileImageUrl(feed)" :src="getProfileImageUrl(feed)" alt="User" />
                 <span v-else class="avatar-placeholder">
                   <svg fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
                   </svg>
                 </span>
               </div>
-              <span class="author-name">{{ feed.userInfo?.nickname || '익명' }}</span>
-              <span class="list-category">{{ feed.categoryName }}</span>
+              <span class="author-name">{{ getDisplayNickname(feed) }}</span>
+              <span class="list-category">{{ getCategoryName(feed) }}</span>
               <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
             </div>
             <button class="btn-more" @click.stop>
@@ -88,17 +88,17 @@
             <p class="list-review" v-html="formatReview(feed.reviewSummary)"></p>
             <div class="list-meta">
               <div class="list-reactions">
-                <span class="reaction-item">
-                  <svg class="icon-small fire-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span :class="['reaction-item', { active: feed.userReactions?.hasHot }]">
+                  <svg class="icon-small fire-icon" :fill="feed.userReactions?.hasHot ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
                   </svg>
-                  {{ feed.likeCount || 0 }}
-                </span>
-                <span class="reaction-item">
-                  <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                  </svg>
                   {{ feed.hotCount || 0 }}
+                </span>
+                <span :class="['reaction-item', { active: feed.userReactions?.hasLike }]">
+                  <svg class="icon-small" :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                  </svg>
+                  {{ feed.likeCount || 0 }}
                 </span>
                 <span class="reaction-item">
                   <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,7 +108,7 @@
                 </span>
               </div>
               <div class="price-place">
-                <span v-if="feed.buyPrice" class="buy-price">{{ formatBuyPrice(feed.buyPrice) }}</span>
+                <span v-if="getDisplayPrice(feed)" class="buy-price">{{ formatBuyPrice(getDisplayPrice(feed)) }}</span>
               </div>
             </div>
             <div class="list-hashtags" v-if="feed.hashtags && feed.hashtags.length > 0">
@@ -158,11 +158,40 @@ const props = defineProps({
   savedPosts: { type: Set, default: () => new Set() }
 });
 
-const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click', 'view-mode-change']);
+const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click', 'view-mode-change', 'update']);
 
 const sortOption = ref('latest');
 const observerTarget = ref(null);
 
+// ========== 사용자 정보 헬퍼 함수 ==========
+const getProfileImageUrl = (feed) => {
+  const userInfo = feed.userInfo;
+  if (!userInfo) return null;
+  return userInfo.profileImageFile?.fileUrl
+      || userInfo.profileImageUrl
+      || userInfo.profileImgUrl
+      || null;
+};
+
+const getDisplayNickname = (feed) => {
+  const userInfo = feed.userInfo;
+  if (!userInfo) return '익명';
+  return userInfo.nickname || userInfo.nickName || '익명';
+};
+
+// ========== 카테고리 & 가격 헬퍼 ==========
+const getCategoryName = (feed) => {
+  return feed.subCategoryDetail?.subCategoryName
+      || feed.subCategoryDetail?.categoryName
+      || feed.categoryName
+      || '';
+};
+
+const getDisplayPrice = (feed) => {
+  return feed.buyPrice || feed.price || null;
+};
+
+// ========== 평가 관련 ==========
 const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation);
 
 const getEvaluationClass = (evaluation) => {
@@ -186,10 +215,13 @@ const getEvaluationIconFill = (evaluation) => {
   return code === 'BEST' ? 'currentColor' : 'none';
 };
 
+// ========== 이벤트 핸들러 ==========
 const handleUpdate = (data) => emit('update', data);
 const handleSave = (feedId) => emit('save', feedId);
 const handleComment = (feedId) => emit('comment', feedId);
 const handlePostClick = (feedId) => emit('post-click', feedId);
+
+// ========== 포맷 함수 ==========
 const formatDate = (dateString) => feedUtils.formatDate(dateString);
 const formatBuyPrice = (price) => feedUtils.formatPrice(price);
 const formatReview = (text) => {
@@ -512,8 +544,6 @@ defineExpose({ observerTarget });
   white-space: nowrap;
 }
 
-.dot-separator { color: var(--secondary); font-size: 12px; }
-
 .list-time { font-size: 12px; color: var(--secondary); white-space: nowrap; }
 
 .btn-more {
@@ -577,13 +607,14 @@ defineExpose({ observerTarget });
   font-weight: 600;
 }
 
+/* 리액션 활성화 스타일 */
+.reaction-item.active { color: #F97316; }
+.reaction-item.active .icon-small { color: #F97316; }
+
 .icon-small { width: 16px; height: 16px; stroke-width: 2; flex-shrink: 0; color: var(--secondary); }
 .icon-small.fire-icon { width: 17px; height: 17px; }
 
-.price-place {
-  display: flex;
-  align-items: center;
-}
+.price-place { display: flex; align-items: center; }
 
 .buy-price {
   font-weight: 700;

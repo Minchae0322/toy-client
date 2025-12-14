@@ -4,12 +4,12 @@
     <div class="post-header">
       <div class="post-author-info">
         <div class="author-avatar">
-          <img v-if="feed.userInfo?.profileImageFile.fileUrl" :src="feed.userInfo.profileImageFile.fileUrl" alt="" />
+          <img v-if="profileImageUrl" :src="profileImageUrl" alt="" />
           <svg v-else class="avatar-icon" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
           </svg>
         </div>
-        <span class="author-name">{{ feed.userInfo?.nickname || '익명' }}</span>
+        <span class="author-name">{{ displayNickname }}</span>
         <span class="category-badge">{{ feed.categoryName }}</span>
         <span class="dot">·</span>
         <span class="post-time">{{ formatDate(feed.createdAt) }}</span>
@@ -29,7 +29,6 @@
           class="post-image"
           loading="lazy"
       />
-      <!-- 이미지 위 평가 배지 -->
       <div v-if="feed.feedEvaluation" class="eval-overlay">
         <span :class="['evaluation-status', getEvaluationClass(feed.feedEvaluation)]">
           <svg class="eval-icon-small" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,17 +48,17 @@
     <div class="post-content">
       <div class="post-actions">
         <div class="action-left">
-          <button @click="handleLike" :class="['action-btn', { liked: localIsLiked }]" :disabled="isLikeLoading">
-            <svg class="action-icon" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-            </svg>
-            <span>{{ formatCount(localLikeCount) }}</span>
-          </button>
           <button @click="handleHot" :class="['action-btn', { hot: localIsHot }]" :disabled="isHotLoading">
             <svg class="action-icon" :fill="localIsHot ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
             </svg>
             <span>{{ formatCount(localHotCount) }}</span>
+          </button>
+          <button @click="handleLike" :class="['action-btn', { liked: localIsLiked }]" :disabled="isLikeLoading">
+            <svg class="action-icon" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+            </svg>
+            <span>{{ formatCount(localLikeCount) }}</span>
           </button>
           <button @click="handleComment" class="action-btn">
             <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { feedService, feedUtils } from '@/services/FeedService';
 
 const props = defineProps({
@@ -111,11 +110,51 @@ const showLikeAnimation = ref(false);
 const isLikeLoading = ref(false);
 const isHotLoading = ref(false);
 
+// ========== 반응형 상태 ==========
 const localIsLiked = ref(props.feed.userReactions?.hasLike || props.isLiked);
 const localIsHot = ref(props.feed.userReactions?.hasHot || props.isHot);
 const localIsSaved = ref(props.isSaved);
 const localLikeCount = ref(props.feed.likeCount || 0);
 const localHotCount = ref(props.feed.hotCount || 0);
+
+// props 변경 시 로컬 상태 동기화
+watch(() => props.feed, (newFeed) => {
+  localIsLiked.value = newFeed.userReactions?.hasLike || props.isLiked;
+  localIsHot.value = newFeed.userReactions?.hasHot || props.isHot;
+  localLikeCount.value = newFeed.likeCount || 0;
+  localHotCount.value = newFeed.hotCount || 0;
+}, { deep: true });
+
+watch(() => props.isLiked, (val) => { localIsLiked.value = val; });
+watch(() => props.isHot, (val) => { localIsHot.value = val; });
+watch(() => props.isSaved, (val) => { localIsSaved.value = val; });
+
+// ========== 사용자 정보 computed (다양한 필드명 대응) ==========
+const profileImageUrl = computed(() => {
+  const userInfo = props.feed.userInfo;
+  if (!userInfo) return null;
+
+  // 가능한 모든 필드명 체크
+  return userInfo.profileImageUrl
+      || userInfo.profileImgUrl
+      || userInfo.profilePictureUrl
+      || userInfo.profilePicture?.fileUrl
+      || userInfo.profileImg?.fileUrl
+      || null;
+});
+
+const displayNickname = computed(() => {
+  const userInfo = props.feed.userInfo;
+  if (!userInfo) return '익명';
+
+  // 가능한 모든 필드명 체크
+  return userInfo.nickname
+      || userInfo.nickName
+      || userInfo.userName
+      || userInfo.username
+      || userInfo.name
+      || '익명';
+});
 
 const discountRate = computed(() => {
   const originalPrice = props.feed.product?.price;
@@ -212,6 +251,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
 </script>
 
 <style scoped>
+/* 스타일은 기존과 동일 - 생략 */
 :root {
   --primary: #0F172A;
   --secondary: #64748B;
@@ -239,7 +279,6 @@ const formatCount = (count) => feedUtils.formatCount(count);
   transform: translateY(-2px);
 }
 
-/* 컴팩트 헤더 */
 .post-header {
   display: flex;
   align-items: center;
@@ -299,10 +338,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   white-space: nowrap;
 }
 
-.dot {
-  color: var(--secondary);
-  font-size: 10px;
-}
+.dot { color: var(--secondary); font-size: 10px; }
 
 .post-time {
   font-size: 11px;
@@ -323,9 +359,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   flex-shrink: 0;
 }
 
-.btn-more:hover {
-  background: var(--hover);
-}
+.btn-more:hover { background: var(--hover); }
 
 .more-icon {
   width: 14px;
@@ -333,7 +367,6 @@ const formatCount = (count) => feedUtils.formatCount(count);
   color: var(--secondary);
 }
 
-/* ========== 이미지 - 수정됨 ========== */
 .post-image-container {
   position: relative;
   width: 100%;
@@ -354,7 +387,6 @@ const formatCount = (count) => feedUtils.formatCount(count);
   display: block;
 }
 
-/* ========== 통일된 평가 배지 스타일 ========== */
 .eval-overlay {
   position: absolute;
   top: 10px;
@@ -380,7 +412,6 @@ const formatCount = (count) => feedUtils.formatCount(count);
   flex-shrink: 0;
 }
 
-/* 평가 타입별 색상 */
 .evaluation-status.eval-best {
   background: rgba(255, 247, 237, 0.85);
   color: #F97316;
@@ -409,7 +440,6 @@ const formatCount = (count) => feedUtils.formatCount(count);
   backdrop-filter: blur(4px);
 }
 
-/* 좋아요 애니메이션 */
 .like-animation {
   position: absolute;
   top: 50%;
@@ -433,10 +463,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
 }
 
-/* 콘텐츠 */
-.post-content {
-  padding: 12px 14px;
-}
+.post-content { padding: 12px 14px; }
 
 .post-actions {
   display: flex;
@@ -469,15 +496,8 @@ const formatCount = (count) => feedUtils.formatCount(count);
   font-family: inherit;
 }
 
-.action-btn:hover:not(:disabled) {
-  background: var(--hover);
-}
-
-.action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
+.action-btn:hover:not(:disabled) { background: var(--hover); }
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .action-btn.liked { color: #DC2626; }
 .action-btn.hot { color: #F97316; }
 .action-btn.saved { color: #1D4ED8; }
@@ -488,11 +508,8 @@ const formatCount = (count) => feedUtils.formatCount(count);
   flex-shrink: 0;
 }
 
-.save-btn {
-  margin-left: auto;
-}
+.save-btn { margin-left: auto; }
 
-/* 포스트 정보 */
 .post-info {
   display: flex;
   flex-direction: column;
@@ -559,11 +576,8 @@ const formatCount = (count) => feedUtils.formatCount(count);
   cursor: pointer;
 }
 
-.hashtag:hover {
-  text-decoration: underline;
-}
+.hashtag:hover { text-decoration: underline; }
 
-/* ========== 반응형 - 이미지 고정 height 제거됨 ========== */
 @media (min-width: 1024px) {
   .post-title { font-size: 16px; }
 }
@@ -576,15 +590,8 @@ const formatCount = (count) => feedUtils.formatCount(count);
   .category-badge { font-size: 9px; padding: 1px 5px; }
   .post-time { font-size: 10px; }
   .more-icon { width: 12px; height: 12px; }
-
-  /* 모바일 평가 배지 */
-  .evaluation-status {
-    padding: 5px 10px;
-    font-size: 11px;
-    gap: 4px;
-  }
+  .evaluation-status { padding: 5px 10px; font-size: 11px; gap: 4px; }
   .eval-icon-small { width: 14px; height: 14px; }
-
   .heart-anim { width: 50px; height: 50px; }
   .post-content { padding: 10px 12px; }
   .action-icon { width: 16px; height: 16px; }
