@@ -312,7 +312,7 @@ const saveProfile = async () => {
       }
 
       profileImgInfo = {
-        fileId: uploadResult.data.attchFileId,
+        fileId: uploadResult.data.id,
         storedPath: uploadResult.data.fileUrl,
         originName: uploadResult.data.orgFileNm,
         fileSize: uploadResult.data.fileSize,

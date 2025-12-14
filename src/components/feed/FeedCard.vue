@@ -4,7 +4,7 @@
     <div class="post-header">
       <div class="post-author-info">
         <div class="author-avatar">
-          <img v-if="feed.userInfo?.profileImageUrl" :src="feed.userInfo.profileImageUrl" alt="" />
+          <img v-if="feed.userInfo?.profileImageFile.fileUrl" :src="feed.userInfo.profileImageFile.fileUrl" alt="" />
           <svg v-else class="avatar-icon" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
           </svg>
