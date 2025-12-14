@@ -65,7 +65,7 @@
           <div class="list-header">
             <div class="list-author-info">
               <div class="author-avatar-small">
-                <img v-if="feed.userInfo?.profileImageUrl" :src="feed.userInfo.profileImageUrl" alt="User" />
+                <img v-if="feed.userInfo?.profileImageFile.fileUrl" :src="feed.userInfo?.profileImageFile.fileUrl" alt="User" />
                 <span v-else class="avatar-placeholder">
                   <svg fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>

@@ -8,7 +8,7 @@
           <span v-if="feed.feedEvaluation" :class="['eval-badge', getEvaluationClass(feed.feedEvaluation)]">
             {{ getEvaluationLabel(feed.feedEvaluation) }}
           </span>
-          <span class="category">{{ feed.subCategoryDetail?.subCategoryName || feed.product?.brand }}</span>
+          <span class="category">{{ getCategoryName }}</span>
         </div>
 
         <!-- Title -->
@@ -16,7 +16,7 @@
 
         <!-- Price + Store -->
         <div class="price-row">
-          <span class="buy-price">{{ formatPrice(feed.buyPrice) }}</span>
+          <span class="buy-price">{{ formatPrice(feed.buyPrice || feed.price) }}</span>
           <div v-if="feed.buyPlace" class="store" @click="$emit('search-store')">
             <svg class="store-icon" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"/>
@@ -65,7 +65,7 @@
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
-              {{ comments.length }}
+              {{ feed.commentCount || comments.length }}
             </button>
           </div>
 
@@ -90,9 +90,9 @@
       <!-- 3. Author - Secondary -->
       <div class="author-section">
         <div class="author-info">
-          <img :src="feed.userInfo?.profileImage || 'https://i.pravatar.cc/150'" class="author-avatar" />
+          <img :src="getAuthorProfileImage" class="author-avatar" />
           <div class="author-details">
-            <span class="author-name">{{ feed.userInfo?.nickname || '사용자' }}</span>
+            <span class="author-name">{{ getAuthorNickname }}</span>
             <span class="author-meta">{{ formatDate(feed.createdAt) }} · 조회 {{ feed.viewCount?.toLocaleString() || 0 }}</span>
           </div>
         </div>
@@ -109,7 +109,7 @@
       <!-- 4. Comments -->
       <div class="comment-section">
         <div class="comment-header">
-          <h3 class="comment-title">댓글 <span class="count">{{ comments.length }}</span></h3>
+          <h3 class="comment-title">댓글 <span class="count">{{ feed.commentCount || comments.length }}</span></h3>
           <select :value="commentSort" @change="$emit('update:comment-sort', $event.target.value)" class="comment-sort">
             <option value="popular">인기순</option>
             <option value="latest">최신순</option>
@@ -189,16 +189,61 @@ defineEmits([
 const isCreatingChatRoom = ref(false)
 const newComment = ref('')
 
-const getProductName = computed(() => props.feed?.product?.name || props.feed?.productName || '상품명 없음')
+// ========== 상품명: product 있으면 product.name, 없으면 productNameCustom ==========
+const getProductName = computed(() => {
+  return props.feed?.product?.name
+      || props.feed?.productNameCustom
+      || props.feed?.productName
+      || '상품명 없음'
+})
+
+// ========== 카테고리명 ==========
+const getCategoryName = computed(() => {
+  return props.feed?.subCategoryDetail?.subCategoryName
+      || props.feed?.subCategoryDetail?.categoryName
+      || props.feed?.product?.brand
+      || ''
+})
+
+// ========== 작성자 프로필 이미지 ==========
+const getAuthorProfileImage = computed(() => {
+  const userInfo = props.feed?.userInfo
+  if (!userInfo) return 'https://i.pravatar.cc/150'
+
+  return userInfo.profileImageFile?.fileUrl
+      || userInfo.profileImageUrl
+      || userInfo.profileImgUrl
+      || userInfo.profileImage
+      || 'https://i.pravatar.cc/150'
+})
+
+// ========== 작성자 닉네임 ==========
+const getAuthorNickname = computed(() => {
+  const userInfo = props.feed?.userInfo
+  if (!userInfo) return '사용자'
+
+  return userInfo.nickname
+      || userInfo.nickName
+      || userInfo.userName
+      || '사용자'
+})
+
 const sortedComments = computed(() => {
   if (props.commentSort === 'popular') return [...props.comments].sort((a, b) => b.fire - a.fire)
   return props.comments
 })
 
-const submitComment = () => { if (newComment.value.trim()) newComment.value = '' }
+const submitComment = () => {
+  if (newComment.value.trim()) {
+    // TODO: emit submit-comment
+    newComment.value = ''
+  }
+}
+
 const formatPrice = (price) => feedUtils.formatPrice(price)
 const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation)
 const formatDate = (date) => date ? new Date(date).toLocaleDateString('ko-KR') : ''
+
 const getEvaluationClass = (evaluation) => {
   const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
   return { 'BEST': 'eval-best', 'GOOD': 'eval-good', 'OKAY': 'eval-okay', 'BAD': 'eval-bad' }[code] || ''
@@ -237,7 +282,11 @@ const handleSendMessage = async () => {
     router.push({
       name: 'ChatWithRoom',
       params: { roomId: response.data.roomId },
-      query: { userName: props.feed.userInfo.nickname, feedId: props.feed.feedId, productName: getProductName.value }
+      query: {
+        userName: getAuthorNickname.value,
+        feedId: props.feed.feedId,
+        productName: getProductName.value
+      }
     })
   } catch (error) {
     alert(error.message || '채팅방 생성에 실패했습니다.')
@@ -292,10 +341,7 @@ const handleSendMessage = async () => {
 .eval-okay { background: rgba(59, 130, 246, 0.95); color: white; }
 .eval-bad { background: rgba(239, 68, 68, 0.95); color: white; }
 
-.category {
-  font-size: 13px;
-  color: #9ca3af;
-}
+.category { font-size: 13px; color: #9ca3af; }
 
 .product-name {
   font-size: 22px;
@@ -312,11 +358,7 @@ const handleSendMessage = async () => {
   margin-bottom: 20px;
 }
 
-.buy-price {
-  font-size: 24px;
-  font-weight: 700;
-  color: #9333ea;
-}
+.buy-price { font-size: 24px; font-weight: 700; color: #9333ea; }
 
 .store {
   display: flex;
@@ -328,11 +370,7 @@ const handleSendMessage = async () => {
 }
 
 .store:hover { color: #6b7280; }
-
-.store-icon {
-  width: 14px;
-  height: 14px;
-}
+.store-icon { width: 14px; height: 14px; }
 
 .review-text {
   font-size: 15px;
@@ -342,11 +380,7 @@ const handleSendMessage = async () => {
   white-space: pre-line;
 }
 
-.hashtags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+.hashtags { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .hashtag {
   font-size: 14px;
@@ -360,10 +394,7 @@ const handleSendMessage = async () => {
 .hashtag:hover { color: #7c22ce; }
 
 /* Divider */
-.divider {
-  height: 8px;
-  background: #f9fafb;
-}
+.divider { height: 8px; background: #f9fafb; }
 
 /* Reactions */
 .reaction-section { padding: 16px 20px; }
@@ -375,10 +406,7 @@ const handleSendMessage = async () => {
   margin-bottom: 12px;
 }
 
-.reaction-buttons {
-  display: flex;
-  gap: 6px;
-}
+.reaction-buttons { display: flex; gap: 6px; }
 
 .reaction-btn {
   display: flex;
@@ -398,11 +426,7 @@ const handleSendMessage = async () => {
 .reaction-btn:hover { background: #f3f4f6; }
 .reaction-btn.active { background: #f3e8ff; color: #9333ea; }
 .reaction-btn.bookmark { padding: 8px; }
-
-.reaction-btn svg {
-  width: 18px;
-  height: 18px;
-}
+.reaction-btn svg { width: 18px; height: 18px; }
 
 .btn-message {
   width: 100%;
@@ -444,11 +468,7 @@ const handleSendMessage = async () => {
   justify-content: space-between;
 }
 
-.author-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.author-info { display: flex; align-items: center; gap: 10px; }
 
 .author-avatar {
   width: 40px;
@@ -457,22 +477,9 @@ const handleSendMessage = async () => {
   object-fit: cover;
 }
 
-.author-details {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.author-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.author-meta {
-  font-size: 12px;
-  color: #9ca3af;
-}
+.author-details { display: flex; flex-direction: column; gap: 2px; }
+.author-name { font-size: 14px; font-weight: 600; color: #111827; }
+.author-meta { font-size: 12px; color: #9ca3af; }
 
 .btn-follow {
   padding: 7px 14px;
@@ -499,12 +506,7 @@ const handleSendMessage = async () => {
   margin-bottom: 16px;
 }
 
-.comment-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-}
-
+.comment-title { font-size: 16px; font-weight: 600; color: #111827; }
 .comment-title .count { color: #9333ea; }
 
 .comment-sort {
@@ -552,16 +554,9 @@ const handleSendMessage = async () => {
 .btn-send.active { background: #9333ea; }
 .btn-send.active svg { color: white; }
 
-.comment-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+.comment-list { display: flex; flex-direction: column; gap: 16px; }
 
-.comment-item {
-  display: flex;
-  gap: 10px;
-}
+.comment-item { display: flex; gap: 10px; }
 
 .comment-avatar {
   width: 32px;
@@ -579,11 +574,7 @@ const handleSendMessage = async () => {
   margin-bottom: 4px;
 }
 
-.comment-author {
-  font-size: 13px;
-  font-weight: 600;
-  color: #111827;
-}
+.comment-author { font-size: 13px; font-weight: 600; color: #111827; }
 
 .author-badge {
   font-size: 10px;
@@ -594,10 +585,7 @@ const handleSendMessage = async () => {
   border-radius: 4px;
 }
 
-.comment-time {
-  font-size: 12px;
-  color: #9ca3af;
-}
+.comment-time { font-size: 12px; color: #9ca3af; }
 
 .comment-text {
   font-size: 14px;
@@ -606,10 +594,7 @@ const handleSendMessage = async () => {
   margin-bottom: 6px;
 }
 
-.comment-actions {
-  display: flex;
-  gap: 12px;
-}
+.comment-actions { display: flex; gap: 12px; }
 
 .action-btn {
   display: flex;
