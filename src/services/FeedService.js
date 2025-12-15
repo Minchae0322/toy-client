@@ -454,14 +454,18 @@ class FeedService extends BaseApiService {
 
   normalizeCommentListResponse(data) {
     if (!data) return { comments: [], page: 0, size: 20, totalElements: 0, totalPages: 0, hasNext: false, hasPrevious: false }
+
+    // API 응답이 content 배열을 사용하는 경우 처리
+    const commentArray = data.content || data.comments || []
+
     return {
-      comments: Array.isArray(data.comments) ? data.comments.map(comment => this.normalizeCommentItem(comment)) : [],
-      page: data.page || 0,
-      size: data.size || 20,
+      comments: Array.isArray(commentArray) ? commentArray.map(comment => this.normalizeCommentItem(comment)) : [],
+      page: data.pageable?.pageNumber ?? data.page ?? 0,
+      size: data.pageable?.pageSize ?? data.size ?? 20,
       totalElements: data.totalElements || 0,
       totalPages: data.totalPages || 0,
-      hasNext: data.hasNext || false,
-      hasPrevious: data.hasPrevious || false
+      hasNext: !data.last,  // last가 true면 hasNext는 false
+      hasPrevious: !data.first  // first가 true면 hasPrevious는 false
     }
   }
 

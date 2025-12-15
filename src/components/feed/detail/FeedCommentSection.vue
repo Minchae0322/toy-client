@@ -1,23 +1,30 @@
 <template>
   <div class="comment-section">
     <div class="comment-inner">
+      <!-- 헤더 -->
+      <div class="comment-header">
+        <h3 class="comment-title">댓글 {{ totalCount > 0 ? totalCount : '' }}</h3>
+      </div>
+
       <!-- 입력창 -->
       <div class="input-row">
         <img :src="currentUserProfile" class="avatar" />
-        <input
-            type="text"
-            v-model="newComment"
-            @keyup.enter="submitComment"
-            placeholder="댓글 달기..."
-            class="input"
-        />
-        <button
-            v-show="newComment.trim()"
-            @click="submitComment"
-            class="btn-post"
-        >
-          게시
-        </button>
+        <div class="input-wrapper">
+          <input
+              type="text"
+              v-model="newComment"
+              @keyup.enter="submitComment"
+              placeholder="댓글을 입력하세요..."
+              class="input"
+          />
+          <button
+              v-show="newComment.trim()"
+              @click="submitComment"
+              class="btn-post"
+          >
+            게시
+          </button>
+        </div>
       </div>
 
       <!-- 댓글 목록 -->
@@ -58,18 +65,16 @@
               </div>
 
               <template v-else>
-                <p class="text">
-                  <span class="author">{{ comment.creatorNickname }}</span>
+                <div class="comment-top">
+                  <span class="author">{{ comment.creatorNickname || '사용자' }}</span>
                   <span v-if="comment.creatorId === feedCreatorId" class="badge">작성자</span>
-                  {{ comment.content }}
-                </p>
-                <div class="meta">
                   <span class="time">{{ formatDate(comment.createdAt) }}</span>
-                  <span v-if="isEdited(comment)" class="edited">수정됨</span>
-                  <template v-if="isMyComment(comment.creatorId)">
-                    <button @click="startEdit(comment)" class="meta-btn">수정</button>
-                    <button @click="handleDelete(comment.commentId)" class="meta-btn delete">삭제</button>
-                  </template>
+                  <span v-if="isEdited(comment)" class="edited">(수정됨)</span>
+                </div>
+                <p class="text">{{ comment.content }}</p>
+                <div v-if="isMyComment(comment.creatorId)" class="meta">
+                  <button @click="startEdit(comment)" class="meta-btn">수정</button>
+                  <button @click="handleDelete(comment.commentId)" class="meta-btn delete">삭제</button>
                 </div>
               </template>
             </div>
@@ -170,21 +175,44 @@ const handleDelete = (commentId) => {
   }
 }
 
+/* Header */
+.comment-header {
+  padding: 20px 0 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.comment-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
 /* Input */
 .input-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 16px 0;
-  border-bottom: 1px solid #efefef;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+.input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f3f4f6;
+  border-radius: 20px;
+  padding: 10px 16px;
 }
 
 .input {
@@ -197,7 +225,7 @@ const handleDelete = (commentId) => {
 }
 
 .input::placeholder {
-  color: #8e8e8e;
+  color: #9ca3af;
 }
 
 .btn-post {
@@ -205,18 +233,19 @@ const handleDelete = (commentId) => {
   border: none;
   font-size: 14px;
   font-weight: 600;
-  color: #0095f6;
+  color: #7c3aed;
   cursor: pointer;
   padding: 0;
+  white-space: nowrap;
 }
 
 .btn-post:hover {
-  color: #00376b;
+  color: #6d28d9;
 }
 
 /* List */
 .list-container {
-  padding: 8px 0 40px;
+  padding: 0 0 40px;
 }
 
 .list {
@@ -228,7 +257,12 @@ const handleDelete = (commentId) => {
 .item {
   display: flex;
   gap: 12px;
-  padding: 12px 0;
+  padding: 16px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.item:last-child {
+  border-bottom: none;
 }
 
 .body {
@@ -236,58 +270,69 @@ const handleDelete = (commentId) => {
   min-width: 0;
 }
 
-.text {
-  font-size: 14px;
-  color: #262626;
-  line-height: 1.5;
-  margin: 0;
-  word-break: break-word;
+.comment-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
 .author {
+  font-size: 14px;
   font-weight: 600;
-  margin-right: 4px;
+  color: #111827;
 }
 
 .badge {
   font-size: 11px;
   font-weight: 500;
-  color: #0095f6;
-  background: #e8f4fd;
+  color: #7c3aed;
+  background: #f3e8ff;
   padding: 2px 6px;
   border-radius: 4px;
-  margin-right: 4px;
+}
+
+.time {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.edited {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.text {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+  word-break: break-word;
 }
 
 .meta {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 6px;
-}
-
-.time,
-.edited {
-  font-size: 12px;
-  color: #8e8e8e;
+  margin-top: 8px;
 }
 
 .meta-btn {
   background: none;
   border: none;
-  font-size: 12px;
-  font-weight: 600;
-  color: #8e8e8e;
+  font-size: 13px;
+  font-weight: 500;
+  color: #9ca3af;
   cursor: pointer;
   padding: 0;
 }
 
 .meta-btn:hover {
-  color: #262626;
+  color: #6b7280;
 }
 
 .meta-btn.delete:hover {
-  color: #ed4956;
+  color: #ef4444;
 }
 
 /* Edit */
@@ -297,18 +342,20 @@ const handleDelete = (commentId) => {
 
 .edit-input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #dbdbdb;
-  border-radius: 4px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
   resize: none;
   outline: none;
   font-family: inherit;
+  background: #f9fafb;
 }
 
 .edit-input:focus {
-  border-color: #262626;
+  border-color: #7c3aed;
+  background: #fff;
 }
 
 .edit-actions {
@@ -323,13 +370,13 @@ const handleDelete = (commentId) => {
   border: none;
   font-size: 13px;
   font-weight: 600;
-  color: #8e8e8e;
+  color: #9ca3af;
   cursor: pointer;
   padding: 0;
 }
 
 .btn-text.primary {
-  color: #0095f6;
+  color: #7c3aed;
 }
 
 .btn-text:disabled {
@@ -340,18 +387,22 @@ const handleDelete = (commentId) => {
 /* More */
 .btn-more {
   display: block;
-  margin: 8px 0 0;
-  padding: 0;
-  background: none;
-  border: none;
+  width: 100%;
+  margin: 16px 0 0;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #8e8e8e;
+  color: #6b7280;
   cursor: pointer;
+  text-align: center;
 }
 
 .btn-more:hover {
-  color: #262626;
+  background: #f3f4f6;
+  color: #374151;
 }
 
 /* States */
@@ -367,8 +418,8 @@ const handleDelete = (commentId) => {
 .spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid #efefef;
-  border-top-color: #262626;
+  border: 2px solid #e5e7eb;
+  border-top-color: #7c3aed;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -379,15 +430,15 @@ const handleDelete = (commentId) => {
 }
 
 .empty p {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  color: #262626;
+  color: #374151;
   margin: 0 0 4px;
 }
 
 .empty span {
   font-size: 14px;
-  color: #8e8e8e;
+  color: #9ca3af;
 }
 
 .loading-more {
