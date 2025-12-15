@@ -114,7 +114,6 @@ const handleLike = () => {
 
 <style scoped>
 .image-gallery {
-  background: #f9fafb;
   position: relative;
   width: 100%;
 }
@@ -124,7 +123,7 @@ const handleLike = () => {
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: #f9fafb;
+  background: #1a1a1a;
   cursor: pointer;
 }
 
@@ -134,33 +133,6 @@ const handleLike = () => {
   object-fit: cover;
   display: block;
   user-select: none;
-  image-rendering: auto;
-  image-rendering: high-quality;
-}
-
-@media (min-width: 1024px) {
-  .image-gallery {
-    flex: 1;
-    min-width: 0;
-    position: sticky;
-    top: 56px;
-    height: calc(100vh - 56px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .image-container {
-    width: 100%;
-    max-width: calc((100vh - 56px) * 4 / 3);
-    aspect-ratio: 4 / 3;
-  }
-
-  .main-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
 }
 
 /* Like Animation */
@@ -204,23 +176,23 @@ const handleLike = () => {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
-  background: white;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.95);
   border: none;
-  border-radius: 9999px;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 5;
 }
 
 .nav-btn:hover {
-  transform: translateY(-50%) scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .nav-btn:active {
@@ -228,11 +200,11 @@ const handleLike = () => {
 }
 
 .nav-btn.prev {
-  left: 16px;
+  left: 12px;
 }
 
 .nav-btn.next {
-  right: 16px;
+  right: 12px;
 }
 
 .nav-icon {
@@ -244,31 +216,31 @@ const handleLike = () => {
 /* Quick Like Button */
 .quick-like-btn {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
-  width: 48px;
-  height: 48px;
-  background: white;
+  bottom: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.95);
   border: none;
-  border-radius: 9999px;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.2s;
   z-index: 5;
 }
 
 .quick-like-btn svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   color: #d1d5db;
   transition: all 0.2s;
 }
 
 .quick-like-btn:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .quick-like-btn:hover svg {
@@ -282,17 +254,20 @@ const handleLike = () => {
 /* Image Indicators */
 .image-indicators {
   position: absolute;
-  bottom: 16px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 6px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
 }
 
 .indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.5);
   border: none;
   cursor: pointer;
@@ -305,7 +280,8 @@ const handleLike = () => {
 }
 
 .indicator.active {
-  width: 24px;
+  width: 18px;
+  border-radius: 3px;
   background: white;
 }
 

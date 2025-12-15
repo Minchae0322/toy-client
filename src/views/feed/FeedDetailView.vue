@@ -3,7 +3,6 @@
     <!-- Loading -->
     <div v-if="loading" class="loading-container">
       <div class="spinner"></div>
-      <p class="loading-text">로딩 중...</p>
     </div>
 
     <!-- Error -->
@@ -22,32 +21,47 @@
       />
 
       <main class="detail-main">
-        <div class="detail-wrapper">
-          <FeedDetailImageGallery
-              :images="imageList"
-              :product-name="getProductName"
-              @like="handleLike"
-          />
+        <div class="content-wrapper">
+          <div class="image-area">
+            <FeedDetailImageGallery
+                :images="imageList"
+                :product-name="getProductName"
+                @like="handleLike"
+            />
+          </div>
 
-          <FeedDetailInfo
-              :feed="feed"
-              :is-following="isFollowing"
-              :is-saved="isSaved"
-              :comments="comments"
-              :comment-sort="commentSort"
-              @follow="handleFollow"
-              @unfollow="handleUnfollow"
-              @like="handleLike"
-              @hot="handleHot"
-              @save="handleSave"
-              @search-store="searchByStore"
-              @search-hashtag="searchByHashtag"
-              @submit-comment="submitComment"
-              @reply-comment="replyToComment"
-              @like-comment="likeComment"
-              @update:comment-sort="commentSort = $event"
-          />
+          <div class="info-area">
+            <FeedDetailInfo
+                v-if="feed"
+                :feed="feed"
+                :is-following="isFollowing"
+                :is-saved="isSaved"
+                @follow="handleFollow"
+                @unfollow="handleUnfollow"
+                @like="handleLike"
+                @hot="handleHot"
+                @save="handleSave"
+                @search-store="searchByStore"
+                @search-hashtag="searchByHashtag"
+                @scroll-to-comments="scrollToComments"
+            />
+          </div>
         </div>
+
+        <section ref="commentSectionRef" class="comment-section-wrapper">
+          <FeedCommentSection
+              :comments="comments"
+              :total-count="feed?.commentCount || 0"
+              :loading="commentLoading"
+              :has-next="commentPagination.hasNext"
+              :feed-creator-id="feed?.userInfo?.userId"
+              :current-user-profile="currentUserProfile"
+              @submit="submitComment"
+              @update="updateComment"
+              @delete="deleteComment"
+              @load-more="loadMoreComments"
+          />
+        </section>
       </main>
     </template>
   </div>
@@ -61,6 +75,7 @@ import { feedService } from '@/services/FeedService.js'
 import FeedDetailHeader from '@/components/feed/detail/FeedDetailHeader.vue'
 import FeedDetailImageGallery from '@/components/feed/detail/FeedDetailImageGallery.vue'
 import FeedDetailInfo from '@/components/feed/detail/FeedDetailInfo.vue'
+import FeedCommentSection from '@/components/feed/detail/FeedCommentSection.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -70,32 +85,134 @@ const error = ref(null)
 const feed = ref(null)
 const isSaved = ref(false)
 const isFollowing = ref(false)
-const commentSort = ref('popular')
+const commentSectionRef = ref(null)
+
 const comments = ref([])
+const commentLoading = ref(false)
+const commentPagination = ref({
+  page: 0,
+  size: 20,
+  totalElements: 0,
+  totalPages: 0,
+  hasNext: false
+})
 
 const imageList = computed(() => feed.value?.attachmentFiles || [])
 const getProductName = computed(() => feed.value?.product?.name || feed.value?.productName || '상품명 없음')
+const currentUserProfile = computed(() => {
+  try {
+    const token = localStorage.getItem('access_token')
+    if (!token) return 'https://i.pravatar.cc/150'
+    return 'https://i.pravatar.cc/150'
+  } catch { return 'https://i.pravatar.cc/150' }
+})
+
+const scrollToComments = () => {
+  commentSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
 const loadFeedDetail = async () => {
   try {
     loading.value = true
     error.value = null
     const response = await feedService.getFeed(route.params.id)
+    console.log('Feed response:', response) // 디버깅용
     if (response.success && response.data) {
       feed.value = response.data
+      await loadComments()
     } else {
       throw new Error(response.message || '피드를 불러오는데 실패했습니다.')
     }
   } catch (err) {
+    console.error('Feed load error:', err) // 디버깅용
     error.value = err.message || '피드를 불러오는데 실패했습니다.'
   } finally {
     loading.value = false
   }
 }
 
+const loadComments = async (page = 0) => {
+  try {
+    commentLoading.value = true
+    const response = await feedService.getComments(route.params.id, { page, size: 20 })
+    if (response.success && response.data) {
+      if (page === 0) {
+        comments.value = response.data.comments || []
+      } else {
+        comments.value = [...comments.value, ...(response.data.comments || [])]
+      }
+      commentPagination.value = {
+        page: response.data.page || 0,
+        size: response.data.size || 20,
+        totalElements: response.data.totalElements || 0,
+        totalPages: response.data.totalPages || 0,
+        hasNext: response.data.hasNext || false
+      }
+    }
+  } catch (err) {
+    console.error('댓글 조회 실패:', err)
+  } finally {
+    commentLoading.value = false
+  }
+}
+
+const loadMoreComments = () => {
+  if (commentPagination.value.hasNext && !commentLoading.value) {
+    loadComments(commentPagination.value.page + 1)
+  }
+}
+
+const submitComment = async (content) => {
+  try {
+    const response = await feedService.createComment(route.params.id, content)
+    if (response.success) {
+      await loadComments(0)
+      if (feed.value) {
+        feed.value.commentCount = (feed.value.commentCount || 0) + 1
+      }
+    }
+  } catch (err) {
+    console.error('댓글 작성 실패:', err)
+    alert(err.message || '댓글 작성에 실패했습니다.')
+  }
+}
+
+const updateComment = async ({ commentId, content }) => {
+  try {
+    const response = await feedService.updateComment(route.params.id, commentId, content)
+    if (response.success) {
+      const index = comments.value.findIndex(c => c.commentId === commentId)
+      if (index !== -1) {
+        comments.value[index].content = content
+        comments.value[index].updatedAt = new Date().toISOString()
+      }
+    }
+  } catch (err) {
+    console.error('댓글 수정 실패:', err)
+    alert(err.message || '댓글 수정에 실패했습니다.')
+  }
+}
+
+const deleteComment = async (commentId) => {
+  if (!confirm('댓글을 삭제하시겠습니까?')) return
+  try {
+    const response = await feedService.deleteComment(route.params.id, commentId)
+    if (response.success) {
+      comments.value = comments.value.filter(c => c.commentId !== commentId)
+      if (feed.value && feed.value.commentCount > 0) {
+        feed.value.commentCount -= 1
+      }
+    }
+  } catch (err) {
+    console.error('댓글 삭제 실패:', err)
+    alert(err.message || '댓글 삭제에 실패했습니다.')
+  }
+}
+
 const goBack = () => router.back()
 
 const handleLike = async () => {
+  if (!feed.value) return
   try {
     const response = await feedService.toggleLike(feed.value.feedId)
     if (response.success && response.data) {
@@ -108,6 +225,7 @@ const handleLike = async () => {
 }
 
 const handleHot = async () => {
+  if (!feed.value) return
   try {
     const response = await feedService.toggleHot(feed.value.feedId)
     if (response.success && response.data) {
@@ -135,34 +253,15 @@ const handleReport = () => console.log('Report feed')
 const searchByStore = () => console.log('Search by store:', feed.value?.buyPlace)
 const searchByHashtag = (tag) => router.push({ path: '/feed', query: { hashtag: tag } })
 
-const submitComment = (text) => {
-  comments.value.unshift({
-    id: Date.now(),
-    author: { name: 'current_user', image: 'https://i.pravatar.cc/150?img=12' },
-    text,
-    time: '방금',
-    fire: 0,
-    isLiked: false,
-    isAuthor: false
-  })
-}
-
-const replyToComment = (id) => console.log('Reply to:', id)
-const likeComment = (id) => {
-  const c = comments.value.find(x => x.id === id)
-  if (c) { c.isLiked = !c.isLiked; c.fire += c.isLiked ? 1 : -1 }
-}
-
 onMounted(() => loadFeedDetail())
 </script>
 
 <style scoped>
 .detail-container {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: #fff;
   min-height: 100vh;
-  color: #111827;
-  -webkit-font-smoothing: antialiased;
+  color: #262626;
 }
 
 .loading-container,
@@ -171,62 +270,105 @@ onMounted(() => loadFeedDetail())
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 70vh;
-  padding: 40px 20px;
+  min-height: 60vh;
+  background: #fff;
 }
 
 .spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #f3f4f6;
-  border-top-color: #9333ea;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e5e5e5;
+  border-top-color: #262626;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.6s linear infinite;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.loading-text {
-  margin-top: 14px;
-  font-size: 14px;
-  color: #6b7280;
-}
-
 .error-text {
-  color: #dc2626;
-  font-size: 15px;
-  margin-bottom: 20px;
-  text-align: center;
+  color: #262626;
+  font-size: 14px;
+  margin-bottom: 16px;
 }
 
 .btn-retry {
-  padding: 12px 24px;
-  background: #9333ea;
-  color: white;
+  padding: 10px 20px;
+  background: #262626;
+  color: #fff;
   border: none;
-  border-radius: 9999px;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
 }
-
-.btn-retry:hover { background: #7c22ce; }
 
 .detail-main {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 24px;
 }
 
-.detail-wrapper {
+.content-wrapper {
   display: flex;
   flex-direction: column;
+  gap: 24px;
+}
+
+.image-area {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.info-area {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 @media (min-width: 1024px) {
-  .detail-wrapper {
+  .content-wrapper {
     flex-direction: row;
-    min-height: calc(100vh - 56px);
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .image-area {
+    flex: 1;
+    min-width: 0;
+    position: sticky;
+    top: 80px;
+  }
+
+  .info-area {
+    width: 400px;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 1023px) {
+  .detail-main {
+    padding: 16px;
+  }
+
+  .content-wrapper {
+    gap: 16px;
+  }
+}
+
+.comment-section-wrapper {
+  margin-top: 24px;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 1023px) {
+  .comment-section-wrapper {
+    margin-top: 16px;
   }
 }
 </style>

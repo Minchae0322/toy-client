@@ -1,20 +1,15 @@
 <template>
   <div class="info-section">
     <div class="scrollable-content">
-      <!-- 1. Product Info - Primary -->
+      <!-- 1. Product Info -->
       <div class="product-section">
-        <!-- Evaluation + Category -->
         <div class="meta-row">
           <span v-if="feed.feedEvaluation" :class="['eval-badge', getEvaluationClass(feed.feedEvaluation)]">
             {{ getEvaluationLabel(feed.feedEvaluation) }}
           </span>
           <span class="category">{{ getCategoryName }}</span>
         </div>
-
-        <!-- Title -->
         <h1 class="product-name">{{ getProductName }}</h1>
-
-        <!-- Price + Store -->
         <div class="price-row">
           <span class="buy-price">{{ formatPrice(feed.buyPrice || feed.price) }}</span>
           <div v-if="feed.buyPlace" class="store" @click="$emit('search-store')">
@@ -24,18 +19,9 @@
             {{ feed.buyPlace }}
           </div>
         </div>
-
-        <!-- Review -->
         <p class="review-text">{{ feed.review }}</p>
-
-        <!-- Hashtags -->
         <div v-if="feed.hashtags?.length" class="hashtags">
-          <button
-              v-for="tag in feed.hashtags"
-              :key="tag.hashtagId"
-              class="hashtag"
-              @click="$emit('search-hashtag', tag.name)"
-          >
+          <button v-for="tag in feed.hashtags" :key="tag.hashtagId" class="hashtag" @click="$emit('search-hashtag', tag.name)">
             #{{ tag.name }}
           </button>
         </div>
@@ -43,7 +29,7 @@
 
       <div class="divider"></div>
 
-      <!-- 2. Reactions + CTA -->
+      <!-- 2. Reactions -->
       <div class="reaction-section">
         <div class="reaction-row">
           <div class="reaction-buttons">
@@ -53,29 +39,25 @@
               </svg>
               {{ feed.hotCount || 0 }}
             </button>
-
             <button @click="$emit('like')" :class="['reaction-btn', 'liked', { active: feed.userReactions?.hasLike }]">
               <svg :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
               </svg>
               {{ feed.likeCount || 0 }}
             </button>
-
-            <button class="reaction-btn">
+            <button class="reaction-btn" @click="scrollToComments">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
-              {{ feed.commentCount || comments.length }}
+              {{ feed.commentCount || 0 }}
             </button>
           </div>
-
           <button @click="$emit('save')" :class="['reaction-btn bookmark', { active: isSaved }]">
             <svg :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
             </svg>
           </button>
         </div>
-
         <button class="btn-message" @click="handleSendMessage" :disabled="isCreatingChatRoom">
           <svg v-if="!isCreatingChatRoom" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -87,7 +69,7 @@
 
       <div class="divider"></div>
 
-      <!-- 3. Author - Secondary -->
+      <!-- 3. Author -->
       <div class="author-section">
         <div class="author-info">
           <img :src="getAuthorProfileImage" class="author-avatar" />
@@ -96,68 +78,9 @@
             <span class="author-meta">{{ formatDate(feed.createdAt) }} · 조회 {{ feed.viewCount?.toLocaleString() || 0 }}</span>
           </div>
         </div>
-        <button
-            @click="isFollowing ? $emit('unfollow') : $emit('follow')"
-            :class="['btn-follow', { active: isFollowing }]"
-        >
+        <button @click="isFollowing ? $emit('unfollow') : $emit('follow')" :class="['btn-follow', { active: isFollowing }]">
           {{ isFollowing ? '팔로잉' : '팔로우' }}
         </button>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- 4. Comments -->
-      <div class="comment-section">
-        <div class="comment-header">
-          <h3 class="comment-title">댓글 <span class="count">{{ feed.commentCount || comments.length }}</span></h3>
-          <select :value="commentSort" @change="$emit('update:comment-sort', $event.target.value)" class="comment-sort">
-            <option value="popular">인기순</option>
-            <option value="latest">최신순</option>
-          </select>
-        </div>
-
-        <div class="comment-input-wrapper">
-          <input
-              type="text"
-              v-model="newComment"
-              @keyup.enter="submitComment"
-              placeholder="댓글을 입력하세요"
-              class="comment-input"
-          />
-          <button @click="submitComment" :disabled="!newComment.trim()" :class="['btn-send', { active: newComment.trim() }]">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-            </svg>
-          </button>
-        </div>
-
-        <div v-if="sortedComments.length" class="comment-list">
-          <article v-for="c in sortedComments" :key="c.id" class="comment-item">
-            <img :src="c.author.image" class="comment-avatar" />
-            <div class="comment-content">
-              <div class="comment-meta">
-                <span class="comment-author">{{ c.author.name }}</span>
-                <span v-if="c.isAuthor" class="author-badge">작성자</span>
-                <span class="comment-time">{{ c.time }}</span>
-              </div>
-              <p class="comment-text">{{ c.text }}</p>
-              <div class="comment-actions">
-                <button class="action-btn" @click="$emit('reply-comment', c.id)">답글</button>
-                <button @click="$emit('like-comment', c.id)" :class="['action-btn', { active: c.isLiked }]">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
-                  </svg>
-                  {{ c.fire }}
-                </button>
-              </div>
-            </div>
-          </article>
-        </div>
-
-        <div v-else class="comment-empty">
-          <p>아직 댓글이 없습니다</p>
-          <span>첫 댓글을 남겨보세요</span>
-        </div>
       </div>
     </div>
   </div>
@@ -174,70 +97,36 @@ const router = useRouter()
 const props = defineProps({
   feed: { type: Object, required: true },
   isFollowing: { type: Boolean, default: false },
-  isSaved: { type: Boolean, default: false },
-  comments: { type: Array, default: () => [] },
-  commentSort: { type: String, default: 'popular' }
+  isSaved: { type: Boolean, default: false }
 })
 
-defineEmits([
+const emit = defineEmits([
   'follow', 'unfollow', 'like', 'hot', 'save',
-  'search-store', 'search-hashtag',
-  'submit-comment', 'reply-comment', 'like-comment',
-  'update:comment-sort'
+  'search-store', 'search-hashtag', 'scroll-to-comments'
 ])
 
 const isCreatingChatRoom = ref(false)
-const newComment = ref('')
 
-// ========== 상품명: product 있으면 product.name, 없으면 productNameCustom ==========
-const getProductName = computed(() => {
-  return props.feed?.product?.name
-      || props.feed?.productNameCustom
-      || props.feed?.productName
-      || '상품명 없음'
-})
-
-// ========== 카테고리명 ==========
-const getCategoryName = computed(() => {
-  return props.feed?.subCategoryDetail?.subCategoryName
-      || props.feed?.subCategoryDetail?.categoryName
-      || props.feed?.product?.brand
-      || ''
-})
-
-// ========== 작성자 프로필 이미지 ==========
+const getProductName = computed(() => props.feed?.product?.name || props.feed?.productNameCustom || props.feed?.productName || '상품명 없음')
+const getCategoryName = computed(() => props.feed?.subCategoryDetail?.subCategoryName || props.feed?.subCategoryDetail?.categoryName || props.feed?.product?.brand || '')
 const getAuthorProfileImage = computed(() => {
   const userInfo = props.feed?.userInfo
   if (!userInfo) return 'https://i.pravatar.cc/150'
-
-  return userInfo.profileImageFile?.fileUrl
-      || userInfo.profileImageUrl
-      || userInfo.profileImgUrl
-      || userInfo.profileImage
-      || 'https://i.pravatar.cc/150'
+  return userInfo.profileImageFile?.fileUrl || userInfo.profileImageUrl || 'https://i.pravatar.cc/150'
 })
+const getAuthorNickname = computed(() => props.feed?.userInfo?.nickname || props.feed?.userInfo?.nickName || '사용자')
 
-// ========== 작성자 닉네임 ==========
-const getAuthorNickname = computed(() => {
-  const userInfo = props.feed?.userInfo
-  if (!userInfo) return '사용자'
+const getCurrentUserId = () => {
+  try {
+    const token = localStorage.getItem('access_token')
+    if (!token) return null
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.userId || payload.sub
+  } catch { return null }
+}
 
-  return userInfo.nickname
-      || userInfo.nickName
-      || userInfo.userName
-      || '사용자'
-})
-
-const sortedComments = computed(() => {
-  if (props.commentSort === 'popular') return [...props.comments].sort((a, b) => b.fire - a.fire)
-  return props.comments
-})
-
-const submitComment = () => {
-  if (newComment.value.trim()) {
-    // TODO: emit submit-comment
-    newComment.value = ''
-  }
+const scrollToComments = () => {
+  emit('scroll-to-comments')
 }
 
 const formatPrice = (price) => feedUtils.formatPrice(price)
@@ -247,15 +136,6 @@ const formatDate = (date) => date ? new Date(date).toLocaleDateString('ko-KR') :
 const getEvaluationClass = (evaluation) => {
   const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
   return { 'BEST': 'eval-best', 'GOOD': 'eval-good', 'OKAY': 'eval-okay', 'BAD': 'eval-bad' }[code] || ''
-}
-
-const getCurrentUserId = () => {
-  try {
-    const token = localStorage.getItem('access_token')
-    if (!token) return null
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.userId || payload.sub
-  } catch { return null }
 }
 
 const handleSendMessage = async () => {
@@ -282,11 +162,7 @@ const handleSendMessage = async () => {
     router.push({
       name: 'ChatWithRoom',
       params: { roomId: response.data.roomId },
-      query: {
-        userName: getAuthorNickname.value,
-        feedId: props.feed.feedId,
-        productName: getProductName.value
-      }
+      query: { userName: getAuthorNickname.value, feedId: props.feed.feedId, productName: getProductName.value }
     })
   } catch (error) {
     alert(error.message || '채팅방 생성에 실패했습니다.')
@@ -303,51 +179,44 @@ const handleSendMessage = async () => {
   background: white;
 }
 
-@media (min-width: 1024px) {
-  .info-section {
-    width: 420px;
-    flex-shrink: 0;
-    border-left: 1px solid #f3f4f6;
-  }
-}
-
 .scrollable-content {
   flex: 1;
-  overflow-y: auto;
-  max-height: calc(100vh - 56px);
 }
 
-.scrollable-content::-webkit-scrollbar { width: 0; }
-
-/* Product Section */
-.product-section { padding: 20px; }
+.product-section {
+  padding: 24px;
+}
 
 .meta-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .eval-badge {
-  padding: 5px 12px;
-  border-radius: 9999px;
+  padding: 6px 12px;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
 }
 
-.eval-best { background: rgba(249, 115, 22, 0.95); color: white; }
-.eval-good { background: rgba(16, 185, 129, 0.95); color: white; }
-.eval-okay { background: rgba(59, 130, 246, 0.95); color: white; }
-.eval-bad { background: rgba(239, 68, 68, 0.95); color: white; }
+.eval-best { background: #fef3c7; color: #d97706; }
+.eval-good { background: #d1fae5; color: #059669; }
+.eval-okay { background: #dbeafe; color: #2563eb; }
+.eval-bad { background: #fee2e2; color: #dc2626; }
 
-.category { font-size: 13px; color: #9ca3af; }
+.category {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
 
 .product-name {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: #111827;
-  line-height: 1.35;
+  line-height: 1.4;
   margin-bottom: 16px;
 }
 
@@ -358,78 +227,135 @@ const handleSendMessage = async () => {
   margin-bottom: 20px;
 }
 
-.buy-price { font-size: 24px; font-weight: 700; color: #9333ea; }
+.buy-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #7c3aed;
+}
 
 .store {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  color: #9ca3af;
+  color: #6b7280;
   cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s;
 }
 
-.store:hover { color: #6b7280; }
+.store:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
 .store-icon { width: 14px; height: 14px; }
 
 .review-text {
   font-size: 15px;
-  color: #4b5563;
+  color: #374151;
   line-height: 1.7;
   margin-bottom: 16px;
   white-space: pre-line;
 }
 
-.hashtags { display: flex; flex-wrap: wrap; gap: 8px; }
+.hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
 .hashtag {
   font-size: 14px;
-  color: #9333ea;
-  background: none;
+  color: #7c3aed;
+  background: #f5f3ff;
   border: none;
-  padding: 0;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: all 0.15s;
 }
 
-.hashtag:hover { color: #7c22ce; }
+.hashtag:hover {
+  background: #ede9fe;
+  color: #6d28d9;
+}
 
-/* Divider */
-.divider { height: 8px; background: #f9fafb; }
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0 24px;
+}
 
-/* Reactions */
-.reaction-section { padding: 16px 20px; }
+.reaction-section {
+  padding: 20px 24px;
+}
 
 .reaction-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
-.reaction-buttons { display: flex; gap: 6px; }
+.reaction-buttons {
+  display: flex;
+  gap: 8px;
+}
 
 .reaction-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 10px 14px;
   background: #f9fafb;
-  border: none;
-  border-radius: 9999px;
-  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   color: #6b7280;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.reaction-btn:hover { background: #f3f4f6; }
-.reaction-btn.active.hot { background: #fff7ed; color: #F97316; }
-.reaction-btn.active.liked { background: #fef2f2; color: #DC2626; }
-.reaction-btn.active { background: #f3e8ff; color: #9333ea; }
-.reaction-btn.bookmark { padding: 8px; }
-.reaction-btn.bookmark.active { background: #eff6ff; color: #2563eb; }
-.reaction-btn svg { width: 18px; height: 18px; }
+.reaction-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.reaction-btn.active.hot {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #ea580c;
+}
+
+.reaction-btn.active.liked {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.reaction-btn.active {
+  background: #f5f3ff;
+  border-color: #c4b5fd;
+  color: #7c3aed;
+}
+
+.reaction-btn.bookmark {
+  padding: 10px;
+}
+
+.reaction-btn.bookmark.active {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #2563eb;
+}
+
+.reaction-btn svg {
+  width: 18px;
+  height: 18px;
+}
 
 .btn-message {
   width: 100%;
@@ -445,12 +371,28 @@ const handleSendMessage = async () => {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
-.btn-message:hover:not(:disabled) { background: #000; }
-.btn-message:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-message svg { width: 20px; height: 20px; }
+.btn-message:hover:not(:disabled) {
+  background: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-message:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-message:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-message svg {
+  width: 20px;
+  height: 20px;
+}
 
 .spinner-small {
   width: 18px;
@@ -463,170 +405,71 @@ const handleSendMessage = async () => {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Author */
 .author-section {
-  padding: 16px 20px;
+  padding: 20px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.author-info { display: flex; align-items: center; gap: 10px; }
-
-.author-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 9999px;
-  object-fit: cover;
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.author-details { display: flex; flex-direction: column; gap: 2px; }
-.author-name { font-size: 14px; font-weight: 600; color: #111827; }
-.author-meta { font-size: 12px; color: #9ca3af; }
+.author-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f3f4f6;
+}
+
+.author-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.author-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.author-meta {
+  font-size: 13px;
+  color: #9ca3af;
+}
 
 .btn-follow {
-  padding: 7px 14px;
-  border-radius: 9999px;
-  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  background: transparent;
-  color: #9333ea;
-  border: 1px solid #9333ea;
+  background: #7c3aed;
+  color: white;
+  border: none;
 }
 
-.btn-follow:hover { background: #faf5ff; }
-.btn-follow.active { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
-
-/* Comments */
-.comment-section { padding: 20px; }
-
-.comment-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
+.btn-follow:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
 }
 
-.comment-title { font-size: 16px; font-weight: 600; color: #111827; }
-.comment-title .count { color: #9333ea; }
-
-.comment-sort {
-  font-size: 13px;
+.btn-follow.active {
+  background: #f3f4f6;
   color: #6b7280;
-  background: none;
-  border: none;
-  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
+  transform: none;
 }
 
-.comment-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: #f9fafb;
-  border-radius: 12px;
-  margin-bottom: 20px;
-}
-
-.comment-input {
-  flex: 1;
-  background: none;
-  border: none;
-  font-size: 14px;
-  outline: none;
-}
-
-.comment-input::placeholder { color: #9ca3af; }
-
-.btn-send {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.btn-follow.active:hover {
   background: #e5e7eb;
-  border: none;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.15s;
 }
-
-.btn-send svg { width: 16px; height: 16px; color: #9ca3af; }
-.btn-send.active { background: #9333ea; }
-.btn-send.active svg { color: white; }
-
-.comment-list { display: flex; flex-direction: column; gap: 16px; }
-
-.comment-item { display: flex; gap: 10px; }
-
-.comment-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 9999px;
-  flex-shrink: 0;
-}
-
-.comment-content { flex: 1; }
-
-.comment-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-.comment-author { font-size: 13px; font-weight: 600; color: #111827; }
-
-.author-badge {
-  font-size: 10px;
-  font-weight: 600;
-  color: #9333ea;
-  background: #f3e8ff;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.comment-time { font-size: 12px; color: #9ca3af; }
-
-.comment-text {
-  font-size: 14px;
-  color: #4b5563;
-  line-height: 1.5;
-  margin-bottom: 6px;
-}
-
-.comment-actions { display: flex; gap: 12px; }
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #9ca3af;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-
-.action-btn:hover { color: #6b7280; }
-.action-btn.active { color: #9333ea; }
-.action-btn svg { width: 14px; height: 14px; }
-
-.comment-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: #9ca3af;
-}
-
-.comment-empty p {
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-  margin-bottom: 4px;
-}
-
-.comment-empty span { font-size: 13px; }
 </style>

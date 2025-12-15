@@ -16,11 +16,9 @@ class FeedService extends BaseApiService {
 
   async createFeedWithFiles(feedData, thumbnailFile, additionalFiles = []) {
     console.log('🚀 [FEED_SERVICE] 피드 생성 프로세스 시작')
-
     try {
       const thumbnailFiles = thumbnailFile ? [thumbnailFile] : []
       const allAdditionalFiles = additionalFiles.filter(f => f)
-
       let thumbnailInfo = null
       let attachmentFileInfos = []
 
@@ -29,7 +27,6 @@ class FeedService extends BaseApiService {
         const thumbnailResponse = await fileService.uploadFiles(thumbnailFiles, { fileCode: 'FEED' })
         const uploadedData = thumbnailResponse.data
         const uploadedFile = Array.isArray(uploadedData) ? uploadedData[0] : uploadedData
-
         if (uploadedFile) {
           thumbnailInfo = this.convertToAttachmentInfo(uploadedFile)
           console.log('✅ 대표 이미지 업로드 완료:', thumbnailInfo)
@@ -40,7 +37,6 @@ class FeedService extends BaseApiService {
         console.log(`2️⃣ ${allAdditionalFiles.length}개 추가 이미지 배치 업로드 중...`)
         const additionalResponse = await fileService.uploadFiles(allAdditionalFiles, { fileCode: 'FEED' })
         const uploadedData = Array.isArray(additionalResponse.data) ? additionalResponse.data : [additionalResponse.data]
-
         attachmentFileInfos = uploadedData.filter(file => file).map(file => this.convertToAttachmentInfo(file))
         console.log(`✅ 추가 이미지 ${attachmentFileInfos.length}개 업로드 완료`)
       }
@@ -51,7 +47,6 @@ class FeedService extends BaseApiService {
         thumbnailAttachmentInfo: thumbnailInfo,
         attachmentFileInfos: attachmentFileInfos
       }
-
       return await this.createFeed(feedCreateData)
     } catch (error) {
       console.error('❌ [FEED_SERVICE] 피드 생성 실패:', error)
@@ -61,13 +56,10 @@ class FeedService extends BaseApiService {
 
   convertToAttachmentInfo(fileResponse) {
     if (!fileResponse) throw new Error('파일 응답이 없습니다.')
-
     if (fileResponse.fileId && fileResponse.storedPath) return fileResponse
-
     if (!fileResponse.id || !fileResponse.fileUrl) {
       throw new Error('파일 응답 형식이 올바르지 않습니다.')
     }
-
     return {
       fileId: fileResponse.id,
       storedPath: fileResponse.fileUrl,
@@ -81,7 +73,6 @@ class FeedService extends BaseApiService {
   async createFeed(feedData) {
     const validation = this.validateFeedData(feedData)
     if (!validation.isValid) throw new Error(validation.errors.join(', '))
-
     const requestData = {
       userId: feedData.userId,
       productId: feedData.productId || null,
@@ -96,13 +87,11 @@ class FeedService extends BaseApiService {
       attachmentFileInfos: feedData.attachmentFileInfos || [],
       hashtags: feedData.hashtags || []
     }
-
     return await this.post('/feeds', requestData)
   }
 
   async getFeed(feedId) {
     if (!feedId) throw new Error('피드 ID가 필요합니다.')
-
     const response = await this.get(`/feeds/${feedId}`)
     if (response.success && response.data) {
       response.data = this.normalizeFeedDetailResponse(response.data)
@@ -117,9 +106,7 @@ class FeedService extends BaseApiService {
       ...this.removeEmptyParams(validatedCondition),
       ...this.removeEmptyParams(validatedPageable)
     }
-
     const response = await this.get('/feeds', params)
-
     if (response.success && response.data) {
       if (response.data.content) {
         response.data.content = this.normalizeFeedListResponse(response.data.content)
@@ -133,7 +120,6 @@ class FeedService extends BaseApiService {
   async getHotFeeds(pageable = {}) {
     const validatedPageable = this.validatePageable(pageable)
     const response = await this.get('/feeds/hot', this.removeEmptyParams(validatedPageable))
-
     if (response.success && response.data) {
       if (response.data.content) {
         response.data.content = this.normalizeHotFeedResponse(response.data.content)
@@ -147,27 +133,19 @@ class FeedService extends BaseApiService {
   async getFeedsWithCursor(searchCondition = {}) {
     const validatedCondition = this.validateSearchCondition(searchCondition)
     const response = await this.get('/feeds/scroll', this.removeEmptyParams(validatedCondition))
-
     if (response.success && response.data?.feeds) {
       response.data.feeds = this.normalizeFeedListResponse(response.data.feeds)
     }
     return response
   }
 
-  /**
-   * 팔로잉 피드 조회 (커서 페이징)
-   * GET /api/feeds/following
-   */
   async getFollowingFeeds(searchCondition = {}) {
     const params = {
       cursor: searchCondition.cursor || null,
       size: Math.min(100, Math.max(1, searchCondition.size || 20))
     }
-
     console.log('👥 [FEED_SERVICE] 팔로잉 피드 조회:', params)
-
     const response = await this.get('/feeds/following', this.removeEmptyParams(params))
-
     if (response.success && response.data) {
       if (response.data.feeds) {
         response.data.feeds = this.normalizeFeedListResponse(response.data.feeds)
@@ -177,14 +155,12 @@ class FeedService extends BaseApiService {
         hasNext: response.data.hasNext
       })
     }
-
     return response
   }
 
   async getFeedList(searchCondition = {}) {
     const validatedCondition = this.validateSearchCondition(searchCondition)
     const response = await this.get('/feeds/list', this.removeEmptyParams(validatedCondition))
-
     if (response.success && response.data) {
       response.data = this.normalizeFeedListResponse(response.data)
     }
@@ -193,10 +169,8 @@ class FeedService extends BaseApiService {
 
   async updateFeed(feedId, feedData) {
     if (!feedId) throw new Error('피드 ID가 필요합니다.')
-
     const validation = this.validateUpdateFeedData(feedData)
     if (!validation.isValid) throw new Error(validation.errors.join(', '))
-
     const requestData = {
       feedId: parseInt(feedId),
       userId: feedData.userId,
@@ -210,7 +184,6 @@ class FeedService extends BaseApiService {
       evaluation: feedData.evaluation?.toUpperCase() || null,
       hashtags: feedData.hashtags || []
     }
-
     return await this.put(`/feeds/${feedId}`, requestData)
   }
 
@@ -219,20 +192,70 @@ class FeedService extends BaseApiService {
     return await this.delete(`/feeds/${feedId}`)
   }
 
+  // ==================== 댓글 CRUD 메서드 ====================
+
+  async getComments(feedId, pageable = {}) {
+    if (!feedId) throw new Error('피드 ID가 필요합니다.')
+    const validatedPageable = this.validateCommentPageable(pageable)
+    const params = this.removeEmptyParams(validatedPageable)
+    console.log('💬 [FEED_SERVICE] 댓글 목록 조회:', { feedId, params })
+    const response = await this.get(`/feeds/${feedId}/comments`, params)
+    if (response.success && response.data) {
+      response.data = this.normalizeCommentListResponse(response.data)
+      console.log('✅ [FEED_SERVICE] 댓글 조회 완료:', {
+        count: response.data.comments?.length || 0,
+        totalElements: response.data.totalElements
+      })
+    }
+    return response
+  }
+
+  async createComment(feedId, content) {
+    if (!feedId) throw new Error('피드 ID가 필요합니다.')
+    const validation = this.validateCommentData({ content })
+    if (!validation.isValid) throw new Error(validation.errors.join(', '))
+    console.log('✍️ [FEED_SERVICE] 댓글 생성:', { feedId, contentLength: content.length })
+    const response = await this.post(`/feeds/${feedId}/comments`, { content: content.trim() })
+    if (response.success) {
+      console.log('✅ [FEED_SERVICE] 댓글 생성 완료')
+    }
+    return response
+  }
+
+  async updateComment(feedId, commentId, content) {
+    if (!feedId) throw new Error('피드 ID가 필요합니다.')
+    if (!commentId) throw new Error('댓글 ID가 필요합니다.')
+    const validation = this.validateCommentData({ content })
+    if (!validation.isValid) throw new Error(validation.errors.join(', '))
+    console.log('📝 [FEED_SERVICE] 댓글 수정:', { feedId, commentId })
+    const response = await this.put(`/feeds/${feedId}/comments/${commentId}`, { content: content.trim() })
+    if (response.success) {
+      console.log('✅ [FEED_SERVICE] 댓글 수정 완료')
+    }
+    return response
+  }
+
+  async deleteComment(feedId, commentId) {
+    if (!feedId) throw new Error('피드 ID가 필요합니다.')
+    if (!commentId) throw new Error('댓글 ID가 필요합니다.')
+    console.log('🗑️ [FEED_SERVICE] 댓글 삭제:', { feedId, commentId })
+    const response = await this.delete(`/feeds/${feedId}/comments/${commentId}`)
+    if (response.success) {
+      console.log('✅ [FEED_SERVICE] 댓글 삭제 완료')
+    }
+    return response
+  }
+
   // ==================== 피드 리액션 메서드 ====================
 
   async toggleFeedReaction(feedId, reactionType) {
     if (!feedId) throw new Error('피드 ID가 필요합니다.')
-
     const validReactionTypes = ['LIKE', 'HOT']
     const upperType = reactionType.toUpperCase()
-
     if (!validReactionTypes.includes(upperType)) {
       throw new Error('올바른 리액션 타입을 선택해주세요. (LIKE, HOT)')
     }
-
     const response = await this.post(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
-
     if (response.success && response.data) {
       response.data = {
         ...response.data,
@@ -245,16 +268,12 @@ class FeedService extends BaseApiService {
 
   async removeFeedReaction(feedId, reactionType) {
     if (!feedId) throw new Error('피드 ID가 필요합니다.')
-
     const validReactionTypes = ['LIKE', 'HOT']
     const upperType = reactionType.toUpperCase()
-
     if (!validReactionTypes.includes(upperType)) {
       throw new Error('올바른 리액션 타입을 선택해주세요. (LIKE, HOT)')
     }
-
     const response = await this.delete(`/feeds/${feedId}/reactions?reactionType=${upperType}`)
-
     if (response.success && response.data) {
       response.data = {
         ...response.data,
@@ -279,9 +298,7 @@ class FeedService extends BaseApiService {
       ...this.removeEmptyParams(validatedCondition),
       ...this.removeEmptyParams(validatedPageable)
     }
-
     const response = await this.get('/hashtags/hot', params)
-
     if (response.success && response.data) {
       if (response.data.content) {
         response.data.content = this.normalizeHotHashtagResponse(response.data.content)
@@ -321,7 +338,6 @@ class FeedService extends BaseApiService {
 
   removeEmptyParams(params) {
     if (!params || typeof params !== 'object') return {}
-
     const cleaned = {}
     Object.entries(params).forEach(([key, value]) => {
       if (value !== null && value !== undefined && value !== '') {
@@ -335,9 +351,10 @@ class FeedService extends BaseApiService {
     return cleaned
   }
 
+  // ==================== 피드 정규화 메서드 ====================
+
   normalizeFeedListResponse(feeds) {
     if (!Array.isArray(feeds)) return []
-
     return feeds.map(feed => ({
       ...feed,
       userInfo: this.normalizeUserInfo(feed.userInfo),
@@ -354,7 +371,6 @@ class FeedService extends BaseApiService {
 
   normalizeFeedDetailResponse(feed) {
     if (!feed) return null
-
     return {
       ...feed,
       userInfo: this.normalizeUserInfo(feed.userInfo),
@@ -434,11 +450,38 @@ class FeedService extends BaseApiService {
     return null
   }
 
+  // ==================== 댓글 정규화 메서드 ====================
+
+  normalizeCommentListResponse(data) {
+    if (!data) return { comments: [], page: 0, size: 20, totalElements: 0, totalPages: 0, hasNext: false, hasPrevious: false }
+    return {
+      comments: Array.isArray(data.comments) ? data.comments.map(comment => this.normalizeCommentItem(comment)) : [],
+      page: data.page || 0,
+      size: data.size || 20,
+      totalElements: data.totalElements || 0,
+      totalPages: data.totalPages || 0,
+      hasNext: data.hasNext || false,
+      hasPrevious: data.hasPrevious || false
+    }
+  }
+
+  normalizeCommentItem(comment) {
+    if (!comment) return null
+    return {
+      commentId: comment.commentId,
+      creatorId: comment.creatorId,
+      creatorNickname: comment.creatorNickname || '알 수 없음',
+      creatorProfileUrl: comment.creatorProfileUrl || null,
+      content: comment.content || '',
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt
+    }
+  }
+
   // ==================== 검증 메서드 ====================
 
   validateFeedData(feedData) {
     const errors = []
-
     if (!feedData.userId) errors.push('사용자 ID는 필수입니다.')
     if (!feedData.productId && (!feedData.productNameCustom || feedData.productNameCustom.trim().length === 0)) {
       errors.push('상품을 선택하거나 상품명을 입력해주세요.')
@@ -479,13 +522,11 @@ class FeedService extends BaseApiService {
       const invalidHashtags = feedData.hashtags.filter(tag => tag.length > 50)
       if (invalidHashtags.length > 0) errors.push('각 해시태그는 50자 이하여야 합니다.')
     }
-
     return { isValid: errors.length === 0, errors }
   }
 
   validateUpdateFeedData(feedData) {
     const errors = []
-
     if (!feedData.userId) errors.push('사용자 ID는 필수입니다.')
     if (!feedData.productId && (!feedData.productNameCustom || feedData.productNameCustom.trim().length === 0)) {
       errors.push('상품을 선택하거나 상품명을 입력해주세요.')
@@ -522,15 +563,22 @@ class FeedService extends BaseApiService {
       const invalidHashtags = feedData.hashtags.filter(tag => tag.length > 50)
       if (invalidHashtags.length > 0) errors.push('각 해시태그는 50자 이하여야 합니다.')
     }
+    return { isValid: errors.length === 0, errors }
+  }
 
+  validateCommentData(commentData) {
+    const errors = []
+    if (!commentData.content || commentData.content.trim().length === 0) {
+      errors.push('댓글 내용을 입력해주세요.')
+    } else if (commentData.content.length > 200) {
+      errors.push('댓글은 200자 이하로 작성해주세요.')
+    }
     return { isValid: errors.length === 0, errors }
   }
 
   validateSearchCondition(searchCondition) {
     if (!searchCondition || typeof searchCondition !== 'object') return {}
-
     const validated = { ...searchCondition }
-
     if (validated.keyword && validated.keyword.length > 100) {
       validated.keyword = validated.keyword.substring(0, 100)
     }
@@ -563,15 +611,12 @@ class FeedService extends BaseApiService {
     } else if (validated.size) {
       validated.size = Math.min(100, Math.max(1, parseInt(validated.size)))
     }
-
     return validated
   }
 
   validateHashtagSearchCondition(searchCondition) {
     if (!searchCondition || typeof searchCondition !== 'object') return {}
-
     const validated = { ...searchCondition }
-
     if (validated.keyword && validated.keyword.length > 50) {
       validated.keyword = validated.keyword.substring(0, 50)
     }
@@ -583,7 +628,6 @@ class FeedService extends BaseApiService {
     } else if (validated.categoryId) {
       validated.categoryId = parseInt(validated.categoryId)
     }
-
     return validated
   }
 
@@ -591,26 +635,32 @@ class FeedService extends BaseApiService {
     if (!pageable || typeof pageable !== 'object') {
       return { page: 0, size: 20, sort: 'createdAt,DESC' }
     }
-
     const validSorts = [
       'createdAt,DESC', 'createdAt,ASC',
       'viewCount,DESC', 'viewCount,ASC',
       'likeCount,DESC', 'hotCount,DESC',
       'usageCount,DESC', 'usageCount,ASC'
     ]
-
     const validated = {
       page: Math.max(0, pageable.page || 0),
       size: Math.min(100, Math.max(1, pageable.size || 20))
     }
-
     if (pageable.sort && validSorts.includes(pageable.sort)) {
       validated.sort = pageable.sort
     } else {
       validated.sort = 'createdAt,DESC'
     }
-
     return validated
+  }
+
+  validateCommentPageable(pageable) {
+    if (!pageable || typeof pageable !== 'object') {
+      return { page: 0, size: 20 }
+    }
+    return {
+      page: Math.max(0, parseInt(pageable.page) || 0),
+      size: Math.min(100, Math.max(1, parseInt(pageable.size) || 20))
+    }
   }
 }
 
@@ -623,7 +673,6 @@ export default feedService
 
 export function useFeed() {
   const service = new FeedService()
-
   return {
     // 피드 CRUD
     createFeedWithFiles: (data, thumbnail, files) => service.createFeedWithFiles(data, thumbnail, files),
@@ -632,11 +681,15 @@ export function useFeed() {
     getFeeds: (condition, pageable) => service.getFeeds(condition, pageable),
     getHotFeeds: (pageable) => service.getHotFeeds(pageable),
     getFeedsWithCursor: (condition) => service.getFeedsWithCursor(condition),
-    getFollowingFeeds: (condition) => service.getFollowingFeeds(condition), // ✅ 추가
+    getFollowingFeeds: (condition) => service.getFollowingFeeds(condition),
     getFeedList: (condition) => service.getFeedList(condition),
     updateFeed: (id, data) => service.updateFeed(id, data),
     deleteFeed: (id) => service.deleteFeed(id),
-
+    // 댓글
+    getComments: (feedId, pageable) => service.getComments(feedId, pageable),
+    createComment: (feedId, content) => service.createComment(feedId, content),
+    updateComment: (feedId, commentId, content) => service.updateComment(feedId, commentId, content),
+    deleteComment: (feedId, commentId) => service.deleteComment(feedId, commentId),
     // 리액션
     toggleLike: (id) => service.toggleLike(id),
     toggleHot: (id) => service.toggleHot(id),
@@ -644,16 +697,13 @@ export function useFeed() {
     removeHot: (id) => service.removeHot(id),
     toggleReaction: (id, type) => service.toggleFeedReaction(id, type),
     removeReaction: (id, type) => service.removeFeedReaction(id, type),
-
     // 검색/필터
     searchFeeds: (keyword, condition, pageable) => service.searchFeeds(keyword, condition, pageable),
     getFeedsByCategory: (categoryId, pageable) => service.getFeedsByCategory(categoryId, pageable),
     getFeedsByHashtag: (hashtag, pageable) => service.getFeedsByHashtag(hashtag, pageable),
     getFeedsByEvaluation: (evaluation, condition, pageable) => service.getFeedsByEvaluation(evaluation, condition, pageable),
-
     // 해시태그
     getHotHashtags: (condition, pageable) => service.getHotHashtags(condition, pageable),
-
     // 유틸리티
     convertToAttachmentInfo: (response) => service.convertToAttachmentInfo(response)
   }
@@ -669,13 +719,11 @@ export const feedUtils = {
     if (num >= 1000) return Math.floor(num / 1000) + 'k'
     return num.toString()
   },
-
   formatPrice(price) {
     if (!price || price === 0) return '무료'
     const numPrice = typeof price === 'string' ? parseInt(price) : price
     return new Intl.NumberFormat('ko-KR').format(numPrice) + '원'
   },
-
   formatDate(dateString) {
     if (!dateString) return ''
     const date = new Date(dateString)
@@ -684,52 +732,70 @@ export const feedUtils = {
     const minutes = Math.floor(diff / 60000)
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
-
     if (minutes < 1) return '방금 전'
     if (minutes < 60) return `${minutes}분 전`
     if (hours < 24) return `${hours}시간 전`
     if (days < 7) return `${days}일 전`
     return date.toLocaleDateString('ko-KR')
   },
-
+  formatCommentDate(dateString) {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const now = new Date()
+    const diff = now - date
+    const seconds = Math.floor(diff / 1000)
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+    if (seconds < 60) return '방금 전'
+    if (minutes < 60) return `${minutes}분 전`
+    if (hours < 24) return `${hours}시간 전`
+    if (days < 7) return `${days}일 전`
+    if (days < 30) return `${Math.floor(days / 7)}주 전`
+    return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+  },
+  truncateComment(content, maxLength = 100) {
+    if (!content) return ''
+    if (content.length <= maxLength) return content
+    return content.substring(0, maxLength) + '...'
+  },
+  formatCommentCount(count) {
+    if (!count || count === 0) return '댓글 작성'
+    const num = parseInt(count)
+    if (num >= 1000) return `댓글 ${Math.floor(num / 1000)}k+`
+    return `댓글 ${num}개`
+  },
   calculateDiscountRate(price, buyPrice) {
     if (!price || !buyPrice || price === 0) return 0
     return Math.round(((price - buyPrice) / price) * 100)
   },
-
   formatHashtag(tag) {
     if (!tag) return ''
     return tag.startsWith('#') ? tag : `#${tag}`
   },
-
   parseHashtags(hashtagString) {
     if (!hashtagString) return []
     return hashtagString.split(/[,\s]+/).map(tag => tag.replace('#', '').trim()).filter(tag => tag.length > 0)
   },
-
   getEvaluationLabel(evaluation) {
     const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
     const labels = { 'BEST': '강추', 'GOOD': '추천', 'OKAY': '괜찮음', 'BAD': '비추천' }
     return labels[code] || ''
   },
-
   getEvaluationColor(evaluation) {
     const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
     const colors = { 'BEST': '#F97316', 'GOOD': '#10B981', 'OKAY': '#3B82F6', 'BAD': '#EF4444' }
     return colors[code] || '#64748B'
   },
-
   getEvaluationIcon(evaluation) {
     const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
     const icons = { 'BEST': '🔥', 'GOOD': '👍', 'OKAY': '👌', 'BAD': '👎' }
     return icons[code] || ''
   },
-
   formatHotScore(score) {
     if (!score || score === 0) return '0.0'
     return parseFloat(score).toFixed(1)
   },
-
   formatUsageCount(count) {
     if (!count || count === 0) return '0회'
     const num = parseInt(count)
@@ -737,18 +803,15 @@ export const feedUtils = {
     if (num >= 1000) return (num / 1000).toFixed(1) + 'k'
     return num.toString() + '회'
   },
-
   hashtagsToString(hashtags) {
     if (!Array.isArray(hashtags) || hashtags.length === 0) return ''
     return hashtags.map(tag => this.formatHashtag(tag)).join(' ')
   },
-
   isValidHashtag(tag) {
     if (!tag || typeof tag !== 'string') return false
     const cleanTag = tag.replace('#', '').trim()
     return cleanTag.length > 0 && cleanTag.length <= 50
   },
-
   filterHashtags(hashtags) {
     if (!Array.isArray(hashtags)) return []
     const uniqueTags = [...new Set(hashtags)]
