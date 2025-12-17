@@ -3,56 +3,43 @@
     <AppSidebar />
 
     <main class="main-content">
-      <!-- 뒤로가기 버튼 -->
-      <button class="back-btn" @click="handleBack">
-        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-      </button>
+      <!-- 프로필 헤더 컴포넌트 (자체 로드) -->
+      <UserProfileHeader />
 
-      <!-- ⭐ 프로필 헤더 컴포넌트 -->
-      <UserProfileHeader
-          :user-info="userInfo"
-          :user-stats="userStats"
-          :is-following="isFollowing"
-          @follow="handleFollow"
-      />
-
-      <!-- ⭐ 탭 네비게이션 컴포넌트 -->
+      <!-- 탭 네비게이션 컴포넌트 -->
       <UserTabNavigation
           v-model="activeMenu"
           :menu-items="menuItems"
+          class="tab-nav"
       />
 
       <!-- 피드 리스트 -->
-      <div class="feed-container">
-        <FeedList
-            ref="feedListRef"
-            :feeds="feeds"
-            :loading="loading"
-            :has-next="hasNext"
-            :view-mode="viewMode"
-            :liked-posts="likedPosts"
-            :hot-posts="hotPosts"
-            :saved-posts="savedPosts"
-            @update="handleReactionUpdate"
-            @save="handleSave"
-            @comment="handleComment"
-            @post-click="openPost"
-            @view-mode-change="viewMode = $event"
-        />
-      </div>
+      <FeedList
+          ref="feedListRef"
+          :feeds="feeds"
+          :loading="loading"
+          :has-next="hasNext"
+          :view-mode="viewMode"
+          :liked-posts="likedPosts"
+          :hot-posts="hotPosts"
+          :saved-posts="savedPosts"
+          @update="handleReactionUpdate"
+          @save="handleSave"
+          @comment="handleComment"
+          @post-click="openPost"
+          @view-mode-change="viewMode = $event"
+      />
     </main>
 
     <!-- Bottom Navigation - Mobile Only -->
     <nav class="bottom-nav">
-      <button class="bottom-nav-item">
+      <button class="bottom-nav-item" @click="$router.push('/feed')">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
         </svg>
         <span>홈</span>
       </button>
-      <button class="bottom-nav-item">
+      <button class="bottom-nav-item" @click="$router.push('/battle')">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
           <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
@@ -64,14 +51,14 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
         </svg>
       </button>
-      <button class="bottom-nav-item">
+      <button class="bottom-nav-item" @click="$router.push('/chat')">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
         </svg>
         <span>메시지</span>
         <span class="nav-badge">3</span>
       </button>
-      <button class="bottom-nav-item active">
+      <button class="bottom-nav-item" @click="$router.push('/mypage')">
         <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
         </svg>
@@ -82,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useFeed } from '@/services/FeedService';
 import AppSidebar from '@/components/feed/AppSidebar.vue';
@@ -97,22 +84,6 @@ const feedService = useFeed();
 const userId = computed(() => route.params.userId);
 
 // State
-const userInfo = ref({
-  nickname: '',
-  profileImageUrl: '',
-  level: 1,
-  bio: '',
-  location: '',
-  joinDate: ''
-});
-
-const userStats = ref({
-  feeds: 0,
-  followers: 0,
-  following: 0,
-  totalLikes: 0
-});
-
 const feeds = ref([]);
 const cursor = ref(null);
 const hasNext = ref(true);
@@ -120,44 +91,38 @@ const loading = ref(false);
 const likedPosts = ref(new Set());
 const hotPosts = ref(new Set());
 const savedPosts = ref(new Set());
-const isFollowing = ref(false);
 
-const viewMode = ref('feed');
+// localStorage에서 뷰 모드 불러오기
+const getStoredViewMode = () => {
+  try {
+    return localStorage.getItem('feedViewMode') || 'feed';
+  } catch (error) {
+    console.error('localStorage 읽기 실패:', error);
+    return 'feed';
+  }
+};
+
+const viewMode = ref(getStoredViewMode());
 const activeMenu = ref('feeds');
 
 const menuItems = [
-  { label: '내 게시물', value: 'feeds' },
-  { label: '좋아요한 글', value: 'liked' },
-  { label: '저장한 글', value: 'saved' }
+  { label: '게시물', value: 'feeds' },
+  { label: '좋아요', value: 'liked' },
+  { label: '저장', value: 'saved' }
 ];
 
 const feedListRef = ref(null);
 
-// Methods
-const loadUserInfo = async () => {
+// viewMode 변경 감지 및 저장
+watch(viewMode, (newMode) => {
   try {
-    userInfo.value = {
-      nickname: '뷰티러버',
-      profileImageUrl: 'https://i.pravatar.cc/300?img=5',
-      level: 12,
-      bio: '좋은 제품을 찾아 공유합니다 ✨',
-      location: '서울',
-      joinDate: '2023.03'
-    };
-
-    userStats.value = {
-      feeds: 127,
-      followers: 3542,
-      following: 892,
-      totalLikes: 15234
-    };
-
-    console.log('✅ 사용자 정보 로드 완료');
+    localStorage.setItem('feedViewMode', newMode);
   } catch (error) {
-    console.error('❌ 사용자 정보 로드 실패:', error);
+    console.error('localStorage 저장 실패:', error);
   }
-};
+});
 
+// Methods
 const loadUserFeeds = async () => {
   if (loading.value || !hasNext.value) return;
 
@@ -228,25 +193,11 @@ const openPost = (feedId) => {
   router.push({ name: 'FeedDetail', params: { id: feedId } });
 };
 
-const handleBack = () => {
-  router.back();
-};
-
-const handleFollow = async () => {
-  try {
-    isFollowing.value = !isFollowing.value;
-    console.log('✅ 팔로우 상태 변경:', isFollowing.value);
-  } catch (error) {
-    console.error('❌ 팔로우 처리 실패:', error);
-  }
-};
-
 // Lifecycle
 let observer = null;
 
 onMounted(async () => {
   console.log('✅ UserFeedListView 마운트');
-  await loadUserInfo();
   await loadUserFeeds();
 
   observer = new IntersectionObserver(
@@ -297,21 +248,15 @@ onUnmounted(() => {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
   max-width: 100vw;
-}
-
-/* 모바일: 작은 여백 */
-.app-container {
   padding: 0 1rem;
 }
 
-/* 태블릿: 중간 여백 */
 @media (min-width: 768px) {
   .app-container {
     padding: 0 2rem;
   }
 }
 
-/* 데스크톱: 큰 여백 */
 @media (min-width: 1280px) {
   .app-container {
     padding: 0 3rem;
@@ -321,7 +266,6 @@ onUnmounted(() => {
   }
 }
 
-/* 대형 화면: 더 큰 여백 */
 @media (min-width: 1920px) {
   .app-container {
     padding: 0 4rem;
@@ -332,48 +276,19 @@ onUnmounted(() => {
   flex: 1;
   min-width: 0;
   min-height: 100vh;
+  padding-top: 1rem;
   padding-bottom: 5rem;
 }
 
 @media (min-width: 768px) {
   .main-content {
+    padding-top: 1.5rem;
     padding-bottom: 2.5rem;
   }
 }
 
-.back-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  margin: 1rem 0 0 0;
-  background: transparent;
-  border: none;
-  color: var(--primary);
-  cursor: pointer;
-  border-radius: 50%;
-  transition: background 0.2s;
-}
-
-.back-btn:hover {
-  background: var(--hover);
-}
-
-.back-btn .icon {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-@media (min-width: 768px) {
-  .back-btn {
-    margin: 1.5rem 0 0 0;
-  }
-}
-
-.feed-container {
-  background: transparent;
-  min-height: 25rem;
+.tab-nav {
+  margin-bottom: 0.5rem;
 }
 
 /* Bottom Navigation */
@@ -477,7 +392,6 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-/* 고해상도 디스플레이 대응 */
 @media (max-resolution: 1dppx) {
   .bottom-nav-item .icon {
     width: 1.375rem;
@@ -487,14 +401,6 @@ onUnmounted(() => {
   .bottom-nav-fab {
     width: 3.25rem;
     height: 3.25rem;
-  }
-}
-
-/* 터치 디바이스 대응 */
-@media (hover: none) {
-  .back-btn {
-    min-height: 2.75rem;
-    min-width: 2.75rem;
   }
 }
 </style>

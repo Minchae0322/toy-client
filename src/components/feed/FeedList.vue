@@ -249,13 +249,13 @@ defineExpose({ observerTarget });
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 .feed-section {
-  padding: 32px 0;
+  padding: 10px 0;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   background: var(--bg);
 }
 
 @media (min-width: 1024px) {
-  .feed-section { padding: 40px 0; }
+  .feed-section { padding: 15px 0; }
 }
 
 .section-header {
