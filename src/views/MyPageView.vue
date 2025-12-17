@@ -222,12 +222,13 @@ const editForm = reactive({
 // ==================== Computed ====================
 const currentUser = computed(() => getUserInfo())
 
+// ✅ 수정된 부분: profile.profilePicture?.fileUrl 직접 접근
 const profileImageUrl = computed(() => {
-  const url = userUtils.getProfileImageUrl(profile.profilePicture)
-  if (url && !url.includes('default-profile')) {
+  const url = profile.profilePicture?.fileUrl
+  if (url) {
     return `${url}?t=${imageKey.value}`
   }
-  return url
+  return null
 })
 
 const displayImageUrl = computed(() => {
@@ -293,7 +294,6 @@ const saveProfile = async () => {
 
   try {
     let profileImgInfo = null
-    let uploadedImageUrl = null
 
     // 1. 파일 업로드 처리 (실패 시 early return)
     if (selectedFile.value) {
@@ -303,7 +303,6 @@ const saveProfile = async () => {
         fileCode: 'FEED'
       })
 
-      // ✅ 업로드 실패 시 즉시 중단 - 프로필 업데이트 진행 안 함
       if (!uploadResult.success || !uploadResult.data) {
         const errorMsg = uploadResult.message || '이미지 업로드에 실패했습니다.'
         console.error('[PROFILE] 이미지 업로드 실패:', errorMsg)
@@ -319,11 +318,10 @@ const saveProfile = async () => {
         contentType: uploadResult.data.contentType || uploadResult.data.fileExt,
         fileExplain: '프로필 이미지'
       }
-      uploadedImageUrl = uploadResult.data.fileUrl
       console.log('[PROFILE] 프로필 이미지 업로드 완료:', profileImgInfo)
     }
 
-    // 2. 프로필 업데이트 (파일 업로드 성공 후에만 도달)
+    // 2. 프로필 업데이트
     const updateDto = {
       nickname: editForm.nickname,
       description: editForm.description,
@@ -373,7 +371,7 @@ const handleImageError = (e) => {
 
 const showFollowers = () => console.log('팔로워 목록')
 const showFollowings = () => console.log('팔로잉 목록')
-const goToMyFeeds = () => router.push({ name: 'UserFeedList', params: { userId: profile.userId } })
+const goToMyFeeds = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToSavedPosts = () => console.log('저장한 글')
 const goToNotificationSettings = () => console.log('알림 설정')
 const goToAccountSettings = () => console.log('계정 설정')
@@ -425,7 +423,9 @@ onMounted(() => {
 }
 
 @media (min-width: 768px) {
-  .app-container { padding: 0 2rem; }
+  .app-container {
+    padding: 0 2rem;
+  }
 }
 
 @media (min-width: 1280px) {
@@ -438,7 +438,9 @@ onMounted(() => {
 }
 
 @media (min-width: 1920px) {
-  .app-container { padding: 0 4rem; }
+  .app-container {
+    padding: 0 4rem;
+  }
 }
 
 .main-content {
@@ -449,7 +451,9 @@ onMounted(() => {
 }
 
 @media (min-width: 768px) {
-  .main-content { padding-bottom: 2.5rem; }
+  .main-content {
+    padding-bottom: 2.5rem;
+  }
 }
 
 .content-inner {
@@ -459,10 +463,14 @@ onMounted(() => {
 }
 
 @media (min-width: 768px) {
-  .content-inner { padding: 0; }
+  .content-inner {
+    padding: 0;
+  }
 }
 
-.content-header { padding: 24px 0 20px; }
+.content-header {
+  padding: 24px 0 20px;
+}
 
 .page-title {
   font-size: 20px;
@@ -488,7 +496,11 @@ onMounted(() => {
   margin: 0 auto 16px;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .btn-retry {
   margin-top: 16px;
@@ -563,7 +575,9 @@ onMounted(() => {
   color: white;
 }
 
-.avatar-edit input { display: none; }
+.avatar-edit input {
+  display: none;
+}
 
 .profile-info {
   flex: 1;
@@ -602,7 +616,9 @@ onMounted(() => {
   transition: all 0.15s;
 }
 
-.btn-edit:hover { background: #faf5ff; }
+.btn-edit:hover {
+  background: #faf5ff;
+}
 
 .follow-stats {
   display: flex;
@@ -616,7 +632,9 @@ onMounted(() => {
   transition: color 0.15s;
 }
 
-.stat-item:hover { color: var(--accent); }
+.stat-item:hover {
+  color: var(--accent);
+}
 
 .follow-stats strong {
   color: var(--primary);
@@ -624,9 +642,13 @@ onMounted(() => {
 }
 
 /* Edit Form */
-.edit-form { padding-top: 20px; }
+.edit-form {
+  padding-top: 20px;
+}
 
-.form-group { margin-bottom: 16px; }
+.form-group {
+  margin-bottom: 16px;
+}
 
 .form-group label {
   display: block;
@@ -692,7 +714,9 @@ onMounted(() => {
   color: var(--secondary);
 }
 
-.btn-cancel:hover:not(:disabled) { background: #e5e7eb; }
+.btn-cancel:hover:not(:disabled) {
+  background: #e5e7eb;
+}
 
 .btn-save {
   background: var(--accent);
@@ -700,7 +724,9 @@ onMounted(() => {
   color: white;
 }
 
-.btn-save:hover:not(:disabled) { opacity: 0.9; }
+.btn-save:hover:not(:disabled) {
+  opacity: 0.9;
+}
 
 .btn-cancel:disabled,
 .btn-save:disabled {
@@ -727,7 +753,9 @@ onMounted(() => {
   line-height: 1.6;
 }
 
-.bio-section p.empty { color: var(--secondary); }
+.bio-section p.empty {
+  color: var(--secondary);
+}
 
 /* Meta Section */
 .meta-section {
@@ -775,9 +803,13 @@ onMounted(() => {
   font-family: inherit;
 }
 
-.menu-item:last-child { border-bottom: none; }
+.menu-item:last-child {
+  border-bottom: none;
+}
 
-.menu-item:hover { background: var(--hover); }
+.menu-item:hover {
+  background: var(--hover);
+}
 
 .menu-left {
   display: flex;
@@ -785,7 +817,9 @@ onMounted(() => {
   gap: 10px;
 }
 
-.menu-left svg { color: var(--secondary); }
+.menu-left svg {
+  color: var(--secondary);
+}
 
 .menu-item > svg {
   color: var(--secondary);
@@ -817,7 +851,9 @@ onMounted(() => {
   color: #dc2626;
 }
 
-.btn-logout svg { color: currentColor; }
+.btn-logout svg {
+  color: currentColor;
+}
 
 /* Bottom Navigation */
 .bottom-nav {
@@ -837,7 +873,9 @@ onMounted(() => {
 }
 
 @media (min-width: 1024px) {
-  .bottom-nav { display: none; }
+  .bottom-nav {
+    display: none;
+  }
 }
 
 .bottom-nav-item {
@@ -856,7 +894,9 @@ onMounted(() => {
   min-width: 3.5rem;
 }
 
-.bottom-nav-item.active { color: var(--primary); }
+.bottom-nav-item.active {
+  color: var(--primary);
+}
 
 .bottom-nav-item .icon {
   width: 1.5rem;
@@ -905,7 +945,9 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.bottom-nav-fab:active { transform: scale(0.95); }
+.bottom-nav-fab:active {
+  transform: scale(0.95);
+}
 
 .bottom-nav-fab .icon {
   width: 1.75rem;

@@ -27,6 +27,7 @@ import FeedHomeView from '@/views/feed/FeedHomeView.vue'
 import FeedDetailView from '@/views/feed/FeedDetailView.vue'
 import FeedCreateView from '@/views/feed/FeedCreateView.vue'
 import UserFeedListView from '@/views/UserFeedListView.vue'
+import FollowListView from '@/views/FollowListView.vue'
 
 // Battle Views import
 import BattleListView from '@/views/battle/BattleListView.vue'
@@ -150,6 +151,16 @@ const routes = [
       requiresAuth: false,
       public: true,
       title: '사용자 피드'
+    }
+  },
+
+  {
+    path: '/user/:userId/follows',
+    name: 'FollowList',
+    component: FollowListView,
+    props: true,
+    meta: {
+      title: '팔로우 목록'
     }
   },
 

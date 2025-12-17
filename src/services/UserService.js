@@ -90,56 +90,54 @@ class UserService extends BaseApiService {
   }
 
   /**
-   * 팔로워 목록 조회
+   * 팔로워 목록 조회 (커서 기반 페이징)
    * GET /api/user/{userId}/followers
+   *
+   * @param {number} userId - 대상 유저 ID
+   * @param {Object} options - 페이징 옵션
+   * @param {number} [options.cursor] - 마지막 followId (커서)
+   * @param {number} [options.size=20] - 조회 개수
    */
-  async getFollowers(userId, pageable = {}) {
+  async getFollowers(userId, { cursor = null, size = 20 } = {}) {
     if (!userId) {
       throw new Error('사용자 ID가 필요합니다.')
     }
 
-    console.log(`📋 [USER_SERVICE] 팔로워 목록 조회: userId=${userId}`)
+    console.log(`📋 [USER_SERVICE] 팔로워 목록 조회: userId=${userId}, cursor=${cursor}, size=${size}`)
 
-    const validatedPageable = this.validatePageable(pageable)
-    const cleanedPageable = this.removeEmptyParams(validatedPageable)
-
-    const response = await this.get(`/user/${userId}/followers`, cleanedPageable)
+    const params = this.removeEmptyParams({ cursor, size })
+    const response = await this.get(`/user/${userId}/followers`, params)
 
     if (response.success && response.data) {
-      if (response.data.content) {
-        response.data.content = this.normalizeFollowUserList(response.data.content)
-      } else if (Array.isArray(response.data)) {
-        response.data = this.normalizeFollowUserList(response.data)
-      }
-      console.log('✅ [USER_SERVICE] 팔로워 목록 조회 완료')
+      response.data = this.normalizeFollowListResponse(response.data, 'followers')
+      console.log('✅ [USER_SERVICE] 팔로워 목록 조회 완료:', response.data)
     }
 
     return response
   }
 
   /**
-   * 팔로잉 목록 조회
-   * GET /api/user/{userId}/followings
+   * 팔로잉 목록 조회 (커서 기반 페이징)
+   * GET /api/user/{userId}/following
+   *
+   * @param {number} userId - 대상 유저 ID
+   * @param {Object} options - 페이징 옵션
+   * @param {number} [options.cursor] - 마지막 followId (커서)
+   * @param {number} [options.size=20] - 조회 개수
    */
-  async getFollowings(userId, pageable = {}) {
+  async getFollowings(userId, { cursor = null, size = 20 } = {}) {
     if (!userId) {
       throw new Error('사용자 ID가 필요합니다.')
     }
 
-    console.log(`📋 [USER_SERVICE] 팔로잉 목록 조회: userId=${userId}`)
+    console.log(`📋 [USER_SERVICE] 팔로잉 목록 조회: userId=${userId}, cursor=${cursor}, size=${size}`)
 
-    const validatedPageable = this.validatePageable(pageable)
-    const cleanedPageable = this.removeEmptyParams(validatedPageable)
-
-    const response = await this.get(`/user/${userId}/followings`, cleanedPageable)
+    const params = this.removeEmptyParams({ cursor, size })
+    const response = await this.get(`/user/${userId}/following`, params)
 
     if (response.success && response.data) {
-      if (response.data.content) {
-        response.data.content = this.normalizeFollowUserList(response.data.content)
-      } else if (Array.isArray(response.data)) {
-        response.data = this.normalizeFollowUserList(response.data)
-      }
-      console.log('✅ [USER_SERVICE] 팔로잉 목록 조회 완료')
+      response.data = this.normalizeFollowListResponse(response.data, 'followings')
+      console.log('✅ [USER_SERVICE] 팔로잉 목록 조회 완료:', response.data)
     }
 
     return response
@@ -187,18 +185,35 @@ class UserService extends BaseApiService {
   }
 
   /**
-   * 팔로우 사용자 목록 정규화
+   * 팔로우 목록 응답 정규화 (커서 기반 페이징)
+   *
+   * @param {Object} data - 백엔드 응답 데이터
+   * @param {string} type - 'followers' 또는 'followings'
    */
-  normalizeFollowUserList(users) {
-    if (!Array.isArray(users)) return []
+  normalizeFollowListResponse(data, type) {
+    if (!data) return null
 
-    return users.map(user => ({
+    const list = data[type] || []
+
+    return {
+      [type]: list.map(user => this.normalizeFollowUser(user)),
+      totalCount: data.totalCount || 0,
+      nextCursor: data.nextCursor || null,
+      hasNext: data.hasNext || false
+    }
+  }
+
+  /**
+   * 팔로우 유저 정규화 (백엔드 FollowUserInfo 매핑)
+   */
+  normalizeFollowUser(user) {
+    if (!user) return null
+
+    return {
       userId: user.userId,
-      username: user.username || '',
       nickname: user.nickname || '알 수 없음',
-      profileImgUrl: user.profileImgUrl || null,
-      isFollowing: user.isFollowing || false
-    }))
+      profileImageUrl: user.profileImageUrl || null
+    }
   }
 
   /**
@@ -245,32 +260,6 @@ class UserService extends BaseApiService {
 
     return cleaned
   }
-
-  /**
-   * 페이징 조건 검증
-   */
-  validatePageable(pageable) {
-    if (!pageable || typeof pageable !== 'object') {
-      return {
-        page: 0,
-        size: 20,
-        sort: 'createdAt,DESC'
-      }
-    }
-
-    const validated = {
-      page: Math.max(0, pageable.page || 0),
-      size: Math.min(100, Math.max(1, pageable.size || 20))
-    }
-
-    if (pageable.sort) {
-      validated.sort = pageable.sort
-    } else {
-      validated.sort = 'createdAt,DESC'
-    }
-
-    return validated
-  }
 }
 
 // ==================== 싱글톤 인스턴스 ====================
@@ -290,8 +279,8 @@ export function useUser() {
 
     // 팔로우
     toggleFollow: (userId) => service.toggleFollow(userId),
-    getFollowers: (userId, pageable) => service.getFollowers(userId, pageable),
-    getFollowings: (userId, pageable) => service.getFollowings(userId, pageable),
+    getFollowers: (userId, options) => service.getFollowers(userId, options),
+    getFollowings: (userId, options) => service.getFollowings(userId, options),
     getFollowStatus: (userId) => service.getFollowStatus(userId)
   }
 }
@@ -345,11 +334,20 @@ export const userUtils = {
   /**
    * 프로필 이미지 URL 가져오기 (기본 이미지 포함)
    */
-  getProfileImageUrl(profilePicture) {
-    if (!profilePicture || !profilePicture.fileUrl) {
-      return '/images/default-profile.png'
+  getProfileImageUrl(user) {
+    if (!user) return '/images/default-profile.png'
+
+    // normalizeFollowUser 결과 처리
+    if (user.profileImageUrl) {
+      return user.profileImageUrl
     }
-    return profilePicture.fileUrl
+
+    // normalizeUserProfile 결과 처리
+    if (user.profilePicture && user.profilePicture.fileUrl) {
+      return user.profilePicture.fileUrl
+    }
+
+    return '/images/default-profile.png'
   },
 
   /**
