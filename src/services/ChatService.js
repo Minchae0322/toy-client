@@ -12,17 +12,14 @@ import * as authUtils from '@/utils/auth.js'
 class ChatService extends BaseApiService {
   constructor() {
     const baseURL = `${getServiceUrl('CHAT')}/api`
-
     super(baseURL, 'CHAT')
 
-    // WebSocket URL 설정
     this.wsURL = ENV.WS_URL
 
     console.log(`💬 [CHAT] Chat Server URL: ${this.baseURL}`)
     console.log(`🔌 [CHAT] WebSocket URL: ${this.wsURL}`)
     console.log(`🌍 [CHAT] Environment: ${ENV.MODE}`)
   }
-
   // ==================== WebSocket URL Getter ====================
 
   getWebSocketUrl() {

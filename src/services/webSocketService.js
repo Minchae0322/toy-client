@@ -2,6 +2,7 @@
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import * as authUtils from '@/utils/auth.js'
+import { ENV } from '@/config/env.js'
 
 class WebSocketService {
   constructor() {
@@ -12,9 +13,11 @@ class WebSocketService {
     this.messageHandlers = new Map()
     this.globalHandlers = new Map()
 
-    // WebSocket 서버 URL
-    this.baseURL = import.meta.env.VITE_CHAT_BASE_URL || 'http://localhost:8084'
+    this.baseURL = ENV.CHAT_BASE_URL
+    this.wsURL = ENV.WS_URL
+
     console.log('🔌 [WebSocket] Base URL:', this.baseURL)
+    console.log('🔌 [WebSocket] WS URL:', this.wsURL)
 
     this.connectionState = {
       connected: false,
@@ -26,7 +29,6 @@ class WebSocketService {
     this.maxReconnectAttempts = 5
     this.reconnectDelay = 1000
 
-    // ✅ 백엔드 yml 설정과 일치
     this.topics = {
       chatRoomPrefix: '/topic/chatroom',
       userDevicePrefix: '/user',
@@ -34,7 +36,6 @@ class WebSocketService {
       onlineUsers: '/topic/online-users'
     }
 
-    // ✅ /app prefix 적용
     this.destinations = {
       sendMessage: '/app/chat/send',
       leaveRoom: '/app/chat/leave',
@@ -152,12 +153,13 @@ class WebSocketService {
       this.connecting = true
       this.updateConnectionState('connecting')
 
-      // 기존 클라이언트 정리
       if (this.client) {
         try { this.client.deactivate() } catch (e) { /* ignore */ }
       }
 
       const socketUrl = `${this.baseURL}/api/ws`
+      console.log('🔌 [WebSocket] Connecting to:', socketUrl)
+
       const socket = new SockJS(socketUrl)
 
       this.client = new Client({
@@ -168,7 +170,7 @@ class WebSocketService {
           'X-User-Id': String(this.getCurrentUserId() || '')
         },
         debug: (str) => {
-          if (import.meta.env.DEV) console.log('🔌 [STOMP]', str)
+          if (ENV.DEV) console.log('🔌 [STOMP]', str)
         },
         reconnectDelay: this.reconnectDelay,
         heartbeatIncoming: 10000,
@@ -210,7 +212,6 @@ class WebSocketService {
         }
       })
 
-      // 타임아웃 설정
       const timeout = setTimeout(() => {
         if (this.connecting) {
           this.connecting = false
@@ -258,14 +259,12 @@ class WebSocketService {
     }
 
     try {
-      // 개인 큐 구독
       const queues = ['messages', 'headsup', 'notifications', 'status']
       for (const queue of queues) {
         const dest = this.getUserDeviceQueue(userId, deviceId, queue)
         await this.subscribeToQueue(queue, dest)
       }
 
-      // 시스템 토픽 구독
       await this.subscribeToTopic('system', this.topics.systemNotification)
       await this.subscribeToTopic('online-users', this.topics.onlineUsers)
 
@@ -400,7 +399,7 @@ class WebSocketService {
     console.log(`📤 [WebSocket] 메시지 전송:`, message)
 
     this.client.publish({
-      destination: this.destinations.sendMessage,  // ✅ /app/chat/send
+      destination: this.destinations.sendMessage,
       headers: headers,
       body: JSON.stringify(message)
     })
@@ -412,7 +411,7 @@ class WebSocketService {
     if (!this.isConnected()) return
 
     this.client.publish({
-      destination: this.destinations.leaveRoom,  // ✅ /app/chat/leave
+      destination: this.destinations.leaveRoom,
       headers: { 'Chat-Room-Id': roomId },
       body: JSON.stringify({})
     })
@@ -427,7 +426,7 @@ class WebSocketService {
     if (!this.isConnected()) return
 
     this.client.publish({
-      destination: this.destinations.sendTyping,  // ✅ /app/chat/typing
+      destination: this.destinations.sendTyping,
       body: JSON.stringify({
         roomId: roomId,
         userId: this.getCurrentUserId(),
@@ -520,6 +519,8 @@ class WebSocketService {
     return {
       connected: this.isConnected(),
       connecting: this.connecting,
+      baseURL: this.baseURL,
+      wsURL: this.wsURL,
       subscriptions: Array.from(this.subscriptions.keys()),
       handlers: Array.from(this.messageHandlers.keys()),
       topics: this.topics,
@@ -545,11 +546,9 @@ class WebSocketService {
   }
 }
 
-// 싱글톤
 export const webSocketService = new WebSocketService()
 webSocketService.startConnectionMonitoring()
 
-// 디버깅용
 if (typeof window !== 'undefined') {
   window.webSocketService = webSocketService
   window.debugWebSocket = () => console.log(webSocketService.getDebugInfo())
