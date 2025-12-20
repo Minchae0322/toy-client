@@ -220,12 +220,9 @@ const loadCategories = async () => {
 const loadHotBattles = async () => {
   try {
     hotLoading.value = true
-    const response = await battleService.getBattles(
-        { status: 'ACTIVE' },
-        { page: 0, size: 5, sort: 'hotScore,DESC' }
-    )
+    const response = await battleService.getHotBattleList()
     if (response.success && response.data) {
-      hotBattles.value = response.data.content || response.data
+      hotBattles.value = response.data
     }
   } catch (error) {
     console.error('HOT 배틀 로드 실패:', error)

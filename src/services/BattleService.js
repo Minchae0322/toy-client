@@ -6,10 +6,7 @@ import { ENV, getServiceUrl } from '@/config/env.js'
 
 class BattleService extends BaseApiService {
   constructor() {
-    // 개발: http://54.180.89.70:8082/api (단일 서버)
-    // 프로덕션: https://content.yourdomain.com/api (MSA)
     const baseURL = `${getServiceUrl('CONTENT')}/api`
-
     super(baseURL, 'BATTLE')
     console.log(`⚔️ [BATTLE] Content Server URL: ${this.baseURL}`)
     console.log(`🌍 [BATTLE] Environment: ${ENV.MODE}`)
@@ -32,7 +29,6 @@ class BattleService extends BaseApiService {
     console.log('🖼️ 대표 이미지:', thumbnailFile?.name)
 
     try {
-      // ✅ uploadFiles 사용으로 변경
       console.log('1️⃣ 대표 이미지 업로드 중...')
       const thumbnailResponse = await fileService.uploadFiles(
           thumbnailFile,
@@ -42,7 +38,6 @@ class BattleService extends BaseApiService {
       const thumbnailInfo = this.convertToAttachmentInfo(thumbnailResponse.data)
       console.log('✅ 대표 이미지 업로드 완료:', thumbnailInfo)
 
-      // 2. 배틀 생성 요청
       console.log('2️⃣ 배틀 생성 요청 중...')
       const battleCreateData = {
         ...battleData,
@@ -143,6 +138,22 @@ class BattleService extends BaseApiService {
       } else if (Array.isArray(response.data)) {
         response.data = this.normalizeBattleListResponse(response.data)
       }
+    }
+
+    return response
+  }
+
+  /**
+   * HOT 배틀 목록 조회
+   * GET /api/battles/hot
+   */
+  async getHotBattleList() {
+    console.log('🔥 [BATTLE_SERVICE] HOT 배틀 목록 조회')
+
+    const response = await this.get('/battles/hot')
+
+    if (response.success && response.data) {
+      response.data = this.normalizeHotBattleListResponse(response.data)
     }
 
     return response
@@ -376,6 +387,22 @@ class BattleService extends BaseApiService {
   }
 
   /**
+   * HOT 배틀 목록 응답 정규화
+   */
+  normalizeHotBattleListResponse(battles) {
+    if (!Array.isArray(battles)) return []
+
+    return battles.map(battle => ({
+      ...battle,
+      thumbnailDto: battle.thumbnailDto || null,
+      topItemImages: battle.topItemImages || [],
+      totalParticipants: battle.totalParticipants || 0,
+      totalVotes: battle.totalVotes || 0,
+      totalViews: battle.totalViews || 0
+    }))
+  }
+
+  /**
    * 배틀 상세 응답 정규화
    */
   normalizeBattleDetailResponse(battle) {
@@ -405,7 +432,6 @@ class BattleService extends BaseApiService {
       votePercentage: item.votePercentage || 0,
       reportCount: item.reportCount || 0,
       userBattleVote: item.userBattleVote || null,
-      // ⭐ status 객체 그대로 유지 (백엔드가 객체로 보냄)
       status: item.status
     }))
   }
@@ -573,7 +599,6 @@ class BattleService extends BaseApiService {
         }
       })
 
-      // 순위 중복 체크
       const ranks = voteData.votes.map(v => v.rank)
       const uniqueRanks = new Set(ranks)
       if (ranks.length !== uniqueRanks.size) {
@@ -699,6 +724,7 @@ export function useBattle() {
     // 배틀 조회
     getBattle: (id) => service.getBattle(id),
     getBattles: (condition, pageable) => service.getBattles(condition, pageable),
+    getHotBattleList: () => service.getHotBattleList(),
     getBattlesByCategory: (subCategoryId, pageable) => service.getBattlesByCategory(subCategoryId, pageable),
     getBattlesByStatus: (status, condition, pageable) => service.getBattlesByStatus(status, condition, pageable),
     getBattlesByCreator: (creatorId, pageable) => service.getBattlesByCreator(creatorId, pageable),
