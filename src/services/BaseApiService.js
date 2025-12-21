@@ -52,7 +52,37 @@ export class BaseApiService {
 
   // ==================== 토큰 갱신 ====================
 
+  /**
+   * OAuth 사용자인지 확인
+   */
+  isOAuthUser() {
+    const userInfo = authUtils.getUserInfo()
+    return userInfo?.provider && userInfo.provider !== 'local'
+  }
+
+  /**
+   * AccessToken이 최근 발급되었는지 확인 (1시간 이내)
+   */
+  isRecentlyIssuedToken() {
+    const accessToken = authUtils.getAccessToken()
+    if (!accessToken) return false
+
+    const payload = authUtils.parseJwtToken(accessToken)
+    if (!payload?.iat) return false
+
+    const tokenAge = Date.now() / 1000 - payload.iat
+    const oneHour = 60 * 60
+    return tokenAge < oneHour
+  }
+
   async refreshToken() {
+    // ⭐ OAuth 사용자이고 최근 발급된 토큰이면 갱신 시도 안 함
+    if (this.isOAuthUser() && this.isRecentlyIssuedToken()) {
+      console.log(`⚠️ [${this.serviceName}] OAuth 사용자 - 최근 발급 토큰, /reissue 시도 안 함`)
+      console.log(`💡 [${this.serviceName}] 힌트: 백엔드에서 OAuth 로그인 시 refreshToken 쿠키 설정 확인 필요`)
+      throw new Error('OAuth user - skip refresh')
+    }
+
     if (this.isRefreshing) {
       return new Promise((resolve, reject) => {
         this.failedQueue.push({ resolve, reject })
@@ -110,6 +140,13 @@ export class BaseApiService {
 
     } catch (error) {
       console.error(`❌ [${this.serviceName}] 토큰 갱신 실패:`, error.message)
+
+      // ⭐ OAuth 사용자 예외 처리 - 로그아웃하지 않음
+      if (error.message === 'OAuth user - skip refresh') {
+        console.log(`⚠️ [${this.serviceName}] OAuth 사용자 - 로그아웃 보류`)
+        this.processQueue(error, null)
+        throw error
+      }
 
       // 디버깅 정보 출력
       if (import.meta.env.DEV) {
@@ -188,6 +225,13 @@ export class BaseApiService {
       if (response.status === 401 && retryOnAuth && !options._retried) {
         console.log(`🔄 [${this.serviceName}] 401 에러 감지, 토큰 갱신 후 재시도...`)
 
+        // ⭐ OAuth 사용자이고 최근 발급 토큰이면 갱신 시도 없이 에러 반환
+        if (this.isOAuthUser() && this.isRecentlyIssuedToken()) {
+          console.log(`⚠️ [${this.serviceName}] OAuth 사용자 - 401 에러지만 로그아웃하지 않음`)
+          console.log(`💡 [${this.serviceName}] 백엔드에서 refreshToken 쿠키 설정 확인 필요 (secure=false, sameSite=Lax)`)
+          throw new ApiError('OAuth 인증 오류 - 백엔드 쿠키 설정 확인 필요', 401, null, this.serviceName)
+        }
+
         try {
           const newToken = await this.refreshToken()
 
@@ -208,6 +252,11 @@ export class BaseApiService {
           return this.request(url, { ...options, _retried: true })
 
         } catch (refreshError) {
+          // ⭐ OAuth 사용자 예외 처리
+          if (refreshError.message === 'OAuth user - skip refresh') {
+            console.log(`⚠️ [${this.serviceName}] OAuth 사용자 - 로그아웃하지 않음`)
+            throw new ApiError('OAuth 인증 오류', 401, null, this.serviceName)
+          }
           console.error(`❌ [${this.serviceName}] 토큰 갱신 실패, 로그아웃 처리`)
           throw new ApiError('인증이 만료되었습니다. 다시 로그인해주세요.', 401, null, this.serviceName)
         }
