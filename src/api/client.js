@@ -1,11 +1,19 @@
 // src/api/client.js
 import axios from 'axios'
 
+// 환경에 따른 기본 URL 설정
+const getAuthBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_AUTH_BASE_URL
+  if (envUrl) return `${envUrl}/api`
+  // 개발 서버에서는 프록시 사용, 프로덕션에서는 직접 요청
+  return import.meta.env.DEV ? '/api' : 'http://54.180.89.70:8081/api'
+}
+
 /**
  * 메인 API 클라이언트 인스턴스
  */
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8081/api',
+  baseURL: getAuthBaseUrl(),
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
@@ -17,7 +25,7 @@ export const apiClient = axios.create({
  * 인증 서버 전용 클라이언트 (토큰 갱신용)
  */
 export const authClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api',
+  baseURL: getAuthBaseUrl(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
