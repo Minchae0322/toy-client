@@ -59,17 +59,16 @@ export class BaseApiService {
     this.isRefreshing = true
 
     try {
-      console.log(`🔄 [${this.serviceName}] 토큰 갱신 시작...`)
+      console.log(`🔄 [${this.serviceName}] /reissue API를 통한 토큰 갱신 시작...`)
 
       const authBaseURL = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8081'
 
-      const response = await fetch(`${authBaseURL}/api/auth/refresh`, {
+      const response = await fetch(`${authBaseURL}/reissue`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         credentials: 'include' // ⭐ 쿠키 포함 (RefreshToken이 여기 있음!)
-        // body 제거 - RefreshToken은 쿠키에서 자동으로 전송됨
       })
 
       // 상세한 에러 로깅
@@ -89,8 +88,8 @@ export class BaseApiService {
       }
 
       const responseData = await response.json()
-      const data = responseData.data || responseData
-      const { accessToken } = data
+      // /reissue API 응답: { accessToken: string }
+      const accessToken = responseData.accessToken
 
       if (!accessToken) {
         throw new Error('새로운 AccessToken을 받지 못했습니다')

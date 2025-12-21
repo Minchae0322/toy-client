@@ -78,17 +78,17 @@ const handleLogout = async (reason = 'Token expired') => {
 }
 
 /**
- * 백엔드 RefreshJwtFilter를 통한 토큰 갱신 (HttpOnly Cookie 사용)
+ * /reissue API를 통한 토큰 갱신 (HttpOnly Cookie 사용)
  * - RefreshToken은 백엔드가 HttpOnly 쿠키로 설정하므로 JS에서 접근 불가
  * - withCredentials: true로 요청하면 브라우저가 자동으로 쿠키 전송
  */
 const refreshTokenViaBackend = async () => {
-  console.log('🔄 [Interceptor] RefreshJwtFilter를 통한 토큰 갱신 시도')
+  console.log('🔄 [Interceptor] /reissue API를 통한 토큰 갱신 시도')
 
   try {
-    // 🌐 보호된 엔드포인트 호출 (RefreshJwtFilter가 처리)
-    // HttpOnly 쿠키는 브라우저가 자동으로 전송함
-    const response = await authClient.get('/api/v1/users/profile', {
+    // 🌐 토큰 재발급 API 호출
+    // HttpOnly 쿠키(refreshToken)는 브라우저가 자동으로 전송함
+    const response = await authClient.post('/reissue', null, {
       headers: {
         'X-Device-ID': authUtils.getDeviceId()
       },
@@ -97,18 +97,17 @@ const refreshTokenViaBackend = async () => {
 
     console.log(`📡 [Interceptor] 응답 상태: ${response.status}`)
 
-    // RefreshJwtFilter가 응답 헤더에 새 AccessToken 추가
-    const newAccessToken = response.headers['authorization'] || response.headers['Authorization']
+    // 응답 body에서 새 AccessToken 추출
+    const newAccessToken = response.data?.accessToken
 
     if (newAccessToken) {
-      const cleanToken = newAccessToken.replace('Bearer ', '')
-      authUtils.setAccessToken(cleanToken)
+      authUtils.setAccessToken(newAccessToken)
 
       console.log('✅ [Interceptor] 토큰 갱신 성공')
-      return cleanToken
+      return newAccessToken
     }
 
-    throw new Error('응답 헤더에 새 AccessToken 없음')
+    throw new Error('응답에서 새 AccessToken을 받지 못함')
 
   } catch (error) {
     console.error('❌ [Interceptor] 토큰 갱신 실패:', {
