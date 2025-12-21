@@ -51,6 +51,23 @@ export const setTokens = (accessToken, refreshToken = null) => {
 }
 
 /**
+ * AccessToken만 저장 (토큰 갱신 시 사용)
+ * @param {string} accessToken - 새로운 AccessToken
+ */
+export const setAccessToken = (accessToken) => {
+    if (accessToken) {
+        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
+        console.log('✅ AccessToken 갱신 저장 완료')
+
+        // 다른 탭에 토큰 변경 알림
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: STORAGE_KEYS.ACCESS_TOKEN,
+            newValue: accessToken
+        }))
+    }
+}
+
+/**
  * 모든 토큰 및 사용자 정보 삭제
  */
 export const clearTokens = () => {
