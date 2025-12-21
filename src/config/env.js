@@ -32,10 +32,10 @@ export const getServiceUrl = (serviceName) => {
       'CHAT': ENV.CHAT_BASE_URL || 'http://54.180.89.70:8084',
     },
     production: {
-      'AUTH': ENV.AUTH_BASE_URL || 'https://auth.yourdomain.com',
-      'CONTENT': ENV.CONTENT_BASE_URL || 'https://content.yourdomain.com',
-      'USER': ENV.USER_BASE_URL || 'https://user.yourdomain.com',
-      'CHAT': ENV.CHAT_BASE_URL || 'https://chat.yourdomain.com',
+      'AUTH': ENV.AUTH_BASE_URL || 'http://54.180.89.70:8081',
+      'CONTENT': ENV.CONTENT_BASE_URL || 'http://54.180.89.70:8082',
+      'USER': ENV.USER_BASE_URL || 'http://54.180.89.70:8083',
+      'CHAT': ENV.CHAT_BASE_URL || 'http://54.180.89.70:8084',
     }
   }
 
