@@ -8,12 +8,12 @@
       </div>
 
       <div v-else-if="error" class="error-state">
-        <div class="error-icon">❌</div>
+        <div class="error-icon">!</div>
         <h2>로그인 실패</h2>
         <p class="error-message">{{ errorMessage }}</p>
         <button @click="goToLogin" class="retry-btn">다시 로그인</button>
 
-        <!-- 🔧 개발용 디버그 정보 -->
+        <!-- 개발용 디버그 정보 -->
         <details v-if="isDev && debugInfo" class="debug-details">
           <summary>디버그 정보</summary>
           <pre>{{ debugInfo }}</pre>
@@ -21,7 +21,7 @@
       </div>
 
       <div v-else class="success-state">
-        <div class="success-icon">✅</div>
+        <div class="success-icon">OK</div>
         <h2>로그인 성공!</h2>
         <p>홈 페이지로 이동 중...</p>
       </div>
@@ -55,21 +55,21 @@ const decodeJWTPayload = (token) => {
     ).join(''))
     return JSON.parse(jsonPayload)
   } catch (e) {
-    console.error('❌ [OAuth] JWT 디코딩 실패:', e)
+    console.error('[OAuth] JWT 디코딩 실패:', e)
     return null
   }
 }
 
-// 🔥 강제 상태 동기화 함수
+// 강제 상태 동기화 함수
 const forceStateSync = () => {
-  console.log('🔄 [OAuth] 강제 상태 동기화 실행')
+  console.log('[OAuth] 강제 상태 동기화 실행')
 
   // Storage 이벤트 강제 발생
   const token = authUtils.getAccessToken()
   const userInfo = authUtils.getUserInfo()
 
   if (token && userInfo) {
-    // 🔥 커스텀 이벤트로 모든 컴포넌트에 알림
+    // 커스텀 이벤트로 모든 컴포넌트에 알림
     window.dispatchEvent(new CustomEvent('auth-state-changed', {
       detail: { user: userInfo, loggedIn: true }
     }))
@@ -87,23 +87,23 @@ const forceStateSync = () => {
       storageArea: localStorage
     }))
 
-    console.log('✅ [OAuth] 강제 상태 동기화 완료')
+    console.log('[OAuth] 강제 상태 동기화 완료')
   }
 }
 
 const handleOAuthCallback = async () => {
   try {
-    console.log('🔗 [OAuth] OAuth2 콜백 처리 시작')
+    console.log('[OAuth] OAuth2 콜백 처리 시작')
 
     const urlParams = new URLSearchParams(window.location.search)
     const accessToken = urlParams.get('token')
+    const refreshToken = urlParams.get('refreshToken')
     const errorParam = urlParams.get('error')
 
     // URL 파라미터 디버깅
-    // 참고: RefreshToken은 백엔드에서 HttpOnly 쿠키로 설정됨 (URL에 없음)
-    console.log('📋 [OAuth] URL 파라미터:', {
+    console.log('[OAuth] URL 파라미터:', {
       accessToken: !!accessToken,
-      refreshToken: '쿠키로 관리됨 (HttpOnly)',
+      refreshToken: !!refreshToken,
       error: errorParam,
       fullURL: window.location.href
     })
@@ -122,7 +122,7 @@ const handleOAuthCallback = async () => {
       throw new Error('JWT 디코딩 실패')
     }
 
-    console.log('🔍 [OAuth] JWT 페이로드:', payload)
+    console.log('[OAuth] JWT 페이로드:', payload)
 
     // 사용자 정보 구성
     const userInfo = {
@@ -135,30 +135,32 @@ const handleOAuthCallback = async () => {
       profileImage: payload.picture || payload.avatar_url || null,
     }
 
-    console.log('👤 [OAuth] 사용자 정보 구성:', userInfo)
+    console.log('[OAuth] 사용자 정보 구성:', userInfo)
 
-    // RefreshToken은 백엔드에서 HttpOnly 쿠키로 설정됨
-    // 프론트엔드에서는 accessToken만 관리
+    // RefreshToken 처리 (AccessToken을 RefreshToken으로도 사용)
+    const finalRefreshToken = refreshToken || accessToken
+
     const tokens = {
       accessToken: accessToken,
-      refreshToken: null  // HttpOnly 쿠키로 관리됨
+      refreshToken: finalRefreshToken
     }
 
-    console.log('💾 [OAuth] 토큰 저장 시작:', {
+    console.log('[OAuth] 토큰 저장 시작:', {
       hasAccessToken: !!tokens.accessToken,
-      refreshToken: 'HttpOnly 쿠키로 관리됨'
+      hasRefreshToken: !!tokens.refreshToken,
+      tokensEqual: tokens.accessToken === tokens.refreshToken
     })
 
-    // 🔥 useAuth를 통한 로그인 처리
+    // useAuth를 통한 로그인 처리
     const loginResult = login(tokens, userInfo)
-    console.log('✅ [OAuth] useAuth.login 결과:', loginResult)
+    console.log('[OAuth] useAuth.login 결과:', loginResult)
 
-    // 🔥 추가 상태 동기화 (모든 컴포넌트 강제 업데이트)
+    // 추가 상태 동기화 (모든 컴포넌트 강제 업데이트)
     setTimeout(() => {
       forceStateSync()
     }, 100)
 
-    // 🔍 저장 상태 최종 검증
+    // 저장 상태 최종 검증
     await new Promise(resolve => setTimeout(resolve, 200))
 
     const finalCheck = {
@@ -168,33 +170,33 @@ const handleOAuthCallback = async () => {
       isAuthenticated: authUtils.isAuthenticated()
     }
 
-    console.log('🔍 [OAuth] 최종 저장 상태:', finalCheck)
+    console.log('[OAuth] 최종 저장 상태:', finalCheck)
 
     if (!finalCheck.isAuthenticated) {
       throw new Error('인증 상태 저장 실패')
     }
 
-    // 🏠 리다이렉트 경로 결정
-    const redirectPath = sessionStorage.getItem('oauth_redirect') || '/home'
+    // 리다이렉트 경로 결정
+    const redirectPath = sessionStorage.getItem('oauth_redirect') || '/feed'
     sessionStorage.removeItem('oauth_redirect')
 
-    console.log('🚀 [OAuth] 리다이렉트 준비:', redirectPath)
+    console.log('[OAuth] 리다이렉트 준비:', redirectPath)
 
-    // 🔥 상태 안정화를 위한 추가 딜레이
+    // 상태 안정화를 위한 추가 딜레이
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // 🏠 홈으로 이동
+    // 홈으로 이동
     try {
-      console.log('🏠 [OAuth] 홈 페이지로 이동 시작...')
+      console.log('[OAuth] 홈 페이지로 이동 시작...')
       await router.push(redirectPath)
-      console.log('🎉 [OAuth] 홈 페이지 이동 완료!')
+      console.log('[OAuth] 홈 페이지 이동 완료!')
     } catch (routerError) {
-      console.warn('❌ [OAuth] 라우터 실패, 강제 이동:', routerError)
+      console.warn('[OAuth] 라우터 실패, 강제 이동:', routerError)
       window.location.href = redirectPath
     }
 
   } catch (err) {
-    console.error('❌ [OAuth] 콜백 처리 실패:', err)
+    console.error('[OAuth] 콜백 처리 실패:', err)
 
     error.value = true
     errorMessage.value = err.message
@@ -204,10 +206,9 @@ const handleOAuthCallback = async () => {
       url: window.location.href,
       tokens: {
         hasAccessToken: !!authUtils.getAccessToken(),
-        refreshToken: 'HttpOnly 쿠키로 관리됨 (JS 접근 불가)',
+        hasRefreshToken: !!authUtils.getRefreshToken(),
         hasUserInfo: !!authUtils.getUserInfo()
-      },
-      hint: '쿠키 확인: 개발자 도구 → Application → Cookies'
+      }
     }
   } finally {
     loading.value = false
@@ -275,6 +276,14 @@ onMounted(handleOAuthCallback)
 .success-icon {
   font-size: 48px;
   margin-bottom: 16px;
+}
+
+.error-icon {
+  color: #dc2626;
+}
+
+.success-icon {
+  color: #1DCD9F;
 }
 
 .error-message {
