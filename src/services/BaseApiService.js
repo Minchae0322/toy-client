@@ -62,6 +62,7 @@ export class BaseApiService {
       console.log(`🔄 [${this.serviceName}] 토큰 갱신 시작...`)
 
       const authBaseURL = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8081'
+
       const response = await fetch(`${authBaseURL}/api/auth/refresh`, {
         method: 'POST',
         headers: {
@@ -71,8 +72,20 @@ export class BaseApiService {
         // body 제거 - RefreshToken은 쿠키에서 자동으로 전송됨
       })
 
+      // 상세한 에러 로깅
       if (!response.ok) {
-        throw new Error(`토큰 갱신 실패: ${response.status}`)
+        const errorText = await response.text().catch(() => 'No response body')
+        console.error(`❌ [${this.serviceName}] 토큰 갱신 응답 에러:`, {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          hint: response.status === 401
+            ? '🍪 RefreshToken 쿠키가 전송되지 않았거나 만료됨. 백엔드 쿠키 설정(SameSite, Secure) 확인 필요'
+            : response.status === 403
+            ? '🔒 CORS 또는 권한 문제. Access-Control-Allow-Credentials 확인 필요'
+            : ''
+        })
+        throw new Error(`토큰 갱신 실패: ${response.status} ${response.statusText}`)
       }
 
       const responseData = await response.json()
@@ -93,7 +106,21 @@ export class BaseApiService {
       return accessToken
 
     } catch (error) {
-      console.error(`❌ [${this.serviceName}] 토큰 갱신 실패:`, error)
+      console.error(`❌ [${this.serviceName}] 토큰 갱신 실패:`, error.message)
+
+      // 디버깅 정보 출력
+      if (import.meta.env.DEV) {
+        console.group(`🔍 [${this.serviceName}] 토큰 갱신 실패 디버깅 정보`)
+        console.log('1. RefreshToken 쿠키가 설정되어 있는지 확인 (개발자 도구 → Application → Cookies)')
+        console.log('2. 백엔드에서 Set-Cookie 헤더가 올바르게 설정되었는지 확인')
+        console.log('   - secure=false (HTTP 환경)')
+        console.log('   - SameSite=None 또는 Lax (cross-site 요청)')
+        console.log('3. CORS 설정 확인')
+        console.log('   - Access-Control-Allow-Credentials: true')
+        console.log('   - Access-Control-Allow-Origin: 특정 도메인 (와일드카드 * 불가)')
+        console.groupEnd()
+      }
+
       this.processQueue(error, null)
       authUtils.logout()
 
