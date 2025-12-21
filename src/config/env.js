@@ -1,15 +1,36 @@
 // src/config/env.js
+// 환경 설정 모듈 - 모든 환경변수를 중앙에서 관리
+
+/**
+ * 환경 타입 정의
+ * - local: 로컬 개발 (localhost 백엔드)
+ * - development: 개발 서버 (원격 개발 서버)
+ * - production: 운영 서버 (nginx 프록시)
+ */
+
+const mode = import.meta.env.MODE
 const isDevelopment = import.meta.env.DEV
 const isProduction = import.meta.env.PROD
-const mode = import.meta.env.MODE
+const envName = import.meta.env.VITE_ENV_NAME || 'local'
 
+/**
+ * 환경 설정 객체
+ */
 export const ENV = {
+  // Vite 기본 환경 정보
   MODE: mode,
   DEV: isDevelopment,
   PROD: isProduction,
 
-  // 개발 환경: AWS EC2 단일 서버
-  // 프로덕션 환경: MSA 구조 (여러 서버)
+  // 커스텀 환경 식별자 (local, development, production)
+  ENV_NAME: envName,
+
+  // 환경 체크 헬퍼
+  isLocal: envName === 'local',
+  isDevelopment: envName === 'development',
+  isProduction: envName === 'production',
+
+  // MSA 서비스 URL
   AUTH_BASE_URL: import.meta.env.VITE_AUTH_BASE_URL,
   CONTENT_BASE_URL: import.meta.env.VITE_CONTENT_BASE_URL,
   USER_BASE_URL: import.meta.env.VITE_USER_BASE_URL,
@@ -18,45 +39,84 @@ export const ENV = {
 }
 
 /**
- * 환경별 기본 URL 반환
+ * 환경별 기본 URL 맵
  */
+const DEFAULT_URLS = {
+  local: {
+    AUTH: 'http://localhost:8081',
+    CONTENT: 'http://localhost:8082',
+    USER: 'http://localhost:8083',
+    CHAT: 'http://localhost:8084',
+    WS: 'http://localhost:8084/api/ws',
+  },
+  development: {
+    AUTH: 'http://54.180.89.70:8081',
+    CONTENT: 'http://54.180.89.70:8082',
+    USER: 'http://54.180.89.70:8083',
+    CHAT: 'http://54.180.89.70:8084',
+    WS: 'http://54.180.89.70:8084/api/ws',
+  },
+  production: {
+    AUTH: 'http://54.180.89.70/auth',
+    CONTENT: 'http://54.180.89.70/content',
+    USER: 'http://54.180.89.70',
+    CHAT: 'http://54.180.89.70/chat',
+    WS: 'http://54.180.89.70/api/ws',
+  },
+}
+
 /**
- * 환경별 기본 URL 반환
+ * 서비스 URL 가져오기
+ * @param {'AUTH' | 'CONTENT' | 'USER' | 'CHAT' | 'WS'} serviceName
+ * @returns {string} 서비스 URL
  */
 export const getServiceUrl = (serviceName) => {
-  const serviceUrls = {
-    development: {
-      'AUTH': ENV.AUTH_BASE_URL || 'http://54.180.89.70:8081',
-      'CONTENT': ENV.CONTENT_BASE_URL || 'http://54.180.89.70:8082',
-      'USER': ENV.USER_BASE_URL || 'http://54.180.89.70:8083',
-      'CHAT': ENV.CHAT_BASE_URL || 'http://54.180.89.70:8084',
-    },
-    production: {
-      'AUTH': ENV.AUTH_BASE_URL || 'http://54.180.89.70:8081',
-      'CONTENT': ENV.CONTENT_BASE_URL || 'http://54.180.89.70:8082',
-      'USER': ENV.USER_BASE_URL || 'http://54.180.89.70:8083',
-      'CHAT': ENV.CHAT_BASE_URL || 'http://54.180.89.70:8084',
-    }
+  const envUrls = {
+    AUTH: ENV.AUTH_BASE_URL,
+    CONTENT: ENV.CONTENT_BASE_URL,
+    USER: ENV.USER_BASE_URL,
+    CHAT: ENV.CHAT_BASE_URL,
+    WS: ENV.WS_URL,
   }
 
-  const environment = isDevelopment ? 'development' : 'production'
-  return serviceUrls[environment][serviceName]
+  // 환경변수가 있으면 사용, 없으면 기본값 사용
+  return envUrls[serviceName] || DEFAULT_URLS[envName]?.[serviceName] || DEFAULT_URLS.local[serviceName]
 }
 
-// 개발 환경 로깅
+/**
+ * API Base URL 가져오기 (서비스별)
+ */
+export const API_URLS = {
+  get AUTH() { return getServiceUrl('AUTH') },
+  get CONTENT() { return getServiceUrl('CONTENT') },
+  get USER() { return getServiceUrl('USER') },
+  get CHAT() { return getServiceUrl('CHAT') },
+  get WS() { return getServiceUrl('WS') },
+}
+
+/**
+ * 환경 정보 로깅 (개발 환경에서만)
+ */
 if (isDevelopment) {
-  console.log('🔧 Development Environment (Single Server):')
-  console.log('  Base URL:', ENV.CONTENT_BASE_URL || 'http://54.180.89.70:8082')
+  const envEmoji = {
+    local: '🏠',
+    development: '🔧',
+    production: '🚀',
+  }
+
+  console.log(`${envEmoji[envName] || '❓'} Environment: ${envName.toUpperCase()}`)
+  console.log('  Mode:', mode)
+  console.log('  AUTH_BASE_URL:', API_URLS.AUTH)
+  console.log('  CONTENT_BASE_URL:', API_URLS.CONTENT)
+  console.log('  USER_BASE_URL:', API_URLS.USER)
+  console.log('  CHAT_BASE_URL:', API_URLS.CHAT)
+  console.log('  WS_URL:', API_URLS.WS)
 }
 
-// 프로덕션 환경 검증
+/**
+ * 프로덕션 환경 검증
+ */
 if (isProduction) {
-  console.log('🚀 Production Environment (MSA):')
-  console.log('  AUTH_BASE_URL:', ENV.AUTH_BASE_URL)
-  console.log('  CONTENT_BASE_URL:', ENV.CONTENT_BASE_URL)
-  console.log('  USER_BASE_URL:', ENV.USER_BASE_URL)
-  console.log('  CHAT_BASE_URL:', ENV.CHAT_BASE_URL)
-
   const requiredVars = [
     'VITE_AUTH_BASE_URL',
     'VITE_CONTENT_BASE_URL',

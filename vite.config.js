@@ -1,78 +1,97 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
-export default defineConfig({
-  plugins: [vue()],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  },
-  define: {
-    // SockJS global 에러 해결
-    global: 'globalThis',
-  },
-  server: {
-    // MSA 환경 프록시 설정
-    proxy: {
-      // 채팅 서비스 WebSocket 프록시 (8084) - 가장 구체적인 패턴을 위에
-      '^/api/ws': {
-        target: 'http://localhost:8084',
-        changeOrigin: true,
-        ws: true, // WebSocket 프록시 활성화
-        secure: false,
-        // SockJS 관련 모든 요청을 포함
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-          });
-        }
-      },
-      // 채팅 API 프록시 (8084)
-      '^/api/chat': {
-        target: 'http://localhost:8084',
-        changeOrigin: true,
-      },
-      // 인증 API 프록시 (8081)
-      '^/api/auth': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-      },
-      // 컨텐츠 API 프록시 (8082)
-      '^/api/content': {
-        target: 'http://localhost:8082',
-        changeOrigin: true,
-      },
-      // 사용자 API 프록시 (8083)
-      '^/api/users': {
-        target: 'http://localhost:8083',
-        changeOrigin: true,
-      },
-      // 기타 API들은 컨텐츠 서버로 (기본) - 가장 마지막에
-      '^/api': {
-        target: 'http://localhost:8082',
-        changeOrigin: true,
+export default defineConfig(({ mode }) => {
+  // 환경변수 로드 (현재 디렉토리에서)
+  const env = loadEnv(mode, process.cwd(), '')
+
+  // Proxy 타겟 URL (환경변수 또는 기본값)
+  const proxyTargets = {
+    auth: env.VITE_PROXY_AUTH_TARGET || 'http://localhost:8081',
+    content: env.VITE_PROXY_CONTENT_TARGET || 'http://localhost:8082',
+    user: env.VITE_PROXY_USER_TARGET || 'http://localhost:8083',
+    chat: env.VITE_PROXY_CHAT_TARGET || 'http://localhost:8084',
+  }
+
+  console.log(`\n🔧 Vite Dev Server Proxy Configuration:`)
+  console.log(`   Environment: ${env.VITE_ENV_NAME || 'local'}`)
+  console.log(`   Auth:    ${proxyTargets.auth}`)
+  console.log(`   Content: ${proxyTargets.content}`)
+  console.log(`   User:    ${proxyTargets.user}`)
+  console.log(`   Chat:    ${proxyTargets.chat}\n`)
+
+  return {
+    plugins: [vue()],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url))
       }
-    }
-  },
-  optimizeDeps: {
-    include: [
-      '@stomp/stompjs',
-      'sockjs-client'
-    ]
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        globals: {
-          'sockjs-client': 'SockJS'
+    },
+    define: {
+      // SockJS global 에러 해결
+      global: 'globalThis',
+    },
+    server: {
+      // MSA 환경 프록시 설정 (환경변수 기반)
+      proxy: {
+        // 채팅 서비스 WebSocket 프록시
+        '^/api/ws': {
+          target: proxyTargets.chat,
+          changeOrigin: true,
+          ws: true,
+          secure: false,
+          configure: (proxy, _options) => {
+            proxy.on('error', (err, _req, _res) => {
+              console.log('proxy error', err)
+            })
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              console.log('Sending Request to the Target:', req.method, req.url)
+            })
+            proxy.on('proxyRes', (proxyRes, req, _res) => {
+              console.log('Received Response from the Target:', proxyRes.statusCode, req.url)
+            })
+          }
+        },
+        // 채팅 API 프록시
+        '^/api/chat': {
+          target: proxyTargets.chat,
+          changeOrigin: true,
+        },
+        // 인증 API 프록시
+        '^/api/auth': {
+          target: proxyTargets.auth,
+          changeOrigin: true,
+        },
+        // 컨텐츠 API 프록시
+        '^/api/content': {
+          target: proxyTargets.content,
+          changeOrigin: true,
+        },
+        // 사용자 API 프록시
+        '^/api/users': {
+          target: proxyTargets.user,
+          changeOrigin: true,
+        },
+        // 기타 API들은 컨텐츠 서버로 (기본)
+        '^/api': {
+          target: proxyTargets.content,
+          changeOrigin: true,
+        }
+      }
+    },
+    optimizeDeps: {
+      include: [
+        '@stomp/stompjs',
+        'sockjs-client'
+      ]
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          globals: {
+            'sockjs-client': 'SockJS'
+          }
         }
       }
     }
