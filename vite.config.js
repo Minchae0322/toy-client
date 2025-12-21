@@ -58,6 +58,11 @@ export default defineConfig(({ mode }) => {
           target: proxyTargets.chat,
           changeOrigin: true,
         },
+        // OAuth2 API 프록시 (인증 서버로)
+        '^/api/oauth2': {
+          target: proxyTargets.auth,
+          changeOrigin: true,
+        },
         // 인증 API 프록시
         '^/api/auth': {
           target: proxyTargets.auth,
