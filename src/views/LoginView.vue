@@ -181,8 +181,11 @@ const handleRegister = async (formData) => {
 }
 
 const handleSocialLogin = (provider) => {
-  // Vite 프록시를 통해 auth 서비스로 라우팅됨 (vite.config.js 참조)
-  const redirectUrl = `/api/oauth2/authorization/${provider}`
+  // window.location.href는 Vite 프록시를 거치지 않으므로 절대 URL 사용
+  const authBaseUrl = import.meta.env.VITE_AUTH_BASE_URL
+  const redirectUrl = `${authBaseUrl}/api/oauth2/authorization/${provider}`
+
+  console.log('[OAuth] 소셜 로그인 시작:', { provider, redirectUrl })
 
   sessionStorage.setItem('oauth_redirect', redirectPath.value)
   window.location.href = redirectUrl
