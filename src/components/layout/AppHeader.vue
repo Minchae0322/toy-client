@@ -88,6 +88,7 @@ const isLoggingOut = ref(false)
 // WebSocket 연결 상태
 const wsConnected = ref(false)
 const wsError = ref(false)
+let unsubscribeWsStatus = null
 
 // 토큰 존재 여부
 const hasToken = computed(() => {
@@ -119,9 +120,12 @@ const setupWebSocketStatusMonitoring = () => {
       wsConnected.value = webSocketService.isConnected()
     }
 
-    // 연결 상태 변화 리스너
+    // 연결 상태 변화 리스너 (기존 리스너 정리 후 등록)
     if (typeof webSocketService.onConnectionChange === 'function') {
-      webSocketService.onConnectionChange((connected) => {
+      if (unsubscribeWsStatus) {
+        unsubscribeWsStatus()
+      }
+      unsubscribeWsStatus = webSocketService.onConnectionChange((connected) => {
         console.log('📶 [AppHeader] WebSocket 상태 변경:', connected)
         wsConnected.value = connected
         wsError.value = false
@@ -247,6 +251,10 @@ onMounted(() => {
 // 언마운트 시 정리
 onUnmounted(() => {
   window.removeEventListener('auth-state-changed', handleAuthStateChange)
+  if (unsubscribeWsStatus) {
+    unsubscribeWsStatus()
+    unsubscribeWsStatus = null
+  }
   console.log('🧹 [AppHeader] 이벤트 리스너 정리 완료')
 })
 </script>

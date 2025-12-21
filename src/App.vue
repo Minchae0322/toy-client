@@ -10,6 +10,7 @@ const {userInfo, isLoggedIn, isAdmin, logout} = useAuth()
 const isLoggingOut = ref(false)
 const wsConnected = ref(false)
 const showMobileMenu = ref(false)
+let unsubscribeWsStatus = null
 
 const isAuthPage = computed(() =>
     ['/login', '/register', '/oauth/callback'].includes(route.path)
@@ -17,7 +18,11 @@ const isAuthPage = computed(() =>
 
 const monitorWebSocketStatus = () => {
   wsConnected.value = webSocketService.isConnected()
-  webSocketService.onConnectionChange((connected) => {
+  // 기존 리스너 정리 후 새로 등록
+  if (unsubscribeWsStatus) {
+    unsubscribeWsStatus()
+  }
+  unsubscribeWsStatus = webSocketService.onConnectionChange((connected) => {
     wsConnected.value = connected
   })
 }
@@ -47,7 +52,12 @@ watch(isLoggedIn, (newVal) => {
   monitorWebSocketStatus()
 })
 
-onUnmounted(() => webSocketService.disconnect())
+onUnmounted(() => {
+  if (unsubscribeWsStatus) {
+    unsubscribeWsStatus()
+  }
+  webSocketService.disconnect()
+})
 </script>
 
 <template>

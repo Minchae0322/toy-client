@@ -89,12 +89,28 @@ class WebSocketService {
   }
 
   onConnectionChange(callback) {
-    this.globalHandlers.set('connection-change', callback)
+    // 다중 리스너 지원
+    const callbacks = this.globalHandlers.get('connection-change') || []
+    callbacks.push(callback)
+    this.globalHandlers.set('connection-change', callbacks)
+
+    // 리스너 제거 함수 반환
+    return () => {
+      const current = this.globalHandlers.get('connection-change') || []
+      const index = current.indexOf(callback)
+      if (index > -1) current.splice(index, 1)
+    }
   }
 
   notifyConnectionChange(connected) {
-    const callback = this.globalHandlers.get('connection-change')
-    if (callback) callback(connected)
+    const callbacks = this.globalHandlers.get('connection-change') || []
+    callbacks.forEach(callback => {
+      try {
+        callback(connected)
+      } catch (e) {
+        console.error('❌ [WebSocket] 연결 상태 콜백 오류:', e)
+      }
+    })
   }
 
   onMessage(type, handler) {
