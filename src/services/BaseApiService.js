@@ -1,5 +1,9 @@
-// services/base/BaseApiService.js
-// 모든 API 서비스의 공통 기반 클래스 (Fetch API 기반)
+// services/BaseApiService.js
+// Fetch API 기반 HTTP 클라이언트
+// - 모든 API 서비스의 공통 기반 클래스
+// - 401 에러 시 자동 토큰 갱신 및 재시도
+//
+// 참고: Axios 기반 요청은 api/interceptors.js가 토큰 갱신 담당
 
 import * as authUtils from '@/utils/auth.js'
 

@@ -1,4 +1,10 @@
 // src/api/interceptors.js
+// Axios 기반 API 요청의 토큰 자동 갱신 담당
+// - apiClient (메인 API): 401 에러 시 자동 갱신 후 재시도
+// - authClient (인증 API): 갱신 요청용 (에러 인터셉터 없음 - 무한루프 방지)
+//
+// 참고: BaseApiService.js는 Fetch API 기반으로 별도 갱신 로직 사용
+
 import axios from 'axios'
 import { apiClient, authClient } from './client.js'
 import * as authUtils from '@/utils/auth.js'
