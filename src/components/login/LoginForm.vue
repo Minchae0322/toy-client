@@ -112,11 +112,11 @@
 
     <!-- 에러 메시지 -->
     <transition name="shake">
-      <div v-if="form.errorMessage" class="alert-box error">
+      <div v-if="displayError" class="alert-box error">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 12H7v-2h2v2zm0-3H7V4h2v5z"/>
         </svg>
-        {{ form.errorMessage }}
+        {{ displayError }}
       </div>
     </transition>
 
@@ -155,7 +155,8 @@ import { ref, computed } from 'vue'
 
 const props = defineProps({
   sessionExpired: Boolean,
-  loading: Boolean
+  loading: Boolean,
+  errorMessage: String
 })
 
 const emit = defineEmits(['submit', 'social-login', 'forgot-password'])
@@ -165,9 +166,11 @@ const form = ref({
   password: '',
   rememberMe: false,
   showPassword: false,
-  emailError: false,
-  errorMessage: ''
+  emailError: false
 })
+
+// 에러 메시지는 props에서 받거나 내부 검증 에러 사용
+const displayError = computed(() => props.errorMessage || '')
 
 const canSubmit = computed(() =>
     form.value.email &&
@@ -182,26 +185,14 @@ const validateEmail = () => {
   }
 }
 
-const handleSubmit = async () => {
+const handleSubmit = () => {
   if (!canSubmit.value) return
 
-  form.value.errorMessage = ''
-
-  try {
-    await emit('submit', {
-      email: form.value.email,
-      password: form.value.password,
-      rememberMe: form.value.rememberMe
-    })
-  } catch (error) {
-    if (error.response?.status === 401) {
-      form.value.errorMessage = '이메일 또는 비밀번호가 올바르지 않습니다'
-    } else if (error.response?.status === 403) {
-      form.value.errorMessage = '계정이 비활성화되었습니다'
-    } else {
-      form.value.errorMessage = '로그인 중 오류가 발생했습니다'
-    }
-  }
+  emit('submit', {
+    email: form.value.email,
+    password: form.value.password,
+    rememberMe: form.value.rememberMe
+  })
 }
 </script>
 

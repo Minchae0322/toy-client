@@ -28,17 +28,32 @@
             type="button"
             class="action-btn"
             :class="{ success: verified }"
-            :disabled="!email || emailError || verified || disabled"
+            :disabled="!email || emailError || verified || disabled || sendingCode"
             @click="sendVerificationCode"
         >
-          <span v-if="verified">✓ 완료</span>
-          <span v-else>인증</span>
+          <svg v-if="sendingCode" class="spinner" width="14" height="14" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="40">
+              <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+          <span v-else-if="verified">✓ 완료</span>
+          <span v-else>{{ sendingCode ? '' : '인증' }}</span>
         </button>
       </div>
       <span v-if="emailError" class="error-msg">
         올바른 이메일 형식을 입력해주세요
       </span>
     </div>
+
+    <!-- 인증 발송 성공 알림 -->
+    <transition name="slide">
+      <div v-if="codeSentSuccess" class="notification success">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+        </svg>
+        인증번호가 발송되었습니다. 이메일을 확인해주세요.
+      </div>
+    </transition>
 
     <!-- 인증번호 입력 영역 -->
     <transition name="expand">
@@ -65,12 +80,17 @@
           />
         </div>
         <div class="verification-footer">
-          <button type="button" class="text-btn primary" :disabled="disabled || verificationCode.length !== 6" @click="verifyCode">
-            인증 확인
+          <button type="button" class="text-btn primary" :disabled="disabled || verificationCode.length !== 6 || verifyingCode" @click="verifyCode">
+            <svg v-if="verifyingCode" class="spinner-small" width="12" height="12" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="40">
+                <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+              </circle>
+            </svg>
+            {{ verifyingCode ? '확인 중...' : '인증 확인' }}
           </button>
           <span class="separator">·</span>
-          <button type="button" class="text-btn" :disabled="disabled" @click="sendVerificationCode">
-            재발송
+          <button type="button" class="text-btn" :disabled="disabled || sendingCode" @click="sendVerificationCode">
+            {{ sendingCode ? '발송 중...' : '재발송' }}
           </button>
         </div>
         <span v-if="verificationError" class="error-msg">
@@ -101,6 +121,9 @@ const verificationInput = ref(null)
 const verificationCode = ref('')
 const timer = ref(180)
 const timerInterval = ref(null)
+const sendingCode = ref(false)
+const verifyingCode = ref(false)
+const codeSentSuccess = ref(false)
 
 const validateEmail = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -110,9 +133,10 @@ const validateEmail = () => {
 }
 
 const sendVerificationCode = async () => {
-  if (emailError.value || !props.email) return
+  if (emailError.value || !props.email || sendingCode.value) return
 
   verificationError.value = ''
+  sendingCode.value = true
 
   try {
     const response = await authService.sendVerificationCode(props.email)
@@ -120,6 +144,12 @@ const sendVerificationCode = async () => {
     if (response.success) {
       console.log('✅ 인증번호 발송 성공')
       verificationSent.value = true
+      codeSentSuccess.value = true
+
+      // 3초 후 성공 메시지 숨기기
+      setTimeout(() => {
+        codeSentSuccess.value = false
+      }, 3000)
 
       timer.value = 180
       if (timerInterval.value) clearInterval(timerInterval.value)
@@ -143,6 +173,8 @@ const sendVerificationCode = async () => {
   } catch (error) {
     console.error('❌ 인증 코드 발송 실패:', error)
     verificationError.value = error.message || '인증 코드 발송 중 오류가 발생했습니다'
+  } finally {
+    sendingCode.value = false
   }
 }
 
@@ -159,12 +191,15 @@ const handleVerificationInput = (event) => {
 }
 
 const verifyCode = async () => {
-  if (verificationCode.value.length !== 6) {
-    verificationError.value = '6자리 인증 코드를 입력해주세요'
+  if (verificationCode.value.length !== 6 || verifyingCode.value) {
+    if (verificationCode.value.length !== 6) {
+      verificationError.value = '6자리 인증 코드를 입력해주세요'
+    }
     return
   }
 
   verificationError.value = ''
+  verifyingCode.value = true
 
   try {
     const response = await authService.verifyEmailCode(props.email, verificationCode.value)
@@ -183,6 +218,8 @@ const verifyCode = async () => {
     verificationError.value = error.message || '인증 코드 확인 중 오류가 발생했습니다'
     verificationCode.value = ''
     verificationInput.value?.focus({ preventScroll: true })
+  } finally {
+    verifyingCode.value = false
   }
 }
 
@@ -315,6 +352,20 @@ input.success:focus {
   cursor: not-allowed;
 }
 
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+.spinner-small {
+  animation: spin 1s linear infinite;
+  margin-right: 4px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .action-btn.success {
   background: var(--success);
   color: white;
@@ -425,6 +476,36 @@ input.success:focus {
 .separator {
   color: var(--gray-300);
   font-size: 11px;
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 2px solid;
+}
+
+.notification.success {
+  background: #D1FAE5;
+  border-color: #6EE7B7;
+  color: #065F46;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
 }
 
 .expand-enter-active,

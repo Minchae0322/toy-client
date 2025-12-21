@@ -1,19 +1,5 @@
 <template>
   <form @submit.prevent="handleSubmit" class="auth-form">
-    <!-- 디버깅 정보 -->
-    <div class="debug-info" style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; font-size: 11px; border-radius: 4px;">
-      <div>이메일: {{ form.email }}</div>
-      <div>이메일 인증: {{ form.emailVerified }}</div>
-      <div>비밀번호: {{ form.password }}</div>
-      <div>비밀번호 확인: {{ form.passwordConfirm }}</div>
-      <div>비밀번호 일치: {{ !form.passwordError }}</div>
-      <div>약관 동의: {{ form.agreeTerms }}</div>
-      <div>비밀번호 강도: {{ passwordStrength }} / 4</div>
-      <div style="font-weight: bold; color: {{ canSubmit ? 'green' : 'red' }};">
-        버튼 활성화: {{ canSubmit }}
-      </div>
-    </div>
-
     <!-- 이메일 입력 & 인증 -->
     <EmailVerification
         v-model:email="form.email"
@@ -98,11 +84,11 @@
 
     <!-- 에러 메시지 -->
     <transition name="shake">
-      <div v-if="form.errorMessage" class="alert-box error">
+      <div v-if="displayError" class="alert-box error">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
           <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 12H7v-2h2v2zm0-3H7V4h2v5z"/>
         </svg>
-        {{ form.errorMessage }}
+        {{ displayError }}
       </div>
     </transition>
   </form>
@@ -114,7 +100,8 @@ import EmailVerification from './EmailVerification.vue'
 import PasswordWithStrength from './PasswordWithStrength.vue'
 
 const props = defineProps({
-  loading: Boolean
+  loading: Boolean,
+  errorMessage: String
 })
 
 const emit = defineEmits(['submit'])
@@ -127,40 +114,26 @@ const form = ref({
   emailVerified: false,
   verificationToken: '',
   passwordError: false,
-  agreeTerms: false,
-  errorMessage: ''
+  agreeTerms: false
 })
+
+// 에러 메시지는 props에서 받음
+const displayError = computed(() => props.errorMessage || '')
 
 const passwordStrength = ref(0)
 
-// 비밀번호 강도 변경 핸들러 추가
 const handleStrengthChange = (strength) => {
-  console.log('비밀번호 강도 변경:', strength)
   passwordStrength.value = strength
 }
 
 const canSubmit = computed(() => {
-  const result =
-      form.value.email &&
+  return form.value.email &&
       form.value.password &&
       form.value.passwordConfirm &&
       form.value.emailVerified &&
       !form.value.passwordError &&
       form.value.agreeTerms &&
-      passwordStrength.value >= 3  // 4 대신 3으로 완화 (테스트용)
-
-  console.log('canSubmit 계산:', {
-    email: !!form.value.email,
-    password: !!form.value.password,
-    passwordConfirm: !!form.value.passwordConfirm,
-    emailVerified: form.value.emailVerified,
-    passwordError: !form.value.passwordError,
-    agreeTerms: form.value.agreeTerms,
-    passwordStrength: passwordStrength.value,
-    result
-  })
-
-  return result
+      passwordStrength.value >= 3
 })
 
 const checkPasswordMatch = () => {
@@ -171,29 +144,14 @@ const checkPasswordMatch = () => {
   }
 }
 
-const handleSubmit = async () => {
-  if (!canSubmit.value) {
-    console.log('제출 불가 - canSubmit이 false입니다')
-    return
-  }
+const handleSubmit = () => {
+  if (!canSubmit.value) return
 
-  form.value.errorMessage = ''
-
-  try {
-    await emit('submit', {
-      email: form.value.email,
-      password: form.value.password,
-      verificationToken: form.value.verificationToken
-    })
-  } catch (error) {
-    if (error.response?.status === 409) {
-      form.value.errorMessage = '이미 사용중인 이메일입니다'
-    } else if (error.response?.status === 400) {
-      form.value.errorMessage = error.response?.data?.message || '입력 정보를 확인해주세요'
-    } else {
-      form.value.errorMessage = error.message || '회원가입 중 오류가 발생했습니다'
-    }
-  }
+  emit('submit', {
+    email: form.value.email,
+    password: form.value.password,
+    verificationToken: form.value.verificationToken
+  })
 }
 </script>
 
