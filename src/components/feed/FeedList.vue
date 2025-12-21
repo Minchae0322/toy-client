@@ -693,14 +693,86 @@ defineExpose({ observerTarget });
 .end-message p, .empty-message p { font-size: 15px; font-weight: 600; color: var(--secondary); margin: 0; }
 
 @media (max-width: 767px) {
-  .feed-section { padding: 24px 0; }
-  .list-view { gap: 12px; padding: 0 8px; }
-  .list-item { flex-direction: column; padding: 16px; }
-  .list-image { width: 100%; aspect-ratio: 4 / 3; }
-  .list-content { min-height: auto; }
-  .author-avatar-small { width: 24px; height: 24px; }
-  .avatar-placeholder svg { width: 12px; height: 12px; }
-  .author-name { font-size: 12px; max-width: 80px; }
-  .list-category { font-size: 9px; padding: 2px 5px; }
+  .feed-section { padding: 0; }
+
+  /* 인스타그램 스타일 - 자연스러운 피드 흐름 */
+  .list-view {
+    gap: 0;
+    padding: 0;
+    background: var(--bg);
+  }
+
+  .list-item {
+    flex-direction: column;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    /* 아이템 사이 subtle한 구분선 */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+
+  .list-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .list-item:hover {
+    box-shadow: none;
+    transform: none;
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .list-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 0;
+  }
+
+  .list-content {
+    min-height: auto;
+    padding: 12px 16px 0;
+  }
+
+  .author-avatar-small { width: 32px; height: 32px; }
+  .avatar-placeholder svg { width: 14px; height: 14px; }
+  .author-name { font-size: 13px; max-width: 100px; font-weight: 600; }
+  .list-category { font-size: 10px; padding: 3px 6px; }
+  .list-time { font-size: 11px; color: #94A3B8; }
+
+  .list-title {
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+
+  .list-review {
+    font-size: 14px;
+    color: #475569;
+    -webkit-line-clamp: 3;
+  }
+
+  .list-meta {
+    border-top: none;
+    padding: 8px 0 0;
+  }
+
+  .list-hashtags {
+    margin-top: 8px;
+  }
+
+  .hashtag {
+    background: transparent;
+    padding: 0;
+    color: #6366F1;
+    font-size: 13px;
+  }
+
+  .hashtag:hover {
+    background: transparent;
+    color: #4F46E5;
+  }
 }
 </style>
