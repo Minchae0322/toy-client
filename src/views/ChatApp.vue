@@ -334,7 +334,9 @@ onBeforeUnmount(async () => {
   dismissToast()
   await handleBackToList()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
-  webSocketService.disconnect()
+  // 메시지 핸들러만 해제, disconnect는 App.vue에서 관리
+  webSocketService.offMessage('chat-message')
+  webSocketService.offMessage('system-notification')
 })
 </script>
 
