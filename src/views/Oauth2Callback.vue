@@ -97,13 +97,13 @@ const handleOAuthCallback = async () => {
 
     const urlParams = new URLSearchParams(window.location.search)
     const accessToken = urlParams.get('token')
-    const refreshToken = urlParams.get('refreshToken')
     const errorParam = urlParams.get('error')
 
     // URL 파라미터 디버깅
+    // 참고: RefreshToken은 백엔드에서 HttpOnly 쿠키로 설정됨 (URL에 없음)
     console.log('📋 [OAuth] URL 파라미터:', {
       accessToken: !!accessToken,
-      refreshToken: !!refreshToken,
+      refreshToken: '쿠키로 관리됨 (HttpOnly)',
       error: errorParam,
       fullURL: window.location.href
     })
@@ -137,18 +137,16 @@ const handleOAuthCallback = async () => {
 
     console.log('👤 [OAuth] 사용자 정보 구성:', userInfo)
 
-    // 🔥 RefreshToken 처리 (AccessToken을 RefreshToken으로도 사용)
-    const finalRefreshToken = refreshToken || accessToken
-
+    // RefreshToken은 백엔드에서 HttpOnly 쿠키로 설정됨
+    // 프론트엔드에서는 accessToken만 관리
     const tokens = {
       accessToken: accessToken,
-      refreshToken: finalRefreshToken
+      refreshToken: null  // HttpOnly 쿠키로 관리됨
     }
 
     console.log('💾 [OAuth] 토큰 저장 시작:', {
       hasAccessToken: !!tokens.accessToken,
-      hasRefreshToken: !!tokens.refreshToken,
-      tokensEqual: tokens.accessToken === tokens.refreshToken
+      refreshToken: 'HttpOnly 쿠키로 관리됨'
     })
 
     // 🔥 useAuth를 통한 로그인 처리
@@ -206,9 +204,10 @@ const handleOAuthCallback = async () => {
       url: window.location.href,
       tokens: {
         hasAccessToken: !!authUtils.getAccessToken(),
-        hasRefreshToken: !!authUtils.getRefreshToken(),
+        refreshToken: 'HttpOnly 쿠키로 관리됨 (JS 접근 불가)',
         hasUserInfo: !!authUtils.getUserInfo()
-      }
+      },
+      hint: '쿠키 확인: 개발자 도구 → Application → Cookies'
     }
   } finally {
     loading.value = false

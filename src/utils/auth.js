@@ -410,7 +410,7 @@ export const debugAuthStatus = () => {
 
     console.log('=== 토큰 정보 ===')
     console.log('Access Token:', accessToken ? '존재 ✅' : '없음 ❌')
-    console.log('Refresh Token:', 'HttpOnly 쿠키로 관리 🍪')
+    console.log('Refresh Token:', 'HttpOnly 쿠키로 관리 🍪 (JS 접근 불가)')
 
     if (accessToken) {
         const payload = parseJwtToken(accessToken)
@@ -432,6 +432,13 @@ export const debugAuthStatus = () => {
 
     console.log('=== 기타 ===')
     console.log('디바이스 ID:', getDeviceId())
+
+    console.log('=== 쿠키 확인 방법 ===')
+    console.log('개발자 도구 → Application → Cookies 에서 refreshToken 쿠키 확인')
+    console.log('⚠️ 쿠키가 없다면 백엔드 설정 확인 필요:')
+    console.log('   - secure=false (HTTP 환경)')
+    console.log('   - SameSite=None 또는 Lax')
+    console.log('   - Access-Control-Allow-Credentials: true')
 
     console.groupEnd()
 }
