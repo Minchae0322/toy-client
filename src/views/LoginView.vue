@@ -46,6 +46,7 @@
                 key="login"
                 :session-expired="sessionExpired"
                 :loading="loading"
+                :error-message="loginError"
                 @submit="handleLogin"
                 @social-login="handleSocialLogin"
             />
@@ -55,6 +56,7 @@
                 v-else
                 key="register"
                 :loading="loading"
+                :error-message="registerError"
                 @submit="handleRegister"
             />
           </transition>
@@ -79,6 +81,8 @@ const { login, isLoggedIn } = useAuth()
 
 const activeTab = ref('login')
 const loading = ref(false)
+const loginError = ref('')
+const registerError = ref('')
 
 const redirectPath = computed(() => route.query.redirect || '/home')
 const sessionExpired = computed(() => route.query.reason === 'session_expired')
@@ -86,10 +90,14 @@ const isDev = computed(() => import.meta.env.DEV)
 
 const switchTab = (tab) => {
   activeTab.value = tab
+  // 탭 전환 시 에러 메시지 초기화
+  loginError.value = ''
+  registerError.value = ''
 }
 
 const handleLogin = async (formData) => {
   loading.value = true
+  loginError.value = ''
 
   try {
     const response = await authService.login({
@@ -116,7 +124,19 @@ const handleLogin = async (formData) => {
 
   } catch (error) {
     console.error('로그인 오류:', error)
-    throw error
+
+    // HTTP 상태 코드별 에러 메시지 설정
+    if (error.status === 401 || error.response?.status === 401) {
+      loginError.value = '이메일 또는 비밀번호가 올바르지 않습니다'
+    } else if (error.status === 403 || error.response?.status === 403) {
+      loginError.value = '계정이 비활성화되었습니다. 관리자에게 문의하세요.'
+    } else if (error.status === 429 || error.response?.status === 429) {
+      loginError.value = '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.'
+    } else if (!navigator.onLine) {
+      loginError.value = '인터넷 연결을 확인해주세요.'
+    } else {
+      loginError.value = error.message || '로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+    }
   } finally {
     loading.value = false
   }
@@ -124,6 +144,7 @@ const handleLogin = async (formData) => {
 
 const handleRegister = async (formData) => {
   loading.value = true
+  registerError.value = ''
 
   try {
     const response = await authService.signup({
@@ -141,7 +162,19 @@ const handleRegister = async (formData) => {
 
   } catch (error) {
     console.error('회원가입 오류:', error)
-    throw error
+
+    // HTTP 상태 코드별 에러 메시지 설정
+    if (error.status === 409 || error.response?.status === 409) {
+      registerError.value = '이미 사용중인 이메일입니다'
+    } else if (error.status === 400 || error.response?.status === 400) {
+      registerError.value = error.response?.data?.message || error.message || '입력 정보를 확인해주세요'
+    } else if (error.status === 422 || error.response?.status === 422) {
+      registerError.value = '이메일 인증이 만료되었습니다. 다시 인증해주세요.'
+    } else if (!navigator.onLine) {
+      registerError.value = '인터넷 연결을 확인해주세요.'
+    } else {
+      registerError.value = error.message || '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+    }
   } finally {
     loading.value = false
   }
