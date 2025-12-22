@@ -370,6 +370,48 @@ const checkAuthenticationStatus = () => {
 router.beforeEach(async (to, from, next) => {
   console.log(`🧭 [Router] 라우트 이동: ${from.path} → ${to.path}`)
 
+  // ==================== OAuth 토큰 처리 ====================
+  // URL에 token 파라미터가 있으면 (백엔드 OAuth 리다이렉트)
+  const tokenParam = to.query.token
+  if (tokenParam) {
+    console.log('🔐 [Router] OAuth 토큰 감지, 저장 처리 시작...')
+
+    try {
+      // 토큰 저장
+      authUtils.setTokens(tokenParam, null)
+
+      // JWT에서 사용자 정보 추출
+      const payload = authUtils.parseJwtToken(tokenParam)
+      if (payload) {
+        const userInfo = {
+          id: payload.userId || payload.sub,
+          username: payload.username || payload.sub,
+          email: payload.email || `${payload.sub}@oauth.local`,
+          nickname: payload.nickname || payload.username || payload.sub,
+          role: payload.auth || payload.role || 'USER',
+          provider: payload.provider || 'oauth',
+          profileImage: payload.picture || payload.avatar_url || null,
+        }
+        authUtils.setUserInfo(userInfo)
+        console.log('✅ [Router] OAuth 토큰 및 사용자 정보 저장 완료:', userInfo.nickname)
+      }
+
+      // token 파라미터 제거하고 같은 경로로 리다이렉트
+      const cleanQuery = { ...to.query }
+      delete cleanQuery.token
+
+      next({
+        path: to.path,
+        query: cleanQuery,
+        replace: true  // 히스토리에서 토큰 URL 제거
+      })
+      return
+    } catch (error) {
+      console.error('❌ [Router] OAuth 토큰 처리 실패:', error)
+      // 실패해도 계속 진행
+    }
+  }
+
   if (to.meta.requiresAuth === false || to.meta.public === true) {
     console.log('🌍 [Router] 공개 페이지 접근 허용:', to.path)
     next()
