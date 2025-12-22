@@ -371,10 +371,11 @@ router.beforeEach(async (to, from, next) => {
   console.log(`🧭 [Router] 라우트 이동: ${from.path} → ${to.path}`)
 
   // ==================== OAuth 토큰 처리 ====================
-  // URL에 token 파라미터가 있으면 (백엔드 OAuth 리다이렉트)
+  // /oauth/callback 경로는 OAuth2Callback.vue에서 처리하도록 통과
+  // 다른 경로에서 token 파라미터가 있으면 여기서 처리
   const tokenParam = to.query.token
-  if (tokenParam) {
-    console.log('🔐 [Router] OAuth 토큰 감지, 저장 처리 시작...')
+  if (tokenParam && to.path !== '/oauth/callback') {
+    console.log('🔐 [Router] OAuth 토큰 감지 (비콜백 경로), 저장 처리 시작...')
 
     try {
       // 토큰 저장
