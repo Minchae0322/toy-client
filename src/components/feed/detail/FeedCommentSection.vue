@@ -1,93 +1,89 @@
 <template>
   <div class="comment-section">
-    <div class="comment-inner">
-      <!-- 헤더 -->
-      <div class="comment-header">
-        <h3 class="comment-title">댓글 {{ totalCount > 0 ? totalCount : '' }}</h3>
+    <!-- 헤더 -->
+    <div class="comment-header">
+      <h3 class="comment-title">댓글 <span v-if="totalCount > 0" class="count">{{ totalCount }}</span></h3>
+    </div>
+
+    <!-- 입력창 -->
+    <div class="input-row">
+      <input
+          type="text"
+          v-model="newComment"
+          @keyup.enter="submitComment"
+          placeholder="댓글을 입력하세요..."
+          class="input"
+      />
+      <button
+          @click="submitComment"
+          :disabled="!newComment.trim()"
+          class="btn-post"
+      >
+        게시
+      </button>
+    </div>
+
+    <!-- 댓글 목록 -->
+    <div class="list-container">
+      <div v-if="loading && !comments.length" class="loading">
+        <div class="spinner"></div>
       </div>
 
-      <!-- 입력창 -->
-      <div class="input-row">
-        <img :src="currentUserProfile" class="avatar" />
-        <div class="input-wrapper">
-          <input
-              type="text"
-              v-model="newComment"
-              @keyup.enter="submitComment"
-              placeholder="댓글을 입력하세요..."
-              class="input"
+      <div v-else-if="!comments.length" class="empty">
+        <p>아직 댓글이 없습니다</p>
+        <span>첫 댓글의 주인공이 되어보세요</span>
+      </div>
+
+      <ul v-else class="list">
+        <li v-for="comment in comments" :key="comment.commentId" class="item">
+          <img
+              :src="comment.creatorProfileUrl || 'https://i.pravatar.cc/150'"
+              class="avatar"
           />
-          <button
-              v-show="newComment.trim()"
-              @click="submitComment"
-              class="btn-post"
-          >
-            게시
-          </button>
-        </div>
-      </div>
-
-      <!-- 댓글 목록 -->
-      <div class="list-container">
-        <div v-if="loading && !comments.length" class="loading">
-          <div class="spinner"></div>
-        </div>
-
-        <div v-else-if="!comments.length" class="empty">
-          <p>아직 댓글이 없습니다</p>
-          <span>첫 댓글의 주인공이 되어보세요</span>
-        </div>
-
-        <ul v-else class="list">
-          <li v-for="comment in comments" :key="comment.commentId" class="item">
-            <img
-                :src="comment.creatorProfileUrl || 'https://i.pravatar.cc/150'"
-                class="avatar"
-            />
-            <div class="body">
-              <div v-if="editingId === comment.commentId" class="edit-mode">
-                <textarea
-                    v-model="editingContent"
-                    @keyup.esc="cancelEdit"
-                    class="edit-input"
-                    rows="2"
-                ></textarea>
-                <div class="edit-actions">
-                  <button @click="cancelEdit" class="btn-text">취소</button>
-                  <button
-                      @click="saveEdit(comment.commentId)"
-                      :disabled="!editingContent.trim()"
-                      class="btn-text primary"
-                  >
-                    저장
-                  </button>
-                </div>
+          <div class="body">
+            <div v-if="editingId === comment.commentId" class="edit-mode">
+              <textarea
+                  v-model="editingContent"
+                  @keyup.esc="cancelEdit"
+                  class="edit-input"
+                  rows="2"
+              ></textarea>
+              <div class="edit-actions">
+                <button @click="cancelEdit" class="btn-text">취소</button>
+                <button
+                    @click="saveEdit(comment.commentId)"
+                    :disabled="!editingContent.trim()"
+                    class="btn-text primary"
+                >
+                  저장
+                </button>
               </div>
-
-              <template v-else>
-                <div class="comment-top">
-                  <span class="author">{{ comment.creatorNickname || '사용자' }}</span>
-                  <span v-if="comment.creatorId === feedCreatorId" class="badge">작성자</span>
-                  <span class="time">{{ formatDate(comment.createdAt) }}</span>
-                  <span v-if="isEdited(comment)" class="edited">(수정됨)</span>
-                </div>
-                <p class="text">{{ comment.content }}</p>
-                <div v-if="isMyComment(comment.creatorId)" class="meta">
-                  <button @click="startEdit(comment)" class="meta-btn">수정</button>
-                  <button @click="handleDelete(comment.commentId)" class="meta-btn delete">삭제</button>
-                </div>
-              </template>
             </div>
-          </li>
-        </ul>
 
-        <button v-if="hasNext && !loading" @click="$emit('load-more')" class="btn-more">
-          댓글 더보기
-        </button>
+            <template v-else>
+              <div class="comment-top">
+                <span class="author">{{ comment.creatorNickname || '사용자' }}</span>
+                <span v-if="comment.creatorId === feedCreatorId" class="badge">작성자</span>
+                <span class="dot">·</span>
+                <span class="time">{{ formatDate(comment.createdAt) }}</span>
+                <span v-if="isEdited(comment)" class="edited">(수정됨)</span>
+              </div>
+              <p class="text">{{ comment.content }}</p>
+              <div v-if="isMyComment(comment.creatorId)" class="meta">
+                <button @click="startEdit(comment)" class="meta-btn">수정</button>
+                <button @click="handleDelete(comment.commentId)" class="meta-btn delete">삭제</button>
+              </div>
+            </template>
+          </div>
+        </li>
+      </ul>
 
-        <div v-if="loading && comments.length" class="loading-more">
-          <div class="spinner small"></div>
-        </div>
+      <button v-if="hasNext && !loading" @click="$emit('load-more')" class="btn-more">
+        댓글 더보기
+      </button>
+
+      <div v-if="loading && comments.length" class="loading-more">
+        <div class="spinner small"></div>
       </div>
     </div>
   </div>
@@ -161,91 +157,81 @@ const handleDelete = (commentId) => {
 <style scoped>
 .comment-section {
   background: #fff;
-}
-
-.comment-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 16px;
-}
-
-@media (min-width: 768px) {
-  .comment-inner {
-    padding: 0 24px;
-  }
+  padding: 0 20px 40px;
 }
 
 /* Header */
 .comment-header {
   padding: 20px 0 16px;
-  border-bottom: 1px solid #e5e7eb;
 }
 
 .comment-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #111827;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1c1917;
   margin: 0;
+}
+
+.count {
+  color: #a8a29e;
+  font-weight: 500;
 }
 
 /* Input */
 .input-row {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px 0;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.input-wrapper {
-  flex: 1;
-  display: flex;
   align-items: center;
-  gap: 12px;
-  background: #f3f4f6;
-  border-radius: 20px;
-  padding: 10px 16px;
+  gap: 10px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f5f5f4;
 }
 
 .input {
   flex: 1;
-  border: none;
-  outline: none;
+  padding: 12px 16px;
+  border: 1px solid #e7e5e4;
+  border-radius: 10px;
   font-size: 14px;
-  color: #262626;
-  background: transparent;
+  color: #1c1917;
+  background: #fafaf9;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .input::placeholder {
-  color: #9ca3af;
+  color: #a8a29e;
+}
+
+.input:focus {
+  border-color: #d6d3d1;
+  background: #fff;
 }
 
 .btn-post {
-  background: none;
+  padding: 12px 20px;
+  background: #1c1917;
   border: none;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
-  color: #7c3aed;
+  color: #fff;
   cursor: pointer;
-  padding: 0;
-  white-space: nowrap;
+  transition: background 0.15s;
 }
 
-.btn-post:hover {
-  color: #6d28d9;
+.btn-post:hover:not(:disabled) {
+  background: #44403c;
+}
+
+.btn-post:disabled {
+  background: #e7e5e4;
+  color: #a8a29e;
+  cursor: not-allowed;
 }
 
 /* List */
 .list-container {
-  padding: 0 0 40px;
+  padding-top: 8px;
 }
 
 .list {
@@ -258,11 +244,18 @@ const handleDelete = (commentId) => {
   display: flex;
   gap: 12px;
   padding: 16px 0;
-  border-bottom: 1px solid #f3f4f6;
 }
 
-.item:last-child {
-  border-bottom: none;
+.item + .item {
+  border-top: 1px solid #f5f5f4;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .body {
@@ -273,38 +266,43 @@ const handleDelete = (commentId) => {
 .comment-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 6px;
 }
 
 .author {
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: #1c1917;
 }
 
 .badge {
   font-size: 11px;
   font-weight: 500;
-  color: #7c3aed;
-  background: #f3e8ff;
+  color: #8b5cf6;
+  background: #f5f3ff;
   padding: 2px 6px;
   border-radius: 4px;
 }
 
+.dot {
+  color: #d6d3d1;
+  font-size: 12px;
+}
+
 .time {
   font-size: 13px;
-  color: #9ca3af;
+  color: #a8a29e;
 }
 
 .edited {
   font-size: 12px;
-  color: #9ca3af;
+  color: #a8a29e;
 }
 
 .text {
   font-size: 14px;
-  color: #374151;
+  color: #44403c;
   line-height: 1.6;
   margin: 0;
   word-break: break-word;
@@ -322,13 +320,14 @@ const handleDelete = (commentId) => {
   border: none;
   font-size: 13px;
   font-weight: 500;
-  color: #9ca3af;
+  color: #a8a29e;
   cursor: pointer;
   padding: 0;
+  transition: color 0.15s;
 }
 
 .meta-btn:hover {
-  color: #6b7280;
+  color: #78716c;
 }
 
 .meta-btn.delete:hover {
@@ -343,18 +342,18 @@ const handleDelete = (commentId) => {
 .edit-input {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e7e5e4;
   border-radius: 8px;
   font-size: 14px;
   line-height: 1.5;
   resize: none;
   outline: none;
   font-family: inherit;
-  background: #f9fafb;
+  background: #fafaf9;
 }
 
 .edit-input:focus {
-  border-color: #7c3aed;
+  border-color: #d6d3d1;
   background: #fff;
 }
 
@@ -370,13 +369,13 @@ const handleDelete = (commentId) => {
   border: none;
   font-size: 13px;
   font-weight: 600;
-  color: #9ca3af;
+  color: #a8a29e;
   cursor: pointer;
   padding: 0;
 }
 
 .btn-text.primary {
-  color: #7c3aed;
+  color: #1c1917;
 }
 
 .btn-text:disabled {
@@ -390,19 +389,19 @@ const handleDelete = (commentId) => {
   width: 100%;
   margin: 16px 0 0;
   padding: 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #fafaf9;
+  border: 1px solid #e7e5e4;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
-  color: #6b7280;
+  font-weight: 500;
+  color: #78716c;
   cursor: pointer;
   text-align: center;
+  transition: background 0.15s;
 }
 
 .btn-more:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: #f5f5f4;
 }
 
 /* States */
@@ -418,8 +417,8 @@ const handleDelete = (commentId) => {
 .spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #7c3aed;
+  border: 2px solid #e7e5e4;
+  border-top-color: #78716c;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -432,13 +431,13 @@ const handleDelete = (commentId) => {
 .empty p {
   font-size: 15px;
   font-weight: 600;
-  color: #374151;
+  color: #57534e;
   margin: 0 0 4px;
 }
 
 .empty span {
   font-size: 14px;
-  color: #9ca3af;
+  color: #a8a29e;
 }
 
 .loading-more {
