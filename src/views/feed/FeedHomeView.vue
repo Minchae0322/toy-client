@@ -77,6 +77,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCategory } from '@/services/CategoryService.js';
 import { useFeed } from '@/services/FeedService.js';
+import * as authUtils from '@/utils/auth.js';
 
 import AppSidebar from '@/components/feed/AppSidebar.vue';
 import AppHeader from '@/components/feed/AppHeader.vue';
@@ -277,6 +278,14 @@ let observer = null;
 onMounted(() => {
   console.log('✅ FeedHomeView 마운트');
   console.log('📋 저장된 뷰 모드:', viewMode.value);
+
+  // 🔍 디버그: 토큰 상태 확인
+  const token = authUtils.getAccessToken();
+  console.log('🔐 [FeedHome] 현재 토큰 상태:', {
+    hasToken: !!token,
+    tokenPreview: token ? token.substring(0, 50) + '...' : 'null',
+    userInfo: authUtils.getUserInfo()
+  });
 
   loadCategories();
   loadFeeds();
