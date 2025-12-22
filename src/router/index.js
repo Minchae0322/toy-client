@@ -370,6 +370,49 @@ const checkAuthenticationStatus = () => {
 router.beforeEach(async (to, from, next) => {
   console.log(`🧭 [Router] 라우트 이동: ${from.path} → ${to.path}`)
 
+  // ==================== OAuth 토큰 처리 ====================
+  // /oauth/callback 경로는 OAuth2Callback.vue에서 처리하도록 통과
+  // 다른 경로에서 token 파라미터가 있으면 여기서 처리
+  const tokenParam = to.query.token
+  if (tokenParam && to.path !== '/oauth/callback') {
+    console.log('🔐 [Router] OAuth 토큰 감지 (비콜백 경로), 저장 처리 시작...')
+
+    try {
+      // 토큰 저장
+      authUtils.setTokens(tokenParam, null)
+
+      // JWT에서 사용자 정보 추출
+      const payload = authUtils.parseJwtToken(tokenParam)
+      if (payload) {
+        const userInfo = {
+          id: payload.userId || payload.sub,
+          username: payload.username || payload.sub,
+          email: payload.email || `${payload.sub}@oauth.local`,
+          nickname: payload.nickname || payload.username || payload.sub,
+          role: payload.auth || payload.role || 'USER',
+          provider: payload.provider || 'oauth',
+          profileImage: payload.picture || payload.avatar_url || null,
+        }
+        authUtils.setUserInfo(userInfo)
+        console.log('✅ [Router] OAuth 토큰 및 사용자 정보 저장 완료:', userInfo.nickname)
+      }
+
+      // token 파라미터 제거하고 같은 경로로 리다이렉트
+      const cleanQuery = { ...to.query }
+      delete cleanQuery.token
+
+      next({
+        path: to.path,
+        query: cleanQuery,
+        replace: true  // 히스토리에서 토큰 URL 제거
+      })
+      return
+    } catch (error) {
+      console.error('❌ [Router] OAuth 토큰 처리 실패:', error)
+      // 실패해도 계속 진행
+    }
+  }
+
   if (to.meta.requiresAuth === false || to.meta.public === true) {
     console.log('🌍 [Router] 공개 페이지 접근 허용:', to.path)
     next()
