@@ -376,15 +376,11 @@ defineExpose({ observerTarget });
 }
 
 @media (min-width: 1024px) {
-  .feed-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 0 32px; }
+  .feed-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; padding: 0 32px; }
 }
 
-@media (min-width: 1440px) {
-  .feed-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
-}
-
-@media (min-width: 1920px) {
-  .feed-grid { grid-template-columns: repeat(5, 1fr); }
+@media (min-width: 1600px) {
+  .feed-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 767px) {
