@@ -14,7 +14,7 @@ import CategoryAdminView from '@/views/CategoryAdminView.vue'
 import ChatApp from '@/views/ChatApp.vue'
 
 // Product Views import
-import ProductListView from '@/views/ProductListView.vue'
+import ProductRankingView from '@/views/ProductRankingView.vue'
 import ProductCreateView from '@/views/ProductCreateView.vue'
 import ProductDetailView from '@/views/ProductDetailView.vue'
 import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
@@ -41,12 +41,12 @@ const routes = [
   // ==================== 상품 관련 라우트 ====================
   {
     path: '/products',
-    name: 'ProductList',
-    component: ProductListView,
+    name: 'ProductRanking',
+    component: ProductRankingView,
     meta: {
       requiresAuth: false,
       public: true,
-      title: '상품 목록'
+      title: 'HOT 100'
     }
   },
   {
@@ -370,18 +370,13 @@ const checkAuthenticationStatus = () => {
 router.beforeEach(async (to, from, next) => {
   console.log(`🧭 [Router] 라우트 이동: ${from.path} → ${to.path}`)
 
-  // ==================== OAuth 토큰 처리 ====================
-  // /oauth/callback 경로는 OAuth2Callback.vue에서 처리하도록 통과
-  // 다른 경로에서 token 파라미터가 있으면 여기서 처리
   const tokenParam = to.query.token
   if (tokenParam && to.path !== '/oauth/callback') {
     console.log('🔐 [Router] OAuth 토큰 감지 (비콜백 경로), 저장 처리 시작...')
 
     try {
-      // 토큰 저장
       authUtils.setTokens(tokenParam, null)
 
-      // JWT에서 사용자 정보 추출
       const payload = authUtils.parseJwtToken(tokenParam)
       if (payload) {
         const userInfo = {
@@ -397,19 +392,17 @@ router.beforeEach(async (to, from, next) => {
         console.log('✅ [Router] OAuth 토큰 및 사용자 정보 저장 완료:', userInfo.nickname)
       }
 
-      // token 파라미터 제거하고 같은 경로로 리다이렉트
       const cleanQuery = { ...to.query }
       delete cleanQuery.token
 
       next({
         path: to.path,
         query: cleanQuery,
-        replace: true  // 히스토리에서 토큰 URL 제거
+        replace: true
       })
       return
     } catch (error) {
       console.error('❌ [Router] OAuth 토큰 처리 실패:', error)
-      // 실패해도 계속 진행
     }
   }
 
@@ -539,14 +532,14 @@ export const chatNavigation = {
 
 // ==================== 상품 네비게이션 헬퍼 ====================
 export const productNavigation = {
-  toProductList(query = {}) {
-    return router.push({ name: 'ProductList', query })
+  toRanking(query = {}) {
+    return router.push({ name: 'ProductRanking', query })
   },
 
   toProductDetail(productId) {
     if (!productId) {
       console.warn('상품 ID가 없습니다')
-      return this.toProductList()
+      return this.toRanking()
     }
     return router.push({ name: 'ProductDetail', params: { id: productId } })
   },
@@ -566,7 +559,7 @@ export const productNavigation = {
   toProductEdit(productId) {
     if (!productId) {
       console.warn('상품 ID가 없습니다')
-      return this.toProductList()
+      return this.toRanking()
     }
     return router.push({ name: 'ProductEdit', params: { id: productId } })
   },
@@ -581,19 +574,12 @@ export const productNavigation = {
     return window.location.origin + route.href
   },
 
-  toProductsByCategory(categoryId, categoryName) {
-    return this.toProductList({
-      categoryId: categoryId,
-      categoryName: categoryName
-    })
+  toRankingByCategory(categoryId) {
+    return this.toRanking({ categoryId })
   },
 
-  toProductsByBrand(brand) {
-    return this.toProductList({ brand: brand })
-  },
-
-  toProductSearch(keyword) {
-    return this.toProductList({ keyword: keyword })
+  toRankingByPeriod(period) {
+    return this.toRanking({ period })
   }
 }
 

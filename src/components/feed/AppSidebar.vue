@@ -18,6 +18,13 @@
           <span class="nav-text">배틀</span>
           <span class="badge">12</span>
         </router-link>
+
+        <router-link to="/products" class="nav-item" active-class="active">
+          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
+          </svg>
+          <span class="nav-text">핫 제품</span>
+        </router-link>
       </div>
 
       <!-- 커뮤니케이션 섹션 -->
@@ -72,42 +79,15 @@
       </svg>
       <span>배틀 등록하기</span>
     </button>
-
-    <!-- 레벨 카드도 로그인 시에만 표시 -->
-    <div v-if="isLoggedIn" class="level-card" @click="handleProtectedRoute('profile')">
-      <div class="level-info">
-        <div class="level-badge">
-          <span class="level-emoji">🔥</span>
-          <span class="level-text">마니아</span>
-          <span class="level-number">Lv.8</span>
-        </div>
-        <svg class="trending-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-        </svg>
-      </div>
-
-      <div class="progress-section">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
-        <div class="progress-info">
-          <span class="progress-percent">73%</span>
-          <span class="progress-divider">·</span>
-          <span class="progress-points">270 / 370</span>
-        </div>
-      </div>
-
-      <p class="level-desc">다음 레벨까지 100 포인트 남음</p>
-    </div>
   </aside>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
-import { useAuth } from '@/composables/useAuth';
+import {useRouter} from 'vue-router';
+import {useAuth} from '@/composables/useAuth';
 
 const router = useRouter();
-const { isLoggedIn, userId } = useAuth();
+const {isLoggedIn, userId} = useAuth();
 
 const handleProtectedRoute = async (routeName) => {
   console.log(`=== ${routeName} 클릭 ===`);
@@ -119,16 +99,16 @@ const handleProtectedRoute = async (routeName) => {
         goToMyProfile();
         break;
       case 'mypage':
-        router.push({ name: 'MyPage' });
+        router.push({name: 'MyPage'});
         break;
       case 'create':
-        router.push({ name: 'FeedCreate' });
+        router.push({name: 'FeedCreate'});
         break;
       case 'createBattle':
-        router.push({ name: 'BattleCreate' });
+        router.push({name: 'BattleCreate'});
         break;
       case 'messages':
-        router.push({ name: 'Chat' });
+        router.push({name: 'Chat'});
         break;
       case 'collections':
         console.log('컬렉션 페이지로 이동');
@@ -143,7 +123,7 @@ const handleProtectedRoute = async (routeName) => {
     console.log('✅ 로그인 페이지로 이동');
     await router.push({
       name: 'Login',
-      query: { redirect: router.currentRoute.value.fullPath }
+      query: {redirect: router.currentRoute.value.fullPath}
     });
   } else {
     console.log('❌ 취소됨');
@@ -160,7 +140,7 @@ const goToMyProfile = async () => {
     console.log('🚀 프로필 페이지로 이동:', userId.value);
     await router.push({
       name: 'UserFeedList',
-      params: { userId: String(userId.value) }
+      params: {userId: String(userId.value)}
     });
     console.log('✅ 이동 완료');
 
@@ -190,7 +170,9 @@ const goToMyProfile = async () => {
 }
 
 @media (min-width: 768px) {
-  .sidebar-left { display: flex; }
+  .sidebar-left {
+    display: flex;
+  }
 }
 
 .nav-menu {
@@ -212,8 +194,14 @@ const goToMyProfile = async () => {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.nav-section:last-child { border-bottom: none; padding-bottom: 0; }
-.nav-section:first-child { padding-top: 0; }
+.nav-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.nav-section:first-child {
+  padding-top: 0;
+}
 
 .nav-item {
   width: 100%;
@@ -230,11 +218,33 @@ const goToMyProfile = async () => {
   font-family: inherit;
 }
 
-.nav-item:hover { background: #ffffff; }
-.nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; color: rgba(0, 0, 0, 0.4); }
-.nav-item.active .icon { color: #9333ea; }
-.nav-text { font-size: 13px; font-weight: 500; color: rgba(0, 0, 0, 0.6); }
-.nav-item.active .nav-text { color: #9333ea; font-weight: 600; border-bottom: 2px solid #9333ea; padding-bottom: 2px; }
+.nav-item:hover {
+  background: #ffffff;
+}
+
+.nav-item .icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.nav-item.active .icon {
+  color: #9333ea;
+}
+
+.nav-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.nav-item.active .nav-text {
+  color: #9333ea;
+  font-weight: 600;
+  border-bottom: 2px solid #9333ea;
+  padding-bottom: 2px;
+}
 
 .badge {
   margin-left: auto;
@@ -249,7 +259,11 @@ const goToMyProfile = async () => {
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-.badge-red { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.badge-red {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
 
 /* 인증 올리기 버튼 */
 .btn-create {
@@ -278,7 +292,10 @@ const goToMyProfile = async () => {
   box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
 }
 
-.btn-create .icon { width: 18px; height: 18px; }
+.btn-create .icon {
+  width: 18px;
+  height: 18px;
+}
 
 /* 배틀 등록하기 버튼 */
 .btn-create-battle {
@@ -307,31 +324,8 @@ const goToMyProfile = async () => {
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
 }
 
-.btn-create-battle .icon { width: 18px; height: 18px; }
-
-.level-card {
-  margin-top: 30px;
-  padding: 16px;
-  background: #fafafa;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+.btn-create-battle .icon {
+  width: 18px;
+  height: 18px;
 }
-
-.level-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); background: #f5f5f5; }
-.level-info { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.level-badge { display: flex; align-items: center; gap: 5px; }
-.level-emoji { font-size: 16px; }
-.level-text { font-size: 13px; font-weight: 700; color: #000; }
-.level-number { font-size: 13px; font-weight: 600; color: rgba(0, 0, 0, 0.5); }
-.trending-icon { color: rgba(0, 0, 0, 0.4); opacity: 0.8; }
-.progress-section { margin-bottom: 10px; }
-.progress-bar { width: 100%; height: 5px; background: rgba(0, 0, 0, 0.08); border-radius: 999px; overflow: hidden; margin-bottom: 6px; }
-.progress-fill { width: 73%; height: 100%; background: linear-gradient(90deg, #9333ea 0%, #c084fc 100%); border-radius: 999px; }
-.progress-info { display: flex; align-items: center; gap: 5px; }
-.progress-percent { font-size: 12px; font-weight: 700; color: #000; }
-.progress-divider { font-size: 12px; color: rgba(0, 0, 0, 0.3); }
-.progress-points { font-size: 12px; font-weight: 500; color: rgba(0, 0, 0, 0.5); }
-.level-desc { font-size: 11px; font-weight: 500; color: rgba(0, 0, 0, 0.5); margin: 0; }
 </style>
