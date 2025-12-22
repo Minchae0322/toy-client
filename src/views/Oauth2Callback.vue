@@ -152,7 +152,7 @@ const handleOAuthCallback = async () => {
     })
 
     // useAuth를 통한 로그인 처리
-    const loginResult = login(tokens, userInfo)
+    const loginResult = await login(tokens, userInfo)
     console.log('[OAuth] useAuth.login 결과:', loginResult)
 
     // 추가 상태 동기화 (모든 컴포넌트 강제 업데이트)
