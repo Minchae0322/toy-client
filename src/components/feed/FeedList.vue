@@ -384,7 +384,12 @@ defineExpose({ observerTarget });
 }
 
 @media (max-width: 767px) {
-  .feed-grid { padding: 0 8px; gap: 12px; }
+  /* 피드 그리드도 자연스러운 흐름으로 */
+  .feed-grid {
+    padding: 0;
+    gap: 0;
+    background: var(--bg);
+  }
 }
 
 .list-view {

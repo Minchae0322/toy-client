@@ -583,20 +583,59 @@ const formatCount = (count) => feedUtils.formatCount(count);
 }
 
 @media (max-width: 767px) {
-  .post-header { padding: 8px 12px; }
-  .author-avatar { width: 24px; height: 24px; }
-  .avatar-icon { width: 12px; height: 12px; }
-  .author-name { font-size: 12px; max-width: 70px; }
-  .category-badge { font-size: 9px; padding: 1px 5px; }
-  .post-time { font-size: 10px; }
-  .more-icon { width: 12px; height: 12px; }
+  /* 카드 스타일 제거 - 자연스러운 피드 흐름 */
+  .post-card {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .post-card:hover {
+    box-shadow: none;
+    transform: none;
+  }
+
+  .post-header { padding: 12px 16px 8px; }
+  .author-avatar { width: 32px; height: 32px; }
+  .avatar-icon { width: 16px; height: 16px; }
+  .author-name { font-size: 13px; max-width: 100px; font-weight: 600; }
+  .category-badge { font-size: 10px; padding: 2px 6px; }
+  .post-time { font-size: 11px; color: #94A3B8; }
+  .more-icon { width: 14px; height: 14px; }
+
+  .post-image-container {
+    border-radius: 0;
+  }
+
   .evaluation-status { padding: 5px 10px; font-size: 11px; gap: 4px; }
   .eval-icon-small { width: 14px; height: 14px; }
   .heart-anim { width: 50px; height: 50px; }
-  .post-content { padding: 10px 12px; }
-  .action-icon { width: 16px; height: 16px; }
-  .action-btn { padding: 3px 5px; font-size: 11px; }
-  .post-title { font-size: 14px; }
-  .post-review { font-size: 12px; }
+
+  .post-content { padding: 12px 16px 16px; }
+  .post-actions {
+    border-bottom: none;
+    margin-bottom: 8px;
+    padding-bottom: 0;
+  }
+  .action-icon { width: 20px; height: 20px; }
+  .action-btn { padding: 4px 6px; font-size: 13px; gap: 4px; }
+  .post-title { font-size: 15px; }
+  .post-review { font-size: 14px; color: #475569; -webkit-line-clamp: 3; }
+
+  .post-details {
+    border-top: none;
+    padding-top: 8px;
+  }
+
+  .post-hashtags {
+    margin-top: 8px;
+  }
+
+  .hashtag {
+    font-size: 13px;
+    color: #6366F1;
+  }
 }
 </style>
