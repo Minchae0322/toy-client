@@ -580,6 +580,24 @@ const formatCount = (count) => feedUtils.formatCount(count);
 
 @media (min-width: 1024px) {
   .post-title { font-size: 16px; }
+
+  /* PC에서 더 컴팩트한 카드 */
+  .post-image-container {
+    aspect-ratio: 1 / 1;
+  }
+
+  .post-header {
+    padding: 8px 12px;
+  }
+
+  .post-content {
+    padding: 10px 12px;
+  }
+
+  .post-actions {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
 }
 
 @media (max-width: 767px) {
