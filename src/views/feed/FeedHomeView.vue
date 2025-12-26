@@ -3,7 +3,7 @@
     <AppSidebar />
 
     <main class="main-content">
-      <AppHeader />
+
 
       <!-- 카테고리 필터 - ⭐ show-all-button 제거, initial-selected 추가 -->
       <CommonCategoryFilter
