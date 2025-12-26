@@ -107,39 +107,7 @@
     </main>
 
     <!-- 모바일 하단 네비게이션 -->
-    <nav class="bottom-nav">
-      <button class="bottom-nav-item">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-        </svg>
-        <span>홈</span>
-      </button>
-      <button class="bottom-nav-item active">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-          <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
-        </svg>
-        <span>배틀</span>
-        <span class="nav-badge">{{ activeBattleCount }}</span>
-      </button>
-      <button class="bottom-nav-fab" @click="handleCreateBattle">
-        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-        </svg>
-      </button>
-      <button class="bottom-nav-item">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
-        </svg>
-        <span>메시지</span>
-      </button>
-      <button class="bottom-nav-item">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
-        </svg>
-        <span>MY</span>
-      </button>
-    </nav>
+    <BottomNavigation />
   </div>
 </template>
 
@@ -154,6 +122,7 @@ import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import HotBattleSection from '@/components/battle/HotBattleSection.vue'
 import BattleList from '@/components/battle/BattleList.vue'
+import BottomNavigation from '@/components/common/BottomNavigation.vue'
 
 const router = useRouter()
 
@@ -689,102 +658,4 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-/* 하단 네비게이션 */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 0.5rem 0;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-}
-
-@media (min-width: 1024px) {
-  .bottom-nav {
-    display: none;
-  }
-}
-
-.bottom-nav-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-  min-width: 3.5rem;
-}
-
-.bottom-nav-item.active {
-  color: var(--primary-accent);
-}
-
-.bottom-nav-item .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  flex-shrink: 0;
-}
-
-.bottom-nav-item span:not(.nav-badge) {
-  font-size: 0.625rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.nav-badge {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.5rem;
-  min-width: 1rem;
-  height: 1rem;
-  padding: 0 0.25rem;
-  background: var(--primary-accent);
-  color: white;
-  font-size: 0.5625rem;
-  font-weight: 700;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.bottom-nav-fab {
-  width: 2.75rem;
-  height: 2.75rem;
-  background: var(--primary-accent);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
-  margin-top: -1.25rem;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.bottom-nav-fab:active {
-  transform: scale(0.95);
-}
-
-.bottom-nav-fab .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  flex-shrink: 0;
-}
 </style>
