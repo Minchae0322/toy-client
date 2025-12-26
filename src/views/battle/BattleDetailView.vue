@@ -132,7 +132,7 @@
               <!-- Score -->
               <div class="product-score">
                 <div class="score-number">
-                  <span class="score-value">{{ item.totalWeightedScore || item.voteCount || 0 }}</span>
+                  <span class="score-value">{{ item.totalScore || 0 }}</span>
                   <span class="score-unit">{{ isWeightedVote ? '점' : '표' }}</span>
                 </div>
                 <div class="score-bar-wrapper">
@@ -166,9 +166,13 @@
                 </button>
               </div>
 
-              <!-- Already Voted -->
-              <div v-else-if="hasVoted" class="voted-badge">
-                투표 완료
+              <!-- My Vote Badge - 내가 투표한 아이템에만 표시 -->
+              <div v-else-if="item.userBattleVote" class="voted-badge my-vote">
+                <span class="vote-icon">✓</span>
+                <span v-if="isWeightedVote && item.userBattleVote.rank">
+                  {{ item.userBattleVote.rank }}위 투표
+                </span>
+                <span v-else>내 투표</span>
               </div>
             </div>
           </div>
@@ -1199,6 +1203,19 @@ export default {
   font-size: 14px;
   font-weight: 600;
   color: #6b7280;
+}
+
+.voted-badge.my-vote {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.voted-badge .vote-icon {
+  font-size: 16px;
 }
 
 /* Modal */
