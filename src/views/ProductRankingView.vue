@@ -193,38 +193,7 @@
     </main>
 
     <!-- Bottom Navigation - Mobile -->
-    <nav class="bottom-nav">
-      <router-link to="/feed" class="bottom-nav-item">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-        </svg>
-        <span>홈</span>
-      </router-link>
-      <router-link to="/products" class="bottom-nav-item active">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
-        </svg>
-        <span>HOT</span>
-      </router-link>
-      <button class="bottom-nav-fab" @click="goToFeedCreate">
-        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-        </svg>
-      </button>
-      <router-link to="/battle" class="bottom-nav-item">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-          <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
-        </svg>
-        <span>배틀</span>
-      </router-link>
-      <router-link to="/mypage" class="bottom-nav-item">
-        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
-        </svg>
-        <span>MY</span>
-      </router-link>
-    </nav>
+    <BottomNavigation />
   </div>
 </template>
 
@@ -234,6 +203,7 @@ import {useRouter, useRoute} from 'vue-router'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import AppHeader from '@/components/feed/AppHeader.vue'
 import RankChange from '@/components/product/RankChange.vue'
+import BottomNavigation from '@/components/common/BottomNavigation.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -1060,81 +1030,4 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-/* Bottom Navigation */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  border-top: 1px solid #e7e5e4;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 0.5rem 0;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
-}
-
-@media (min-width: 1024px) {
-  .bottom-nav {
-    display: none;
-  }
-}
-
-.bottom-nav-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
-  background: transparent;
-  border: none;
-  color: #78716c;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-  min-width: 3.5rem;
-}
-
-.bottom-nav-item.active {
-  color: #9333ea;
-}
-
-.bottom-nav-item .icon {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.bottom-nav-item span {
-  font-size: 0.6875rem;
-  font-weight: 600;
-}
-
-.bottom-nav-fab {
-  width: 3.5rem;
-  height: 3.5rem;
-  background: #9333ea;
-  color: white;
-  border: none;
-  border-radius: 1.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 0.5rem 1.25rem rgba(147, 51, 234, 0.4);
-  margin-top: -1.75rem;
-  transition: all 0.2s;
-}
-
-.bottom-nav-fab:active {
-  transform: scale(0.95);
-}
-
-.bottom-nav-fab .icon {
-  width: 1.75rem;
-  height: 1.75rem;
-}
 </style>
