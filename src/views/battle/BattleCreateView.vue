@@ -66,6 +66,7 @@
           :steps="steps"
           :current-step="currentStep"
           :can-proceed="canProceed"
+          :loading="loading"
           @previous="handlePrevious"
           @next="handleNext"
       />

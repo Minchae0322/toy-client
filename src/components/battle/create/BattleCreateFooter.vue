@@ -11,9 +11,10 @@
         <button
             class="btn-primary"
             @click="$emit('next')"
-            :disabled="!canProceed"
+            :disabled="!canProceed || loading"
         >
-          {{ currentStep === 4 ? '배틀 생성하기' : '다음 단계' }}
+          <span v-if="loading && currentStep === 4" class="loading-spinner"></span>
+          {{ loading && currentStep === 4 ? '생성 중...' : (currentStep === 4 ? '배틀 생성하기' : '다음 단계') }}
         </button>
       </div>
     </div>
@@ -31,6 +32,10 @@ defineProps({
     required: true
   },
   canProceed: {
+    type: Boolean,
+    default: false
+  },
+  loading: {
     type: Boolean,
     default: false
   }
@@ -106,5 +111,32 @@ defineEmits(['previous', 'next']);
   color: #9CA3AF;
   cursor: not-allowed;
   transform: none;
+}
+
+.btn-primary:disabled:not(.loading) {
+  background: #E5E7EB;
+}
+
+.btn-primary:has(.loading-spinner) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #4B5563;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
