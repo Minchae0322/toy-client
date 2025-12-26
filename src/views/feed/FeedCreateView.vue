@@ -107,8 +107,8 @@
                 </svg>
               </button>
 
-              <Transition name="dropdown">
-                <div v-if="showCategoryDropdown && !categoriesLoading" class="category-dropdown-menu">
+              <Transition :name="dropdownDirection === 'up' ? 'dropdown-up' : 'dropdown'">
+                <div v-if="showCategoryDropdown && !categoriesLoading" class="category-dropdown-menu" :class="{ 'dropdown-up': dropdownDirection === 'up' }">
                   <div class="dropdown-header">
                     <span class="dropdown-title">카테고리 선택</span>
                     <button class="btn-close-dropdown" @click.stop="closeCategoryDropdown" type="button">
@@ -298,6 +298,7 @@ const errorMessage = ref('')
 const hashtagInput = ref('')
 const productSuggestions = ref([])
 const showCategoryDropdown = ref(false)
+const dropdownDirection = ref('down') // 'down' 또는 'up'
 const categories = ref([])
 const categoriesLoading = ref(false)
 const draggedIndex = ref(null)
@@ -421,7 +422,23 @@ const loadCategories = async () => {
   }
 }
 
-const toggleCategoryDropdown = () => { showCategoryDropdown.value = !showCategoryDropdown.value }
+const toggleCategoryDropdown = () => {
+  if (!showCategoryDropdown.value && categoryDropdownRef.value) {
+    // 드롭다운을 열 때 방향 계산
+    const rect = categoryDropdownRef.value.getBoundingClientRect()
+    const dropdownHeight = 400 // 드롭다운 메뉴 최대 높이
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+
+    // 아래 공간이 부족하고 위 공간이 더 많으면 위로 펼치기
+    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+      dropdownDirection.value = 'up'
+    } else {
+      dropdownDirection.value = 'down'
+    }
+  }
+  showCategoryDropdown.value = !showCategoryDropdown.value
+}
 const closeCategoryDropdown = () => { showCategoryDropdown.value = false }
 const selectSubCategory = (id) => { formData.value.subCategoryId = id; showCategoryDropdown.value = false }
 
@@ -824,6 +841,10 @@ onBeforeUnmount(() => {
   overflow: hidden;
   z-index: 100;
 }
+.category-dropdown-menu.dropdown-up {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
 .dropdown-header {
   display: flex;
   align-items: center;
@@ -1066,6 +1087,11 @@ onBeforeUnmount(() => {
 .dropdown-leave-active { animation: dropOut 0.15s ease; }
 @keyframes dropIn { from { opacity: 0; transform: translateY(-8px); } }
 @keyframes dropOut { to { opacity: 0; transform: translateY(-8px); } }
+
+.dropdown-up-enter-active { animation: dropUpIn 0.2s ease; }
+.dropdown-up-leave-active { animation: dropUpOut 0.15s ease; }
+@keyframes dropUpIn { from { opacity: 0; transform: translateY(8px); } }
+@keyframes dropUpOut { to { opacity: 0; transform: translateY(8px); } }
 
 .modal-enter-active, .modal-leave-active { transition: opacity 0.2s; }
 .modal-enter-from, .modal-leave-to { opacity: 0; }
