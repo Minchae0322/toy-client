@@ -45,28 +45,7 @@
     </main>
 
     <!-- Bottom Navigation - Mobile Only -->
-    <nav class="bottom-nav">
-      <button class="bottom-nav-item">
-        <Home :size="22" />
-        <span>홈</span>
-      </button>
-      <button class="bottom-nav-item">
-        <Swords :size="22" />
-        <span>배틀</span>
-      </button>
-      <button class="bottom-nav-fab">
-        <Plus :size="24" />
-      </button>
-      <button class="bottom-nav-item active">
-        <MessageCircle :size="22" />
-        <span>메시지</span>
-        <span v-if="unreadCount > 0" class="nav-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-      </button>
-      <button class="bottom-nav-item">
-        <User :size="22" />
-        <span>MY</span>
-      </button>
-    </nav>
+    <BottomNavigation :unread-count="unreadCount" />
 
     <!-- 알림 토스트 -->
     <Transition name="toast">
@@ -93,10 +72,11 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { AlertCircle, X, Home, MessageCircle, User, Plus, Swords } from 'lucide-vue-next'
+import { AlertCircle, X } from 'lucide-vue-next'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import ChatRoomView from '@/views/ChatRoomView.vue'
 import ChatDetailView from '@/views/ChatDetailView.vue'
+import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { webSocketService } from '@/services/webSocketService.js'
 
 const props = defineProps({
@@ -480,85 +460,6 @@ onBeforeUnmount(async () => {
   color: var(--secondary);
   font-weight: 500;
 }
-
-/* Bottom Navigation */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--card);
-  border-top: 1px solid var(--border);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 0.5rem 0;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
-}
-
-@media (min-width: 1024px) {
-  .bottom-nav { display: none; }
-}
-
-.bottom-nav-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
-  background: transparent;
-  border: none;
-  color: var(--secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-  min-width: 3.5rem;
-}
-
-.bottom-nav-item.active { color: var(--accent); }
-
-.bottom-nav-item span:not(.nav-badge) {
-  font-size: 0.6875rem;
-  font-weight: 600;
-}
-
-.nav-badge {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.5rem;
-  min-width: 1.125rem;
-  height: 1.125rem;
-  padding: 0 0.3125rem;
-  background: #DC2626;
-  color: white;
-  font-size: 0.625rem;
-  font-weight: 700;
-  border-radius: 0.5625rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bottom-nav-fab {
-  width: 3.5rem;
-  height: 3.5rem;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 1.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 0.5rem 1.25rem rgba(147, 51, 234, 0.4);
-  margin-top: -1.75rem;
-  transition: all 0.2s;
-}
-
-.bottom-nav-fab:active { transform: scale(0.95); }
 
 /* 알림 토스트 */
 .notification-toast {
