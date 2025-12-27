@@ -486,21 +486,31 @@ const formatCount = (count) => feedUtils.formatCount(count);
   gap: 3px;
   padding: 4px 6px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
   color: var(--primary);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   font-family: inherit;
 }
 
 .action-btn:hover:not(:disabled) { background: var(--hover); }
 .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.action-btn.liked { color: #DC2626; }
-.action-btn.hot { color: #F97316; }
-.action-btn.saved { color: #1D4ED8; }
+.action-btn.liked {
+  color: #DC2626;
+  background: rgba(220, 38, 38, 0.1);
+}
+.action-btn.hot {
+  color: #F97316;
+  background: rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+.action-btn.saved {
+  color: #1D4ED8;
+  background: rgba(29, 78, 216, 0.1);
+}
 
 .action-icon {
   width: 18px;
