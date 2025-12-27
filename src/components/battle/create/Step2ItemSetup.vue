@@ -136,10 +136,12 @@ const handleImageError = (event) => {
 /* 기존 스타일 유지 */
 .form-section {
   flex: 1;
+  width: 100%;
   background: white;
   border-radius: 16px;
   padding: 32px;
   border: 1px solid #F0F0F3;
+  box-sizing: border-box;
 }
 
 .form-group {
