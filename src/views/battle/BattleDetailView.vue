@@ -387,7 +387,7 @@ export default {
     },
 
     handleVote(itemId, rank) {
-      if (this.hasVoted || this.submitting) return
+      if (this.submitting) return
 
       const newRanks = { ...this.selectedRanks }
 
@@ -431,12 +431,6 @@ export default {
       this.submitting = true
 
       try {
-        // 기존 투표가 있으면 먼저 취소
-        if (this.hasVoted) {
-          console.log('🗑️ 기존 투표 취소 중...')
-          await battleService.cancelVote(this.battleId)
-        }
-
         const votes = []
 
         if (this.isWeightedVote) {
