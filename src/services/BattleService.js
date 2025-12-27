@@ -431,7 +431,7 @@ class BattleService extends BaseApiService {
       voteCount: item.voteCount || 0,
       votePercentage: item.votePercentage || 0,
       reportCount: item.reportCount || 0,
-      userBattleVote: item.userBattleVote || [],
+      userBattleVote: item.userBattleVote || null,
       status: item.status
     }))
   }

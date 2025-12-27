@@ -167,10 +167,10 @@
               </div>
 
               <!-- My Vote Badge - 내가 투표한 아이템에만 표시 -->
-              <div v-else-if="item.userBattleVote?.length > 0" class="voted-badge my-vote">
+              <div v-else-if="item.userBattleVote" class="voted-badge my-vote">
                 <span class="vote-icon">✓</span>
                 <span v-if="isWeightedVote">
-                  {{ item.userBattleVote.map(v => v.rank + '위').join(', ') }} 투표
+                  {{ item.userBattleVote.rank }}위 투표
                 </span>
                 <span v-else>내 투표</span>
               </div>
@@ -377,7 +377,7 @@ export default {
     checkUserVote() {
       // 사용자가 이미 투표한 경우 체크
       if (this.battle?.items) {
-        const hasUserVote = this.battle.items.some(item => item.userBattleVote?.length > 0)
+        const hasUserVote = this.battle.items.some(item => item.userBattleVote)
         this.hasVoted = hasUserVote
         console.log('🗳️ 투표 여부:', this.hasVoted)
       }
