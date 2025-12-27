@@ -520,6 +520,12 @@ onMounted(async () => {
 @media (max-width: 1024px) {
   .create-container {
     flex-direction: column;
+    align-items: center;
+  }
+
+  .create-container > * {
+    width: 100%;
+    max-width: 600px;
   }
 
   .content-area {
@@ -530,6 +536,10 @@ onMounted(async () => {
 @media (max-width: 640px) {
   .content-area {
     padding: 20px 16px 80px;
+  }
+
+  .create-container > * {
+    max-width: 100%;
   }
 }
 </style>
