@@ -111,16 +111,16 @@ const isLikeLoading = ref(false);
 const isHotLoading = ref(false);
 
 // ========== 반응형 상태 ==========
-const localIsLiked = ref(props.feed.userReactions?.hasLike || props.isLiked);
-const localIsHot = ref(props.feed.userReactions?.hasHot || props.isHot);
+const localIsLiked = ref(props.feed.userReactions?.hasLike === true);
+const localIsHot = ref(props.feed.userReactions?.hasHot === true);
 const localIsSaved = ref(props.isSaved);
 const localLikeCount = ref(props.feed.likeCount || 0);
 const localHotCount = ref(props.feed.hotCount || 0);
 
 // props 변경 시 로컬 상태 동기화
 watch(() => props.feed, (newFeed) => {
-  localIsLiked.value = newFeed.userReactions?.hasLike || props.isLiked;
-  localIsHot.value = newFeed.userReactions?.hasHot || props.isHot;
+  localIsLiked.value = newFeed.userReactions?.hasLike === true;
+  localIsHot.value = newFeed.userReactions?.hasHot === true;
   localLikeCount.value = newFeed.likeCount || 0;
   localHotCount.value = newFeed.hotCount || 0;
 }, { deep: true });
@@ -503,9 +503,13 @@ const formatCount = (count) => feedUtils.formatCount(count);
   background: rgba(220, 38, 38, 0.1);
 }
 .action-btn.hot {
+  color: var(--primary);
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.action-btn.hot .action-icon {
   color: #F97316;
-  background: rgba(249, 115, 22, 0.15);
-  border: 1px solid rgba(249, 115, 22, 0.3);
 }
 .action-btn.saved {
   color: #1D4ED8;
