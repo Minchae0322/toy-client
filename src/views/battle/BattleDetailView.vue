@@ -143,6 +143,13 @@
                 </div>
               </div>
 
+              <!-- Previous Vote Badge - 이전 투표 표시 -->
+              <div v-if="item.userBattleVote" class="previous-vote-badge">
+                <span class="vote-icon">✓</span>
+                <span v-if="isWeightedVote">이전 투표: {{ item.userBattleVote.rank }}위</span>
+                <span v-else>내 투표</span>
+              </div>
+
               <!-- Vote Buttons -->
               <div v-if="canVote" class="vote-buttons">
                 <div v-if="isWeightedVote" class="vote-buttons-weighted">
@@ -164,15 +171,6 @@
                 >
                   {{ getProductRank(item.id) !== null ? '✓ 선택됨' : '투표하기' }}
                 </button>
-              </div>
-
-              <!-- My Vote Badge - 내가 투표한 아이템에만 표시 -->
-              <div v-else-if="item.userBattleVote" class="voted-badge my-vote">
-                <span class="vote-icon">✓</span>
-                <span v-if="isWeightedVote">
-                  {{ item.userBattleVote.rank }}위 투표
-                </span>
-                <span v-else>내 투표</span>
               </div>
             </div>
           </div>
@@ -287,7 +285,7 @@ export default {
       return voteType === 'MULTIPLE'
     },
     canVote() {
-      if (!this.battle || this.hasVoted) return false
+      if (!this.battle) return false
 
       const status = this.battle.status?.title || this.battle.status
       if (status !== 'ACTIVE') return false
@@ -433,6 +431,12 @@ export default {
       this.submitting = true
 
       try {
+        // 기존 투표가 있으면 먼저 취소
+        if (this.hasVoted) {
+          console.log('🗑️ 기존 투표 취소 중...')
+          await battleService.cancelVote(this.battleId)
+        }
+
         const votes = []
 
         if (this.isWeightedVote) {
@@ -1216,6 +1220,24 @@ export default {
 
 .voted-badge .vote-icon {
   font-size: 16px;
+}
+
+.previous-vote-badge {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background-color: #dbeafe;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d4ed8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.previous-vote-badge .vote-icon {
+  font-size: 12px;
 }
 
 /* Modal */
