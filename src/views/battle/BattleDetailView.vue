@@ -169,8 +169,8 @@
               <!-- My Vote Badge - 내가 투표한 아이템에만 표시 -->
               <div v-else-if="item.userBattleVote?.length > 0" class="voted-badge my-vote">
                 <span class="vote-icon">✓</span>
-                <span v-if="isWeightedVote && item.userBattleVote[0]?.rank">
-                  {{ item.userBattleVote[0].rank }}위 투표
+                <span v-if="isWeightedVote">
+                  {{ item.userBattleVote.map(v => v.rank + '위').join(', ') }} 투표
                 </span>
                 <span v-else>내 투표</span>
               </div>
