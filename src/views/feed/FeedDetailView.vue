@@ -224,16 +224,36 @@ const handleLike = async () => {
   }
 }
 
+const hotLoading = ref(false)
 const handleHot = async () => {
-  if (!feed.value) return
+  if (!feed.value || hotLoading.value) return
+
+  // 옵티미스틱 UI: 즉시 상태 토글
+  const previousHasHot = feed.value.userReactions?.hasHot || false
+  const previousHotCount = feed.value.hotCount || 0
+
+  feed.value.userReactions = { ...feed.value.userReactions, hasHot: !previousHasHot }
+  feed.value.hotCount = previousHasHot ? Math.max(0, previousHotCount - 1) : previousHotCount + 1
+
+  hotLoading.value = true
   try {
     const response = await feedService.toggleHot(feed.value.feedId)
     if (response.success && response.data) {
+      // 서버 응답으로 실제 값 동기화
       feed.value.hotCount = response.data.hotCount
       feed.value.userReactions = { ...feed.value.userReactions, hasHot: response.data.action === 'added' }
+    } else {
+      // 실패 시 롤백
+      feed.value.userReactions = { ...feed.value.userReactions, hasHot: previousHasHot }
+      feed.value.hotCount = previousHotCount
     }
   } catch (err) {
     console.error('핫 실패:', err)
+    // 에러 시 롤백
+    feed.value.userReactions = { ...feed.value.userReactions, hasHot: previousHasHot }
+    feed.value.hotCount = previousHotCount
+  } finally {
+    hotLoading.value = false
   }
 }
 
