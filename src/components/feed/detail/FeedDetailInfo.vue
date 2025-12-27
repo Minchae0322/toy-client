@@ -377,7 +377,11 @@ const handleSendMessage = async () => {
 }
 
 .react-btn.hot.active {
-  background: #fff7ed;
+  background: transparent;
+  color: #a8a29e;
+}
+
+.react-btn.hot.active .react-icon {
   color: #ea580c;
 }
 
