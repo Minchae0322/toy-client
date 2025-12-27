@@ -24,11 +24,42 @@
       <span class="nav-label">배틀</span>
     </router-link>
 
-    <button class="nav-fab" @click="handleCreate">
-      <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-      </svg>
-    </button>
+    <!-- FAB 버튼 영역 -->
+    <div class="fab-container">
+      <button class="nav-fab" :class="{ 'fab-open': isMenuOpen }" @click="toggleMenu">
+        <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+      </button>
+
+      <!-- FAB 메뉴 -->
+      <Transition name="fab-menu">
+        <div v-if="isMenuOpen" class="fab-menu">
+          <button class="fab-menu-item" @click="handleCreateFeed">
+            <div class="fab-menu-icon feed-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="fab-menu-label">새 피드 올리기</span>
+          </button>
+
+          <button class="fab-menu-item" @click="handleCreateBattle">
+            <div class="fab-menu-icon battle-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <span class="fab-menu-label">새 배틀 만들기</span>
+          </button>
+        </div>
+      </Transition>
+    </div>
+
+    <!-- 오버레이 -->
+    <Transition name="overlay">
+      <div v-if="isMenuOpen" class="fab-overlay" @click="closeMenu"></div>
+    </Transition>
 
     <button
       class="nav-item"
@@ -58,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 
@@ -73,6 +104,8 @@ const router = useRouter();
 const route = useRoute();
 const { isLoggedIn } = useAuth();
 
+const isMenuOpen = ref(false);
+
 const isActive = (path) => {
   if (path === '/feed') {
     return route.path === '/feed' || route.path === '/';
@@ -80,7 +113,17 @@ const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/');
 };
 
-const handleCreate = async () => {
+const toggleMenu = () => {
+  isMenuOpen.value = !isMenuOpen.value;
+};
+
+const closeMenu = () => {
+  isMenuOpen.value = false;
+};
+
+const handleCreateFeed = async () => {
+  closeMenu();
+
   if (isLoggedIn.value) {
     router.push({ name: 'FeedCreate' });
     return;
@@ -91,6 +134,23 @@ const handleCreate = async () => {
     await router.push({
       name: 'Login',
       query: { redirect: '/feed/create' }
+    });
+  }
+};
+
+const handleCreateBattle = async () => {
+  closeMenu();
+
+  if (isLoggedIn.value) {
+    router.push({ name: 'BattleCreate' });
+    return;
+  }
+
+  const confirmed = confirm('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?');
+  if (confirmed) {
+    await router.push({
+      name: 'Login',
+      query: { redirect: '/battle/create' }
     });
   }
 };
@@ -116,6 +176,21 @@ const handleProtectedNav = async (routeName) => {
     });
   }
 };
+
+// ESC 키로 메뉴 닫기
+const handleKeydown = (e) => {
+  if (e.key === 'Escape' && isMenuOpen.value) {
+    closeMenu();
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <style scoped>
@@ -209,6 +284,14 @@ const handleProtectedNav = async (routeName) => {
   box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
 }
 
+/* FAB Container */
+.fab-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* FAB (Floating Action Button) - 중앙 생성 버튼 */
 .nav-fab {
   width: 3.25rem;
@@ -223,8 +306,9 @@ const handleProtectedNav = async (routeName) => {
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(147, 51, 234, 0.4);
   margin-top: -1.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-tap-highlight-color: transparent;
+  z-index: 102;
 }
 
 .nav-fab:active {
@@ -232,8 +316,126 @@ const handleProtectedNav = async (routeName) => {
   box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4);
 }
 
+.nav-fab.fab-open {
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+}
+
+.nav-fab.fab-open:active {
+  transform: rotate(45deg) scale(0.92);
+}
+
 .fab-icon {
   width: 1.5rem;
   height: 1.5rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* FAB 메뉴 */
+.fab-menu {
+  position: absolute;
+  bottom: 4.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 101;
+}
+
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: white;
+  border: none;
+  border-radius: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fab-menu-item:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.fab-menu-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fab-menu-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.fab-menu-icon.feed-icon {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.fab-menu-icon.battle-icon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.fab-menu-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1f2937;
+  padding-right: 0.5rem;
+}
+
+/* 오버레이 */
+.fab-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  z-index: 99;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 메뉴 트랜지션 */
+.fab-menu-enter-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-menu-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.fab-menu-enter-from,
+.fab-menu-leave-to {
+  opacity: 0;
+  transform: translateY(1rem) scale(0.9);
+}
+
+.fab-menu-enter-to,
+.fab-menu-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* 오버레이 트랜지션 */
+.overlay-enter-active,
+.overlay-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.overlay-enter-from,
+.overlay-leave-to {
+  opacity: 0;
 }
 </style>
