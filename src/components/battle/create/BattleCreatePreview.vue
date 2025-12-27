@@ -1,5 +1,11 @@
 <template>
-  <div class="preview-section">
+  <div class="preview-section" :class="{ collapsed: isCollapsed }">
+    <!-- 모바일 토글 버튼 -->
+    <button class="preview-toggle" @click="isCollapsed = !isCollapsed">
+      <span class="toggle-icon">{{ isCollapsed ? '👁️' : '✕' }}</span>
+      <span class="toggle-text">{{ isCollapsed ? '미리보기' : '닫기' }}</span>
+    </button>
+
     <div class="preview-label">미리보기</div>
     <div class="preview-card">
       <!-- ⭐ 대표 이미지가 있으면 표시 -->
@@ -68,7 +74,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
+
+const isCollapsed = ref(true); // 모바일에서 기본적으로 접힌 상태
 
 const props = defineProps({
   battleForm: {
@@ -218,5 +226,124 @@ const previewImageUrl = computed(() => {
 .preview-date {
   font-size: 12px;
   color: #9CA3AF;
+}
+
+/* 모바일 토글 버튼 - 데스크톱에서는 숨김 */
+.preview-toggle {
+  display: none;
+}
+
+/* ===== 모바일 반응형 ===== */
+@media (max-width: 1024px) {
+  .preview-section {
+    width: 100%;
+    position: fixed;
+    bottom: 80px;
+    right: 16px;
+    left: 16px;
+    top: auto;
+    z-index: 50;
+    max-width: calc(100% - 32px);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .preview-section.collapsed {
+    transform: translateY(calc(100% + 100px));
+    pointer-events: none;
+  }
+
+  .preview-section.collapsed .preview-toggle {
+    pointer-events: auto;
+    transform: translateY(calc(-100% - 100px));
+  }
+
+  .preview-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: absolute;
+    top: -48px;
+    right: 0;
+    padding: 10px 16px;
+    background: #1A1A1A;
+    color: white;
+    border: none;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 51;
+  }
+
+  .preview-toggle:active {
+    transform: scale(0.95);
+  }
+
+  .toggle-icon {
+    font-size: 16px;
+  }
+
+  .preview-card {
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .preview-visual {
+    height: 140px;
+  }
+
+  .preview-content {
+    padding: 16px;
+  }
+
+  .preview-title {
+    font-size: 16px;
+    min-height: auto;
+    margin-bottom: 12px;
+  }
+
+  .preview-stats {
+    padding: 12px 0;
+    gap: 12px;
+  }
+
+  .preview-stat-value {
+    font-size: 18px;
+  }
+
+  .preview-footer {
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .preview-section {
+    right: 12px;
+    left: 12px;
+    bottom: 72px;
+    max-width: calc(100% - 24px);
+  }
+
+  .preview-toggle {
+    padding: 8px 14px;
+    font-size: 12px;
+    top: -44px;
+  }
+
+  .preview-visual {
+    height: 120px;
+  }
+
+  .preview-content {
+    padding: 14px;
+  }
+
+  .preview-title {
+    font-size: 15px;
+  }
+
+  .preview-stat-value {
+    font-size: 16px;
+  }
 }
 </style>
