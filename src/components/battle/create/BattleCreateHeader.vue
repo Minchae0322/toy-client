@@ -306,9 +306,13 @@ defineEmits(['back', 'save-draft']);
     font-size: 15px;
   }
 
+  .divider {
+    display: none;
+  }
+
   .back-btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
 
   .save-draft-btn span {
@@ -316,24 +320,58 @@ defineEmits(['back', 'save-draft']);
   }
 
   .save-draft-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     justify-content: center;
   }
 
+  .steps-wrapper {
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+
   .step-circle {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     font-size: 12px;
   }
 
   .step-label {
-    font-size: 12px;
+    display: none;
+  }
+
+  .step-line {
+    width: 24px;
+  }
+
+  .step-item.active .step-label {
+    display: block;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    padding: 10px 12px;
+  }
+
+  .page-title {
+    font-size: 14px;
+  }
+
+  .step-circle {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
   }
 
   .step-line {
     width: 16px;
+  }
+
+  .step-item.active .step-label {
+    font-size: 10px;
   }
 }
 </style>

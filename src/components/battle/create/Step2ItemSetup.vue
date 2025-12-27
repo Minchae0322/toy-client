@@ -24,7 +24,7 @@
         <!-- Selected Items Grid -->
         <div
             v-else
-            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;"
+            class="items-grid"
         >
           <div
               v-for="(item, index) in displayItems"
@@ -302,9 +302,87 @@ const handleImageError = (event) => {
   background: #F3F4F6;
 }
 
-@media (max-width: 768px) {
-  .selected-item {
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* ===== 모바일 반응형 ===== */
+@media (max-width: 1024px) {
+  .items-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-section {
+    padding: 24px 20px;
+  }
+
+  .items-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .selected-item {
+    padding: 6px;
+  }
+
+  .item-visual {
+    height: 70px;
+  }
+
+  .item-placeholder {
+    font-size: 28px;
+  }
+
+  .item-name {
+    font-size: 10px;
+  }
+
+  .item-brand {
+    font-size: 9px;
+  }
+
+  .selected-item-remove {
+    opacity: 1;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+  }
+
+  .empty-state {
+    padding: 32px 16px;
+  }
+
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+  }
+
+  .empty-title {
+    font-size: 14px;
+  }
+
+  .add-item-button {
+    min-height: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .items-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .item-visual {
+    height: 80px;
+  }
+
+  .item-placeholder {
+    font-size: 32px;
   }
 }
 </style>

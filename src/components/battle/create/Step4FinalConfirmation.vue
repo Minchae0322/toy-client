@@ -404,26 +404,146 @@ const formatDate = (dateString) => {
 
 @media (max-width: 768px) {
   .form-section {
-    padding: 24px;
+    padding: 24px 20px;
+  }
+
+  .confirmation-header {
+    padding: 16px 0 24px;
+    margin-bottom: 24px;
   }
 
   .header-icon {
     font-size: 48px;
+    margin-bottom: 12px;
   }
 
   .header-title {
     font-size: 20px;
   }
 
+  .header-desc {
+    font-size: 13px;
+  }
+
+  .summary-section {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .summary-title {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
   .summary-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
+    padding: 10px 0;
+  }
+
+  .summary-label {
+    font-size: 12px;
+  }
+
+  .summary-value {
+    font-size: 13px;
+    flex-wrap: wrap;
   }
 
   .warning-box {
     flex-direction: column;
     gap: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .warning-icon {
+    font-size: 20px;
+  }
+
+  .warning-title {
+    font-size: 14px;
+  }
+
+  .warning-desc {
+    font-size: 12px;
+  }
+
+  .checklist-box {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .checklist-title {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .checklist-item {
+    font-size: 13px;
+    padding: 10px 8px;
+  }
+
+  .agreement-box {
+    padding: 16px;
+  }
+
+  .agreement-checkbox {
+    width: 20px;
+    height: 20px;
+    margin-top: 0;
+  }
+
+  .agreement-text {
+    font-size: 13px;
+  }
+
+  .agreement-hint {
+    font-size: 11px;
+    margin-left: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-section {
+    padding: 20px 16px;
+  }
+
+  .header-icon {
+    font-size: 40px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+
+  .summary-section {
+    padding: 14px;
+  }
+
+  .summary-title {
+    font-size: 14px;
+  }
+
+  .summary-value {
+    font-size: 12px;
+  }
+
+  .summary-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .checklist-item {
+    font-size: 12px;
+    padding: 8px 6px;
+  }
+
+  .checklist-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
   }
 }
 </style>

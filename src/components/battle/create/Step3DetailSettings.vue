@@ -271,7 +271,15 @@ const descriptionCharCount = computed(() => {
 
 @media (max-width: 768px) {
   .form-section {
-    padding: 24px;
+    padding: 24px 20px;
+  }
+
+  .form-group {
+    margin-bottom: 24px;
+  }
+
+  .vote-type-option {
+    padding: 16px;
   }
 
   .vote-type-content {
@@ -279,14 +287,64 @@ const descriptionCharCount = computed(() => {
   }
 
   .vote-type-icon {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     font-size: 20px;
+  }
+
+  .vote-type-title {
+    font-size: 15px;
+  }
+
+  .vote-type-desc {
+    font-size: 12px;
+  }
+
+  .textarea {
+    min-height: 120px;
+    font-size: 16px; /* iOS 줌 방지 */
   }
 
   .info-box {
     flex-direction: column;
     gap: 8px;
+    padding: 16px;
+  }
+
+  .info-icon {
+    font-size: 20px;
+  }
+
+  .info-title {
+    font-size: 13px;
+  }
+
+  .info-desc {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-section {
+    padding: 20px 16px;
+  }
+
+  .vote-type-option {
+    padding: 14px;
+  }
+
+  .vote-type-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .vote-type-title {
+    font-size: 14px;
+  }
+
+  .vote-type-desc {
+    font-size: 11px;
   }
 }
 </style>

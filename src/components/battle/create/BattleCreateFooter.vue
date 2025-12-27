@@ -139,4 +139,62 @@ defineEmits(['previous', 'next']);
     transform: rotate(360deg);
   }
 }
+
+/* ===== 모바일 반응형 ===== */
+@media (max-width: 768px) {
+  .action-footer {
+    padding: 16px 20px;
+  }
+
+  .action-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .step-info {
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .action-buttons {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    padding: 14px 16px;
+    font-size: 15px;
+    justify-content: center;
+  }
+
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .action-footer {
+    padding: 14px 16px;
+  }
+
+  .step-info {
+    font-size: 12px;
+  }
+
+  .action-buttons {
+    gap: 10px;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    padding: 12px 14px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+}
 </style>
