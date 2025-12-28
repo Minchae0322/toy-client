@@ -222,16 +222,36 @@ const deleteComment = async (commentId) => {
 
 const goBack = () => router.back()
 
+const likeLoading = ref(false)
 const handleLike = async () => {
-  if (!feed.value) return
+  if (!feed.value || likeLoading.value) return
+
+  // Optimistic update - 즉시 UI 반영
+  const previousHasLike = feed.value.userReactions?.hasLike || false
+  const previousLikeCount = feed.value.likeCount || 0
+
+  feed.value.userReactions = { ...feed.value.userReactions, hasLike: !previousHasLike }
+  feed.value.likeCount = previousHasLike ? Math.max(0, previousLikeCount - 1) : previousLikeCount + 1
+
+  likeLoading.value = true
   try {
     const response = await feedService.toggleLike(feed.value.feedId)
     if (response.success && response.data) {
+      // 서버 응답으로 실제 값 동기화
       feed.value.likeCount = response.data.likeCount
       feed.value.userReactions = { ...feed.value.userReactions, hasLike: response.data.action === 'added' }
+    } else {
+      // 실패 시 롤백
+      feed.value.userReactions = { ...feed.value.userReactions, hasLike: previousHasLike }
+      feed.value.likeCount = previousLikeCount
     }
   } catch (err) {
     console.error('좋아요 실패:', err)
+    // 에러 시 롤백
+    feed.value.userReactions = { ...feed.value.userReactions, hasLike: previousHasLike }
+    feed.value.likeCount = previousLikeCount
+  } finally {
+    likeLoading.value = false
   }
 }
 

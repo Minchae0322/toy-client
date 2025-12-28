@@ -213,17 +213,32 @@ const handleCardClick = (event) => {
 const handleLike = async (event) => {
   event.stopPropagation();
   if (isLikeLoading.value) return;
+
+  // Optimistic update - 즉시 UI 반영
+  const previousIsLiked = localIsLiked.value;
+  const previousLikeCount = localLikeCount.value;
+  localIsLiked.value = !previousIsLiked;
+  localLikeCount.value = previousIsLiked ? Math.max(0, previousLikeCount - 1) : previousLikeCount + 1;
+
   try {
     isLikeLoading.value = true;
     const response = await feedService.toggleLike(props.feed.feedId);
     if (response.success && response.data) {
+      // 서버 응답으로 실제 값 동기화
       localLikeCount.value = response.data.likeCount;
       localHotCount.value = response.data.hotCount;
       localIsLiked.value = response.data.action === 'added';
       emit('update', { feedId: props.feed.feedId, likeCount: response.data.likeCount, hotCount: response.data.hotCount, action: response.data.action, reactionType: 'LIKE' });
+    } else {
+      // 실패 시 롤백
+      localIsLiked.value = previousIsLiked;
+      localLikeCount.value = previousLikeCount;
     }
   } catch (error) {
     console.error('❌ LIKE 실패:', error);
+    // 에러 시 롤백
+    localIsLiked.value = previousIsLiked;
+    localLikeCount.value = previousLikeCount;
   } finally {
     isLikeLoading.value = false;
   }
@@ -232,18 +247,33 @@ const handleLike = async (event) => {
 const handleHot = async (event) => {
   event.stopPropagation();
   if (isHotLoading.value) return;
+
+  // Optimistic update - 즉시 UI 반영
+  const previousIsHot = localIsHot.value;
+  const previousHotCount = localHotCount.value;
+  localIsHot.value = !previousIsHot;
+  localHotCount.value = previousIsHot ? Math.max(0, previousHotCount - 1) : previousHotCount + 1;
+
   try {
     isHotLoading.value = true;
     const response = await feedService.toggleHot(props.feed.feedId);
     if (response.success && response.data) {
+      // 서버 응답으로 실제 값 동기화
       localLikeCount.value = response.data.likeCount;
       localHotCount.value = response.data.hotCount;
       localIsHot.value = response.data.action === 'added';
-      emit('update', { feedId: props.feed.feedId, likeCount: response.data.likeCount, hotCount: response.data.hotCount });
+      emit('update', { feedId: props.feed.feedId, likeCount: response.data.likeCount, hotCount: response.data.hotCount, action: response.data.action, reactionType: 'HOT' });
+    } else {
+      // 실패 시 롤백
+      localIsHot.value = previousIsHot;
+      localHotCount.value = previousHotCount;
     }
     emit('hot', props.feed.feedId);
   } catch (error) {
     console.error('❌ HOT 실패:', error);
+    // 에러 시 롤백
+    localIsHot.value = previousIsHot;
+    localHotCount.value = previousHotCount;
   } finally {
     isHotLoading.value = false;
   }
