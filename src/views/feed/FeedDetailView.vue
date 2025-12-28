@@ -63,6 +63,15 @@
           />
         </section>
       </main>
+
+      <!-- Share Modal -->
+      <ShareModal
+          :visible="showShareModal"
+          :title="getProductName"
+          :description="feed?.reviewSummary || ''"
+          :image="shareImage"
+          @close="closeShareModal"
+      />
     </template>
   </div>
 </template>
@@ -76,6 +85,7 @@ import FeedDetailHeader from '@/components/feed/detail/FeedDetailHeader.vue'
 import FeedDetailImageGallery from '@/components/feed/detail/FeedDetailImageGallery.vue'
 import FeedDetailInfo from '@/components/feed/detail/FeedDetailInfo.vue'
 import FeedCommentSection from '@/components/feed/detail/FeedCommentSection.vue'
+import ShareModal from '@/components/common/ShareModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -86,6 +96,7 @@ const feed = ref(null)
 const isSaved = ref(false)
 const isFollowing = ref(false)
 const commentSectionRef = ref(null)
+const showShareModal = ref(false)
 
 const comments = ref([])
 const commentLoading = ref(false)
@@ -262,12 +273,18 @@ const handleFollow = () => { isFollowing.value = true }
 const handleUnfollow = () => { isFollowing.value = false }
 
 const handleShare = () => {
-  if (navigator.share) navigator.share({ title: getProductName.value, url: window.location.href })
+  showShareModal.value = true
 }
 
 const handleCopyLink = () => {
   navigator.clipboard.writeText(window.location.href).then(() => alert('링크가 복사되었습니다!'))
 }
+
+const closeShareModal = () => {
+  showShareModal.value = false
+}
+
+const shareImage = computed(() => imageList.value?.[0]?.fileUrl || '')
 
 const handleReport = () => console.log('Report feed')
 const searchByStore = () => console.log('Search by store:', feed.value?.buyPlace)
