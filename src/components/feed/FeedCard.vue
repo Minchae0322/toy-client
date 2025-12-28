@@ -553,17 +553,17 @@ const formatCount = (count) => feedUtils.formatCount(count);
 .action-btn:hover:not(:disabled) { background: var(--hover); }
 .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .action-btn.liked {
-  color: #DC2626;
-  background: rgba(220, 38, 38, 0.1);
+  color: #f43f5e;
+  background: #fff1f2;
 }
 .action-btn.hot {
-  color: var(--primary);
-  background: transparent;
+  color: #ea580c;
+  background: #fff7ed;
   border: 1px solid transparent;
 }
 
 .action-btn.hot .action-icon {
-  color: #F97316;
+  color: #ea580c;
 }
 .action-btn.saved {
   color: #1D4ED8;
