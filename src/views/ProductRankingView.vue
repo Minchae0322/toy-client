@@ -474,6 +474,19 @@ onMounted(() => {
 .ranking-wrapper {
   max-width: 896px;
   padding: 32px 0;
+  padding-left: 1rem;
+}
+
+@media (min-width: 768px) {
+  .ranking-wrapper {
+    padding-left: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .ranking-wrapper {
+    padding-left: 3rem;
+  }
 }
 
 /* Header */
