@@ -4,18 +4,17 @@
     <header class="header">
       <div class="header-container">
         <button class="back-btn" @click="goBack">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12.5 15L7.5 10L12.5 5"/>
           </svg>
         </button>
-        <div class="breadcrumb">
+        <nav class="breadcrumb">
           <router-link to="/">홈</router-link>
           <span class="separator">/</span>
           <router-link to="/products">상품</router-link>
           <span class="separator">/</span>
           <span class="current">{{ product?.name || '상품 상세' }}</span>
-        </div>
-
+        </nav>
         <div v-if="isLoggedIn && isOwner" class="header-actions">
           <button class="edit-btn" @click="editProduct">수정</button>
           <button class="delete-btn" @click="deleteProduct">삭제</button>
@@ -24,82 +23,216 @@
     </header>
 
     <!-- 메인 컨테이너 -->
-    <div class="main-container">
-      <main class="main-content">
-        <!-- 로딩 상태 -->
-        <div v-if="loading" class="loading-container">
-          <div class="loading-spinner"></div>
-          <p>상품 정보를 불러오는 중입니다</p>
+    <main class="main-container">
+      <!-- 로딩 -->
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>상품 정보를 불러오는 중입니다</p>
+      </div>
+
+      <!-- 에러 -->
+      <div v-else-if="error" class="error-container">
+        <h3>상품을 불러올 수 없습니다</h3>
+        <p>{{ error }}</p>
+        <button @click="fetchProductData" class="retry-btn">다시 시도</button>
+      </div>
+
+      <!-- 콘텐츠 -->
+      <template v-else-if="product">
+        <div class="content-layout">
+          <!-- 왼쪽: 피드/배틀 메인 -->
+          <section class="main-content">
+            <!-- 탭 네비게이션 -->
+            <div class="tab-nav">
+              <button
+                  :class="['tab-btn', { active: activeTab === 'feed' }]"
+                  @click="activeTab = 'feed'"
+              >
+                피드
+                <span class="tab-count">{{ feeds.length }}</span>
+              </button>
+              <button
+                  :class="['tab-btn', { active: activeTab === 'battle' }]"
+                  @click="activeTab = 'battle'"
+              >
+                배틀
+                <span class="tab-count">{{ battles.length }}</span>
+              </button>
+            </div>
+
+            <!-- 피드 탭 -->
+            <div v-if="activeTab === 'feed'" class="tab-content">
+              <!-- 피드 작성 -->
+              <div class="feed-write-box">
+                <div class="user-avatar">😊</div>
+                <input
+                    type="text"
+                    placeholder="이 상품에 대한 의견을 남겨보세요..."
+                    class="feed-input"
+                    @click="handleWriteFeed"
+                    readonly
+                />
+                <button class="write-btn" @click="handleWriteFeed">작성</button>
+              </div>
+
+              <!-- 피드 목록 -->
+              <FeedCard
+                  v-for="feed in feeds"
+                  :key="feed.id"
+                  :feed="feed"
+                  @like="handleFeedLike"
+              />
+
+              <!-- 빈 상태 -->
+              <div v-if="feeds.length === 0" class="empty-state">
+                <div class="empty-icon">📝</div>
+                <p class="empty-title">아직 피드가 없어요</p>
+                <p class="empty-desc">첫 번째 피드를 작성해보세요!</p>
+              </div>
+            </div>
+
+            <!-- 배틀 탭 -->
+            <div v-if="activeTab === 'battle'" class="tab-content">
+              <!-- 배틀 생성 -->
+              <button class="battle-create-btn" @click="handleCreateBattle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                새 배틀 만들기
+              </button>
+
+              <!-- 배틀 목록 -->
+              <BattleCard
+                  v-for="battle in battles"
+                  :key="battle.id"
+                  :battle="battle"
+                  @vote="handleVote"
+                  @view="viewBattle"
+              />
+
+              <!-- 빈 상태 -->
+              <div v-if="battles.length === 0" class="empty-state">
+                <div class="empty-icon">🏆</div>
+                <p class="empty-title">참여 중인 배틀이 없어요</p>
+                <p class="empty-desc">새로운 배틀을 시작해보세요!</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 오른쪽: 상품 정보 사이드바 -->
+          <aside class="product-sidebar">
+            <div class="sidebar-sticky">
+              <!-- 상품 이미지 -->
+              <div class="product-image-wrapper">
+                <img :src="product.thumbnailUrl || defaultImage" :alt="product.name" class="product-image"/>
+              </div>
+
+              <!-- 상품 정보 -->
+              <div class="product-info-section">
+                <div class="info-header">
+                  <span class="brand">{{ product.brand }}</span>
+                  <span class="category-badge">{{ product.category?.name || product.category }}</span>
+                </div>
+                <h1 class="product-name">{{ product.name }}</h1>
+                <p class="product-price">{{ formatPrice(product.price) }}<span class="currency">원</span></p>
+              </div>
+
+              <!-- 통계 -->
+              <div class="stats-section">
+                <div class="stat-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                  <span>{{ product.avgRating?.toFixed(1) || '0.0' }}</span>
+                </div>
+                <div class="stat-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <span>{{ formatCount(product.viewCount) }}</span>
+                </div>
+                <div class="stat-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                  <span>{{ formatCount(product.likeCount) }}</span>
+                </div>
+              </div>
+
+              <!-- 액션 버튼 -->
+              <div class="action-section">
+                <button :class="['action-btn', { active: userReaction.hasLike }]" @click="handleLikeAction">
+                  <svg width="18" height="18" viewBox="0 0 24 24" :fill="userReaction.hasLike ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                  좋아요
+                </button>
+                <button :class="['action-btn', { active: userReaction.hasBookmark }]" @click="handleBookmarkAction">
+                  <svg width="18" height="18" viewBox="0 0 24 24" :fill="userReaction.hasBookmark ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  저장
+                </button>
+                <button class="action-btn" @click="handleShareAction">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+                  </svg>
+                  공유
+                </button>
+              </div>
+
+              <!-- 상세 정보 (조건부 렌더링) -->
+              <div v-if="hasDetailContent" class="detail-section">
+                <!-- 설명 -->
+                <div
+                    v-if="product.description"
+                    class="detail-block description"
+                    :class="{ 'has-more': hasDetailGrid || product.tags }"
+                >
+                  <p>{{ product.description }}</p>
+                </div>
+
+                <!-- 상세 그리드 -->
+                <div v-if="hasDetailGrid" class="detail-grid" :class="{ 'has-tags': product.tags }">
+                  <div v-if="product.feature" class="detail-item">
+                    <span class="detail-label">특징</span>
+                    <span class="detail-value">{{ product.feature }}</span>
+                  </div>
+                  <div v-if="product.distributor" class="detail-item">
+                    <span class="detail-label">판매처</span>
+                    <span class="detail-value">{{ product.distributor }}</span>
+                  </div>
+                  <div v-if="product.releaseDate" class="detail-item">
+                    <span class="detail-label">출시일</span>
+                    <span class="detail-value">{{ formatDate(product.releaseDate) }}</span>
+                  </div>
+                </div>
+
+                <!-- 태그 -->
+                <div v-if="product.tags" class="tags-wrapper">
+                  <span v-for="tag in parseTags(product.tags)" :key="tag" class="tag">#{{ tag }}</span>
+                </div>
+              </div>
+
+              <!-- 활동 요약 -->
+              <div class="activity-section">
+                <div class="activity-item">
+                  <span class="activity-number">{{ feeds.length }}</span>
+                  <span class="activity-label">피드</span>
+                </div>
+                <div class="activity-divider"></div>
+                <div class="activity-item">
+                  <span class="activity-number">{{ battles.length }}</span>
+                  <span class="activity-label">배틀</span>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
+      </template>
+    </main>
 
-        <!-- 에러 상태 -->
-        <div v-else-if="error" class="error-container">
-          <div class="error-message">
-            <h3>상품을 불러올 수 없습니다</h3>
-            <p>{{ error }}</p>
-            <button @click="fetchProductData" class="retry-btn">다시 시도</button>
-          </div>
-        </div>
-
-        <!-- 상품 정보 -->
-        <template v-else-if="product">
-          <!-- 제품 헤더 -->
-          <ProductHeader
-              v-if="product"
-              :product="product"
-              :is-logged-in="isLoggedIn"
-          />
-
-          <!-- 이미지 갤러리 -->
-          <ImageGallery
-              v-if="product"
-              :product="product"
-              :current-image-index="currentImageIndex"
-              @update:current-image-index="currentImageIndex = $event"
-          />
-
-          <!-- 제품 정보 -->
-          <ProductInfo
-              v-if="product"
-              :product="product"
-          />
-
-          <!-- 액션 버튼 섹션 -->
-          <ActionSection
-              v-if="product"
-              :is-logged-in="isLoggedIn"
-              :product="product"
-              :user-reaction="userReaction"
-              :action-loading="actionLoading"
-              @bookmark="handleBookmarkAction"
-              @share="handleShareAction"
-              @like="toggleLike"
-              @interest="toggleInterest"
-              @wish="toggleWish"
-          />
-
-          <!-- 리뷰 섹션 -->
-          <ReviewSection
-              :product-id="product.id"
-              :is-logged-in="isLoggedIn"
-              @write-review="handleWriteReviewAction"
-              @refresh-product="fetchProductData"
-          />
-
-          <!-- 개인거래 섹션 -->
-          <TradeSection
-              v-if="product && oneMouthTrades"
-              :trades="oneMouthTrades"
-              :is-logged-in="isLoggedIn"
-              :product-id="product.id"
-              @create-trade="createTrade"
-              @view-trade="viewTrade"
-          />
-        </template>
-      </main>
-    </div>
-
-    <!-- 로그인 유도 모달 -->
+    <!-- 로그인 모달 -->
     <LoginModal
         v-if="showLoginModal"
         :title="loginModalTitle"
@@ -115,70 +248,83 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth.js'
 import { productService } from '@/services/ProductService.js'
 
-// 컴포넌트 임포트
-import ProductHeader from '@/components/product/detail/ProductHeader.vue'
-import ImageGallery from '@/components/product/detail/ImageGallery.vue'
-import ProductInfo from '@/components/product/detail/ProductInfo.vue'
-import ActionSection from '@/components/product/detail/ActionSection.vue'
-import ReviewSection from '@/components/product/detail/ReviewSection.vue'
-import TradeSection from '@/components/product/detail/TradeSection.vue'
+import FeedCard from '@/components/product/detail/FeedCard.vue'
+import BattleCard from '@/components/product/detail/BattleCard.vue'
 import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { isLoggedIn, userId } = useAuth()
 
-const {
-  user,
-  isLoggedIn,
-  userId,
-  userNickname
-} = useAuth()
+const defaultImage = 'https://via.placeholder.com/400'
 
-// Reactive data
 const loading = ref(true)
 const error = ref(null)
 const actionLoading = ref(false)
 const showLoginModal = ref(false)
 const loginModalTitle = ref('')
 const loginModalMessage = ref('')
+const activeTab = ref('feed')
 
 const product = ref(null)
-const currentImageIndex = ref(0)
-const oneMouthTrades = ref([])
+const feeds = ref([])
+const battles = ref([])
+const userReaction = ref({ hasLike: false, hasBookmark: false })
 
-const userReaction = ref({
-  hasLike: false,
-  hasBookmark: false,
-  hasInterest: false,
-  hasShare: false,
-  hasWish: false
-})
-
-// Computed
 const isOwner = computed(() => {
-  return isLoggedIn.value &&
-      userId.value &&
-      product.value?.creatorId &&
-      userId.value === product.value.creatorId
+  return isLoggedIn.value && userId.value && product.value?.creatorId === userId.value
 })
 
-// 데이터 로드
+// 상세 정보 섹션 표시 여부
+const hasDetailContent = computed(() => {
+  if (!product.value) return false
+  return product.value.description || product.value.feature ||
+      product.value.distributor || product.value.releaseDate || product.value.tags
+})
+
+// 상세 그리드 표시 여부
+const hasDetailGrid = computed(() => {
+  if (!product.value) return false
+  return product.value.feature || product.value.distributor || product.value.releaseDate
+})
+
+const formatPrice = (price) => {
+  if (!price) return '0'
+  const num = typeof price === 'string' ? parseInt(price.replace(/,/g, '')) : price
+  return num.toLocaleString()
+}
+
+const formatCount = (count) => {
+  if (!count) return '0'
+  if (count >= 10000) return (count / 10000).toFixed(1) + '만'
+  if (count >= 1000) return (count / 1000).toFixed(1) + 'k'
+  return count.toString()
+}
+
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
+
+const parseTags = (tags) => {
+  if (!tags) return []
+  return tags.split(';').map(tag => tag.trim()).filter(tag => tag)
+}
+
 const fetchProductData = async () => {
   try {
     loading.value = true
     error.value = null
-
     const productId = route.params.id
     const response = await productService.getProduct(productId)
 
     if (response.success) {
       product.value = response.data
-
       if (isLoggedIn.value && response.data.userReaction) {
         userReaction.value = response.data.userReaction
       }
-
-      await fetchOneMouthTrades(productId)
+      await Promise.all([fetchFeeds(productId), fetchBattles(productId)])
     } else {
       error.value = response.error || '상품을 불러올 수 없습니다.'
     }
@@ -189,70 +335,105 @@ const fetchProductData = async () => {
   }
 }
 
-const fetchOneMouthTrades = async (productId) => {
+const fetchFeeds = async (productId) => {
   try {
-    // 샘플 데이터
-    oneMouthTrades.value = [
-      {
-        oneMouthId: 1,
-        title: '스타벅스 콜드브루 할인 판매',
-        sellingPrice: 3500,
-        tradeLocation: '강남역',
-        viewCount: 45,
-        oneMouthStatus: 'ON_SALE',
-        thumbnailUrl: ''
-      },
-      {
-        oneMouthId: 2,
-        title: '급처! 스타벅스 쿠폰',
-        sellingPrice: 3000,
-        tradeLocation: '홍대입구',
-        viewCount: 32,
-        oneMouthStatus: 'RESERVED',
-        thumbnailUrl: ''
-      }
+    feeds.value = [
+      { id: 1, user: '커피러버', avatar: '☕', content: '오늘도 아아로 시작! 역시 스벅 아메리카노가 최고예요.', likes: 24, comments: 5, time: '2시간 전', image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&h=450&fit=crop', liked: false },
+      { id: 2, user: '맛집탐방러', avatar: '🍽️', content: '투썸이랑 비교해봤는데 확실히 스벅이 더 진하고 깔끔해요!', likes: 18, comments: 12, time: '5시간 전', image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&h=450&fit=crop', liked: false }
     ]
   } catch (err) {
-    console.error('개인거래 목록 조회 실패:', err)
-    oneMouthTrades.value = []
+    console.error('피드 조회 실패:', err)
   }
 }
 
-// 인증 관련 액션
+const fetchBattles = async (productId) => {
+  try {
+    battles.value = [
+      { id: 1, title: '최고의 아메리카노는?', status: 'LIVE', totalVotes: 2847, participants: 1203, endDate: '2일 남음',
+        items: [
+          { rank: 1, name: '스타벅스', votes: 42, isThis: true },
+          { rank: 2, name: '투썸플레이스', votes: 28, isThis: false },
+          { rank: 3, name: '이디야', votes: 18, isThis: false },
+          { rank: 4, name: '메가커피', votes: 12, isThis: false }
+        ]
+      },
+      { id: 2, title: '가성비 카페 음료 TOP5', status: 'ENDED', totalVotes: 5621, participants: 2891, endDate: '종료됨',
+        items: [
+          { rank: 1, name: '메가커피', votes: 35, isThis: false },
+          { rank: 2, name: '컴포즈', votes: 25, isThis: false },
+          { rank: 3, name: '스타벅스', votes: 20, isThis: true }
+        ]
+      }
+    ]
+  } catch (err) {
+    console.error('배틀 조회 실패:', err)
+  }
+}
+
 const showLoginRequiredModal = (title, message) => {
   loginModalTitle.value = title
   loginModalMessage.value = message
   showLoginModal.value = true
 }
+const closeLoginModal = () => { showLoginModal.value = false }
 
-const closeLoginModal = () => {
-  showLoginModal.value = false
+const handleLikeAction = async () => {
+  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '좋아요를 누르려면 로그인해주세요.')
+  try {
+    actionLoading.value = true
+    const response = await productService.likeProduct(product.value.id)
+    if (response.success) userReaction.value.hasLike = !userReaction.value.hasLike
+  } catch (err) { console.error('좋아요 실패:', err) }
+  finally { actionLoading.value = false }
 }
 
 const handleBookmarkAction = async () => {
-  if (!isLoggedIn.value) {
-    showLoginRequiredModal('로그인이 필요합니다', '상품을 찜하려면 로그인해주세요.')
-    return
-  }
-  await toggleBookmark()
+  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '저장하려면 로그인해주세요.')
+  try {
+    actionLoading.value = true
+    const response = await productService.bookmarkProduct(product.value.id)
+    if (response.success) userReaction.value.hasBookmark = !userReaction.value.hasBookmark
+  } catch (err) { console.error('북마크 실패:', err) }
+  finally { actionLoading.value = false }
 }
 
 const handleShareAction = async () => {
-  await shareToSystem()
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: product.value.name, url: window.location.href })
+    } else {
+      await navigator.clipboard.writeText(window.location.href)
+      alert('링크가 복사되었습니다!')
+    }
+  } catch (err) { console.log('공유 취소:', err) }
 }
 
-const handleWriteReviewAction = () => {
-  if (!isLoggedIn.value) {
-    showLoginRequiredModal('로그인이 필요합니다', '리뷰를 작성하려면 로그인해주세요.')
-    return
+const handleWriteFeed = () => {
+  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '피드를 작성하려면 로그인해주세요.')
+  router.push(`/products/${product.value.id}/feed/write`)
+}
+
+const handleFeedLike = (feedId) => {
+  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '좋아요를 누르려면 로그인해주세요.')
+  const feed = feeds.value.find(f => f.id === feedId)
+  if (feed) {
+    feed.liked = !feed.liked
+    feed.likes += feed.liked ? 1 : -1
   }
-  writeReview()
 }
 
-// 상품 관리
-const editProduct = () => {
-  router.push(`/products/${product.value.id}/edit`)
+const handleCreateBattle = () => {
+  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '배틀을 만들려면 로그인해주세요.')
+  router.push(`/battle/create?productId=${product.value.id}`)
 }
+
+const handleVote = (battleId) => {
+  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '투표하려면 로그인해주세요.')
+  router.push(`/battle/${battleId}/vote`)
+}
+
+const viewBattle = (battleId) => { router.push(`/battle/${battleId}`) }
+const editProduct = () => { router.push(`/products/${product.value.id}/edit`) }
 
 const deleteProduct = async () => {
   if (confirm('정말로 이 상품을 삭제하시겠습니까?')) {
@@ -260,374 +441,477 @@ const deleteProduct = async () => {
       await productService.deleteProduct(product.value.id)
       alert('상품이 삭제되었습니다.')
       router.push('/products')
-    } catch (err) {
-      console.error('상품 삭제 실패:', err)
-      alert('상품 삭제에 실패했습니다.')
-    }
+    } catch (err) { alert('삭제에 실패했습니다.') }
   }
 }
 
-// 리액션
-const toggleBookmark = async () => {
-  try {
-    actionLoading.value = true
-    const response = await productService.bookmarkProduct(product.value.id)
+const goBack = () => { router.go(-1) }
 
-    if (response.success) {
-      userReaction.value.hasBookmark = !userReaction.value.hasBookmark
-      updateLikeCount()
-    }
-  } catch (err) {
-    console.error('찜하기 실패:', err)
-    alert('찜하기 처리 중 오류가 발생했습니다.')
-  } finally {
-    actionLoading.value = false
-  }
-}
-
-const toggleLike = async () => {
-  try {
-    actionLoading.value = true
-    const response = await productService.likeProduct(product.value.id)
-
-    if (response.success) {
-      userReaction.value.hasLike = !userReaction.value.hasLike
-      updateLikeCount()
-    }
-  } catch (err) {
-    console.error('좋아요 실패:', err)
-    alert('좋아요 처리 중 오류가 발생했습니다.')
-  } finally {
-    actionLoading.value = false
-  }
-}
-
-const toggleInterest = async () => {
-  try {
-    actionLoading.value = true
-    const response = await productService.toggleProductReaction(product.value.id, 'INTEREST')
-
-    if (response.success) {
-      userReaction.value.hasInterest = !userReaction.value.hasInterest
-    }
-  } catch (err) {
-    console.error('관심상품 실패:', err)
-    alert('관심상품 처리 중 오류가 발생했습니다.')
-  } finally {
-    actionLoading.value = false
-  }
-}
-
-const toggleWish = async () => {
-  try {
-    actionLoading.value = true
-    const response = await productService.toggleProductReaction(product.value.id, 'WISH')
-
-    if (response.success) {
-      userReaction.value.hasWish = !userReaction.value.hasWish
-    }
-  } catch (err) {
-    console.error('위시리스트 실패:', err)
-    alert('위시리스트 처리 중 오류가 발생했습니다.')
-  } finally {
-    actionLoading.value = false
-  }
-}
-
-const updateLikeCount = () => {
-  const hasAnyPositiveReaction = userReaction.value.hasLike || userReaction.value.hasBookmark
-  if (hasAnyPositiveReaction) {
-    product.value.likeCount = (product.value.likeCount || 0) + 1
-  } else {
-    product.value.likeCount = Math.max((product.value.likeCount || 0) - 1, 0)
-  }
-}
-
-const shareToSystem = async () => {
-  try {
-    if (navigator.share) {
-      await navigator.share({
-        title: product.value.name,
-        text: product.value.description,
-        url: window.location.href
-      })
-    } else {
-      await navigator.clipboard.writeText(window.location.href)
-      alert('링크가 클립보드에 복사되었습니다!')
-    }
-
-    if (isLoggedIn.value) {
-      try {
-        await productService.toggleProductReaction(product.value.id, 'SHARE')
-      } catch (err) {
-        console.warn('공유 통계 업데이트 실패:', err)
-      }
-    }
-  } catch (err) {
-    console.log('공유 취소됨:', err)
-  }
-}
-
-// 리뷰
-const writeReview = () => {
-  router.push(`/products/${product.value.id}/review`)
-}
-
-// 개인거래
-const createTrade = () => {
-  if (!isLoggedIn.value) {
-    showLoginRequiredModal('로그인이 필요합니다', '거래를 등록하려면 로그인해주세요.')
-    return
-  }
-  router.push(`/one-mouth/create?productId=${product.value.id}`)
-}
-
-const viewTrade = (tradeId) => {
-  router.push(`/one-mouth/${tradeId}`)
-}
-
-// 네비게이션
-const goBack = () => {
-  router.go(-1)
-}
-
-// 라이프사이클
-onMounted(() => {
-  fetchProductData()
-})
+onMounted(() => { fetchProductData() })
 
 watch(() => route.params.id, (newId, oldId) => {
-  if (newId && newId !== oldId) {
-    fetchProductData()
-  }
+  if (newId && newId !== oldId) fetchProductData()
 })
 
-watch(isLoggedIn, (newValue) => {
-  if (newValue) {
-    fetchProductData()
-  } else {
-    userReaction.value = {
-      hasLike: false,
-      hasBookmark: false,
-      hasInterest: false,
-      hasShare: false,
-      hasWish: false
-    }
-  }
+watch(isLoggedIn, (val) => {
+  if (val) fetchProductData()
+  else userReaction.value = { hasLike: false, hasBookmark: false }
 })
 </script>
 
 <style scoped>
+* { box-sizing: border-box; }
+
 .product-detail-view {
   min-height: 100vh;
-  background: #FAFAFA;
-  color: #1F2937;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.6;
-  letter-spacing: -0.01em;
+  background: #fff;
 }
 
+/* Header */
 .header {
-  background: white;
-  border-bottom: 1px solid #E5E7EB;
+  background: #fff;
+  border-bottom: 1px solid #eee;
   position: sticky;
   top: 0;
   z-index: 100;
 }
-
 .header-container {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px;
+  height: 56px;
   display: flex;
   align-items: center;
-  height: 64px;
   gap: 16px;
 }
-
 .back-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s;
-  color: #6B7280;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-
-.back-btn:hover {
-  background: #F3F4F6;
-  color: #111827;
-}
-
+.back-btn:hover { background: #f5f5f5; }
 .breadcrumb {
-  color: #9CA3AF;
-  font-size: 14px;
   flex: 1;
-  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 13px;
+  color: #999;
 }
-
-.breadcrumb a {
-  color: #059669;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.breadcrumb a:hover {
-  color: #047857;
-}
-
-.breadcrumb .separator {
-  color: #D1D5DB;
-}
-
-.breadcrumb .current {
-  color: #1F2937;
-  font-weight: 600;
-}
-
-.header-actions {
-  display: flex;
-  gap: 8px;
-}
-
+.breadcrumb a { color: #666; text-decoration: none; }
+.breadcrumb a:hover { color: #7c3aed; }
+.breadcrumb .separator { color: #ddd; }
+.breadcrumb .current { color: #333; font-weight: 500; }
+.header-actions { display: flex; gap: 8px; }
 .edit-btn, .delete-btn {
-  padding: 8px 16px;
-  border: 1px solid;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: -0.01em;
+  transition: all 0.15s;
 }
+.edit-btn { border: 1px solid #ddd; background: #fff; color: #333; }
+.edit-btn:hover { background: #f5f5f5; }
+.delete-btn { border: 1px solid #fecaca; background: #fff; color: #dc2626; }
+.delete-btn:hover { background: #fef2f2; }
 
-.edit-btn {
-  border-color: #D1D5DB;
-  color: #374151;
-  background: white;
-}
-
-.edit-btn:hover {
-  background: #F9FAFB;
-  border-color: #9CA3AF;
-}
-
-.delete-btn {
-  border-color: #FEE2E2;
-  color: #DC2626;
-  background: #FEF2F2;
-}
-
-.delete-btn:hover {
-  background: #FEE2E2;
-  border-color: #FECACA;
-}
-
+/* Main */
 .main-container {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 32px 24px 80px;
+  padding: 24px;
 }
-
-.main-content {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
 .loading-container, .error-container {
   padding: 80px 24px;
   text-align: center;
 }
-
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #F3F4F6;
-  border-top: 3px solid #059669;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #eee;
+  border-top-color: #7c3aed;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin: 0 auto 20px;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-container h3 { font-size: 16px; color: #333; margin: 0 0 8px; }
+.error-container p { font-size: 14px; color: #666; margin: 0; }
+.retry-btn {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Layout */
+.content-layout {
+  display: flex;
+  gap: 40px;
+}
+.main-content {
+  flex: 1;
+  min-width: 0;
+}
+.product-sidebar {
+  width: 380px;
+  flex-shrink: 0;
+}
+.sidebar-sticky {
+  position: sticky;
+  top: 80px;
 }
 
-.loading-container p {
-  font-size: 15px;
-  color: #6B7280;
+/* Tab Navigation */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s;
+}
+.tab-btn:hover { color: #333; }
+.tab-btn.active { background: #fff; color: #333; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.tab-count {
+  padding: 2px 8px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 10px;
+  font-size: 12px;
+}
+.tab-btn.active .tab-count { background: #7c3aed; color: #fff; }
+
+/* Tab Content */
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Feed Write Box */
+.feed-write-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.feed-input {
+  flex: 1;
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+.feed-input::placeholder { color: #999; }
+.write-btn {
+  padding: 10px 20px;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.write-btn:hover { background: #6d28d9; }
+
+/* Battle Create */
+.battle-create-btn {
+  width: 100%;
+  padding: 16px;
+  background: #fff;
+  border: 1px dashed #ddd;
+  border-radius: 12px;
+  color: #7c3aed;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s;
+}
+.battle-create-btn:hover { border-color: #7c3aed; background: #faf5ff; }
+
+/* Empty State */
+.empty-state {
+  padding: 60px 24px;
+  text-align: center;
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-size: 15px; font-weight: 500; color: #333; margin: 0 0 4px; }
+.empty-desc { font-size: 13px; color: #999; margin: 0; }
+
+/* Product Sidebar */
+.product-image-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+.product-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.product-info-section {
+  padding: 20px 0;
+  border-bottom: 1px solid #eee;
+}
+.info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.brand {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c3aed;
+}
+.category-badge {
+  padding: 4px 10px;
+  background: #f5f5f5;
+  color: #666;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.product-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+.product-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+}
+.currency {
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  margin-left: 2px;
+}
+
+/* Stats */
+.stats-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+}
+
+/* Actions */
+.action-section {
+  display: flex;
+  gap: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+.action-btn {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.action-btn:hover { background: #f5f5f5; }
+.action-btn.active { border-color: #7c3aed; color: #7c3aed; background: #faf5ff; }
+
+/* Detail Section - 조건부 여백 처리 */
+.detail-section {
+  padding: 20px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-block.description {
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+.detail-block.description.has-more {
+  margin-bottom: 16px;
+}
+.detail-block.description p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #555;
+}
+
+.detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.detail-grid.has-tags {
+  margin-bottom: 16px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.detail-label {
+  font-size: 13px;
+  color: #999;
+}
+.detail-value {
+  font-size: 13px;
+  color: #333;
   font-weight: 500;
 }
 
-.error-message h3 {
-  color: #DC2626;
-  margin-bottom: 12px;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
-
-.error-message p {
-  color: #6B7280;
-  margin-bottom: 24px;
-  font-size: 14px;
-}
-
-.retry-btn {
-  background: #059669;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
+.tag {
+  padding: 6px 12px;
+  background: #f5f5f5;
+  color: #666;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.2s;
-  letter-spacing: -0.01em;
+  transition: all 0.15s;
+}
+.tag:hover { background: #ede9fe; color: #7c3aed; }
+
+/* Activity */
+.activity-section {
+  display: flex;
+  align-items: center;
+  padding: 20px 0;
+}
+.activity-item {
+  flex: 1;
+  text-align: center;
+}
+.activity-number {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+}
+.activity-label {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+.activity-divider {
+  width: 1px;
+  height: 40px;
+  background: #eee;
 }
 
-.retry-btn:hover {
-  background: #047857;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+/* FeedCard/BattleCard 이미지 4:3 비율 */
+.tab-content :deep(.feed-image img) {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  width: 100%;
+  max-height: none;
+}
+
+.tab-content :deep(.feed-card),
+.tab-content :deep(.battle-card) {
+  border: 1px solid #eee;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .content-layout { flex-direction: column-reverse; gap: 24px; }
+  .product-sidebar { width: 100%; }
+  .sidebar-sticky { position: relative; top: 0; display: flex; flex-wrap: wrap; gap: 20px; }
+  .product-image-wrapper { width: 200px; flex-shrink: 0; }
+  .product-info-section { flex: 1; padding: 0; border: none; }
+  .stats-section, .action-section, .detail-section, .activity-section { display: none; }
 }
 
 @media (max-width: 768px) {
-  .main-container {
-    padding: 24px 16px 60px;
-  }
-
-  .header-container {
-    padding: 0 16px;
-    height: 56px;
-  }
-
-  .header-actions {
-    display: none;
-  }
-
-  .breadcrumb {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 480px) {
-  .main-container {
-    padding: 16px 12px 60px;
-  }
-
-  .main-content {
-    border-radius: 12px;
-  }
+  .main-container { padding: 16px; }
+  .header-container { padding: 0 16px; }
+  .breadcrumb { display: none; }
+  .sidebar-sticky { flex-direction: column; }
+  .product-image-wrapper { width: 100%; }
+  .stats-section, .action-section { display: flex; }
+  .detail-section, .activity-section { display: block; }
 }
 </style>
