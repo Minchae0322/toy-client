@@ -133,8 +133,12 @@ class FeedService extends BaseApiService {
   async getFeedsWithCursor(searchCondition = {}) {
     const validatedCondition = this.validateSearchCondition(searchCondition)
     const response = await this.get('/feeds/scroll', this.removeEmptyParams(validatedCondition))
-    if (response.success && response.data?.feeds) {
-      response.data.feeds = this.normalizeFeedListResponse(response.data.feeds)
+    if (response.success && response.data) {
+      // API 응답이 content 또는 feeds 필드를 사용할 수 있음
+      const feedArray = response.data.content || response.data.feeds || []
+      response.data.feeds = this.normalizeFeedListResponse(feedArray)
+      // content 필드도 동일하게 유지 (호환성)
+      response.data.content = response.data.feeds
     }
     return response
   }
