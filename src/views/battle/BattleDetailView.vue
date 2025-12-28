@@ -250,6 +250,15 @@
           </div>
         </div>
       </div>
+
+      <!-- Share Modal -->
+      <ShareModal
+          :visible="showShareModal"
+          :title="battle?.title || ''"
+          :description="battle?.description || ''"
+          :image="getBattleImage()"
+          @close="closeShareModal"
+      />
     </template>
   </div>
 </template>
@@ -257,9 +266,13 @@
 <script>
 import { battleService, battleUtils } from '@/services/BattleService.js'
 import { fileService } from '@/services/FileService.js'
+import ShareModal from '@/components/common/ShareModal.vue'
 
 export default {
   name: 'BattleDetail',
+  components: {
+    ShareModal
+  },
   data() {
     return {
       battleUtils,
@@ -276,7 +289,8 @@ export default {
         brand: '',
         imageFile: null,
         imagePreview: null
-      }
+      },
+      showShareModal: false
     }
   },
   computed: {
@@ -609,17 +623,17 @@ export default {
     },
 
     shareBattle() {
-      if (navigator.share) {
-        navigator.share({
-          title: this.battle.title,
-          text: this.battle.description,
-          url: window.location.href
-        }).catch(console.error)
-      } else {
-        // 복사 기능
-        navigator.clipboard.writeText(window.location.href)
-        alert('링크가 복사되었습니다!')
-      }
+      this.showShareModal = true
+    },
+
+    closeShareModal() {
+      this.showShareModal = false
+    },
+
+    getBattleImage() {
+      // 배틀의 첫 번째 아이템 이미지를 반환
+      const firstItem = this.sortedItems?.[0]
+      return firstItem ? this.getItemImage(firstItem) : ''
     }
   },
   beforeUnmount() {

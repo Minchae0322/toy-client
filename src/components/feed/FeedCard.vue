@@ -66,6 +66,11 @@
             </svg>
             <span>{{ formatCount(feed.commentCount || 0) }}</span>
           </button>
+          <button @click="handleShare" class="action-btn">
+            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+          </button>
         </div>
         <button @click="handleSave" :class="['action-btn', 'save-btn', { saved: localIsSaved }]">
           <svg class="action-icon" :fill="localIsSaved ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,12 +95,23 @@
         </div>
       </div>
     </div>
+
+    <!-- Share Modal -->
+    <ShareModal
+        :visible="showShareModal"
+        :title="feed.productName"
+        :description="feed.reviewSummary || ''"
+        :url="shareUrl"
+        :image="shareImage"
+        @close="closeShareModal"
+    />
   </article>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { feedService, feedUtils } from '@/services/FeedService';
+import ShareModal from '@/components/common/ShareModal.vue';
 
 const props = defineProps({
   feed: { type: Object, required: true },
@@ -104,9 +120,10 @@ const props = defineProps({
   isSaved: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['like', 'hot', 'save', 'comment', 'menu', 'search-tag', 'update', 'click']);
+const emit = defineEmits(['like', 'hot', 'save', 'comment', 'menu', 'search-tag', 'update', 'click', 'share']);
 
 const showLikeAnimation = ref(false);
+const showShareModal = ref(false);
 const isLikeLoading = ref(false);
 const isHotLoading = ref(false);
 
@@ -244,6 +261,12 @@ const handleSave = (event) => { event.stopPropagation(); localIsSaved.value = !l
 const handleComment = (event) => { event.stopPropagation(); emit('comment', props.feed.feedId); };
 const handleMenu = (event) => { event.stopPropagation(); emit('menu', props.feed.feedId); };
 const handleHashtagClick = (tag, event) => { event.stopPropagation(); emit('search-tag', tag); };
+const handleShare = (event) => { event.stopPropagation(); showShareModal.value = true; emit('share', props.feed.feedId); };
+const closeShareModal = () => { showShareModal.value = false; };
+
+// 공유용 정보
+const shareUrl = computed(() => `${window.location.origin}/feed/${props.feed.feedId}`);
+const shareImage = computed(() => props.feed.thumbnailUrl?.fileUrl || '');
 
 const formatDate = (dateString) => feedUtils.formatDate(dateString);
 const formatPrice = (price) => feedUtils.formatPrice(price);
