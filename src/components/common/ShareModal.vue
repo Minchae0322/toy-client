@@ -150,9 +150,25 @@ const shareKakao = () => {
       }
     })
   } else {
-    // Kakao SDK가 없는 경우 카카오톡 앱으로 이동
-    const kakaoUrl = `https://story.kakao.com/share?url=${encodeURIComponent(shareUrl.value)}`
-    window.open(kakaoUrl, '_blank', 'width=600,height=400')
+    // Kakao SDK가 없는 경우 카카오톡 공유 URL scheme 사용
+    const kakaoTalkUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=YOUR_APP_KEY&validation_action=default&validation_params=${encodeURIComponent(JSON.stringify({
+      title: props.title || '공유하기',
+      description: props.description || '',
+      imageUrl: props.image || '',
+      link: { webUrl: shareUrl.value, mobileWebUrl: shareUrl.value }
+    }))}`
+
+    // 카카오톡 앱 딥링크 시도 (모바일)
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    if (isMobile) {
+      // 모바일에서는 카카오톡 앱으로 공유 시도
+      const text = `${props.title || ''}\n${props.description || ''}\n${shareUrl.value}`
+      window.location.href = `kakaotalk://msg/text/send?text=${encodeURIComponent(text)}`
+    } else {
+      // 데스크탑에서는 링크 복사 안내
+      copyLink()
+      alert('링크가 복사되었습니다. 카카오톡에서 붙여넣기 해주세요.')
+    }
   }
   close()
 }

@@ -109,7 +109,7 @@ const commentPagination = ref({
 })
 
 const imageList = computed(() => feed.value?.attachmentFiles || [])
-const getProductName = computed(() => feed.value?.product?.name || feed.value?.productName || '상품명 없음')
+const getProductName = computed(() => feed.value?.product?.name || feed.value?.productNameCustom || feed.value?.productName || '상품명 없음')
 const currentUserProfile = computed(() => {
   try {
     const token = localStorage.getItem('access_token')

@@ -99,7 +99,7 @@
     <!-- Share Modal -->
     <ShareModal
         :visible="showShareModal"
-        :title="feed.productName"
+        :title="shareTitle"
         :description="feed.reviewSummary || ''"
         :url="shareUrl"
         :image="shareImage"
@@ -267,6 +267,7 @@ const closeShareModal = () => { showShareModal.value = false; };
 // 공유용 정보
 const shareUrl = computed(() => `${window.location.origin}/feed/${props.feed.feedId}`);
 const shareImage = computed(() => props.feed.thumbnailUrl?.fileUrl || '');
+const shareTitle = computed(() => props.feed.product?.name || props.feed.productNameCustom || props.feed.productName || '');
 
 const formatDate = (dateString) => feedUtils.formatDate(dateString);
 const formatPrice = (price) => feedUtils.formatPrice(price);
