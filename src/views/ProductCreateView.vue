@@ -8,66 +8,346 @@
 
     <!-- 메인 컨텐츠 -->
     <template v-if="isLoggedIn && !authLoading">
-      <!-- 페이지 헤더 -->
-      <PageHeader :user-nickname="userNickname" :user-role="user?.role" />
+      <!-- 헤더 -->
+      <header class="page-header">
+        <div class="header-inner">
+          <button class="back-btn" @click="goBack">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12.5 15L7.5 10L12.5 5"/>
+            </svg>
+          </button>
+          <div class="header-title">
+            <h1>새 제품 등록</h1>
+            <p class="header-subtitle">제품 정보를 입력하여 등록해주세요</p>
+          </div>
+          <div class="header-user">
+            <span class="user-badge">{{ user?.role === 'ADMIN' ? '관리자' : '판매자' }}</span>
+            <span class="user-name">{{ userNickname }}</span>
+          </div>
+        </div>
+      </header>
 
-      <!-- 폼 컨테이너 -->
-      <div class="form-container">
+      <!-- 컨텐츠 레이아웃 -->
+      <main class="main-content">
         <form @submit.prevent="handleSubmit" ref="productForm">
-          <!-- 필수 안내 -->
-          <RequiredNotice />
+          <div class="content-layout">
+            <!-- 왼쪽: 폼 영역 -->
+            <div class="form-area">
+              <!-- 기본 정보 -->
+              <section class="form-section">
+                <div class="section-header">
+                  <h2>기본 정보</h2>
+                  <span class="required-badge">필수</span>
+                </div>
 
-          <!-- 기본 정보 -->
-          <BasicInfoSection
-              v-model:form="form"
-              :categories="categories"
-              :errors="errors"
-              :is-logged-in="isLoggedIn"
-              @validate="validateField"
-          />
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label">
+                      제품명
+                      <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        v-model="form.name"
+                        class="form-input"
+                        :class="{ 'has-error': errors.name }"
+                        placeholder="제품명을 입력하세요"
+                        @blur="validateField('name')"
+                    />
+                    <span v-if="errors.name" class="error-text">{{ errors.name }}</span>
+                  </div>
 
-          <!-- 상세 정보 -->
-          <DetailInfoSection
-              v-model:form="form"
-              v-model:selected-features="selectedFeatures"
-              v-model:selected-tags="selectedTags"
-              v-model:custom-feature="customFeature"
-              :is-logged-in="isLoggedIn"
-              @add-custom-feature="addCustomFeature"
-              @add-tag="addTag"
-              @remove-tag="removeTag"
-              ref="detailSectionRef"
-          />
+                  <div class="form-group">
+                    <label class="form-label">
+                      브랜드
+                      <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        v-model="form.brand"
+                        class="form-input"
+                        :class="{ 'has-error': errors.brand }"
+                        placeholder="브랜드명을 입력하세요"
+                        @blur="validateField('brand')"
+                    />
+                    <span v-if="errors.brand" class="error-text">{{ errors.brand }}</span>
+                  </div>
 
-          <!-- 이미지 업로드 -->
-          <ImageUploadSection
-              v-model:thumbnail-file="thumbnailFile"
-              v-model:additional-files="additionalFiles"
-              :errors="errors"
-              :is-logged-in="isLoggedIn"
-              @remove-thumbnail="removeThumbnail"
-              @remove-additional="removeAdditionalImage"
-              ref="imageSectionRef"
-          />
+                  <div class="form-group">
+                    <label class="form-label">
+                      카테고리
+                      <span class="required">*</span>
+                    </label>
+                    <select
+                        v-model="form.categoryId"
+                        class="form-select"
+                        :class="{ 'has-error': errors.categoryId }"
+                        @change="validateField('categoryId')"
+                    >
+                      <option :value="null" disabled>카테고리 선택</option>
+                      <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                        {{ cat.name }}
+                      </option>
+                    </select>
+                    <span v-if="errors.categoryId" class="error-text">{{ errors.categoryId }}</span>
+                  </div>
 
-          <!-- 작성 완료율 -->
-          <CompletionStatus
-              :completion-percentage="completionPercentage"
-              :form="form"
-              :thumbnail-file="thumbnailFile"
-          />
+                  <div class="form-group">
+                    <label class="form-label">
+                      가격
+                      <span class="required">*</span>
+                    </label>
+                    <div class="input-with-suffix">
+                      <input
+                          type="text"
+                          v-model="form.price"
+                          class="form-input"
+                          :class="{ 'has-error': errors.price }"
+                          placeholder="0"
+                          @blur="validateField('price')"
+                      />
+                      <span class="input-suffix">원</span>
+                    </div>
+                    <span v-if="errors.price" class="error-text">{{ errors.price }}</span>
+                  </div>
+                </div>
+              </section>
 
-          <!-- 폼 액션 -->
-          <FormActions
-              :can-submit="canSubmit"
-              :is-loading="isLoading"
-              :is-logged-in="isLoggedIn"
-              :is-form-valid="isFormValid"
-              :completion-percentage="completionPercentage"
-              @cancel="goBack"
-          />
+              <!-- 상세 정보 -->
+              <section class="form-section">
+                <div class="section-header">
+                  <h2>상세 정보</h2>
+                  <span class="optional-badge">선택</span>
+                </div>
+
+                <div class="form-stack">
+                  <div class="form-group">
+                    <label class="form-label">제품 설명</label>
+                    <textarea
+                        v-model="form.description"
+                        class="form-textarea"
+                        placeholder="제품에 대한 상세 설명을 입력하세요"
+                        rows="4"
+                    ></textarea>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">판매처</label>
+                      <input
+                          type="text"
+                          v-model="form.distributor"
+                          class="form-input"
+                          placeholder="판매처를 입력하세요"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">출시일</label>
+                      <input
+                          type="date"
+                          v-model="form.releaseDate"
+                          class="form-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">특징</label>
+                    <div class="feature-input-row">
+                      <input
+                          type="text"
+                          v-model="customFeature"
+                          class="form-input"
+                          placeholder="특징을 입력하고 추가하세요"
+                          @keyup.enter="addCustomFeature"
+                      />
+                      <button type="button" class="add-btn" @click="addCustomFeature">추가</button>
+                    </div>
+                    <div v-if="selectedFeatures.length > 0" class="chip-list">
+                      <span v-for="(feature, idx) in selectedFeatures" :key="idx" class="chip">
+                        {{ feature }}
+                        <button type="button" class="chip-remove" @click="selectedFeatures.splice(idx, 1)">×</button>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">태그</label>
+                    <div class="tag-input-row">
+                      <input
+                          type="text"
+                          v-model="tagInput"
+                          class="form-input"
+                          placeholder="태그를 입력하고 추가하세요 (최대 10개)"
+                          @keyup.enter="addTag(tagInput); tagInput = ''"
+                      />
+                      <button type="button" class="add-btn" @click="addTag(tagInput); tagInput = ''">추가</button>
+                    </div>
+                    <div v-if="selectedTags.length > 0" class="chip-list">
+                      <span v-for="(tag, idx) in selectedTags" :key="idx" class="chip tag-chip">
+                        #{{ tag }}
+                        <button type="button" class="chip-remove" @click="removeTag(idx)">×</button>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- 이미지 업로드 -->
+              <section class="form-section">
+                <div class="section-header">
+                  <h2>제품 이미지</h2>
+                  <span class="required-badge">필수</span>
+                </div>
+
+                <div class="image-upload-area">
+                  <!-- 대표 이미지 -->
+                  <div class="upload-block">
+                    <label class="upload-label">
+                      대표 이미지
+                      <span class="required">*</span>
+                    </label>
+                    <div
+                        class="upload-zone thumbnail-zone"
+                        :class="{ 'has-file': thumbnailFile, 'has-error': errors.thumbnail }"
+                        @click="$refs.thumbnailInput.click()"
+                        @dragover.prevent
+                        @drop.prevent="handleThumbnailDrop"
+                    >
+                      <template v-if="thumbnailFile">
+                        <img :src="thumbnailFile.preview" class="preview-image" />
+                        <button type="button" class="remove-btn" @click.stop="removeThumbnail">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                          </svg>
+                        </button>
+                      </template>
+                      <template v-else>
+                        <div class="upload-placeholder">
+                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                          </svg>
+                          <span>클릭 또는 드래그하여 업로드</span>
+                          <span class="upload-hint">권장: 1:1 비율, 최대 10MB</span>
+                        </div>
+                      </template>
+                    </div>
+                    <input
+                        ref="thumbnailInput"
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        @change="handleThumbnailChange"
+                    />
+                    <span v-if="errors.thumbnail" class="error-text">{{ errors.thumbnail }}</span>
+                  </div>
+
+                  <!-- 추가 이미지 -->
+                  <div class="upload-block">
+                    <label class="upload-label">추가 이미지 (최대 5장)</label>
+                    <div class="additional-images">
+                      <div
+                          v-for="(file, idx) in additionalFiles"
+                          :key="idx"
+                          class="additional-item"
+                      >
+                        <img :src="file.preview" class="preview-image" />
+                        <button type="button" class="remove-btn" @click="removeAdditionalImage(idx)">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                          </svg>
+                        </button>
+                      </div>
+                      <div
+                          v-if="additionalFiles.length < 5"
+                          class="additional-add"
+                          @click="$refs.additionalInput.click()"
+                      >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <input
+                        ref="additionalInput"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        hidden
+                        @change="handleAdditionalChange"
+                    />
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- 오른쪽: 사이드바 -->
+            <aside class="sidebar">
+              <div class="sidebar-sticky">
+                <!-- 완료율 카드 -->
+                <div class="completion-card">
+                  <div class="completion-header">
+                    <span class="completion-label">작성 완료율</span>
+                    <span class="completion-value">{{ completionPercentage }}%</span>
+                  </div>
+                  <div class="completion-bar">
+                    <div class="completion-fill" :style="{ width: completionPercentage + '%' }"></div>
+                  </div>
+                  <ul class="completion-checklist">
+                    <li :class="{ done: form.name.trim() }">
+                      <span class="check-icon">{{ form.name.trim() ? '✓' : '○' }}</span>
+                      제품명
+                    </li>
+                    <li :class="{ done: form.brand.trim() }">
+                      <span class="check-icon">{{ form.brand.trim() ? '✓' : '○' }}</span>
+                      브랜드
+                    </li>
+                    <li :class="{ done: form.categoryId }">
+                      <span class="check-icon">{{ form.categoryId ? '✓' : '○' }}</span>
+                      카테고리
+                    </li>
+                    <li :class="{ done: form.price && form.price.trim() }">
+                      <span class="check-icon">{{ form.price && form.price.trim() ? '✓' : '○' }}</span>
+                      가격
+                    </li>
+                    <li :class="{ done: thumbnailFile }">
+                      <span class="check-icon">{{ thumbnailFile ? '✓' : '○' }}</span>
+                      대표 이미지
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="action-buttons">
+                  <button type="button" class="btn-secondary" @click="goBack">
+                    취소
+                  </button>
+                  <button
+                      type="submit"
+                      class="btn-primary"
+                      :disabled="!canSubmit"
+                  >
+                    <template v-if="isLoading">
+                      <span class="loading-spinner"></span>
+                      등록 중...
+                    </template>
+                    <template v-else>
+                      제품 등록
+                    </template>
+                  </button>
+                </div>
+
+                <!-- 임시저장 안내 -->
+                <p class="save-notice">
+                  작성 중 페이지를 벗어나면 내용이 임시저장됩니다
+                </p>
+              </div>
+            </aside>
+          </div>
         </form>
-      </div>
+      </main>
     </template>
 
     <!-- 로그인 모달 -->
@@ -93,29 +373,19 @@ import { useCategory } from '@/services/CategoryService.js'
 import { useFile } from '@/services/FileService.js'
 import { useAuth } from '@/composables/useAuth.js'
 
-// 컴포넌트 임포트
 import AuthLoading from '@/components/product/create/AuthLoading.vue'
 import AuthError from '@/components/product/create/AuthError.vue'
-import PageHeader from '@/components/product/create/PageHeader.vue'
-import RequiredNotice from '@/components/product/create/RequiredNotice.vue'
-import BasicInfoSection from '@/components/product/create/BasicInfoSection.vue'
-import DetailInfoSection from '@/components/product/create/DetailInfoSection.vue'
-import ImageUploadSection from '@/components/product/create/ImageUploadSection.vue'
-import CompletionStatus from '@/components/product/create/CompletionStatus.vue'
-import FormActions from '@/components/product/create/FormActions.vue'
 import LoginModal from '@/components/product/create/LoginModal.vue'
 import LoadingOverlay from '@/components/product/create/LoadingOverlay.vue'
 import SuccessModal from '@/components/product/create/SuccessModal.vue'
 
 const router = useRouter()
-
-// Composables
 const { user, isLoggedIn, loading: authLoading, userId, userNickname, checkAuthStatus, logout } = useAuth()
 const { createProduct, debugStatus } = useProduct()
 const { getCategories } = useCategory()
 const { uploadImage } = useFile()
 
-// 상태
+// State
 const isLoading = ref(false)
 const showSuccessModal = ref(false)
 const showLoginModal = ref(false)
@@ -125,13 +395,14 @@ const additionalFiles = ref([])
 const selectedFeatures = ref([])
 const selectedTags = ref([])
 const customFeature = ref('')
+const tagInput = ref('')
 
 // Refs
 const productForm = ref(null)
-const detailSectionRef = ref(null)
-const imageSectionRef = ref(null)
+const thumbnailInput = ref(null)
+const additionalInput = ref(null)
 
-// 폼 데이터
+// Form
 const form = reactive({
   name: '',
   brand: '',
@@ -144,7 +415,7 @@ const form = reactive({
   categoryId: null
 })
 
-// 에러
+// Errors
 const errors = reactive({
   name: '',
   brand: '',
@@ -181,34 +452,26 @@ const canSubmit = computed(() => {
   return isFormValid.value && !isLoading.value && !authLoading.value
 })
 
-// 인증 관련
+// Watch
 watch(isLoggedIn, (newValue, oldValue) => {
-  if (!newValue && oldValue) {
-    handleLoggedOut()
-  } else if (newValue && !oldValue) {
-    handleLoggedIn()
-  }
+  if (!newValue && oldValue) handleLoggedOut()
+  else if (newValue && !oldValue) handleLoggedIn()
 })
 
-// 라이프사이클
+// Lifecycle
 onMounted(async () => {
   await checkAuthenticationStatus()
-  if (isLoggedIn.value) {
-    await initializeComponent()
-  } else {
-    showAuthRequiredMessage()
-  }
+  if (isLoggedIn.value) await initializeComponent()
+  else showAuthRequiredMessage()
 })
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', beforeUnloadHandler)
   if (thumbnailFile.value?.preview) URL.revokeObjectURL(thumbnailFile.value.preview)
-  additionalFiles.value.forEach(fileObj => {
-    if (fileObj.preview) URL.revokeObjectURL(fileObj.preview)
-  })
+  additionalFiles.value.forEach(f => f.preview && URL.revokeObjectURL(f.preview))
 })
 
-// 메서드
+// Methods
 const checkAuthenticationStatus = async () => {
   try {
     const isAuthenticated = await checkAuthStatus()
@@ -224,36 +487,26 @@ const checkAuthenticationStatus = async () => {
   }
 }
 
-const showAuthRequiredMessage = () => {
-  showLoginModal.value = true
-}
+const showAuthRequiredMessage = () => { showLoginModal.value = true }
 
 const handleLoggedOut = () => {
   if (hasFormData()) {
     saveDraft()
     alert('로그아웃되었습니다. 입력하신 내용은 임시저장되었습니다.')
   }
-  router.push({
-    name: 'Login',
-    query: { reason: 'session_expired', redirect: router.currentRoute.value.fullPath }
-  })
+  router.push({ name: 'Login', query: { reason: 'session_expired', redirect: router.currentRoute.value.fullPath } })
 }
 
 const handleLoggedIn = async () => {
   await initializeComponent()
   if (localStorage.getItem('productFormDraft')) {
-    if (confirm('이전에 작성하던 내용이 있습니다. 복원하시겠습니까?')) {
-      restoreDraft()
-    }
+    if (confirm('이전에 작성하던 내용이 있습니다. 복원하시겠습니까?')) restoreDraft()
   }
   showLoginModal.value = false
 }
 
 const handleLoginFromModal = () => {
-  router.push({
-    name: 'Login',
-    query: { redirect: router.currentRoute.value.fullPath }
-  })
+  router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
 }
 
 const closeLoginModal = () => {
@@ -275,17 +528,14 @@ const initializeComponent = async () => {
 const loadCategories = async () => {
   try {
     const response = await getCategories({ isActive: true })
-    if (response.success && response.data && response.data.length > 0) {
+    if (response.success && response.data?.length > 0) {
       categories.value = response.data
-      console.log('✅ 카테고리 로딩 성공:', categories.value.length, '개')
     } else {
-      console.warn('⚠️ 카테고리 API 응답이 비어있습니다')
-      alert('카테고리를 불러올 수 없습니다. 관리자에게 문의하세요.')
+      alert('카테고리를 불러올 수 없습니다.')
       categories.value = []
     }
   } catch (error) {
-    console.error('❌ 카테고리 로딩 실패:', error)
-    alert('카테고리를 불러오는 중 오류가 발생했습니다. 페이지를 새로고침해주세요.')
+    alert('카테고리를 불러오는 중 오류가 발생했습니다.')
     categories.value = []
   }
 }
@@ -306,13 +556,9 @@ const validateField = (fieldName) => {
       if (!form.categoryId) errors.categoryId = '카테고리를 선택해주세요'
       break
     case 'price':
-      if (!form.price || form.price.trim() === '') {
-        errors.price = '가격은 필수입니다'
-      } else if (parseInt(form.price) <= 0) {
-        errors.price = '가격은 0보다 커야 합니다'
-      } else if (parseInt(form.price) > 9999999999) {
-        errors.price = '가격이 너무 큽니다'
-      }
+      if (!form.price || form.price.trim() === '') errors.price = '가격은 필수입니다'
+      else if (parseInt(form.price) <= 0) errors.price = '가격은 0보다 커야 합니다'
+      else if (parseInt(form.price) > 9999999999) errors.price = '가격이 너무 큽니다'
       break
   }
 }
@@ -322,13 +568,29 @@ const validateForm = () => {
   validateField('brand')
   validateField('categoryId')
   validateField('price')
-
   if (!thumbnailFile.value) errors.thumbnail = '대표 이미지는 필수입니다'
   else errors.thumbnail = ''
-
   errors.additionalImages = ''
-
   return !Object.values(errors).some(error => error !== '')
+}
+
+// Image handlers
+const handleThumbnailChange = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    if (thumbnailFile.value?.preview) URL.revokeObjectURL(thumbnailFile.value.preview)
+    thumbnailFile.value = { file, preview: URL.createObjectURL(file) }
+    errors.thumbnail = ''
+  }
+}
+
+const handleThumbnailDrop = (e) => {
+  const file = e.dataTransfer.files[0]
+  if (file && file.type.startsWith('image/')) {
+    if (thumbnailFile.value?.preview) URL.revokeObjectURL(thumbnailFile.value.preview)
+    thumbnailFile.value = { file, preview: URL.createObjectURL(file) }
+    errors.thumbnail = ''
+  }
 }
 
 const removeThumbnail = () => {
@@ -337,12 +599,21 @@ const removeThumbnail = () => {
   errors.thumbnail = '대표 이미지는 필수입니다'
 }
 
+const handleAdditionalChange = (e) => {
+  const files = Array.from(e.target.files)
+  const remaining = 5 - additionalFiles.value.length
+  files.slice(0, remaining).forEach(file => {
+    additionalFiles.value.push({ file, preview: URL.createObjectURL(file) })
+  })
+}
+
 const removeAdditionalImage = (index) => {
   const fileObj = additionalFiles.value[index]
   if (fileObj.preview) URL.revokeObjectURL(fileObj.preview)
   additionalFiles.value.splice(index, 1)
 }
 
+// Feature & Tag
 const addCustomFeature = () => {
   const feature = customFeature.value.trim()
   if (!feature) return
@@ -356,8 +627,9 @@ const addCustomFeature = () => {
 }
 
 const addTag = (tag) => {
-  if (!tag) return
-  if (selectedTags.value.includes(tag)) {
+  const t = tag?.trim()
+  if (!t) return
+  if (selectedTags.value.includes(t)) {
     alert('이미 추가된 태그입니다')
     return
   }
@@ -365,31 +637,27 @@ const addTag = (tag) => {
     alert('태그는 최대 10개까지입니다')
     return
   }
-  selectedTags.value.push(tag)
+  selectedTags.value.push(t)
 }
 
-const removeTag = (index) => {
-  selectedTags.value.splice(index, 1)
-}
+const removeTag = (index) => { selectedTags.value.splice(index, 1) }
 
+// Submit
 const handleSubmit = async () => {
   if (!isLoggedIn.value) {
     alert('로그인이 필요합니다')
     showAuthRequiredMessage()
     return
   }
-
   if (!userId.value) {
     alert('사용자 정보를 확인할 수 없습니다')
     await logout()
     return
   }
-
   if (!thumbnailFile.value) {
     alert('대표 이미지는 필수입니다')
     return
   }
-
   if (!validateForm()) {
     alert('입력 정보를 확인해주세요')
     return
@@ -399,16 +667,12 @@ const handleSubmit = async () => {
 
   try {
     const thumbnailUploadResult = await uploadImage(thumbnailFile.value.file, 'PRODUCT')
-    if (!thumbnailUploadResult.success) {
-      throw new Error(`대표 이미지 업로드 실패: ${thumbnailUploadResult.error}`)
-    }
+    if (!thumbnailUploadResult.success) throw new Error(`대표 이미지 업로드 실패: ${thumbnailUploadResult.error}`)
 
     const additionalUploadResults = []
     for (const fileObj of additionalFiles.value) {
       const uploadResult = await uploadImage(fileObj.file, 'PRODUCT')
-      if (!uploadResult.success) {
-        throw new Error(`추가 이미지 업로드 실패: ${uploadResult.error}`)
-      }
+      if (!uploadResult.success) throw new Error(`추가 이미지 업로드 실패: ${uploadResult.error}`)
       additionalUploadResults.push(uploadResult.data)
     }
 
@@ -469,6 +733,7 @@ const handleSubmit = async () => {
   }
 }
 
+// Draft
 const saveDraft = () => {
   if (!isLoggedIn.value) return
   const draftData = {
@@ -539,39 +804,574 @@ const beforeUnloadHandler = (event) => {
 </script>
 
 <style scoped>
+* { box-sizing: border-box; }
+
 .product-create-view {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
-  background: #FAFAFA;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background: #fff;
 }
 
-.form-container {
-  background: white;
+/* Header */
+.page-header {
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.back-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.back-btn:hover { background: #f5f5f5; }
+.header-title {
+  flex: 1;
+}
+.header-title h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+}
+.header-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 2px 0 0;
+}
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-badge {
+  padding: 4px 10px;
+  background: #f5f5f5;
+  color: #666;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Main */
+.main-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.content-layout {
+  display: flex;
+  gap: 40px;
+}
+
+.form-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar {
+  width: 320px;
+  flex-shrink: 0;
+}
+.sidebar-sticky {
+  position: sticky;
+  top: 96px;
+}
+
+/* Form Section */
+.form-section {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f5f5f5;
+}
+.section-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+}
+.required-badge {
+  padding: 3px 8px;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.optional-badge {
+  padding: 3px 8px;
+  background: #f5f5f5;
+  color: #666;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Form Elements */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+.form-label .required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+.form-input, .form-select, .form-textarea {
+  padding: 12px 14px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+.form-input::placeholder, .form-textarea::placeholder {
+  color: #bbb;
+}
+.form-input.has-error, .form-select.has-error {
+  border-color: #dc2626;
+}
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+.form-select {
+  cursor: pointer;
+}
+
+.input-with-suffix {
+  position: relative;
+}
+.input-with-suffix .form-input {
+  padding-right: 40px;
+}
+.input-suffix {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #999;
+}
+
+.error-text {
+  font-size: 12px;
+  color: #dc2626;
+}
+
+/* Feature & Tag Input */
+.feature-input-row, .tag-input-row {
+  display: flex;
+  gap: 8px;
+}
+.feature-input-row .form-input, .tag-input-row .form-input {
+  flex: 1;
+}
+.add-btn {
+  padding: 12px 20px;
+  background: #f5f5f5;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.add-btn:hover {
+  background: #eee;
+  color: #333;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f5f5f5;
   border-radius: 16px;
+  font-size: 13px;
+  color: #333;
+}
+.chip.tag-chip {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+.chip-remove {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.chip-remove:hover {
+  color: #666;
+}
+
+/* Image Upload */
+.image-upload-area {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.upload-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.upload-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+.upload-label .required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.upload-zone {
+  border: 2px dashed #e5e5e5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.upload-zone:hover {
+  border-color: #7c3aed;
+  background: #faf5ff;
+}
+.upload-zone.has-error {
+  border-color: #dc2626;
+}
+.upload-zone.has-file {
+  border-style: solid;
+  border-color: #e5e5e5;
+}
+
+.thumbnail-zone {
+  aspect-ratio: 1;
+  max-width: 280px;
+}
+.thumbnail-zone .preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-placeholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #999;
   padding: 40px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: 1px solid #F3F4F6;
+}
+.upload-placeholder span {
+  font-size: 14px;
+}
+.upload-hint {
+  font-size: 12px !important;
+  color: #bbb !important;
+}
+
+.preview-image {
+  display: block;
+}
+.remove-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.remove-btn:hover {
+  background: rgba(0,0,0,0.8);
+}
+
+.additional-images {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.additional-item {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #eee;
+}
+.additional-item .preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.additional-item .remove-btn {
+  width: 22px;
+  height: 22px;
+  top: 6px;
+  right: 6px;
+}
+.additional-add {
+  width: 100px;
+  height: 100px;
+  border: 2px dashed #e5e5e5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.additional-add:hover {
+  border-color: #7c3aed;
+  color: #7c3aed;
+  background: #faf5ff;
+}
+
+/* Sidebar */
+.completion-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.completion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.completion-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+.completion-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #7c3aed;
+}
+.completion-bar {
+  height: 6px;
+  background: #f5f5f5;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.completion-fill {
+  height: 100%;
+  background: #7c3aed;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.completion-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.completion-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #999;
+}
+.completion-checklist li.done {
+  color: #333;
+}
+.check-icon {
+  width: 18px;
+  font-size: 12px;
+}
+.completion-checklist li.done .check-icon {
+  color: #7c3aed;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.btn-primary, .btn-secondary {
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-primary {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #6d28d9;
+}
+.btn-primary:disabled {
+  background: #e5e5e5;
+  color: #999;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background: #fff;
+  color: #666;
+  border: 1px solid #e5e5e5;
+}
+.btn-secondary:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.save-notice {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .content-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    order: -1;
+  }
+  .sidebar-sticky {
+    position: relative;
+    top: 0;
+  }
+  .completion-card {
+    display: none;
+  }
+  .action-buttons {
+    flex-direction: row;
+  }
+  .btn-primary, .btn-secondary {
+    flex: 1;
+  }
 }
 
 @media (max-width: 768px) {
-  .product-create-view {
-    padding: 16px;
+  .main-content {
+    padding: 20px 16px;
   }
-
-  .form-container {
-    padding: 24px;
+  .header-inner {
+    padding: 0 16px;
   }
-}
-
-@media (max-width: 480px) {
-  .product-create-view {
-    padding: 12px;
+  .header-subtitle {
+    display: none;
   }
-
-  .form-container {
+  .form-grid, .form-row {
+    grid-template-columns: 1fr;
+  }
+  .form-section {
     padding: 20px;
   }
 }
