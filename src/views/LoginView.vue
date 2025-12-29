@@ -6,21 +6,21 @@
         <div class="logo">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
             <!-- 요거트 컵 -->
-            <ellipse cx="24" cy="14" rx="16" ry="4" fill="#FFE4EC"/>
-            <path d="M8 14 C8 14 10 38 24 38 C38 38 40 14 40 14" fill="url(#yogurtGradient)" stroke="#FF85A2" stroke-width="1.5"/>
-            <ellipse cx="24" cy="14" rx="16" ry="4" fill="#FFF0F5" stroke="#FF85A2" stroke-width="1.5"/>
+            <ellipse cx="24" cy="14" rx="16" ry="4" fill="#EDE9FE"/>
+            <path d="M8 14 C8 14 10 38 24 38 C38 38 40 14 40 14" fill="url(#yogurtGradient)" stroke="#A855F7" stroke-width="1.5"/>
+            <ellipse cx="24" cy="14" rx="16" ry="4" fill="#F5F3FF" stroke="#A855F7" stroke-width="1.5"/>
             <!-- 토핑 -->
-            <circle cx="18" cy="12" r="2" fill="#FF6B9D"/>
+            <circle cx="18" cy="12" r="2" fill="#9333EA"/>
             <circle cx="26" cy="11" r="1.5" fill="#A8E6CF"/>
             <circle cx="30" cy="13" r="1.8" fill="#FFD93D"/>
-            <circle cx="22" cy="14" r="1.2" fill="#FF85A2"/>
+            <circle cx="22" cy="14" r="1.2" fill="#A855F7"/>
             <!-- 스푼 -->
             <ellipse cx="36" cy="8" rx="4" ry="2.5" fill="#F8F8F8" stroke="#E0E0E0" stroke-width="1"/>
             <rect x="35" y="10" width="2" height="12" rx="1" fill="#F0F0F0" stroke="#E0E0E0" stroke-width="0.5"/>
             <defs>
               <linearGradient id="yogurtGradient" x1="24" y1="14" x2="24" y2="38" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#FFF5F8"/>
-                <stop offset="100%" stop-color="#FFE4EC"/>
+                <stop offset="0%" stop-color="#FAF5FF"/>
+                <stop offset="100%" stop-color="#EDE9FE"/>
               </linearGradient>
             </defs>
           </svg>
@@ -230,10 +230,10 @@ onMounted(async () => {
 
 <style scoped>
 :root {
-  --primary: #FF6B9D;
-  --primary-hover: #FF5289;
-  --primary-light: #FFF0F5;
-  --primary-dark: #E85A8A;
+  --primary: #9333EA;
+  --primary-hover: #7C3AED;
+  --primary-light: #F5F3FF;
+  --primary-dark: #7C3AED;
   --accent: #A8E6CF;
   --accent-light: #E8F8F0;
   --success: #10B981;
@@ -242,7 +242,7 @@ onMounted(async () => {
   --warning-light: #FEF3C7;
   --error: #EF4444;
   --error-light: #FEE2E2;
-  --cream: #FFF8F0;
+  --cream: #FAF5FF;
   --gray-50: #FAFAFA;
   --gray-100: #F5F5F5;
   --gray-200: #EEEEEE;
@@ -253,11 +253,11 @@ onMounted(async () => {
   --gray-700: #616161;
   --gray-800: #424242;
   --gray-900: #212121;
-  --border: #FFD6E5;
-  --border-focus: #FF6B9D;
-  --shadow-sm: 0 1px 3px 0 rgba(255, 107, 157, 0.1);
-  --shadow: 0 4px 6px -1px rgba(255, 107, 157, 0.15);
-  --shadow-lg: 0 10px 25px -5px rgba(255, 107, 157, 0.2);
+  --border: #E9D5FF;
+  --border-focus: #9333EA;
+  --shadow-sm: 0 1px 3px 0 rgba(147, 51, 234, 0.1);
+  --shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.15);
+  --shadow-lg: 0 10px 25px -5px rgba(147, 51, 234, 0.2);
 }
 
 * {
@@ -271,7 +271,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #FFF5F8 0%, #FFE4EC 50%, #FFF0F5 100%);
+  background: linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 50%, #EDE9FE 100%);
   padding: 20px;
   position: relative;
   overflow: hidden;
@@ -284,20 +284,20 @@ onMounted(async () => {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at 30% 20%, rgba(168, 230, 207, 0.2) 0%, transparent 40%),
-              radial-gradient(circle at 70% 80%, rgba(255, 217, 61, 0.15) 0%, transparent 40%);
+  background: radial-gradient(circle at 30% 20%, rgba(168, 230, 207, 0.15) 0%, transparent 40%),
+              radial-gradient(circle at 70% 80%, rgba(255, 217, 61, 0.1) 0%, transparent 40%);
   pointer-events: none;
 }
 
 .auth-container {
   width: 100%;
   max-width: 420px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
-  border: 2px solid #FFD6E5;
+  border: 1px solid #E9D5FF;
   border-radius: 24px;
-  box-shadow: 0 8px 32px -8px rgba(255, 107, 157, 0.2),
-              0 4px 16px -4px rgba(255, 107, 157, 0.1);
+  box-shadow: 0 8px 32px -8px rgba(147, 51, 234, 0.15),
+              0 4px 16px -4px rgba(147, 51, 234, 0.08);
   overflow: hidden;
   position: relative;
   z-index: 1;
@@ -306,14 +306,14 @@ onMounted(async () => {
 .logo-area {
   padding: 32px 24px 24px;
   text-align: center;
-  background: linear-gradient(180deg, #FFF8FA 0%, #FFFFFF 100%);
-  border-bottom: 1px solid #FFE4EC;
+  background: linear-gradient(180deg, #FAF5FF 0%, #FFFFFF 100%);
+  border-bottom: 1px solid #F3E8FF;
 }
 
 .logo {
   display: inline-flex;
   margin-bottom: 16px;
-  filter: drop-shadow(0 4px 8px rgba(255, 107, 157, 0.2));
+  filter: drop-shadow(0 4px 8px rgba(147, 51, 234, 0.15));
   transition: transform 0.3s ease;
 }
 
@@ -324,7 +324,7 @@ onMounted(async () => {
 .brand-name {
   font-size: 28px;
   font-weight: 800;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF85A2 50%, #E85A8A 100%);
+  background: linear-gradient(135deg, #9333EA 0%, #A855F7 50%, #7C3AED 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -345,12 +345,12 @@ onMounted(async () => {
 
 .tab-header {
   display: flex;
-  background: #FFF5F8;
-  padding: 6px;
-  gap: 6px;
-  margin: 0 16px;
-  margin-top: 16px;
+  background: #F5F3FF;
+  padding: 4px;
+  gap: 0;
+  margin: 16px 20px 0;
   border-radius: 12px;
+  border: 1px solid #E9D5FF;
 }
 
 .tab-btn {
@@ -363,19 +363,19 @@ onMounted(async () => {
   color: #9E9E9E;
   cursor: pointer;
   position: relative;
-  transition: all 0.3s ease;
-  border-radius: 8px;
+  transition: all 0.25s ease;
+  border-radius: 10px;
 }
 
-.tab-btn:hover {
-  color: #FF6B9D;
+.tab-btn:hover:not(.active) {
+  color: #7C3AED;
   background: rgba(255, 255, 255, 0.5);
 }
 
 .tab-btn.active {
-  color: #FF6B9D;
-  background: white;
-  box-shadow: 0 2px 8px -2px rgba(255, 107, 157, 0.3);
+  color: white;
+  background: linear-gradient(135deg, #9333EA 0%, #A855F7 100%);
+  box-shadow: 0 2px 8px -2px rgba(147, 51, 234, 0.4);
 }
 
 .tab-content {

@@ -247,7 +247,7 @@ const handleSubmit = () => {
 }
 
 .required {
-  color: #FF6B9D;
+  color: #9333EA;
   margin-left: 2px;
 }
 
@@ -260,7 +260,7 @@ const handleSubmit = () => {
 
 .text-btn {
   font-size: 12px;
-  color: #FF6B9D;
+  color: #9333EA;
   background: none;
   border: none;
   cursor: pointer;
@@ -270,7 +270,7 @@ const handleSubmit = () => {
 }
 
 .text-btn:hover {
-  color: #E85A8A;
+  color: #7C3AED;
 }
 
 .input-wrapper {
@@ -283,10 +283,10 @@ input[type="text"] {
   width: 100%;
   padding: 12px 44px;
   font-size: 14px;
-  border: 2px solid #FFD6E5;
+  border: 1px solid #E9D5FF;
   border-radius: 12px;
   color: #424242;
-  background: #FFFBFD;
+  background: #FDFCFF;
   transition: all 0.3s ease;
   outline: none;
   box-sizing: border-box;
@@ -297,14 +297,14 @@ input::placeholder {
 }
 
 input:hover:not(:focus):not(:disabled) {
-  border-color: #FFB8D0;
+  border-color: #C4B5FD;
   background: white;
 }
 
 input:focus {
-  border-color: #FF6B9D;
+  border-color: #9333EA;
   background: white;
-  box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.1);
+  box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1);
 }
 
 input:disabled {
@@ -328,13 +328,13 @@ input.error:focus {
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #FFB8D0;
+  color: #C4B5FD;
   pointer-events: none;
   transition: color 0.2s;
 }
 
 input:focus ~ .input-icon {
-  color: #FF6B9D;
+  color: #9333EA;
 }
 
 .toggle-btn {
@@ -351,7 +351,7 @@ input:focus ~ .input-icon {
 }
 
 .toggle-btn:hover {
-  color: #FF6B9D;
+  color: #9333EA;
 }
 
 .error-msg {
@@ -386,7 +386,7 @@ input:focus ~ .input-icon {
   width: 18px;
   height: 18px;
   min-width: 18px;
-  border: 2px solid #FFD6E5;
+  border: 2px solid #E9D5FF;
   border-radius: 6px;
   margin-right: 8px;
   display: flex;
@@ -403,8 +403,8 @@ input:focus ~ .input-icon {
 }
 
 .checkbox-label input:checked ~ .checkbox-box {
-  background: #FF6B9D;
-  border-color: #FF6B9D;
+  background: #9333EA;
+  border-color: #9333EA;
 }
 
 .checkbox-label input:checked ~ .checkbox-box svg {
@@ -413,7 +413,7 @@ input:focus ~ .input-icon {
 }
 
 .checkbox-label:hover .checkbox-box {
-  border-color: #FF6B9D;
+  border-color: #9333EA;
 }
 
 .submit-btn {
@@ -432,14 +432,14 @@ input:focus ~ .input-icon {
 }
 
 .submit-btn.primary {
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF85A2 100%);
+  background: linear-gradient(135deg, #9333EA 0%, #A855F7 100%);
   color: white;
-  box-shadow: 0 4px 12px -2px rgba(255, 107, 157, 0.4);
+  box-shadow: 0 4px 12px -2px rgba(147, 51, 234, 0.4);
 }
 
 .submit-btn.primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #FF5289 0%, #FF6B9D 100%);
-  box-shadow: 0 6px 16px -2px rgba(255, 107, 157, 0.5);
+  background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%);
+  box-shadow: 0 6px 16px -2px rgba(147, 51, 234, 0.5);
   transform: translateY(-2px);
 }
 
@@ -480,7 +480,7 @@ input:focus ~ .input-icon {
 .social-section {
   margin-top: 28px;
   padding-top: 24px;
-  border-top: 2px solid #FFE4EC;
+  border-top: 1px solid #F3E8FF;
 }
 
 .divider-text {
@@ -499,7 +499,7 @@ input:focus ~ .input-icon {
   top: 50%;
   width: calc(50% - 50px);
   height: 1px;
-  background: #FFE4EC;
+  background: #F3E8FF;
 }
 
 .divider-text::before {
@@ -534,9 +534,9 @@ input:focus ~ .input-icon {
 
 .social-btn:hover {
   background: #FAFAFA;
-  border-color: #FFD6E5;
+  border-color: #E9D5FF;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px -2px rgba(255, 107, 157, 0.15);
+  box-shadow: 0 4px 12px -2px rgba(147, 51, 234, 0.12);
 }
 
 .social-btn.kakao {
