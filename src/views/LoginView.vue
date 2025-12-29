@@ -224,7 +224,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FAFAFA;
+  background: white;
   padding: 24px;
 }
 
@@ -232,23 +232,24 @@ onMounted(async () => {
   width: 100%;
   max-width: 400px;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .logo-area {
-  padding: 48px 32px 32px;
+  padding: 40px 32px 28px;
   text-align: center;
+  border-bottom: 1px solid #F0F0F0;
 }
 
 .logo {
   display: inline-flex;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .brand-name {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #9333EA;
   letter-spacing: -0.02em;
@@ -261,25 +262,24 @@ onMounted(async () => {
 .tab-header {
   display: flex;
   border-bottom: 1px solid #F0F0F0;
-  margin: 0 32px;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 16px 0;
+  padding: 14px 0;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
   font-size: 14px;
   font-weight: 500;
-  color: #BDBDBD;
+  color: #9E9E9E;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: -1px;
 }
 
 .tab-btn:hover:not(.active) {
-  color: #9333EA;
+  color: #7C3AED;
 }
 
 .tab-btn.active {
@@ -288,7 +288,7 @@ onMounted(async () => {
 }
 
 .tab-content {
-  padding: 32px;
+  padding: 28px 32px 32px;
 }
 
 .fade-enter-active,
@@ -304,22 +304,17 @@ onMounted(async () => {
 @media (max-width: 480px) {
   .auth-wrapper {
     padding: 0;
-    background: white;
   }
 
   .auth-container {
     max-width: 100%;
+    border: none;
     border-radius: 0;
-    box-shadow: none;
     min-height: 100vh;
   }
 
   .logo-area {
-    padding: 40px 24px 24px;
-  }
-
-  .tab-header {
-    margin: 0 24px;
+    padding: 48px 24px 24px;
   }
 
   .tab-content {
