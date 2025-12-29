@@ -83,12 +83,29 @@
                   @like="handleFeedLike"
               />
 
+              <!-- 로딩 상태 -->
+              <div v-if="feedsLoading && feeds.length === 0" class="tab-loading">
+                <div class="loading-spinner small"></div>
+                <p>피드를 불러오는 중...</p>
+              </div>
+
               <!-- 빈 상태 -->
-              <div v-if="feeds.length === 0" class="empty-state">
+              <div v-else-if="feeds.length === 0 && !feedsLoading" class="empty-state">
                 <div class="empty-icon">📝</div>
                 <p class="empty-title">아직 피드가 없어요</p>
                 <p class="empty-desc">첫 번째 피드를 작성해보세요!</p>
               </div>
+
+              <!-- 더보기 버튼 -->
+              <button
+                  v-if="hasMoreFeeds && feeds.length > 0"
+                  class="load-more-btn"
+                  :disabled="feedsLoading"
+                  @click="fetchFeeds(route.params.id, true)"
+              >
+                <span v-if="feedsLoading">불러오는 중...</span>
+                <span v-else>더보기</span>
+              </button>
             </div>
 
             <!-- 배틀 탭 -->
@@ -110,12 +127,29 @@
                   @view="viewBattle"
               />
 
+              <!-- 로딩 상태 -->
+              <div v-if="battlesLoading && battles.length === 0" class="tab-loading">
+                <div class="loading-spinner small"></div>
+                <p>배틀을 불러오는 중...</p>
+              </div>
+
               <!-- 빈 상태 -->
-              <div v-if="battles.length === 0" class="empty-state">
+              <div v-else-if="battles.length === 0 && !battlesLoading" class="empty-state">
                 <div class="empty-icon">🏆</div>
                 <p class="empty-title">참여 중인 배틀이 없어요</p>
                 <p class="empty-desc">새로운 배틀을 시작해보세요!</p>
               </div>
+
+              <!-- 더보기 버튼 -->
+              <button
+                  v-if="hasMoreBattles && battles.length > 0"
+                  class="load-more-btn"
+                  :disabled="battlesLoading"
+                  @click="fetchBattles(route.params.id, true)"
+              >
+                <span v-if="battlesLoading">불러오는 중...</span>
+                <span v-else>더보기</span>
+              </button>
             </div>
           </section>
 
@@ -271,6 +305,14 @@ const feeds = ref([])
 const battles = ref([])
 const userReaction = ref({ hasLike: false, hasBookmark: false })
 
+// 피드/배틀 페이지네이션 상태
+const feedsLoading = ref(false)
+const battlesLoading = ref(false)
+const feedsCursor = ref(null)
+const battlesCursor = ref(null)
+const hasMoreFeeds = ref(true)
+const hasMoreBattles = ref(true)
+
 const isOwner = computed(() => {
   return isLoggedIn.value && userId.value && product.value?.creatorId === userId.value
 })
@@ -335,38 +377,55 @@ const fetchProductData = async () => {
   }
 }
 
-const fetchFeeds = async (productId) => {
+const fetchFeeds = async (productId, loadMore = false) => {
+  if (feedsLoading.value) return
   try {
-    feeds.value = [
-      { id: 1, user: '커피러버', avatar: '☕', content: '오늘도 아아로 시작! 역시 스벅 아메리카노가 최고예요.', likes: 24, comments: 5, time: '2시간 전', image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&h=450&fit=crop', liked: false },
-      { id: 2, user: '맛집탐방러', avatar: '🍽️', content: '투썸이랑 비교해봤는데 확실히 스벅이 더 진하고 깔끔해요!', likes: 18, comments: 12, time: '5시간 전', image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&h=450&fit=crop', liked: false }
-    ]
+    feedsLoading.value = true
+    const options = {
+      size: 20,
+      cursor: loadMore ? feedsCursor.value : null
+    }
+    const response = await productService.getProductFeeds(productId, options)
+    if (response.success) {
+      const newFeeds = response.data?.content || response.data || []
+      if (loadMore) {
+        feeds.value = [...feeds.value, ...newFeeds]
+      } else {
+        feeds.value = newFeeds
+      }
+      feedsCursor.value = response.data?.nextCursor || null
+      hasMoreFeeds.value = !!feedsCursor.value || newFeeds.length >= 20
+    }
   } catch (err) {
     console.error('피드 조회 실패:', err)
+  } finally {
+    feedsLoading.value = false
   }
 }
 
-const fetchBattles = async (productId) => {
+const fetchBattles = async (productId, loadMore = false) => {
+  if (battlesLoading.value) return
   try {
-    battles.value = [
-      { id: 1, title: '최고의 아메리카노는?', status: 'LIVE', totalVotes: 2847, participants: 1203, endDate: '2일 남음',
-        items: [
-          { rank: 1, name: '스타벅스', votes: 42, isThis: true },
-          { rank: 2, name: '투썸플레이스', votes: 28, isThis: false },
-          { rank: 3, name: '이디야', votes: 18, isThis: false },
-          { rank: 4, name: '메가커피', votes: 12, isThis: false }
-        ]
-      },
-      { id: 2, title: '가성비 카페 음료 TOP5', status: 'ENDED', totalVotes: 5621, participants: 2891, endDate: '종료됨',
-        items: [
-          { rank: 1, name: '메가커피', votes: 35, isThis: false },
-          { rank: 2, name: '컴포즈', votes: 25, isThis: false },
-          { rank: 3, name: '스타벅스', votes: 20, isThis: true }
-        ]
+    battlesLoading.value = true
+    const options = {
+      size: 20,
+      cursor: loadMore ? battlesCursor.value : null
+    }
+    const response = await productService.getProductBattles(productId, options)
+    if (response.success) {
+      const newBattles = response.data?.content || response.data || []
+      if (loadMore) {
+        battles.value = [...battles.value, ...newBattles]
+      } else {
+        battles.value = newBattles
       }
-    ]
+      battlesCursor.value = response.data?.nextCursor || null
+      hasMoreBattles.value = !!battlesCursor.value || newBattles.length >= 20
+    }
   } catch (err) {
     console.error('배틀 조회 실패:', err)
+  } finally {
+    battlesLoading.value = false
   }
 }
 
@@ -692,6 +751,45 @@ watch(isLoggedIn, (val) => {
 .empty-icon { font-size: 40px; margin-bottom: 12px; }
 .empty-title { font-size: 15px; font-weight: 500; color: #333; margin: 0 0 4px; }
 .empty-desc { font-size: 13px; color: #999; margin: 0; }
+
+/* Tab Loading */
+.tab-loading {
+  padding: 40px 24px;
+  text-align: center;
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+.tab-loading p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+.loading-spinner.small {
+  width: 24px;
+  height: 24px;
+}
+
+/* Load More Button */
+.load-more-btn {
+  width: 100%;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.load-more-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #ddd;
+}
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* Product Sidebar */
 .product-image-wrapper {
