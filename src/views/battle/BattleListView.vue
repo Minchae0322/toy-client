@@ -116,6 +116,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { battleService } from '@/services/BattleService.js'
 import { categoryService } from '@/services/CategoryService.js'
+import { useAuthStore } from '@/stores/auth.js'
 
 // Components
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'
@@ -125,13 +126,19 @@ import BattleList from '@/components/battle/BattleList.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 // State
-const tabs = ref([
+const allTabs = ref([
   { id: 'ongoing', label: '진행중', count: 0 },
   { id: 'ended', label: '종료됨', count: 0 },
-  { id: 'my', label: '내 배틀', count: 0 }
+  { id: 'my', label: '내 배틀', count: 0, requiresAuth: true }
 ])
+
+// 로그인 상태에 따라 탭 필터링
+const tabs = computed(() => {
+  return allTabs.value.filter(tab => !tab.requiresAuth || authStore.isAuthenticated)
+})
 
 const activeTab = ref('ongoing')
 const viewMode = ref('grid')
@@ -217,6 +224,8 @@ const loadBattles = async (reset = false) => {
       searchCondition.status = 'ACTIVE'
     } else if (activeTab.value === 'ended') {
       searchCondition.status = 'CLOSED'
+    } else if (activeTab.value === 'my') {
+      searchCondition.creatorId = authStore.userId
     }
 
     if (selectedSubCategory.value) {
@@ -257,7 +266,7 @@ const updateTabCounts = async () => {
         { page: 0, size: 1 }
     )
     if (ongoingResponse.success && ongoingResponse.data.totalElements !== undefined) {
-      tabs.value[0].count = ongoingResponse.data.totalElements
+      allTabs.value[0].count = ongoingResponse.data.totalElements
     }
 
     const endedResponse = await battleService.getBattles(
@@ -265,7 +274,18 @@ const updateTabCounts = async () => {
         { page: 0, size: 1 }
     )
     if (endedResponse.success && endedResponse.data.totalElements !== undefined) {
-      tabs.value[1].count = endedResponse.data.totalElements
+      allTabs.value[1].count = endedResponse.data.totalElements
+    }
+
+    // 로그인한 경우에만 내 배틀 카운트 조회
+    if (authStore.isAuthenticated && authStore.userId) {
+      const myResponse = await battleService.getBattles(
+          { creatorId: authStore.userId },
+          { page: 0, size: 1 }
+      )
+      if (myResponse.success && myResponse.data.totalElements !== undefined) {
+        allTabs.value[2].count = myResponse.data.totalElements
+      }
     }
   } catch (error) {
     console.error('탭 카운트 업데이트 실패:', error)
