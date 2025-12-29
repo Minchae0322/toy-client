@@ -163,30 +163,29 @@ const handleSubmit = () => {
 .notification {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 12px 14px;
-  border-radius: 12px;
-  margin-bottom: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
   font-size: 13px;
-  font-weight: 500;
-  border: 2px solid;
+  background: #ECFDF5;
+  color: #065F46;
 }
 
 .notification.success {
-  background: #E8F8F0;
-  border-color: #A8E6CF;
+  background: #ECFDF5;
   color: #065F46;
 }
 
 .input-group {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .input-label {
   display: block;
   font-size: 13px;
-  font-weight: 600;
-  color: #616161;
+  font-weight: 500;
+  color: #424242;
   margin-bottom: 8px;
 }
 
@@ -202,13 +201,13 @@ const handleSubmit = () => {
 input[type="password"],
 input[type="text"] {
   width: 100%;
-  padding: 12px 44px;
-  font-size: 14px;
-  border: 1px solid #E9D5FF;
-  border-radius: 12px;
-  color: #424242;
-  background: #FDFCFF;
-  transition: all 0.3s ease;
+  padding: 14px 16px 14px 44px;
+  font-size: 15px;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  color: #212121;
+  background: white;
+  transition: border-color 0.2s ease;
   outline: none;
   box-sizing: border-box;
 }
@@ -218,30 +217,21 @@ input::placeholder {
 }
 
 input:hover:not(:focus):not(:disabled) {
-  border-color: #C4B5FD;
-  background: white;
+  border-color: #BDBDBD;
 }
 
 input:focus {
   border-color: #9333EA;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1);
 }
 
 input:disabled {
   background: #FAFAFA;
   cursor: not-allowed;
   opacity: 0.6;
-  border-color: #EEEEEE;
 }
 
 input.error {
   border-color: #EF4444;
-  background: #FFF5F5;
-}
-
-input.error:focus {
-  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
 }
 
 .input-icon {
@@ -249,13 +239,8 @@ input.error:focus {
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #C4B5FD;
+  color: #BDBDBD;
   pointer-events: none;
-  transition: color 0.2s;
-}
-
-input:focus ~ .input-icon {
-  color: #9333EA;
 }
 
 .error-msg {
@@ -263,15 +248,13 @@ input:focus ~ .input-icon {
   margin-top: 6px;
   font-size: 12px;
   color: #EF4444;
-  font-weight: 500;
 }
 
 .terms-section {
-  margin-bottom: 16px;
-  padding: 14px;
-  background: #FAF5FF;
-  border: 1px solid #F3E8FF;
-  border-radius: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #FAFAFA;
+  border-radius: 8px;
 }
 
 .checkbox-label {
@@ -295,21 +278,19 @@ input:focus ~ .input-icon {
   width: 18px;
   height: 18px;
   min-width: 18px;
-  border: 2px solid #E9D5FF;
-  border-radius: 6px;
+  border: 1px solid #E0E0E0;
+  border-radius: 4px;
   margin-right: 10px;
-  margin-top: 1px;
+  margin-top: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
   background: white;
 }
 
 .checkbox-box svg {
   opacity: 0;
-  transform: scale(0.8);
-  transition: all 0.2s;
+  transition: opacity 0.15s;
 }
 
 .checkbox-label input:checked ~ .checkbox-box {
@@ -319,7 +300,6 @@ input:focus ~ .input-icon {
 
 .checkbox-label input:checked ~ .checkbox-box svg {
   opacity: 1;
-  transform: scale(1);
 }
 
 .checkbox-label:hover .checkbox-box {
@@ -333,12 +313,10 @@ input:focus ~ .input-icon {
 .link {
   color: #9333EA;
   text-decoration: none;
-  font-weight: 600;
-  transition: color 0.2s;
+  font-weight: 500;
 }
 
 .link:hover {
-  color: #7C3AED;
   text-decoration: underline;
 }
 
@@ -346,11 +324,11 @@ input:focus ~ .input-icon {
   width: 100%;
   padding: 14px 20px;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -358,23 +336,18 @@ input:focus ~ .input-icon {
 }
 
 .submit-btn.primary {
-  background: linear-gradient(135deg, #9333EA 0%, #A855F7 100%);
+  background: #9333EA;
   color: white;
-  box-shadow: 0 4px 12px -2px rgba(147, 51, 234, 0.4);
 }
 
 .submit-btn.primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%);
-  box-shadow: 0 6px 16px -2px rgba(147, 51, 234, 0.5);
-  transform: translateY(-2px);
+  background: #7C3AED;
 }
 
 .submit-btn:disabled {
-  background: #EEEEEE;
+  background: #E0E0E0;
   color: #9E9E9E;
   cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
 }
 
 .spinner {
@@ -389,28 +362,25 @@ input:focus ~ .input-icon {
 .alert-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: 12px;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 8px;
   margin-top: 16px;
   font-size: 13px;
-  font-weight: 500;
 }
 
 .alert-box.error {
-  background: #FFF0F3;
-  color: #C62828;
-  border: 2px solid #FFCDD2;
+  background: #FEF2F2;
+  color: #DC2626;
 }
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.15s ease;
 }
 
 .slide-enter-from,
 .slide-leave-to {
-  transform: translateY(-10px);
   opacity: 0;
 }
 
@@ -420,7 +390,7 @@ input:focus ~ .input-icon {
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
 }
 </style>
