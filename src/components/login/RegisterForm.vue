@@ -164,34 +164,34 @@ const handleSubmit = () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  font-size: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
   font-weight: 500;
   border: 2px solid;
 }
 
 .notification.success {
-  background: #D1FAE5;
-  border-color: #6EE7B7;
+  background: #E8F8F0;
+  border-color: #A8E6CF;
   color: #065F46;
 }
 
 .input-group {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .input-label {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: #374151;
-  margin-bottom: 6px;
+  color: #616161;
+  margin-bottom: 8px;
 }
 
 .required {
-  color: #EF4444;
+  color: #FF6B9D;
   margin-left: 2px;
 }
 
@@ -202,69 +202,76 @@ const handleSubmit = () => {
 input[type="password"],
 input[type="text"] {
   width: 100%;
-  padding: 10px 36px;
+  padding: 12px 44px;
   font-size: 14px;
-  border: 2px solid #D1D5DB;
-  border-radius: 6px;
-  color: #1F2937;
-  background: white;
-  transition: all 0.2s;
+  border: 2px solid #FFD6E5;
+  border-radius: 12px;
+  color: #424242;
+  background: #FFFBFD;
+  transition: all 0.3s ease;
   outline: none;
   box-sizing: border-box;
 }
 
 input::placeholder {
-  color: #9CA3AF;
+  color: #BDBDBD;
 }
 
 input:hover:not(:focus):not(:disabled) {
-  border-color: #9CA3AF;
+  border-color: #FFB8D0;
+  background: white;
 }
 
 input:focus {
-  border-color: #5B5FCF;
+  border-color: #FF6B9D;
   background: white;
-  box-shadow: 0 0 0 3px rgba(91, 95, 207, 0.1);
+  box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.1);
 }
 
 input:disabled {
-  background: #F9FAFB;
+  background: #FAFAFA;
   cursor: not-allowed;
   opacity: 0.6;
-  border-color: #E5E7EB;
+  border-color: #EEEEEE;
 }
 
 input.error {
   border-color: #EF4444;
+  background: #FFF5F5;
 }
 
 input.error:focus {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
 }
 
 .input-icon {
   position: absolute;
-  left: 11px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9CA3AF;
+  color: #FFB8D0;
   pointer-events: none;
+  transition: color 0.2s;
+}
+
+input:focus ~ .input-icon {
+  color: #FF6B9D;
 }
 
 .error-msg {
   display: block;
-  margin-top: 4px;
-  font-size: 11px;
+  margin-top: 6px;
+  font-size: 12px;
   color: #EF4444;
   font-weight: 500;
 }
 
 .terms-section {
-  margin-bottom: 12px;
-  padding: 12px;
-  background: #F9FAFB;
-  border: 2px solid #E5E7EB;
-  border-radius: 6px;
+  margin-bottom: 16px;
+  padding: 14px;
+  background: #FFF8FA;
+  border: 2px solid #FFE4EC;
+  border-radius: 12px;
 }
 
 .checkbox-label {
@@ -272,9 +279,9 @@ input.error:focus {
   align-items: flex-start;
   cursor: pointer;
   user-select: none;
-  font-size: 12px;
-  color: #374151;
-  line-height: 1.4;
+  font-size: 13px;
+  color: #616161;
+  line-height: 1.5;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -285,12 +292,12 @@ input.error:focus {
 }
 
 .checkbox-box {
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  border: 2px solid #D1D5DB;
-  border-radius: 4px;
-  margin-right: 8px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border: 2px solid #FFD6E5;
+  border-radius: 6px;
+  margin-right: 10px;
   margin-top: 1px;
   display: flex;
   align-items: center;
@@ -306,8 +313,8 @@ input.error:focus {
 }
 
 .checkbox-label input:checked ~ .checkbox-box {
-  background: #5B5FCF;
-  border-color: #5B5FCF;
+  background: #FF6B9D;
+  border-color: #FF6B9D;
 }
 
 .checkbox-label input:checked ~ .checkbox-box svg {
@@ -316,7 +323,7 @@ input.error:focus {
 }
 
 .checkbox-label:hover .checkbox-box {
-  border-color: #5B5FCF;
+  border-color: #FF6B9D;
 }
 
 .terms-text {
@@ -324,24 +331,26 @@ input.error:focus {
 }
 
 .link {
-  color: #111827;
-  text-decoration: underline;
+  color: #FF6B9D;
+  text-decoration: none;
   font-weight: 600;
+  transition: color 0.2s;
 }
 
 .link:hover {
-  opacity: 0.7;
+  color: #E85A8A;
+  text-decoration: underline;
 }
 
 .submit-btn {
   width: 100%;
-  padding: 11px 20px;
+  padding: 14px 20px;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 12px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -349,22 +358,23 @@ input.error:focus {
 }
 
 .submit-btn.primary {
-  background: #5B5FCF;
+  background: linear-gradient(135deg, #FF6B9D 0%, #FF85A2 100%);
   color: white;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px -2px rgba(255, 107, 157, 0.4);
 }
 
 .submit-btn.primary:hover:not(:disabled) {
-  background: #4A4EB8;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #FF5289 0%, #FF6B9D 100%);
+  box-shadow: 0 6px 16px -2px rgba(255, 107, 157, 0.5);
+  transform: translateY(-2px);
 }
 
 .submit-btn:disabled {
-  background: #D1D5DB;
-  color: #6B7280;
+  background: #EEEEEE;
+  color: #9E9E9E;
   cursor: not-allowed;
   box-shadow: none;
+  transform: none;
 }
 
 .spinner {
@@ -379,18 +389,18 @@ input.error:focus {
 .alert-box {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  margin-top: 10px;
-  font-size: 12px;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .alert-box.error {
-  background: #FEE2E2;
-  color: #991B1B;
-  border: 2px solid #FCA5A5;
+  background: #FFF0F3;
+  color: #C62828;
+  border: 2px solid #FFCDD2;
 }
 
 .slide-enter-active,

@@ -4,18 +4,29 @@
       <!-- 로고 영역 -->
       <div class="logo-area">
         <div class="logo">
-          <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
-            <rect width="48" height="48" rx="12" fill="url(#gradient)"/>
-            <path d="M24 14L32 20V28L24 34L16 28V20L24 14Z" fill="white"/>
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <!-- 요거트 컵 -->
+            <ellipse cx="24" cy="14" rx="16" ry="4" fill="#FFE4EC"/>
+            <path d="M8 14 C8 14 10 38 24 38 C38 38 40 14 40 14" fill="url(#yogurtGradient)" stroke="#FF85A2" stroke-width="1.5"/>
+            <ellipse cx="24" cy="14" rx="16" ry="4" fill="#FFF0F5" stroke="#FF85A2" stroke-width="1.5"/>
+            <!-- 토핑 -->
+            <circle cx="18" cy="12" r="2" fill="#FF6B9D"/>
+            <circle cx="26" cy="11" r="1.5" fill="#A8E6CF"/>
+            <circle cx="30" cy="13" r="1.8" fill="#FFD93D"/>
+            <circle cx="22" cy="14" r="1.2" fill="#FF85A2"/>
+            <!-- 스푼 -->
+            <ellipse cx="36" cy="8" rx="4" ry="2.5" fill="#F8F8F8" stroke="#E0E0E0" stroke-width="1"/>
+            <rect x="35" y="10" width="2" height="12" rx="1" fill="#F0F0F0" stroke="#E0E0E0" stroke-width="0.5"/>
             <defs>
-              <linearGradient id="gradient" x1="0" y1="0" x2="48" y2="48">
-                <stop offset="0%" stop-color="#5B5FCF"/>
-                <stop offset="100%" stop-color="#3F43A4"/>
+              <linearGradient id="yogurtGradient" x1="24" y1="14" x2="24" y2="38" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FFF5F8"/>
+                <stop offset="100%" stop-color="#FFE4EC"/>
               </linearGradient>
             </defs>
           </svg>
         </div>
-        <h1 class="brand-name">SERVICE</h1>
+        <h1 class="brand-name">요거뜨</h1>
+        <p class="brand-tagline">신선한 하루의 시작</p>
       </div>
 
       <!-- 탭 컨테이너 -->
@@ -219,31 +230,34 @@ onMounted(async () => {
 
 <style scoped>
 :root {
-  --primary: #5B5FCF;
-  --primary-hover: #4A4EBF;
-  --primary-light: #F0F0FF;
-  --primary-dark: #3F43A4;
+  --primary: #FF6B9D;
+  --primary-hover: #FF5289;
+  --primary-light: #FFF0F5;
+  --primary-dark: #E85A8A;
+  --accent: #A8E6CF;
+  --accent-light: #E8F8F0;
   --success: #10B981;
   --success-light: #D1FAE5;
   --warning: #F59E0B;
   --warning-light: #FEF3C7;
   --error: #EF4444;
   --error-light: #FEE2E2;
-  --gray-50: #F9FAFB;
-  --gray-100: #F3F4F6;
-  --gray-200: #E5E7EB;
-  --gray-300: #D1D5DB;
-  --gray-400: #9CA3AF;
-  --gray-500: #6B7280;
-  --gray-600: #4B5563;
-  --gray-700: #374151;
-  --gray-800: #1F2937;
-  --gray-900: #111827;
-  --border: #D1D5DB;
-  --border-focus: #5B5FCF;
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  --cream: #FFF8F0;
+  --gray-50: #FAFAFA;
+  --gray-100: #F5F5F5;
+  --gray-200: #EEEEEE;
+  --gray-300: #E0E0E0;
+  --gray-400: #BDBDBD;
+  --gray-500: #9E9E9E;
+  --gray-600: #757575;
+  --gray-700: #616161;
+  --gray-800: #424242;
+  --gray-900: #212121;
+  --border: #FFD6E5;
+  --border-focus: #FF6B9D;
+  --shadow-sm: 0 1px 3px 0 rgba(255, 107, 157, 0.1);
+  --shadow: 0 4px 6px -1px rgba(255, 107, 157, 0.15);
+  --shadow-lg: 0 10px 25px -5px rgba(255, 107, 157, 0.2);
 }
 
 * {
@@ -257,36 +271,72 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+  background: linear-gradient(135deg, #FFF5F8 0%, #FFE4EC 50%, #FFF0F5 100%);
   padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 20%, rgba(168, 230, 207, 0.2) 0%, transparent 40%),
+              radial-gradient(circle at 70% 80%, rgba(255, 217, 61, 0.15) 0%, transparent 40%);
+  pointer-events: none;
 }
 
 .auth-container {
   width: 100%;
   max-width: 420px;
-  background: white;
-  border: 1px solid var(--gray-200);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 2px solid #FFD6E5;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px -8px rgba(255, 107, 157, 0.2),
+              0 4px 16px -4px rgba(255, 107, 157, 0.1);
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .logo-area {
-  padding: 24px 24px 20px;
+  padding: 32px 24px 24px;
   text-align: center;
-  border-bottom: 1px solid var(--gray-200);
+  background: linear-gradient(180deg, #FFF8FA 0%, #FFFFFF 100%);
+  border-bottom: 1px solid #FFE4EC;
 }
 
 .logo {
   display: inline-flex;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 4px 8px rgba(255, 107, 157, 0.2));
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05) rotate(-2deg);
 }
 
 .brand-name {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--gray-800);
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FF6B9D 0%, #FF85A2 50%, #E85A8A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.brand-tagline {
+  font-size: 13px;
+  color: #9E9E9E;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .tab-container {
@@ -295,34 +345,37 @@ onMounted(async () => {
 
 .tab-header {
   display: flex;
-  background: var(--gray-50);
-  padding: 4px;
-  gap: 4px;
+  background: #FFF5F8;
+  padding: 6px;
+  gap: 6px;
+  margin: 0 16px;
+  margin-top: 16px;
+  border-radius: 12px;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 10px 16px;
+  padding: 12px 16px;
   background: transparent;
   border: none;
   font-size: 14px;
   font-weight: 600;
-  color: var(--gray-600);
+  color: #9E9E9E;
   cursor: pointer;
   position: relative;
-  transition: all 0.2s;
-  border-radius: 6px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
 }
 
 .tab-btn:hover {
-  color: var(--gray-900);
+  color: #FF6B9D;
   background: rgba(255, 255, 255, 0.5);
 }
 
 .tab-btn.active {
-  color: var(--gray-900);
+  color: #FF6B9D;
   background: white;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px -2px rgba(255, 107, 157, 0.3);
 }
 
 .tab-content {
