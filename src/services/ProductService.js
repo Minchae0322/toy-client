@@ -7,7 +7,7 @@ import {ENV, getServiceUrl} from "@/config/env.js";
 class ProductService extends BaseApiService {
   constructor() {
     const baseURL = `${getServiceUrl('PRODUCT')}/api`
-    super(baseURL, 'FEED')
+    super(baseURL, 'PRODUCT')
     console.log(`⚔️ [PRODUCT] Content Server URL: ${this.baseURL}`)
     console.log(`🌍 [PRODUCT] Environment: ${ENV.MODE}`)
   }
@@ -142,34 +142,24 @@ class ProductService extends BaseApiService {
     return response
   }
 
-  // ==================== 상품 피드/배틀 관련 메서드 (NEW) ====================
+  // ==================== 상품 피드/배틀 관련 메서드 ====================
 
-  /**
-   * 상품 피드 목록 조회 (커서 기반 페이지네이션)
-   */
   async getProductFeeds(productId, options = {}) {
     if (!productId) throw new Error('상품 ID가 필요합니다.')
-
     const params = this.removeEmptyParams({
       cursor: options.cursor || null,
       size: Math.min(100, Math.max(1, options.size || 20))
     })
-
     console.log('📤 [PRODUCT_SERVICE] getProductFeeds 요청:', { productId, params })
     return await this.get(`/products/${productId}/feeds`, params)
   }
 
-  /**
-   * 상품 배틀 목록 조회 (커서 기반 페이지네이션)
-   */
   async getProductBattles(productId, options = {}) {
     if (!productId) throw new Error('상품 ID가 필요합니다.')
-
     const params = this.removeEmptyParams({
       cursor: options.cursor || null,
       size: Math.min(100, Math.max(1, options.size || 20))
     })
-
     console.log('📤 [PRODUCT_SERVICE] getProductBattles 요청:', { productId, params })
     return await this.get(`/products/${productId}/battles`, params)
   }
@@ -300,8 +290,22 @@ class ProductService extends BaseApiService {
     return validated
   }
 
+  // ⭐ 백엔드 Swagger 기준 정렬 옵션 최신화
   validatePageable(pageable) {
-    const validSorts = ['createdAt,DESC', 'createdAt,ASC', 'releaseDate,DESC', 'releaseDate,ASC', 'likeCount,DESC', 'likeCount,ASC', 'viewCount,DESC', 'viewCount,ASC', 'name,DESC', 'name,ASC']
+    const validSorts = [
+      // 기본 정렬
+      'createdAt,DESC', 'createdAt,ASC',
+      'releaseDate,DESC', 'releaseDate,ASC',
+      'updatedAt,DESC', 'updatedAt,ASC',
+      'name,DESC', 'name,ASC',
+      // 인기/통계 정렬
+      'popularityScore,DESC', 'popularityScore,ASC',
+      'likeCount,DESC', 'likeCount,ASC',
+      'viewCount,DESC', 'viewCount,ASC',
+      'averageRating,DESC', 'averageRating,ASC',
+      'shareCount,DESC', 'shareCount,ASC',
+      'reviewCount,DESC', 'reviewCount,ASC'
+    ]
     return {
       page: Math.max(0, pageable?.page || 0),
       size: Math.min(100, Math.max(1, pageable?.size || 20)),
@@ -335,3 +339,92 @@ class ProductService extends BaseApiService {
 
 export const productService = new ProductService()
 export default productService
+
+// ==================== 유틸리티 객체 ====================
+
+export const productFilterUtils = {
+  removeEmptyParams(params) {
+    if (!params || typeof params !== 'object') return {}
+    const cleaned = {}
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        if (Array.isArray(value) ? value.length > 0 : true) cleaned[key] = value
+      }
+    })
+    return cleaned
+  },
+
+  getDefaultSearchCondition() {
+    return { keyword: '', categoryId: null, status: 'APPROVED', creatorId: null }
+  },
+
+  getDefaultPageable() {
+    return { page: 0, size: 20, sort: 'createdAt,DESC' }
+  },
+
+  // ⭐ 백엔드 Swagger 기준 정렬 옵션 최신화
+  getSortOptions() {
+    return [
+      { value: 'createdAt,DESC', label: '최신순' },
+      { value: 'createdAt,ASC', label: '오래된순' },
+      { value: 'popularityScore,DESC', label: '인기순' },
+      { value: 'likeCount,DESC', label: '좋아요순' },
+      { value: 'viewCount,DESC', label: '조회수순' },
+      { value: 'averageRating,DESC', label: '평점높은순' },
+      { value: 'reviewCount,DESC', label: '리뷰많은순' },
+      { value: 'shareCount,DESC', label: '공유순' },
+      { value: 'name,ASC', label: '이름순' },
+      { value: 'releaseDate,DESC', label: '출시일순' },
+      { value: 'updatedAt,DESC', label: '수정일순' }
+    ]
+  }
+}
+
+export const productUtils = {
+  formatCount(count) {
+    if (!count || count === 0) return '0'
+    const num = parseInt(count)
+    if (num >= 10000) return Math.floor(num / 10000) + '만+'
+    if (num >= 1000) return Math.floor(num / 1000) + 'k'
+    return num.toString()
+  },
+
+  formatPrice(price) {
+    if (!price || price === '0' || price === 0) return '무료'
+    const numPrice = typeof price === 'string' ? parseInt(price) : price
+    return new Intl.NumberFormat('ko-KR').format(numPrice) + '원'
+  },
+
+  formatRating(rating) {
+    if (!rating) return '0.0'
+    return typeof rating === 'number' ? rating.toFixed(1) : rating
+  },
+
+  formatDate(dateString) {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const now = new Date()
+    const diff = now - date
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 1) return '방금 전'
+    if (minutes < 60) return `${minutes}분 전`
+    if (hours < 24) return `${hours}시간 전`
+    if (days < 7) return `${days}일 전`
+    return date.toLocaleDateString('ko-KR')
+  },
+
+  getRatingText(rating) {
+    const texts = { 1: '별로예요', 2: '그저 그래요', 3: '괜찮아요', 4: '좋아요', 5: '최고예요' }
+    return texts[Math.round(rating)] || '평가 없음'
+  },
+
+  getRatingStars(rating) {
+    const fullStars = Math.floor(rating)
+    const hasHalfStar = rating % 1 >= 0.5
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0)
+    return '★'.repeat(fullStars) + (hasHalfStar ? '☆' : '') + '☆'.repeat(emptyStars)
+  }
+}

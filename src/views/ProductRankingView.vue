@@ -63,7 +63,7 @@
                 <RankChange :change="hero.rankChange" :isNew="hero.isNew" />
               </div>
               <div class="hero-image-wrap">
-                <img :src="hero.thumbnailUrl" :alt="hero.name" class="hero-image" />
+                <img :src="getThumbnailUrl(hero)" :alt="hero.name" class="hero-image" />
               </div>
               <div class="hero-info">
                 <span class="brand">{{ hero.brand }}</span>
@@ -73,11 +73,11 @@
                     <svg width="14" height="14" viewBox="0 0 20 20" fill="#fbbf24">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                     </svg>
-                    {{ hero.avgRating }}
-                    <span class="stat-sub">({{ hero.reviewCount }})</span>
+                    {{ formatRating(hero.averageRating) }}
+                    <span class="stat-sub">({{ hero.reviewCount || 0 }})</span>
                   </span>
                   <span class="stat hot">
-                    🔥 {{ hero.hotScore?.toLocaleString() }}
+                    🔥 {{ formatScore(hero.popularityScore) }}
                   </span>
                 </div>
               </div>
@@ -92,16 +92,16 @@
             <!-- 2, 3위 -->
             <div class="runner-grid">
               <div
-                  v-for="product in runnerUps"
+                  v-for="(product, index) in runnerUps"
                   :key="product.id"
                   class="runner-card"
                   @click="goToDetail(product)"
               >
                 <div class="runner-rank">
-                  <span class="rank-number">{{ product.rank }}</span>
+                  <span class="rank-number">{{ index + 2 }}</span>
                   <RankChange :change="product.rankChange" :isNew="product.isNew" />
                 </div>
-                <img :src="product.thumbnailUrl" :alt="product.name" class="runner-image" />
+                <img :src="getThumbnailUrl(product)" :alt="product.name" class="runner-image" />
                 <div class="runner-info">
                   <span class="brand">{{ product.brand }}</span>
                   <h3 class="name">{{ product.name }}</h3>
@@ -110,14 +110,14 @@
                       <svg width="12" height="12" viewBox="0 0 20 20" fill="#fbbf24">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                       </svg>
-                      {{ product.avgRating }}
+                      {{ formatRating(product.averageRating) }}
                     </span>
-                    <span class="stat hot">🔥 {{ formatScore(product.hotScore) }}</span>
+                    <span class="stat hot">🔥 {{ formatScore(product.popularityScore) }}</span>
                   </div>
                 </div>
                 <div class="runner-score">
                   <div class="score-bar">
-                    <div class="score-fill" :style="{ width: getScorePercent(product.hotScore) + '%' }"></div>
+                    <div class="score-fill" :style="{ width: getScorePercent(product.popularityScore) + '%' }"></div>
                   </div>
                 </div>
               </div>
@@ -128,16 +128,16 @@
           <section class="chart-section">
             <div class="chart-list">
               <div
-                  v-for="product in restList"
+                  v-for="(product, index) in restList"
                   :key="product.id"
                   class="chart-item"
                   @click="goToDetail(product)"
               >
                 <div class="chart-rank">
-                  <span class="rank-number">{{ product.rank }}</span>
+                  <span class="rank-number">{{ index + 4 }}</span>
                   <RankChange :change="product.rankChange" :isNew="product.isNew" />
                 </div>
-                <img :src="product.thumbnailUrl" :alt="product.name" class="chart-image" />
+                <img :src="getThumbnailUrl(product)" :alt="product.name" class="chart-image" />
                 <div class="chart-info">
                   <h3 class="name">{{ product.name }}</h3>
                   <span class="brand">{{ product.brand }}</span>
@@ -147,13 +147,13 @@
                     <svg width="12" height="12" viewBox="0 0 20 20" fill="#fbbf24">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                     </svg>
-                    {{ product.avgRating }}
+                    {{ formatRating(product.averageRating) }}
                   </span>
-                  <span class="stat hot">🔥 {{ formatScore(product.hotScore) }}</span>
+                  <span class="stat hot">🔥 {{ formatScore(product.popularityScore) }}</span>
                 </div>
                 <div class="chart-bar">
                   <div class="score-bar small">
-                    <div class="score-fill" :style="{ width: getScorePercent(product.hotScore) + '%' }"></div>
+                    <div class="score-fill" :style="{ width: getScorePercent(product.popularityScore) + '%' }"></div>
                   </div>
                 </div>
               </div>
@@ -182,9 +182,12 @@ import AppSidebar from '@/components/feed/AppSidebar.vue'
 import AppHeader from '@/components/feed/AppHeader.vue'
 import RankChange from '@/components/product/RankChange.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
+import { productService } from '@/services/ProductService.js'
 
 const router = useRouter()
 const route = useRoute()
+
+const DEFAULT_THUMBNAIL = 'https://picsum.photos/200'
 
 const periods = [
   { label: '실시간', value: 'REALTIME' },
@@ -208,18 +211,33 @@ const loading = ref(false)
 const hasNext = ref(true)
 const currentPage = ref(0)
 const pageSize = 10
+const totalElements = ref(0)
 
+// Computed
 const hero = computed(() => products.value[0] || null)
 const runnerUps = computed(() => products.value.slice(1, 3))
 const restList = computed(() => products.value.slice(3))
-const maxScore = computed(() => hero.value?.hotScore || 1)
+const maxScore = computed(() => hero.value?.popularityScore || 1)
+
+// 유틸리티 함수
+const getThumbnailUrl = (product) => {
+  return product.thumbnailDto?.filePath || DEFAULT_THUMBNAIL
+}
 
 const formatScore = (score) => {
   if (!score) return '0'
-  return score >= 1000 ? (score / 1000).toFixed(1) + 'k' : score
+  if (score >= 10000) return (score / 10000).toFixed(1) + '만'
+  if (score >= 1000) return (score / 1000).toFixed(1) + 'k'
+  return score.toLocaleString()
+}
+
+const formatRating = (rating) => {
+  if (!rating) return '0.0'
+  return typeof rating === 'number' ? rating.toFixed(1) : rating
 }
 
 const getScorePercent = (score) => {
+  if (!score || !maxScore.value) return 0
   return Math.round((score / maxScore.value) * 100)
 }
 
@@ -227,6 +245,7 @@ const goToDetail = (product) => {
   router.push({ name: 'ProductDetail', params: { id: product.id } })
 }
 
+// API 호출
 const fetchRanking = async (reset = false) => {
   if (loading.value) return
   loading.value = true
@@ -238,31 +257,70 @@ const fetchRanking = async (reset = false) => {
       hasNext.value = true
     }
 
-    // Mock data
-    const mockData = [
-      { id: 1, rank: 1, rankChange: 2, name: '에어팟 프로 2세대', brand: 'Apple', avgRating: 4.8, reviewCount: 326, hotScore: 12450, thumbnailUrl: 'https://picsum.photos/200?1' },
-      { id: 2, rank: 2, rankChange: -1, name: '갤럭시 버즈3 프로', brand: 'Samsung', avgRating: 4.6, reviewCount: 218, hotScore: 8230, thumbnailUrl: 'https://picsum.photos/200?2' },
-      { id: 3, rank: 3, rankChange: 0, name: '다이슨 에어랩', brand: 'Dyson', avgRating: 4.7, reviewCount: 412, hotScore: 7890, thumbnailUrl: 'https://picsum.photos/200?3' },
-      { id: 4, rank: 4, rankChange: 3, name: '스탠리 텀블러', brand: 'Stanley', avgRating: 4.5, reviewCount: 189, hotScore: 6540, thumbnailUrl: 'https://picsum.photos/200?4' },
-      { id: 5, rank: 5, rankChange: -2, name: '소니 WH-1000XM5', brand: 'Sony', avgRating: 4.7, reviewCount: 287, hotScore: 5980, thumbnailUrl: 'https://picsum.photos/200?5' },
-      { id: 6, rank: 6, rankChange: 1, name: '애플워치 시리즈 9', brand: 'Apple', avgRating: 4.6, reviewCount: 156, hotScore: 5420, thumbnailUrl: 'https://picsum.photos/200?6' },
-      { id: 7, rank: 7, rankChange: -1, isNew: true, name: '로지텍 MX Master 3S', brand: 'Logitech', avgRating: 4.8, reviewCount: 98, hotScore: 4890, thumbnailUrl: 'https://picsum.photos/200?7' },
-      { id: 8, rank: 8, rankChange: 0, name: '샤오미 공기청정기', brand: 'Xiaomi', avgRating: 4.4, reviewCount: 234, hotScore: 4560, thumbnailUrl: 'https://picsum.photos/200?8' },
-      { id: 9, rank: 9, rankChange: 2, name: '닌텐도 스위치 OLED', brand: 'Nintendo', avgRating: 4.7, reviewCount: 445, hotScore: 4230, thumbnailUrl: 'https://picsum.photos/200?9' },
-      { id: 10, rank: 10, rankChange: -3, name: '라네즈 립 마스크', brand: 'Laneige', avgRating: 4.5, reviewCount: 567, hotScore: 3980, thumbnailUrl: 'https://picsum.photos/200?10' },
-    ]
+    // 검색 조건
+    const searchCondition = {
+      status: 'APPROVED'
+    }
 
-    products.value = mockData
-    hasNext.value = true
+    // 카테고리 필터
+    if (selectedCategory.value) {
+      searchCondition.categoryId = selectedCategory.value
+    }
+
+    // 페이징 (popularityScore 내림차순)
+    const pageable = {
+      page: currentPage.value,
+      size: pageSize,
+      sort: 'popularityScore,DESC'
+    }
+
+    console.log('📤 [RANKING] API 요청:', { searchCondition, pageable })
+
+    const response = await productService.getProducts(searchCondition, pageable)
+
+    console.log('📥 [RANKING] API 응답:', response)
+
+    if (response.success && response.data) {
+      const pageData = response.data
+
+      // Spring Page 응답 처리
+      if (pageData.content) {
+        if (reset) {
+          products.value = pageData.content
+        } else {
+          products.value = [...products.value, ...pageData.content]
+        }
+
+        // 페이징 정보 업데이트
+        hasNext.value = !pageData.last
+        totalElements.value = pageData.totalElements || 0
+
+        console.log('✅ [RANKING] 로드 완료:', {
+          loaded: products.value.length,
+          total: totalElements.value,
+          hasNext: hasNext.value
+        })
+      } else if (Array.isArray(pageData)) {
+        // 배열 응답 (페이징 없음)
+        products.value = reset ? pageData : [...products.value, ...pageData]
+        hasNext.value = pageData.length >= pageSize
+      }
+    } else {
+      console.error('❌ [RANKING] API 오류:', response.message)
+      hasNext.value = false
+    }
   } catch (e) {
-    console.error('랭킹 로드 실패:', e)
+    console.error('❌ [RANKING] 랭킹 로드 실패:', e)
+    hasNext.value = false
   } finally {
     loading.value = false
   }
 }
 
+// 이벤트 핸들러
 const handlePeriodChange = (period) => {
   selectedPeriod.value = period
+  // TODO: 기간별 필터 API 파라미터 추가 필요시 여기서 처리
   fetchRanking(true)
 }
 
@@ -273,16 +331,18 @@ const handleCategoryChange = (categoryId) => {
 
 const loadMore = () => {
   currentPage.value++
-  fetchRanking()
+  fetchRanking(false)
 }
 
+// URL 쿼리 파라미터 감시
 watch(() => route.query, (query) => {
   if (query.period) selectedPeriod.value = query.period
   if (query.categoryId) selectedCategory.value = Number(query.categoryId)
 }, { immediate: true })
 
+// 마운트 시 데이터 로드
 onMounted(() => {
-  fetchRanking()
+  fetchRanking(true)
 })
 </script>
 
@@ -298,19 +358,16 @@ onMounted(() => {
   max-width: 100vw;
 }
 
-/* 모바일: 작은 여백 */
 .app-container {
   padding: 0 1rem;
 }
 
-/* 태블릿: 중간 여백 */
 @media (min-width: 768px) {
   .app-container {
     padding: 0 2rem;
   }
 }
 
-/* 데스크톱: 큰 여백 */
 @media (min-width: 1280px) {
   .app-container {
     padding: 0 3rem;
@@ -320,7 +377,6 @@ onMounted(() => {
   }
 }
 
-/* 대형 화면: 더 큰 여백 */
 @media (min-width: 1920px) {
   .app-container {
     padding: 0 4rem;
