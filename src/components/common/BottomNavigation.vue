@@ -44,6 +44,15 @@
             <span class="fab-menu-label">새 피드 올리기</span>
           </button>
 
+          <button class="fab-menu-item" @click="handleCreateProduct">
+            <div class="fab-menu-icon product-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+            </div>
+            <span class="fab-menu-label">제품 등록하기</span>
+          </button>
+
           <button class="fab-menu-item" @click="handleCreateBattle">
             <div class="fab-menu-icon battle-icon">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,6 +160,23 @@ const handleCreateBattle = async () => {
     await router.push({
       name: 'Login',
       query: { redirect: '/battle/create' }
+    });
+  }
+};
+
+const handleCreateProduct = async () => {
+  closeMenu();
+
+  if (isLoggedIn.value) {
+    router.push({ name: 'ProductCreate' });
+    return;
+  }
+
+  const confirmed = confirm('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?');
+  if (confirmed) {
+    await router.push({
+      name: 'Login',
+      query: { redirect: '/products/create' }
     });
   }
 };
@@ -379,6 +405,11 @@ onBeforeUnmount(() => {
 
 .fab-menu-icon.feed-icon {
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.fab-menu-icon.product-icon {
+  background: linear-gradient(135deg, #f97316, #ea580c);
   color: white;
 }
 

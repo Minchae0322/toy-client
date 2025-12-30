@@ -72,6 +72,14 @@
       <span>인증 올리기</span>
     </button>
 
+    <!-- 제품 등록하기 버튼 -->
+    <button class="btn-create-product" @click="handleProtectedRoute('createProduct')">
+      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      <span>제품 등록하기</span>
+    </button>
+
     <!-- 배틀 등록하기 버튼 -->
     <button class="btn-create-battle" @click="handleProtectedRoute('createBattle')">
       <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,6 +111,9 @@ const handleProtectedRoute = async (routeName) => {
         break;
       case 'create':
         router.push({name: 'FeedCreate'});
+        break;
+      case 'createProduct':
+        router.push({name: 'ProductCreate'});
         break;
       case 'createBattle':
         router.push({name: 'BattleCreate'});
@@ -293,6 +304,38 @@ const goToMyProfile = async () => {
 }
 
 .btn-create .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* 제품 등록하기 버튼 */
+.btn-create-product {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px;
+  background: #f97316;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 10px;
+  font-family: inherit;
+  box-shadow: 0 1px 3px rgba(249, 115, 22, 0.2);
+}
+
+.btn-create-product:hover {
+  transform: translateY(-1px);
+  background: #ea580c;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.btn-create-product .icon {
   width: 18px;
   height: 18px;
 }
