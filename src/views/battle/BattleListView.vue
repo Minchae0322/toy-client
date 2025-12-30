@@ -149,7 +149,7 @@ const totalPages = ref(0)
 const totalCount = ref(0)
 const hasNext = ref(true)
 const loading = ref(false)
-const hotLoading = ref(false)
+const hotLoading = ref(true)
 const battleListRef = ref(null)
 
 const selectedCategory = ref(null)
