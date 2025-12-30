@@ -562,7 +562,7 @@ export default {
     getItemImage(item) {
       return item.battleItemProduct?.thumbnailDto?.storedPath ||
           item.customImageUrl ||
-          'https://via.placeholder.com/400?text=No+Image'
+          'https://placehold.co/400x400?text=No+Image'
     },
 
     getStatusClass(status) {
@@ -615,7 +615,7 @@ export default {
     },
 
     handleImageError(e) {
-      e.target.src = 'https://via.placeholder.com/400?text=No+Image'
+      e.target.src = 'https://placehold.co/400x400?text=No+Image'
     },
 
     goBack() {

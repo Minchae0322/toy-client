@@ -365,11 +365,11 @@ const handleUserSearch = () => {
 const getSampleUsers = () => {
   return [
     { id: '1', name: '김철수', email: 'kim@example.com', avatar: null },
-    { id: '2', name: '이영희', email: 'lee@example.com', avatar: 'https://via.placeholder.com/32/FF6B6B/FFFFFF?text=이' },
+    { id: '2', name: '이영희', email: 'lee@example.com', avatar: 'https://placehold.co/32x32/FF6B6B/FFFFFF?text=이' },
     { id: '3', name: '박민준', email: 'park@example.com', avatar: null },
-    { id: '4', name: '최지원', email: 'choi@example.com', avatar: 'https://via.placeholder.com/32/4ECDC4/FFFFFF?text=최' },
+    { id: '4', name: '최지원', email: 'choi@example.com', avatar: 'https://placehold.co/32x32/4ECDC4/FFFFFF?text=최' },
     { id: '5', name: '정서연', email: 'jung@example.com', avatar: null },
-    { id: '6', name: '강동현', email: 'kang@example.com', avatar: 'https://via.placeholder.com/32/45B7D1/FFFFFF?text=강' }
+    { id: '6', name: '강동현', email: 'kang@example.com', avatar: 'https://placehold.co/32x32/45B7D1/FFFFFF?text=강' }
   ]
 }
 

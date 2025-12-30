@@ -280,7 +280,7 @@ const getSampleChatRooms = () => [
 
 const getDefaultAvatar = (room) => `https://ui-avatars.com/api/?name=${encodeURIComponent(room.name || '?')}&background=9333ea&color=fff`
 
-const getDefaultFeedImage = () => 'https://via.placeholder.com/100x100?text=No+Image'
+const getDefaultFeedImage = () => 'https://placehold.co/100x100?text=No+Image'
 
 const formatTime = (date) => {
   if (!date) return ''
