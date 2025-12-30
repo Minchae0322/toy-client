@@ -17,19 +17,6 @@
 
         <!-- 필터 -->
         <div class="filter-section">
-          <div class="filter-group">
-            <div class="period-tabs">
-              <button
-                  v-for="p in periods"
-                  :key="p.value"
-                  :class="['tab-btn', { active: selectedPeriod === p.value }]"
-                  @click="handlePeriodChange(p.value)"
-              >
-                {{ p.label }}
-              </button>
-            </div>
-          </div>
-
           <div class="category-tabs">
             <button
                 v-for="c in categories"
@@ -183,28 +170,14 @@ import AppHeader from '@/components/feed/AppHeader.vue'
 import RankChange from '@/components/product/RankChange.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { productService } from '@/services/ProductService.js'
+import { categoryService } from '@/services/CategoryService.js'
 
 const router = useRouter()
 const route = useRoute()
 
 const DEFAULT_THUMBNAIL = 'https://picsum.photos/200'
 
-const periods = [
-  { label: '실시간', value: 'REALTIME' },
-  { label: '주간', value: 'WEEKLY' },
-  { label: '월간', value: 'MONTHLY' }
-]
-
-const categories = [
-  { label: '전체', value: null },
-  { label: '전자기기', value: 1 },
-  { label: '뷰티', value: 2 },
-  { label: '식품', value: 3 },
-  { label: '패션', value: 4 },
-  { label: '생활', value: 5 }
-]
-
-const selectedPeriod = ref('WEEKLY')
+const categories = ref([{ label: '전체', value: null }])
 const selectedCategory = ref(null)
 const products = ref([])
 const loading = ref(false)
@@ -317,13 +290,31 @@ const fetchRanking = async (reset = false) => {
   }
 }
 
-// 이벤트 핸들러
-const handlePeriodChange = (period) => {
-  selectedPeriod.value = period
-  // TODO: 기간별 필터 API 파라미터 추가 필요시 여기서 처리
-  fetchRanking(true)
+// 카테고리 조회
+const fetchCategories = async () => {
+  try {
+    const response = await categoryService.getCategories({ isActive: true })
+
+    if (response.success && response.data) {
+      const categoryList = Array.isArray(response.data) ? response.data : []
+
+      // '전체' 옵션과 함께 카테고리 목록 구성
+      categories.value = [
+        { label: '전체', value: null },
+        ...categoryList.map(cat => ({
+          label: cat.categoryName,
+          value: cat.id
+        }))
+      ]
+
+      console.log('✅ [RANKING] 카테고리 로드 완료:', categories.value.length)
+    }
+  } catch (e) {
+    console.error('❌ [RANKING] 카테고리 로드 실패:', e)
+  }
 }
 
+// 이벤트 핸들러
 const handleCategoryChange = (categoryId) => {
   selectedCategory.value = categoryId
   fetchRanking(true)
@@ -336,12 +327,12 @@ const loadMore = () => {
 
 // URL 쿼리 파라미터 감시
 watch(() => route.query, (query) => {
-  if (query.period) selectedPeriod.value = query.period
   if (query.categoryId) selectedCategory.value = Number(query.categoryId)
 }, { immediate: true })
 
 // 마운트 시 데이터 로드
-onMounted(() => {
+onMounted(async () => {
+  await fetchCategories()
   fetchRanking(true)
 })
 </script>
@@ -427,43 +418,9 @@ onMounted(() => {
 
 /* 필터 */
 .filter-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
   margin-bottom: 32px;
   padding-bottom: 24px;
   border-bottom: 1px solid #eee;
-}
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.period-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  background: #f5f5f5;
-  border-radius: 8px;
-}
-.tab-btn {
-  padding: 8px 16px;
-  border: none;
-  background: transparent;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.tab-btn:hover {
-  color: #333;
-}
-.tab-btn.active {
-  background: #fff;
-  color: #111;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 .category-tabs {
   display: flex;
