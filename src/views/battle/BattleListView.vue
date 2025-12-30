@@ -216,7 +216,6 @@ const loadBattles = async (reset = false) => {
 
     if (reset) {
       currentPage.value = 0
-      battles.value = []
     }
 
     const searchCondition = {}
@@ -307,7 +306,6 @@ const handleCategoryChange = ({ category, subCategory }) => {
 }
 
 const resetAndLoadBattles = () => {
-  battles.value = []
   currentPage.value = 0
   hasNext.value = true
   loadBattles(true)
