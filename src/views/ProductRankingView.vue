@@ -293,21 +293,24 @@ const fetchRanking = async (reset = false) => {
 // 카테고리 조회
 const fetchCategories = async () => {
   try {
-    const response = await categoryService.getCategories({ isActive: true })
+    console.log('📤 [RANKING] 카테고리 API 호출 중...')
+    const response = await categoryService.getRootCategories({ isActive: true })
+
+    console.log('📥 [RANKING] 카테고리 API 응답:', response)
 
     if (response.success && response.data) {
       const categoryList = Array.isArray(response.data) ? response.data : []
 
-      // '전체' 옵션과 함께 카테고리 목록 구성
+      // '전체' 옵션과 함께 카테고리 목록 구성 (2depth 최상위 카테고리만)
       categories.value = [
         { label: '전체', value: null },
         ...categoryList.map(cat => ({
           label: cat.categoryName,
-          value: cat.id
+          value: cat.categoryId || cat.id
         }))
       ]
 
-      console.log('✅ [RANKING] 카테고리 로드 완료:', categories.value.length)
+      console.log('✅ [RANKING] 카테고리 로드 완료:', categories.value)
     }
   } catch (e) {
     console.error('❌ [RANKING] 카테고리 로드 실패:', e)
@@ -316,6 +319,11 @@ const fetchCategories = async () => {
 
 // 이벤트 핸들러
 const handleCategoryChange = (categoryId) => {
+  console.log('🔄 [RANKING] 카테고리 변경:', {
+    previous: selectedCategory.value,
+    new: categoryId,
+    type: typeof categoryId
+  })
   selectedCategory.value = categoryId
   fetchRanking(true)
 }
