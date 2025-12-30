@@ -51,7 +51,7 @@
     <div v-else class="list-view">
       <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="handlePostClick(feed.feedId)">
         <div class="list-image">
-          <img :src="feed.thumbnailUrl?.fileUrl || 'https://via.placeholder.com/400'" :alt="feed.productName" />
+          <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
           <div v-if="feed.feedEvaluation" class="list-evaluation-badge-overlay">
             <span :class="['list-evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
               <svg class="list-eval-icon" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">

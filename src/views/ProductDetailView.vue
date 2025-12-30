@@ -290,7 +290,7 @@ const route = useRoute()
 const router = useRouter()
 const { isLoggedIn, userId } = useAuth()
 
-const defaultImage = 'https://via.placeholder.com/400'
+const defaultImage = 'https://placehold.co/400x400?text=No+Image'
 
 const loading = ref(true)
 const error = ref(null)

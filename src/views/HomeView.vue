@@ -42,7 +42,7 @@ const handleLike = (id) => {
 const trendingMemes = ref([
   {
     id: 1,
-    image: "https://via.placeholder.com/300x200/FF6B6B/FFFFFF?text=월요일+기분",
+    image: "https://placehold.co/300x200/FF6B6B/FFFFFF?text=월요일+기분",
     title: "월요일 아침 기분.jpg",
     likes: 1247,
     comments: 89,
@@ -50,7 +50,7 @@ const trendingMemes = ref([
   },
   {
     id: 2,
-    image: "https://via.placeholder.com/300x200/4ECDC4/FFFFFF?text=카페+대기",
+    image: "https://placehold.co/300x200/4ECDC4/FFFFFF?text=카페+대기",
     title: "카페 대기줄 현실",
     likes: 892,
     comments: 156,
@@ -58,7 +58,7 @@ const trendingMemes = ref([
   },
   {
     id: 3,
-    image: "https://via.placeholder.com/300x200/45B7D1/FFFFFF?text=배달+고민",
+    image: "https://placehold.co/300x200/45B7D1/FFFFFF?text=배달+고민",
     title: "배달음식 고민하는 나",
     likes: 2156,
     comments: 234,
@@ -73,7 +73,7 @@ const trendingFoods = ref([
     brand: "스타벅스",
     rating: 4.2,
     reviews: 1890,
-    image: "https://via.placeholder.com/150x150/FF69B4/FFFFFF?text=딸기라떼",
+    image: "https://placehold.co/150x150/FF69B4/FFFFFF?text=딸기라떼",
     price: "5,900원",
     isHot: true
   },
@@ -83,7 +83,7 @@ const trendingFoods = ref([
     brand: "파리바게뜨",
     rating: 4.5,
     reviews: 756,
-    image: "https://via.placeholder.com/150x150/FFD700/FFFFFF?text=케이크",
+    image: "https://placehold.co/150x150/FFD700/FFFFFF?text=케이크",
     price: "3,200원",
     isNew: true
   },
@@ -93,7 +93,7 @@ const trendingFoods = ref([
     brand: "삼양",
     rating: 4.1,
     reviews: 2341,
-    image: "https://via.placeholder.com/150x150/FF4500/FFFFFF?text=불닭",
+    image: "https://placehold.co/150x150/FF4500/FFFFFF?text=불닭",
     price: "1,800원",
     isHot: true
   }

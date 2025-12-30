@@ -24,7 +24,7 @@
     <!-- Image -->
     <div class="post-image-container" @dblclick="handleDoubleTapLike">
       <img
-          :src="feed.thumbnailUrl?.fileUrl || 'https://via.placeholder.com/400'"
+          :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'"
           :alt="feed.productName"
           class="post-image"
           loading="lazy"
