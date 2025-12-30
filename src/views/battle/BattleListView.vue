@@ -306,6 +306,7 @@ const handleCategoryChange = ({ category, subCategory }) => {
 }
 
 const resetAndLoadBattles = () => {
+  battles.value = []
   currentPage.value = 0
   hasNext.value = true
   loadBattles(true)
