@@ -15,19 +15,13 @@
           <p class="header-desc">이번 주 가장 인기 있는 제품들을 확인해보세요</p>
         </header>
 
-        <!-- 필터 -->
-        <div class="filter-section">
-          <div class="category-tabs">
-            <button
-                v-for="c in categories"
-                :key="c.value"
-                :class="['category-btn', { active: selectedCategory === c.value }]"
-                @click="handleCategoryChange(c.value)"
-            >
-              {{ c.label }}
-            </button>
-          </div>
-        </div>
+        <!-- 카테고리 필터 (Design 2 적용) -->
+        <CommonCategoryFilter
+            :categories="categories"
+            :show-view-toggle="false"
+            :initial-category-id="selectedCategoryId"
+            @category-change="handleCategoryChange"
+        />
 
         <!-- 로딩 -->
         <div v-if="loading && !products.length" class="loading-state">
@@ -169,6 +163,7 @@ import AppSidebar from '@/components/feed/AppSidebar.vue'
 import AppHeader from '@/components/feed/AppHeader.vue'
 import RankChange from '@/components/product/RankChange.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
+import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue';
 import { productService } from '@/services/ProductService.js'
 import { categoryService } from '@/services/CategoryService.js'
 
@@ -177,8 +172,9 @@ const route = useRoute()
 
 const DEFAULT_THUMBNAIL = 'https://picsum.photos/200'
 
-const categories = ref([{ label: '전체', value: null }])
-const selectedCategory = ref(null)
+// 상태
+const categories = ref([])
+const selectedCategoryId = ref(null)
 const products = ref([])
 const loading = ref(false)
 const hasNext = ref(true)
@@ -218,6 +214,13 @@ const goToDetail = (product) => {
   router.push({ name: 'ProductDetail', params: { id: product.id } })
 }
 
+// 카테고리 변경 핸들러
+const handleCategoryChange = ({ categoryId }) => {
+  console.log('🔄 [RANKING] 카테고리 변경:', categoryId)
+  selectedCategoryId.value = categoryId
+  fetchRanking(true)
+}
+
 // API 호출
 const fetchRanking = async (reset = false) => {
   if (loading.value) return
@@ -230,17 +233,14 @@ const fetchRanking = async (reset = false) => {
       hasNext.value = true
     }
 
-    // 검색 조건
     const searchCondition = {
       status: 'APPROVED'
     }
 
-    // 카테고리 필터
-    if (selectedCategory.value) {
-      searchCondition.categoryId = selectedCategory.value
+    if (selectedCategoryId.value) {
+      searchCondition.categoryId = selectedCategoryId.value
     }
 
-    // 페이징 (popularityScore 내림차순)
     const pageable = {
       page: currentPage.value,
       size: pageSize,
@@ -256,7 +256,6 @@ const fetchRanking = async (reset = false) => {
     if (response.success && response.data) {
       const pageData = response.data
 
-      // Spring Page 응답 처리
       if (pageData.content) {
         if (reset) {
           products.value = pageData.content
@@ -264,7 +263,6 @@ const fetchRanking = async (reset = false) => {
           products.value = [...products.value, ...pageData.content]
         }
 
-        // 페이징 정보 업데이트
         hasNext.value = !pageData.last
         totalElements.value = pageData.totalElements || 0
 
@@ -274,7 +272,6 @@ const fetchRanking = async (reset = false) => {
           hasNext: hasNext.value
         })
       } else if (Array.isArray(pageData)) {
-        // 배열 응답 (페이징 없음)
         products.value = reset ? pageData : [...products.value, ...pageData]
         hasNext.value = pageData.length >= pageSize
       }
@@ -294,38 +291,18 @@ const fetchRanking = async (reset = false) => {
 const fetchCategories = async () => {
   try {
     console.log('📤 [RANKING] 카테고리 API 호출 중...')
-    const response = await categoryService.getRootCategories({ isActive: true })
+    const response = await categoryService.getCategories({isActive: true})
 
     console.log('📥 [RANKING] 카테고리 API 응답:', response)
 
     if (response.success && response.data) {
-      const categoryList = Array.isArray(response.data) ? response.data : []
-
-      // '전체' 옵션과 함께 카테고리 목록 구성 (2depth 최상위 카테고리만)
-      categories.value = [
-        { label: '전체', value: null },
-        ...categoryList.map(cat => ({
-          label: cat.categoryName,
-          value: cat.categoryId || cat.id
-        }))
-      ]
-
+      // 계층 구조 그대로 유지 (children 포함)
+      categories.value = Array.isArray(response.data) ? response.data : []
       console.log('✅ [RANKING] 카테고리 로드 완료:', categories.value)
     }
   } catch (e) {
     console.error('❌ [RANKING] 카테고리 로드 실패:', e)
   }
-}
-
-// 이벤트 핸들러
-const handleCategoryChange = (categoryId) => {
-  console.log('🔄 [RANKING] 카테고리 변경:', {
-    previous: selectedCategory.value,
-    new: categoryId,
-    type: typeof categoryId
-  })
-  selectedCategory.value = categoryId
-  fetchRanking(true)
 }
 
 const loadMore = () => {
@@ -335,8 +312,10 @@ const loadMore = () => {
 
 // URL 쿼리 파라미터 감시
 watch(() => route.query, (query) => {
-  if (query.categoryId) selectedCategory.value = Number(query.categoryId)
-}, { immediate: true })
+  if (query.categoryId) {
+    selectedCategoryId.value = Number(query.categoryId)
+  }
+}, {immediate: true})
 
 // 마운트 시 데이터 로드
 onMounted(async () => {
@@ -346,7 +325,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-* { box-sizing: border-box; }
+/* 기존 스타일 유지 - 변경 없음 */
+* {
+  box-sizing: border-box;
+}
 
 .app-container {
   background: #fff;
@@ -355,31 +337,6 @@ onMounted(async () => {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
   max-width: 100vw;
-}
-
-.app-container {
-  padding: 0 1rem;
-}
-
-@media (min-width: 768px) {
-  .app-container {
-    padding: 0 2rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  .app-container {
-    padding: 0 3rem;
-    max-width: 1920px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-}
-
-@media (min-width: 1920px) {
-  .app-container {
-    padding: 0 4rem;
-  }
 }
 
 .main-content {
@@ -397,13 +354,13 @@ onMounted(async () => {
 .ranking-view {
   max-width: 900px;
   margin: 0 auto;
-  padding: 32px 24px;
 }
 
 /* 페이지 헤더 */
 .page-header {
-  margin-bottom: 32px;
+  padding: 32px 24px 24px;
 }
+
 .header-label {
   font-size: 12px;
   font-weight: 600;
@@ -412,47 +369,18 @@ onMounted(async () => {
   display: block;
   margin-bottom: 4px;
 }
+
 .page-header h1 {
   font-size: 28px;
   font-weight: 700;
   color: #111;
   margin: 0;
 }
+
 .header-desc {
   font-size: 14px;
   color: #999;
   margin: 8px 0 0;
-}
-
-/* 필터 */
-.filter-section {
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #eee;
-}
-.category-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.category-btn {
-  padding: 6px 14px;
-  border: 1px solid #eee;
-  background: #fff;
-  border-radius: 16px;
-  font-size: 13px;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.category-btn:hover {
-  border-color: #ddd;
-  color: #333;
-}
-.category-btn.active {
-  background: #111;
-  border-color: #111;
-  color: #fff;
 }
 
 /* 로딩 & 빈 상태 */
@@ -464,6 +392,7 @@ onMounted(async () => {
   padding: 80px 0;
   color: #999;
 }
+
 .spinner {
   width: 32px;
   height: 32px;
@@ -473,11 +402,16 @@ onMounted(async () => {
   animation: spin 0.8s linear infinite;
   margin-bottom: 16px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* Top 섹션 */
 .top-section {
-  margin-bottom: 24px;
+  padding: 24px;
 }
 
 /* 1위 히어로 카드 */
@@ -493,66 +427,79 @@ onMounted(async () => {
   margin-bottom: 16px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
+
 .hero-card:hover {
   border-color: #ddd;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
+
 .hero-rank {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
+
 .hero-rank .rank-number {
   font-size: 40px;
   font-weight: 800;
   color: #7c3aed;
   line-height: 1;
 }
+
 .hero-image-wrap {
   flex-shrink: 0;
 }
+
 .hero-image {
   width: 120px;
   height: 120px;
   border-radius: 12px;
   object-fit: cover;
 }
+
 .hero-info {
   flex: 1;
   min-width: 0;
 }
+
 .hero-info .brand {
   font-size: 13px;
   color: #999;
   display: block;
   margin-bottom: 4px;
 }
+
 .hero-info .name {
   font-size: 20px;
   font-weight: 600;
   color: #111;
   margin: 0 0 12px;
 }
+
 .hero-score {
   width: 100px;
   text-align: right;
 }
+
 .score-bar {
   height: 6px;
   background: #f5f5f5;
   border-radius: 3px;
   overflow: hidden;
 }
+
 .score-bar.small {
   height: 4px;
 }
+
 .score-fill {
   height: 100%;
   background: #7c3aed;
   border-radius: 3px;
   transition: width 0.3s ease;
 }
+
 .score-label {
   font-size: 11px;
   color: #999;
@@ -566,6 +513,7 @@ onMounted(async () => {
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
+
 .runner-card {
   display: flex;
   flex-direction: column;
@@ -576,22 +524,26 @@ onMounted(async () => {
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
+
 .runner-card:hover {
   border-color: #ddd;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
+
 .runner-rank {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
 }
+
 .runner-rank .rank-number {
   font-size: 28px;
   font-weight: 800;
   color: #ddd;
   line-height: 1;
 }
+
 .runner-image {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -599,15 +551,18 @@ onMounted(async () => {
   object-fit: cover;
   margin-bottom: 12px;
 }
+
 .runner-info {
   flex: 1;
 }
+
 .runner-info .brand {
   font-size: 12px;
   color: #999;
   display: block;
   margin-bottom: 2px;
 }
+
 .runner-info .name {
   font-size: 15px;
   font-weight: 600;
@@ -617,6 +572,7 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .runner-score {
   margin-top: 12px;
 }
@@ -627,6 +583,7 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
 }
+
 .stat {
   display: flex;
   align-items: center;
@@ -635,23 +592,27 @@ onMounted(async () => {
   font-weight: 500;
   color: #666;
 }
+
 .stat-sub {
   color: #999;
   font-weight: 400;
 }
+
 .stat.hot {
   color: #7c3aed;
 }
 
 /* 차트 리스트 */
 .chart-section {
-  margin-bottom: 24px;
+  padding: 0 24px 24px;
 }
+
 .chart-list {
   border: 1px solid #eee;
   border-radius: 12px;
   overflow: hidden;
 }
+
 .chart-item {
   display: flex;
   align-items: center;
@@ -662,18 +623,22 @@ onMounted(async () => {
   border-bottom: 1px solid #f5f5f5;
   transition: background 0.15s;
 }
+
 .chart-item:last-child {
   border-bottom: none;
 }
+
 .chart-item:hover {
   background: #fafafa;
 }
+
 .chart-rank {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 70px;
 }
+
 .chart-rank .rank-number {
   font-size: 16px;
   font-weight: 700;
@@ -681,6 +646,7 @@ onMounted(async () => {
   width: 24px;
   text-align: center;
 }
+
 .chart-image {
   width: 48px;
   height: 48px;
@@ -688,10 +654,12 @@ onMounted(async () => {
   object-fit: cover;
   flex-shrink: 0;
 }
+
 .chart-info {
   flex: 1;
   min-width: 0;
 }
+
 .chart-info .name {
   font-size: 14px;
   font-weight: 600;
@@ -701,40 +669,57 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .chart-info .brand {
   font-size: 12px;
   color: #999;
 }
+
 .chart-stats {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .chart-bar {
   width: 80px;
 }
 
 @media (max-width: 768px) {
-  .ranking-view {
+  .page-header {
     padding: 20px 16px;
   }
+
+  .top-section {
+    padding: 16px;
+  }
+
+  .chart-section {
+    padding: 0 16px 16px;
+  }
+
   .page-header h1 {
     font-size: 24px;
   }
+
   .hero-card {
     flex-wrap: wrap;
     gap: 16px;
   }
+
   .hero-image {
     width: 80px;
     height: 80px;
   }
+
   .hero-score {
     width: 100%;
   }
+
   .runner-grid {
     grid-template-columns: 1fr;
   }
+
   .chart-stats, .chart-bar {
     display: none;
   }
@@ -743,8 +728,9 @@ onMounted(async () => {
 /* 더보기 */
 .load-more {
   text-align: center;
-  padding-top: 8px;
+  padding: 8px 24px 32px;
 }
+
 .load-more-btn {
   padding: 12px 32px;
   background: #fff;
@@ -756,10 +742,12 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.15s;
 }
+
 .load-more-btn:hover:not(:disabled) {
   border-color: #ddd;
   color: #333;
 }
+
 .load-more-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
