@@ -7,7 +7,7 @@ import {ENV, getServiceUrl} from "@/config/env.js";
 class ProductService extends BaseApiService {
   constructor() {
     const baseURL = `${getServiceUrl('PRODUCT')}/api`
-    super(baseURL, 'FEED')
+    super(baseURL, 'PRODUCT')
     console.log(`⚔️ [PRODUCT] Content Server URL: ${this.baseURL}`)
     console.log(`🌍 [PRODUCT] Environment: ${ENV.MODE}`)
   }
