@@ -668,7 +668,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   .post-header { padding: 12px 16px 8px; }
   .author-avatar { width: 32px; height: 32px; }
   .avatar-icon { width: 16px; height: 16px; }
-  .author-name { font-size: 13px; max-width: 100px; font-weight: 600; }
+  .author-name { font-size: 13px; max-width: 100px; font-weight: 600; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
   .category-badge { font-size: 10px; padding: 2px 6px; }
   .post-time { font-size: 11px; color: #94A3B8; }
   .more-icon { width: 14px; height: 14px; }
@@ -689,8 +689,8 @@ const formatCount = (count) => feedUtils.formatCount(count);
   }
   .action-icon { width: 20px; height: 20px; }
   .action-btn { padding: 4px 6px; font-size: 13px; gap: 4px; }
-  .post-title { font-size: 15px; font-weight: 700; }
-  .post-review { font-size: 14px; color: #475569; -webkit-line-clamp: 3; }
+  .post-title { font-size: 15px; font-weight: 700; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+  .post-review { font-size: 14px; color: #475569; -webkit-line-clamp: 3; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
 
   .post-details {
     border-top: none;

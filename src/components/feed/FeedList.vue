@@ -744,19 +744,21 @@ defineExpose({ observerTarget });
 
   .author-avatar-small { width: 32px; height: 32px; }
   .avatar-placeholder svg { width: 14px; height: 14px; }
-  .author-name { font-size: 13px; max-width: 100px; font-weight: 600; }
+  .author-name { font-size: 13px; max-width: 100px; font-weight: 600; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
   .list-category { font-size: 10px; padding: 3px 6px; }
   .list-time { font-size: 11px; color: #94A3B8; }
 
   .list-title {
     font-size: 15px;
     font-weight: 700;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     margin-bottom: 4px;
   }
 
   .list-review {
     font-size: 14px;
     color: #475569;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     -webkit-line-clamp: 3;
   }
 
