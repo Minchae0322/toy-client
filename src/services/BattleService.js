@@ -309,9 +309,9 @@ class BattleService extends BaseApiService {
    * 상태별 배틀 조회
    */
   async getBattlesByStatus(status, searchCondition = {}, pageable = {}) {
-    const validStatuses = ['DRAFT', 'ACTIVE', 'CLOSED', 'EARLY_CLOSED']
+    const validStatuses = ['NORMAL', 'SUSPENDED', 'EARLY_CLOSED']
     if (!validStatuses.includes(status?.toUpperCase())) {
-      throw new Error('올바른 배틀 상태를 선택해주세요. (DRAFT, ACTIVE, CLOSED, EARLY_CLOSED)')
+      throw new Error('올바른 배틀 상태를 선택해주세요. (NORMAL, SUSPENDED, EARLY_CLOSED)')
     }
 
     return await this.getBattles({
@@ -651,12 +651,17 @@ class BattleService extends BaseApiService {
     }
 
     if (validated.status) {
-      const validStatuses = ['DRAFT', 'ACTIVE', 'CLOSED', 'EARLY_CLOSED']
+      const validStatuses = ['NORMAL', 'SUSPENDED', 'EARLY_CLOSED']
       if (validStatuses.includes(validated.status.toUpperCase())) {
         validated.status = validated.status.toUpperCase()
       } else {
         delete validated.status
       }
+    }
+
+    // isActive 필드 검증 추가
+    if (validated.isActive !== undefined) {
+      validated.isActive = Boolean(validated.isActive)
     }
 
     if (validated.creatorId && isNaN(parseInt(validated.creatorId))) {

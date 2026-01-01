@@ -220,9 +220,9 @@ const loadBattles = async (reset = false) => {
 
     const searchCondition = {}
     if (activeTab.value === 'ongoing') {
-      searchCondition.status = 'ACTIVE'
+      searchCondition.isActive = true
     } else if (activeTab.value === 'ended') {
-      searchCondition.status = 'CLOSED'
+      searchCondition.isActive = false
     } else if (activeTab.value === 'my') {
       searchCondition.creatorId = authStore.userId
     }
@@ -261,7 +261,7 @@ const loadBattles = async (reset = false) => {
 const updateTabCounts = async () => {
   try {
     const ongoingResponse = await battleService.getBattles(
-        { status: 'ACTIVE' },
+        { isActive: true },
         { page: 0, size: 1 }
     )
     if (ongoingResponse.success && ongoingResponse.data.totalElements !== undefined) {
@@ -269,7 +269,7 @@ const updateTabCounts = async () => {
     }
 
     const endedResponse = await battleService.getBattles(
-        { status: 'CLOSED' },
+        { isActive: false },
         { page: 0, size: 1 }
     )
     if (endedResponse.success && endedResponse.data.totalElements !== undefined) {
