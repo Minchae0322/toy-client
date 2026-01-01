@@ -114,25 +114,43 @@ const categoryName = computed(() => {
       || '기타'
 })
 
+// endDate 기준으로 진행 여부를 판단하는 헬퍼 함수
+const isActiveByEndDate = computed(() => {
+  if (!props.battle?.endDate) return true
+  return new Date(props.battle.endDate) > new Date()
+})
+
 const statusText = computed(() => {
+  const status = props.battle?.status?.title || props.battle?.status
+
+  // status가 NORMAL인 경우 endDate로 판단
+  if (status === 'NORMAL') {
+    return isActiveByEndDate.value ? '진행중' : '종료됨'
+  }
+
   // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
   if (props.battle?.isActive !== undefined) {
     return props.battle.isActive ? '진행중' : '종료'
   }
 
-  const status = props.battle?.status?.title || props.battle?.status
-  const map = { ACTIVE: '진행중', SCHEDULED: '예정', CLOSED: '종료', ENDED: '종료', EARLY_CLOSED: '조기종료', NORMAL: '진행중', SUSPENDED: '중단됨' }
+  const map = { ACTIVE: '진행중', SCHEDULED: '예정', CLOSED: '종료', ENDED: '종료', EARLY_CLOSED: '조기종료', SUSPENDED: '중단됨' }
   return map[status] || '대기'
 })
 
 const statusClass = computed(() => {
+  const status = props.battle?.status?.title || props.battle?.status
+
+  // status가 NORMAL인 경우 endDate로 판단
+  if (status === 'NORMAL') {
+    return isActiveByEndDate.value ? 'active' : 'ended'
+  }
+
   // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
   if (props.battle?.isActive !== undefined) {
     return props.battle.isActive ? 'active' : 'ended'
   }
 
-  const status = props.battle?.status?.title || props.battle?.status
-  const map = { ACTIVE: 'active', SCHEDULED: 'scheduled', CLOSED: 'ended', ENDED: 'ended', EARLY_CLOSED: 'ended', NORMAL: 'active', SUSPENDED: 'suspended' }
+  const map = { ACTIVE: 'active', SCHEDULED: 'scheduled', CLOSED: 'ended', ENDED: 'ended', EARLY_CLOSED: 'ended', SUSPENDED: 'suspended' }
   return map[status] || 'draft'
 })
 
@@ -156,11 +174,21 @@ const dDay = computed(() => {
 })
 
 const dDayText = computed(() => {
+  const status = props.battle?.status?.title || props.battle?.status
+
+  // status가 NORMAL인 경우 endDate로 판단
+  if (status === 'NORMAL') {
+    const days = dDay.value
+    if (days === null) return ''
+    if (days < 0) return '종료'
+    if (days === 0) return '오늘 마감'
+    return `D-${days}`
+  }
+
   // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
   if (props.battle?.isActive !== undefined) {
     if (!props.battle.isActive) return '종료'
   } else {
-    const status = props.battle?.status?.title || props.battle?.status
     if (status === 'CLOSED' || status === 'ENDED') return '종료'
   }
 
@@ -172,12 +200,18 @@ const dDayText = computed(() => {
 })
 
 const showDeadline = computed(() => {
+  const status = props.battle?.status?.title || props.battle?.status
+
+  // status가 NORMAL인 경우 endDate가 있으면 항상 D-day 배지 표시
+  if (status === 'NORMAL') {
+    return dDay.value !== null
+  }
+
   // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
   if (props.battle?.isActive !== undefined) {
     return props.battle.isActive && dDay.value !== null
   }
 
-  const status = props.battle?.status?.title || props.battle?.status
   return status === 'ACTIVE' && dDay.value !== null
 })
 
@@ -189,11 +223,18 @@ const ddayClass = computed(() => {
 })
 
 const isActive = computed(() => {
+  const status = props.battle?.status?.title || props.battle?.status
+
+  // status가 NORMAL인 경우 endDate로 판단
+  if (status === 'NORMAL') {
+    return isActiveByEndDate.value
+  }
+
   if (props.battle?.isActive !== undefined) {
     return props.battle.isActive
   }
-  const status = props.battle?.status?.title || props.battle?.status
-  return status === 'ACTIVE' || status === 'NORMAL'
+
+  return status === 'ACTIVE'
 })
 
 const daysLeftText = computed(() => {
