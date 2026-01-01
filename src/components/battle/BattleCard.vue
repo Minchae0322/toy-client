@@ -43,6 +43,7 @@
       <div class="stats">
         <span>{{ itemCount }}개 참여</span>
         <span>{{ formatNumber(battle.totalVotes) }} 투표</span>
+        <span v-if="isActive && daysLeftText" class="days-left">{{ daysLeftText }}</span>
       </div>
 
       <div class="card-footer">
@@ -114,14 +115,24 @@ const categoryName = computed(() => {
 })
 
 const statusText = computed(() => {
+  // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
+  if (props.battle?.isActive !== undefined) {
+    return props.battle.isActive ? '진행중' : '종료'
+  }
+
   const status = props.battle?.status?.title || props.battle?.status
-  const map = { ACTIVE: '진행중', SCHEDULED: '예정', CLOSED: '종료', ENDED: '종료', EARLY_CLOSED: '조기종료' }
+  const map = { ACTIVE: '진행중', SCHEDULED: '예정', CLOSED: '종료', ENDED: '종료', EARLY_CLOSED: '조기종료', NORMAL: '진행중', SUSPENDED: '중단됨' }
   return map[status] || '대기'
 })
 
 const statusClass = computed(() => {
+  // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
+  if (props.battle?.isActive !== undefined) {
+    return props.battle.isActive ? 'active' : 'ended'
+  }
+
   const status = props.battle?.status?.title || props.battle?.status
-  const map = { ACTIVE: 'active', SCHEDULED: 'scheduled', CLOSED: 'ended', ENDED: 'ended', EARLY_CLOSED: 'ended' }
+  const map = { ACTIVE: 'active', SCHEDULED: 'scheduled', CLOSED: 'ended', ENDED: 'ended', EARLY_CLOSED: 'ended', NORMAL: 'active', SUSPENDED: 'suspended' }
   return map[status] || 'draft'
 })
 
@@ -145,8 +156,14 @@ const dDay = computed(() => {
 })
 
 const dDayText = computed(() => {
-  const status = props.battle?.status?.title || props.battle?.status
-  if (status === 'CLOSED' || status === 'ENDED') return '종료'
+  // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
+  if (props.battle?.isActive !== undefined) {
+    if (!props.battle.isActive) return '종료'
+  } else {
+    const status = props.battle?.status?.title || props.battle?.status
+    if (status === 'CLOSED' || status === 'ENDED') return '종료'
+  }
+
   const days = dDay.value
   if (days === null) return ''
   if (days < 0) return '종료'
@@ -155,6 +172,11 @@ const dDayText = computed(() => {
 })
 
 const showDeadline = computed(() => {
+  // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
+  if (props.battle?.isActive !== undefined) {
+    return props.battle.isActive && dDay.value !== null
+  }
+
   const status = props.battle?.status?.title || props.battle?.status
   return status === 'ACTIVE' && dDay.value !== null
 })
@@ -164,6 +186,22 @@ const ddayClass = computed(() => {
   if (days === null) return ''
   if (days <= 3) return 'urgent'
   return 'normal'
+})
+
+const isActive = computed(() => {
+  if (props.battle?.isActive !== undefined) {
+    return props.battle.isActive
+  }
+  const status = props.battle?.status?.title || props.battle?.status
+  return status === 'ACTIVE' || status === 'NORMAL'
+})
+
+const daysLeftText = computed(() => {
+  const days = dDay.value
+  if (days === null || days < 0) return ''
+  if (days === 0) return '오늘 마감'
+  if (days === 1) return '1일 남음'
+  return `${days}일 남음`
 })
 </script>
 
@@ -236,6 +274,11 @@ const ddayClass = computed(() => {
   color: #fff;
 }
 
+.status-badge.suspended {
+  background: #f59e0b;
+  color: #fff;
+}
+
 .status-badge.draft {
   background: #e2e8f0;
   color: #64748b;
@@ -299,6 +342,11 @@ const ddayClass = computed(() => {
   gap: 12px;
   font-size: 11px;
   color: #94a3b8;
+}
+
+.stats .days-left {
+  color: #9333ea;
+  font-weight: 500;
 }
 
 /* 푸터 */
