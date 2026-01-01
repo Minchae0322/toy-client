@@ -750,6 +750,7 @@ defineExpose({ observerTarget });
 
   .list-title {
     font-size: 15px;
+    font-weight: 700;
     margin-bottom: 4px;
   }
 
