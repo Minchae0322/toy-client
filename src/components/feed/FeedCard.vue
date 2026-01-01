@@ -689,7 +689,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   }
   .action-icon { width: 20px; height: 20px; }
   .action-btn { padding: 4px 6px; font-size: 13px; gap: 4px; }
-  .post-title { font-size: 15px; }
+  .post-title { font-size: 15px; font-weight: 700; }
   .post-review { font-size: 14px; color: #475569; -webkit-line-clamp: 3; }
 
   .post-details {
