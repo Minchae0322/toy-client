@@ -683,9 +683,9 @@ const formatCount = (count) => feedUtils.formatCount(count);
 
   .post-content { padding: 12px 16px 16px; }
   .post-actions {
-    border-bottom: none;
-    margin-bottom: 8px;
-    padding-bottom: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
   }
   .action-icon { width: 20px; height: 20px; }
   .action-btn { padding: 4px 6px; font-size: 13px; gap: 4px; }
