@@ -71,7 +71,7 @@ onUnmounted(() => {
           <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="logo-text">HYPE BATTLE</span>
+        <span class="logo-text">요거뜨</span>
       </RouterLink>
 
       <!-- 데스크톱 네비게이션 -->
@@ -201,25 +201,31 @@ onUnmounted(() => {
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   color: #000;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease;
 }
 
 .logo:hover {
-  opacity: 0.7;
+  opacity: 0.8;
+  transform: translateY(-1px);
 }
 
 .logo-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  color: #9333ea;
 }
 
 .logo-text {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.8px;
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* 네비게이션 */
