@@ -205,6 +205,7 @@ onUnmounted(() => {
   text-decoration: none;
   color: #000;
   transition: all 0.2s ease;
+  margin-left: 24px;
 }
 
 .logo:hover {
