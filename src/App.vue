@@ -559,6 +559,9 @@ onUnmounted(() => {
 .main {
   min-height: calc(100vh - 64px);
   background: #ffffff;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .main.auth-page {

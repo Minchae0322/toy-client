@@ -311,35 +311,13 @@ onUnmounted(() => {
   color: var(--primary);
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
-  max-width: 100vw;
+  max-width: 100%;
+  padding: 0 16px;
 }
 
-/* 모바일: 작은 여백 */
-.app-container {
-  padding: 0 1rem;
-}
-
-/* 태블릿: 중간 여백 */
 @media (min-width: 768px) {
   .app-container {
-    padding: 0 2rem;
-  }
-}
-
-/* 데스크톱: 큰 여백 */
-@media (min-width: 1280px) {
-  .app-container {
-    padding: 0 3rem;
-    max-width: 1920px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-}
-
-/* 대형 화면: 더 큰 여백 */
-@media (min-width: 1920px) {
-  .app-container {
-    padding: 0 4rem;
+    padding: 0 16px;
   }
 }
 
