@@ -190,7 +190,7 @@ onUnmounted(() => {
 .header-content {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 10px;
+  padding: 0 16px;
   height: 64px;
   display: flex;
   align-items: center;
