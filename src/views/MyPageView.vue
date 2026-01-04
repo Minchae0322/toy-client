@@ -114,6 +114,15 @@
 
           <!-- Menu Section -->
           <div class="menu-section">
+            <button class="menu-item" @click="goToProfile">
+              <div class="menu-left">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                </svg>
+                <span>프로필</span>
+              </div>
+              <ChevronRight :size="18" />
+            </button>
             <button class="menu-item" @click="goToMyFeeds">
               <div class="menu-left"><FileText :size="18" /><span>내 피드</span></div>
               <ChevronRight :size="18" />
@@ -340,6 +349,7 @@ const handleImageError = (e) => {
 
 const showFollowers = () => console.log('팔로워 목록')
 const showFollowings = () => console.log('팔로잉 목록')
+const goToProfile = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToMyFeeds = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToSavedPosts = () => console.log('저장한 글')
 const goToNotificationSettings = () => console.log('알림 설정')
