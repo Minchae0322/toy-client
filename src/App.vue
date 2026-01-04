@@ -1,11 +1,12 @@
 <script setup>
-import {RouterLink, RouterView, useRoute} from 'vue-router'
+import {RouterLink, RouterView, useRoute, useRouter} from 'vue-router'
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {webSocketService} from '@/services/webSocketService.js'
 import {useAuth} from '@/composables/useAuth'
 
 const route = useRoute()
-const {userInfo, isLoggedIn, isAdmin, logout} = useAuth()
+const router = useRouter()
+const {userInfo, isLoggedIn, isAdmin, logout, userId} = useAuth()
 
 const isLoggingOut = ref(false)
 const wsConnected = ref(false)
@@ -15,6 +16,10 @@ let unsubscribeWsStatus = null
 const isAuthPage = computed(() =>
     ['/login', '/register', '/oauth/callback'].includes(route.path)
 )
+
+const profileImageUrl = computed(() => {
+  return userInfo.value?.profilePicture?.fileUrl || null
+})
 
 const monitorWebSocketStatus = () => {
   wsConnected.value = webSocketService.isConnected()
@@ -34,6 +39,22 @@ const handleLogout = async () => {
   } catch {}
   await logout()
   isLoggingOut.value = false
+}
+
+const goToProfile = async () => {
+  if (!userId.value) {
+    console.error('❌ userId가 없습니다')
+    return
+  }
+
+  try {
+    await router.push({
+      name: 'UserFeedList',
+      params: {userId: String(userId.value)}
+    })
+  } catch (error) {
+    console.error('❌ 프로필 이동 실패:', error)
+  }
 }
 
 onMounted(() => {
@@ -109,8 +130,11 @@ onUnmounted(() => {
             <div class="ws-status" :class="{ connected: wsConnected }" title="WebSocket 연결 상태">
               <span class="ws-dot"></span>
             </div>
-            <div class="user-info">
-              <div class="user-avatar">{{ userInfo?.username?.charAt(0).toUpperCase() }}</div>
+            <div class="user-info" @click="goToProfile" style="cursor: pointer;">
+              <div class="user-avatar">
+                <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
+                <span v-else>{{ userInfo?.username?.charAt(0).toUpperCase() }}</span>
+              </div>
               <span class="user-name">{{ userInfo?.username }}</span>
             </div>
             <button @click="handleLogout" class="btn-ghost" :disabled="isLoggingOut">
@@ -148,12 +172,15 @@ onUnmounted(() => {
             <RouterLink to="/admin/category" class="mobile-menu-item" @click="showMobileMenu = false">카테고리</RouterLink>
           </div>
           <div class="mobile-menu-footer">
-            <div class="mobile-user-info">
+            <div class="mobile-user-info" @click="goToProfile" style="cursor: pointer;">
               <div class="ws-status mobile" :class="{ connected: wsConnected }">
                 <span class="ws-dot"></span>
                 <span class="ws-label">{{ wsConnected ? '연결됨' : '연결 끊김' }}</span>
               </div>
-              <div class="user-avatar">{{ userInfo?.username?.charAt(0).toUpperCase() }}</div>
+              <div class="user-avatar">
+                <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
+                <span v-else>{{ userInfo?.username?.charAt(0).toUpperCase() }}</span>
+              </div>
               <span>{{ userInfo?.username }}</span>
             </div>
             <button @click="handleLogout" class="btn-ghost" :disabled="isLoggingOut">
@@ -435,6 +462,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.user-info:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .user-avatar {
@@ -448,6 +482,14 @@ onUnmounted(() => {
   border-radius: 50%;
   font-size: 13px;
   font-weight: 600;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .user-name {
