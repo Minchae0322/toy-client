@@ -3,7 +3,7 @@
     <div class="auth-container">
       <!-- 로고 영역 -->
       <div class="logo-area">
-        <img src="/images/yogodde_01.png" alt="요거뜨" class="logo-image" />
+        <img src="/images/yogodde02.png" alt="요거뜨" class="logo-image" />
       </div>
 
       <!-- 탭 컨테이너 -->
@@ -231,13 +231,13 @@ onMounted(async () => {
 }
 
 .logo-area {
-  padding: 40px 32px 28px;
+  padding: 30px 22px 28px;
   text-align: center;
   border-bottom: 1px solid #F0F0F0;
 }
 
 .logo-image {
-  max-width: 200px;
+  max-width: 120px;
   height: auto;
 }
 
