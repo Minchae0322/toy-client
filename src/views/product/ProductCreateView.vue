@@ -78,18 +78,47 @@
                       카테고리
                       <span class="required">*</span>
                     </label>
-                    <select
-                        v-model="form.categoryId"
-                        class="form-select"
-                        :class="{ 'has-error': errors.categoryId }"
-                        @change="validateField('categoryId')"
-                    >
-                      <option :value="null" disabled>카테고리 선택</option>
-                      <option v-for="cat in categories" :key="cat.categoryId" :value="cat.categoryId">
-                        {{ cat.categoryName }}
-                      </option>
-                    </select>
-                    <span v-if="errors.categoryId" class="error-text">{{ errors.categoryId }}</span>
+                    <div class="category-dropdown" ref="categoryDropdownRef">
+                      <button class="category-select-btn" @click.stop="toggleCategoryDropdown" :disabled="categoriesLoading" type="button">
+                        <div v-if="form.subCategoryId" class="selected-category">
+                          <span class="category-text">{{ getSubCategoryLabel(form.subCategoryId) }}</span>
+                        </div>
+                        <span v-else-if="categoriesLoading" class="placeholder">카테고리 로딩 중...</span>
+                        <span v-else class="placeholder">카테고리를 선택하세요</span>
+                        <svg class="dropdown-icon" :class="{ open: showCategoryDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                      </button>
+
+                      <Transition :name="dropdownDirection === 'up' ? 'dropdown-up' : 'dropdown'">
+                        <div v-if="showCategoryDropdown && !categoriesLoading" class="category-dropdown-menu" :class="{ 'dropdown-up': dropdownDirection === 'up' }">
+                          <div class="dropdown-header">
+                            <span class="dropdown-title">카테고리 선택</span>
+                            <button class="btn-close-dropdown" @click.stop="closeCategoryDropdown" type="button">
+                              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                              </svg>
+                            </button>
+                          </div>
+                          <div class="dropdown-content">
+                            <div v-for="parent in categories" :key="parent.categoryId" class="category-group">
+                              <div class="category-group-header">
+                                <span class="parent-name">{{ parent.categoryName }}</span>
+                              </div>
+                              <div v-if="parent.subCategories?.length" class="sub-categories">
+                                <button v-for="sub in parent.subCategories" :key="sub.categoryId" class="sub-category-item" :class="{ active: form.subCategoryId === sub.categoryId }" @click.stop="selectSubCategory(sub.categoryId)" type="button">
+                                  <span class="sub-name">{{ sub.categoryName }}</span>
+                                  <svg v-if="form.subCategoryId === sub.categoryId" class="check-icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Transition>
+                    </div>
+                    <span v-if="errors.subCategoryId" class="error-text">{{ errors.subCategoryId }}</span>
                   </div>
 
                   <div class="form-group">
@@ -304,8 +333,8 @@
                       <span class="check-icon">{{ form.brand.trim() ? '✓' : '○' }}</span>
                       브랜드
                     </li>
-                    <li :class="{ done: form.categoryId }">
-                      <span class="check-icon">{{ form.categoryId ? '✓' : '○' }}</span>
+                    <li :class="{ done: form.subCategoryId }">
+                      <span class="check-icon">{{ form.subCategoryId ? '✓' : '○' }}</span>
                       카테고리
                     </li>
                     <li :class="{ done: form.price && form.price.trim() }">
@@ -390,6 +419,10 @@ const isLoading = ref(false)
 const showSuccessModal = ref(false)
 const showLoginModal = ref(false)
 const categories = ref([])
+const categoriesLoading = ref(false)
+const showCategoryDropdown = ref(false)
+const dropdownDirection = ref('down')
+const categoryDropdownRef = ref(null)
 const thumbnailFile = ref(null)
 const additionalFiles = ref([])
 const selectedFeatures = ref([])
@@ -412,14 +445,14 @@ const form = reactive({
   feature: '',
   tags: [],
   releaseDate: '',
-  categoryId: null
+  subCategoryId: null
 })
 
 // Errors
 const errors = reactive({
   name: '',
   brand: '',
-  categoryId: '',
+  subCategoryId: '',
   price: '',
   thumbnail: '',
   additionalImages: '',
@@ -432,7 +465,7 @@ const completionPercentage = computed(() => {
   const total = 5
   if (form.name.trim()) completed++
   if (form.brand.trim()) completed++
-  if (form.categoryId) completed++
+  if (form.subCategoryId) completed++
   if (form.price && form.price.trim()) completed++
   if (thumbnailFile.value) completed++
   return Math.round((completed / total) * 100)
@@ -442,7 +475,7 @@ const isFormValid = computed(() => {
   return isLoggedIn.value &&
       form.name.trim() &&
       form.brand.trim() &&
-      form.categoryId &&
+      form.subCategoryId &&
       form.price && form.price.trim() &&
       thumbnailFile.value !== null &&
       Object.values(errors).every(error => !error)
@@ -463,10 +496,12 @@ onMounted(async () => {
   await checkAuthenticationStatus()
   if (isLoggedIn.value) await initializeComponent()
   else showAuthRequiredMessage()
+  document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', beforeUnloadHandler)
+  document.removeEventListener('click', handleClickOutside)
   if (thumbnailFile.value?.preview) URL.revokeObjectURL(thumbnailFile.value.preview)
   additionalFiles.value.forEach(f => f.preview && URL.revokeObjectURL(f.preview))
 })
@@ -527,9 +562,13 @@ const initializeComponent = async () => {
 
 const loadCategories = async () => {
   try {
+    categoriesLoading.value = true
     const response = await getCategories({ isActive: true })
-    if (response.success && response.data?.length > 0) {
-      categories.value = response.data
+    if (response.success && response.data) {
+      categories.value = response.data.map(parent => ({
+        ...parent,
+        subCategories: parent.children || []
+      }))
     } else {
       alert('카테고리를 불러올 수 없습니다.')
       categories.value = []
@@ -537,6 +576,8 @@ const loadCategories = async () => {
   } catch (error) {
     alert('카테고리를 불러오는 중 오류가 발생했습니다.')
     categories.value = []
+  } finally {
+    categoriesLoading.value = false
   }
 }
 
@@ -552,8 +593,8 @@ const validateField = (fieldName) => {
       if (!form.brand.trim()) errors.brand = '브랜드명은 필수입니다'
       else if (form.brand.length > 100) errors.brand = '브랜드명은 최대 100자입니다'
       break
-    case 'categoryId':
-      if (!form.categoryId) errors.categoryId = '카테고리를 선택해주세요'
+    case 'subCategoryId':
+      if (!form.subCategoryId) errors.subCategoryId = '카테고리를 선택해주세요'
       break
     case 'price':
       if (!form.price || form.price.trim() === '') errors.price = '가격은 필수입니다'
@@ -566,7 +607,7 @@ const validateField = (fieldName) => {
 const validateForm = () => {
   validateField('name')
   validateField('brand')
-  validateField('categoryId')
+  validateField('subCategoryId')
   validateField('price')
   if (!thumbnailFile.value) errors.thumbnail = '대표 이미지는 필수입니다'
   else errors.thumbnail = ''
@@ -642,6 +683,44 @@ const addTag = (tag) => {
 
 const removeTag = (index) => { selectedTags.value.splice(index, 1) }
 
+// Category Methods
+const toggleCategoryDropdown = () => {
+  if (!showCategoryDropdown.value && categoryDropdownRef.value) {
+    const rect = categoryDropdownRef.value.getBoundingClientRect()
+    const dropdownHeight = 400
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+      dropdownDirection.value = 'up'
+    } else {
+      dropdownDirection.value = 'down'
+    }
+  }
+  showCategoryDropdown.value = !showCategoryDropdown.value
+}
+
+const closeCategoryDropdown = () => { showCategoryDropdown.value = false }
+
+const selectSubCategory = (id) => {
+  form.subCategoryId = id
+  showCategoryDropdown.value = false
+  errors.subCategoryId = ''
+}
+
+const getSubCategoryLabel = (subCategoryId) => {
+  for (const parent of categories.value) {
+    if (parent.categoryId === subCategoryId) return parent.categoryName
+    for (const sub of (parent.subCategories || [])) {
+      if (sub.categoryId === subCategoryId) return `${parent.categoryName} > ${sub.categoryName}`
+    }
+  }
+  return ''
+}
+
+const handleClickOutside = (e) => {
+  if (categoryDropdownRef.value && !categoryDropdownRef.value.contains(e.target)) closeCategoryDropdown()
+}
+
 // Submit
 const handleSubmit = async () => {
   if (!isLoggedIn.value) {
@@ -707,7 +786,7 @@ const handleSubmit = async () => {
       feature: allFeatures.length > 0 ? allFeatures.join(';') : null,
       tags: selectedTags.value,
       releaseDate: form.releaseDate || null,
-      categoryId: form.categoryId,
+      categoryId: form.subCategoryId,
       thumbnailAttachmentInfo,
       attachmentFileInfos
     }
@@ -1375,4 +1454,108 @@ const beforeUnloadHandler = (event) => {
     padding: 20px;
   }
 }
+
+/* Category Dropdown */
+.category-dropdown { position: relative; }
+.category-select-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.category-select-btn:hover { border-color: #7c3aed; }
+.category-select-btn:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+.category-select-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.selected-category { display: flex; align-items: center; }
+.category-text { color: #333; }
+.placeholder { color: #bbb; }
+.dropdown-icon { width: 20px; height: 20px; color: #999; transition: transform 0.2s; }
+.dropdown-icon.open { transform: rotate(180deg); }
+
+.category-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  max-height: 400px;
+  overflow: hidden;
+  z-index: 100;
+}
+.category-dropdown-menu.dropdown-up {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f5f5f5;
+}
+.dropdown-title { font-size: 15px; font-weight: 700; color: #111; }
+.btn-close-dropdown {
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+}
+.btn-close-dropdown:hover { color: #333; }
+.btn-close-dropdown svg { width: 20px; height: 20px; }
+
+.dropdown-content { overflow-y: auto; max-height: 340px; padding: 8px; }
+.category-group { margin-bottom: 8px; }
+.category-group-header {
+  padding: 10px 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+.parent-name { font-size: 13px; font-weight: 700; color: #666; text-transform: uppercase; }
+
+.sub-categories { padding-left: 8px; }
+.sub-category-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sub-category-item:hover { background: #f5f5f5; }
+.sub-category-item.active { background: #f3e8ff; }
+.sub-name { font-size: 14px; font-weight: 500; color: #333; }
+.sub-category-item.active .sub-name { color: #7c3aed; font-weight: 600; }
+.check-icon { width: 18px; height: 18px; color: #7c3aed; }
+
+/* Dropdown Transitions */
+.dropdown-enter-active { animation: dropIn 0.2s ease; }
+.dropdown-leave-active { animation: dropOut 0.15s ease; }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-8px); } }
+@keyframes dropOut { to { opacity: 0; transform: translateY(-8px); } }
+
+.dropdown-up-enter-active { animation: dropUpIn 0.2s ease; }
+.dropdown-up-leave-active { animation: dropUpOut 0.15s ease; }
+@keyframes dropUpIn { from { opacity: 0; transform: translateY(8px); } }
+@keyframes dropUpOut { to { opacity: 0; transform: translateY(8px); } }
 </style>
