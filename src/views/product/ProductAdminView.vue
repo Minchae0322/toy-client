@@ -1,42 +1,5 @@
 <template>
   <div class="admin-container">
-    <!-- 사이드바 -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h1 class="logo">Admin</h1>
-      </div>
-      <nav class="sidebar-nav">
-        <a href="#" class="nav-item active">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-          </svg>
-          상품 관리
-        </a>
-        <a href="#" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          사용자 관리
-        </a>
-        <a href="#" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          리뷰 관리
-        </a>
-        <a href="#" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-            <line x1="6" y1="20" x2="6" y2="14"/>
-          </svg>
-          통계
-        </a>
-      </nav>
-    </aside>
-
     <!-- 메인 콘텐츠 -->
     <main class="main-content">
       <!-- 헤더 -->
@@ -632,53 +595,17 @@ onMounted(() => {
 * { box-sizing: border-box; }
 
 .admin-container {
-  display: flex;
   min-height: 100vh;
   background: #f8f9fa;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   color: #333;
 }
 
-/* 사이드바 */
-.sidebar {
-  width: 240px;
-  background: #1a1a2e;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.sidebar-header {
-  padding: 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.logo {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.sidebar-nav { padding: 16px 12px; }
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  color: rgba(255,255,255,0.6);
-  text-decoration: none;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.15s;
-  margin-bottom: 4px;
-}
-
-.nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-.nav-item.active { background: rgba(124, 58, 237, 0.3); color: #fff; }
-
 /* 메인 콘텐츠 */
 .main-content {
-  flex: 1;
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
   padding: 24px 32px;
   overflow-x: auto;
 }
@@ -1078,7 +1005,6 @@ onMounted(() => {
 
 /* 반응형 */
 @media (max-width: 1024px) {
-  .sidebar { display: none; }
   .main-content { padding: 16px; }
   .col-stats, .col-date { display: none; }
 }
