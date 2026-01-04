@@ -137,6 +137,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useProductDetail } from '@/composables/useProduct'
+import { useFile } from '@/services/FileService.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -144,9 +145,10 @@ const route = useRoute()
 const {
   fetchProduct,
   createReview,
-  uploadReviewImage,
   validateReviewData
 } = useProductDetail()
+
+const { upload } = useFile()
 
 // State
 const product = ref(null)
@@ -277,18 +279,18 @@ const handleSubmit = async () => {
 
     for (const image of previewImages.value) {
       console.log('📤 이미지 업로드 중:', image.file.name)
-      const fileInfo = await uploadReviewImage(image.file)
+      const uploadResult = await upload(image.file, { fileCode: 'REVIEW' })
 
-      if (fileInfo) {
-        // ProductCreate처럼 파일 정보 객체 사용
+      if (uploadResult.success && uploadResult.data) {
+        // 파일 정보 객체 사용
         attachmentFileInfos.push({
-          id: fileInfo.id,
-          fileUrl: fileInfo.fileUrl,
-          orgFileNm: fileInfo.orgFileNm,
-          fileSize: fileInfo.fileSize,
-          contentType: fileInfo.contentType
+          id: uploadResult.data.id,
+          fileUrl: uploadResult.data.fileUrl,
+          orgFileNm: uploadResult.data.orgFileNm,
+          fileSize: uploadResult.data.fileSize,
+          contentType: uploadResult.data.contentType
         })
-        console.log('✅ 이미지 업로드 성공:', fileInfo.orgFileNm)
+        console.log('✅ 이미지 업로드 성공:', uploadResult.data.orgFileNm)
       } else {
         console.error('❌ 이미지 업로드 실패:', image.file.name)
       }

@@ -404,6 +404,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProduct } from '@/composables/useProduct.js'
 import { useCategory } from '@/services/CategoryService.js'
+import { useFile } from '@/services/FileService.js'
 import { useAuth } from '@/composables/useAuth.js'
 
 import AuthLoading from '@/components/product/create/AuthLoading.vue'
@@ -414,8 +415,9 @@ import SuccessModal from '@/components/product/create/SuccessModal.vue'
 
 const router = useRouter()
 const { user, isLoggedIn, loading: authLoading, userId, userNickname, checkAuthStatus, logout } = useAuth()
-const { createProduct, debugStatus, uploadReviewImage } = useProduct()
+const { createProduct, debugStatus } = useProduct()
 const { getCategories } = useCategory()
+const { upload } = useFile()
 
 // State
 const isLoading = ref(false)
@@ -754,24 +756,24 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    // 리뷰 작성과 동일한 방식으로 이미지 업로드
-    const thumbnailUploadResult = await uploadReviewImage(thumbnailFile.value.file, 'PRODUCT')
-    if (!thumbnailUploadResult) throw new Error('대표 이미지 업로드 실패')
+    // FileService 사용하여 이미지 업로드
+    const thumbnailUploadResult = await upload(thumbnailFile.value.file, { fileCode: 'PRODUCT' })
+    if (!thumbnailUploadResult.success) throw new Error(`대표 이미지 업로드 실패: ${thumbnailUploadResult.error}`)
 
     const additionalUploadResults = []
     for (const fileObj of additionalFiles.value) {
-      const uploadResult = await uploadReviewImage(fileObj.file, 'PRODUCT')
-      if (!uploadResult) throw new Error('추가 이미지 업로드 실패')
-      additionalUploadResults.push(uploadResult)
+      const uploadResult = await upload(fileObj.file, { fileCode: 'PRODUCT' })
+      if (!uploadResult.success) throw new Error(`추가 이미지 업로드 실패: ${uploadResult.error}`)
+      additionalUploadResults.push(uploadResult.data)
     }
 
-    // 파일 정보 객체 구성 (리뷰와 동일한 형태)
+    // 파일 정보 객체 구성
     const thumbnailAttachmentInfo = {
-      fileId: thumbnailUploadResult.id,
-      storedPath: thumbnailUploadResult.fileUrl,
-      originName: thumbnailUploadResult.orgFileNm,
-      fileSize: thumbnailUploadResult.fileSize,
-      contentType: thumbnailUploadResult.contentType,
+      fileId: thumbnailUploadResult.data.id,
+      storedPath: thumbnailUploadResult.data.fileUrl,
+      originName: thumbnailUploadResult.data.orgFileNm,
+      fileSize: thumbnailUploadResult.data.fileSize,
+      contentType: thumbnailUploadResult.data.contentType || 'image/jpeg',
       fileExplain: '제품 대표 이미지'
     }
 
@@ -780,7 +782,7 @@ const handleSubmit = async () => {
       storedPath: uploadData.fileUrl,
       originName: uploadData.orgFileNm,
       fileSize: uploadData.fileSize,
-      contentType: uploadData.contentType,
+      contentType: uploadData.contentType || 'image/jpeg',
       fileExplain: `제품 추가 이미지 ${index + 1}`,
       sortOrder: index + 1
     }))
