@@ -755,12 +755,12 @@ const handleSubmit = async () => {
 
   try {
     // 리뷰 작성과 동일한 방식으로 이미지 업로드
-    const thumbnailUploadResult = await uploadReviewImage(thumbnailFile.value.file)
+    const thumbnailUploadResult = await uploadReviewImage(thumbnailFile.value.file, 'PRODUCT')
     if (!thumbnailUploadResult) throw new Error('대표 이미지 업로드 실패')
 
     const additionalUploadResults = []
     for (const fileObj of additionalFiles.value) {
-      const uploadResult = await uploadReviewImage(fileObj.file)
+      const uploadResult = await uploadReviewImage(fileObj.file, 'PRODUCT')
       if (!uploadResult) throw new Error('추가 이미지 업로드 실패')
       additionalUploadResults.push(uploadResult)
     }
