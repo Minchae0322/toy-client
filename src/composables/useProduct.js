@@ -559,42 +559,6 @@ export function useProduct() {
     }
   }
 
-  /**
-   * 리뷰 이미지 업로드 (파일 서버로 업로드 후 파일 정보 반환)
-   */
-  const uploadReviewImage = async (file) => {
-    if (!file) {
-      error.value = '파일이 필요합니다.'
-      return null
-    }
-
-    try {
-      console.log('📤 [COMPOSABLE] 리뷰 이미지 업로드 시작:', file.name)
-
-      const response = await productService.uploadReviewImage(file)
-
-      if (response.success && response.data) {
-        // ProductCreate처럼 파일 정보 객체 반환
-        const fileInfo = {
-          id: response.data.id,
-          fileUrl: response.data.fileUrl,
-          orgFileNm: response.data.orgFileNm || file.name,
-          fileSize: response.data.fileSize || file.size,
-          contentType: response.data.contentType || file.type
-        }
-
-        console.log('✅ [COMPOSABLE] 리뷰 이미지 업로드 성공:', fileInfo)
-        return fileInfo
-      } else {
-        throw new Error(response.error || '이미지 업로드에 실패했습니다.')
-      }
-    } catch (err) {
-      console.error('❌ [COMPOSABLE] 이미지 업로드 실패:', err)
-      handleError(err, '이미지 업로드')
-      return null
-    }
-  }
-
   // ==================== 유효성 검증 ====================
 
   const validateProductData = (productData) => {
@@ -745,7 +709,6 @@ export function useProduct() {
     toggleReviewLike,
     reportReview,
     fetchReviewStats,
-    uploadReviewImage,
 
     // 유틸리티
     validateProductData,
@@ -819,7 +782,6 @@ export function useProductDetail() {
     toggleReviewLike,
     reportReview,
     fetchReviewStats,
-    uploadReviewImage,
     validateReviewData,
     clearError
   } = useProduct()
@@ -845,7 +807,6 @@ export function useProductDetail() {
     toggleReviewLike,
     reportReview,
     fetchReviewStats,
-    uploadReviewImage,
     validateReviewData,
     clearError
   }

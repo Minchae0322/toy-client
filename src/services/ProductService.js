@@ -259,17 +259,6 @@ class ProductService extends BaseApiService {
     return await this.get(`/products/${productId}/reviews/stats`)
   }
 
-  async uploadReviewImage(file, fileCode = 'REVIEW') {
-    if (!file) throw new Error('파일이 필요합니다.')
-    if (file.size > 5 * 1024 * 1024) throw new Error('파일 크기는 5MB 이하여야 합니다.')
-    if (!file.type.startsWith('image/')) throw new Error('이미지 파일만 업로드 가능합니다.')
-
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('fileCode', fileCode)
-    return await this.uploadFile('/files/upload', formData)
-  }
-
   // ==================== 유틸리티/검증 메서드 ====================
 
   removeEmptyParams(params) {
