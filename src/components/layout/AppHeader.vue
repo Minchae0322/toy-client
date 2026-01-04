@@ -58,6 +58,12 @@
             </div>
 
             <div class="user-info">
+              <div class="user-avatar" v-if="userInfo?.profileImage">
+                <img :src="userInfo.profileImage" :alt="userInfo?.nickname || userInfo?.username" />
+              </div>
+              <div class="user-avatar-placeholder" v-else>
+                <span>{{ (userInfo?.nickname || userInfo?.username || '?')[0].toUpperCase() }}</span>
+              </div>
               <span class="username">{{ userInfo?.nickname || userInfo?.username }}</span>
               <span v-if="isAdmin" class="admin-badge">관리자</span>
             </div>
@@ -464,6 +470,46 @@ onUnmounted(() => {
   gap: 8px;
 }
 
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.user-avatar:hover {
+  border-color: #9333ea;
+  transform: scale(1.05);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #9333ea, #db2777);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.user-avatar-placeholder:hover {
+  transform: scale(1.05);
+}
+
 .username {
   font-weight: 600;
   color: #333;
@@ -515,6 +561,20 @@ onUnmounted(() => {
 
   .admin-menu {
     display: none;
+  }
+
+  .user-info .username {
+    display: none;
+  }
+
+  .user-avatar,
+  .user-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+  }
+
+  .user-avatar-placeholder {
+    font-size: 12px;
   }
 }
 </style>
