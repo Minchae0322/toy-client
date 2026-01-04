@@ -3,14 +3,7 @@
     <div class="auth-container">
       <!-- 로고 영역 -->
       <div class="logo-area">
-        <div class="logo">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="20" r="18" fill="#9333EA" fill-opacity="0.1"/>
-            <circle cx="20" cy="20" r="12" fill="#9333EA" fill-opacity="0.2"/>
-            <circle cx="20" cy="20" r="6" fill="#9333EA"/>
-          </svg>
-        </div>
-        <h1 class="brand-name">요거뜨</h1>
+        <img src="/images/yogodde_01.png" alt="요거뜨" class="logo-image" />
       </div>
 
       <!-- 탭 컨테이너 -->
@@ -243,16 +236,9 @@ onMounted(async () => {
   border-bottom: 1px solid #F0F0F0;
 }
 
-.logo {
-  display: inline-flex;
-  margin-bottom: 12px;
-}
-
-.brand-name {
-  font-size: 22px;
-  font-weight: 700;
-  color: #9333EA;
-  letter-spacing: -0.02em;
+.logo-image {
+  max-width: 200px;
+  height: auto;
 }
 
 .tab-container {
