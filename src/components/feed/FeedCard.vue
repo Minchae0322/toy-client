@@ -651,59 +651,172 @@ const formatCount = (count) => feedUtils.formatCount(count);
 }
 
 @media (max-width: 767px) {
-  /* 카드 스타일 제거 - 자연스러운 피드 흐름 */
+  /* Soft Modern 스타일 - 은은한 카드 디자인 */
   .post-card {
-    border-radius: 0;
+    border-radius: 16px;
     border: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: none;
-    background: transparent;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    background: #FFFFFF;
+    margin-bottom: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Soft hover effect */
   .post-card:hover {
-    box-shadow: none;
-    transform: none;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08), 0 0 0 1px rgba(99, 102, 241, 0.12);
+    transform: translateY(-2px);
   }
 
-  .post-header { padding: 12px 16px 8px; }
-  .author-avatar { width: 32px; height: 32px; }
+  .post-card:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.06), 0 0 0 1px rgba(99, 102, 241, 0.08);
+  }
+
+  .post-header {
+    padding: 14px 16px 10px;
+    background: linear-gradient(to bottom, rgba(250, 250, 250, 0.5) 0%, transparent 100%);
+  }
+
+  .author-avatar {
+    width: 32px;
+    height: 32px;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  }
   .avatar-icon { width: 16px; height: 16px; }
-  .author-name { font-size: 13px; max-width: 100px; font-weight: 600; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
-  .category-badge { font-size: 10px; padding: 2px 6px; }
-  .post-time { font-size: 11px; color: #94A3B8; }
+  .author-name {
+    font-size: 13px;
+    max-width: 100px;
+    font-weight: 600;
+    color: #1E293B;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  .category-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+    color: #4F46E5;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .post-time {
+    font-size: 11px;
+    color: #94A3B8;
+  }
   .more-icon { width: 14px; height: 14px; }
+
+  .btn-more {
+    padding: 6px;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .btn-more:hover {
+    background: rgba(99, 102, 241, 0.08);
+  }
 
   .post-image-container {
     border-radius: 0;
   }
 
-  .evaluation-status { padding: 5px 10px; font-size: 11px; gap: 4px; }
+  .evaluation-status { padding: 5px 12px; font-size: 11px; gap: 4px; }
   .eval-icon-small { width: 14px; height: 14px; }
   .heart-anim { width: 50px; height: 50px; }
 
-  .post-content { padding: 12px 16px 16px; }
+  .post-content {
+    padding: 12px 16px 16px;
+    background: linear-gradient(to bottom, rgba(250, 250, 250, 0.3) 0%, transparent 40px);
+  }
+
   .post-actions {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
     margin-bottom: 12px;
     padding-bottom: 10px;
   }
+
   .action-icon { width: 20px; height: 20px; }
-  .action-btn { padding: 4px 6px; font-size: 13px; gap: 4px; }
-  .post-title { font-size: 15px; font-weight: 700; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
-  .post-review { font-size: 14px; color: #475569; -webkit-line-clamp: 3; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+
+  .action-btn {
+    padding: 5px 8px;
+    font-size: 13px;
+    gap: 4px;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .action-btn:hover:not(:disabled) {
+    background: rgba(99, 102, 241, 0.06);
+  }
+
+  .action-btn.liked {
+    background: linear-gradient(135deg, #FFE4E6 0%, #FECDD3 100%);
+    color: #E11D48;
+  }
+
+  .action-btn.hot {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    color: #D97706;
+  }
+
+  .action-btn.saved {
+    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+    color: #4F46E5;
+  }
+
+  .post-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0F172A;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  .post-review {
+    font-size: 14px;
+    color: #64748B;
+    -webkit-line-clamp: 3;
+    line-height: 1.5;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
 
   .post-details {
-    border-top: none;
-    padding-top: 8px;
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+    padding-top: 10px;
+    margin-top: 10px;
   }
 
   .post-hashtags {
-    margin-top: 8px;
+    margin-top: 10px;
+    gap: 6px;
   }
 
   .hashtag {
+    font-size: 12px;
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+    padding: 4px 10px;
+    color: #0369A1;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .hashtag:hover {
+    background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+    color: #075985;
+    transform: translateY(-1px);
+  }
+
+  .buy-price {
+    font-weight: 700;
+    color: #0F172A;
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+    padding: 4px 10px;
+    border-radius: 8px;
     font-size: 13px;
-    color: #6366F1;
+  }
+
+  .discount {
+    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+    color: #DC2626;
   }
 }
 </style>
