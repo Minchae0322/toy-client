@@ -142,7 +142,7 @@ onUnmounted(() => {
           <div v-if="isAdmin" class="mobile-menu-section">
             <div class="mobile-menu-label">관리자</div>
             <RouterLink to="/admin" class="mobile-menu-item" @click="showMobileMenu = false">대시보드</RouterLink>
-            <RouterLink to="/admin/products" class="dropdown-item">상품 관리</RouterLink>
+            <RouterLink to="/admin/products" class="mobile-menu-item" @click="showMobileMenu = false">상품 관리</RouterLink>
             <RouterLink to="/admin/users" class="mobile-menu-item" @click="showMobileMenu = false">사용자</RouterLink>
             <RouterLink to="/admin/category" class="mobile-menu-item" @click="showMobileMenu = false">카테고리</RouterLink>
           </div>
