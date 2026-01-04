@@ -320,7 +320,10 @@ const visiblePages = computed(() => {
 })
 
 // 유틸리티
-const getThumbnailUrl = (product) => product.thumbnailDto?.filePath || DEFAULT_THUMBNAIL
+const getThumbnailUrl = (product) => {
+  // thumbnailDto의 fileUrl 또는 filePath 사용 (백엔드 응답에 맞춤)
+  return product.thumbnailDto?.fileUrl || product.thumbnailDto?.filePath || DEFAULT_THUMBNAIL
+}
 
 const formatCount = (count) => {
   if (!count) return '0'
