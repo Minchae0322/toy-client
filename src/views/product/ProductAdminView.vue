@@ -1,42 +1,5 @@
 <template>
   <div class="admin-container">
-    <!-- 사이드바 -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h1 class="logo">Admin</h1>
-      </div>
-      <nav class="sidebar-nav">
-        <a href="#" class="nav-item active">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-          </svg>
-          상품 관리
-        </a>
-        <a href="#" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          사용자 관리
-        </a>
-        <a href="#" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          리뷰 관리
-        </a>
-        <a href="#" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-            <line x1="6" y1="20" x2="6" y2="14"/>
-          </svg>
-          통계
-        </a>
-      </nav>
-    </aside>
-
     <!-- 메인 콘텐츠 -->
     <main class="main-content">
       <!-- 헤더 -->
@@ -302,7 +265,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-// import { productService } from '@/services/ProductService.js'
+import { productService } from '@/services/ProductService.js'
 
 const DEFAULT_THUMBNAIL = 'https://picsum.photos/200'
 
@@ -398,46 +361,76 @@ const showToast = (message, type = 'success') => {
   setTimeout(() => { toast.value.show = false }, 3000)
 }
 
-// API 호출 (Mock)
+// API 호출
 const fetchProducts = async () => {
   loading.value = true
   try {
-    // 실제 구현시 productService.getProducts() 호출
-    // Mock 데이터
-    await new Promise(r => setTimeout(r, 500))
+    // 검색 조건 구성
+    const searchCondition = {
+      status: selectedStatus.value,
+      keyword: searchKeyword.value || null
+    }
 
-    const mockProducts = Array.from({ length: 15 }, (_, i) => ({
-      id: currentPage.value * 15 + i + 1,
-      name: `상품 ${currentPage.value * 15 + i + 1}`,
-      brand: ['Apple', 'Samsung', 'LG', 'Sony'][i % 4],
-      categoryName: ['전자기기', '의류', '식품', '가구'][i % 4],
-      viewCount: Math.floor(Math.random() * 10000),
-      likeCount: Math.floor(Math.random() * 1000),
-      averageRating: (Math.random() * 2 + 3).toFixed(1),
-      status: ['PENDING', 'APPROVED', 'REJECTED'][i % 3],
-      price: Math.floor(Math.random() * 500000),
-      description: '상품 설명입니다.',
-      createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-    }))
+    // 페이징 및 정렬 옵션 구성
+    const pageable = {
+      page: currentPage.value,
+      size: pageSize,
+      sort: selectedSort.value
+    }
 
-    products.value = selectedStatus.value
-        ? mockProducts.filter(p => p.status === selectedStatus.value)
-        : mockProducts
+    console.log('📤 [ProductAdminView] API 호출:', { searchCondition, pageable })
 
-    totalElements.value = 150
-    totalPages.value = 10
+    // 실제 API 호출
+    const response = await productService.getProducts(searchCondition, pageable)
 
-    // 상태별 카운트 업데이트
-    statusTabs.value[0].count = 150
-    statusTabs.value[1].count = 50
-    statusTabs.value[2].count = 80
-    statusTabs.value[3].count = 20
+    if (response.success && response.data) {
+      // Page 객체 응답 처리
+      if (response.data.content) {
+        products.value = response.data.content
+        totalElements.value = response.data.totalElements || 0
+        totalPages.value = response.data.totalPages || 0
+      } else {
+        products.value = response.data
+        totalElements.value = response.data.length
+        totalPages.value = 1
+      }
+
+      console.log('✅ [ProductAdminView] 상품 목록 로드 성공:', products.value.length, '개')
+
+      // 상태별 카운트 업데이트 (추후 별도 API로 교체 가능)
+      await updateStatusCounts()
+    } else {
+      console.error('❌ [ProductAdminView] API 응답 실패:', response)
+      showToast('상품 목록을 불러오는데 실패했습니다', 'error')
+    }
 
   } catch (e) {
-    console.error('상품 로드 실패:', e)
+    console.error('❌ [ProductAdminView] 상품 로드 실패:', e)
     showToast('상품 목록을 불러오는데 실패했습니다', 'error')
   } finally {
     loading.value = false
+  }
+}
+
+// 상태별 카운트 업데이트
+const updateStatusCounts = async () => {
+  try {
+    // 각 상태별 카운트 조회 (실제 API로 교체 가능)
+    const promises = [
+      productService.getProducts({}, { page: 0, size: 1 }),
+      productService.getProducts({ status: 'PENDING' }, { page: 0, size: 1 }),
+      productService.getProducts({ status: 'APPROVED' }, { page: 0, size: 1 }),
+      productService.getProducts({ status: 'REJECTED' }, { page: 0, size: 1 })
+    ]
+
+    const results = await Promise.all(promises)
+
+    statusTabs.value[0].count = results[0].data?.totalElements || 0
+    statusTabs.value[1].count = results[1].data?.totalElements || 0
+    statusTabs.value[2].count = results[2].data?.totalElements || 0
+    statusTabs.value[3].count = results[3].data?.totalElements || 0
+  } catch (e) {
+    console.error('❌ [ProductAdminView] 상태별 카운트 업데이트 실패:', e)
   }
 }
 
@@ -494,43 +487,103 @@ const closeDetailModal = () => {
 }
 
 const approveProduct = async (product) => {
-  // API 호출
-  product.status = 'APPROVED'
-  showToast(`"${product.name}" 승인 완료`)
+  try {
+    const response = await productService.approveProduct(product.id)
+    if (response.success) {
+      product.status = 'APPROVED'
+      showToast(`"${product.name}" 승인 완료`)
+      await fetchProducts() // 목록 새로고침
+    } else {
+      showToast('승인에 실패했습니다', 'error')
+    }
+  } catch (error) {
+    console.error('❌ [ProductAdminView] 상품 승인 실패:', error)
+    showToast('승인에 실패했습니다', 'error')
+  }
 }
 
 const rejectProduct = async (product) => {
-  product.status = 'REJECTED'
-  showToast(`"${product.name}" 거부 처리됨`, 'warning')
+  try {
+    const response = await productService.rejectProduct(product.id)
+    if (response.success) {
+      product.status = 'REJECTED'
+      showToast(`"${product.name}" 거부 처리됨`, 'warning')
+      await fetchProducts() // 목록 새로고침
+    } else {
+      showToast('거부 처리에 실패했습니다', 'error')
+    }
+  } catch (error) {
+    console.error('❌ [ProductAdminView] 상품 거부 실패:', error)
+    showToast('거부 처리에 실패했습니다', 'error')
+  }
 }
 
 const deleteProduct = async (product) => {
   if (!confirm(`"${product.name}"을(를) 삭제하시겠습니까?`)) return
-  products.value = products.value.filter(p => p.id !== product.id)
-  showToast('삭제 완료')
+
+  try {
+    const response = await productService.deleteProduct(product.id)
+    if (response.success) {
+      products.value = products.value.filter(p => p.id !== product.id)
+      showToast('삭제 완료')
+      await fetchProducts() // 목록 새로고침
+    } else {
+      showToast('삭제에 실패했습니다', 'error')
+    }
+  } catch (error) {
+    console.error('❌ [ProductAdminView] 상품 삭제 실패:', error)
+    showToast('삭제에 실패했습니다', 'error')
+  }
 }
 
-const bulkApprove = () => {
-  products.value.forEach(p => {
-    if (selectedProducts.value.includes(p.id)) p.status = 'APPROVED'
-  })
-  showToast(`${selectedProducts.value.length}개 상품 승인 완료`)
-  selectedProducts.value = []
+const bulkApprove = async () => {
+  try {
+    const response = await productService.bulkApproveProducts(selectedProducts.value)
+    if (response.success) {
+      showToast(`${selectedProducts.value.length}개 상품 승인 완료`)
+      selectedProducts.value = []
+      await fetchProducts() // 목록 새로고침
+    } else {
+      showToast('일괄 승인에 실패했습니다', 'error')
+    }
+  } catch (error) {
+    console.error('❌ [ProductAdminView] 일괄 승인 실패:', error)
+    showToast('일괄 승인에 실패했습니다', 'error')
+  }
 }
 
-const bulkReject = () => {
-  products.value.forEach(p => {
-    if (selectedProducts.value.includes(p.id)) p.status = 'REJECTED'
-  })
-  showToast(`${selectedProducts.value.length}개 상품 거부 처리됨`, 'warning')
-  selectedProducts.value = []
+const bulkReject = async () => {
+  try {
+    const response = await productService.bulkRejectProducts(selectedProducts.value)
+    if (response.success) {
+      showToast(`${selectedProducts.value.length}개 상품 거부 처리됨`, 'warning')
+      selectedProducts.value = []
+      await fetchProducts() // 목록 새로고침
+    } else {
+      showToast('일괄 거부에 실패했습니다', 'error')
+    }
+  } catch (error) {
+    console.error('❌ [ProductAdminView] 일괄 거부 실패:', error)
+    showToast('일괄 거부에 실패했습니다', 'error')
+  }
 }
 
-const bulkDelete = () => {
+const bulkDelete = async () => {
   if (!confirm(`${selectedProducts.value.length}개 상품을 삭제하시겠습니까?`)) return
-  products.value = products.value.filter(p => !selectedProducts.value.includes(p.id))
-  showToast('삭제 완료')
-  selectedProducts.value = []
+
+  try {
+    const response = await productService.bulkDeleteProducts(selectedProducts.value)
+    if (response.success) {
+      showToast('삭제 완료')
+      selectedProducts.value = []
+      await fetchProducts() // 목록 새로고침
+    } else {
+      showToast('일괄 삭제에 실패했습니다', 'error')
+    }
+  } catch (error) {
+    console.error('❌ [ProductAdminView] 일괄 삭제 실패:', error)
+    showToast('일괄 삭제에 실패했습니다', 'error')
+  }
 }
 
 onMounted(() => {
@@ -542,53 +595,17 @@ onMounted(() => {
 * { box-sizing: border-box; }
 
 .admin-container {
-  display: flex;
   min-height: 100vh;
   background: #f8f9fa;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   color: #333;
 }
 
-/* 사이드바 */
-.sidebar {
-  width: 240px;
-  background: #1a1a2e;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.sidebar-header {
-  padding: 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.logo {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.sidebar-nav { padding: 16px 12px; }
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  color: rgba(255,255,255,0.6);
-  text-decoration: none;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.15s;
-  margin-bottom: 4px;
-}
-
-.nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-.nav-item.active { background: rgba(124, 58, 237, 0.3); color: #fff; }
-
 /* 메인 콘텐츠 */
 .main-content {
-  flex: 1;
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
   padding: 24px 32px;
   overflow-x: auto;
 }
@@ -988,7 +1005,6 @@ onMounted(() => {
 
 /* 반응형 */
 @media (max-width: 1024px) {
-  .sidebar { display: none; }
   .main-content { padding: 16px; }
   .col-stats, .col-date { display: none; }
 }
