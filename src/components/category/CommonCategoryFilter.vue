@@ -28,30 +28,6 @@
         </div>
         <div class="scroll-fade-right" :class="{ visible: showRightFade }"></div>
       </div>
-
-      <!-- View Toggle - Desktop Only -->
-      <div v-if="showViewToggle" class="view-toggle">
-        <button
-            @click="$emit('update:viewMode', 'feed')"
-            :class="['view-btn', { active: viewMode === 'feed' }]"
-            title="피드 뷰"
-        >
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-          </svg>
-          <span>피드</span>
-        </button>
-        <button
-            @click="$emit('update:viewMode', 'list')"
-            :class="['view-btn', { active: viewMode === 'list' }]"
-            title="리스트 뷰"
-        >
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
-          </svg>
-          <span>리스트</span>
-        </button>
-      </div>
     </div>
 
     <!-- 2depth: 서브 카테고리 (선택한 카테고리에 children이 있을 때만) -->

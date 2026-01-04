@@ -237,6 +237,7 @@ onUnmounted(() => {
 .logo-icon {
   width: 28px;
   height: 28px;
+  margin-left: 23px;
   color: #9333ea;
 }
 
