@@ -18,6 +18,7 @@ import ProductRankingView from '@/views/product/ProductRankingView.vue'
 import ProductCreateView from '@/views/product/ProductCreateView.vue'
 import ProductDetailView from '@/views/product/ProductDetailView.vue'
 import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
+import MyProductView from '@/views/product/MyProductView.vue'
 
 // Sale Post Views import
 import SalePostCreateView from '@/views/SalePostCreateView.vue'
@@ -66,6 +67,12 @@ const routes = [
     component: ProductDetailView,
     props: true,
     meta: { requiresAuth: false, public: true, title: '상품 상세' }
+  },
+  {
+    path: '/my-products',
+    name: 'MyProducts',
+    component: MyProductView,
+    meta: { requiresAuth: true, title: '내 상품' }
   },
 
   // ==================== 한입만 거래 관련 라우트 ====================
