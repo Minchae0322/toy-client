@@ -57,29 +57,35 @@
       </div>
     </nav>
 
-    <!-- 인증 올리기 버튼 -->
-    <button class="btn-create" @click="handleProtectedRoute('create')">
-      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
-      <span>인증 올리기</span>
-    </button>
+    <!-- 액션 버튼들 (서브틀 컬러 바) -->
+    <div class="action-buttons">
+      <button class="btn-subtle btn-purple" @click="handleProtectedRoute('create')">
+        <span class="btn-text">인증 올리기</span>
+        <div class="btn-icon-circle btn-icon-purple">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+      </button>
 
-    <!-- 제품 등록하기 버튼 -->
-    <button class="btn-create-product" @click="handleProtectedRoute('createProduct')">
-      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
-      <span>제품 등록하기</span>
-    </button>
+      <button class="btn-subtle btn-orange" @click="handleProtectedRoute('createProduct')">
+        <span class="btn-text">제품 등록하기</span>
+        <div class="btn-icon-circle btn-icon-orange">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+      </button>
 
-    <!-- 배틀 등록하기 버튼 -->
-    <button class="btn-create-battle" @click="handleProtectedRoute('createBattle')">
-      <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
-      <span>배틀 등록하기</span>
-    </button>
+      <button class="btn-subtle btn-dark" @click="handleProtectedRoute('createBattle')">
+        <span class="btn-text">배틀 등록하기</span>
+        <div class="btn-icon-circle btn-icon-dark">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+      </button>
+    </div>
   </aside>
 </template>
 
@@ -246,99 +252,116 @@ const handleProtectedRoute = async (routeName) => {
   border-color: #fecaca;
 }
 
-/* 인증 올리기 버튼 */
-.btn-create {
+/* 액션 버튼 영역 */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 서브틀 컬러 버튼 공통 스타일 */
+.btn-subtle {
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+
+/* 보라색 버튼 */
+.btn-purple {
+  background: rgba(147, 51, 234, 0.04);
+  border: 1px solid rgba(147, 51, 234, 0.1);
+}
+
+.btn-purple:hover {
+  background: rgba(147, 51, 234, 0.08);
+  border-color: rgba(147, 51, 234, 0.2);
+}
+
+.btn-purple .btn-text {
+  color: rgba(88, 28, 135, 0.7);
+}
+
+.btn-purple:hover .btn-text {
+  color: rgb(88, 28, 135);
+}
+
+/* 주황색 버튼 */
+.btn-orange {
+  background: rgba(249, 115, 22, 0.04);
+  border: 1px solid rgba(249, 115, 22, 0.1);
+}
+
+.btn-orange:hover {
+  background: rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.2);
+}
+
+.btn-orange .btn-text {
+  color: rgba(154, 52, 18, 0.7);
+}
+
+.btn-orange:hover .btn-text {
+  color: rgb(154, 52, 18);
+}
+
+/* 다크 버튼 */
+.btn-dark {
+  background: rgba(51, 65, 85, 0.04);
+  border: 1px solid rgba(51, 65, 85, 0.1);
+}
+
+.btn-dark:hover {
+  background: rgba(51, 65, 85, 0.08);
+  border-color: rgba(51, 65, 85, 0.2);
+}
+
+.btn-dark .btn-text {
+  color: rgba(51, 65, 85, 0.7);
+}
+
+.btn-dark:hover .btn-text {
+  color: rgb(30, 41, 59);
+}
+
+/* 버튼 텍스트 */
+.btn-text {
+  font-size: 13px;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+/* 아이콘 원형 */
+.btn-icon-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 11px;
+  flex-shrink: 0;
+}
+
+.btn-icon-purple {
   background: #9333ea;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 10px;
-  font-family: inherit;
-  box-shadow: 0 1px 3px rgba(147, 51, 234, 0.2);
 }
 
-.btn-create:hover {
-  transform: translateY(-1px);
-  background: #7e22ce;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
-}
-
-.btn-create .icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* 제품 등록하기 버튼 */
-.btn-create-product {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 11px;
+.btn-icon-orange {
   background: #f97316;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 10px;
-  font-family: inherit;
-  box-shadow: 0 1px 3px rgba(249, 115, 22, 0.2);
 }
 
-.btn-create-product:hover {
-  transform: translateY(-1px);
-  background: #ea580c;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
-}
-
-.btn-create-product .icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* 배틀 등록하기 버튼 */
-.btn-create-battle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 11px;
-  background: #0f172a;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 20px;
-  font-family: inherit;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
-}
-
-.btn-create-battle:hover {
-  transform: translateY(-1px);
+.btn-icon-dark {
   background: #1e293b;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
 }
 
-.btn-create-battle .icon {
-  width: 18px;
-  height: 18px;
+.btn-icon {
+  width: 12px;
+  height: 12px;
+  color: #ffffff;
 }
 </style>
