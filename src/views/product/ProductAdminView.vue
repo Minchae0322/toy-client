@@ -530,8 +530,14 @@ const approveProduct = async (product) => {
 }
 
 const rejectProduct = async (product) => {
+  const reason = prompt(`"${product.name}" 반려 사유를 입력하세요:`)
+  if (!reason || !reason.trim()) {
+    showToast('반려 사유는 필수입니다', 'error')
+    return
+  }
+
   try {
-    const response = await productService.rejectProduct(product.id)
+    const response = await productService.rejectProduct(product.id, reason.trim())
     if (response.success) {
       // 백엔드에서 반환된 status를 사용 (객체 또는 문자열)
       if (response.data?.status) {
@@ -555,7 +561,7 @@ const deleteProduct = async (product) => {
   if (!confirm(`"${product.name}"을(를) 삭제하시겠습니까?`)) return
 
   try {
-    const response = await productService.deleteProduct(product.id)
+    const response = await productService.updateProductStatus(product.id, 'DELETED')
     if (response.success) {
       products.value = products.value.filter(p => p.id !== product.id)
       showToast('삭제 완료')
@@ -586,8 +592,14 @@ const bulkApprove = async () => {
 }
 
 const bulkReject = async () => {
+  const reason = prompt(`${selectedProducts.value.length}개 상품의 반려 사유를 입력하세요:`)
+  if (!reason || !reason.trim()) {
+    showToast('반려 사유는 필수입니다', 'error')
+    return
+  }
+
   try {
-    const response = await productService.bulkRejectProducts(selectedProducts.value)
+    const response = await productService.bulkRejectProducts(selectedProducts.value, reason.trim())
     if (response.success) {
       showToast(`${selectedProducts.value.length}개 상품 거부 처리됨`, 'warning')
       selectedProducts.value = []
