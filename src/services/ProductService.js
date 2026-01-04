@@ -266,7 +266,7 @@ class ProductService extends BaseApiService {
 
     const formData = new FormData()
     formData.append('file', file)
-    return await this.post('/files/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return await this.uploadFile('/files/upload', formData)
   }
 
   // ==================== 유틸리티/검증 메서드 ====================
