@@ -127,6 +127,16 @@
               <div class="menu-left"><FileText :size="18" /><span>내 피드</span></div>
               <ChevronRight :size="18" />
             </button>
+            <button class="menu-item" @click="goToMyProducts">
+              <div class="menu-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span>내 상품</span>
+              </div>
+              <ChevronRight :size="18" />
+            </button>
             <button class="menu-item" @click="goToSavedPosts">
               <div class="menu-left"><Bookmark :size="18" /><span>저장한 글</span></div>
               <ChevronRight :size="18" />
@@ -351,6 +361,7 @@ const showFollowers = () => console.log('팔로워 목록')
 const showFollowings = () => console.log('팔로잉 목록')
 const goToProfile = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToMyFeeds = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
+const goToMyProducts = () => router.push({name: 'MyProducts'})
 const goToSavedPosts = () => console.log('저장한 글')
 const goToNotificationSettings = () => console.log('알림 설정')
 const goToAccountSettings = () => console.log('계정 설정')

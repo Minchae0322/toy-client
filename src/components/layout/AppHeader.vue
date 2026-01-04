@@ -58,11 +58,12 @@
             </div>
 
             <div class="user-info">
-              <div class="user-avatar" v-if="userInfo?.profileImage">
-                <img :src="userInfo.profileImage" :alt="userInfo?.nickname || userInfo?.username" />
-              </div>
-              <div class="user-avatar-placeholder" v-else>
-                <span>{{ (userInfo?.nickname || userInfo?.username || '?')[0].toUpperCase() }}</span>
+              <div class="user-avatar">
+                <img
+                  :src="getUserProfileImage()"
+                  :alt="userInfo?.nickname || userInfo?.username"
+                  @error="handleImageError"
+                />
               </div>
               <span class="username">{{ userInfo?.nickname || userInfo?.username }}</span>
               <span v-if="isAdmin" class="admin-badge">관리자</span>
@@ -108,6 +109,22 @@ const getConnectionText = () => {
   if (wsError.value) return '오류'
   if (wsConnected.value) return '온라인'
   return '오프라인'
+}
+
+// 프로필 이미지 가져오기
+const getUserProfileImage = () => {
+  if (userInfo.value?.profileImage) {
+    return userInfo.value.profileImage
+  }
+  // 기본 프로필 이미지 (UI Avatars API 사용)
+  const username = userInfo.value?.nickname || userInfo.value?.username || 'User'
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=9333ea&color=fff&size=128&bold=true`
+}
+
+// 이미지 로드 실패 시 처리
+const handleImageError = (e) => {
+  const username = userInfo.value?.nickname || userInfo.value?.username || 'User'
+  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=9333ea&color=fff&size=128&bold=true`
 }
 
 // ✅ WebSocket 상태 모니터링 설정
@@ -478,6 +495,7 @@ onUnmounted(() => {
   border: 2px solid #e5e7eb;
   transition: all 0.3s;
   flex-shrink: 0;
+  background: #f3f4f6;
 }
 
 .user-avatar:hover {
@@ -489,25 +507,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.user-avatar-placeholder {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #9333ea, #db2777);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 14px;
-  flex-shrink: 0;
-  transition: all 0.3s;
-}
-
-.user-avatar-placeholder:hover {
-  transform: scale(1.05);
 }
 
 .username {
@@ -567,14 +566,9 @@ onUnmounted(() => {
     display: none;
   }
 
-  .user-avatar,
-  .user-avatar-placeholder {
+  .user-avatar {
     width: 32px;
     height: 32px;
-  }
-
-  .user-avatar-placeholder {
-    font-size: 12px;
   }
 }
 </style>
