@@ -2,7 +2,7 @@
 
 import { BaseApiService } from './BaseApiService.js'
 import * as authUtils from '@/utils/auth.js'
-import {ENV, getServiceUrl} from "@/config/env.js";
+import { ENV, getServiceUrl } from "@/config/env.js"
 
 class ProductService extends BaseApiService {
   constructor() {
@@ -12,10 +12,10 @@ class ProductService extends BaseApiService {
     console.log(`🌍 [PRODUCT] Environment: ${ENV.MODE}`)
   }
 
-  // ==================== 상품 관련 메서드 ====================
+  // ==================== 상품 CRUD ====================
 
   async createProduct(productData) {
-    console.log('🚀 [PRODUCT_SERVICE] 상품 등록 요청 데이터 (전체):', JSON.stringify(productData, null, 2))
+    console.log('🚀 [PRODUCT_SERVICE] 상품 등록 요청 데이터:', JSON.stringify(productData, null, 2))
     const validation = this.validateProductData(productData)
     if (!validation.isValid) {
       throw new Error(validation.errors.join(', '))
@@ -110,36 +110,79 @@ class ProductService extends BaseApiService {
     return await this.delete(`/products/${productId}`)
   }
 
-  async approveProduct(productId) {
+  // ==================== 상품 상태 관리 (관리자) ====================
+
+  async updateProductStatus(productId, status, reason = null) {
     if (!productId) throw new Error('상품 ID가 필요합니다.')
-    return await this.patch(`/products/${productId}/approve`)
+
+    const validStatuses = ['PENDING', 'APPROVED', 'REJECTED', 'DELETED']
+    if (!validStatuses.includes(status)) {
+      throw new Error('올바른 상태값이 아닙니다.')
+    }
+
+    if (status === 'REJECTED' && !reason?.trim()) {
+      throw new Error('반려 시 사유는 필수입니다.')
+    }
+
+    const requestData = {
+      status,
+      reason: reason?.trim() || null
+    }
+
+    console.log('📤 [PRODUCT_SERVICE] updateProductStatus 요청:', { productId, ...requestData })
+    return await this.patch(`/products/${productId}/status`, requestData)
   }
 
-  async rejectProduct(productId) {
-    if (!productId) throw new Error('상품 ID가 필요합니다.')
-    return await this.patch(`/products/${productId}/reject`)
+  async bulkUpdateProductStatus(productIds, status, reason = null) {
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+      throw new Error('상품 ID 목록이 필요합니다.')
+    }
+
+    if (productIds.length > 100) {
+      throw new Error('한 번에 최대 100개까지 처리 가능합니다.')
+    }
+
+    const validStatuses = ['PENDING', 'APPROVED', 'REJECTED', 'DELETED']
+    if (!validStatuses.includes(status)) {
+      throw new Error('올바른 상태값이 아닙니다.')
+    }
+
+    if (status === 'REJECTED' && !reason?.trim()) {
+      throw new Error('반려 시 사유는 필수입니다.')
+    }
+
+    const requestData = {
+      productIds,
+      status,
+      reason: reason?.trim() || null
+    }
+
+    console.log('📤 [PRODUCT_SERVICE] bulkUpdateProductStatus 요청:', requestData)
+    return await this.patch('/products/bulk/status', requestData)
+  }
+
+  // 편의 메서드 (기존 호출부 호환)
+  async approveProduct(productId) {
+    return this.updateProductStatus(productId, 'APPROVED')
+  }
+
+  async rejectProduct(productId, reason) {
+    return this.updateProductStatus(productId, 'REJECTED', reason)
   }
 
   async bulkApproveProducts(productIds) {
-    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
-      throw new Error('상품 ID 목록이 필요합니다.')
-    }
-    return await this.patch('/products/bulk/approve', { productIds })
+    return this.bulkUpdateProductStatus(productIds, 'APPROVED')
   }
 
-  async bulkRejectProducts(productIds) {
-    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
-      throw new Error('상품 ID 목록이 필요합니다.')
-    }
-    return await this.patch('/products/bulk/reject', { productIds })
+  async bulkRejectProducts(productIds, reason) {
+    return this.bulkUpdateProductStatus(productIds, 'REJECTED', reason)
   }
 
   async bulkDeleteProducts(productIds) {
-    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
-      throw new Error('상품 ID 목록이 필요합니다.')
-    }
-    return await this.delete('/products/bulk', { data: { productIds } })
+    return this.bulkUpdateProductStatus(productIds, 'DELETED')
   }
+
+  // ==================== 리액션 ====================
 
   async toggleProductReaction(productId, reactionType) {
     if (!productId) throw new Error('상품 ID가 필요합니다.')
@@ -151,17 +194,31 @@ class ProductService extends BaseApiService {
     return await this.post(`/products/${productId}/reactions/${reactionType.toUpperCase()}`, requestData)
   }
 
-  async likeProduct(productId) { return this.toggleProductReaction(productId, 'LIKE') }
-  async bookmarkProduct(productId) { return this.toggleProductReaction(productId, 'BOOKMARK') }
+  async likeProduct(productId) {
+    return this.toggleProductReaction(productId, 'LIKE')
+  }
 
-  async getCategories() { return await this.get('/categories') }
+  async bookmarkProduct(productId) {
+    return this.toggleProductReaction(productId, 'BOOKMARK')
+  }
+
+  // ==================== 카테고리 ====================
+
+  async getCategories() {
+    return await this.get('/categories')
+  }
+
   async getCategory(categoryId) {
     if (!categoryId) throw new Error('카테고리 ID가 필요합니다.')
     return await this.get(`/categories/${categoryId}`)
   }
 
+  // ==================== 검색/인기 ====================
+
   async searchProducts(keyword, filters = {}, pageable = {}) {
-    if (!keyword || keyword.trim().length === 0) throw new Error('검색 키워드가 필요합니다.')
+    if (!keyword || keyword.trim().length === 0) {
+      throw new Error('검색 키워드가 필요합니다.')
+    }
 
     const params = {
       keyword: keyword.trim(),
@@ -193,7 +250,7 @@ class ProductService extends BaseApiService {
     return response
   }
 
-  // ==================== 상품 피드/배틀 관련 메서드 ====================
+  // ==================== 피드/배틀 ====================
 
   async getProductFeeds(productId, options = {}) {
     if (!productId) throw new Error('상품 ID가 필요합니다.')
@@ -215,7 +272,7 @@ class ProductService extends BaseApiService {
     return await this.get(`/products/${productId}/battles`, params)
   }
 
-  // ==================== 리뷰 관련 메서드 ====================
+  // ==================== 리뷰 ====================
 
   async createReview(productId, reviewData) {
     if (!productId) throw new Error('상품 ID가 필요합니다.')
@@ -279,7 +336,7 @@ class ProductService extends BaseApiService {
     return await this.get(`/products/${productId}/reviews/stats`)
   }
 
-  // ==================== 유틸리티/검증 메서드 ====================
+  // ==================== 유틸리티/검증 ====================
 
   removeEmptyParams(params) {
     if (!params || typeof params !== 'object') return {}
@@ -292,7 +349,10 @@ class ProductService extends BaseApiService {
     return cleaned
   }
 
-  normalizeProduct(product) { return product || null }
+  normalizeProduct(product) {
+    return product || null
+  }
+
   normalizeProductListResponse(products) {
     return Array.isArray(products) ? products.map(p => this.normalizeProduct(p)) : []
   }
@@ -310,11 +370,19 @@ class ProductService extends BaseApiService {
 
   validateReviewData(reviewData) {
     const errors = []
-    if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) errors.push('평점은 1~5 사이여야 합니다.')
-    if (!reviewData.comment?.trim()) errors.push('리뷰 내용을 입력해주세요.')
-    else if (reviewData.comment.trim().length < 10) errors.push('리뷰는 최소 10자 이상 작성해주세요.')
-    else if (reviewData.comment.length > 1000) errors.push('리뷰는 1000자 이하로 작성해주세요.')
-    if (reviewData.attachmentFileInfos?.length > 5) errors.push('이미지는 최대 5장까지 첨부 가능합니다.')
+    if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
+      errors.push('평점은 1~5 사이여야 합니다.')
+    }
+    if (!reviewData.comment?.trim()) {
+      errors.push('리뷰 내용을 입력해주세요.')
+    } else if (reviewData.comment.trim().length < 10) {
+      errors.push('리뷰는 최소 10자 이상 작성해주세요.')
+    } else if (reviewData.comment.length > 1000) {
+      errors.push('리뷰는 1000자 이하로 작성해주세요.')
+    }
+    if (reviewData.attachmentFileInfos?.length > 5) {
+      errors.push('이미지는 최대 5장까지 첨부 가능합니다.')
+    }
     return { isValid: errors.length === 0, errors }
   }
 
@@ -322,8 +390,12 @@ class ProductService extends BaseApiService {
     if (!searchCondition || typeof searchCondition !== 'object') return {}
     const validStatuses = ['PENDING', 'APPROVED', 'REJECTED', 'DELETED']
     const validated = { ...searchCondition }
-    if (validated.status && !validStatuses.includes(validated.status)) validated.status = 'APPROVED'
-    if (validated.keyword?.length > 100) validated.keyword = validated.keyword.substring(0, 100)
+    if (validated.status && !validStatuses.includes(validated.status)) {
+      validated.status = 'APPROVED'
+    }
+    if (validated.keyword?.length > 100) {
+      validated.keyword = validated.keyword.substring(0, 100)
+    }
     if (validated.categoryId) {
       if (isNaN(parseInt(validated.categoryId))) delete validated.categoryId
       else validated.categoryId = parseInt(validated.categoryId)
@@ -331,15 +403,12 @@ class ProductService extends BaseApiService {
     return validated
   }
 
-  // ⭐ 백엔드 Swagger 기준 정렬 옵션 최신화
   validatePageable(pageable) {
     const validSorts = [
-      // 기본 정렬
       'createdAt,DESC', 'createdAt,ASC',
       'releaseDate,DESC', 'releaseDate,ASC',
       'updatedAt,DESC', 'updatedAt,ASC',
       'name,DESC', 'name,ASC',
-      // 인기/통계 정렬
       'popularityScore,DESC', 'popularityScore,ASC',
       'likeCount,DESC', 'likeCount,ASC',
       'viewCount,DESC', 'viewCount,ASC',
@@ -355,7 +424,11 @@ class ProductService extends BaseApiService {
   }
 
   validateReviewPageable(pageable) {
-    const validSorts = ['createdAt,DESC', 'createdAt,ASC', 'rating,DESC', 'rating,ASC', 'likeCount,DESC', 'likeCount,ASC']
+    const validSorts = [
+      'createdAt,DESC', 'createdAt,ASC',
+      'rating,DESC', 'rating,ASC',
+      'likeCount,DESC', 'likeCount,ASC'
+    ]
     return {
       page: Math.max(0, pageable?.page || 0),
       size: Math.min(50, Math.max(1, pageable?.size || 10)),
@@ -366,13 +439,15 @@ class ProductService extends BaseApiService {
   formatPrice(price) {
     if (!price) return '가격 정보 없음'
     if (price === '0' || price === 0) return '무료'
-    return new Intl.NumberFormat('ko-KR').format(typeof price === 'string' ? parseInt(price) : price) + '원'
+    return new Intl.NumberFormat('ko-KR').format(
+        typeof price === 'string' ? parseInt(price) : price
+    ) + '원'
   }
 
   debugProductStatus() {
     console.group('🔍 [PRODUCT] 상품 서비스 상태')
     console.log('Content Server URL:', this.baseURL)
-    console.log('지원 기능: 상품 CRUD, 리액션, 리뷰, 피드/배틀 조회')
+    console.log('지원 기능: 상품 CRUD, 상태관리, 리액션, 리뷰, 피드/배틀 조회')
     this.debugStatus()
     console.groupEnd()
   }
@@ -396,14 +471,22 @@ export const productFilterUtils = {
   },
 
   getDefaultSearchCondition() {
-    return { keyword: '', categoryId: null, status: 'APPROVED', creatorId: null }
+    return {
+      keyword: '',
+      categoryId: null,
+      status: 'APPROVED',
+      creatorId: null
+    }
   },
 
   getDefaultPageable() {
-    return { page: 0, size: 20, sort: 'createdAt,DESC' }
+    return {
+      page: 0,
+      size: 20,
+      sort: 'createdAt,DESC'
+    }
   },
 
-  // ⭐ 백엔드 Swagger 기준 정렬 옵션 최신화
   getSortOptions() {
     return [
       { value: 'createdAt,DESC', label: '최신순' },
@@ -417,6 +500,15 @@ export const productFilterUtils = {
       { value: 'name,ASC', label: '이름순' },
       { value: 'releaseDate,DESC', label: '출시일순' },
       { value: 'updatedAt,DESC', label: '수정일순' }
+    ]
+  },
+
+  getStatusOptions() {
+    return [
+      { value: 'PENDING', label: '승인 대기' },
+      { value: 'APPROVED', label: '승인됨' },
+      { value: 'REJECTED', label: '반려됨' },
+      { value: 'DELETED', label: '삭제됨' }
     ]
   }
 }
@@ -457,8 +549,34 @@ export const productUtils = {
     return date.toLocaleDateString('ko-KR')
   },
 
+  getStatusLabel(status) {
+    const labels = {
+      PENDING: '승인 대기',
+      APPROVED: '승인됨',
+      REJECTED: '반려됨',
+      DELETED: '삭제됨'
+    }
+    return labels[status] || '알 수 없음'
+  },
+
+  getStatusColor(status) {
+    const colors = {
+      PENDING: 'warning',
+      APPROVED: 'success',
+      REJECTED: 'error',
+      DELETED: 'default'
+    }
+    return colors[status] || 'default'
+  },
+
   getRatingText(rating) {
-    const texts = { 1: '별로예요', 2: '그저 그래요', 3: '괜찮아요', 4: '좋아요', 5: '최고예요' }
+    const texts = {
+      1: '별로예요',
+      2: '그저 그래요',
+      3: '괜찮아요',
+      4: '좋아요',
+      5: '최고예요'
+    }
     return texts[Math.round(rating)] || '평가 없음'
   },
 
