@@ -90,6 +90,37 @@ class ProductService extends BaseApiService {
     return await this.delete(`/products/${productId}`)
   }
 
+  async approveProduct(productId) {
+    if (!productId) throw new Error('상품 ID가 필요합니다.')
+    return await this.patch(`/products/${productId}/approve`)
+  }
+
+  async rejectProduct(productId) {
+    if (!productId) throw new Error('상품 ID가 필요합니다.')
+    return await this.patch(`/products/${productId}/reject`)
+  }
+
+  async bulkApproveProducts(productIds) {
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+      throw new Error('상품 ID 목록이 필요합니다.')
+    }
+    return await this.patch('/products/bulk/approve', { productIds })
+  }
+
+  async bulkRejectProducts(productIds) {
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+      throw new Error('상품 ID 목록이 필요합니다.')
+    }
+    return await this.patch('/products/bulk/reject', { productIds })
+  }
+
+  async bulkDeleteProducts(productIds) {
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+      throw new Error('상품 ID 목록이 필요합니다.')
+    }
+    return await this.delete('/products/bulk', { data: { productIds } })
+  }
+
   async toggleProductReaction(productId, reactionType) {
     if (!productId) throw new Error('상품 ID가 필요합니다.')
     const validReactionTypes = ['LIKE', 'BOOKMARK', 'INTEREST', 'SHARE', 'WISH']
