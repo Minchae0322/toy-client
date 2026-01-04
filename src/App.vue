@@ -188,13 +188,35 @@ onUnmounted(() => {
 }
 
 .header-content {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 16px;
   height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 1rem;
+}
+
+/* 태블릿: 중간 여백 */
+@media (min-width: 768px) {
+  .header-content {
+    padding: 0 2rem;
+  }
+}
+
+/* 데스크톱: 큰 여백 */
+@media (min-width: 1280px) {
+  .header-content {
+    padding: 0 3rem;
+    max-width: 1920px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* 대형 화면: 더 큰 여백 */
+@media (min-width: 1920px) {
+  .header-content {
+    padding: 0 4rem;
+  }
 }
 
 /* 로고 */
