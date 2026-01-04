@@ -90,6 +90,11 @@
                         </svg>
                       </button>
 
+                      <!-- 오버레이 -->
+                      <Transition name="overlay-fade">
+                        <div v-if="showCategoryDropdown && !categoriesLoading" class="category-dropdown-overlay" @click="closeCategoryDropdown"></div>
+                      </Transition>
+
                       <Transition :name="dropdownDirection === 'up' ? 'dropdown-up' : 'dropdown'">
                         <div v-if="showCategoryDropdown && !categoriesLoading" class="category-dropdown-menu" :class="{ 'dropdown-up': dropdownDirection === 'up' }">
                           <div class="dropdown-header">
@@ -687,13 +692,19 @@ const removeTag = (index) => { selectedTags.value.splice(index, 1) }
 const toggleCategoryDropdown = () => {
   if (!showCategoryDropdown.value && categoryDropdownRef.value) {
     const rect = categoryDropdownRef.value.getBoundingClientRect()
-    const dropdownHeight = 400
-    const spaceBelow = window.innerHeight - rect.bottom
-    const spaceAbove = rect.top
-    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+    const viewportHeight = window.innerHeight
+    const spaceBelow = viewportHeight - rect.bottom - 16 // 16px padding
+    const spaceAbove = rect.top - 80 // 80px for header
+    const minDropdownHeight = 300
+
+    // 아래 공간이 충분하면 아래로, 아니면 위로
+    if (spaceBelow >= minDropdownHeight) {
+      dropdownDirection.value = 'down'
+    } else if (spaceAbove >= minDropdownHeight) {
       dropdownDirection.value = 'up'
     } else {
-      dropdownDirection.value = 'down'
+      // 둘 다 부족하면 더 넓은 쪽 선택
+      dropdownDirection.value = spaceBelow > spaceAbove ? 'down' : 'up'
     }
   }
   showCategoryDropdown.value = !showCategoryDropdown.value
@@ -1453,6 +1464,26 @@ const beforeUnloadHandler = (event) => {
   .form-section {
     padding: 20px;
   }
+
+  /* 모바일에서 카테고리 드롭다운 전체 화면처럼 표시 */
+  .category-dropdown-menu {
+    position: fixed;
+    top: 64px !important;
+    bottom: auto !important;
+    left: 0;
+    right: 0;
+    max-height: calc(100vh - 64px);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  .category-dropdown-menu.dropdown-up {
+    top: 64px !important;
+    bottom: auto !important;
+  }
+  .dropdown-content {
+    max-height: calc(100vh - 120px);
+  }
 }
 
 /* Category Dropdown */
@@ -1483,6 +1514,22 @@ const beforeUnloadHandler = (event) => {
 .dropdown-icon { width: 20px; height: 20px; color: #999; transition: transform 0.2s; }
 .dropdown-icon.open { transform: rotate(180deg); }
 
+/* 드롭다운 오버레이 */
+.category-dropdown-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 150;
+}
+
+/* 오버레이 페이드 애니메이션 */
+.overlay-fade-enter-active, .overlay-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.overlay-fade-enter-from, .overlay-fade-leave-to {
+  opacity: 0;
+}
+
 .category-dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -1492,9 +1539,9 @@ const beforeUnloadHandler = (event) => {
   border: 1px solid #e5e5e5;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-  max-height: 400px;
+  max-height: min(500px, calc(100vh - 200px));
   overflow: hidden;
-  z-index: 100;
+  z-index: 200;
 }
 .category-dropdown-menu.dropdown-up {
   top: auto;
@@ -1518,7 +1565,28 @@ const beforeUnloadHandler = (event) => {
 .btn-close-dropdown:hover { color: #333; }
 .btn-close-dropdown svg { width: 20px; height: 20px; }
 
-.dropdown-content { overflow-y: auto; max-height: 340px; padding: 8px; }
+.dropdown-content {
+  overflow-y: auto;
+  max-height: min(440px, calc(100vh - 260px));
+  padding: 8px;
+  /* 스크롤바 스타일링 */
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+.dropdown-content::-webkit-scrollbar {
+  width: 6px;
+}
+.dropdown-content::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 3px;
+}
+.dropdown-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+.dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
 .category-group { margin-bottom: 8px; }
 .category-group-header {
   padding: 10px 12px;
