@@ -399,10 +399,10 @@ const fetchProducts = async () => {
       sort: selectedSort.value
     }
 
-    console.log('📤 [ProductAdminView] API 호출:', { searchCondition, pageable })
+    console.log('📤 [ProductAdminView] 관리자 API 호출:', { searchCondition, pageable })
 
-    // 실제 API 호출
-    const response = await productService.getProducts(searchCondition, pageable)
+    // 관리자용 API 호출 (승인 대기중 포함 전체 제품 조회)
+    const response = await productService.getAllProductsForAdmin(searchCondition, pageable)
 
     if (response.success && response.data) {
       // Page 객체 응답 처리
@@ -436,12 +436,12 @@ const fetchProducts = async () => {
 // 상태별 카운트 업데이트
 const updateStatusCounts = async () => {
   try {
-    // 각 상태별 카운트 조회 (실제 API로 교체 가능)
+    // 관리자용 API로 각 상태별 카운트 조회
     const promises = [
-      productService.getProducts({}, { page: 0, size: 1 }),
-      productService.getProducts({ status: 'PENDING' }, { page: 0, size: 1 }),
-      productService.getProducts({ status: 'APPROVED' }, { page: 0, size: 1 }),
-      productService.getProducts({ status: 'REJECTED' }, { page: 0, size: 1 })
+      productService.getAllProductsForAdmin({}, { page: 0, size: 1 }),
+      productService.getAllProductsForAdmin({ status: 'PENDING' }, { page: 0, size: 1 }),
+      productService.getAllProductsForAdmin({ status: 'APPROVED' }, { page: 0, size: 1 }),
+      productService.getAllProductsForAdmin({ status: 'REJECTED' }, { page: 0, size: 1 })
     ]
 
     const results = await Promise.all(promises)

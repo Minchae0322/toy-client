@@ -66,6 +66,26 @@ class ProductService extends BaseApiService {
     return response
   }
 
+  async getAllProductsForAdmin(searchCondition = {}, pageable = {}) {
+    const validatedCondition = this.validateSearchCondition(searchCondition)
+    const validatedPageable = this.validatePageable(pageable)
+    const cleanedCondition = this.removeEmptyParams(validatedCondition)
+    const cleanedPageable = this.removeEmptyParams(validatedPageable)
+    const params = { ...cleanedCondition, ...cleanedPageable }
+
+    console.log('📤 [PRODUCT_SERVICE] getAllProductsForAdmin 요청 파라미터:', params)
+    const response = await this.get('/products/admin/all', params)
+
+    if (response.success && response.data) {
+      if (response.data.content && Array.isArray(response.data.content)) {
+        response.data.content = this.normalizeProductListResponse(response.data.content)
+      } else if (Array.isArray(response.data)) {
+        response.data = this.normalizeProductListResponse(response.data)
+      }
+    }
+    return response
+  }
+
   async updateProduct(productId, productData) {
     if (!productId) throw new Error('상품 ID가 필요합니다.')
     const validation = this.validateProductData(productData)
