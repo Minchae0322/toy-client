@@ -72,7 +72,7 @@ const loading = ref(false)
 const loginError = ref('')
 const registerError = ref('')
 
-const redirectPath = computed(() => route.query.redirect || '/home')
+const redirectPath = computed(() => route.query.redirect || '/feed')
 const sessionExpired = computed(() => route.query.reason === 'session_expired')
 const isDev = computed(() => import.meta.env.DEV)
 
@@ -107,7 +107,7 @@ const handleLogin = async (formData) => {
       profileImage: null
     }
 
-    login({ accessToken, refreshToken }, userInfo)
+    await login({ accessToken, refreshToken }, userInfo)
     await router.push(redirectPath.value)
 
   } catch (error) {
