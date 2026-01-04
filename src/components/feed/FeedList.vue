@@ -698,89 +698,163 @@ defineExpose({ observerTarget });
 .end-message p, .empty-message p { font-size: 15px; font-weight: 600; color: var(--secondary); margin: 0; }
 
 @media (max-width: 767px) {
-  .feed-section { padding: 0; }
-
-  /* 인스타그램 스타일 - 자연스러운 피드 흐름 */
-  .list-view {
-    gap: 0;
+  .feed-section {
     padding: 0;
-    background: var(--bg);
+    background: #FAFAFA;
+  }
+
+  /* Soft Modern 스타일 - 은은한 구분과 클릭 유도 */
+  .list-view {
+    gap: 12px;
+    padding: 12px;
+    background: #FAFAFA;
   }
 
   .list-item {
     flex-direction: column;
     padding: 0;
     border: none;
-    border-radius: 0;
-    box-shadow: none;
-    background: transparent;
-    /* 아이템 사이 subtle한 구분선 */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    padding-bottom: 16px;
-    margin-bottom: 16px;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    background: #FFFFFF;
+    margin-bottom: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .list-item:last-child {
-    border-bottom: none;
     margin-bottom: 0;
   }
 
+  /* Soft hover effect - 클릭 가능함을 암시 */
   .list-item:hover {
-    box-shadow: none;
-    transform: none;
-    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08), 0 0 0 1px rgba(99, 102, 241, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .list-item:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.06), 0 0 0 1px rgba(99, 102, 241, 0.08);
   }
 
   .list-image {
     width: 100%;
     aspect-ratio: 4 / 3;
-    border-radius: 0;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
   }
 
   .list-content {
     min-height: auto;
-    padding: 12px 16px 0;
+    padding: 14px 16px 16px;
+    background: linear-gradient(to bottom, rgba(250, 250, 250, 0.3) 0%, transparent 40px);
   }
 
-  .author-avatar-small { width: 32px; height: 32px; }
+  .author-avatar-small {
+    width: 32px;
+    height: 32px;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  }
   .avatar-placeholder svg { width: 14px; height: 14px; }
-  .author-name { font-size: 13px; max-width: 100px; font-weight: 600; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
-  .list-category { font-size: 10px; padding: 3px 6px; }
-  .list-time { font-size: 11px; color: #94A3B8; }
+  .author-name {
+    font-size: 13px;
+    max-width: 100px;
+    font-weight: 600;
+    color: #1E293B;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  .list-category {
+    font-size: 10px;
+    padding: 3px 8px;
+    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+    color: #4F46E5;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .list-time {
+    font-size: 11px;
+    color: #94A3B8;
+  }
 
   .list-title {
     font-size: 15px;
     font-weight: 700;
+    color: #0F172A;
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    line-height: 1.4;
   }
 
   .list-review {
     font-size: 14px;
-    color: #475569;
+    color: #64748B;
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     -webkit-line-clamp: 3;
+    line-height: 1.5;
   }
 
   .list-meta {
-    border-top: none;
-    padding: 8px 0 0;
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+    padding: 10px 0 0;
+    margin-top: 12px;
+  }
+
+  /* Reaction buttons - 클릭 가능하게 강조 */
+  .reaction-item {
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .reaction-item:hover {
+    background: rgba(99, 102, 241, 0.06);
+  }
+
+  .reaction-item.active {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    color: #D97706;
   }
 
   .list-hashtags {
-    margin-top: 8px;
+    margin-top: 10px;
+    gap: 6px;
   }
 
   .hashtag {
-    background: transparent;
-    padding: 0;
-    color: #6366F1;
-    font-size: 13px;
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+    padding: 4px 10px;
+    color: #0369A1;
+    font-size: 12px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
   }
 
   .hashtag:hover {
-    background: transparent;
-    color: #4F46E5;
+    background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+    color: #075985;
+    transform: translateY(-1px);
+  }
+
+  /* Button styles - 더 명확한 클릭 영역 */
+  .btn-more {
+    padding: 6px;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .btn-more:hover {
+    background: rgba(99, 102, 241, 0.08);
+  }
+
+  /* 가격 정보 강조 */
+  .buy-price {
+    font-weight: 700;
+    color: #0F172A;
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 13px;
   }
 }
 </style>
