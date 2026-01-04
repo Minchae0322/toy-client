@@ -97,6 +97,7 @@ onUnmounted(() => {
             <div class="dropdown-menu">
               <RouterLink to="/admin" class="dropdown-item">대시보드</RouterLink>
               <RouterLink to="/admin/users" class="dropdown-item">사용자</RouterLink>
+              <RouterLink to="/admin/products" class="dropdown-item">상품 관리</RouterLink>
               <RouterLink to="/admin/category" class="dropdown-item">카테고리</RouterLink>
             </div>
           </div>
