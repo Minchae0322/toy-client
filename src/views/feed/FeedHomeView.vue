@@ -314,9 +314,9 @@ onUnmounted(() => {
   max-width: 100vw;
 }
 
-/* 모바일: 작은 여백 */
+/* 모바일: 여백 없음 (인스타그램 스타일) */
 .app-container {
-  padding: 0 1rem;
+  padding: 0;
 }
 
 /* 태블릿: 중간 여백 */
