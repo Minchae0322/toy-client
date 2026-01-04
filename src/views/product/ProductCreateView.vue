@@ -85,8 +85,8 @@
                         @change="validateField('categoryId')"
                     >
                       <option :value="null" disabled>카테고리 선택</option>
-                      <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                        {{ cat.name }}
+                      <option v-for="cat in categories" :key="cat.categoryId" :value="cat.categoryId">
+                        {{ cat.categoryName }}
                       </option>
                     </select>
                     <span v-if="errors.categoryId" class="error-text">{{ errors.categoryId }}</span>
