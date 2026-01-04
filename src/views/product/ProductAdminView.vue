@@ -156,12 +156,12 @@
                     <circle cx="12" cy="12" r="3"/>
                   </svg>
                 </button>
-                <button v-if="product.status === 'PENDING'" class="action-btn approve" title="승인" @click="approveProduct(product)">
+                <button v-if="getStatusValue(product.status) === 'PENDING'" class="action-btn approve" title="승인" @click="approveProduct(product)">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                 </button>
-                <button v-if="product.status === 'PENDING'" class="action-btn reject" title="거부" @click="rejectProduct(product)">
+                <button v-if="getStatusValue(product.status) === 'PENDING'" class="action-btn reject" title="거부" @click="rejectProduct(product)">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
@@ -245,10 +245,10 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button v-if="selectedProduct?.status === 'PENDING'" class="modal-btn approve" @click="approveProduct(selectedProduct); closeDetailModal()">
+          <button v-if="getStatusValue(selectedProduct?.status) === 'PENDING'" class="modal-btn approve" @click="approveProduct(selectedProduct); closeDetailModal()">
             승인
           </button>
-          <button v-if="selectedProduct?.status === 'PENDING'" class="modal-btn reject" @click="rejectProduct(selectedProduct); closeDetailModal()">
+          <button v-if="getStatusValue(selectedProduct?.status) === 'PENDING'" class="modal-btn reject" @click="rejectProduct(selectedProduct); closeDetailModal()">
             거부
           </button>
           <button class="modal-btn secondary" @click="closeDetailModal">닫기</button>
@@ -320,7 +320,10 @@ const visiblePages = computed(() => {
 })
 
 // 유틸리티
-const getThumbnailUrl = (product) => product.thumbnailDto?.filePath || DEFAULT_THUMBNAIL
+const getThumbnailUrl = (product) => {
+  // thumbnailDto의 fileUrl 또는 filePath 사용 (백엔드 응답에 맞춤)
+  return product.thumbnailDto?.fileUrl || product.thumbnailDto?.filePath || DEFAULT_THUMBNAIL
+}
 
 const formatCount = (count) => {
   if (!count) return '0'
@@ -342,19 +345,37 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ko-KR').format(price) + '원'
 }
 
-const getStatusClass = (status) => ({
-  'PENDING': 'pending',
-  'APPROVED': 'approved',
-  'REJECTED': 'rejected',
-  'DELETED': 'deleted'
-}[status] || 'pending')
+// status가 객체 또는 문자열일 수 있음 처리
+const getStatusValue = (status) => {
+  if (!status) return 'PENDING'
+  return typeof status === 'object' ? status.title : status
+}
 
-const getStatusLabel = (status) => ({
-  'PENDING': '대기중',
-  'APPROVED': '승인됨',
-  'REJECTED': '거부됨',
-  'DELETED': '삭제됨'
-}[status] || '알 수 없음')
+const getStatusClass = (status) => {
+  const statusValue = getStatusValue(status)
+  return ({
+    'PENDING': 'pending',
+    'APPROVED': 'approved',
+    'REJECTED': 'rejected',
+    'DELETED': 'deleted'
+  }[statusValue] || 'pending')
+}
+
+const getStatusLabel = (status) => {
+  // status가 객체인 경우 description 우선 사용
+  if (status && typeof status === 'object' && status.description) {
+    return status.description
+  }
+
+  // status가 문자열이거나 객체에 description이 없는 경우
+  const statusValue = getStatusValue(status)
+  return ({
+    'PENDING': '대기중',
+    'APPROVED': '승인됨',
+    'REJECTED': '거부됨',
+    'DELETED': '삭제됨'
+  }[statusValue] || '알 수 없음')
+}
 
 const showToast = (message, type = 'success') => {
   toast.value = { show: true, message, type }
@@ -490,7 +511,13 @@ const approveProduct = async (product) => {
   try {
     const response = await productService.approveProduct(product.id)
     if (response.success) {
-      product.status = 'APPROVED'
+      // 백엔드에서 반환된 status를 사용 (객체 또는 문자열)
+      if (response.data?.status) {
+        product.status = response.data.status
+      } else {
+        // 백엔드에서 상태를 반환하지 않는 경우 객체 형태로 설정
+        product.status = { title: 'APPROVED', description: '승인됨' }
+      }
       showToast(`"${product.name}" 승인 완료`)
       await fetchProducts() // 목록 새로고침
     } else {
@@ -506,7 +533,13 @@ const rejectProduct = async (product) => {
   try {
     const response = await productService.rejectProduct(product.id)
     if (response.success) {
-      product.status = 'REJECTED'
+      // 백엔드에서 반환된 status를 사용 (객체 또는 문자열)
+      if (response.data?.status) {
+        product.status = response.data.status
+      } else {
+        // 백엔드에서 상태를 반환하지 않는 경우 객체 형태로 설정
+        product.status = { title: 'REJECTED', description: '거부됨' }
+      }
       showToast(`"${product.name}" 거부 처리됨`, 'warning')
       await fetchProducts() // 목록 새로고침
     } else {
