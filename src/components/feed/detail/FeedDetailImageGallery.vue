@@ -16,8 +16,8 @@
       <!-- Like Animation -->
       <transition name="like-scale">
         <div v-if="showLikeAnimation" class="like-animation">
-          <svg class="heart-icon" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/>
+          <svg class="heart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14a5 5 0 1 0 0 8 5 5 0 1 0 0-8M10 14l7-7M19 4a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/>
           </svg>
         </div>
       </transition>
@@ -45,8 +45,8 @@
           :class="{ active: isLiked }"
           @click.stop="handleLike"
       >
-        <svg fill="currentColor" viewBox="0 0 24 24">
-          <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14a5 5 0 1 0 0 8 5 5 0 1 0 0-8M10 14l7-7M19 4a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/>
         </svg>
       </button>
 

@@ -41,8 +41,8 @@
         </span>
       </div>
       <div v-if="showLikeAnimation" class="like-animation">
-        <svg class="heart-anim" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
+        <svg class="heart-anim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14a5 5 0 1 0 0 8 5 5 0 1 0 0-8M10 14l7-7M19 4a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/>
         </svg>
       </div>
     </div>
@@ -60,15 +60,9 @@
 
       <div class="post-actions">
         <div class="action-left">
-          <button @click="handleHot" :class="['action-btn', { active: localIsHot }]" :disabled="isHotLoading">
-            <svg class="action-icon" :fill="localIsHot ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
-            </svg>
-            <span>{{ formatCount(localHotCount) }}</span>
-          </button>
           <button @click="handleLike" :class="['action-btn', { active: localIsLiked }]" :disabled="isLikeLoading">
             <svg class="action-icon" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 14a5 5 0 1 0 0 8 5 5 0 1 0 0-8M10 14l7-7M19 4a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/>
             </svg>
             <span>{{ formatCount(localLikeCount) }}</span>
           </button>
