@@ -121,7 +121,7 @@ const handleLike = () => {
 .image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: #1a1a1a;
   cursor: pointer;
