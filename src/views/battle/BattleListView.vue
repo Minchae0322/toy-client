@@ -394,6 +394,7 @@ onUnmounted(() => {
   color: var(--text-primary);
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
+  gap: 1.5rem;
   max-width: 100vw;
 }
 
