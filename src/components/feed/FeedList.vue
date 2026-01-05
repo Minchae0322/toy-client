@@ -209,30 +209,35 @@ defineExpose({ observerTarget });
   background-position: right 8px center;
 }
 
-/* Feed Grid - 반응형 그리드 (배틀과 동일) */
+/* Feed Grid - 한 열에 하나씩, 컴팩트하게 */
 .feed-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
-@media (min-width: 640px) {
-  .feed-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
+/* 피드 카드 이미지 비율 조정 (세로로 1.5개 보이도록) */
+.feed-grid :deep(.post-image-container) {
+  aspect-ratio: 4 / 3;
 }
 
-@media (min-width: 1024px) {
-  .feed-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.feed-grid :deep(.post-content) {
+  padding: 10px 12px;
 }
 
-@media (min-width: 1536px) {
-  .feed-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+.feed-grid :deep(.post-info) {
+  margin-bottom: 8px;
+}
+
+.feed-grid :deep(.post-review) {
+  -webkit-line-clamp: 1;
+  margin-bottom: 4px;
+}
+
+.feed-grid :deep(.post-hashtags) {
+  margin-top: 6px;
 }
 
 /* List View - 컴팩트 */
@@ -402,7 +407,15 @@ defineExpose({ observerTarget });
   .view-btn .icon { width: 14px; height: 14px; }
   .sort-select { padding: 6px 24px 6px 8px; font-size: 11px; }
 
-  .feed-grid { gap: 12px; }
+  .feed-grid {
+    gap: 12px;
+    max-width: 100%;
+    padding: 0 4px;
+  }
+
+  .feed-grid :deep(.post-image-container) {
+    aspect-ratio: 3 / 2;
+  }
 
   .list-view { gap: 10px; }
 
