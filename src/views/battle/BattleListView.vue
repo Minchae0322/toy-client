@@ -394,7 +394,6 @@ onUnmounted(() => {
   color: var(--text-primary);
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
-  gap: 1.5rem;
   max-width: 100vw;
 }
 
@@ -428,6 +427,13 @@ onUnmounted(() => {
   min-width: 0;
   min-height: 100vh;
   padding-bottom: 5rem;
+  padding-left: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    padding-left: 0;
+  }
 }
 
 @media (min-width: 768px) {
