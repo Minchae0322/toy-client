@@ -287,13 +287,41 @@ onUnmounted(() => {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
   max-width: 100vw;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-container {
+    padding: 0 3rem;
+    max-width: 1920px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container {
+    padding: 0 4rem;
+  }
 }
 
 .main-content {
   flex: 1;
   min-width: 0;
   min-height: 100vh;
-  padding: 0 24px 5rem;
+  padding-bottom: 5rem;
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    padding-bottom: 2.5rem;
+  }
 }
 
 .content-layout {
@@ -303,21 +331,9 @@ onUnmounted(() => {
   margin: 0 auto;
 }
 
-@media (min-width: 768px) {
-  .main-content {
-    padding-bottom: 2.5rem;
-  }
-}
-
 @media (max-width: 1024px) {
   .content-layout {
     max-width: 100%;
-  }
-}
-
-@media (max-width: 767px) {
-  .main-content {
-    padding: 0 16px 5rem;
   }
 }
 </style>
