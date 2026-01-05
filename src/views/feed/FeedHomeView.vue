@@ -334,13 +334,11 @@ onUnmounted(() => {
 .content-layout {
   display: flex;
   gap: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
-@media (max-width: 1024px) {
-  .content-layout {
-    max-width: 100%;
-  }
+/* FeedList가 남은 공간을 차지하도록 */
+.content-layout :deep(.feed-section) {
+  flex: 1;
+  min-width: 0;
 }
 </style>
