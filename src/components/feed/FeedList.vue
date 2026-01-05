@@ -4,20 +4,12 @@
       <h2 class="section-title">최신 인증</h2>
       <div class="header-controls">
         <div class="view-toggle">
-          <button
-              @click="$emit('view-mode-change', 'feed')"
-              :class="['view-btn', { active: viewMode === 'feed' }]"
-              title="피드 뷰"
-          >
+          <button @click="$emit('view-mode-change', 'feed')" :class="['view-btn', { active: viewMode === 'feed' }]">
             <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
               <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
             </svg>
           </button>
-          <button
-              @click="$emit('view-mode-change', 'list')"
-              :class="['view-btn', { active: viewMode === 'list' }]"
-              title="리스트 뷰"
-          >
+          <button @click="$emit('view-mode-change', 'list')" :class="['view-btn', { active: viewMode === 'list' }]">
             <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
             </svg>
@@ -26,119 +18,103 @@
         <select class="sort-select" v-model="sortOption">
           <option value="latest">최신순</option>
           <option value="popular">인기순</option>
-          <option value="discussed">댓글 많은순</option>
+          <option value="discussed">댓글순</option>
         </select>
       </div>
     </div>
 
-    <!-- Feed Grid View -->
-    <div v-if="viewMode === 'feed'" class="feed-grid">
-      <FeedCard
-          v-for="feed in feeds"
-          :key="feed.feedId"
-          :feed="feed"
-          :is-liked="likedPosts.has(feed.feedId)"
-          :is-hot="hotPosts.has(feed.feedId)"
-          :is-saved="savedPosts.has(feed.feedId)"
-          @update="handleUpdate"
-          @save="handleSave"
-          @comment="handleComment"
-          @click="handlePostClick"
+    <div class="feed-layout">
+      <!-- Main Feed Area -->
+      <div class="feed-main">
+        <!-- Feed Grid View -->
+        <div v-if="viewMode === 'feed'" class="feed-grid">
+          <FeedCard
+              v-for="feed in feeds"
+              :key="feed.feedId"
+              :feed="feed"
+              :is-liked="likedPosts.has(feed.feedId)"
+              :is-hot="hotPosts.has(feed.feedId)"
+              :is-saved="savedPosts.has(feed.feedId)"
+              @update="handleUpdate"
+              @save="handleSave"
+              @comment="handleComment"
+              @click="handlePostClick"
+          />
+        </div>
+
+        <!-- List View -->
+        <div v-else class="list-view">
+          <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="handlePostClick(feed.feedId)">
+            <div class="list-image">
+              <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
+              <div v-if="feed.feedEvaluation" class="list-eval-overlay">
+                <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+                  {{ getEvaluationLabel(feed.feedEvaluation) }}
+                </span>
+              </div>
+            </div>
+            <div class="list-content">
+              <div class="list-header">
+                <div class="list-author">
+                  <div class="author-avatar-sm">
+                    <img v-if="getProfileImageUrl(feed)" :src="getProfileImageUrl(feed)" alt="" />
+                    <span v-else class="avatar-placeholder">
+                      <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+                    </span>
+                  </div>
+                  <span class="author-name">{{ getDisplayNickname(feed) }}</span>
+                  <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
+                </div>
+              </div>
+              <h3 class="list-title">{{ feed.productName }}</h3>
+              <p class="list-review">{{ feed.reviewSummary }}</p>
+              <div class="list-footer">
+                <div class="list-reactions">
+                  <span :class="['reaction', { active: feed.userReactions?.hasHot }]">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+                    {{ feed.hotCount || 0 }}
+                  </span>
+                  <span :class="['reaction', { active: feed.userReactions?.hasLike }]">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+                    {{ feed.likeCount || 0 }}
+                  </span>
+                  <span class="reaction">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    {{ feed.commentCount || 0 }}
+                  </span>
+                </div>
+                <span v-if="getDisplayPrice(feed)" class="list-price">{{ formatBuyPrice(getDisplayPrice(feed)) }}</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Loading & Observer -->
+        <div ref="observerTarget" class="load-section">
+          <div v-if="loading" class="loading-box">
+            <div class="spinner"></div>
+            <span>로딩 중...</span>
+          </div>
+          <div v-else-if="!hasNext && feeds.length > 0" class="end-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>모든 게시물을 확인했습니다</span>
+          </div>
+          <div v-else-if="feeds.length === 0 && !loading" class="empty-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+            <span>아직 게시물이 없습니다</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <RightSidebar
+          :popular-hashtags="popularHashtags"
+          :trending-categories="trendingCategories"
+          :recommended-users="recommendedUsers"
+          @search-tag="$emit('search-tag', $event)"
+          @filter-category="$emit('filter-category', $event)"
+          @follow-user="$emit('follow-user', $event)"
       />
-    </div>
-
-    <!-- List View -->
-    <div v-else class="list-view">
-      <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="handlePostClick(feed.feedId)">
-        <div class="list-image">
-          <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
-          <div v-if="feed.feedEvaluation" class="list-evaluation-badge-overlay">
-            <span :class="['list-evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
-              <svg class="list-eval-icon" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getEvaluationIconPath(feed.feedEvaluation)"/>
-              </svg>
-              {{ getEvaluationLabel(feed.feedEvaluation) }}
-            </span>
-          </div>
-        </div>
-        <div class="list-content">
-          <div class="list-header">
-            <div class="list-author-info">
-              <div class="author-avatar-small">
-                <img v-if="getProfileImageUrl(feed)" :src="getProfileImageUrl(feed)" alt="User" />
-                <span v-else class="avatar-placeholder">
-                  <svg fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
-                  </svg>
-                </span>
-              </div>
-              <span class="author-name">{{ getDisplayNickname(feed) }}</span>
-              <span class="list-category">{{ getCategoryName(feed) }}</span>
-              <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
-            </div>
-            <button class="btn-more" @click.stop>
-              <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="list-main">
-            <h3 class="list-title">{{ feed.productName }}</h3>
-            <p class="list-review" v-html="formatReview(feed.reviewSummary)"></p>
-            <div class="list-meta">
-              <div class="list-reactions">
-                <span :class="['reaction-item', { active: feed.userReactions?.hasHot }]">
-                  <svg class="icon-small fire-icon" :fill="feed.userReactions?.hasHot ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
-                  </svg>
-                  {{ feed.hotCount || 0 }}
-                </span>
-                <span :class="['reaction-item', { active: feed.userReactions?.hasLike }]">
-                  <svg class="icon-small" :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
-                  </svg>
-                  {{ feed.likeCount || 0 }}
-                </span>
-                <span class="reaction-item">
-                  <svg class="icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                  </svg>
-                  {{ feed.commentCount || 0 }}
-                </span>
-              </div>
-              <div class="price-place">
-                <span v-if="getDisplayPrice(feed)" class="buy-price">{{ formatBuyPrice(getDisplayPrice(feed)) }}</span>
-              </div>
-            </div>
-            <div class="list-hashtags" v-if="feed.hashtags && feed.hashtags.length > 0">
-              <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="hashtag" @click.stop>
-                #{{ tag }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </article>
-    </div>
-
-    <!-- Loading & Observer Target -->
-    <div ref="observerTarget" class="load-more-section">
-      <div v-if="loading" class="loading-container">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">로딩 중...</p>
-      </div>
-      <div v-else-if="!hasNext && feeds.length > 0" class="end-message">
-        <svg class="end-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-        </svg>
-        <p>모든 게시물을 확인했습니다</p>
-      </div>
-      <div v-else-if="feeds.length === 0 && !loading" class="empty-message">
-        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-        </svg>
-        <p>아직 게시물이 없습니다</p>
-      </div>
     </div>
   </section>
 </template>
@@ -146,6 +122,7 @@
 <script setup>
 import { ref } from 'vue';
 import FeedCard from './FeedCard.vue';
+import RightSidebar from './RightSidebar.vue';
 import { feedUtils } from '@/services/FeedService';
 
 const props = defineProps({
@@ -155,706 +132,311 @@ const props = defineProps({
   viewMode: { type: String, default: 'feed' },
   likedPosts: { type: Set, default: () => new Set() },
   hotPosts: { type: Set, default: () => new Set() },
-  savedPosts: { type: Set, default: () => new Set() }
+  savedPosts: { type: Set, default: () => new Set() },
+  popularHashtags: { type: Array, default: () => [] },
+  trendingCategories: { type: Array, default: () => [] },
+  recommendedUsers: { type: Array, default: () => [] }
 });
 
-const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click', 'view-mode-change', 'update']);
+const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click', 'view-mode-change', 'update', 'search-tag', 'filter-category', 'follow-user']);
 
 const sortOption = ref('latest');
 const observerTarget = ref(null);
 
-// ========== 사용자 정보 헬퍼 함수 ==========
-const getProfileImageUrl = (feed) => {
-  const userInfo = feed.userInfo;
-  if (!userInfo) return null;
-  return userInfo.profileImageFile?.fileUrl
-      || userInfo.profileImageUrl
-      || userInfo.profileImgUrl
-      || null;
-};
-
-const getDisplayNickname = (feed) => {
-  const userInfo = feed.userInfo;
-  if (!userInfo) return '익명';
-  return userInfo.nickname || userInfo.nickName || '익명';
-};
-
-// ========== 카테고리 & 가격 헬퍼 ==========
-const getCategoryName = (feed) => {
-  return feed.subCategoryDetail?.subCategoryName
-      || feed.subCategoryDetail?.categoryName
-      || feed.categoryName
-      || '';
-};
-
-const getDisplayPrice = (feed) => {
-  return feed.buyPrice || feed.price || null;
-};
-
-// ========== 평가 관련 ==========
+const getProfileImageUrl = (feed) => feed.userInfo?.profileImageFile?.fileUrl || feed.userInfo?.profileImgUrl || null;
+const getDisplayNickname = (feed) => feed.userInfo?.nickname || feed.userInfo?.nickName || '익명';
+const getDisplayPrice = (feed) => feed.buyPrice || feed.price || null;
 const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation);
-
 const getEvaluationClass = (evaluation) => {
   const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
   return { 'BEST': 'eval-best', 'GOOD': 'eval-good', 'OKAY': 'eval-okay', 'BAD': 'eval-bad' }[code] || '';
 };
 
-const getEvaluationIconPath = (evaluation) => {
-  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
-  const icons = {
-    'BEST': 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
-    'GOOD': 'M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5',
-    'OKAY': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-    'BAD': 'M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5'
-  };
-  return icons[code] || icons['OKAY'];
-};
-
-const getEvaluationIconFill = (evaluation) => {
-  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
-  return code === 'BEST' ? 'currentColor' : 'none';
-};
-
-// ========== 이벤트 핸들러 ==========
 const handleUpdate = (data) => emit('update', data);
 const handleSave = (feedId) => emit('save', feedId);
 const handleComment = (feedId) => emit('comment', feedId);
 const handlePostClick = (feedId) => emit('post-click', feedId);
 
-// ========== 포맷 함수 ==========
 const formatDate = (dateString) => feedUtils.formatDate(dateString);
 const formatBuyPrice = (price) => feedUtils.formatPrice(price);
-const formatReview = (text) => {
-  if (!text) return '';
-  return text.replace(/\n/g, '<br>');
-};
 
 defineExpose({ observerTarget });
 </script>
 
 <style scoped>
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-:root {
-  --primary: #0F172A;
-  --secondary: #64748B;
-  --accent: #F97316;
-  --border: #E2E8F0;
-  --bg: #FFFFFF;
-  --card: #FFFFFF;
-  --hover: #F8FAFC;
-  --shadow: rgba(0, 0, 0, 0.08);
-}
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 .feed-section {
-  padding: 10px 0;
+  padding: 16px 0;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--bg);
+  background: #ffffff;
+  min-height: 100vh;
 }
 
-@media (min-width: 1024px) {
-  .feed-section { padding: 15px 0; }
-}
-
+/* Header */
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 0 20px 20px;
-  border-bottom: 1px solid var(--border);
+  padding: 0 0 16px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 16px;
 }
 
-@media (min-width: 1024px) {
-  .section-header { padding: 0 32px 24px; }
-}
+.section-title { font-size: 18px; font-weight: 700; color: #1a1a1a; }
 
-.section-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-@media (min-width: 1024px) {
-  .section-title { font-size: 24px; }
-}
-
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.header-controls { display: flex; align-items: center; gap: 8px; }
 
 .view-toggle {
   display: flex;
-  background: var(--hover);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 3px;
-  gap: 2px;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 2px;
 }
 
 .view-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   background: transparent;
   border: none;
-  border-radius: 8px;
-  color: var(--secondary);
+  border-radius: 6px;
+  color: #999;
   cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
+  transition: all 0.15s;
 }
 
-.view-btn:hover {
-  color: var(--primary);
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.view-btn.active {
-  background: white;
-  color: var(--primary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-}
-
-.view-btn .icon { width: 18px; height: 18px; }
+.view-btn:hover { color: #666; }
+.view-btn.active { background: #fff; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.view-btn .icon { width: 15px; height: 15px; }
 
 .sort-select {
-  padding: 10px 36px 10px 16px;
-  background: var(--hover);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary);
+  padding: 7px 26px 7px 10px;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1a1a1a;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 5L6 8L9 5' stroke='%2364748B' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23999' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 14px center;
-  font-family: inherit;
-  transition: all 0.2s;
+  background-position: right 8px center;
 }
 
-.sort-select:hover {
-  background: white;
-  border-color: var(--primary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+/* Layout */
+.feed-layout {
+  display: flex;
+  gap: 24px;
 }
 
-.sort-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.05);
-}
+.feed-main { flex: 1; max-width: 600px; }
 
-@media (max-width: 767px) {
-  .section-header { gap: 12px; padding: 0 12px 16px; }
-  .section-title { font-size: 18px; flex: 1 1 100%; }
-  .header-controls { width: 100%; justify-content: space-between; }
-  .view-btn { width: 34px; height: 34px; }
-  .view-btn .icon { width: 16px; height: 16px; }
-  .sort-select { font-size: 13px; padding: 8px 30px 8px 12px; }
-}
-
+/* Feed Grid - 1열 */
 .feed-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  padding: 0 20px;
-}
-
-@media (min-width: 768px) {
-  .feed-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (min-width: 1024px) {
-  .feed-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; padding: 0 32px; }
-}
-
-@media (min-width: 1600px) {
-  .feed-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 767px) {
-  /* 피드 그리드도 자연스러운 흐름으로 */
-  .feed-grid {
-    padding: 0;
-    gap: 0;
-    background: var(--bg);
-  }
-}
-
-.list-view {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 0 20px;
 }
 
-@media (min-width: 1024px) {
-  .list-view { gap: 20px; padding: 0 32px; }
+/* List View - 컴팩트 */
+.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .list-item {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 12px;
   display: flex;
-  gap: 20px;
-  transition: all 0.25s;
+  gap: 12px;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
 .list-item:hover {
-  box-shadow: 0 4px 12px var(--shadow);
-  transform: translateY(-2px);
-  border-color: rgba(0, 0, 0, 0.1);
+  border-color: #d0d0d0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
 }
 
 .list-image {
   position: relative;
-  width: 200px;
-  aspect-ratio: 4 / 3;
+  width: 100px;
+  height: 100px;
   flex-shrink: 0;
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--hover);
-}
-
-.list-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.list-item:hover .list-image img { transform: scale(1.05); }
-
-.list-evaluation-badge-overlay {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 2;
-}
-
-.list-evaluation-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
   border-radius: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
+  overflow: hidden;
+  background: #fafafa;
 }
 
-.list-eval-icon { width: 13px; height: 13px; flex-shrink: 0; stroke-width: 2; }
+.list-image img { width: 100%; height: 100%; object-fit: cover; }
 
-.list-evaluation-badge.eval-best {
-  background: rgba(255, 247, 237, 0.85);
-  color: #F97316;
-  border: 1px solid rgba(253, 186, 116, 0.8);
-  backdrop-filter: blur(4px);
+.list-eval-overlay { position: absolute; top: 6px; left: 6px; }
+
+.list-eval-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
 }
 
-.list-evaluation-badge.eval-good {
-  background: rgba(209, 250, 229, 0.85);
-  color: #059669;
-  border: 1px solid rgba(110, 231, 183, 0.8);
-  backdrop-filter: blur(4px);
-}
+.list-eval-badge.eval-best { background: rgba(255,237,213,0.95); color: #ea580c; }
+.list-eval-badge.eval-good { background: rgba(220,252,231,0.95); color: #16a34a; }
+.list-eval-badge.eval-okay { background: rgba(224,231,255,0.95); color: #4f46e5; }
+.list-eval-badge.eval-bad { background: rgba(254,226,226,0.95); color: #dc2626; }
 
-.list-evaluation-badge.eval-okay {
-  background: rgba(219, 234, 254, 0.85);
-  color: #2563EB;
-  border: 1px solid rgba(147, 197, 253, 0.8);
-  backdrop-filter: blur(4px);
-}
+.list-content { flex: 1; display: flex; flex-direction: column; min-width: 0; gap: 4px; }
 
-.list-evaluation-badge.eval-bad {
-  background: rgba(254, 226, 226, 0.85);
-  color: #DC2626;
-  border: 1px solid rgba(252, 165, 165, 0.8);
-  backdrop-filter: blur(4px);
-}
+.list-header { margin-bottom: 2px; }
 
-.list-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-  min-height: 180px;
-}
+.list-author { display: flex; align-items: center; gap: 6px; }
 
-.list-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.list-author-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-
-.author-avatar-small {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+.author-avatar-sm {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   overflow: hidden;
-  color: white;
 }
 
-.author-avatar-small img { width: 100%; height: 100%; object-fit: cover; }
+.author-avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-placeholder svg { width: 10px; height: 10px; color: #999; }
 
-.avatar-placeholder svg { width: 14px; height: 14px; }
+.list-author .author-name { font-size: 11px; font-weight: 600; color: #1a1a1a; }
 
-.author-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100px;
-}
-
-.list-category {
-  padding: 2px 6px;
-  background: #EFF6FF;
-  color: #1D4ED8;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.list-time { font-size: 12px; color: var(--secondary); white-space: nowrap; }
-
-.btn-more {
-  padding: 4px;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-
-.btn-more:hover { background: var(--hover); }
-.btn-more .icon { width: 16px; height: 16px; color: var(--secondary); }
-
-.list-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
+.list-time { font-size: 10px; color: #999; }
 
 .list-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--primary);
-  line-height: 1.4;
-  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .list-review {
-  font-size: 14px;
-  color: var(--secondary);
-  line-height: 1.6;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  word-break: break-word;
-  margin-bottom: auto;
+  flex: 1;
 }
 
-.list-meta {
+.list-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
-  border-top: 1px solid var(--border);
   margin-top: auto;
 }
 
-.list-reactions { display: flex; align-items: center; gap: 12px; }
+.list-reactions { display: flex; gap: 10px; }
 
-.reaction-item {
+.reaction {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--primary);
-  font-weight: 600;
-}
-
-/* 리액션 활성화 스타일 */
-.reaction-item.active { color: #F97316; }
-.reaction-item.active .icon-small { color: #F97316; }
-
-.icon-small { width: 16px; height: 16px; stroke-width: 2; flex-shrink: 0; color: var(--secondary); }
-.icon-small.fire-icon { width: 17px; height: 17px; }
-
-.price-place { display: flex; align-items: center; }
-
-.buy-price {
-  font-weight: 700;
-  color: var(--primary);
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.list-hashtags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.hashtag {
-  font-size: 12px;
-  color: #1D4ED8;
+  gap: 3px;
+  font-size: 11px;
   font-weight: 500;
-  cursor: pointer;
-  transition: color 0.2s;
-  background: #EFF6FF;
-  padding: 4px 8px;
-  border-radius: 6px;
+  color: #888;
 }
 
-.hashtag:hover { color: #1E40AF; background: #DBEAFE; }
+.reaction svg { width: 12px; height: 12px; }
+.reaction.active { color: #f59e0b; }
 
-.load-more-section {
-  width: 100%;
-  padding: 60px 20px;
+.list-price {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1a1a1a;
+  background: #f5f5f5;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* Loading States */
+.load-section {
+  padding: 40px 0;
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 200px;
 }
 
-.loading-container {
+.loading-box, .end-box, .empty-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 20px;
+  gap: 10px;
+  color: #999;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #E2E8F0;
-  border-top-color: #F97316;
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e8e8e8;
+  border-top-color: #6366f1;
   border-radius: 50%;
-  animation: spinner-rotate 0.8s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
-@keyframes spinner-rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.end-box svg, .empty-box svg { width: 36px; height: 36px; }
+
+/* ===== Mobile ===== */
+@media (max-width: 1024px) {
+  .feed-main { max-width: 100%; }
 }
-
-.loading-text { font-size: 15px; font-weight: 600; color: #64748B; margin: 0; }
-
-.end-message, .empty-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 32px 20px;
-  background: var(--hover);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.end-icon, .empty-icon { width: 48px; height: 48px; color: var(--secondary); }
-.end-message p, .empty-message p { font-size: 15px; font-weight: 600; color: var(--secondary); margin: 0; }
 
 @media (max-width: 767px) {
-  .feed-section {
-    padding: 0;
-    background: #FAFAFA;
-  }
+  .feed-section { padding: 12px 0; }
 
-  /* Soft Modern 스타일 - 은은한 구분과 클릭 유도 */
-  .list-view {
-    gap: 12px;
-    padding: 12px;
-    background: #FAFAFA;
-  }
+  .section-header { padding: 0 0 12px; margin-bottom: 12px; }
+  .section-title { font-size: 16px; }
+  .view-btn { width: 28px; height: 28px; }
+  .view-btn .icon { width: 14px; height: 14px; }
+  .sort-select { padding: 6px 24px 6px 8px; font-size: 11px; }
+
+  .feed-grid { gap: 14px; }
+
+  .list-view { gap: 10px; }
 
   .list-item {
-    flex-direction: column;
-    padding: 0;
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
-    background: #FFFFFF;
-    margin-bottom: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .list-item:last-child {
-    margin-bottom: 0;
-  }
-
-  /* Soft hover effect - 클릭 가능함을 암시 */
-  .list-item:hover {
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08), 0 0 0 1px rgba(99, 102, 241, 0.12);
-    transform: translateY(-2px);
+    padding: 10px;
+    gap: 10px;
+    border-radius: 10px;
   }
 
   .list-item:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.06), 0 0 0 1px rgba(99, 102, 241, 0.08);
+    transform: scale(0.98);
   }
 
   .list-image {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    border-radius: 12px 12px 0 0;
-    overflow: hidden;
-  }
-
-  .list-content {
-    min-height: auto;
-    padding: 14px 16px 16px;
-    background: linear-gradient(to bottom, rgba(250, 250, 250, 0.3) 0%, transparent 40px);
-  }
-
-  .author-avatar-small {
-    width: 32px;
-    height: 32px;
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-  }
-  .avatar-placeholder svg { width: 14px; height: 14px; }
-  .author-name {
-    font-size: 13px;
-    max-width: 100px;
-    font-weight: 600;
-    color: #1E293B;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  }
-  .list-category {
-    font-size: 10px;
-    padding: 3px 8px;
-    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
-    color: #4F46E5;
-    border-radius: 6px;
-    font-weight: 600;
-  }
-  .list-time {
-    font-size: 11px;
-    color: #94A3B8;
-  }
-
-  .list-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0F172A;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    margin-bottom: 6px;
-    line-height: 1.4;
-  }
-
-  .list-review {
-    font-size: 14px;
-    color: #64748B;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    -webkit-line-clamp: 3;
-    line-height: 1.5;
-  }
-
-  .list-meta {
-    border-top: 1px solid rgba(226, 232, 240, 0.6);
-    padding: 10px 0 0;
-    margin-top: 12px;
-  }
-
-  /* Reaction buttons - 클릭 가능하게 강조 */
-  .reaction-item {
-    padding: 4px 8px;
+    width: 90px;
+    height: 90px;
     border-radius: 8px;
-    transition: all 0.2s;
   }
 
-  .reaction-item:hover {
-    background: rgba(99, 102, 241, 0.06);
-  }
+  .list-title { font-size: 13px; }
+  .list-review { font-size: 11px; -webkit-line-clamp: 2; }
 
-  .reaction-item.active {
-    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-    color: #D97706;
-  }
-
-  .list-hashtags {
-    margin-top: 10px;
-    gap: 6px;
-  }
-
-  .hashtag {
-    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-    padding: 4px 10px;
-    color: #0369A1;
-    font-size: 12px;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.2s;
-  }
-
-  .hashtag:hover {
-    background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
-    color: #075985;
-    transform: translateY(-1px);
-  }
-
-  /* Button styles - 더 명확한 클릭 영역 */
-  .btn-more {
-    padding: 6px;
-    border-radius: 8px;
-    transition: all 0.2s;
-  }
-
-  .btn-more:hover {
-    background: rgba(99, 102, 241, 0.08);
-  }
-
-  /* 가격 정보 강조 */
-  .buy-price {
-    font-weight: 700;
-    color: #0F172A;
-    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 13px;
-  }
+  .load-section { padding: 28px 0; }
 }
 </style>

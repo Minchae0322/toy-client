@@ -1,6 +1,6 @@
 <template>
   <article class="post-card" @click="handleCardClick">
-    <!-- 컴팩트 Header -->
+    <!-- Header -->
     <div class="post-header">
       <div class="post-author-info">
         <div class="author-avatar">
@@ -9,10 +9,13 @@
             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
           </svg>
         </div>
-        <span class="author-name">{{ displayNickname }}</span>
-        <span class="category-badge">{{ feed.categoryName }}</span>
-        <span class="dot">·</span>
-        <span class="post-time">{{ formatDate(feed.createdAt) }}</span>
+        <div class="author-meta">
+          <span class="author-name">{{ displayNickname }}</span>
+          <div class="meta-row">
+            <span class="category-badge">{{ feed.categoryName }}</span>
+            <span class="post-time">{{ formatDate(feed.createdAt) }}</span>
+          </div>
+        </div>
       </div>
       <button class="btn-more" @click="handleMenu">
         <svg class="more-icon" fill="currentColor" viewBox="0 0 20 20">
@@ -30,8 +33,8 @@
           loading="lazy"
       />
       <div v-if="feed.feedEvaluation" class="eval-overlay">
-        <span :class="['evaluation-status', getEvaluationClass(feed.feedEvaluation)]">
-          <svg class="eval-icon-small" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
+        <span :class="['evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
+          <svg class="eval-icon" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getEvaluationIconPath(feed.feedEvaluation)"/>
           </svg>
           {{ getEvaluationLabel(feed.feedEvaluation) }}
@@ -46,72 +49,53 @@
 
     <!-- Content -->
     <div class="post-content">
+      <div class="post-info">
+        <h3 class="post-title">{{ feed.productName }}</h3>
+        <p v-if="feed.reviewSummary" class="post-review">{{ feed.reviewSummary }}</p>
+        <div v-if="feed.price || feed.buyPlace" class="post-details">
+          <span v-if="feed.buyPlace" class="store">{{ feed.buyPlace }}</span>
+          <span v-if="feed.price" class="buy-price">{{ formatPrice(feed.price) }}</span>
+        </div>
+      </div>
+
       <div class="post-actions">
         <div class="action-left">
-          <button @click="handleHot" :class="['action-btn', { hot: localIsHot }]" :disabled="isHotLoading">
+          <button @click="handleHot" :class="['action-btn', { active: localIsHot }]" :disabled="isHotLoading">
             <svg class="action-icon" :fill="localIsHot ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
             </svg>
             <span>{{ formatCount(localHotCount) }}</span>
           </button>
-          <button @click="handleLike" :class="['action-btn', { liked: localIsLiked }]" :disabled="isLikeLoading">
+          <button @click="handleLike" :class="['action-btn', { active: localIsLiked }]" :disabled="isLikeLoading">
             <svg class="action-icon" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
             </svg>
             <span>{{ formatCount(localLikeCount) }}</span>
           </button>
           <button @click="handleComment" class="action-btn">
             <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
             <span>{{ formatCount(feed.commentCount || 0) }}</span>
           </button>
-          <button @click="handleShare" class="action-btn">
-            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-            </svg>
-          </button>
         </div>
-        <button @click="handleSave" :class="['action-btn', 'save-btn', { saved: localIsSaved }]">
+        <button @click="handleSave" :class="['action-btn save-btn', { active: localIsSaved }]">
           <svg class="action-icon" :fill="localIsSaved ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
           </svg>
         </button>
       </div>
 
-      <div class="post-info">
-        <div class="post-title-row">
-          <h3 class="post-title">{{ feed.productName }}</h3>
-          <span v-if="feed.price" class="post-price">{{ formatPrice(feed.price) }}</span>
-        </div>
-        <p v-if="feed.reviewSummary" class="post-review">{{ feed.reviewSummary }}</p>
-        <div v-if="feed.price || feed.buyPlace" class="post-details">
-          <span v-if="feed.buyPlace" class="store">{{ feed.buyPlace }}</span>
-          <span v-if="feed.price" class="buy-price">{{ formatPrice(feed.price) }}</span>
-          <span v-if="showDiscount" class="discount">{{ discountRate }}%</span>
-        </div>
-        <div v-if="feed.hashtags && feed.hashtags.length > 0" class="post-hashtags">
-          <span v-for="tag in feed.hashtags" :key="tag" class="hashtag" @click="handleHashtagClick(tag, $event)">#{{ tag }}</span>
-        </div>
+      <div v-if="feed.hashtags && feed.hashtags.length > 0" class="post-hashtags">
+        <span v-for="tag in feed.hashtags.slice(0, 4)" :key="tag" class="hashtag" @click="handleHashtagClick(tag, $event)">#{{ tag }}</span>
       </div>
     </div>
-
-    <!-- Share Modal -->
-    <ShareModal
-        :visible="showShareModal"
-        :title="shareTitle"
-        :description="feed.reviewSummary || ''"
-        :url="shareUrl"
-        :image="shareImage"
-        @close="closeShareModal"
-    />
   </article>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { feedService, feedUtils } from '@/services/FeedService';
-import ShareModal from '@/components/common/ShareModal.vue';
 
 const props = defineProps({
   feed: { type: Object, required: true },
@@ -123,18 +107,15 @@ const props = defineProps({
 const emit = defineEmits(['like', 'hot', 'save', 'comment', 'menu', 'search-tag', 'update', 'click', 'share']);
 
 const showLikeAnimation = ref(false);
-const showShareModal = ref(false);
 const isLikeLoading = ref(false);
 const isHotLoading = ref(false);
 
-// ========== 반응형 상태 ==========
 const localIsLiked = ref(props.feed.userReactions?.hasLike === true);
 const localIsHot = ref(props.feed.userReactions?.hasHot === true);
 const localIsSaved = ref(props.isSaved);
 const localLikeCount = ref(props.feed.likeCount || 0);
 const localHotCount = ref(props.feed.hotCount || 0);
 
-// props 변경 시 로컬 상태 동기화
 watch(() => props.feed, (newFeed) => {
   localIsLiked.value = newFeed.userReactions?.hasLike === true;
   localIsHot.value = newFeed.userReactions?.hasHot === true;
@@ -142,45 +123,18 @@ watch(() => props.feed, (newFeed) => {
   localHotCount.value = newFeed.hotCount || 0;
 }, { deep: true });
 
-watch(() => props.isLiked, (val) => { localIsLiked.value = val; });
-watch(() => props.isHot, (val) => { localIsHot.value = val; });
 watch(() => props.isSaved, (val) => { localIsSaved.value = val; });
 
-// ========== 사용자 정보 computed (다양한 필드명 대응) ==========
 const profileImageUrl = computed(() => {
   const userInfo = props.feed.userInfo;
   if (!userInfo) return null;
-
-  // 가능한 모든 필드명 체크
-  return userInfo.profileImageFile?.fileUrl
-      || userInfo.profileImgUrl
-      || userInfo.profilePictureUrl
-      || userInfo.profilePicture?.fileUrl
-      || userInfo.profileImg?.fileUrl
-      || null;
+  return userInfo.profileImageFile?.fileUrl || userInfo.profileImgUrl || null;
 });
 
 const displayNickname = computed(() => {
   const userInfo = props.feed.userInfo;
-  if (!userInfo) return '익명';
-
-  // 가능한 모든 필드명 체크
-  return userInfo.nickname
-      || userInfo.nickName
-      || userInfo.userName
-      || userInfo.username
-      || userInfo.name
-      || '익명';
+  return userInfo?.nickname || userInfo?.nickName || '익명';
 });
-
-const discountRate = computed(() => {
-  const originalPrice = props.feed.product?.price;
-  const buyPrice = props.feed.price;
-  if (!originalPrice || !buyPrice || originalPrice <= buyPrice) return 0;
-  return Math.round(((originalPrice - buyPrice) / originalPrice) * 100);
-});
-
-const showDiscount = computed(() => discountRate.value > 0);
 
 const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation);
 
@@ -213,70 +167,41 @@ const handleCardClick = (event) => {
 const handleLike = async (event) => {
   event.stopPropagation();
   if (isLikeLoading.value) return;
-
-  // Optimistic update - 즉시 UI 반영
-  const previousIsLiked = localIsLiked.value;
-  const previousLikeCount = localLikeCount.value;
-  localIsLiked.value = !previousIsLiked;
-  localLikeCount.value = previousIsLiked ? Math.max(0, previousLikeCount - 1) : previousLikeCount + 1;
-
+  const prev = localIsLiked.value;
+  const prevCount = localLikeCount.value;
+  localIsLiked.value = !prev;
+  localLikeCount.value = prev ? Math.max(0, prevCount - 1) : prevCount + 1;
   try {
     isLikeLoading.value = true;
     const response = await feedService.toggleLike(props.feed.feedId);
     if (response.success && response.data) {
-      // 서버 응답으로 실제 값 동기화
       localLikeCount.value = response.data.likeCount;
       localHotCount.value = response.data.hotCount;
       localIsLiked.value = response.data.action === 'added';
       emit('update', { feedId: props.feed.feedId, likeCount: response.data.likeCount, hotCount: response.data.hotCount, action: response.data.action, reactionType: 'LIKE' });
-    } else {
-      // 실패 시 롤백
-      localIsLiked.value = previousIsLiked;
-      localLikeCount.value = previousLikeCount;
-    }
-  } catch (error) {
-    console.error('❌ LIKE 실패:', error);
-    // 에러 시 롤백
-    localIsLiked.value = previousIsLiked;
-    localLikeCount.value = previousLikeCount;
-  } finally {
-    isLikeLoading.value = false;
-  }
+    } else { localIsLiked.value = prev; localLikeCount.value = prevCount; }
+  } catch { localIsLiked.value = prev; localLikeCount.value = prevCount; }
+  finally { isLikeLoading.value = false; }
 };
 
 const handleHot = async (event) => {
   event.stopPropagation();
   if (isHotLoading.value) return;
-
-  // Optimistic update - 즉시 UI 반영
-  const previousIsHot = localIsHot.value;
-  const previousHotCount = localHotCount.value;
-  localIsHot.value = !previousIsHot;
-  localHotCount.value = previousIsHot ? Math.max(0, previousHotCount - 1) : previousHotCount + 1;
-
+  const prev = localIsHot.value;
+  const prevCount = localHotCount.value;
+  localIsHot.value = !prev;
+  localHotCount.value = prev ? Math.max(0, prevCount - 1) : prevCount + 1;
   try {
     isHotLoading.value = true;
     const response = await feedService.toggleHot(props.feed.feedId);
     if (response.success && response.data) {
-      // 서버 응답으로 실제 값 동기화
       localLikeCount.value = response.data.likeCount;
       localHotCount.value = response.data.hotCount;
       localIsHot.value = response.data.action === 'added';
       emit('update', { feedId: props.feed.feedId, likeCount: response.data.likeCount, hotCount: response.data.hotCount, action: response.data.action, reactionType: 'HOT' });
-    } else {
-      // 실패 시 롤백
-      localIsHot.value = previousIsHot;
-      localHotCount.value = previousHotCount;
-    }
-    emit('hot', props.feed.feedId);
-  } catch (error) {
-    console.error('❌ HOT 실패:', error);
-    // 에러 시 롤백
-    localIsHot.value = previousIsHot;
-    localHotCount.value = previousHotCount;
-  } finally {
-    isHotLoading.value = false;
-  }
+    } else { localIsHot.value = prev; localHotCount.value = prevCount; }
+  } catch { localIsHot.value = prev; localHotCount.value = prevCount; }
+  finally { isHotLoading.value = false; }
 };
 
 const handleDoubleTapLike = () => {
@@ -291,13 +216,6 @@ const handleSave = (event) => { event.stopPropagation(); localIsSaved.value = !l
 const handleComment = (event) => { event.stopPropagation(); emit('comment', props.feed.feedId); };
 const handleMenu = (event) => { event.stopPropagation(); emit('menu', props.feed.feedId); };
 const handleHashtagClick = (tag, event) => { event.stopPropagation(); emit('search-tag', tag); };
-const handleShare = (event) => { event.stopPropagation(); showShareModal.value = true; emit('share', props.feed.feedId); };
-const closeShareModal = () => { showShareModal.value = false; };
-
-// 공유용 정보
-const shareUrl = computed(() => `${window.location.origin}/feed/${props.feed.feedId}`);
-const shareImage = computed(() => props.feed.thumbnailUrl?.fileUrl || '');
-const shareTitle = computed(() => props.feed.product?.name || props.feed.productNameCustom || props.feed.productName || '');
 
 const formatDate = (dateString) => feedUtils.formatDate(dateString);
 const formatPrice = (price) => feedUtils.formatPrice(price);
@@ -305,518 +223,289 @@ const formatCount = (count) => feedUtils.formatCount(count);
 </script>
 
 <style scoped>
-/* 스타일은 기존과 동일 - 생략 */
-:root {
-  --primary: #0F172A;
-  --secondary: #64748B;
-  --accent: #F97316;
-  --border: #E2E8F0;
-  --bg: #F8FAFC;
-  --card: #FFFFFF;
-  --hover: #F1F5F9;
-}
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 .post-card {
-  background: var(--card);
-  border-radius: 16px;
-  border: 1px solid var(--border);
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  transition: all 0.3s;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  transition: all 0.2s ease;
   cursor: pointer;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .post-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #d0d0d0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 
+/* Header */
 .post-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f5f5f5;
 }
 
 .post-author-info {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   flex: 1;
   min-width: 0;
 }
 
 .author-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
+  border: 1px solid #e0e0e0;
 }
 
-.author-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-icon { width: 18px; height: 18px; color: #999; }
 
-.avatar-icon {
-  width: 14px;
-  height: 14px;
-  color: white;
-}
+.author-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
 .author-name {
   font-size: 13px;
   font-weight: 600;
-  color: var(--primary);
+  color: #1a1a1a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 90px;
 }
+
+.meta-row { display: flex; align-items: center; gap: 6px; }
 
 .category-badge {
-  padding: 2px 6px;
-  background: #EFF6FF;
-  color: #1D4ED8;
+  padding: 2px 7px;
+  background: #f5f5f5;
+  color: #666;
   border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.dot { color: var(--secondary); font-size: 10px; }
-
-.post-time {
   font-size: 11px;
-  color: var(--secondary);
-  white-space: nowrap;
+  font-weight: 500;
+  border: 1px solid #ebebeb;
 }
+
+.post-time { font-size: 11px; color: #999; }
 
 .btn-more {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  flex-shrink: 0;
+  transition: background 0.15s;
 }
 
-.btn-more:hover { background: var(--hover); }
+.btn-more:hover { background: #f5f5f5; }
+.more-icon { width: 16px; height: 16px; color: #999; }
 
-.more-icon {
-  width: 14px;
-  height: 14px;
-  color: var(--secondary);
-}
-
+/* Image */
 .post-image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  user-select: none;
+  aspect-ratio: 4 / 3;
+  background: #fafafa;
   overflow: hidden;
-  background: #f1f5f9;
 }
 
 .post-image {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
-  display: block;
+  transition: transform 0.3s ease;
 }
 
-.eval-overlay {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1;
-}
+.post-card:hover .post-image { transform: scale(1.02); }
 
-.evaluation-status {
+.eval-overlay { position: absolute; top: 10px; left: 10px; }
+
+.evaluation-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
-  flex-shrink: 0;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.3);
 }
 
-.eval-icon-small {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
+.eval-icon { width: 14px; height: 14px; }
 
-.evaluation-status.eval-best {
-  background: rgba(255, 247, 237, 0.85);
-  color: #F97316;
-  border: 1px solid rgba(253, 186, 116, 0.8);
-  backdrop-filter: blur(4px);
-}
-
-.evaluation-status.eval-good {
-  background: rgba(209, 250, 229, 0.85);
-  color: #059669;
-  border: 1px solid rgba(110, 231, 183, 0.8);
-  backdrop-filter: blur(4px);
-}
-
-.evaluation-status.eval-okay {
-  background: rgba(219, 234, 254, 0.85);
-  color: #2563EB;
-  border: 1px solid rgba(147, 197, 253, 0.8);
-  backdrop-filter: blur(4px);
-}
-
-.evaluation-status.eval-bad {
-  background: rgba(254, 226, 226, 0.85);
-  color: #DC2626;
-  border: 1px solid rgba(252, 165, 165, 0.8);
-  backdrop-filter: blur(4px);
-}
+.evaluation-badge.eval-best { background: rgba(255,237,213,0.95); color: #ea580c; }
+.evaluation-badge.eval-good { background: rgba(220,252,231,0.95); color: #16a34a; }
+.evaluation-badge.eval-okay { background: rgba(224,231,255,0.95); color: #4f46e5; }
+.evaluation-badge.eval-bad { background: rgba(254,226,226,0.95); color: #dc2626; }
 
 .like-animation {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  animation: likeZoom 0.6s ease-out;
+  animation: heartPop 0.6s ease-out forwards;
   pointer-events: none;
-  z-index: 2;
 }
 
-.heart-anim {
-  width: 60px;
-  height: 60px;
-  color: white;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
-}
+.heart-anim { width: 56px; height: 56px; color: white; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)); }
 
-@keyframes likeZoom {
+@keyframes heartPop {
   0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
 }
 
-.post-content { padding: 12px 14px; }
+/* Content */
+.post-content { padding: 14px; }
 
-.post-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-}
-
-.action-left {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 4px 6px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--primary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.action-btn:hover:not(:disabled) { background: var(--hover); }
-.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.action-btn.liked {
-  color: #f43f5e;
-  background: #fff1f2;
-}
-.action-btn.hot {
-  color: #ea580c;
-  background: #fff7ed;
-  border: 1px solid transparent;
-}
-
-.action-btn.hot .action-icon {
-  color: #ea580c;
-}
-.action-btn.saved {
-  color: #1D4ED8;
-  background: rgba(29, 78, 216, 0.1);
-}
-
-.action-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.save-btn { margin-left: auto; }
-
-.post-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.post-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
+.post-info { margin-bottom: 12px; }
 
 .post-title {
   font-size: 15px;
-  font-weight: 700;
-  color: var(--primary);
+  font-weight: 600;
+  color: #1a1a1a;
   line-height: 1.4;
-  flex: 1;
-  min-width: 0;
-}
-
-.post-price {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .post-review {
   font-size: 13px;
-  color: var(--primary);
+  color: #666;
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin-bottom: 8px;
 }
 
 .post-details {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  padding-top: 6px;
-  border-top: 1px solid var(--border);
+  gap: 8px;
+  font-size: 12px;
 }
 
-.store { color: var(--secondary); }
-.buy-price { font-weight: 600; color: var(--secondary); }
-.discount { padding: 2px 5px; background: #FEE2E2; color: #DC2626; border-radius: 4px; font-size: 10px; font-weight: 700; }
+.store { color: #999; }
 
+.buy-price {
+  font-weight: 600;
+  color: #1a1a1a;
+  background: #f5f5f5;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* Actions */
+.post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.action-left { display: flex; align-items: center; gap: 2px; }
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-btn:hover:not(:disabled) { background: #f5f5f5; color: #333; }
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.action-btn.active { color: #f59e0b; background: #fffbeb; }
+.action-btn.save-btn.active { color: #6366f1; background: #eef2ff; }
+
+.action-icon { width: 18px; height: 18px; }
+
+/* Hashtags */
 .post-hashtags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
+  margin-top: 10px;
 }
 
 .hashtag {
-  font-size: 11px;
-  color: #1D4ED8;
+  font-size: 12px;
+  color: #6366f1;
   font-weight: 500;
+  padding: 4px 8px;
+  background: #f5f5ff;
+  border-radius: 4px;
   cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid #ebebff;
 }
 
-.hashtag:hover { text-decoration: underline; }
+.hashtag:hover { background: #eef2ff; border-color: #dde4ff; }
 
-@media (min-width: 1024px) {
-  .post-title { font-size: 16px; }
-}
-
+/* ===== Mobile ===== */
 @media (max-width: 767px) {
-  /* Soft Modern 스타일 - 은은한 카드 디자인 */
   .post-card {
-    border-radius: 16px;
-    border: none;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
-    background: #FFFFFF;
-    margin-bottom: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Soft hover effect */
-  .post-card:hover {
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08), 0 0 0 1px rgba(99, 102, 241, 0.12);
-    transform: translateY(-2px);
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   }
 
   .post-card:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.06), 0 0 0 1px rgba(99, 102, 241, 0.08);
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   }
 
-  .post-header {
-    padding: 14px 16px 10px;
-    background: linear-gradient(to bottom, rgba(250, 250, 250, 0.5) 0%, transparent 100%);
-  }
+  .post-header { padding: 10px 12px; }
 
-  .author-avatar {
-    width: 32px;
-    height: 32px;
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-  }
+  .author-avatar { width: 32px; height: 32px; border-radius: 8px; }
   .avatar-icon { width: 16px; height: 16px; }
-  .author-name {
-    font-size: 13px;
-    max-width: 100px;
-    font-weight: 600;
-    color: #1E293B;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  }
-  .category-badge {
-    font-size: 10px;
-    padding: 3px 8px;
-    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
-    color: #4F46E5;
-    border-radius: 6px;
-    font-weight: 600;
-  }
-  .post-time {
-    font-size: 11px;
-    color: #94A3B8;
-  }
-  .more-icon { width: 14px; height: 14px; }
+  .author-name { font-size: 12px; }
+  .category-badge { font-size: 10px; padding: 2px 5px; }
+  .post-time { font-size: 10px; }
 
-  .btn-more {
-    padding: 6px;
-    border-radius: 8px;
-    transition: all 0.2s;
-  }
+  .post-image-container { aspect-ratio: 16 / 10; }
 
-  .btn-more:hover {
-    background: rgba(99, 102, 241, 0.08);
-  }
+  .evaluation-badge { padding: 4px 8px; font-size: 10px; }
+  .eval-icon { width: 12px; height: 12px; }
 
-  .post-image-container {
-    border-radius: 0;
-  }
+  .post-content { padding: 12px; }
+  .post-title { font-size: 14px; }
+  .post-review { font-size: 12px; -webkit-line-clamp: 2; }
 
-  .evaluation-status { padding: 5px 12px; font-size: 11px; gap: 4px; }
-  .eval-icon-small { width: 14px; height: 14px; }
-  .heart-anim { width: 50px; height: 50px; }
+  .action-btn { padding: 5px 8px; font-size: 11px; }
+  .action-icon { width: 16px; height: 16px; }
 
-  .post-content {
-    padding: 12px 16px 16px;
-    background: linear-gradient(to bottom, rgba(250, 250, 250, 0.3) 0%, transparent 40px);
-  }
-
-  .post-actions {
-    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-  }
-
-  .action-icon { width: 20px; height: 20px; }
-
-  .action-btn {
-    padding: 5px 8px;
-    font-size: 13px;
-    gap: 4px;
-    border-radius: 8px;
-    transition: all 0.2s;
-  }
-
-  .action-btn:hover:not(:disabled) {
-    background: rgba(99, 102, 241, 0.06);
-  }
-
-  .action-btn.liked {
-    background: linear-gradient(135deg, #FFE4E6 0%, #FECDD3 100%);
-    color: #E11D48;
-  }
-
-  .action-btn.hot {
-    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-    color: #D97706;
-  }
-
-  .action-btn.saved {
-    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
-    color: #4F46E5;
-  }
-
-  .post-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0F172A;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  }
-
-  .post-review {
-    font-size: 14px;
-    color: #64748B;
-    -webkit-line-clamp: 3;
-    line-height: 1.5;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  }
-
-  .post-details {
-    border-top: 1px solid rgba(226, 232, 240, 0.6);
-    padding-top: 10px;
-    margin-top: 10px;
-  }
-
-  .post-hashtags {
-    margin-top: 10px;
-    gap: 6px;
-  }
-
-  .hashtag {
-    font-size: 12px;
-    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-    padding: 4px 10px;
-    color: #0369A1;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.2s;
-  }
-
-  .hashtag:hover {
-    background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
-    color: #075985;
-    transform: translateY(-1px);
-  }
-
-  .buy-price {
-    font-weight: 700;
-    color: #0F172A;
-    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 13px;
-  }
-
-  .discount {
-    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
-    color: #DC2626;
-  }
+  .hashtag { font-size: 11px; padding: 3px 6px; }
 }
 </style>

@@ -1,475 +1,290 @@
 <template>
-  <aside class="sidebar-right">
-    <!-- Trending -->
-    <section class="sidebar-section">
-      <div class="section-header">
-        <h3 class="sidebar-title">Trending</h3>
+  <aside class="sidebar">
+    <!-- 인기 해시태그 -->
+    <div class="sidebar-card">
+      <div class="sidebar-header">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+        </svg>
+        <h3 class="sidebar-title">인기 해시태그</h3>
+      </div>
+      <div class="hashtag-list">
         <button
-            v-if="hotHashtags.length > 5"
-            @click="toggleExpand"
-            class="btn-expand"
+            v-for="(tag, index) in popularHashtags"
+            :key="tag.name"
+            class="hashtag-item"
+            @click="$emit('search-tag', tag.name)"
         >
-          {{ isExpanded ? '−' : `+${Math.min(hotHashtags.length, 10) - 5}` }}
+          <span class="hashtag-rank" :class="getRankClass(index)">{{ index + 1 }}</span>
+          <span class="hashtag-name">#{{ tag.name }}</span>
+          <span class="hashtag-count">{{ formatCount(tag.count) }}</span>
         </button>
       </div>
+    </div>
 
-      <!-- 로딩 상태 -->
-      <div v-if="loading" class="state-wrapper">
-        <div class="loading-spinner"></div>
+    <!-- 트렌딩 카테고리 -->
+    <div class="sidebar-card">
+      <div class="sidebar-header">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+        </svg>
+        <h3 class="sidebar-title">트렌딩</h3>
       </div>
-
-      <!-- 에러 상태 -->
-      <div v-else-if="error" class="state-wrapper">
-        <p class="error-text">{{ error }}</p>
-        <button @click="loadHotHashtags" class="btn-retry">다시 시도</button>
-      </div>
-
-      <!-- 해시태그 목록 -->
-      <div v-else class="trending-list">
-        <transition-group name="list" tag="div">
-          <div
-              v-for="(hashtag, idx) in displayedHashtags"
-              :key="hashtag.id"
-              class="trending-item"
-              @click="onHashtagClick(hashtag.name)"
-          >
-            <span class="rank">{{ idx + 1 }}</span>
-            <div class="content">
-              <p class="tag">{{ formatHashtag(hashtag.name) }}</p>
-              <p class="count">{{ formatUsageCount(hashtag.usageCount) }}</p>
-            </div>
-          </div>
-        </transition-group>
-
-        <div v-if="hotHashtags.length === 0" class="state-wrapper">
-          <p class="empty-text">트렌딩 데이터 없음</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Recommended -->
-    <section class="sidebar-section">
-      <h3 class="sidebar-title">Recommended</h3>
-      <div class="recommended-list">
-        <div
-            v-for="user in recommendedUsers"
-            :key="user.name"
-            class="recommended-item"
+      <div class="trending-list">
+        <button
+            v-for="category in trendingCategories"
+            :key="category.id"
+            class="trending-item"
+            @click="$emit('filter-category', category.id)"
         >
-          <img :src="user.image" :alt="user.name" class="avatar" />
-          <div class="content">
-            <p class="name">{{ user.name }}</p>
-            <p class="desc">{{ formatNumber(user.followers) }}</p>
+          <span class="trending-emoji">{{ category.emoji }}</span>
+          <div class="trending-info">
+            <span class="trending-name">{{ category.name }}</span>
+            <span class="trending-desc">{{ category.description }}</span>
           </div>
-          <button class="btn-follow">팔로우</button>
+          <span class="trending-badge" v-if="category.isHot">HOT</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 추천 유저 -->
+    <div class="sidebar-card">
+      <div class="sidebar-header">
+        <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <h3 class="sidebar-title">추천 리뷰어</h3>
+      </div>
+      <div class="user-list">
+        <div v-for="user in recommendedUsers" :key="user.id" class="user-item">
+          <div class="user-avatar">
+            <img v-if="user.avatar" :src="user.avatar" alt="" />
+            <span v-else class="avatar-fallback">{{ user.name.charAt(0) }}</span>
+          </div>
+          <div class="user-info">
+            <span class="user-name">{{ user.name }}</span>
+            <span class="user-stats">리뷰 {{ user.reviewCount }}개</span>
+          </div>
+          <button class="follow-btn" @click="$emit('follow-user', user.id)">팔로우</button>
         </div>
       </div>
-    </section>
-
-    <!-- Footer -->
-    <div class="sidebar-footer">
-      <div class="footer-links">
-        <a href="#">About</a>
-        <a href="#">Terms</a>
-        <a href="#">Privacy</a>
-        <a href="#">Help</a>
-      </div>
-      <p class="copyright">© 2025 HYPE BATTLE</p>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useFeed, feedUtils } from '@/services/FeedService'
-
-const router = useRouter()
-const { getHotHashtags } = useFeed()
-
-const hotHashtags = ref([])
-const loading = ref(false)
-const error = ref(null)
-const isExpanded = ref(false)
-
-const displayedHashtags = computed(() => {
-  const maxCount = Math.min(hotHashtags.value.length, 10)
-  return isExpanded.value ? hotHashtags.value.slice(0, maxCount) : hotHashtags.value.slice(0, 5)
-})
-
-const recommendedUsers = [
-  {
-    name: 'sneaker_master',
-    category: '스니커즈 컬렉터',
-    followers: 12340,
-    image: 'https://i.pravatar.cc/150?img=33'
+const props = defineProps({
+  popularHashtags: {
+    type: Array,
+    default: () => [
+      { name: '가성비', count: 1523 },
+      { name: '다이소', count: 1204 },
+      { name: '편의점신상', count: 987 },
+      { name: '무신사', count: 856 },
+      { name: '올리브영', count: 743 },
+      { name: '꿀템', count: 621 },
+      { name: '일상템', count: 534 },
+      { name: '뷰티', count: 489 }
+    ]
   },
-  {
-    name: 'tech_reviewer',
-    category: '테크 리뷰어',
-    followers: 8900,
-    image: 'https://i.pravatar.cc/150?img=68'
+  trendingCategories: {
+    type: Array,
+    default: () => [
+      { id: 1, name: '뷰티/코스메틱', emoji: '💄', description: '오늘 +128건', isHot: true },
+      { id: 2, name: '패션/의류', emoji: '👕', description: '오늘 +95건', isHot: true },
+      { id: 3, name: '식품/음료', emoji: '🍜', description: '오늘 +87건', isHot: false },
+      { id: 4, name: '생활용품', emoji: '🏠', description: '오늘 +64건', isHot: false }
+    ]
   },
-  {
-    name: 'beauty_expert',
-    category: '뷰티 인플루언서',
-    followers: 5670,
-    image: 'https://i.pravatar.cc/150?img=45'
+  recommendedUsers: {
+    type: Array,
+    default: () => [
+      { id: 1, name: '뷰티마니아', avatar: null, reviewCount: 234 },
+      { id: 2, name: '가성비헌터', avatar: null, reviewCount: 189 },
+      { id: 3, name: '일상리뷰어', avatar: null, reviewCount: 156 }
+    ]
   }
-]
+});
 
-const loadHotHashtags = async () => {
-  loading.value = true
-  error.value = null
+defineEmits(['search-tag', 'filter-category', 'follow-user']);
 
-  try {
-    const response = await getHotHashtags(
-        {},
-        {
-          page: 0,
-          size: 10,
-          sort: 'usageCount,DESC'
-        }
-    )
+const getRankClass = (index) => {
+  if (index === 0) return 'rank-gold';
+  if (index === 1) return 'rank-silver';
+  if (index === 2) return 'rank-bronze';
+  return '';
+};
 
-    if (response.success) {
-      hotHashtags.value = response.data.content || response.data
-      console.log('✅ 인기 해시태그 로드 완료:', hotHashtags.value)
-    } else {
-      throw new Error(response.message || '데이터 로드 실패')
-    }
-  } catch (err) {
-    console.error('❌ 해시태그 로드 실패:', err)
-    error.value = err.message || '데이터 로드 실패'
-  } finally {
-    loading.value = false
-  }
-}
-
-const toggleExpand = () => {
-  isExpanded.value = !isExpanded.value
-}
-
-const onHashtagClick = (hashtag) => {
-  console.log('해시태그 클릭:', hashtag)
-  router.push({
-    name: 'FeedSearch',
-    query: { hashtag: hashtag }
-  })
-}
-
-const formatHashtag = (tag) => {
-  return feedUtils.formatHashtag(tag)
-}
-
-const formatUsageCount = (count) => {
-  return feedUtils.formatUsageCount(count)
-}
-
-const formatNumber = (num) => {
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K'
-  }
-  return num.toString()
-}
-
-onMounted(() => {
-  loadHotHashtags()
-})
+const formatCount = (count) => {
+  if (count >= 1000) return (count / 1000).toFixed(1) + 'k';
+  return count;
+};
 </script>
 
 <style scoped>
-.sidebar-right {
-  position: fixed;
-  right: 0;
-  top: 0;
-  width: 320px;
-  height: 100vh;
-  background: #ffffff;
-  border-left: 1px solid #f0f0f0;
-  overflow-y: auto;
-  display: none;
-}
-
-@media (min-width: 1280px) {
-  .sidebar-right {
-    display: block;
-  }
-}
-
-.sidebar-section {
-  padding: 24px 20px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-/* Section Header */
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.sidebar-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #000;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0;
-}
-
-.btn-expand {
-  width: 24px;
-  height: 24px;
-  background: transparent;
-  color: #999;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  transition: color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-family: inherit;
-}
-
-.btn-expand:hover {
-  color: #9333ea;
-}
-
-/* State Wrapper */
-.state-wrapper {
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+.sidebar-card {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+.sidebar-header {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  gap: 12px;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f5f5f5;
 }
 
-.loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #f0f0f0;
-  border-top-color: #9333ea;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
+.sidebar-icon { width: 16px; height: 16px; color: #6366f1; }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+.sidebar-title { font-size: 13px; font-weight: 700; color: #1a1a1a; }
 
-.error-text {
-  font-size: 13px;
-  color: #999;
-}
+/* Hashtag List */
+.hashtag-list { display: flex; flex-direction: column; gap: 2px; }
 
-.empty-text {
-  font-size: 13px;
-  color: #999;
-}
-
-.btn-retry {
-  padding: 8px 16px;
-  background: #9333ea;
-  color: #fff;
+.hashtag-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: transparent;
   border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
+  border-radius: 8px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.15s;
+  text-align: left;
+  width: 100%;
   font-family: inherit;
 }
 
-.btn-retry:hover {
-  opacity: 0.8;
+.hashtag-item:hover { background: #f8f8f8; }
+
+.hashtag-rank {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #666;
 }
+
+.hashtag-rank.rank-gold { background: #fef3c7; color: #d97706; }
+.hashtag-rank.rank-silver { background: #e5e7eb; color: #4b5563; }
+.hashtag-rank.rank-bronze { background: #fed7aa; color: #c2410c; }
+
+.hashtag-name { flex: 1; font-size: 13px; font-weight: 500; color: #1a1a1a; }
+
+.hashtag-count { font-size: 11px; color: #999; }
 
 /* Trending List */
-.trending-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.trending-list { display: flex; flex-direction: column; gap: 2px; }
 
 .trending-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-  border-radius: 4px;
-}
-
-.trending-item:hover {
-  background: #fafafa;
-}
-
-.rank {
-  font-size: 14px;
-  font-weight: 600;
-  color: #999;
-  width: 20px;
-  text-align: center;
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-}
-
-.trending-item:nth-child(1) .rank {
-  color: #9333ea;
-  font-weight: 700;
-}
-
-.trending-item:nth-child(2) .rank,
-.trending-item:nth-child(3) .rank {
-  color: #666;
-}
-
-.content {
-  flex: 1;
-  min-width: 0;
-}
-
-.tag {
-  font-size: 14px;
-  font-weight: 500;
-  color: #000;
-  margin-bottom: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.count {
-  font-size: 12px;
-  color: #999;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Transition Animations */
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.3s ease;
-}
-
-.list-enter-from {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.list-leave-to {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.list-move {
-  transition: transform 0.3s ease;
-}
-
-/* Recommended */
-.recommended-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.recommended-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #000;
-  margin-bottom: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.desc {
-  font-size: 12px;
-  color: #999;
-  font-variant-numeric: tabular-nums;
-}
-
-.btn-follow {
-  padding: 6px 16px;
-  background: #9333ea;
-  color: #fff;
+  gap: 10px;
+  padding: 8px 10px;
+  background: transparent;
   border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
+  border-radius: 8px;
   cursor: pointer;
-  transition: opacity 0.2s;
-  flex-shrink: 0;
-  white-space: nowrap;
+  transition: all 0.15s;
+  text-align: left;
+  width: 100%;
   font-family: inherit;
 }
 
-.btn-follow:hover {
-  opacity: 0.8;
+.trending-item:hover { background: #f8f8f8; }
+
+.trending-emoji { font-size: 18px; }
+
+.trending-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+
+.trending-name { font-size: 12px; font-weight: 600; color: #1a1a1a; }
+
+.trending-desc { font-size: 10px; color: #999; }
+
+.trending-badge {
+  padding: 2px 5px;
+  background: #fef2f2;
+  color: #ef4444;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
 }
 
-/* Footer */
-.sidebar-footer {
-  padding: 24px 20px;
-}
+/* User List */
+.user-list { display: flex; flex-direction: column; gap: 6px; }
 
-.footer-links {
+.user-item {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 12px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
 }
 
-.footer-links a {
+.user-item:hover { background: #f8f8f8; }
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.avatar-fallback { font-size: 12px; font-weight: 600; color: white; }
+
+.user-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+
+.user-name { font-size: 12px; font-weight: 600; color: #1a1a1a; }
+
+.user-stats { font-size: 10px; color: #999; }
+
+.follow-btn {
+  padding: 5px 10px;
+  background: #f5f5f5;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
   font-size: 11px;
-  color: #999;
-  text-decoration: none;
-  transition: color 0.2s;
+  font-weight: 600;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
 }
 
-.footer-links a:hover {
-  color: #9333ea;
-}
+.follow-btn:hover { background: #6366f1; color: white; border-color: #6366f1; }
 
-.copyright {
-  font-size: 11px;
-  color: #ccc;
-}
-
-/* Scrollbar */
-.sidebar-right::-webkit-scrollbar {
-  width: 4px;
-}
-
-.sidebar-right::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-right::-webkit-scrollbar-thumb {
-  background: #e0e0e0;
-  border-radius: 2px;
-}
-
-.sidebar-right::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
+/* 1024px 이하에서 숨김 */
+@media (max-width: 1024px) {
+  .sidebar { display: none; }
 }
 </style>
