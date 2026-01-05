@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import * as authUtils from '@/utils/auth.js'
 import { authService } from '@/services/AuthService.js'
+import { userService } from '@/services/UserService.js'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -69,7 +70,7 @@ export const useAuthStore = defineStore('auth', {
                     return false
                 }
 
-                // 사용자 정보 로드
+                // 사용자 기본 정보 로드 (JWT/localStorage)
                 const user = authUtils.getCurrentUser()
 
                 if (!user?.id) {
@@ -78,10 +79,29 @@ export const useAuthStore = defineStore('auth', {
                     return false
                 }
 
+                // 프로필 API에서 최신 정보 가져오기 (프로필 사진 포함)
+                try {
+                    const profileResponse = await userService.getUserProfile(user.id)
+
+                    if (profileResponse.success && profileResponse.data) {
+                        // 프로필 정보를 user 객체에 병합
+                        user.profilePicture = profileResponse.data.profilePicture
+                        user.nickname = profileResponse.data.nickname || user.nickname
+                        user.description = profileResponse.data.description || user.description
+
+                        console.log('✅ [AuthStore] 프로필 정보 로드 완료')
+                    }
+                } catch (profileError) {
+                    console.warn('⚠️ [AuthStore] 프로필 정보 로드 실패 (기본 정보만 사용):', profileError)
+                }
+
                 // 상태 업데이트
                 this.user = user
                 this.isAuthenticated = true
                 this.lastActivity = Date.now()
+
+                // localStorage에도 업데이트된 정보 저장
+                authUtils.setUserInfo(user)
 
                 console.log('✅ [AuthStore] 사용자 정보 로드 완료:', user.nickname || user.username)
                 return true
