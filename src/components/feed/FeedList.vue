@@ -23,98 +23,83 @@
       </div>
     </div>
 
-    <div class="feed-layout">
-      <!-- Main Feed Area -->
-      <div class="feed-main">
-        <!-- Feed Grid View -->
-        <div v-if="viewMode === 'feed'" class="feed-grid">
-          <FeedCard
-              v-for="feed in feeds"
-              :key="feed.feedId"
-              :feed="feed"
-              :is-liked="likedPosts.has(feed.feedId)"
-              :is-hot="hotPosts.has(feed.feedId)"
-              :is-saved="savedPosts.has(feed.feedId)"
-              @update="handleUpdate"
-              @save="handleSave"
-              @comment="handleComment"
-              @click="handlePostClick"
-          />
-        </div>
+    <!-- Feed Grid View -->
+    <div v-if="viewMode === 'feed'" class="feed-grid">
+      <FeedCard
+          v-for="feed in feeds"
+          :key="feed.feedId"
+          :feed="feed"
+          :is-liked="likedPosts.has(feed.feedId)"
+          :is-hot="hotPosts.has(feed.feedId)"
+          :is-saved="savedPosts.has(feed.feedId)"
+          @update="handleUpdate"
+          @save="handleSave"
+          @comment="handleComment"
+          @click="handlePostClick"
+      />
+    </div>
 
-        <!-- List View -->
-        <div v-else class="list-view">
-          <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="handlePostClick(feed.feedId)">
-            <div class="list-image">
-              <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
-              <div v-if="feed.feedEvaluation" class="list-eval-overlay">
-                <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
-                  {{ getEvaluationLabel(feed.feedEvaluation) }}
+    <!-- List View -->
+    <div v-else class="list-view">
+      <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="handlePostClick(feed.feedId)">
+        <div class="list-image">
+          <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
+          <div v-if="feed.feedEvaluation" class="list-eval-overlay">
+            <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+              {{ getEvaluationLabel(feed.feedEvaluation) }}
+            </span>
+          </div>
+        </div>
+        <div class="list-content">
+          <div class="list-header">
+            <div class="list-author">
+              <div class="author-avatar-sm">
+                <img v-if="getProfileImageUrl(feed)" :src="getProfileImageUrl(feed)" alt="" />
+                <span v-else class="avatar-placeholder">
+                  <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
                 </span>
               </div>
+              <span class="author-name">{{ getDisplayNickname(feed) }}</span>
+              <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
             </div>
-            <div class="list-content">
-              <div class="list-header">
-                <div class="list-author">
-                  <div class="author-avatar-sm">
-                    <img v-if="getProfileImageUrl(feed)" :src="getProfileImageUrl(feed)" alt="" />
-                    <span v-else class="avatar-placeholder">
-                      <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
-                    </span>
-                  </div>
-                  <span class="author-name">{{ getDisplayNickname(feed) }}</span>
-                  <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
-                </div>
-              </div>
-              <h3 class="list-title">{{ feed.productName }}</h3>
-              <p class="list-review">{{ feed.reviewSummary }}</p>
-              <div class="list-footer">
-                <div class="list-reactions">
-                  <span :class="['reaction', { active: feed.userReactions?.hasHot }]">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
-                    {{ feed.hotCount || 0 }}
-                  </span>
-                  <span :class="['reaction', { active: feed.userReactions?.hasLike }]">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
-                    {{ feed.likeCount || 0 }}
-                  </span>
-                  <span class="reaction">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                    {{ feed.commentCount || 0 }}
-                  </span>
-                </div>
-                <span v-if="getDisplayPrice(feed)" class="list-price">{{ formatBuyPrice(getDisplayPrice(feed)) }}</span>
-              </div>
+          </div>
+          <h3 class="list-title">{{ feed.productName }}</h3>
+          <p class="list-review">{{ feed.reviewSummary }}</p>
+          <div class="list-footer">
+            <div class="list-reactions">
+              <span :class="['reaction', { active: feed.userReactions?.hasHot }]">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+                {{ feed.hotCount || 0 }}
+              </span>
+              <span :class="['reaction', { active: feed.userReactions?.hasLike }]">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+                {{ feed.likeCount || 0 }}
+              </span>
+              <span class="reaction">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                {{ feed.commentCount || 0 }}
+              </span>
             </div>
-          </article>
+            <span v-if="getDisplayPrice(feed)" class="list-price">{{ formatBuyPrice(getDisplayPrice(feed)) }}</span>
+          </div>
         </div>
+      </article>
+    </div>
 
-        <!-- Loading & Observer -->
-        <div ref="observerTarget" class="load-section">
-          <div v-if="loading" class="loading-box">
-            <div class="spinner"></div>
-            <span>로딩 중...</span>
-          </div>
-          <div v-else-if="!hasNext && feeds.length > 0" class="end-box">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <span>모든 게시물을 확인했습니다</span>
-          </div>
-          <div v-else-if="feeds.length === 0 && !loading" class="empty-box">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-            <span>아직 게시물이 없습니다</span>
-          </div>
-        </div>
+    <!-- Loading & Observer -->
+    <div ref="observerTarget" class="load-section">
+      <div v-if="loading" class="loading-box">
+        <div class="spinner"></div>
+        <span>로딩 중...</span>
       </div>
-
-      <!-- Sidebar -->
-      <RightSidebar
-          :popular-hashtags="popularHashtags"
-          :trending-categories="trendingCategories"
-          :recommended-users="recommendedUsers"
-          @search-tag="$emit('search-tag', $event)"
-          @filter-category="$emit('filter-category', $event)"
-          @follow-user="$emit('follow-user', $event)"
-      />
+      <div v-else-if="!hasNext && feeds.length > 0" class="end-box">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span>모든 게시물을 확인했습니다</span>
+      </div>
+      <div v-else-if="feeds.length === 0 && !loading" class="empty-box">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+        <span>아직 게시물이 없습니다</span>
+      </div>
     </div>
   </section>
 </template>
@@ -122,7 +107,6 @@
 <script setup>
 import { ref } from 'vue';
 import FeedCard from './FeedCard.vue';
-import RightSidebar from './RightSidebar.vue';
 import { feedUtils } from '@/services/FeedService';
 
 const props = defineProps({
@@ -132,13 +116,10 @@ const props = defineProps({
   viewMode: { type: String, default: 'feed' },
   likedPosts: { type: Set, default: () => new Set() },
   hotPosts: { type: Set, default: () => new Set() },
-  savedPosts: { type: Set, default: () => new Set() },
-  popularHashtags: { type: Array, default: () => [] },
-  trendingCategories: { type: Array, default: () => [] },
-  recommendedUsers: { type: Array, default: () => [] }
+  savedPosts: { type: Set, default: () => new Set() }
 });
 
-const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click', 'view-mode-change', 'update', 'search-tag', 'filter-category', 'follow-user']);
+const emit = defineEmits(['like', 'hot', 'save', 'comment', 'post-click', 'view-mode-change', 'update']);
 
 const sortOption = ref('latest');
 const observerTarget = ref(null);
@@ -227,14 +208,6 @@ defineExpose({ observerTarget });
   background-repeat: no-repeat;
   background-position: right 8px center;
 }
-
-/* Layout */
-.feed-layout {
-  display: flex;
-  gap: 24px;
-}
-
-.feed-main { flex: 1; max-width: 600px; }
 
 /* Feed Grid - 1열 */
 .feed-grid {
@@ -401,10 +374,6 @@ defineExpose({ observerTarget });
 .end-box svg, .empty-box svg { width: 36px; height: 36px; }
 
 /* ===== Mobile ===== */
-@media (max-width: 1024px) {
-  .feed-main { max-width: 100%; }
-}
-
 @media (max-width: 767px) {
   .feed-section { padding: 12px 0; }
 
