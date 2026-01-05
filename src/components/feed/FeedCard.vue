@@ -1,15 +1,21 @@
 <template>
-  <article class="feed-card" @click="handleCardClick">
+  <article class="post-card" @click="handleCardClick">
     <!-- Header -->
-    <div class="feed-header">
-      <div class="header-left">
-        <div class="avatar">
+    <div class="post-header">
+      <div class="post-author-info">
+        <div class="author-avatar">
           <img v-if="profileImageUrl" :src="profileImageUrl" alt="" />
-          <span v-else class="avatar-initial">{{ displayNickname[0] }}</span>
+          <svg v-else class="avatar-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+          </svg>
         </div>
-        <span class="nickname">{{ displayNickname }}</span>
-        <span class="category-badge">{{ feed.categoryName }}</span>
-        <span class="time-dot">{{ formatDate(feed.createdAt) }}</span>
+        <div class="author-meta">
+          <span class="author-name">{{ displayNickname }}</span>
+          <div class="meta-row">
+            <span class="category-badge">{{ feed.categoryName }}</span>
+            <span class="post-time">{{ formatDate(feed.createdAt) }}</span>
+          </div>
+        </div>
       </div>
       <button class="btn-more" @click="handleMenu">
         <svg class="more-icon" fill="currentColor" viewBox="0 0 20 20">
@@ -19,26 +25,21 @@
     </div>
 
     <!-- Image -->
-    <div class="feed-image" @dblclick="handleDoubleTapLike">
+    <div class="post-image-container" @dblclick="handleDoubleTapLike">
       <img
           :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'"
           :alt="feed.productName"
+          class="post-image"
           loading="lazy"
       />
-      <!-- Evaluation Badge -->
-      <div v-if="feed.feedEvaluation" class="eval-badge-wrap">
-        <span :class="['eval-badge', evalStyle.bg, evalStyle.text, evalStyle.border]">
-          {{ getEvalLabel(feed.feedEvaluation) }}
+      <div v-if="feed.feedEvaluation" class="eval-overlay">
+        <span :class="['evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
+          <svg class="eval-icon" :fill="getEvaluationIconFill(feed.feedEvaluation)" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getEvaluationIconPath(feed.feedEvaluation)"/>
+          </svg>
+          {{ getEvaluationLabel(feed.feedEvaluation) }}
         </span>
       </div>
-      <!-- Thread Indicator -->
-      <div v-if="feed.threadReviews?.length > 0" class="thread-indicator">
-        <svg class="thread-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-        </svg>
-        {{ feed.threadReviews.length }}개의 후속 리뷰
-      </div>
-      <!-- Like Animation -->
       <div v-if="showLikeAnimation" class="like-animation">
         <svg class="heart-anim" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
@@ -47,123 +48,48 @@
     </div>
 
     <!-- Content -->
-    <div class="feed-content">
-      <!-- Actions -->
-      <div class="feed-actions">
+    <div class="post-content">
+      <div class="post-info">
+        <h3 class="post-title">{{ feed.productName }}</h3>
+        <p v-if="feed.reviewSummary" class="post-review">{{ feed.reviewSummary }}</p>
+        <div v-if="feed.price || feed.buyPlace" class="post-details">
+          <span v-if="feed.buyPlace" class="store">{{ feed.buyPlace }}</span>
+          <span v-if="feed.price" class="buy-price">{{ formatPrice(feed.price) }}</span>
+        </div>
+      </div>
+
+      <div class="post-actions">
         <div class="action-left">
           <button @click="handleHot" :class="['action-btn', { active: localIsHot }]" :disabled="isHotLoading">
             <svg class="action-icon" :fill="localIsHot ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
             </svg>
-            {{ formatCount(localHotCount) }}
+            <span>{{ formatCount(localHotCount) }}</span>
           </button>
           <button @click="handleLike" :class="['action-btn', { active: localIsLiked }]" :disabled="isLikeLoading">
             <svg class="action-icon" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
             </svg>
-            {{ formatCount(localLikeCount) }}
+            <span>{{ formatCount(localLikeCount) }}</span>
           </button>
           <button @click="handleComment" class="action-btn">
             <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
-            {{ feed.commentCount || 0 }}
+            <span>{{ formatCount(feed.commentCount || 0) }}</span>
           </button>
         </div>
         <button @click="handleSave" :class="['action-btn save-btn', { active: localIsSaved }]">
           <svg class="action-icon" :fill="localIsSaved ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
           </svg>
         </button>
       </div>
 
-      <!-- Info -->
-      <div class="feed-info">
-        <div class="info-row">
-          <h3 class="product-name">{{ feed.productName }}</h3>
-          <span v-if="displayPrice" class="price">{{ formatPrice(displayPrice) }}</span>
-        </div>
-        <p v-if="feed.reviewSummary" class="review-summary">{{ feed.reviewSummary }}</p>
-        <div v-if="feed.hashtags?.length > 0" class="hashtags">
-          <span
-            v-for="tag in feed.hashtags.slice(0, 4)"
-            :key="tag"
-            class="hashtag"
-            @click="handleHashtagClick(tag, $event)"
-          >
-            #{{ tag }}
-          </span>
-        </div>
+      <div v-if="feed.hashtags && feed.hashtags.length > 0" class="post-hashtags">
+        <span v-for="tag in feed.hashtags.slice(0, 4)" :key="tag" class="hashtag" @click="handleHashtagClick(tag, $event)">#{{ tag }}</span>
       </div>
     </div>
-
-    <!-- Thread Section -->
-    <div v-if="feed.threadReviews?.length > 0 && showThread" class="thread-section">
-      <!-- Thread Header -->
-      <button class="thread-header" @click.stop="toggleThread">
-        <div class="thread-title">
-          <div class="thread-bar"></div>
-          <span class="thread-label">후속 리뷰</span>
-          <span class="thread-count">{{ feed.threadReviews.length }}</span>
-        </div>
-        <svg :class="['chevron', { expanded: showThread }]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
-
-      <!-- Thread Items -->
-      <div class="thread-list">
-        <div class="timeline-line"></div>
-        <div class="thread-items">
-          <div
-            v-for="review in visibleThreads"
-            :key="review.id"
-            class="thread-item"
-          >
-            <div :class="['timeline-dot', getThreadEvalStyle(review.evaluation).dot]"></div>
-            <div class="thread-card">
-              <div class="thread-card-header">
-                <span :class="['thread-eval', getThreadEvalStyle(review.evaluation).bg, getThreadEvalStyle(review.evaluation).text]">
-                  {{ getEvalLabel(review.evaluation) }}
-                </span>
-                <span class="thread-time">{{ review.daysAgo }}일 전</span>
-                <span class="thread-likes">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                  </svg>
-                  {{ review.likeCount }}
-                </span>
-              </div>
-              <p class="thread-content">{{ review.content }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Show More -->
-        <button
-          v-if="feed.threadReviews.length > 2"
-          class="show-more-btn"
-          @click.stop="toggleExpanded"
-        >
-          <span>{{ expandedThread ? '접기' : `${feed.threadReviews.length - 2}개 더 보기` }}</span>
-          <svg :class="['show-more-chevron', { expanded: expandedThread }]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Collapsed Thread Toggle -->
-    <button
-      v-if="feed.threadReviews?.length > 0 && !showThread"
-      class="thread-collapsed"
-      @click.stop="toggleThread"
-    >
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-      </svg>
-      후속 리뷰 {{ feed.threadReviews.length }}개 보기
-    </button>
   </article>
 </template>
 
@@ -183,8 +109,6 @@ const emit = defineEmits(['like', 'hot', 'save', 'comment', 'menu', 'search-tag'
 const showLikeAnimation = ref(false);
 const isLikeLoading = ref(false);
 const isHotLoading = ref(false);
-const showThread = ref(true);
-const expandedThread = ref(false);
 
 const localIsLiked = ref(props.feed.userReactions?.hasLike === true);
 const localIsHot = ref(props.feed.userReactions?.hasHot === true);
@@ -212,36 +136,31 @@ const displayNickname = computed(() => {
   return userInfo?.nickname || userInfo?.nickName || '익명';
 });
 
-const displayPrice = computed(() => props.feed.buyPrice || props.feed.price || null);
+const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation);
 
-const visibleThreads = computed(() => {
-  if (!props.feed.threadReviews) return [];
-  return expandedThread.value ? props.feed.threadReviews : props.feed.threadReviews.slice(0, 2);
-});
-
-const evalStyle = computed(() => getEvalStyle(props.feed.feedEvaluation));
-
-const getEvalStyle = (eval_) => {
-  const code = typeof eval_ === 'string' ? eval_ : eval_?.code;
-  return {
-    BEST: { bg: 'bg-amber', text: 'text-amber', border: 'border-amber', dot: 'dot-amber' },
-    GOOD: { bg: 'bg-emerald', text: 'text-emerald', border: 'border-emerald', dot: 'dot-emerald' },
-    OKAY: { bg: 'bg-sky', text: 'text-sky', border: 'border-sky', dot: 'dot-sky' },
-    BAD: { bg: 'bg-rose', text: 'text-rose', border: 'border-rose', dot: 'dot-rose' }
-  }[code] || { bg: 'bg-slate', text: 'text-slate', border: 'border-slate', dot: 'dot-slate' };
+const getEvaluationClass = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
+  return { 'BEST': 'eval-best', 'GOOD': 'eval-good', 'OKAY': 'eval-okay', 'BAD': 'eval-bad' }[code] || '';
 };
 
-const getThreadEvalStyle = (eval_) => getEvalStyle(eval_);
+const getEvaluationIconPath = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
+  const icons = {
+    'BEST': 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
+    'GOOD': 'M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5',
+    'OKAY': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+    'BAD': 'M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5'
+  };
+  return icons[code] || icons['OKAY'];
+};
 
-const getEvalLabel = (e) => {
-  const code = typeof e === 'string' ? e : e?.code;
-  return { BEST: '최고예요', GOOD: '좋아요', OKAY: '괜찮아요', BAD: '별로예요' }[code] || '';
+const getEvaluationIconFill = (evaluation) => {
+  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
+  return code === 'BEST' ? 'currentColor' : 'none';
 };
 
 const handleCardClick = (event) => {
-  if (event.target.closest('.action-btn') || event.target.closest('.btn-more') ||
-      event.target.closest('.hashtag') || event.target.closest('.thread-header') ||
-      event.target.closest('.show-more-btn') || event.target.closest('.thread-collapsed')) return;
+  if (event.target.closest('.action-btn') || event.target.closest('.btn-more') || event.target.closest('.hashtag')) return;
   emit('click', props.feed.feedId);
 };
 
@@ -297,8 +216,6 @@ const handleSave = (event) => { event.stopPropagation(); localIsSaved.value = !l
 const handleComment = (event) => { event.stopPropagation(); emit('comment', props.feed.feedId); };
 const handleMenu = (event) => { event.stopPropagation(); emit('menu', props.feed.feedId); };
 const handleHashtagClick = (tag, event) => { event.stopPropagation(); emit('search-tag', tag); };
-const toggleThread = () => { showThread.value = !showThread.value; };
-const toggleExpanded = () => { expandedThread.value = !expandedThread.value; };
 
 const formatDate = (dateString) => feedUtils.formatDate(dateString);
 const formatPrice = (price) => feedUtils.formatPrice(price);
@@ -308,85 +225,80 @@ const formatCount = (count) => feedUtils.formatCount(count);
 <style scoped>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-.feed-card {
+.post-card {
   background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   cursor: pointer;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
-.feed-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.post-card:hover {
+  border-color: #d0d0d0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 /* Header */
-.feed-header {
+.post-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: linear-gradient(to bottom, rgba(248, 250, 252, 0.5), transparent);
+  padding: 10px 12px;
+  border-bottom: 1px solid #f5f5f5;
 }
 
-.header-left {
+.post-author-info {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+.author-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 2px solid #ffffff;
-  overflow: hidden;
   flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
 }
 
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-icon { width: 18px; height: 18px; color: #999; }
 
-.avatar-initial {
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 500;
-}
+.author-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
-.nickname {
-  font-size: 14px;
+.author-name {
+  font-size: 13px;
   font-weight: 600;
-  color: #334155;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+.meta-row { display: flex; align-items: center; gap: 6px; }
 
 .category-badge {
-  padding: 2px 8px;
-  background: linear-gradient(to right, #eef2ff, #f5f3ff);
-  color: #4f46e5;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 2px 7px;
+  background: #f5f5f5;
+  color: #666;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: 500;
+  border: 1px solid #ebebeb;
 }
 
-.time-dot {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.time-dot::before {
-  content: '· ';
-}
+.post-time { font-size: 11px; color: #999; }
 
 .btn-more {
   width: 28px;
@@ -396,100 +308,53 @@ const formatCount = (count) => feedUtils.formatCount(count);
   justify-content: center;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background 0.15s;
 }
 
-.btn-more:hover {
-  background: rgba(241, 245, 249, 0.8);
-}
-
-.more-icon {
-  width: 16px;
-  height: 16px;
-  color: #94a3b8;
-}
+.btn-more:hover { background: #f5f5f5; }
+.more-icon { width: 16px; height: 16px; color: #999; }
 
 /* Image */
-.feed-image {
+.post-image-container {
   position: relative;
-  aspect-ratio: 4 / 3;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #fafafa;
   overflow: hidden;
-  background: #f1f5f9;
 }
 
-.feed-image img {
+.post-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
-.eval-badge-wrap {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-}
+.post-card:hover .post-image { transform: scale(1.02); }
 
-.eval-badge {
+.eval-overlay { position: absolute; top: 10px; left: 10px; }
+
+.evaluation-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 600;
   backdrop-filter: blur(8px);
-  border-width: 1px;
-  border-style: solid;
+  border: 1px solid rgba(255,255,255,0.3);
 }
 
-/* Evaluation Colors */
-.bg-amber { background: rgb(254, 243, 199); }
-.text-amber { color: #d97706; }
-.border-amber { border-color: rgba(253, 230, 138, 0.6); }
+.eval-icon { width: 14px; height: 14px; }
 
-.bg-emerald { background: rgb(209, 250, 229); }
-.text-emerald { color: #059669; }
-.border-emerald { border-color: rgba(167, 243, 208, 0.6); }
+.evaluation-badge.eval-best { background: rgba(255,237,213,0.95); color: #ea580c; }
+.evaluation-badge.eval-good { background: rgba(220,252,231,0.95); color: #16a34a; }
+.evaluation-badge.eval-okay { background: rgba(224,231,255,0.95); color: #4f46e5; }
+.evaluation-badge.eval-bad { background: rgba(254,226,226,0.95); color: #dc2626; }
 
-.bg-sky { background: rgb(224, 242, 254); }
-.text-sky { color: #0284c7; }
-.border-sky { border-color: rgba(186, 230, 253, 0.6); }
-
-.bg-rose { background: rgb(254, 226, 226); }
-.text-rose { color: #e11d48; }
-.border-rose { border-color: rgba(254, 205, 211, 0.6); }
-
-.bg-slate { background: rgb(241, 245, 249); }
-.text-slate { color: #475569; }
-.border-slate { border-color: rgba(226, 232, 240, 1); }
-
-/* Thread Indicator */
-.thread-indicator {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(8px);
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #475569;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-}
-
-.thread-icon {
-  width: 14px;
-  height: 14px;
-}
-
-/* Like Animation */
 .like-animation {
   position: absolute;
   top: 50%;
@@ -499,12 +364,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   pointer-events: none;
 }
 
-.heart-anim {
-  width: 56px;
-  height: 56px;
-  color: white;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
-}
+.heart-anim { width: 56px; height: 56px; color: white; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)); }
 
 @keyframes heartPop {
   0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
@@ -513,467 +373,139 @@ const formatCount = (count) => feedUtils.formatCount(count);
 }
 
 /* Content */
-.feed-content {
-  padding: 16px;
+.post-content { padding: 12px; }
+
+.post-info { margin-bottom: 10px; }
+
+.post-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.4;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.post-review {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.post-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.store { color: #999; }
+
+.buy-price {
+  font-weight: 600;
+  color: #1a1a1a;
+  background: #f5f5f5;
+  padding: 3px 8px;
+  border-radius: 4px;
 }
 
 /* Actions */
-.feed-actions {
+.post-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
 }
 
-.action-left {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
+.action-left { display: flex; align-items: center; gap: 2px; }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: 4px;
+  padding: 5px 8px;
   background: transparent;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 500;
-  color: #94a3b8;
+  color: #666;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.action-btn:hover:not(:disabled) {
-  background: #f8fafc;
-}
+.action-btn:hover:not(:disabled) { background: #f5f5f5; color: #333; }
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.action-btn.active { color: #f59e0b; background: #fffbeb; }
+.action-btn.save-btn.active { color: #6366f1; background: #eef2ff; }
 
-.action-btn.active {
-  background: linear-gradient(to right, #fef3c7, #ffedd5);
-  color: #f97316;
-}
+.action-icon { width: 16px; height: 16px; }
 
-.action-btn.save-btn.active {
-  background: linear-gradient(to right, #eef2ff, #f5f3ff);
-  color: #6366f1;
-}
-
-.action-icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* Info */
-.feed-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.info-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.product-name {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.price {
-  font-size: 14px;
-  font-weight: 600;
-  color: #334155;
-  flex-shrink: 0;
-  margin-left: 12px;
-}
-
-.review-summary {
-  font-size: 14px;
-  color: #64748b;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.hashtags {
+/* Hashtags */
+.post-hashtags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding-top: 4px;
+  margin-top: 8px;
 }
 
 .hashtag {
-  padding: 4px 10px;
-  background: linear-gradient(to right, #e0f2fe, #cffafe);
-  color: #0284c7;
-  border-radius: 8px;
   font-size: 12px;
+  color: #6366f1;
   font-weight: 500;
+  padding: 4px 8px;
+  background: #f5f5ff;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
+  border: 1px solid #ebebff;
 }
 
-.hashtag:hover {
-  background: linear-gradient(to right, #bae6fd, #a5f3fc);
-}
+.hashtag:hover { background: #eef2ff; border-color: #dde4ff; }
 
-/* Thread Section */
-.thread-section {
-  border-top: 1px solid #f1f5f9;
-}
-
-.thread-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.thread-header:hover {
-  background: rgba(248, 250, 252, 0.5);
-}
-
-.thread-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.thread-bar {
-  width: 4px;
-  height: 24px;
-  background: linear-gradient(to bottom, #a78bfa, #8b5cf6);
-  border-radius: 2px;
-}
-
-.thread-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #334155;
-}
-
-.thread-count {
-  padding: 2px 8px;
-  background: #f5f3ff;
-  color: #7c3aed;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.chevron {
-  width: 16px;
-  height: 16px;
-  color: #94a3b8;
-  transition: transform 0.2s;
-}
-
-.chevron.expanded {
-  transform: rotate(180deg);
-}
-
-/* Thread List */
-.thread-list {
-  position: relative;
-  padding: 0 16px 16px;
-}
-
-.timeline-line {
-  position: absolute;
-  left: 27px;
-  top: 0;
-  bottom: 16px;
-  width: 2px;
-  background: linear-gradient(to bottom, #c4b5fd, #ddd6fe, #f1f5f9);
-  border-radius: 1px;
-}
-
-.thread-items {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.thread-item {
-  position: relative;
-  padding-left: 32px;
-}
-
-.timeline-dot {
-  position: absolute;
-  left: 7px;
-  top: 12px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px #ffffff;
-}
-
-.dot-amber { background: #fbbf24; }
-.dot-emerald { background: #34d399; }
-.dot-sky { background: #38bdf8; }
-.dot-rose { background: #fb7185; }
-.dot-slate { background: #94a3b8; }
-
-.thread-card {
-  padding: 14px;
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.8), #ffffff);
-  border-radius: 12px;
-  border: 1px solid #f1f5f9;
-  transition: all 0.15s;
-  cursor: pointer;
-}
-
-.thread-card:hover {
-  border-color: #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-}
-
-.thread-card-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.thread-eval {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.thread-time {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.thread-likes {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.thread-likes svg {
-  width: 12px;
-  height: 12px;
-}
-
-.thread-content {
-  font-size: 14px;
-  color: #475569;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.thread-card:hover .thread-content {
-  -webkit-line-clamp: unset;
-}
-
-/* Show More Button */
-.show-more-btn {
-  position: relative;
-  margin-left: 32px;
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  font-size: 12px;
-  font-weight: 500;
-  color: #7c3aed;
-  cursor: pointer;
-  transition: color 0.15s;
-}
-
-.show-more-btn:hover {
-  color: #6d28d9;
-}
-
-.show-more-chevron {
-  width: 14px;
-  height: 14px;
-  transition: transform 0.2s;
-}
-
-.show-more-chevron.expanded {
-  transform: rotate(180deg);
-}
-
-/* Collapsed Thread Toggle */
-.thread-collapsed {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-top: 1px solid #f1f5f9;
-  background: transparent;
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
-  font-size: 14px;
-  font-weight: 500;
-  color: #7c3aed;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.thread-collapsed:hover {
-  background: rgba(245, 243, 255, 0.5);
-}
-
-.thread-collapsed svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* Mobile */
+/* ===== Mobile ===== */
 @media (max-width: 767px) {
-  .feed-card {
-    border-radius: 16px;
+  .post-card {
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   }
 
-  .feed-header {
-    padding: 10px 12px;
+  .post-card:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   }
 
-  .avatar {
-    width: 28px;
-    height: 28px;
-  }
+  .post-header { padding: 10px 12px; }
 
-  .avatar-initial {
-    font-size: 12px;
-  }
+  .author-avatar { width: 32px; height: 32px; border-radius: 8px; }
+  .avatar-icon { width: 16px; height: 16px; }
+  .author-name { font-size: 12px; }
+  .category-badge { font-size: 10px; padding: 2px 5px; }
+  .post-time { font-size: 10px; }
 
-  .nickname {
-    font-size: 13px;
-  }
+  .post-image-container { aspect-ratio: 16 / 10; }
 
-  .category-badge {
-    font-size: 11px;
-    padding: 2px 6px;
-  }
+  .evaluation-badge { padding: 4px 8px; font-size: 10px; }
+  .eval-icon { width: 12px; height: 12px; }
 
-  .time-dot {
-    font-size: 11px;
-  }
+  .post-content { padding: 12px; }
+  .post-title { font-size: 14px; }
+  .post-review { font-size: 12px; -webkit-line-clamp: 2; }
 
-  .feed-image {
-    aspect-ratio: 16 / 10;
-  }
+  .action-btn { padding: 5px 8px; font-size: 11px; }
+  .action-icon { width: 16px; height: 16px; }
 
-  .eval-badge {
-    padding: 4px 10px;
-    font-size: 11px;
-  }
-
-  .thread-indicator {
-    padding: 4px 8px;
-    font-size: 11px;
-  }
-
-  .feed-content {
-    padding: 12px;
-  }
-
-  .action-btn {
-    padding: 5px 8px;
-    font-size: 13px;
-  }
-
-  .action-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .product-name {
-    font-size: 15px;
-  }
-
-  .price {
-    font-size: 13px;
-  }
-
-  .review-summary {
-    font-size: 13px;
-  }
-
-  .hashtag {
-    font-size: 11px;
-    padding: 3px 8px;
-  }
-
-  .thread-header {
-    padding: 10px 12px;
-  }
-
-  .thread-label {
-    font-size: 13px;
-  }
-
-  .thread-list {
-    padding: 0 12px 12px;
-  }
-
-  .timeline-line {
-    left: 23px;
-  }
-
-  .thread-item {
-    padding-left: 28px;
-  }
-
-  .timeline-dot {
-    left: 3px;
-  }
-
-  .thread-card {
-    padding: 12px;
-  }
-
-  .thread-content {
-    font-size: 13px;
-  }
-
-  .show-more-btn {
-    margin-left: 28px;
-  }
+  .hashtag { font-size: 11px; padding: 3px 6px; }
 }
 </style>
