@@ -67,12 +67,8 @@
           <p class="list-review">{{ feed.reviewSummary }}</p>
           <div class="list-footer">
             <div class="list-reactions">
-              <span :class="['reaction', { active: feed.userReactions?.hasHot }]">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
-                {{ feed.hotCount || 0 }}
-              </span>
               <span :class="['reaction', { active: feed.userReactions?.hasLike }]">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 14a5 5 0 1 0 0 8 5 5 0 1 0 0-8M10 14l7-7M19 4a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/></svg>
                 {{ feed.likeCount || 0 }}
               </span>
               <span class="reaction">
