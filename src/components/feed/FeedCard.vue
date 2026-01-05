@@ -247,7 +247,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid #f5f5f5;
 }
 
@@ -320,7 +320,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
 .post-image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   background: #fafafa;
   overflow: hidden;
 }
@@ -373,16 +373,16 @@ const formatCount = (count) => feedUtils.formatCount(count);
 }
 
 /* Content */
-.post-content { padding: 14px; }
+.post-content { padding: 12px; }
 
-.post-info { margin-bottom: 12px; }
+.post-info { margin-bottom: 10px; }
 
 .post-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #1a1a1a;
   line-height: 1.4;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -390,14 +390,14 @@ const formatCount = (count) => feedUtils.formatCount(count);
 }
 
 .post-review {
-  font-size: 13px;
+  font-size: 12px;
   color: #666;
-  line-height: 1.5;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .post-details {
@@ -422,7 +422,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid #f0f0f0;
 }
 
@@ -432,11 +432,11 @@ const formatCount = (count) => feedUtils.formatCount(count);
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 10px;
+  padding: 5px 8px;
   background: transparent;
   border: none;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: #666;
   cursor: pointer;
@@ -449,14 +449,14 @@ const formatCount = (count) => feedUtils.formatCount(count);
 .action-btn.active { color: #f59e0b; background: #fffbeb; }
 .action-btn.save-btn.active { color: #6366f1; background: #eef2ff; }
 
-.action-icon { width: 18px; height: 18px; }
+.action-icon { width: 16px; height: 16px; }
 
 /* Hashtags */
 .post-hashtags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .hashtag {

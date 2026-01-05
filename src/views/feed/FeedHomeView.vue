@@ -16,27 +16,32 @@
           @see-all="handleSeeAllHot"
       />
 
-      <FeedList
-          ref="feedListRef"
-          :feeds="feeds"
-          :loading="loading"
-          :has-next="hasNext"
-          :view-mode="viewMode"
-          :liked-posts="likedPosts"
-          :hot-posts="hotPosts"
-          :saved-posts="savedPosts"
-          :popular-hashtags="popularHashtags"
-          :trending-categories="trendingCategories"
-          :recommended-users="recommendedUsers"
-          @update="handleReactionUpdate"
-          @save="handleSave"
-          @comment="handleComment"
-          @post-click="openPost"
-          @view-mode-change="viewMode = $event"
-          @search-tag="handleSearchTag"
-          @filter-category="handleFilterCategory"
-          @follow-user="handleFollowUser"
-      />
+      <div class="content-layout">
+        <FeedList
+            ref="feedListRef"
+            :feeds="feeds"
+            :loading="loading"
+            :has-next="hasNext"
+            :view-mode="viewMode"
+            :liked-posts="likedPosts"
+            :hot-posts="hotPosts"
+            :saved-posts="savedPosts"
+            @update="handleReactionUpdate"
+            @save="handleSave"
+            @comment="handleComment"
+            @post-click="openPost"
+            @view-mode-change="viewMode = $event"
+        />
+
+        <RightSidebar
+            :popular-hashtags="popularHashtags"
+            :trending-categories="trendingCategories"
+            :recommended-users="recommendedUsers"
+            @search-tag="handleSearchTag"
+            @filter-category="handleFilterCategory"
+            @follow-user="handleFollowUser"
+        />
+      </div>
     </main>
 
     <!-- Bottom Navigation - Mobile Only -->
@@ -55,6 +60,7 @@ import AppSidebar from '@/components/feed/AppSidebar.vue';
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue';
 import HotSection from '@/components/feed/HotSection.vue';
 import FeedList from '@/components/feed/FeedList.vue';
+import RightSidebar from '@/components/feed/RightSidebar.vue';
 import BottomNavigation from '@/components/common/BottomNavigation.vue';
 
 const router = useRouter();
@@ -288,13 +294,24 @@ onUnmounted(() => {
   min-width: 0;
   min-height: 100vh;
   padding: 0 24px 5rem;
-  max-width: 960px;
+}
+
+.content-layout {
+  display: flex;
+  gap: 24px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
 @media (min-width: 768px) {
   .main-content {
     padding-bottom: 2.5rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .content-layout {
+    max-width: 100%;
   }
 }
 
