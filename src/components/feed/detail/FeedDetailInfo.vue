@@ -19,15 +19,8 @@
     </div>
 
     <!-- Info Row -->
-    <div class="info-row">
-      <div v-if="feed.buyPlace" class="info-item">
-        <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        <span>{{ feed.buyPlace }}</span>
-      </div>
-      <div v-if="feed.buyPrice || feed.price" class="info-item price">
+    <div v-if="feed.buyPrice || feed.price" class="info-row">
+      <div class="info-item price">
         <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 8v2"/>
         </svg>
