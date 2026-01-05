@@ -244,10 +244,10 @@ defineExpose({ observerTarget });
 .list-item {
   background: #ffffff;
   border: 1px solid #e8e8e8;
-  border-radius: 10px;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 16px;
   display: flex;
-  gap: 12px;
+  gap: 16px;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
@@ -261,10 +261,10 @@ defineExpose({ observerTarget });
 
 .list-image {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 140px;
+  height: 140px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   background: #fafafa;
 }
@@ -311,7 +311,7 @@ defineExpose({ observerTarget });
 .list-time { font-size: 10px; color: #999; }
 
 .list-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: #1a1a1a;
   display: -webkit-box;
@@ -321,9 +321,9 @@ defineExpose({ observerTarget });
 }
 
 .list-review {
-  font-size: 12px;
+  font-size: 13px;
   color: #666;
-  line-height: 1.4;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -414,9 +414,9 @@ defineExpose({ observerTarget });
   .list-view { gap: 10px; }
 
   .list-item {
-    padding: 10px;
-    gap: 10px;
-    border-radius: 10px;
+    padding: 14px;
+    gap: 14px;
+    border-radius: 12px;
   }
 
   .list-item:active {
@@ -424,13 +424,13 @@ defineExpose({ observerTarget });
   }
 
   .list-image {
-    width: 90px;
-    height: 90px;
-    border-radius: 8px;
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
   }
 
-  .list-title { font-size: 13px; }
-  .list-review { font-size: 11px; -webkit-line-clamp: 2; }
+  .list-title { font-size: 14px; }
+  .list-review { font-size: 12px; -webkit-line-clamp: 2; }
 
   .load-section { padding: 28px 0; }
 }
