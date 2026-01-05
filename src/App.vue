@@ -6,7 +6,7 @@ import {useAuth} from '@/composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
-const {userInfo, isLoggedIn, isAdmin, logout, userId} = useAuth()
+const {user, isLoggedIn, isAdmin, logout, userId} = useAuth()
 
 const isLoggingOut = ref(false)
 const wsConnected = ref(false)
@@ -18,7 +18,7 @@ const isAuthPage = computed(() =>
 )
 
 const profileImageUrl = computed(() => {
-  return userInfo.value?.profilePicture?.fileUrl || null
+  return user.value?.profilePicture?.fileUrl || null
 })
 
 const monitorWebSocketStatus = () => {
@@ -133,9 +133,9 @@ onUnmounted(() => {
             <div class="user-info" @click="goToProfile" style="cursor: pointer;">
               <div class="user-avatar">
                 <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
-                <span v-else>{{ userInfo?.username?.charAt(0).toUpperCase() }}</span>
+                <span v-else>{{ user?.username?.charAt(0).toUpperCase() }}</span>
               </div>
-              <span class="user-name">{{ userInfo?.username }}</span>
+              <span class="user-name">{{ user?.username }}</span>
             </div>
             <button @click="handleLogout" class="btn-ghost" :disabled="isLoggingOut">
               {{ isLoggingOut ? '...' : '로그아웃' }}
@@ -179,9 +179,9 @@ onUnmounted(() => {
               </div>
               <div class="user-avatar">
                 <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
-                <span v-else>{{ userInfo?.username?.charAt(0).toUpperCase() }}</span>
+                <span v-else>{{ user?.username?.charAt(0).toUpperCase() }}</span>
               </div>
-              <span>{{ userInfo?.username }}</span>
+              <span>{{ user?.username }}</span>
             </div>
             <button @click="handleLogout" class="btn-ghost" :disabled="isLoggingOut">
               {{ isLoggingOut ? '...' : '로그아웃' }}
