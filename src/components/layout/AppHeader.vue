@@ -65,7 +65,7 @@
                   @error="handleImageError"
                 />
               </div>
-              <span class="username">{{ userInfo?.nickname || userInfo?.username }}</span>
+              <span class="username">{{ userInfo?.nickname || '사용자' }}</span>
               <span v-if="isAdmin" class="admin-badge">관리자</span>
             </div>
             <button @click="handleLogout" class="logout-btn">로그아웃</button>
@@ -87,7 +87,7 @@ import * as authUtils from '@/utils/auth.js'
 const showDebug = ref(import.meta.env.DEV)
 
 // 🔥 useAuth에서 전역 상태 직접 사용
-const { userInfo, isLoggedIn, isAdmin, logout } = useAuth()
+const { user: userInfo, isLoggedIn, isAdmin, logout } = useAuth()
 
 // 로그아웃 진행 상태
 const isLoggingOut = ref(false)
