@@ -213,13 +213,11 @@ defineExpose({ observerTarget });
   background-position: right 8px center;
 }
 
-/* Feed Grid - 한 열에 하나씩, 컴팩트하게 */
+/* Feed Grid - PC에서 2열 그리드 */
 .feed-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 480px;
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
 /* 피드 카드 이미지 비율 조정 (세로로 1.5개 보이도록) */
@@ -455,8 +453,8 @@ defineExpose({ observerTarget });
   .sort-select { padding: 6px 24px 6px 8px; font-size: 11px; }
 
   .feed-grid {
+    grid-template-columns: 1fr;
     gap: 12px;
-    max-width: 100%;
     padding: 0 4px;
   }
 
