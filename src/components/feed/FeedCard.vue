@@ -51,10 +51,9 @@
     <div class="post-content">
       <div class="post-info">
         <h3 class="post-title">{{ feed.productName }}</h3>
-        <p v-if="feed.reviewSummary" class="post-review">{{ feed.reviewSummary }}</p>
-        <div v-if="feed.price || feed.buyPlace" class="post-details">
-          <span v-if="feed.buyPlace" class="store">{{ feed.buyPlace }}</span>
-          <span v-if="feed.price" class="buy-price">{{ formatPrice(feed.price) }}</span>
+        <p class="post-review">{{ feed.reviewSummary || '' }}</p>
+        <div v-if="feed.price" class="post-details">
+          <span class="buy-price">{{ formatPrice(feed.price) }}</span>
         </div>
       </div>
 
@@ -376,6 +375,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
   font-weight: 600;
   color: #1a1a1a;
   line-height: 1.4;
+  height: calc(14px * 1.4);
   margin-bottom: 4px;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -387,6 +387,8 @@ const formatCount = (count) => feedUtils.formatCount(count);
   font-size: 12px;
   color: #666;
   line-height: 1.4;
+  height: calc(12px * 1.4 * 2);
+  min-height: calc(12px * 1.4 * 2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
