@@ -212,9 +212,9 @@ defineExpose({ observerTarget });
   gap: 20px;
 }
 
-/* 피드 카드 이미지 비율 조정 (세로로 1.5개 보이도록) */
+/* 피드 카드 이미지 비율 조정 */
 .feed-grid :deep(.post-image-container) {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
 }
 
 .feed-grid :deep(.post-content) {
@@ -409,7 +409,7 @@ defineExpose({ observerTarget });
   }
 
   .feed-grid :deep(.post-image-container) {
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 1 / 1;
   }
 
   .list-view { gap: 10px; }
