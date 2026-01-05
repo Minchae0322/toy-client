@@ -393,8 +393,8 @@ onMounted(() => loadFeedDetail())
   }
 
   .image-area {
-    width: 400px;
-    flex-shrink: 0;
+    flex: 1;
+    min-width: 0;
     position: sticky;
     top: 80px;
   }
