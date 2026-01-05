@@ -424,7 +424,7 @@ const formatCount = (count) => feedUtils.formatCount(count);
 .post-image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   user-select: none;
   overflow: hidden;
   background: #f1f5f9;
