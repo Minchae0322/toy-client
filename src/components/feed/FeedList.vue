@@ -209,11 +209,30 @@ defineExpose({ observerTarget });
   background-position: right 8px center;
 }
 
-/* Feed Grid - 1열 */
+/* Feed Grid - 반응형 그리드 (배틀과 동일) */
 .feed-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .feed-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .feed-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1536px) {
+  .feed-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 /* List View - 컴팩트 */
@@ -383,7 +402,7 @@ defineExpose({ observerTarget });
   .view-btn .icon { width: 14px; height: 14px; }
   .sort-select { padding: 6px 24px 6px 8px; font-size: 11px; }
 
-  .feed-grid { gap: 14px; }
+  .feed-grid { gap: 12px; }
 
   .list-view { gap: 10px; }
 
