@@ -49,17 +49,21 @@
               {{ getEvaluationLabel(feed.feedEvaluation) }}
             </span>
           </div>
+          <!-- Thread Indicator for List View -->
+          <div v-if="feed.threadReviews?.length > 0" class="list-thread-indicator">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            {{ feed.threadReviews.length }}
+          </div>
         </div>
         <div class="list-content">
           <div class="list-header">
             <div class="list-author">
               <div class="author-avatar-sm">
                 <img v-if="getProfileImageUrl(feed)" :src="getProfileImageUrl(feed)" alt="" />
-                <span v-else class="avatar-placeholder">
-                  <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
-                </span>
+                <span v-else class="avatar-initial-sm">{{ getDisplayNickname(feed)[0] }}</span>
               </div>
               <span class="author-name">{{ getDisplayNickname(feed) }}</span>
+              <span class="list-category">{{ feed.categoryName }}</span>
               <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
             </div>
           </div>
@@ -68,15 +72,15 @@
           <div class="list-footer">
             <div class="list-reactions">
               <span :class="['reaction', { active: feed.userReactions?.hasHot }]">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
                 {{ feed.hotCount || 0 }}
               </span>
               <span :class="['reaction', { active: feed.userReactions?.hasLike }]">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
                 {{ feed.likeCount || 0 }}
               </span>
               <span class="reaction">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                 {{ feed.commentCount || 0 }}
               </span>
             </div>
@@ -240,7 +244,7 @@ defineExpose({ observerTarget });
   margin-top: 6px;
 }
 
-/* List View - 컴팩트 */
+/* List View - 새로운 디자인 */
 .list-view {
   display: flex;
   flex-direction: column;
@@ -249,77 +253,120 @@ defineExpose({ observerTarget });
 
 .list-item {
   background: #ffffff;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
-  padding: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 16px;
+  padding: 14px;
   display: flex;
-  gap: 12px;
+  gap: 14px;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .list-item:hover {
-  border-color: #d0d0d0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .list-image {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #fafafa;
+  background: #f1f5f9;
 }
 
 .list-image img { width: 100%; height: 100%; object-fit: cover; }
 
-.list-eval-overlay { position: absolute; top: 6px; left: 6px; }
+.list-eval-overlay { position: absolute; top: 8px; left: 8px; }
 
 .list-eval-badge {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 9px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
   font-weight: 600;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.list-eval-badge.eval-best { background: rgba(255,237,213,0.95); color: #ea580c; }
-.list-eval-badge.eval-good { background: rgba(220,252,231,0.95); color: #16a34a; }
-.list-eval-badge.eval-okay { background: rgba(224,231,255,0.95); color: #4f46e5; }
-.list-eval-badge.eval-bad { background: rgba(254,226,226,0.95); color: #dc2626; }
+.list-eval-badge.eval-best { background: rgba(254, 243, 199, 0.95); color: #d97706; }
+.list-eval-badge.eval-good { background: rgba(209, 250, 229, 0.95); color: #059669; }
+.list-eval-badge.eval-okay { background: rgba(224, 242, 254, 0.95); color: #0284c7; }
+.list-eval-badge.eval-bad { background: rgba(254, 226, 226, 0.95); color: #e11d48; }
 
-.list-content { flex: 1; display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+/* Thread Indicator for List View */
+.list-thread-indicator {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 6px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #7c3aed;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.list-thread-indicator svg { width: 10px; height: 10px; }
+
+.list-content { flex: 1; display: flex; flex-direction: column; min-width: 0; gap: 6px; }
 
 .list-header { margin-bottom: 2px; }
 
-.list-author { display: flex; align-items: center; gap: 6px; }
+.list-author { display: flex; align-items: center; gap: 8px; }
 
 .author-avatar-sm {
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  background: #f0f0f0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .author-avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
-.avatar-placeholder svg { width: 10px; height: 10px; color: #999; }
 
-.list-author .author-name { font-size: 11px; font-weight: 600; color: #1a1a1a; }
+.avatar-initial-sm {
+  font-size: 10px;
+  font-weight: 500;
+  color: #ffffff;
+}
 
-.list-time { font-size: 10px; color: #999; }
+.list-author .author-name { font-size: 12px; font-weight: 600; color: #334155; }
+
+.list-category {
+  padding: 1px 6px;
+  background: linear-gradient(to right, #eef2ff, #f5f3ff);
+  color: #4f46e5;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.list-time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.list-time::before {
+  content: '· ';
+}
 
 .list-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -327,9 +374,9 @@ defineExpose({ observerTarget });
 }
 
 .list-review {
-  font-size: 12px;
-  color: #666;
-  line-height: 1.4;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -344,27 +391,27 @@ defineExpose({ observerTarget });
   margin-top: auto;
 }
 
-.list-reactions { display: flex; gap: 10px; }
+.list-reactions { display: flex; gap: 12px; }
 
 .reaction {
   display: flex;
   align-items: center;
-  gap: 3px;
-  font-size: 11px;
+  gap: 4px;
+  font-size: 12px;
   font-weight: 500;
-  color: #888;
+  color: #94a3b8;
 }
 
-.reaction svg { width: 12px; height: 12px; }
-.reaction.active { color: #f59e0b; }
+.reaction svg { width: 14px; height: 14px; }
+.reaction.active { color: #f97316; }
 
 .list-price {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: #1a1a1a;
-  background: #f5f5f5;
-  padding: 3px 8px;
-  border-radius: 4px;
+  color: #334155;
+  background: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
 /* Loading States */
@@ -420,9 +467,9 @@ defineExpose({ observerTarget });
   .list-view { gap: 10px; }
 
   .list-item {
-    padding: 10px;
-    gap: 10px;
-    border-radius: 10px;
+    padding: 12px;
+    gap: 12px;
+    border-radius: 14px;
   }
 
   .list-item:active {
@@ -430,13 +477,41 @@ defineExpose({ observerTarget });
   }
 
   .list-image {
-    width: 90px;
-    height: 90px;
-    border-radius: 8px;
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
   }
 
+  .list-eval-badge {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+
+  .list-thread-indicator {
+    padding: 2px 5px;
+    font-size: 9px;
+  }
+
+  .list-thread-indicator svg { width: 9px; height: 9px; }
+
+  .author-avatar-sm {
+    width: 20px;
+    height: 20px;
+  }
+
+  .avatar-initial-sm { font-size: 9px; }
+
+  .list-author .author-name { font-size: 11px; }
+  .list-category { font-size: 9px; padding: 1px 5px; }
+  .list-time { font-size: 10px; }
+
   .list-title { font-size: 13px; }
-  .list-review { font-size: 11px; -webkit-line-clamp: 2; }
+  .list-review { font-size: 12px; -webkit-line-clamp: 2; }
+
+  .reaction { font-size: 11px; gap: 3px; }
+  .reaction svg { width: 12px; height: 12px; }
+
+  .list-price { font-size: 11px; padding: 3px 8px; }
 
   .load-section { padding: 28px 0; }
 }
