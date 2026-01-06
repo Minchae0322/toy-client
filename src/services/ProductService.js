@@ -146,7 +146,7 @@ class ProductService extends BaseApiService {
 
     const requestData = {
       status,
-      reason: reason?.trim() || null
+      rejectReason: reason?.trim() || null
     }
 
     console.log('📤 [PRODUCT_SERVICE] updateProductStatus 요청:', { productId, ...requestData })
@@ -174,7 +174,7 @@ class ProductService extends BaseApiService {
     const requestData = {
       productIds,
       status,
-      reason: reason?.trim() || null
+      rejectReason: reason?.trim() || null
     }
 
     console.log('📤 [PRODUCT_SERVICE] bulkUpdateProductStatus 요청:', requestData)
