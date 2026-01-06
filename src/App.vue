@@ -234,16 +234,9 @@ onUnmounted(() => {
 @media (min-width: 1280px) {
   .header-content {
     padding: 0 3rem;
-    max-width: 1920px;
+    max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
-  }
-}
-
-/* 대형 화면: 더 큰 여백 */
-@media (min-width: 1920px) {
-  .header-content {
-    padding: 0 4rem;
   }
 }
 
