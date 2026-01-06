@@ -159,10 +159,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 <span class="label-with-required">구매처<span class="required-mark">*</span></span>
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="formData.storeUnknown" @change="handleStoreUnknown" />
-                  <span>모름</span>
-                </label>
+                <button type="button" class="btn-toggle" :class="{ active: formData.storeUnknown }" @click="toggleStoreUnknown">모름</button>
               </label>
               <input type="text" class="form-input" placeholder="구매처를 입력하세요 (예: 무신사, 쿠팡)" v-model="formData.store" :disabled="formData.storeUnknown" />
             </div>
@@ -174,10 +171,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 구매 가격
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="formData.priceHidden" />
-                  <span>비공개</span>
-                </label>
+                <button type="button" class="btn-toggle" :class="{ active: formData.priceHidden }" @click="formData.priceHidden = !formData.priceHidden">비공개</button>
               </label>
               <div class="price-input-wrapper">
                 <span class="price-prefix">₩</span>
@@ -318,7 +312,8 @@ const formData = ref({
   hashtags: []
 })
 
-const handleStoreUnknown = () => {
+const toggleStoreUnknown = () => {
+  formData.value.storeUnknown = !formData.value.storeUnknown
   if (formData.value.storeUnknown) {
     formData.value.store = '모름'
   } else {
@@ -917,14 +912,25 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.btn-toggle {
   margin-left: auto;
-  font-size: 13px;
+  padding: 4px 10px;
+  background: var(--hover);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--secondary);
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-toggle:hover {
+  background: #e5e7eb;
+}
+.btn-toggle.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
 }
 
 .price-input-wrapper { position: relative; }
