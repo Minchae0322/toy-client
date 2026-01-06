@@ -250,7 +250,13 @@ const formatCount = (count) => {
 }
 
 /* Hashtag List */
-.hashtag-list { display: flex; flex-direction: column; gap: 2px; }
+.hashtag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 200px;
+  position: relative;
+}
 
 .hashtag-transition-wrapper {
   display: flex;
@@ -259,9 +265,14 @@ const formatCount = (count) => {
 }
 
 /* Hashtag Transition Animation */
-.hashtag-fade-enter-active,
+.hashtag-fade-enter-active {
+  transition: all 0.3s ease;
+}
+
 .hashtag-fade-leave-active {
   transition: all 0.3s ease;
+  position: absolute;
+  width: 100%;
 }
 
 .hashtag-fade-enter-from {
