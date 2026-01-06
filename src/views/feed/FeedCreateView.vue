@@ -159,11 +159,12 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 구매처
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="formData.storeUnknown" @change="handleStoreUnknown" />
+                  <span>모름</span>
+                </label>
               </label>
-              <div class="store-input-wrapper">
-                <input type="text" class="form-input" placeholder="구매처를 입력하세요 (예: 무신사, 쿠팡)" v-model="formData.store" />
-                <button type="button" class="btn-unknown" @click="formData.store = '모름'">모름</button>
-              </div>
+              <input type="text" class="form-input" placeholder="구매처를 입력하세요 (예: 무신사, 쿠팡)" v-model="formData.store" :disabled="formData.storeUnknown" />
             </div>
 
             <!-- 구매 가격 -->
@@ -310,11 +311,20 @@ const formData = ref({
   subCategoryId: null,
   review: '',
   store: '',
+  storeUnknown: false,
   buyPrice: null,
   priceHidden: false,
   evaluation: 'BEST',
   hashtags: []
 })
+
+const handleStoreUnknown = () => {
+  if (formData.value.storeUnknown) {
+    formData.value.store = '모름'
+  } else {
+    formData.value.store = ''
+  }
+}
 
 const evaluations = [
   { value: 'BEST', label: '강추' },
@@ -896,33 +906,6 @@ onBeforeUnmount(() => {
 .additional-info { display: flex; flex-direction: column; gap: 24px; }
 .form-group { display: flex; flex-direction: column; gap: 8px; }
 
-/* Store Input */
-.store-input-wrapper {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.store-input-wrapper .form-input {
-  flex: 1;
-}
-.btn-unknown {
-  padding: 12px 16px;
-  background: var(--hover);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--secondary);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s;
-}
-.btn-unknown:hover {
-  background: #f3e8ff;
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -945,31 +928,76 @@ onBeforeUnmount(() => {
 }
 .price-input { padding-left: 32px; }
 
-/* Evaluation Buttons */
-.status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+/* Evaluation Buttons - Linear/Soft UI Style */
+.status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .status-btn {
-  padding: 12px 8px;
-  background: white;
-  border: 2px solid var(--border);
-  border-radius: 10px;
+  padding: 14px 10px;
+  background: #f8f9fa;
+  border: 1px solid transparent;
+  border-radius: 12px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
+  color: #6b7280;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
-.status-btn:hover { border-color: var(--secondary); }
+.status-btn:hover {
+  background: #f3f4f6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
 
-.status-btn.best { border-color: #f97316; color: #f97316; }
-.status-btn.best.active { background: #f97316; color: white; }
+.status-btn.best {
+  background: #fff7ed;
+  color: #c2410c;
+}
+.status-btn.best:hover { background: #ffedd5; }
+.status-btn.best.active {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fb923c;
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.15);
+  font-weight: 600;
+}
 
-.status-btn.good { border-color: #10b981; color: #10b981; }
-.status-btn.good.active { background: #10b981; color: white; }
+.status-btn.good {
+  background: #ecfdf5;
+  color: #047857;
+}
+.status-btn.good:hover { background: #d1fae5; }
+.status-btn.good.active {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #34d399;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
+  font-weight: 600;
+}
 
-.status-btn.okay { border-color: #3b82f6; color: #3b82f6; }
-.status-btn.okay.active { background: #3b82f6; color: white; }
+.status-btn.okay {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.status-btn.okay:hover { background: #dbeafe; }
+.status-btn.okay.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+  font-weight: 600;
+}
 
-.status-btn.bad { border-color: #ef4444; color: #ef4444; }
-.status-btn.bad.active { background: #ef4444; color: white; }
+.status-btn.bad {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.status-btn.bad:hover { background: #fee2e2; }
+.status-btn.bad.active {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
+  font-weight: 600;
+}
 
 /* Hashtags */
 .count-badge { margin-left: auto; font-size: 13px; color: var(--secondary); }
