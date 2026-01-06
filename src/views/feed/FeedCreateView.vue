@@ -142,7 +142,7 @@
         <div class="right-column">
           <!-- Review -->
           <section class="card">
-            <label class="form-label">
+            <label class="form-label required">
               한줄평
               <span class="char-count" :class="{ error: formData.review.length > 100 }">{{ formData.review.length }}/100</span>
             </label>
@@ -153,19 +153,17 @@
           <section class="card additional-info">
             <!-- Store -->
             <div class="form-group">
-              <label class="form-label">
+              <label class="form-label required">
                 <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 구매처
               </label>
-              <select class="form-select" v-model="formData.store">
-                <option value="">선택 안함</option>
-                <option v-for="store in stores" :key="store" :value="store">{{ store }}</option>
-                <option value="direct">직접 입력</option>
-              </select>
-              <input v-if="formData.store === 'direct'" type="text" class="form-input mt-2" placeholder="구매처를 입력하세요" v-model="formData.storeCustom" />
+              <div class="store-input-wrapper">
+                <input type="text" class="form-input" placeholder="구매처를 입력하세요 (예: 무신사, 쿠팡)" v-model="formData.store" />
+                <button type="button" class="btn-unknown" @click="formData.store = '모름'">모름</button>
+              </div>
             </div>
 
             <!-- 구매 가격 -->
@@ -312,14 +310,11 @@ const formData = ref({
   subCategoryId: null,
   review: '',
   store: '',
-  storeCustom: '',
   buyPrice: null,
   priceHidden: false,
   evaluation: 'BEST',
   hashtags: []
 })
-
-const stores = ['무신사', '29CM', '쿠팡', '네이버 쇼핑', '지마켓', '11번가', 'SSG', '롯데온']
 
 const evaluations = [
   { value: 'BEST', label: '강추' },
@@ -337,6 +332,7 @@ const canSubmit = computed(() => {
       formData.value.productNameCustom.trim() &&
       formData.value.subCategoryId &&
       formData.value.review.trim() &&
+      formData.value.store.trim() &&
       formData.value.evaluation &&
       !isSubmitting.value &&
       !isProcessingImage.value
@@ -563,7 +559,7 @@ const handleSubmit = async () => {
       productNameCustom: formData.value.productNameCustom.trim(),
       subCategoryId: formData.value.subCategoryId,
       review: formData.value.review.trim(),
-      buyPlace: formData.value.store === 'direct' ? formData.value.storeCustom?.trim() : formData.value.store || null,
+      buyPlace: formData.value.store.trim(),
       buyPrice: formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null,
       evaluation: formData.value.evaluation,
       hashtags: formData.value.hashtags
@@ -662,6 +658,12 @@ onBeforeUnmount(() => {
 .create-content { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
 .content-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
 @media (min-width: 1024px) { .content-grid { grid-template-columns: 1fr 1fr; } }
+
+.left-column, .right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 .card {
   background: white;
@@ -891,8 +893,35 @@ onBeforeUnmount(() => {
 .check-icon { width: 18px; height: 18px; color: var(--accent); }
 
 /* Additional Info */
-.additional-info { display: flex; flex-direction: column; gap: 20px; }
-.form-group { display: flex; flex-direction: column; }
+.additional-info { display: flex; flex-direction: column; gap: 24px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+
+/* Store Input */
+.store-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.store-input-wrapper .form-input {
+  flex: 1;
+}
+.btn-unknown {
+  padding: 12px 16px;
+  background: var(--hover);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.btn-unknown:hover {
+  background: #f3e8ff;
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 .checkbox-label {
   display: flex;
