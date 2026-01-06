@@ -337,12 +337,41 @@ onMounted(async () => {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   display: flex;
   max-width: 100vw;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-container {
+    padding: 0 3rem;
+    max-width: 1920px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container {
+    padding: 0 4rem;
+  }
 }
 
 .main-content {
   flex: 1;
   min-width: 0;
   padding-bottom: 80px;
+  padding-left: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    padding-left: 0;
+  }
 }
 
 @media (min-width: 768px) {
