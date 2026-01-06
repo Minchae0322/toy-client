@@ -59,6 +59,7 @@
 
     <!-- 액션 버튼들 (서브틀 컬러 바) -->
     <div class="action-buttons">
+      <!-- 사용자 활동 버튼 -->
       <button class="btn-subtle btn-purple" @click="handleProtectedRoute('create')">
         <span class="btn-text">인증 올리기</span>
         <div class="btn-icon-circle btn-icon-purple">
@@ -68,18 +69,22 @@
         </div>
       </button>
 
-      <button class="btn-subtle btn-orange" @click="handleProtectedRoute('createProduct')">
-        <span class="btn-text">제품 등록하기</span>
-        <div class="btn-icon-circle btn-icon-orange">
+      <button class="btn-subtle btn-dark" @click="handleProtectedRoute('createBattle')">
+        <span class="btn-text">배틀 등록하기</span>
+        <div class="btn-icon-circle btn-icon-dark">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
         </div>
       </button>
 
-      <button class="btn-subtle btn-dark" @click="handleProtectedRoute('createBattle')">
-        <span class="btn-text">배틀 등록하기</span>
-        <div class="btn-icon-circle btn-icon-dark">
+      <!-- 구분선 -->
+      <div class="action-divider"></div>
+
+      <!-- 관리자/제품 등록 버튼 -->
+      <button class="btn-subtle btn-orange" @click="handleProtectedRoute('createProduct')">
+        <span class="btn-text">신제품 등록하기</span>
+        <div class="btn-icon-circle btn-icon-orange">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
@@ -257,6 +262,13 @@ const handleProtectedRoute = async (routeName) => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* 구분선 */
+.action-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 4px 0;
 }
 
 /* 서브틀 컬러 버튼 공통 스타일 */
