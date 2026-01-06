@@ -247,6 +247,13 @@ onUnmounted(() => {
   min-height: 100vh;
   padding-top: 1rem;
   padding-bottom: 5rem;
+  padding-left: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    padding-left: 0;
+  }
 }
 
 @media (min-width: 768px) {
