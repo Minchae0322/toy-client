@@ -71,6 +71,8 @@ defineProps({
 
 const emit = defineEmits(['battle-click', 'view-all'])
 
+const DEFAULT_THUMBNAIL = 'https://picsum.photos/200'
+
 const formatNumber = (num) => {
   if (!num || num === 0) return '0'
   if (num >= 10000) return `${Math.floor(num / 10000)}만`
@@ -82,7 +84,7 @@ const getBattleThumbnail = (battle) => {
   return battle?.thumbnailDto?.fileUrl
       || battle?.thumbnailFile?.fileUrl
       || battle?.topItemImages?.[0]
-      || null
+      || DEFAULT_THUMBNAIL
 }
 
 const getRankClass = (index) => {
