@@ -66,6 +66,26 @@ class ProductService extends BaseApiService {
     return response
   }
 
+  async getMyProducts(searchCondition = {}, pageable = {}) {
+    const validatedCondition = this.validateSearchCondition(searchCondition)
+    const validatedPageable = this.validatePageable(pageable)
+    const cleanedCondition = this.removeEmptyParams(validatedCondition)
+    const cleanedPageable = this.removeEmptyParams(validatedPageable)
+    const params = { ...cleanedCondition, ...cleanedPageable }
+
+    console.log('📤 [PRODUCT_SERVICE] getMyProducts 요청 파라미터:', params)
+    const response = await this.get('/products/my', params)
+
+    if (response.success && response.data) {
+      if (response.data.content && Array.isArray(response.data.content)) {
+        response.data.content = this.normalizeProductListResponse(response.data.content)
+      } else if (Array.isArray(response.data)) {
+        response.data = this.normalizeProductListResponse(response.data)
+      }
+    }
+    return response
+  }
+
   async getAllProductsForAdmin(searchCondition = {}, pageable = {}) {
     const validatedCondition = this.validateSearchCondition(searchCondition)
     const validatedPageable = this.validatePageable(pageable)
