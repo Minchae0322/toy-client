@@ -128,7 +128,7 @@ onMounted(() => loadHotFeeds());
 <style scoped>
 .hot-section {
   padding: 32px 20px;
-  background: #FAFAFA;
+  background: #FFFFFF;
 }
 
 @media (min-width: 1024px) {
