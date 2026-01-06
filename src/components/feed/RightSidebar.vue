@@ -7,18 +7,29 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
         </svg>
         <h3 class="sidebar-title">인기 해시태그</h3>
+        <div class="hashtag-pagination">
+          <span
+              v-for="pageIndex in totalPages"
+              :key="pageIndex"
+              class="pagination-dot"
+              :class="{ active: currentPage === pageIndex - 1 }"
+              @click="goToPage(pageIndex - 1)"
+          ></span>
+        </div>
       </div>
       <div class="hashtag-list">
-        <button
-            v-for="(tag, index) in popularHashtags"
-            :key="tag.name"
-            class="hashtag-item"
-            @click="$emit('search-tag', tag.name)"
-        >
-          <span class="hashtag-rank" :class="getRankClass(index)">{{ index + 1 }}</span>
-          <span class="hashtag-name">#{{ tag.name }}</span>
-          <span class="hashtag-count">{{ formatCount(tag.count) }}</span>
-        </button>
+        <transition-group name="hashtag-fade" tag="div" class="hashtag-transition-wrapper">
+          <button
+              v-for="(tag, index) in displayedHashtags"
+              :key="tag.name"
+              class="hashtag-item"
+              @click="$emit('search-tag', tag.name)"
+          >
+            <span class="hashtag-rank" :class="getRankClass(getActualRank(index))">{{ getActualRank(index) + 1 }}</span>
+            <span class="hashtag-name">#{{ tag.name }}</span>
+            <span class="hashtag-count">{{ formatCount(tag.count) }}</span>
+          </button>
+        </transition-group>
       </div>
     </div>
 
@@ -73,6 +84,8 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+
 const props = defineProps({
   popularHashtags: {
     type: Array,
@@ -84,7 +97,9 @@ const props = defineProps({
       { name: '올리브영', count: 743 },
       { name: '꿀템', count: 621 },
       { name: '일상템', count: 534 },
-      { name: '뷰티', count: 489 }
+      { name: '뷰티', count: 489 },
+      { name: '추천템', count: 412 },
+      { name: '데일리', count: 389 }
     ]
   },
   trendingCategories: {
@@ -107,6 +122,59 @@ const props = defineProps({
 });
 
 defineEmits(['search-tag', 'filter-category', 'follow-user']);
+
+// 해시태그 페이지네이션
+const ITEMS_PER_PAGE = 5;
+const AUTO_ROTATE_INTERVAL = 5000; // 5초마다 자동 전환
+
+const currentPage = ref(0);
+let autoRotateTimer = null;
+
+const totalPages = computed(() => {
+  return Math.ceil(props.popularHashtags.length / ITEMS_PER_PAGE);
+});
+
+const displayedHashtags = computed(() => {
+  const start = currentPage.value * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  return props.popularHashtags.slice(start, end);
+});
+
+const getActualRank = (index) => {
+  return currentPage.value * ITEMS_PER_PAGE + index;
+};
+
+const goToPage = (pageIndex) => {
+  currentPage.value = pageIndex;
+  resetAutoRotate();
+};
+
+const nextPage = () => {
+  currentPage.value = (currentPage.value + 1) % totalPages.value;
+};
+
+const startAutoRotate = () => {
+  if (totalPages.value > 1) {
+    autoRotateTimer = setInterval(nextPage, AUTO_ROTATE_INTERVAL);
+  }
+};
+
+const resetAutoRotate = () => {
+  if (autoRotateTimer) {
+    clearInterval(autoRotateTimer);
+  }
+  startAutoRotate();
+};
+
+onMounted(() => {
+  startAutoRotate();
+});
+
+onUnmounted(() => {
+  if (autoRotateTimer) {
+    clearInterval(autoRotateTimer);
+  }
+});
 
 const getRankClass = (index) => {
   if (index === 0) return 'rank-gold';
@@ -154,8 +222,57 @@ const formatCount = (count) => {
 
 .sidebar-title { font-size: 13px; font-weight: 700; color: #1a1a1a; }
 
+/* Hashtag Pagination */
+.hashtag-pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.pagination-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination-dot:hover {
+  background: #bbb;
+}
+
+.pagination-dot.active {
+  background: #6366f1;
+  width: 16px;
+  border-radius: 3px;
+}
+
 /* Hashtag List */
 .hashtag-list { display: flex; flex-direction: column; gap: 2px; }
+
+.hashtag-transition-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Hashtag Transition Animation */
+.hashtag-fade-enter-active,
+.hashtag-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.hashtag-fade-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.hashtag-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
 
 .hashtag-item {
   display: flex;

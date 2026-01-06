@@ -88,7 +88,9 @@ const popularHashtags = ref([
   {name: '올리브영', count: 743},
   {name: '꿀템', count: 621},
   {name: '일상템', count: 534},
-  {name: '뷰티', count: 489}
+  {name: '뷰티', count: 489},
+  {name: '추천템', count: 412},
+  {name: '데일리', count: 389}
 ]);
 
 const trendingCategories = ref([
