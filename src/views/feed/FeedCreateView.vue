@@ -153,18 +153,17 @@
           <section class="card additional-info">
             <!-- Store -->
             <div class="form-group">
-              <label class="form-label required">
+              <label class="form-label">
                 <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                구매처
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="formData.storeUnknown" @change="handleStoreUnknown" />
-                  <span>모름</span>
-                </label>
+                <span class="label-with-required">구매처<span class="required-mark">*</span></span>
               </label>
-              <input type="text" class="form-input" placeholder="구매처를 입력하세요 (예: 무신사, 쿠팡)" v-model="formData.store" :disabled="formData.storeUnknown" />
+              <div class="store-input-wrapper">
+                <input type="text" class="form-input" placeholder="구매처를 입력하세요 (예: 무신사, 쿠팡)" v-model="formData.store" />
+                <button type="button" class="btn-unknown" @click="formData.store = '모름'">모름</button>
+              </div>
             </div>
 
             <!-- 구매 가격 -->
@@ -311,20 +310,11 @@ const formData = ref({
   subCategoryId: null,
   review: '',
   store: '',
-  storeUnknown: false,
   buyPrice: null,
   priceHidden: false,
   evaluation: 'BEST',
   hashtags: []
 })
-
-const handleStoreUnknown = () => {
-  if (formData.value.storeUnknown) {
-    formData.value.store = '모름'
-  } else {
-    formData.value.store = ''
-  }
-}
 
 const evaluations = [
   { value: 'BEST', label: '강추' },
@@ -905,6 +895,44 @@ onBeforeUnmount(() => {
 /* Additional Info */
 .additional-info { display: flex; flex-direction: column; gap: 24px; }
 .form-group { display: flex; flex-direction: column; gap: 8px; }
+
+/* Store Input */
+.store-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.store-input-wrapper .form-input {
+  flex: 1;
+}
+.btn-unknown {
+  padding: 12px 16px;
+  background: var(--hover);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.btn-unknown:hover {
+  background: #f3e8ff;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Required Mark */
+.label-with-required {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.required-mark {
+  color: #ef4444;
+  font-weight: 600;
+}
 
 .checkbox-label {
   display: flex;
