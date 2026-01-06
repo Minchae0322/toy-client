@@ -205,11 +205,18 @@ defineExpose({ observerTarget });
   background-position: right 8px center;
 }
 
-/* Feed Grid - PC에서 2열 그리드 */
+/* Feed Grid - 기본 1열, 넓은 화면에서 2열 */
 .feed-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .feed-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
 }
 
 /* 피드 카드 이미지 비율 조정 */
@@ -403,7 +410,6 @@ defineExpose({ observerTarget });
   .sort-select { padding: 6px 24px 6px 8px; font-size: 11px; }
 
   .feed-grid {
-    grid-template-columns: 1fr;
     gap: 12px;
     padding: 0 4px;
   }
