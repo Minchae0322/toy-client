@@ -1,99 +1,74 @@
-<!-- BottomNavigation.vue - 모바일 하단 네비게이션 -->
 <template>
-  <nav class="bottom-nav">
-    <router-link
-      to="/feed"
-      class="nav-item"
-      :class="{ active: isActive('/feed') }"
-    >
-      <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-      </svg>
-      <span class="nav-label">홈</span>
-    </router-link>
+  <nav class="safe-area-bottom">
+    <div class="nav-wrapper">
+      <router-link to="/feed" class="nav-item" :class="{ active: isActive('/feed') }">
+        <div class="icon-box">
+          <svg v-if="!isActive('/feed')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <svg v-else class="nav-icon active-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z"/>
+            <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z"/>
+          </svg>
+        </div>
+        <span class="nav-label">홈</span>
+      </router-link>
 
-    <router-link
-      to="/battle"
-      class="nav-item"
-      :class="{ active: isActive('/battle') }"
-    >
-      <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/>
-      </svg>
-      <span class="nav-label">배틀</span>
-    </router-link>
+      <router-link to="/battle" class="nav-item" :class="{ active: isActive('/battle') }">
+        <div class="icon-box">
+          <svg v-if="!isActive('/battle')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <svg v-else class="nav-icon active-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <span class="nav-label">배틀</span>
+      </router-link>
 
-    <!-- FAB 버튼 영역 -->
-    <div class="fab-container">
-      <button class="nav-fab" :class="{ 'fab-open': isMenuOpen }" @click="toggleMenu">
-        <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-        </svg>
+      <div class="fab-center">
+        <button class="action-btn" :class="{ open: isMenuOpen }" @click="toggleMenu">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </button>
+
+        <Transition name="slide-up">
+          <div v-if="isMenuOpen" class="action-menu">
+            <button class="menu-row" @click="handleCreateFeed"><span>새 피드</span><i class="dot blue"></i></button>
+            <button class="menu-row" @click="handleCreateProduct"><span>제품 등록</span><i class="dot teal"></i></button>
+            <button class="menu-row" @click="handleCreateBattle"><span>배틀 생성</span><i class="dot main"></i></button>
+          </div>
+        </Transition>
+      </div>
+
+      <button class="nav-item" :class="{ active: isActive('/chat') }" @click="handleProtectedNav('chat')">
+        <div class="icon-box relative">
+          <svg v-if="!isActive('/chat')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <svg v-else class="nav-icon active-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z"/>
+          </svg>
+          <span v-if="unreadCount > 0" class="mini-badge"></span>
+        </div>
+        <span class="nav-label">메시지</span>
       </button>
 
-      <!-- FAB 메뉴 -->
-      <Transition name="fab-menu">
-        <div v-if="isMenuOpen" class="fab-menu">
-          <button class="fab-menu-item" @click="handleCreateFeed">
-            <div class="fab-menu-icon feed-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-            </div>
-            <span class="fab-menu-label">새 피드 올리기</span>
-          </button>
-
-          <button class="fab-menu-item" @click="handleCreateProduct">
-            <div class="fab-menu-icon product-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </div>
-            <span class="fab-menu-label">제품 등록하기</span>
-          </button>
-
-          <button class="fab-menu-item" @click="handleCreateBattle">
-            <div class="fab-menu-icon battle-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-              </svg>
-            </div>
-            <span class="fab-menu-label">새 배틀 만들기</span>
-          </button>
+      <button class="nav-item" :class="{ active: isActive('/mypage') }" @click="handleProtectedNav('mypage')">
+        <div class="icon-box">
+          <svg v-if="!isActive('/mypage')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <svg v-else class="nav-icon active-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd"/>
+          </svg>
         </div>
-      </Transition>
+        <span class="nav-label">MY</span>
+      </button>
     </div>
 
-    <!-- 오버레이 -->
-    <Transition name="overlay">
-      <div v-if="isMenuOpen" class="fab-overlay" @click="closeMenu"></div>
-    </Transition>
-
-    <button
-      class="nav-item"
-      :class="{ active: isActive('/chat') }"
-      @click="handleProtectedNav('chat')"
-    >
-      <div class="nav-icon-wrapper">
-        <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
-        </svg>
-        <span v-if="unreadCount > 0" class="badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-      </div>
-      <span class="nav-label">메시지</span>
-    </button>
-
-    <button
-      class="nav-item"
-      :class="{ active: isActive('/mypage') || isActive('/user') }"
-      @click="handleProtectedNav('mypage')"
-    >
-      <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
-      </svg>
-      <span class="nav-label">MY</span>
-    </button>
+    <div v-if="isMenuOpen" class="minimal-overlay" @click="closeMenu"></div>
   </nav>
 </template>
 
@@ -102,371 +77,210 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 
-const props = defineProps({
-  unreadCount: {
-    type: Number,
-    default: 0
-  }
-});
+defineProps({ unreadCount: { type: Number, default: 0 } });
 
 const router = useRouter();
 const route = useRoute();
 const { isLoggedIn } = useAuth();
-
 const isMenuOpen = ref(false);
 
-const isActive = (path) => {
-  if (path === '/feed') {
-    return route.path === '/feed' || route.path === '/';
-  }
-  return route.path === path || route.path.startsWith(path + '/');
-};
+const isActive = (path) => path === '/feed'
+    ? route.path === '/feed' || route.path === '/'
+    : route.path.startsWith(path);
 
-const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value;
-};
+const toggleMenu = () => isMenuOpen.value = !isMenuOpen.value;
+const closeMenu = () => isMenuOpen.value = false;
 
-const closeMenu = () => {
-  isMenuOpen.value = false;
-};
-
-const handleCreateFeed = async () => {
+const requireAuth = async (redirect, cb) => {
   closeMenu();
-
-  if (isLoggedIn.value) {
-    router.push({ name: 'FeedCreate' });
-    return;
-  }
-
-  const confirmed = confirm('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?');
-  if (confirmed) {
-    await router.push({
-      name: 'Login',
-      query: { redirect: '/feed/create' }
-    });
+  if (isLoggedIn.value) return cb();
+  if (confirm('로그인이 필요합니다.')) {
+    await router.push({ name: 'Login', query: { redirect } });
   }
 };
 
-const handleCreateBattle = async () => {
-  closeMenu();
+const handleCreateFeed = () => requireAuth('/feed/create', () => router.push({ name: 'FeedCreate' }));
+const handleCreateBattle = () => requireAuth('/battle/create', () => router.push({ name: 'BattleCreate' }));
+const handleCreateProduct = () => requireAuth('/products/create', () => router.push({ name: 'ProductCreate' }));
+const handleProtectedNav = (name) => requireAuth(route.fullPath, () => router.push({ name: name === 'chat' ? 'Chat' : 'MyPage' }));
 
-  if (isLoggedIn.value) {
-    router.push({ name: 'BattleCreate' });
-    return;
-  }
-
-  const confirmed = confirm('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?');
-  if (confirmed) {
-    await router.push({
-      name: 'Login',
-      query: { redirect: '/battle/create' }
-    });
-  }
-};
-
-const handleCreateProduct = async () => {
-  closeMenu();
-
-  if (isLoggedIn.value) {
-    router.push({ name: 'ProductCreate' });
-    return;
-  }
-
-  const confirmed = confirm('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?');
-  if (confirmed) {
-    await router.push({
-      name: 'Login',
-      query: { redirect: '/products/create' }
-    });
-  }
-};
-
-const handleProtectedNav = async (routeName) => {
-  if (isLoggedIn.value) {
-    switch (routeName) {
-      case 'chat':
-        router.push({ name: 'Chat' });
-        break;
-      case 'mypage':
-        router.push({ name: 'MyPage' });
-        break;
-    }
-    return;
-  }
-
-  const confirmed = confirm('로그인이 필요한 페이지입니다.\n로그인 페이지로 이동하시겠습니까?');
-  if (confirmed) {
-    await router.push({
-      name: 'Login',
-      query: { redirect: route.fullPath }
-    });
-  }
-};
-
-// ESC 키로 메뉴 닫기
-const handleKeydown = (e) => {
-  if (e.key === 'Escape' && isMenuOpen.value) {
-    closeMenu();
-  }
-};
-
-onMounted(() => {
-  document.addEventListener('keydown', handleKeydown);
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', handleKeydown);
-});
+const onKey = (e) => e.key === 'Escape' && closeMenu();
+onMounted(() => document.addEventListener('keydown', onKey));
+onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
 </script>
 
 <style scoped>
-.bottom-nav {
+.safe-area-bottom {
+  /* Design Tokens - Modern Neutral & Suble Accent */
+  --main: #9993ea;
+  --bg-nav: rgba(255, 255, 255, 0.85);
+  --border-light: rgba(0, 0, 0, 0.05);
+  --text-dim: #a1a1aa;
+  --text-main: #3f3f46;
+
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
-  z-index: 100;
+  z-index: 1000;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+}
+
+.nav-wrapper {
+  max-width: 500px;
+  width: 100%;
+  height: 64px;
+  background: var(--bg-nav);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0.5rem 0;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-}
-
-/* 데스크톱/태블릿에서 숨김 */
-@media (min-width: 1024px) {
-  .bottom-nav {
-    display: none;
-  }
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
 .nav-item {
-  position: relative;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
-  background: transparent;
-  border: none;
-  color: #9ca3af;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-  min-width: 3.5rem;
+  justify-content: center;
   text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.nav-item:active {
-  transform: scale(0.92);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  transition: all 0.2s ease;
+  padding-top: 4px;
 }
 
 .nav-item.active {
-  color: #9333ea;
+  color: var(--main);
 }
 
-.nav-icon-wrapper {
+.icon-box {
   position: relative;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 4px;
 }
 
 .nav-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  transition: transform 0.2s ease;
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.8;
 }
 
-.nav-item.active .nav-icon {
-  transform: scale(1.1);
+.active-icon {
+  transform: scale(1.05);
 }
 
 .nav-label {
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
-.badge {
-  position: absolute;
-  top: -0.375rem;
-  right: -0.5rem;
-  min-width: 1rem;
-  height: 1rem;
-  padding: 0 0.25rem;
-  background: #ef4444;
-  color: white;
-  font-size: 0.625rem;
-  font-weight: 700;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
-}
-
-/* FAB Container */
-.fab-container {
+/* FAB - Minimalist Action Button */
+.fab-center {
   position: relative;
+  width: 56px;
   display: flex;
-  align-items: center;
   justify-content: center;
 }
 
-/* FAB (Floating Action Button) - 중앙 생성 버튼 */
-.nav-fab {
-  width: 3.25rem;
-  height: 3.25rem;
-  background: linear-gradient(135deg, #9333ea, #7c3aed);
-  color: white;
+.action-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--main);
   border: none;
-  border-radius: 50%;
+  border-radius: 14px;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.4);
-  margin-top: -1.5rem;
+  box-shadow: 0 4px 12px rgba(153, 147, 234, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  -webkit-tap-highlight-color: transparent;
-  z-index: 102;
+  cursor: pointer;
 }
 
-.nav-fab:active {
-  transform: scale(0.92);
-  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4);
-}
+.action-btn svg { width: 24px; height: 24px; }
+.action-btn.open { transform: rotate(45deg); background: #3f3f46; }
 
-.nav-fab.fab-open {
-  transform: rotate(45deg);
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
-}
-
-.nav-fab.fab-open:active {
-  transform: rotate(45deg) scale(0.92);
-}
-
-.fab-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* FAB 메뉴 */
-.fab-menu {
+/* Notion-like Action Menu */
+.action-menu {
   position: absolute;
-  bottom: 4.5rem;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 8px;
+  width: 140px;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  z-index: 101;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1002;
 }
 
-.fab-menu-item {
+.menu-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1.25rem;
-  background: white;
+  justify-content: space-between;
+  padding: 10px 12px;
   border: none;
-  border-radius: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
+  text-align: left;
 }
 
-.fab-menu-item:active {
-  transform: scale(0.96);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
+.menu-row:hover { background: #f4f4f5; }
 
-.fab-menu-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+.dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+}
+.dot.blue { background: #3b82f6; }
+.dot.teal { background: #14b8a6; }
+.dot.main { background: var(--main); }
+
+/* Message Badge */
+.mini-badge {
+  position: absolute;
+  top: 1px;
+  right: 0px;
+  width: 8px;
+  height: 8px;
+  background: #f43f5e;
+  border-radius: 50%;
+  border: 1.5px solid white;
 }
 
-.fab-menu-icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.fab-menu-icon.feed-icon {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-}
-
-.fab-menu-icon.product-icon {
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  color: white;
-}
-
-.fab-menu-icon.battle-icon {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-}
-
-.fab-menu-label {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #1f2937;
-  padding-right: 0.5rem;
-}
-
-/* 오버레이 */
-.fab-overlay {
+/* Minimal Overlay */
+.minimal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(2px);
-  z-index: 99;
-  -webkit-tap-highlight-color: transparent;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 999;
 }
 
-/* 메뉴 트랜지션 */
-.fab-menu-enter-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* Transitions */
+.slide-up-enter-active, .slide-up-leave-active { transition: all 0.2s ease; }
+.slide-up-enter-from, .slide-up-leave-to { opacity: 0; transform: translateX(-50%) translateY(10px); }
 
-.fab-menu-leave-active {
-  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
-}
-
-.fab-menu-enter-from,
-.fab-menu-leave-to {
-  opacity: 0;
-  transform: translateY(1rem) scale(0.9);
-}
-
-.fab-menu-enter-to,
-.fab-menu-leave-from {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-/* 오버레이 트랜지션 */
-.overlay-enter-active,
-.overlay-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.overlay-enter-from,
-.overlay-leave-to {
-  opacity: 0;
+@media (min-width: 1024px) {
+  .safe-area-bottom { display: none; }
 }
 </style>
