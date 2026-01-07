@@ -122,8 +122,17 @@ defineExpose({ observerTarget });
 /* Grid View */
 .modern-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
+}
+
+/* PC - 카드 세로 여백 축소 */
+@media (min-width: 769px) {
+  .modern-grid :deep(.post-content) { padding: 16px; }
+  .modern-grid :deep(.primary-review) { margin-bottom: 10px; font-size: 15px; }
+  .modern-grid :deep(.hashtag-group) { margin-bottom: 12px; }
+  .modern-grid :deep(.product-info-box) { margin-bottom: 14px; padding: 8px 16px; }
+  .modern-grid :deep(.post-footer) { padding-top: 12px; }
 }
 
 /* List View */
