@@ -368,7 +368,7 @@ onMounted(() => {
 .my-products {
   min-height: 100vh;
   background: #F9FAFB;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   color: #111;
 }
 

@@ -221,7 +221,7 @@ watch(() => route.params.id, () => {
 .onemouth-detail {
   min-height: 100vh;
   background: #FAFAFA;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   color: #1A1A1A;
 }
 

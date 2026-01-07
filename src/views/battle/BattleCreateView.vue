@@ -493,7 +493,7 @@ onMounted(async () => {
 <style scoped>
 .app-container {
   min-height: 100vh;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   background: #FAFBFC;
   color: #1A1A1A;
   line-height: 1.5;

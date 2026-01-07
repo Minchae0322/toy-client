@@ -545,7 +545,7 @@ watch(actualRoomId, (newVal, oldVal) => {
 </script>
 
 <style scoped>
-.chat-detail-container { display: flex; flex-direction: column; height: 100vh; background: #FFF; font-family: 'Pretendard', -apple-system, sans-serif; }
+.chat-detail-container { display: flex; flex-direction: column; height: 100vh; background: #FFF; font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif; }
 
 /* Header */
 .detail-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #FFF; border-bottom: 1px solid #E2E8F0; position: sticky; top: 0; z-index: 100; }

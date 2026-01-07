@@ -334,7 +334,7 @@ onMounted(async () => {
   background: #fff;
   min-height: 100vh;
   color: #222;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   display: flex;
   max-width: 100vw;
   padding: 0 1rem;
