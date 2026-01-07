@@ -1,83 +1,73 @@
 <template>
   <div class="info-section">
-    <!-- Header -->
-    <div class="header">
+    <section class="review-section">
       <div :class="['eval-badge', getEvaluationClass(feed.feedEvaluation)]">
         <span class="eval-dot" />
-        <span>{{ getEvaluationLabel(feed.feedEvaluation) }}</span>
+        {{ getEvaluationLabel(feed.feedEvaluation) }}
       </div>
-      <h1 class="title">{{ getProductName }}</h1>
-      <p class="category">{{ getCategoryName }}</p>
-    </div>
 
-    <!-- Review -->
-    <div class="review-card">
-      <svg class="quote-icon" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-      </svg>
-      <p class="review-text">{{ feed.review }}</p>
-    </div>
-
-    <!-- Info Row -->
-    <div v-if="feed.buyPrice || feed.price || feed.buyPlace" class="info-row">
-      <div v-if="feed.buyPrice || feed.price" class="info-item price">
-        <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 8v2"/>
+      <div class="quote-wrapper">
+        <svg class="quote-icon" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
         </svg>
-        <span>{{ formatPrice(feed.buyPrice || feed.price) }}</span>
+        <p class="review-text">{{ feed.review }}</p>
       </div>
-      <div v-if="feed.buyPlace" class="info-item">
-        <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        <span>{{ feed.buyPlace }}</span>
-      </div>
-    </div>
+    </section>
 
-    <!-- Hashtags -->
-    <div v-if="feed.hashtags?.length" class="hashtags">
+    <section class="product-info-banner" @click="$emit('search-store', getProductName)">
+      <div class="product-main">
+        <span class="category-tag">{{ getCategoryName }}</span>
+        <h1 class="product-title">{{ getProductName }}</h1>
+      </div>
+      <div class="price-area">
+        <span class="price-label">구매가</span>
+        <span class="price-value">{{ formatPrice(feed.buyPrice || feed.price) }}</span>
+      </div>
+    </section>
+
+    <section class="interaction-bar">
+      <div class="stat-group">
+        <button
+            :class="['stat-btn', { active: feed.userReactions?.hasLike }]"
+            @click="$emit('like')"
+        >
+          <svg class="icon" :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+          </svg>
+          <span>{{ feed.likeCount || 0 }}</span>
+        </button>
+        <button class="stat-btn" @click="$emit('scroll-to-comments')">
+          <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <span>{{ feed.commentCount || 0 }}</span>
+        </button>
+      </div>
+      <button :class="['bookmark-btn', { active: isSaved }]" @click="$emit('save')">
+        <svg class="icon" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+        </svg>
+      </button>
+    </section>
+
+    <section v-if="feed.hashtags?.length" class="hashtag-section">
       <button
           v-for="tag in feed.hashtags"
           :key="tag.hashtagId"
-          class="hashtag"
+          class="tag-chip"
           @click="$emit('search-hashtag', tag.name)"
       >
         #{{ tag.name }}
       </button>
-    </div>
+    </section>
 
     <div class="divider" />
 
-    <!-- Reactions -->
-    <div class="reactions">
-      <button @click="$emit('like')" :class="['react-btn', { active: feed.userReactions?.hasLike, like: true }]">
-        <svg class="react-icon" :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14a5 5 0 1 0 0 8 5 5 0 1 0 0-8M10 14l7-7M19 4a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/>
-        </svg>
-        <span>{{ feed.likeCount || 0 }}</span>
-      </button>
-      <button class="react-btn" @click="$emit('scroll-to-comments')">
-        <svg class="react-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-        </svg>
-        <span>{{ feed.commentCount || 0 }}</span>
-      </button>
-      <button @click="$emit('save')" :class="['react-btn bookmark', { active: isSaved }]">
-        <svg class="react-icon" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-        </svg>
-      </button>
-    </div>
-
-    <div class="divider" />
-
-    <!-- Author -->
-    <div class="author">
-      <img :src="getAuthorProfileImage" class="avatar" alt="" />
-      <div class="author-info">
-        <span class="name">{{ getAuthorNickname }}</span>
-        <span class="meta">{{ formatDate(feed.createdAt) }} · 조회 {{ feed.viewCount?.toLocaleString() || 0 }}</span>
+    <section class="author-section">
+      <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
+      <div class="author-meta">
+        <span class="author-name">{{ getAuthorNickname }}</span>
+        <span class="post-info">{{ formatDate(feed.createdAt) }} · 조회 {{ feed.viewCount?.toLocaleString() }}</span>
       </div>
       <button
           @click="isFollowing ? $emit('unfollow') : $emit('follow')"
@@ -85,30 +75,22 @@
       >
         {{ isFollowing ? '팔로잉' : '팔로우' }}
       </button>
-    </div>
+    </section>
 
-    <!-- CTA -->
-    <button class="cta-btn" @click="handleSendMessage" :disabled="isCreatingChatRoom">
+    <button class="cta-floating-btn" @click="handleSendMessage" :disabled="isCreatingChatRoom">
       <template v-if="!isCreatingChatRoom">
         <svg class="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
-        문의하기
+        이 유저에게 문의하기
       </template>
-      <template v-else>
-        <div class="spinner" />
-        연결 중...
-      </template>
+      <span v-else class="loader">연결 중...</span>
     </button>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { chatService } from '@/services/ChatService'
-
-const router = useRouter()
 
 const props = defineProps({
   feed: { type: Object, required: true },
@@ -116,375 +98,116 @@ const props = defineProps({
   isSaved: { type: Boolean, default: false }
 })
 
-const emit = defineEmits([
-  'follow', 'unfollow', 'like', 'save',
-  'search-store', 'search-hashtag', 'scroll-to-comments'
-])
+const emit = defineEmits(['follow', 'unfollow', 'like', 'save', 'search-store', 'search-hashtag', 'scroll-to-comments', 'send-message'])
 
 const isCreatingChatRoom = ref(false)
 
-const getProductName = computed(() =>
-    props.feed?.product?.name || props.feed?.productNameCustom || props.feed?.productName || '상품명 없음'
-)
-
-const getCategoryName = computed(() =>
-    props.feed?.subCategoryDetail?.subCategoryName || props.feed?.subCategoryDetail?.categoryName || props.feed?.product?.brand || ''
-)
-
-const getAuthorProfileImage = computed(() => {
-  const userInfo = props.feed?.userInfo
-  if (!userInfo) return 'https://i.pravatar.cc/150'
-  return userInfo.profileImageFile?.fileUrl || userInfo.profileImageUrl || 'https://i.pravatar.cc/150'
-})
-
-const getAuthorNickname = computed(() =>
-    props.feed?.userInfo?.nickname || props.feed?.userInfo?.nickName || '사용자'
-)
-
-const getEvaluationCode = computed(() => {
-  const eval_ = props.feed?.feedEvaluation
-  return typeof eval_ === 'string' ? eval_ : eval_?.code
-})
-
-const getCurrentUserId = () => {
-  try {
-    const token = localStorage.getItem('access_token')
-    if (!token) return null
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.userId || payload.sub
-  } catch { return null }
-}
+/* 헬퍼 함수 및 계산된 속성 */
+const getProductName = computed(() => props.feed?.product?.name || props.feed?.productNameCustom || props.feed?.productName || '상품 정보')
+const getCategoryName = computed(() => props.feed?.subCategoryDetail?.subCategoryName || props.feed?.subCategoryDetail?.categoryName || '카테고리')
+const getAuthorProfileImage = computed(() => props.feed?.userInfo?.profileImageFile?.fileUrl || props.feed?.userInfo?.profileImageUrl || 'https://i.pravatar.cc/150')
+const getAuthorNickname = computed(() => props.feed?.userInfo?.nickname || '사용자')
 
 const formatDate = (date) => date ? new Date(date).toLocaleDateString('ko-KR') : ''
+const formatPrice = (price) => price ? new Intl.NumberFormat('ko-KR').format(price) + '원' : '가격 미정'
 
-const formatPrice = (price) => {
-  if (!price) return ''
-  return new Intl.NumberFormat('ko-KR').format(price) + '원'
+const getEvaluationLabel = (ev) => {
+  const code = typeof ev === 'string' ? ev : ev?.code
+  return { 'BEST': '강력추천', 'GOOD': '추천', 'OKAY': '보통', 'BAD': '별로' }[code] || '평가 정보'
 }
 
-const getEvaluationLabel = (evaluation) => {
-  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
-  return { 'BEST': '강력추천', 'GOOD': '추천', 'OKAY': '보통', 'BAD': '별로' }[code] || ''
+const getEvaluationClass = (ev) => {
+  const code = typeof ev === 'string' ? ev : ev?.code
+  return code?.toLowerCase() || ''
 }
 
-const getEvaluationClass = (evaluation) => {
-  const code = typeof evaluation === 'string' ? evaluation : evaluation?.code
-  return { 'BEST': 'best', 'GOOD': 'good', 'OKAY': 'okay', 'BAD': 'bad' }[code] || ''
-}
-
-const handleSendMessage = async () => {
+const handleSendMessage = () => {
   if (isCreatingChatRoom.value) return
-  try {
-    isCreatingChatRoom.value = true
-    const currentUserId = getCurrentUserId()
-    if (!currentUserId) {
-      alert('로그인이 필요한 서비스입니다.')
-      router.push({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
-      return
-    }
-    if (currentUserId === props.feed.userInfo?.userId) {
-      alert('본인의 게시글에는 문의할 수 없습니다.')
-      return
-    }
-    const response = await chatService.startChat({
-      chatContext: 'PRODUCT_TRADE',
-      chatContextId: props.feed.feedId,
-      creatorId: props.feed.userInfo.userId,
-      participantIds: [props.feed.userInfo.userId, currentUserId]
-    })
-    if (!response.success) throw new Error(response.error || '채팅방 생성에 실패했습니다.')
-    router.push({
-      name: 'ChatWithRoom',
-      params: { roomId: response.data.roomId },
-      query: { userName: getAuthorNickname.value, feedId: props.feed.feedId, productName: getProductName.value }
-    })
-  } catch (error) {
-    alert(error.message || '채팅방 생성에 실패했습니다.')
-  } finally {
-    isCreatingChatRoom.value = false
-  }
+  emit('send-message', props.feed)
 }
 </script>
 
 <style scoped>
-.info-section {
-  padding: 20px;
-}
+.info-section { padding: 24px; background: #fff; max-width: 600px; margin: 0 auto; }
 
-/* Header */
-.header {
-  margin-bottom: 20px;
-}
+/* 2. Review Section */
+.review-section { margin-bottom: 28px; }
 
+/* [중요] 파스텔톤 뱃지 스타일 */
 .eval-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 12px;
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 100px;
+  font-size: 11px; font-weight: 800; margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
+.eval-badge.best { background-color: #fef3c7; color: #92400e; }
+.eval-badge.good { background-color: #dcfce7; color: #166534; }
+.eval-badge.okay { background-color: #f3e8ff; color: #6b21a8; }
+.eval-badge.bad { background-color: #fee2e2; color: #991b1b; }
 
-.eval-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+.eval-dot { width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; opacity: 0.6; }
+
+.quote-wrapper { position: relative; padding-left: 28px; }
+.quote-icon { position: absolute; left: 0; top: 0; width: 18px; height: 18px; color: #9993ea; opacity: 0.4; }
+.review-text { font-size: 16px; line-height: 1.7; color: #1f2937; font-weight: 500; white-space: pre-line; margin: 0; }
+
+/* 3 & 4. Product Banner */
+.product-info-banner {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #f8f8fa; padding: 18px 22px; border-radius: 20px; margin-bottom: 28px;
+  border: 1px solid #f1f1f5; cursor: pointer; transition: 0.2s;
 }
+.product-info-banner:active { transform: scale(0.98); background: #f1f1f5; }
+.category-tag { font-size: 10px; font-weight: 800; color: #9333ea; text-transform: uppercase; letter-spacing: 0.5px; }
+.product-title { font-size: 15px; font-weight: 700; color: #111827; margin: 2px 0 0; }
+.price-area { text-align: right; }
+.price-label { display: block; font-size: 10px; color: #9ca3af; margin-bottom: 2px; font-weight: 600; }
+.price-value { font-size: 17px; font-weight: 800; color: #9333ea; }
 
-.eval-badge.best { background: #fff7ed; color: #ea580c; }
-.eval-badge.best .eval-dot { background: #fb923c; }
-
-.eval-badge.good { background: #ecfdf5; color: #059669; }
-.eval-badge.good .eval-dot { background: #34d399; }
-
-.eval-badge.okay { background: #f5f5f4; color: #78716c; }
-.eval-badge.okay .eval-dot { background: #a8a29e; }
-
-.eval-badge.bad { background: #fef2f2; color: #dc2626; }
-.eval-badge.bad .eval-dot { background: #f87171; }
-
-.title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1c1917;
-  line-height: 1.4;
-  margin-bottom: 4px;
+/* 5. Interaction Bar */
+.interaction-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 4px; }
+.stat-group { display: flex; gap: 16px; }
+.stat-btn {
+  display: flex; align-items: center; gap: 6px; background: none; border: none;
+  font-size: 14px; font-weight: 700; color: #6b7280; cursor: pointer; transition: 0.2s;
 }
+.stat-btn .icon { width: 22px; height: 22px; }
+.stat-btn.active { color: #f43f5e; }
+.bookmark-btn { background: none; border: none; color: #6b7280; cursor: pointer; }
+.bookmark-btn .icon { width: 22px; height: 22px; }
+.bookmark-btn.active { color: #9333ea; }
 
-.category {
-  font-size: 14px;
-  color: #a8a29e;
+/* 6. Hashtags */
+.hashtag-section { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.tag-chip {
+  padding: 8px 14px; border-radius: 12px; background: #f3f4f6; border: none;
+  font-size: 12px; font-weight: 600; color: #4b5563; cursor: pointer; transition: 0.2s;
 }
+.tag-chip:active { background: #e5e7eb; }
 
-/* Review */
-.review-card {
-  position: relative;
-  background: #fafaf9;
-  border-radius: 12px;
-  padding: 16px;
-  padding-left: 40px;
-  margin-bottom: 16px;
-}
+.divider { height: 1px; background: #f1f5f9; margin-bottom: 32px; }
 
-.quote-icon {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  width: 18px;
-  height: 18px;
-  color: #d6d3d1;
-}
-
-.review-text {
-  font-size: 14px;
-  color: #57534e;
-  line-height: 1.7;
-  white-space: pre-line;
-}
-
-/* Info Row */
-.info-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #78716c;
-}
-
-.info-item.price {
-  font-weight: 500;
-  color: #44403c;
-}
-
-.info-icon {
-  width: 16px;
-  height: 16px;
-  color: #a8a29e;
-}
-
-/* Hashtags */
-.hashtags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.hashtag {
-  font-size: 12px;
-  color: #8b5cf6;
-  background: #f5f3ff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.hashtag:hover {
-  background: #ede9fe;
-}
-
-/* Divider */
-.divider {
-  height: 1px;
-  background: #f5f5f4;
-  margin: 16px 0;
-}
-
-/* Reactions */
-.reactions {
-  display: flex;
-  gap: 8px;
-}
-
-.react-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: none;
-  background: #fafaf9;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #a8a29e;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.react-btn:hover {
-  background: #f5f5f4;
-}
-
-.react-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.react-btn.like.active {
-  background: #fff1f2;
-  color: #f43f5e;
-}
-
-.react-btn.bookmark {
-  margin-left: auto;
-  padding: 8px;
-}
-
-.react-btn.bookmark.active {
-  background: #f5f3ff;
-  color: #8b5cf6;
-}
-
-/* Author */
-.author {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.author-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1c1917;
-}
-
-.meta {
-  font-size: 12px;
-  color: #a8a29e;
-}
-
+/* 7. Author Section */
+.author-section { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.author-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #f1f5f9; }
+.author-meta { flex: 1; }
+.author-name { display: block; font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+.post-info { font-size: 12px; color: #9ca3af; font-weight: 500; }
 .follow-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #1c1917;
-  color: #fff;
-  transition: all 0.15s;
+  padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; border: none;
+  background: #111827; color: #fff; cursor: pointer;
 }
+.follow-btn.active { background: #f3f4f6; color: #6b7280; }
 
-.follow-btn:hover {
-  background: #44403c;
+/* 8. CTA Button */
+.cta-floating-btn {
+  width: 100%; padding: 16px; border-radius: 16px; border: none;
+  background: #9333ea; color: #fff; font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 10px 20px -5px rgba(147, 51, 234, 0.3); cursor: pointer; transition: 0.3s;
+  white-space: nowrap;
 }
-
-.follow-btn.active {
-  background: #f5f5f4;
-  color: #78716c;
-}
-
-.follow-btn.active:hover {
-  background: #e7e5e4;
-}
-
-/* CTA */
-.cta-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #8b5cf6;
-  color: #fff;
-  transition: background 0.15s;
-}
-
-.cta-btn:hover:not(:disabled) {
-  background: #7c3aed;
-}
-
-.cta-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.cta-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+.cta-floating-btn:active { transform: translateY(2px); box-shadow: none; }
+.cta-floating-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+.cta-icon { width: 20px; height: 20px; flex-shrink: 0; }
+.loader { font-size: 14px; letter-spacing: 0.5px; }
 </style>
