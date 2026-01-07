@@ -315,7 +315,7 @@ onMounted(() => loadFeedDetail())
 
 <style scoped>
 .detail-container {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   background: #fff;
   min-height: 100vh;
   color: #262626;

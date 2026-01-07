@@ -363,7 +363,7 @@ onUnmounted(() => {
 }
 
 .app-container {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   background: #FAFAFA;
   color: #1A1A1A;
   min-height: 100vh;

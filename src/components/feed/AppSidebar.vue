@@ -154,7 +154,7 @@ const handleProtectedRoute = async (routeName) => {
   display: none;
   flex-direction: column;
   overflow-y: auto;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   position: sticky;
   align-self: flex-start;
   flex-shrink: 0;

@@ -770,7 +770,7 @@ onMounted(() => {
 .admin-container {
   min-height: 100vh;
   background: #f8f9fa;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   color: #333;
 }
 

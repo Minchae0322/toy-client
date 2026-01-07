@@ -335,7 +335,7 @@ onMounted(() => {
   width: 100%;
   min-height: 100vh;
   background: var(--bg);
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   color: var(--primary);
   -webkit-font-smoothing: antialiased;
 }
