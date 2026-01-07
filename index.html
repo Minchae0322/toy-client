@@ -7,16 +7,24 @@
               src: url('/fonts/SEBANG_Gothic_Bold.woff') format('woff');
               font-display: swap;
           }
+          /* SUIT Variable - 모든 weight(100-900) 지원 */
+          @font-face {
+              font-family: 'SUIT';
+              src: url('/fonts/SUIT-Variable.woff2') format('woff2-variations');
+              font-weight: 100 900;
+              font-style: normal;
+              font-display: swap;
+          }
           @font-face {
               font-family: 'SUIT-Regular';
-              src: url('/fonts/SUIT-Regular.woff2') format('woff2');
-              font-weight: 400;
+              src: url('/fonts/SUIT-Variable.woff2') format('woff2-variations');
+              font-weight: 100 900;
               font-style: normal;
               font-display: swap;
           }
       </style>
-    <!-- 폰트 프리로드 - 로컬 폰트 사용 -->
-    <link rel="preload" href="/fonts/SUIT-Regular.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- 폰트 프리로드 - Variable 폰트 사용 -->
+    <link rel="preload" href="/fonts/SUIT-Variable.woff2" as="font" type="font/woff2" crossorigin>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
