@@ -200,4 +200,100 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .like-animation svg { width: 80px; height: 80px; }
 .heart-pop-enter-active { animation: heart-pop 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
 @keyframes heart-pop { 0% { transform: scale(0); } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 0; } }
+
+/* 모바일: 인스타/스레드 스타일 (경계선만 있는 형태) */
+@media (max-width: 768px) {
+  .post-card {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid #e5e5e5;
+    background: transparent;
+  }
+  .post-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .post-card:active {
+    background: #fafafa;
+  }
+
+  /* 이미지 전체 너비 */
+  .post-image-container {
+    border-radius: 0;
+  }
+
+  /* 평가 뱃지 위치 조정 */
+  .eval-overlay-top {
+    top: 12px;
+    left: 12px;
+  }
+  .evaluation-badge {
+    padding: 5px 12px;
+    font-size: 10px;
+  }
+
+  /* 콘텐츠 영역 */
+  .post-content {
+    padding: 14px 16px 16px;
+  }
+
+  .primary-review {
+    font-size: 14px;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .quote {
+    font-size: 16px;
+  }
+
+  .hashtag-group {
+    margin-bottom: 12px;
+    gap: 6px;
+  }
+  .tag-item {
+    font-size: 11px;
+  }
+
+  /* 제품 정보 박스 */
+  .product-info-box {
+    margin-left: -4px;
+    margin-right: -4px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+  .category-tag {
+    font-size: 9px;
+  }
+  .product-name {
+    font-size: 13px;
+  }
+  .price-tag {
+    font-size: 14px;
+  }
+
+  /* 푸터 */
+  .post-footer {
+    padding-top: 12px;
+  }
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  .user-nickname {
+    font-size: 12px;
+  }
+  .post-date {
+    font-size: 11px;
+  }
+
+  .stat-pill {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
 </style>
