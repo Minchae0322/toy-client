@@ -185,7 +185,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .user-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
 .user-meta { display: flex; flex-direction: column; gap: 1px; }
 .user-nickname { font-size: 13px; font-weight: 700; color: #18181b; }
-.post-date { font-size: 10.5px; color: #a1a1aa; font-weight: 400; }
+.post-date { font-size: 12px; color: #a1a1aa; font-weight: 400; }
 
 .interaction-group { display: flex; gap: 6px; }
 .stat-pill {
