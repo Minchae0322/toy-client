@@ -1,9 +1,14 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif !important;
   background-color: #ffffff;
   color: #222;
+}
+
+/* 전역 폰트 강제 적용 */
+*, *::before, *::after {
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif !important;
 }
 
 #app {
