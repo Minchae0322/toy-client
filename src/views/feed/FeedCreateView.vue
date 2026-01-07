@@ -142,7 +142,7 @@
         <div class="right-column">
           <!-- Review -->
           <section class="card">
-            <label class="form-label">
+            <label class="form-label required">
               한줄평
               <span class="char-count" :class="{ error: formData.review.length > 100 }">{{ formData.review.length }}/100</span>
             </label>
@@ -158,14 +158,10 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                구매처
+                <span class="label-with-required">구매처<span class="required-mark">*</span></span>
+                <button type="button" class="btn-toggle" :class="{ active: formData.storeUnknown }" @click="toggleStoreUnknown">모름</button>
               </label>
-              <select class="form-select" v-model="formData.store">
-                <option value="">선택 안함</option>
-                <option v-for="store in stores" :key="store" :value="store">{{ store }}</option>
-                <option value="direct">직접 입력</option>
-              </select>
-              <input v-if="formData.store === 'direct'" type="text" class="form-input mt-2" placeholder="구매처를 입력하세요" v-model="formData.storeCustom" />
+              <input type="text" class="form-input" placeholder="구매처를 입력하세요 (예: 무신사, 쿠팡)" v-model="formData.store" :disabled="formData.storeUnknown" />
             </div>
 
             <!-- 구매 가격 -->
@@ -175,10 +171,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 구매 가격
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="formData.priceHidden" />
-                  <span>비공개</span>
-                </label>
+                <button type="button" class="btn-toggle" :class="{ active: formData.priceHidden }" @click="formData.priceHidden = !formData.priceHidden">비공개</button>
               </label>
               <div class="price-input-wrapper">
                 <span class="price-prefix">₩</span>
@@ -312,14 +305,21 @@ const formData = ref({
   subCategoryId: null,
   review: '',
   store: '',
-  storeCustom: '',
+  storeUnknown: false,
   buyPrice: null,
   priceHidden: false,
   evaluation: 'BEST',
   hashtags: []
 })
 
-const stores = ['무신사', '29CM', '쿠팡', '네이버 쇼핑', '지마켓', '11번가', 'SSG', '롯데온']
+const toggleStoreUnknown = () => {
+  formData.value.storeUnknown = !formData.value.storeUnknown
+  if (formData.value.storeUnknown) {
+    formData.value.store = '모름'
+  } else {
+    formData.value.store = ''
+  }
+}
 
 const evaluations = [
   { value: 'BEST', label: '강추' },
@@ -337,6 +337,7 @@ const canSubmit = computed(() => {
       formData.value.productNameCustom.trim() &&
       formData.value.subCategoryId &&
       formData.value.review.trim() &&
+      formData.value.store.trim() &&
       formData.value.evaluation &&
       !isSubmitting.value &&
       !isProcessingImage.value
@@ -563,7 +564,7 @@ const handleSubmit = async () => {
       productNameCustom: formData.value.productNameCustom.trim(),
       subCategoryId: formData.value.subCategoryId,
       review: formData.value.review.trim(),
-      buyPlace: formData.value.store === 'direct' ? formData.value.storeCustom?.trim() : formData.value.store || null,
+      buyPlace: formData.value.store.trim(),
       buyPrice: formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null,
       evaluation: formData.value.evaluation,
       hashtags: formData.value.hashtags
@@ -662,6 +663,12 @@ onBeforeUnmount(() => {
 .create-content { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
 .content-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
 @media (min-width: 1024px) { .content-grid { grid-template-columns: 1fr 1fr; } }
+
+.left-column, .right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 .card {
   background: white;
@@ -891,17 +898,39 @@ onBeforeUnmount(() => {
 .check-icon { width: 18px; height: 18px; color: var(--accent); }
 
 /* Additional Info */
-.additional-info { display: flex; flex-direction: column; gap: 20px; }
-.form-group { display: flex; flex-direction: column; }
+.additional-info { display: flex; flex-direction: column; gap: 24px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
 
-.checkbox-label {
-  display: flex;
+/* Required Mark */
+.label-with-required {
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+}
+.required-mark {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.btn-toggle {
   margin-left: auto;
-  font-size: 13px;
+  padding: 4px 10px;
+  background: var(--hover);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--secondary);
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-toggle:hover {
+  background: #e5e7eb;
+}
+.btn-toggle.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
 }
 
 .price-input-wrapper { position: relative; }

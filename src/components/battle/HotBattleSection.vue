@@ -29,10 +29,11 @@
         <!-- 썸네일 -->
         <div class="thumb">
           <img
-              v-if="getBattleThumbnail(battle)"
-              :src="getBattleThumbnail(battle)"
+              v-if="getOriginalThumbnail(battle) && !imageErrors.has(battle.id || battle.battleId)"
+              :src="getOriginalThumbnail(battle)"
               :alt="battle.title"
               loading="lazy"
+              @error="handleImageError(battle.id || battle.battleId)"
           />
           <div v-else class="thumb-placeholder">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -60,6 +61,7 @@
 </template>
 
 <script setup>
+import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -71,6 +73,8 @@ defineProps({
 
 const emit = defineEmits(['battle-click', 'view-all'])
 
+const imageErrors = reactive(new Set())
+
 const formatNumber = (num) => {
   if (!num || num === 0) return '0'
   if (num >= 10000) return `${Math.floor(num / 10000)}만`
@@ -78,7 +82,7 @@ const formatNumber = (num) => {
   return num.toLocaleString()
 }
 
-const getBattleThumbnail = (battle) => {
+const getOriginalThumbnail = (battle) => {
   return battle?.thumbnailDto?.fileUrl
       || battle?.thumbnailFile?.fileUrl
       || battle?.topItemImages?.[0]
@@ -95,6 +99,10 @@ const getRankClass = (index) => {
 const handleBattleClick = (battleId) => {
   router.push({ name: 'BattleDetail', params: { id: battleId } })
   emit('battle-click', battleId)
+}
+
+const handleImageError = (battleId) => {
+  imageErrors.add(battleId)
 }
 </script>
 

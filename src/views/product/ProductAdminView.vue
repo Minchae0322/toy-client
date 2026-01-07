@@ -156,12 +156,32 @@
                     <circle cx="12" cy="12" r="3"/>
                   </svg>
                 </button>
-                <button v-if="getStatusValue(product.status) === 'PENDING'" class="action-btn approve" title="승인" @click="approveProduct(product)">
+                <button
+                  class="action-btn pending"
+                  title="대기중으로"
+                  :disabled="getStatusValue(product.status) === 'PENDING'"
+                  @click="setPendingProduct(product)"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </button>
+                <button
+                  class="action-btn approve"
+                  title="승인"
+                  :disabled="getStatusValue(product.status) === 'APPROVED'"
+                  @click="approveProduct(product)"
+                >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                 </button>
-                <button v-if="getStatusValue(product.status) === 'PENDING'" class="action-btn reject" title="거부" @click="rejectProduct(product)">
+                <button
+                  class="action-btn reject"
+                  title="거부"
+                  :disabled="getStatusValue(product.status) === 'REJECTED'"
+                  @click="rejectProduct(product)"
+                >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
@@ -245,13 +265,73 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button v-if="getStatusValue(selectedProduct?.status) === 'PENDING'" class="modal-btn approve" @click="approveProduct(selectedProduct); closeDetailModal()">
+          <button
+            class="modal-btn pending"
+            :disabled="getStatusValue(selectedProduct?.status) === 'PENDING'"
+            @click="setPendingProduct(selectedProduct); closeDetailModal()"
+          >
+            대기중
+          </button>
+          <button
+            class="modal-btn approve"
+            :disabled="getStatusValue(selectedProduct?.status) === 'APPROVED'"
+            @click="approveProduct(selectedProduct); closeDetailModal()"
+          >
             승인
           </button>
-          <button v-if="getStatusValue(selectedProduct?.status) === 'PENDING'" class="modal-btn reject" @click="rejectProduct(selectedProduct); closeDetailModal()">
+          <button
+            class="modal-btn reject"
+            :disabled="getStatusValue(selectedProduct?.status) === 'REJECTED'"
+            @click="handleDetailReject"
+          >
             거부
           </button>
           <button class="modal-btn secondary" @click="closeDetailModal">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 반려 사유 입력 모달 -->
+    <div v-if="showRejectModal" class="modal-overlay" @click.self="closeRejectModal">
+      <div class="modal-content reject-modal">
+        <div class="modal-header">
+          <h3>반려 사유 입력</h3>
+          <button class="modal-close" @click="closeRejectModal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="reject-info">
+            <span class="reject-target">
+              {{ rejectTarget.isBulk
+                ? `${rejectTarget.productIds.length}개 상품`
+                : `"${rejectTarget.product?.name}"` }}
+            </span>
+            <span class="reject-desc">상품을 반려 처리합니다.</span>
+          </div>
+          <div class="form-group">
+            <label for="rejectReason">반려 사유 <span class="required">*</span></label>
+            <textarea
+              id="rejectReason"
+              v-model="rejectReason"
+              placeholder="반려 사유를 상세히 입력해주세요. (필수)"
+              rows="4"
+              maxlength="500"
+            ></textarea>
+            <div class="char-count">{{ rejectReason.length }} / 500</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn secondary" @click="closeRejectModal">취소</button>
+          <button
+            class="modal-btn reject"
+            :disabled="!rejectReason.trim()"
+            @click="confirmReject"
+          >
+            반려 처리
+          </button>
         </div>
       </div>
     </div>
@@ -284,6 +364,11 @@ const selectedProducts = ref([])
 
 const showDetailModal = ref(false)
 const selectedProduct = ref(null)
+
+// 반려 모달 상태
+const showRejectModal = ref(false)
+const rejectReason = ref('')
+const rejectTarget = ref({ isBulk: false, product: null, productIds: [] })
 
 const toast = ref({ show: false, message: '', type: 'success' })
 
@@ -507,6 +592,12 @@ const closeDetailModal = () => {
   selectedProduct.value = null
 }
 
+const handleDetailReject = () => {
+  const product = selectedProduct.value
+  closeDetailModal()
+  rejectProduct(product)
+}
+
 const approveProduct = async (product) => {
   try {
     const response = await productService.approveProduct(product.id)
@@ -529,32 +620,84 @@ const approveProduct = async (product) => {
   }
 }
 
-const rejectProduct = async (product) => {
-  const reason = prompt(`"${product.name}" 반려 사유를 입력하세요:`)
-  if (!reason || !reason.trim()) {
+const setPendingProduct = async (product) => {
+  try {
+    const response = await productService.updateProductStatus(product.id, 'PENDING')
+    if (response.success) {
+      if (response.data?.status) {
+        product.status = response.data.status
+      } else {
+        product.status = { title: 'PENDING', description: '대기중' }
+      }
+      showToast(`"${product.name}" 대기중으로 변경`)
+      await fetchProducts()
+    } else {
+      showToast('상태 변경에 실패했습니다', 'error')
+    }
+  } catch (error) {
+    console.error('❌ [ProductAdminView] 상품 상태 변경 실패:', error)
+    showToast('상태 변경에 실패했습니다', 'error')
+  }
+}
+
+const rejectProduct = (product) => {
+  rejectTarget.value = { isBulk: false, product, productIds: [] }
+  rejectReason.value = ''
+  showRejectModal.value = true
+}
+
+const closeRejectModal = () => {
+  showRejectModal.value = false
+  rejectReason.value = ''
+  rejectTarget.value = { isBulk: false, product: null, productIds: [] }
+}
+
+const confirmReject = async () => {
+  if (!rejectReason.value.trim()) {
     showToast('반려 사유는 필수입니다', 'error')
     return
   }
 
-  try {
-    const response = await productService.rejectProduct(product.id, reason.trim())
-    if (response.success) {
-      // 백엔드에서 반환된 status를 사용 (객체 또는 문자열)
-      if (response.data?.status) {
-        product.status = response.data.status
+  const reason = rejectReason.value.trim()
+
+  if (rejectTarget.value.isBulk) {
+    // 일괄 반려 처리
+    try {
+      const response = await productService.bulkRejectProducts(rejectTarget.value.productIds, reason)
+      if (response.success) {
+        showToast(`${rejectTarget.value.productIds.length}개 상품 거부 처리됨`, 'warning')
+        selectedProducts.value = []
+        await fetchProducts()
       } else {
-        // 백엔드에서 상태를 반환하지 않는 경우 객체 형태로 설정
-        product.status = { title: 'REJECTED', description: '거부됨' }
+        showToast('일괄 거부에 실패했습니다', 'error')
       }
-      showToast(`"${product.name}" 거부 처리됨`, 'warning')
-      await fetchProducts() // 목록 새로고침
-    } else {
+    } catch (error) {
+      console.error('❌ [ProductAdminView] 일괄 거부 실패:', error)
+      showToast('일괄 거부에 실패했습니다', 'error')
+    }
+  } else {
+    // 단일 반려 처리
+    const product = rejectTarget.value.product
+    try {
+      const response = await productService.rejectProduct(product.id, reason)
+      if (response.success) {
+        if (response.data?.status) {
+          product.status = response.data.status
+        } else {
+          product.status = { title: 'REJECTED', description: '거부됨' }
+        }
+        showToast(`"${product.name}" 거부 처리됨`, 'warning')
+        await fetchProducts()
+      } else {
+        showToast('거부 처리에 실패했습니다', 'error')
+      }
+    } catch (error) {
+      console.error('❌ [ProductAdminView] 상품 거부 실패:', error)
       showToast('거부 처리에 실패했습니다', 'error')
     }
-  } catch (error) {
-    console.error('❌ [ProductAdminView] 상품 거부 실패:', error)
-    showToast('거부 처리에 실패했습니다', 'error')
   }
+
+  closeRejectModal()
 }
 
 const deleteProduct = async (product) => {
@@ -591,26 +734,10 @@ const bulkApprove = async () => {
   }
 }
 
-const bulkReject = async () => {
-  const reason = prompt(`${selectedProducts.value.length}개 상품의 반려 사유를 입력하세요:`)
-  if (!reason || !reason.trim()) {
-    showToast('반려 사유는 필수입니다', 'error')
-    return
-  }
-
-  try {
-    const response = await productService.bulkRejectProducts(selectedProducts.value, reason.trim())
-    if (response.success) {
-      showToast(`${selectedProducts.value.length}개 상품 거부 처리됨`, 'warning')
-      selectedProducts.value = []
-      await fetchProducts() // 목록 새로고침
-    } else {
-      showToast('일괄 거부에 실패했습니다', 'error')
-    }
-  } catch (error) {
-    console.error('❌ [ProductAdminView] 일괄 거부 실패:', error)
-    showToast('일괄 거부에 실패했습니다', 'error')
-  }
+const bulkReject = () => {
+  rejectTarget.value = { isBulk: true, product: null, productIds: [...selectedProducts.value] }
+  rejectReason.value = ''
+  showRejectModal.value = true
 }
 
 const bulkDelete = async () => {
@@ -635,6 +762,7 @@ onMounted(() => {
   fetchProducts()
 })
 </script>
+
 
 <style scoped>
 * { box-sizing: border-box; }
@@ -799,7 +927,7 @@ onMounted(() => {
 .col-stats { width: 160px; }
 .col-status { width: 80px; }
 .col-date { width: 100px; }
-.col-actions { width: 120px; }
+.col-actions { width: 180px; }
 
 .product-info { display: flex; align-items: center; gap: 12px; }
 
@@ -868,15 +996,18 @@ onMounted(() => {
   background: #f5f5f5;
 }
 
-.action-btn:hover { transform: scale(1.05); }
+.action-btn:hover:not(:disabled) { transform: scale(1.05); }
+.action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .action-btn.view { color: #666; }
 .action-btn.view:hover { background: #e5e5e5; }
+.action-btn.pending { color: #f59e0b; }
+.action-btn.pending:hover:not(:disabled) { background: #fef3c7; }
 .action-btn.approve { color: #10b981; }
-.action-btn.approve:hover { background: #d1fae5; }
+.action-btn.approve:hover:not(:disabled) { background: #d1fae5; }
 .action-btn.reject { color: #f59e0b; }
-.action-btn.reject:hover { background: #fef3c7; }
+.action-btn.reject:hover:not(:disabled) { background: #fef3c7; }
 .action-btn.delete { color: #ef4444; }
-.action-btn.delete:hover { background: #fee2e2; }
+.action-btn.delete:hover:not(:disabled) { background: #fee2e2; }
 
 /* 로딩 & 빈 상태 */
 .loading-state, .empty-state {
@@ -1020,10 +1151,79 @@ onMounted(() => {
   transition: opacity 0.15s;
 }
 
-.modal-btn:hover { opacity: 0.85; }
+.modal-btn:hover:not(:disabled) { opacity: 0.85; }
+.modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.modal-btn.pending { background: #fef3c7; color: #92400e; }
 .modal-btn.approve { background: #10b981; color: #fff; }
 .modal-btn.reject { background: #f59e0b; color: #fff; }
 .modal-btn.secondary { background: #f0f0f0; color: #666; }
+
+/* 반려 모달 */
+.reject-modal { max-width: 480px; }
+
+.reject-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: #fff7ed;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #f59e0b;
+}
+
+.reject-target {
+  font-weight: 600;
+  font-size: 15px;
+  color: #92400e;
+}
+
+.reject-desc {
+  font-size: 13px;
+  color: #b45309;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group .required {
+  color: #ef4444;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #f59e0b;
+}
+
+.form-group textarea::placeholder {
+  color: #999;
+}
+
+.char-count {
+  font-size: 12px;
+  color: #999;
+  text-align: right;
+}
 
 /* 토스트 */
 .toast {
