@@ -237,12 +237,18 @@ defineExpose({ observerTarget });
 }
 .empty-state svg { width: 40px; height: 40px; }
 
+/* PC - 카드 90% 배율 */
+@media (min-width: 769px) {
+  .modern-grid :deep(.post-card) {
+    transform: scale(0.9);
+    transform-origin: top center;
+  }
+}
+
 /* Mobile */
 @media (max-width: 768px) {
   .feed-container {
     padding: 20px 12px;
-    transform: scale(0.9);
-    transform-origin: top center;
   }
 
   .feed-header { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
