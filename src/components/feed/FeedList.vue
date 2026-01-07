@@ -237,10 +237,10 @@ defineExpose({ observerTarget });
 }
 .empty-state svg { width: 40px; height: 40px; }
 
-/* PC - 카드 90% 배율 */
+/* PC - 카드 세로 90% 배율 */
 @media (min-width: 769px) {
   .modern-grid :deep(.post-card) {
-    transform: scale(0.9);
+    transform: scaleY(0.9);
     transform-origin: top center;
   }
 }
