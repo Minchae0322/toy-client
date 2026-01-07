@@ -2,7 +2,7 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-
+import './assets/main.css'  // css 폴더 제거
 import App from './App.vue'
 import router from './router'
 
