@@ -168,7 +168,7 @@ const handleSubCategoryClick = (subCategory) => {
 
 <style scoped>
 .filter-container {
-  background: #FAFAFA;
+  background: #ffffff;
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -210,12 +210,12 @@ const handleSubCategoryClick = (subCategory) => {
 
 .scroll-fade-left {
   left: 0;
-  background: linear-gradient(to right, #FAFAFA 20%, transparent 100%);
+  background: linear-gradient(to right, #ffffff 20%, transparent 100%);
 }
 
 .scroll-fade-right {
   right: 0;
-  background: linear-gradient(to left, #FAFAFA 20%, transparent 100%);
+  background: linear-gradient(to left, #ffffff 20%, transparent 100%);
 }
 
 .scroll-fade-left.visible,
