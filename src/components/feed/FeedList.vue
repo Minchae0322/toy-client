@@ -132,7 +132,12 @@ defineExpose({ observerTarget });
   .modern-grid :deep(.primary-review) { margin-bottom: 10px; font-size: 15px; }
   .modern-grid :deep(.hashtag-group) { margin-bottom: 12px; }
   .modern-grid :deep(.product-info-box) { margin-bottom: 14px; padding: 8px 16px; }
-  .modern-grid :deep(.post-footer) { padding-top: 12px; }
+  .modern-grid :deep(.post-footer) { padding-top: 10px; }
+  .modern-grid :deep(.user-avatar) { width: 28px; height: 28px; }
+  .modern-grid :deep(.user-nickname) { font-size: 11px; }
+  .modern-grid :deep(.post-date) { font-size: 9px; }
+  .modern-grid :deep(.stat-pill) { padding: 5px 10px; font-size: 11px; }
+  .modern-grid :deep(.icon) { width: 14px; height: 14px; }
 }
 
 /* List View */
