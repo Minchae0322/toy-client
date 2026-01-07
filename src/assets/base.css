@@ -1,11 +1,5 @@
 /* color palette from <https://github.com/vuejs/theme> */
-@font-face {
-  font-family: 'SUIT-Regular';
-  src: url('/fonts/SUIT-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* @font-face는 main.css에서 통합 정의 */
 
 :root {
   --vt-c-white: #ffffff;
