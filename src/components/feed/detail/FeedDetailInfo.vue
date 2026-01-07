@@ -148,7 +148,7 @@ const handleSendMessage = () => {
 
 .quote-wrapper { position: relative; padding-left: 28px; }
 .quote-icon { position: absolute; left: 0; top: 0; width: 18px; height: 18px; color: #9993ea; opacity: 0.4; }
-.review-text { font-size: 16px; line-height: 1.7; color: #1f2937; font-weight: 500; white-space: pre-line; margin: 0; }
+.review-text { font-size: 16px; line-height: 1.7; color: #1f2937; font-weight: 600; white-space: pre-line; margin: 0; }
 
 /* 3 & 4. Product Banner */
 .product-info-banner {
