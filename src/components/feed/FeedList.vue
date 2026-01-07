@@ -239,13 +239,17 @@ defineExpose({ observerTarget });
 
 /* Mobile */
 @media (max-width: 768px) {
-  .feed-container { padding: 20px 12px; }
+  .feed-container {
+    padding: 20px 12px;
+    transform: scale(0.9);
+    transform-origin: top center;
+  }
 
   .feed-header { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
   .main-title { font-size: 22px; }
   .sub-title { font-size: 13px; }
 
-  .modern-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .modern-grid { grid-template-columns: 1fr; gap: 12px; }
 
   .list-view { gap: 12px; }
 
