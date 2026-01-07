@@ -30,7 +30,7 @@
       </div>
     </div>
 
-    <!-- 2depth: 서브 카테고리 (선택한 카테고리에 children이 있을 때만) -->
+    <!-- 2depth: 서브 카테고리 -->
     <Transition name="slide-fade">
       <div v-if="selectedCategory?.children?.length > 0" class="sub-category-section">
         <div class="sub-indicator">
@@ -93,7 +93,6 @@ const tabsRef = ref(null);
 const showLeftFade = ref(false);
 const showRightFade = ref(true);
 
-// 스크롤 페이드 효과 처리
 const handleScroll = () => {
   if (!tabsRef.value) return;
   const { scrollLeft, scrollWidth, clientWidth } = tabsRef.value;
@@ -101,18 +100,15 @@ const handleScroll = () => {
   showRightFade.value = scrollLeft < scrollWidth - clientWidth - 10;
 };
 
-// 초기 선택 상태 설정
 onMounted(() => {
   if (props.initialSelected === null) {
     handleAllClick();
   } else {
     findAndSelectCategory(props.initialSelected);
   }
-  // 초기 스크롤 상태 체크
   setTimeout(handleScroll, 100);
 });
 
-// initialSelected 변경 감지
 watch(() => props.initialSelected, (newVal) => {
   if (newVal === null) {
     selectedCategory.value = null;
@@ -122,7 +118,6 @@ watch(() => props.initialSelected, (newVal) => {
   }
 });
 
-// 카테고리 ID로 찾아서 선택
 const findAndSelectCategory = (categoryId) => {
   for (const cat of props.categories) {
     if (cat.categoryId === categoryId) {
@@ -130,7 +125,6 @@ const findAndSelectCategory = (categoryId) => {
       selectedSubCategory.value = null;
       return;
     }
-    // children에서 찾기
     if (cat.children) {
       const sub = cat.children.find(c => c.categoryId === categoryId);
       if (sub) {
@@ -145,9 +139,6 @@ const findAndSelectCategory = (categoryId) => {
 const handleAllClick = () => {
   selectedCategory.value = null;
   selectedSubCategory.value = null;
-
-  console.log('📌 [CategoryFilter] 전체 선택');
-
   emit('category-change', {
     categoryId: null,
     category: null,
@@ -158,9 +149,6 @@ const handleAllClick = () => {
 const handleCategoryClick = (category) => {
   selectedCategory.value = category;
   selectedSubCategory.value = null;
-
-  console.log('📌 [CategoryFilter] 카테고리 선택:', category.categoryName);
-
   emit('category-change', {
     categoryId: category.categoryId,
     category: category,
@@ -170,9 +158,6 @@ const handleCategoryClick = (category) => {
 
 const handleSubCategoryClick = (subCategory) => {
   selectedSubCategory.value = subCategory;
-
-  console.log('📌 [CategoryFilter] 서브카테고리 선택:', subCategory?.categoryName || '전체');
-
   emit('category-change', {
     categoryId: subCategory ? subCategory.categoryId : selectedCategory.value.categoryId,
     category: selectedCategory.value,
@@ -183,8 +168,8 @@ const handleSubCategoryClick = (subCategory) => {
 
 <style scoped>
 .filter-container {
-  background: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif;
+  background: #FAFAFA;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 /* 메인 컨트롤 섹션 */
@@ -193,13 +178,12 @@ const handleSubCategoryClick = (subCategory) => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 20px;
-  background: #fff;
+  padding: 12px 20px;
 }
 
 @media (min-width: 1024px) {
   .controls-section {
-    padding: 20px 32px;
+    padding: 16px 24px;
   }
 }
 
@@ -211,13 +195,13 @@ const handleSubCategoryClick = (subCategory) => {
   overflow: hidden;
 }
 
-/* 스크롤 페이드 효과 */
+/* 스크롤 페이드 */
 .scroll-fade-left,
 .scroll-fade-right {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 40px;
+  width: 32px;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -226,12 +210,12 @@ const handleSubCategoryClick = (subCategory) => {
 
 .scroll-fade-left {
   left: 0;
-  background: linear-gradient(to right, #fff 0%, transparent 100%);
+  background: linear-gradient(to right, #FAFAFA 20%, transparent 100%);
 }
 
 .scroll-fade-right {
   right: 0;
-  background: linear-gradient(to left, #fff 0%, transparent 100%);
+  background: linear-gradient(to left, #FAFAFA 20%, transparent 100%);
 }
 
 .scroll-fade-left.visible,
@@ -239,15 +223,15 @@ const handleSubCategoryClick = (subCategory) => {
   opacity: 1;
 }
 
-/* 1depth: 가로 스크롤 탭 */
+/* 1depth 탭 */
 .category-tabs {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  padding: 2px 4px;
+  padding: 2px;
 }
 
 .category-tabs::-webkit-scrollbar {
@@ -256,106 +240,59 @@ const handleSubCategoryClick = (subCategory) => {
 
 .category-tab {
   flex-shrink: 0;
-  padding: 6px 12px;
-  border-radius: 4px;
-  background: transparent;
-  color: #666;
-  border: 1px solid #e5e5e5;
+  padding: 7px 14px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #888888;
+  border: 1px solid #eee;
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  font-family: inherit;
+  transition: all 0.15s ease;
 }
 
 .category-tab:hover {
-  border-color: #ccc;
-  color: #333;
+  border-color: #ddd;
+  color: #555555;
 }
 
 .category-tab.active {
-  background: #111;
-  color: #fff;
-  border-color: #111;
-}
-
-/* View Toggle */
-.view-toggle {
-  display: none;
-  gap: 4px;
-  padding: 4px;
-  background: #f3f4f6;
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-
-@media (min-width: 1024px) {
-  .view-toggle {
-    display: flex;
-  }
-}
-
-.view-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
+  background: #9933EA;
+  color: #ffffff;
+  border-color: #9933EA;
   font-weight: 600;
-  color: #9ca3af;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
 }
 
-.view-btn:hover {
-  color: #6b7280;
-}
-
-.view-btn.active {
-  background: #ffffff;
-  color: #374151;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.view-btn .icon {
-  width: 16px;
-  height: 16px;
-}
-
-/* 2depth: 서브 카테고리 */
+/* 2depth 서브카테고리 */
 .sub-category-section {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 20px 16px;
-  background: #fff;
+  gap: 10px;
+  padding: 0 20px 12px;
 }
 
 @media (min-width: 1024px) {
   .sub-category-section {
-    padding: 0 32px 20px;
+    padding: 0 24px 16px;
   }
 }
 
 .sub-indicator {
   display: flex;
   align-items: center;
-  color: #d1d5db;
+  color: #d0d0d0;
   flex-shrink: 0;
 }
 
 .sub-indicator svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .sub-tabs {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -366,39 +303,41 @@ const handleSubCategoryClick = (subCategory) => {
 
 .sub-tab {
   padding: 5px 12px;
-  border-radius: 4px;
+  border-radius: 5px;
   background: transparent;
-  color: #666;
-  border: 1px solid #e0e0e0;
+  color: #999999;
+  border: 1px solid #eeeeee;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  font-family: inherit;
+  transition: all 0.15s ease;
 }
 
 .sub-tab:hover {
-  border-color: #ccc;
-  color: #333;
+  border-color: #dddddd;
+  color: #666666;
 }
 
 .sub-tab.active {
-  background: #7c3aed;
-  color: #fff;
-  border-color: #7c3aed;
+  background: #FAF5FF;
+  color: #9933EA;
+  border-color: #9933EA;
+  font-weight: 600;
 }
 
-/* Transition 애니메이션 - 2depth 표시/숨김 */
+/* Transition */
 .slide-fade-enter-active {
-  transition: opacity 0.15s ease-out;
+  transition: all 0.2s ease-out;
 }
 
 .slide-fade-leave-active {
-  transition: opacity 0.1s ease-in;
+  transition: all 0.15s ease-in;
 }
 
 .slide-fade-enter-from,
 .slide-fade-leave-to {
   opacity: 0;
+  transform: translateY(-4px);
 }
 </style>
