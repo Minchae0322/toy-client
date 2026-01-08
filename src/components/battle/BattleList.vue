@@ -238,4 +238,12 @@ defineExpose({ observerTarget })
     transition: none;
   }
 }
+
+/* 모바일: 2열 그리드 */
+@media (max-width: 768px) {
+  .battles-grid.view-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
 </style>
