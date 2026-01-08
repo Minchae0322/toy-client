@@ -14,7 +14,10 @@
         <SaleTypeSelector v-model="formData.saleType" />
 
         <!-- 2️⃣ 상품 선택 -->
-        <ProductSelector v-model="formData.productId" />
+        <ProductSelector
+            v-model="formData.productId"
+            v-model:productName="formData.productName"
+        />
 
         <!-- 3️⃣ 이미지 업로드 -->
         <ImageUploadSection
@@ -89,7 +92,8 @@ const formData = ref({
   description: '',
   saleType: '',
   tradeLocation: '',
-  productId: null
+  productId: null,
+  productName: ''
 });
 
 const biteSizeOption = ref({
@@ -303,6 +307,7 @@ const buildRequestData = (thumbnailAttachmentInfo, attachmentFileInfos) => {
     saleType: formData.value.saleType,
     tradeLocation: formData.value.tradeLocation,
     productId: formData.value.productId,
+    productName: formData.value.productName,
     thumbnailAttachmentInfo,
     attachmentFileInfos
   };
