@@ -201,15 +201,14 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .heart-pop-enter-active { animation: heart-pop 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
 @keyframes heart-pop { 0% { transform: scale(0); } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 0; } }
 
-/* 모바일: 인스타/스레드 스타일 (경계선만 있는 형태) */
+/* 모바일: 스레드 스타일 (얇은 경계선) */
 @media (max-width: 768px) {
   .post-card {
     border-radius: 0;
     border: none;
     background: transparent;
-    padding-bottom: 12px;
-    margin-bottom: 12px;
-    border-bottom: 8px solid #f4f4f5;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e0e0e0;
   }
   .post-card:hover {
     transform: none;
@@ -236,7 +235,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 
   /* 콘텐츠 영역 */
   .post-content {
-    padding: 14px 16px 8px;
+    padding: 14px 16px 4px;
   }
 
   .primary-review {
@@ -256,13 +255,14 @@ const formatDate = (date) => feedUtils.formatDate(date);
     font-size: 11px;
   }
 
-  /* 제품 정보 박스 */
+  /* 제품 정보 박스 - 경계 제거 */
   .product-info-box {
     margin-left: -4px;
     margin-right: -4px;
     padding: 10px 14px;
     border-radius: 12px;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
+    border: none;
   }
   .category-tag {
     font-size: 9px;
@@ -274,11 +274,10 @@ const formatDate = (date) => feedUtils.formatDate(date);
     font-size: 14px;
   }
 
-  /* 푸터 - 사용자 영역 강조 */
+  /* 푸터 - 경계 제거 */
   .post-footer {
-    padding-top: 12px;
-    margin-top: 4px;
-    border-top: 1px solid #ebebeb;
+    padding-top: 8px;
+    border-top: none;
   }
   .user-avatar {
     width: 28px;
