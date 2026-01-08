@@ -437,14 +437,86 @@ const daysLeftText = computed(() => {
   opacity: 1;
 }
 
-/* 반응형 */
-@media (max-width: 640px) {
+/* 모바일: 컴팩트 카드 */
+@media (max-width: 768px) {
+  .battle-card {
+    border-radius: 12px;
+  }
+
+  .card-thumbnail {
+    aspect-ratio: 4 / 3;
+  }
+
+  .badges-top {
+    top: 6px;
+    left: 6px;
+    gap: 3px;
+  }
+
+  .status-badge {
+    padding: 2px 5px;
+    font-size: 9px;
+  }
+
+  .vote-type-badge {
+    padding: 2px 5px;
+    font-size: 9px;
+  }
+
+  .dday-badge {
+    top: 6px;
+    right: 6px;
+    padding: 2px 5px;
+    font-size: 9px;
+  }
+
   .card-content {
-    padding: 14px;
+    padding: 10px;
+  }
+
+  .category {
+    font-size: 10px;
+    margin-bottom: 2px;
   }
 
   .title {
-    font-size: 14px;
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 6px;
+    -webkit-line-clamp: 2;
+  }
+
+  .stats {
+    gap: 6px;
+    font-size: 10px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .stats span {
+    white-space: nowrap;
+  }
+
+  .card-footer {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .creator-avatar {
+    width: 16px;
+    height: 16px;
+  }
+
+  .creator-name {
+    font-size: 10px;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .action-hint {
+    display: none;
   }
 }
 
