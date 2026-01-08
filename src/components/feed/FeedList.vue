@@ -251,34 +251,61 @@ defineExpose({ observerTarget });
 }
 .empty-state svg { width: 40px; height: 40px; }
 
-/* Mobile */
+/* Mobile: 인스타/스레드 스타일 (경계선만 있는 형태) */
 @media (max-width: 768px) {
   .feed-container {
-    padding: 20px 12px;
+    padding: 0;
+    background: white;
   }
 
-  .feed-header { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
-  .main-title { font-size: 22px; }
-  .sub-title { font-size: 13px; }
+  .feed-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 0;
+    padding: 16px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .main-title { font-size: 20px; }
+  .sub-title { font-size: 12px; }
 
-  .modern-grid { grid-template-columns: 1fr; gap: 12px; }
+  /* 그리드 뷰: 간격 제거, 전체 너비 */
+  .modern-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
 
-  .list-view { gap: 12px; }
+  /* 리스트 뷰: 경계선 스타일 */
+  .list-view {
+    gap: 0;
+  }
 
-  .list-item { border-radius: 16px; }
-  .list-item:hover { transform: none; }
-  .list-item:active { transform: scale(0.98); }
+  .list-item {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid #e5e5e5;
+    background: transparent;
+  }
+  .list-item:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: #e5e5e5;
+  }
+  .list-item:active {
+    background: #fafafa;
+    transform: none;
+  }
 
   .list-image { width: 120px; min-width: 120px; }
 
-  .list-content { padding: 14px; gap: 6px; }
-  .list-title { font-size: 15px; }
+  .list-content { padding: 12px 14px; gap: 4px; }
+  .list-title { font-size: 14px; }
   .list-review { font-size: 13px; -webkit-line-clamp: 2; }
 
-  .list-footer { padding-top: 10px; }
-  .list-avatar { width: 24px; height: 24px; }
-  .list-nickname { font-size: 12px; }
-  .stat { font-size: 12px; }
-  .stat svg { width: 14px; height: 14px; }
+  .list-footer { padding-top: 8px; }
+  .list-avatar { width: 22px; height: 22px; }
+  .list-nickname { font-size: 11px; }
+  .stat { font-size: 11px; }
+  .stat svg { width: 13px; height: 13px; }
 }
 </style>
