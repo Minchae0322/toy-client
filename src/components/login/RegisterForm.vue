@@ -1,6 +1,5 @@
 <template>
   <form @submit.prevent="handleSubmit" class="auth-form">
-    <!-- 이메일 입력 & 인증 -->
     <EmailVerification
         v-model:email="form.email"
         v-model:verified="form.emailVerified"
@@ -8,17 +7,15 @@
         :disabled="loading"
     />
 
-    <!-- 인증 성공 메시지 -->
-    <transition name="slide">
-      <div v-if="form.emailVerified" class="notification success">
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+    <transition name="slide-fade">
+      <div v-if="form.emailVerified" class="status-banner success">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        이메일 인증 완료
+        <span>이메일 인증이 완료되었습니다.</span>
       </div>
     </transition>
 
-    <!-- 비밀번호 입력 -->
     <PasswordWithStrength
         v-model:password="form.password"
         v-model:show-password="form.showPassword"
@@ -26,68 +23,49 @@
         @strength-change="handleStrengthChange"
     />
 
-    <!-- 비밀번호 확인 -->
     <div class="input-group">
-      <label class="input-label">
-        비밀번호 확인
-        <span class="required">*</span>
-      </label>
+      <label class="input-label">비밀번호 확인</label>
       <div class="input-wrapper">
+        <div class="input-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
         <input
             :type="form.showPassword ? 'text' : 'password'"
             v-model="form.passwordConfirm"
-            placeholder="비밀번호를 다시 입력하세요"
+            placeholder="비밀번호를 다시 한 번 입력하세요"
             required
             :disabled="loading"
             :class="{ error: form.passwordError && form.passwordConfirm }"
             @input="checkPasswordMatch"
             @blur="checkPasswordMatch"
         />
-        <div class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-            <rect x="5" y="9" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M10 13v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
       </div>
       <span v-if="form.passwordError && form.passwordConfirm" class="error-msg">
-        비밀번호가 일치하지 않습니다
+        비밀번호가 일치하지 않습니다.
       </span>
     </div>
 
-    <!-- 약관 동의 -->
-    <div class="terms-section">
-      <label class="checkbox-label">
+    <div class="terms-container">
+      <label class="custom-checkbox">
         <input type="checkbox" v-model="form.agreeTerms" />
-        <span class="checkbox-box">
-          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
-            <path d="M1 5L4.5 8.5L11 1.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <span class="terms-text">
-          <a href="#" class="link" @click.prevent>이용약관</a> 및
-          <a href="#" class="link" @click.prevent>개인정보처리방침</a>에 동의합니다
+        <span class="checkmark"></span>
+        <span class="terms-label">
+          <a href="#" @click.prevent class="link">이용약관</a> 및
+          <a href="#" @click.prevent class="link">개인정보처리방침</a>에 동의합니다.
         </span>
       </label>
     </div>
 
-    <!-- 회원가입 버튼 -->
-    <button type="submit" class="submit-btn primary" :disabled="!canSubmit || loading">
-      <svg v-if="loading" class="spinner" width="18" height="18" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="40">
-          <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
-        </circle>
-      </svg>
-      <span>{{ loading ? '가입 중...' : '회원가입' }}</span>
+    <button type="submit" class="submit-btn" :disabled="!canSubmit || loading">
+      <div v-if="loading" class="spinner"></div>
+      <span>{{ loading ? '가입 처리 중' : '계정 생성하기' }}</span>
     </button>
 
-    <!-- 에러 메시지 -->
     <transition name="shake">
-      <div v-if="displayError" class="alert-box error">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 12H7v-2h2v2zm0-3H7V4h2v5z"/>
-        </svg>
+      <div v-if="displayError" class="error-alert">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         {{ displayError }}
       </div>
     </transition>
@@ -117,10 +95,8 @@ const form = ref({
   agreeTerms: false
 })
 
-// 에러 메시지는 props에서 받음
-const displayError = computed(() => props.errorMessage || '')
-
 const passwordStrength = ref(0)
+const displayError = computed(() => props.errorMessage || '')
 
 const handleStrengthChange = (strength) => {
   passwordStrength.value = strength
@@ -146,7 +122,6 @@ const checkPasswordMatch = () => {
 
 const handleSubmit = () => {
   if (!canSubmit.value) return
-
   emit('submit', {
     email: form.value.email,
     password: form.value.password,
@@ -160,23 +135,25 @@ const handleSubmit = () => {
   width: 100%;
 }
 
-.notification {
+/* Linear 스타일의 상태 배너 */
+.status-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  padding: 10px 12px;
+  border-radius: 6px;
   font-size: 13px;
-  background: #ECFDF5;
-  color: #065F46;
+  margin-bottom: 20px;
+  font-weight: 500;
 }
 
-.notification.success {
-  background: #ECFDF5;
-  color: #065F46;
+.status-banner.success {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #dcfce7;
 }
 
+/* 입력 그룹 공통 스타일 */
 .input-group {
   margin-bottom: 20px;
 }
@@ -185,212 +162,168 @@ const handleSubmit = () => {
   display: block;
   font-size: 13px;
   font-weight: 500;
-  color: #424242;
-  margin-bottom: 8px;
-}
-
-.required {
-  color: #9333EA;
-  margin-left: 2px;
+  color: #27272a;
+  margin-bottom: 6px;
 }
 
 .input-wrapper {
   position: relative;
 }
 
-input[type="password"],
-input[type="text"] {
+input {
   width: 100%;
-  padding: 14px 16px 14px 44px;
-  font-size: 15px;
-  border: 1px solid #E0E0E0;
-  border-radius: 8px;
-  color: #212121;
-  background: white;
-  transition: border-color 0.2s ease;
+  padding: 10px 12px 10px 40px;
+  font-size: 14px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
   outline: none;
-  box-sizing: border-box;
-}
-
-input::placeholder {
-  color: #BDBDBD;
-}
-
-input:hover:not(:focus):not(:disabled) {
-  border-color: #BDBDBD;
 }
 
 input:focus {
-  border-color: #9333EA;
-}
-
-input:disabled {
-  background: #FAFAFA;
-  cursor: not-allowed;
-  opacity: 0.6;
+  border-color: #18181b;
+  box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.05);
 }
 
 input.error {
-  border-color: #EF4444;
+  border-color: #ef4444;
 }
 
 .input-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #BDBDBD;
-  pointer-events: none;
+  color: #a1a1aa;
 }
 
 .error-msg {
-  display: block;
-  margin-top: 6px;
   font-size: 12px;
-  color: #EF4444;
+  color: #ef4444;
+  margin-top: 4px;
+  display: block;
 }
 
-.terms-section {
-  margin-bottom: 20px;
-  padding: 16px;
-  background: #FAFAFA;
+/* 약관 동의 섹션: 정갈한 박스 형태 */
+.terms-container {
+  margin-bottom: 24px;
+  padding: 14px;
+  background-color: #fafafa;
+  border: 1px solid #f4f4f5;
   border-radius: 8px;
 }
 
-.checkbox-label {
+.custom-checkbox {
   display: flex;
   align-items: flex-start;
   cursor: pointer;
-  user-select: none;
+  gap: 10px;
   font-size: 13px;
-  color: #616161;
-  line-height: 1.5;
+  color: #52525b;
+  line-height: 1.4;
 }
 
-.checkbox-label input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
+.custom-checkbox input {
+  display: none;
 }
 
-.checkbox-box {
+.checkmark {
   width: 18px;
   height: 18px;
-  min-width: 18px;
-  border: 1px solid #E0E0E0;
+  border: 1px solid #d4d4d8;
   border-radius: 4px;
-  margin-right: 10px;
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: white;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s;
 }
 
-.checkbox-box svg {
-  opacity: 0;
-  transition: opacity 0.15s;
+.custom-checkbox input:checked + .checkmark {
+  background-color: #9333ea;
+  border-color: #9333ea;
 }
 
-.checkbox-label input:checked ~ .checkbox-box {
-  background: #9333EA;
-  border-color: #9333EA;
-}
-
-.checkbox-label input:checked ~ .checkbox-box svg {
-  opacity: 1;
-}
-
-.checkbox-label:hover .checkbox-box {
-  border-color: #9333EA;
-}
-
-.terms-text {
-  flex: 1;
+.custom-checkbox input:checked + .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .link {
-  color: #9333EA;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.link:hover {
+  color: #9333ea;
   text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
+/* 제출 버튼 */
 .submit-btn {
   width: 100%;
-  padding: 14px 20px;
+  padding: 12px;
+  background-color: #18181b; /* Linear 특유의 블랙 버튼 */
+  color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  transition: opacity 0.2s;
 }
 
-.submit-btn.primary {
-  background: #9333EA;
-  color: white;
-}
-
-.submit-btn.primary:hover:not(:disabled) {
-  background: #7C3AED;
+.submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
 .submit-btn:disabled {
-  background: #E0E0E0;
-  color: #9E9E9E;
+  background-color: #f4f4f5;
+  color: #a1a1aa;
   cursor: not-allowed;
 }
 
-.spinner {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.alert-box {
+/* 에러 알림 */
+.error-alert {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  border-radius: 8px;
+  justify-content: center;
+  gap: 6px;
   margin-top: 16px;
+  color: #ef4444;
   font-size: 13px;
+  font-weight: 500;
 }
 
-.alert-box.error {
-  background: #FEF2F2;
-  color: #DC2626;
+/* 로딩 스피너 */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
 }
 
-.slide-enter-active,
-.slide-leave-active {
-  transition: opacity 0.15s ease;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.slide-enter-from,
-.slide-leave-to {
-  opacity: 0;
-}
+/* 애니메이션 */
+.slide-fade-enter-active { transition: all 0.3s ease-out; }
+.slide-fade-enter-from { opacity: 0; transform: translateY(-10px); }
 
 .shake-enter-active {
   animation: shake 0.3s;
 }
-
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-3px); }
-  75% { transform: translateX(3px); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 </style>
