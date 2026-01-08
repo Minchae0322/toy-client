@@ -208,7 +208,8 @@ const formatDate = (date) => feedUtils.formatDate(date);
     border: none;
     background: transparent;
     padding-bottom: 16px;
-    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #d0d0d0;
   }
   .post-card:hover {
     transform: none;
