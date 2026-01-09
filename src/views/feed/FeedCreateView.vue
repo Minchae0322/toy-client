@@ -244,30 +244,61 @@
     </div>
 
     <!-- Cancel Dialog -->
-    <Transition name="modal">
-      <div v-if="showCancelDialog" class="modal-overlay" @click="showCancelDialog = false">
-        <div class="confirm-dialog" @click.stop>
-          <h3 class="dialog-title">작성을 취소하시겠어요?</h3>
-          <p class="dialog-desc">지금까지 작성한 내용이 모두 사라집니다.</p>
-          <div class="dialog-actions">
-            <button class="btn-dialog cancel" @click="showCancelDialog = false">계속 작성</button>
-            <button class="btn-dialog confirm" @click="confirmCancel">취소</button>
-          </div>
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showCancelDialog" class="modal-overlay" @click="showCancelDialog = false">
+          <Transition name="dialog" appear>
+            <div class="confirm-dialog" @click.stop>
+              <div class="dialog-icon-wrapper warning">
+                <svg class="dialog-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              </div>
+              <h3 class="dialog-title">작성을 취소하시겠어요?</h3>
+              <p class="dialog-desc">지금까지 작성한 내용이 모두 사라집니다.</p>
+              <div class="dialog-actions">
+                <button class="btn-dialog secondary" @click="showCancelDialog = false">
+                  <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                  계속 작성
+                </button>
+                <button class="btn-dialog danger" @click="confirmCancel">
+                  <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                  취소하기
+                </button>
+              </div>
+            </div>
+          </Transition>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
 
     <!-- Toasts -->
-    <Transition name="toast">
-      <div v-if="errorMessage" class="error-toast">
-        <span>{{ errorMessage }}</span>
-      </div>
-    </Transition>
-    <Transition name="toast">
-      <div v-if="showSuccessToast" class="success-toast">
-        <span>인증이 게시되었습니다!</span>
-      </div>
-    </Transition>
+    <Teleport to="body">
+      <Transition name="toast">
+        <div v-if="errorMessage" class="toast error-toast">
+          <div class="toast-icon error">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <span class="toast-message">{{ errorMessage }}</span>
+        </div>
+      </Transition>
+      <Transition name="toast">
+        <div v-if="showSuccessToast" class="toast success-toast">
+          <div class="toast-icon success">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <span class="toast-message">인증이 게시되었습니다!</span>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1066,50 +1097,160 @@ onBeforeUnmount(() => {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 200;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
 }
+
 .confirm-dialog {
   background: white;
-  border-radius: 16px;
-  padding: 28px;
-  max-width: 360px;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 380px;
   width: 100%;
   text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
-.dialog-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-.dialog-desc { font-size: 14px; color: var(--secondary); margin-bottom: 20px; }
-.dialog-actions { display: flex; gap: 10px; }
+
+.dialog-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.dialog-icon-wrapper.warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.dialog-icon {
+  width: 32px;
+  height: 32px;
+  color: #d97706;
+}
+
+.dialog-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.dialog-desc {
+  font-size: 14px;
+  color: var(--secondary);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+}
+
 .btn-dialog {
   flex: 1;
-  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 12px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
-.btn-dialog.cancel { background: var(--hover); color: var(--primary); }
-.btn-dialog.confirm { background: #dc2626; color: white; }
+
+.btn-dialog .btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-dialog.secondary {
+  background: #f3f4f6;
+  color: var(--primary);
+}
+
+.btn-dialog.secondary:hover {
+  background: #e5e7eb;
+}
+
+.btn-dialog.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-dialog.danger:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
 
 /* Toasts */
-.error-toast, .success-toast {
+.toast {
   position: fixed;
   bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 14px 20px;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: 14px;
   font-size: 14px;
   font-weight: 600;
-  z-index: 300;
+  z-index: 1100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
 }
-.error-toast { background: #dc2626; color: white; }
-.success-toast { background: var(--primary); color: white; }
+
+.toast-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toast-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.toast-icon.error {
+  color: white;
+}
+
+.toast-icon.success {
+  color: white;
+}
+
+.toast-message {
+  white-space: nowrap;
+}
+
+.error-toast {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.success-toast {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
 
 /* Transitions */
 .dropdown-enter-active { animation: dropIn 0.2s ease; }
@@ -1122,9 +1263,40 @@ onBeforeUnmount(() => {
 @keyframes dropUpIn { from { opacity: 0; transform: translateY(8px); } }
 @keyframes dropUpOut { to { opacity: 0; transform: translateY(8px); } }
 
-.modal-enter-active, .modal-leave-active { transition: opacity 0.2s; }
+.modal-enter-active, .modal-leave-active { transition: opacity 0.25s ease; }
 .modal-enter-from, .modal-leave-to { opacity: 0; }
 
-.toast-enter-active, .toast-leave-active { transition: all 0.3s; }
-.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+.dialog-enter-active { animation: dialogIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.dialog-leave-active { animation: dialogOut 0.2s ease; }
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+}
+@keyframes dialogOut {
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(5px);
+  }
+}
+
+.toast-enter-active {
+  animation: toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toast-leave-active {
+  animation: toastOut 0.3s ease;
+}
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px) scale(0.9);
+  }
+}
+@keyframes toastOut {
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(0.95);
+  }
+}
 </style>
