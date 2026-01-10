@@ -88,6 +88,21 @@ const handleLogin = async (formData) => {
   }
 }
 
+const handleRegister = async (formData) => {
+  loading.value = true
+  registerError.value = ''
+  try {
+    await authService.signup(formData)
+    // 회원가입 성공 시 로그인 탭으로 전환
+    activeTab.value = 'login'
+    loginError.value = ''
+  } catch (error) {
+    registerError.value = error.message || '회원가입에 실패했습니다. 다시 시도해주세요.'
+  } finally {
+    loading.value = false
+  }
+}
+
 const handleSocialLogin = (provider) => {
   const authBaseUrl = import.meta.env.VITE_AUTH_BASE_URL
   window.location.href = `${authBaseUrl}/api/oauth2/authorization/${provider}`
