@@ -87,7 +87,7 @@ onUnmounted(() => {
     <div class="header-content">
       <!-- 로고 -->
       <RouterLink to="/home" class="logo">
-        <img src="/images/logo1.png" alt="요거뜨" class="logo-image" />
+        <img src="/images/logo4.png" alt="요거뜨" class="logo-image" />
       </RouterLink>
 
       <!-- 데스크톱 네비게이션 -->
@@ -288,7 +288,7 @@ onUnmounted(() => {
 
 
 .header-content {
-  height: 56px;
+  height: 66px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -305,10 +305,10 @@ onUnmounted(() => {
 }
 
 .logo-image {
-  height: 32px;
+  height: 37px;
   width: auto;
   object-fit: contain;
-  padding: 4px;
+  margin-left: 14px;
 }
 
 /* ===================== 데스크톱 네비게이션 ===================== */

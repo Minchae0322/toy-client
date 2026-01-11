@@ -12,7 +12,7 @@
     <div class="header-container">
       <div class="logo">
         <RouterLink to="/home" class="mz-title">
-          <img src="/images/logo1.png" alt="한입만" class="logo-image" />
+          <img src="/images/logo4.png" alt="한입만" class="logo-image" />
         </RouterLink>
       </div>
 
@@ -339,6 +339,7 @@ onUnmounted(() => {
 .logo-image {
   height: 40px;
   width: auto;
+
   object-fit: contain;
 }
 
