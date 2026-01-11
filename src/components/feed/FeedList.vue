@@ -303,16 +303,15 @@ defineExpose({ observerTarget });
 .loader { width: 24px; height: 24px; border: 3px solid #f4f4f5; border-top-color: #9993ea; border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ===== 스켈레톤 애니메이션 ===== */
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+/* ===== 스켈레톤 애니메이션 (부드러운 pulse) ===== */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
-.skeleton-line {
-  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+.skeleton-bone {
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 6px;
 }
 
@@ -322,18 +321,24 @@ defineExpose({ observerTarget });
   border-radius: 28px;
   border: 1px solid #f0f0f5;
   overflow: hidden;
+  width: 100%;
 }
 
 .skeleton-image {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .skeleton-content {
   padding: 22px;
+}
+
+.skeleton-line {
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 6px;
 }
 
 .skeleton-review {
@@ -357,9 +362,8 @@ defineExpose({ observerTarget });
 .skeleton-tag {
   height: 16px;
   width: 50px;
-  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
 }
 
@@ -414,9 +418,8 @@ defineExpose({ observerTarget });
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .skeleton-author-info {
@@ -444,9 +447,8 @@ defineExpose({ observerTarget });
   width: 50px;
   height: 30px;
   border-radius: 100px;
-  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* ===== 리스트 뷰 스켈레톤 ===== */
@@ -463,9 +465,8 @@ defineExpose({ observerTarget });
   width: 180px;
   min-width: 180px;
   aspect-ratio: 1 / 1;
-  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .skeleton-list-content {
@@ -527,9 +528,8 @@ defineExpose({ observerTarget });
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .skeleton-list-nickname {
