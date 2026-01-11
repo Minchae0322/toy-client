@@ -18,34 +18,40 @@
     <div v-if="viewMode === 'feed'" class="modern-grid">
       <!-- 스켈레톤: 초기 로딩 -->
       <template v-if="loading && feeds.length === 0">
-        <article v-for="n in 12" :key="'skeleton-' + n" class="post-card skeleton-card">
-          <div class="post-image-container">
+        <article v-for="n in 12" :key="'skeleton-' + n" class="skeleton-card">
+          <div class="skeleton-image-container">
             <div class="skeleton-image"></div>
           </div>
-          <div class="post-content">
-            <div class="skeleton-line" style="height: 16px; width: 90%; margin-bottom: 6px;"></div>
-            <div class="skeleton-line" style="height: 16px; width: 70%; margin-bottom: 14px;"></div>
-            <div class="hashtag-group">
-              <span class="skeleton-line" style="height: 14px; width: 45px;"></span>
-              <span class="skeleton-line" style="height: 14px; width: 55px;"></span>
-              <span class="skeleton-line" style="height: 14px; width: 40px;"></span>
+          <div class="skeleton-content">
+            <!-- primary-review -->
+            <div class="skeleton-review">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line short"></div>
             </div>
-            <div class="product-info-box">
-              <div class="product-details">
-                <div class="skeleton-line" style="height: 10px; width: 50px; margin-bottom: 4px;"></div>
-                <div class="skeleton-line" style="height: 14px; width: 100px;"></div>
+            <!-- hashtag-group -->
+            <div class="skeleton-hashtags">
+              <span class="skeleton-tag"></span>
+              <span class="skeleton-tag"></span>
+              <span class="skeleton-tag"></span>
+            </div>
+            <!-- product-info-box -->
+            <div class="skeleton-product-box">
+              <div class="skeleton-product-details">
+                <div class="skeleton-category"></div>
+                <div class="skeleton-product-name"></div>
               </div>
-              <div class="skeleton-line" style="height: 16px; width: 60px;"></div>
+              <div class="skeleton-price"></div>
             </div>
-            <div class="post-footer">
-              <div class="user-block">
+            <!-- post-footer -->
+            <div class="skeleton-footer">
+              <div class="skeleton-user">
                 <div class="skeleton-avatar"></div>
-                <div class="user-meta">
-                  <div class="skeleton-line" style="height: 12px; width: 50px; margin-bottom: 2px;"></div>
-                  <div class="skeleton-line" style="height: 10px; width: 35px;"></div>
+                <div class="skeleton-user-meta">
+                  <div class="skeleton-nickname"></div>
+                  <div class="skeleton-date"></div>
                 </div>
               </div>
-              <div class="interaction-group">
+              <div class="skeleton-actions">
                 <div class="skeleton-stat-pill"></div>
                 <div class="skeleton-stat-pill"></div>
               </div>
@@ -316,13 +322,6 @@ defineExpose({ observerTarget });
   50% { opacity: 0.5; }
 }
 
-.skeleton-line {
-  background-color: #e5e7eb;
-  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  border-radius: 6px;
-  display: block;
-}
-
 /* ===== 그리드 뷰 스켈레톤 카드 (FeedCard와 동일한 레이아웃) ===== */
 .skeleton-card {
   pointer-events: none;
@@ -332,7 +331,8 @@ defineExpose({ observerTarget });
   overflow: hidden;
 }
 
-.skeleton-card .post-image-container {
+/* 이미지 영역 - FeedCard .post-image-container와 동일 */
+.skeleton-image-container {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -347,18 +347,50 @@ defineExpose({ observerTarget });
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.skeleton-card .post-content {
+/* 콘텐츠 영역 - FeedCard .post-content와 동일 */
+.skeleton-content {
   padding: 22px;
 }
 
-.skeleton-card .hashtag-group {
+/* 리뷰 텍스트 - FeedCard .primary-review와 동일 */
+.skeleton-review {
+  margin-bottom: 14px;
+}
+
+.skeleton-line {
+  height: 16px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.skeleton-line.short {
+  width: 70%;
+  margin-bottom: 0;
+}
+
+/* 해시태그 - FeedCard .hashtag-group와 동일 */
+.skeleton-hashtags {
   display: flex;
   gap: 8px;
   margin-bottom: 18px;
   flex-wrap: wrap;
 }
 
-.skeleton-card .product-info-box {
+.skeleton-tag {
+  height: 14px;
+  width: 50px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 6px;
+}
+
+.skeleton-tag:nth-child(2) { width: 60px; }
+.skeleton-tag:nth-child(3) { width: 45px; }
+
+/* 제품 정보 박스 - FeedCard .product-info-box와 동일 */
+.skeleton-product-box {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -371,12 +403,39 @@ defineExpose({ observerTarget });
   border: 1px solid #f1f1f5;
 }
 
-.skeleton-card .product-details {
+.skeleton-product-details {
   flex: 1;
   padding-right: 12px;
 }
 
-.skeleton-card .post-footer {
+.skeleton-category {
+  height: 10px;
+  width: 50px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.skeleton-product-name {
+  height: 15px;
+  width: 100px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 6px;
+}
+
+.skeleton-price {
+  height: 16px;
+  width: 60px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* 푸터 - FeedCard .post-footer와 동일 */
+.skeleton-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -384,21 +443,10 @@ defineExpose({ observerTarget });
   border-top: 1px solid #f4f4f7;
 }
 
-.skeleton-card .user-block {
+.skeleton-user {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.skeleton-card .user-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.skeleton-card .interaction-group {
-  display: flex;
-  gap: 6px;
 }
 
 .skeleton-avatar {
@@ -410,11 +458,38 @@ defineExpose({ observerTarget });
   flex-shrink: 0;
 }
 
-.skeleton-stat-pill {
+.skeleton-user-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.skeleton-nickname {
+  height: 13px;
   width: 50px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 4px;
+}
+
+.skeleton-date {
+  height: 10px;
+  width: 35px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 4px;
+}
+
+.skeleton-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.skeleton-stat-pill {
+  width: 55px;
   height: 30px;
   border-radius: 100px;
-  background-color: #e5e7eb;
+  background-color: #f4f4f7;
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -538,7 +613,7 @@ defineExpose({ observerTarget });
   .stat { font-size: 11px; }
   .stat svg { width: 13px; height: 13px; }
 
-  /* 모바일 스켈레톤: 그리드 뷰 */
+  /* 모바일 스켈레톤: 그리드 뷰 - FeedCard 모바일과 동일 */
   .skeleton-card {
     border-radius: 0;
     border: none;
@@ -548,20 +623,37 @@ defineExpose({ observerTarget });
     border-bottom: 1px solid #d0d0d0;
   }
 
-  .skeleton-card .post-image-container {
+  .skeleton-image-container {
     border-radius: 0;
   }
 
-  .skeleton-card .post-content {
+  .skeleton-content {
     padding: 14px 16px 4px;
   }
 
-  .skeleton-card .hashtag-group {
+  .skeleton-review {
+    margin-bottom: 10px;
+  }
+
+  .skeleton-line {
+    height: 14px;
+    margin-bottom: 4px;
+  }
+
+  .skeleton-hashtags {
     margin-bottom: 12px;
     gap: 6px;
   }
 
-  .skeleton-card .product-info-box {
+  .skeleton-tag {
+    height: 12px;
+    width: 40px;
+  }
+
+  .skeleton-tag:nth-child(2) { width: 50px; }
+  .skeleton-tag:nth-child(3) { width: 35px; }
+
+  .skeleton-product-box {
     margin-left: -4px;
     margin-right: -4px;
     padding: 10px 14px;
@@ -570,7 +662,22 @@ defineExpose({ observerTarget });
     border: none;
   }
 
-  .skeleton-card .post-footer {
+  .skeleton-category {
+    height: 9px;
+    width: 45px;
+  }
+
+  .skeleton-product-name {
+    height: 13px;
+    width: 80px;
+  }
+
+  .skeleton-price {
+    height: 14px;
+    width: 50px;
+  }
+
+  .skeleton-footer {
     padding-top: 8px;
     border-top: none;
   }
@@ -578,6 +685,16 @@ defineExpose({ observerTarget });
   .skeleton-avatar {
     width: 28px;
     height: 28px;
+  }
+
+  .skeleton-nickname {
+    height: 12px;
+    width: 45px;
+  }
+
+  .skeleton-date {
+    height: 9px;
+    width: 30px;
   }
 
   .skeleton-stat-pill {
@@ -602,6 +719,12 @@ defineExpose({ observerTarget });
   .skeleton-image,
   .skeleton-avatar,
   .skeleton-stat-pill,
+  .skeleton-tag,
+  .skeleton-category,
+  .skeleton-product-name,
+  .skeleton-price,
+  .skeleton-nickname,
+  .skeleton-date,
   .skeleton-list-image,
   .skeleton-list-avatar {
     animation: none;
