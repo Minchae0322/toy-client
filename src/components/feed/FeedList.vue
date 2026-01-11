@@ -324,6 +324,7 @@ defineExpose({ observerTarget });
 
 /* ===== 그리드 뷰 스켈레톤 카드 (FeedCard와 동일한 레이아웃) ===== */
 .skeleton-card {
+  width: 100%;
   pointer-events: none;
   background: white;
   border-radius: 28px;
