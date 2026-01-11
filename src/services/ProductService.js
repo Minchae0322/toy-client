@@ -370,7 +370,19 @@ class ProductService extends BaseApiService {
   }
 
   normalizeProduct(product) {
-    return product || null
+    if (!product) return null
+
+    // popularityScore가 없으면 viewCount, likeCount, shareCount, reviewCount 기반으로 계산
+    if (product.popularityScore === undefined || product.popularityScore === null) {
+      const viewCount = product.viewCount || 0
+      const likeCount = product.likeCount || 0
+      const shareCount = product.shareCount || 0
+      const reviewCount = product.reviewCount || 0
+      // 가중치: 조회수(1) + 좋아요(3) + 공유(5) + 리뷰(2)
+      product.popularityScore = viewCount + (likeCount * 3) + (shareCount * 5) + (reviewCount * 2)
+    }
+
+    return product
   }
 
   normalizeProductListResponse(products) {
