@@ -305,9 +305,10 @@ onUnmounted(() => {
 }
 
 .logo-image {
-  height: 40px;
+  height: 32px;
   width: auto;
   object-fit: contain;
+  padding: 4px;
 }
 
 /* ===================== 데스크톱 네비게이션 ===================== */
