@@ -15,92 +15,102 @@
     </header>
 
     <!-- Feed Grid View -->
-    <div v-if="viewMode === 'feed'" class="modern-grid">
-      <!-- 스켈레톤: 초기 로딩 -->
-      <template v-if="loading && feeds.length === 0">
-        <article v-for="n in 12" :key="'skeleton-' + n" class="skeleton-card">
-          <div class="skeleton-image-container">
-            <div class="skeleton-image"></div>
-          </div>
-          <div class="skeleton-content">
-            <!-- primary-review -->
-            <div class="skeleton-review">
-              <div class="skeleton-line"></div>
-              <div class="skeleton-line short"></div>
+    <div v-if="viewMode === 'feed'" class="modern-grid-wrapper">
+      <div class="modern-grid" :class="{ 'empty-skeleton': !loading && feeds.length === 0 }">
+        <!-- 스켈레톤: 초기 로딩 또는 빈 상태 -->
+        <template v-if="feeds.length === 0">
+          <article v-for="n in 6" :key="'skeleton-' + n" class="skeleton-card">
+            <div class="skeleton-image-container">
+              <div class="skeleton-image"></div>
             </div>
-            <!-- hashtag-group -->
-            <div class="skeleton-hashtags">
-              <span class="skeleton-tag"></span>
-              <span class="skeleton-tag"></span>
-              <span class="skeleton-tag"></span>
-            </div>
-            <!-- product-info-box -->
-            <div class="skeleton-product-box">
-              <div class="skeleton-product-details">
-                <div class="skeleton-category"></div>
-                <div class="skeleton-product-name"></div>
+            <div class="skeleton-content">
+              <!-- primary-review -->
+              <div class="skeleton-review">
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line short"></div>
               </div>
-              <div class="skeleton-price"></div>
-            </div>
-            <!-- post-footer -->
-            <div class="skeleton-footer">
-              <div class="skeleton-user">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-user-meta">
-                  <div class="skeleton-nickname"></div>
-                  <div class="skeleton-date"></div>
+              <!-- hashtag-group -->
+              <div class="skeleton-hashtags">
+                <span class="skeleton-tag"></span>
+                <span class="skeleton-tag"></span>
+                <span class="skeleton-tag"></span>
+              </div>
+              <!-- product-info-box -->
+              <div class="skeleton-product-box">
+                <div class="skeleton-product-details">
+                  <div class="skeleton-category"></div>
+                  <div class="skeleton-product-name"></div>
+                </div>
+                <div class="skeleton-price"></div>
+              </div>
+              <!-- post-footer -->
+              <div class="skeleton-footer">
+                <div class="skeleton-user">
+                  <div class="skeleton-avatar"></div>
+                  <div class="skeleton-user-meta">
+                    <div class="skeleton-nickname"></div>
+                    <div class="skeleton-date"></div>
+                  </div>
+                </div>
+                <div class="skeleton-actions">
+                  <div class="skeleton-stat-pill"></div>
+                  <div class="skeleton-stat-pill"></div>
                 </div>
               </div>
-              <div class="skeleton-actions">
-                <div class="skeleton-stat-pill"></div>
-                <div class="skeleton-stat-pill"></div>
-              </div>
             </div>
-          </div>
-        </article>
-      </template>
-      <!-- 실제 피드 카드 -->
-      <FeedCard
-          v-else
-          v-for="feed in feeds"
-          :key="feed.feedId"
-          :feed="feed"
-          @update="(data) => $emit('update', data)"
-          @click="(id) => $emit('post-click', id)"
-      />
+          </article>
+        </template>
+        <!-- 실제 피드 카드 -->
+        <FeedCard
+            v-else
+            v-for="feed in feeds"
+            :key="feed.feedId"
+            :feed="feed"
+            @update="(data) => $emit('update', data)"
+            @click="(id) => $emit('post-click', id)"
+        />
+      </div>
+      <!-- 빈 상태 오버레이 -->
+      <div v-if="!loading && feeds.length === 0" class="empty-overlay">
+        <div class="empty-message">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+          <span>아직 게시물이 없습니다</span>
+        </div>
+      </div>
     </div>
 
     <!-- List View -->
-    <div v-else class="list-view">
-      <!-- 스켈레톤: 초기 로딩 -->
-      <template v-if="loading && feeds.length === 0">
-        <article v-for="n in 8" :key="'skeleton-list-' + n" class="list-item skeleton-list-item">
-          <div class="list-image">
-            <div class="skeleton-list-image"></div>
-          </div>
-          <div class="list-content">
-            <div class="list-header">
-              <span class="skeleton-line" style="height: 11px; width: 60px;"></span>
-              <span class="skeleton-line" style="height: 11px; width: 40px;"></span>
+    <div v-else class="list-view-wrapper">
+      <div class="list-view" :class="{ 'empty-skeleton': !loading && feeds.length === 0 }">
+        <!-- 스켈레톤: 초기 로딩 또는 빈 상태 -->
+        <template v-if="feeds.length === 0">
+          <article v-for="n in 4" :key="'skeleton-list-' + n" class="list-item skeleton-list-item">
+            <div class="list-image">
+              <div class="skeleton-list-image"></div>
             </div>
-            <div class="skeleton-line" style="height: 18px; width: 70%; margin: 4px 0;"></div>
-            <div class="skeleton-line" style="height: 14px; width: 100%; margin-bottom: 4px;"></div>
-            <div class="skeleton-line" style="height: 14px; width: 85%; flex: 1;"></div>
-            <div class="list-footer">
-              <div class="list-author">
-                <div class="skeleton-list-avatar"></div>
-                <span class="skeleton-line" style="height: 13px; width: 50px;"></span>
+            <div class="list-content">
+              <div class="list-header">
+                <span class="skeleton-line" style="height: 11px; width: 60px;"></span>
+                <span class="skeleton-line" style="height: 11px; width: 40px;"></span>
               </div>
-              <div class="list-stats">
-                <span class="skeleton-line" style="height: 13px; width: 35px;"></span>
-                <span class="skeleton-line" style="height: 13px; width: 35px;"></span>
+              <div class="skeleton-line" style="height: 18px; width: 70%; margin: 4px 0;"></div>
+              <div class="skeleton-line" style="height: 14px; width: 100%; margin-bottom: 4px;"></div>
+              <div class="skeleton-line" style="height: 14px; width: 85%; flex: 1;"></div>
+              <div class="list-footer">
+                <div class="list-author">
+                  <div class="skeleton-list-avatar"></div>
+                  <span class="skeleton-line" style="height: 13px; width: 50px;"></span>
+                </div>
+                <div class="list-stats">
+                  <span class="skeleton-line" style="height: 13px; width: 35px;"></span>
+                  <span class="skeleton-line" style="height: 13px; width: 35px;"></span>
+                </div>
               </div>
             </div>
-          </div>
-        </article>
-      </template>
-      <!-- 실제 리스트 아이템 -->
-      <template v-else>
+          </article>
+        </template>
+        <!-- 실제 리스트 아이템 -->
+        <template v-else>
         <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="$emit('post-click', feed.feedId)">
           <div class="list-image">
             <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
@@ -139,15 +149,19 @@
           </div>
         </article>
       </template>
+      </div>
+      <!-- 빈 상태 오버레이 -->
+      <div v-if="!loading && feeds.length === 0" class="empty-overlay">
+        <div class="empty-message">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+          <span>아직 게시물이 없습니다</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Loading & Empty States -->
+    <!-- Loading Spinner (for infinite scroll) -->
     <div ref="observerTarget" class="scroll-status">
       <span v-if="loading && feeds.length > 0" class="loader"></span>
-      <div v-else-if="!loading && feeds.length === 0" class="empty-state">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-        <span>아직 게시물이 없습니다</span>
-      </div>
     </div>
   </section>
 </template>
@@ -194,11 +208,36 @@ defineExpose({ observerTarget });
 }
 .view-switch button.active { background: white; color: #18181b; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
+/* Grid View Wrapper */
+.modern-grid-wrapper {
+  position: relative;
+}
+
 /* Grid View */
 .modern-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
+}
+
+/* 빈 상태 스켈레톤 - opacity 낮춤 */
+.modern-grid.empty-skeleton {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.modern-grid.empty-skeleton .skeleton-card,
+.modern-grid.empty-skeleton .skeleton-image,
+.modern-grid.empty-skeleton .skeleton-line,
+.modern-grid.empty-skeleton .skeleton-tag,
+.modern-grid.empty-skeleton .skeleton-avatar,
+.modern-grid.empty-skeleton .skeleton-stat-pill,
+.modern-grid.empty-skeleton .skeleton-category,
+.modern-grid.empty-skeleton .skeleton-product-name,
+.modern-grid.empty-skeleton .skeleton-price,
+.modern-grid.empty-skeleton .skeleton-nickname,
+.modern-grid.empty-skeleton .skeleton-date {
+  animation: none !important;
 }
 
 /* PC - 카드 세로 여백 축소 */
@@ -215,11 +254,28 @@ defineExpose({ observerTarget });
   .modern-grid :deep(.icon) { width: 14px; height: 14px; }
 }
 
+/* List View Wrapper */
+.list-view-wrapper {
+  position: relative;
+}
+
 /* List View */
 .list-view {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* 빈 상태 스켈레톤 - opacity 낮춤 */
+.list-view.empty-skeleton {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.list-view.empty-skeleton .skeleton-list-image,
+.list-view.empty-skeleton .skeleton-line,
+.list-view.empty-skeleton .skeleton-list-avatar {
+  animation: none !important;
 }
 
 .list-item {
@@ -315,6 +371,46 @@ defineExpose({ observerTarget });
 .scroll-status { height: 80px; display: flex; align-items: center; justify-content: center; }
 .loader { width: 24px; height: 24px; border: 3px solid #f4f4f5; border-top-color: #9993ea; border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 빈 상태 오버레이 ===== */
+.empty-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.empty-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 32px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f5;
+  pointer-events: auto;
+}
+
+.empty-message svg {
+  width: 48px;
+  height: 48px;
+  color: #9993ea;
+  opacity: 0.6;
+}
+
+.empty-message span {
+  font-size: 15px;
+  font-weight: 600;
+  color: #71717a;
+  letter-spacing: -0.2px;
+}
 
 /* ===== 스켈레톤 애니메이션 ===== */
 @keyframes skeleton-pulse {
@@ -547,16 +643,6 @@ defineExpose({ observerTarget });
   flex-shrink: 0;
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  color: #a1a1aa;
-  font-size: 14px;
-}
-.empty-state svg { width: 40px; height: 40px; }
-
 /* Mobile: 인스타/스레드 스타일 (경계선만 있는 형태) */
 @media (max-width: 768px) {
   .feed-container {
@@ -711,6 +797,22 @@ defineExpose({ observerTarget });
 
   .skeleton-list-item .list-footer {
     padding-top: 8px;
+  }
+
+  /* 모바일 빈 상태 오버레이 */
+  .empty-message {
+    padding: 32px 24px;
+    margin: 16px;
+    border-radius: 16px;
+  }
+
+  .empty-message svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .empty-message span {
+    font-size: 14px;
   }
 }
 
