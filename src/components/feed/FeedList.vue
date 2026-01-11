@@ -14,8 +14,70 @@
       </div>
     </header>
 
+    <!-- 초기 로딩 스켈레톤: 그리드 뷰 -->
+    <div v-if="loading && feeds.length === 0 && viewMode === 'feed'" class="modern-grid">
+      <div v-for="n in 6" :key="'skeleton-grid-' + n" class="skeleton-card">
+        <div class="skeleton-image"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line skeleton-review"></div>
+          <div class="skeleton-line skeleton-review-short"></div>
+          <div class="skeleton-tags">
+            <div class="skeleton-tag"></div>
+            <div class="skeleton-tag"></div>
+            <div class="skeleton-tag"></div>
+          </div>
+          <div class="skeleton-product-box">
+            <div class="skeleton-product-info">
+              <div class="skeleton-line skeleton-category"></div>
+              <div class="skeleton-line skeleton-product-name"></div>
+            </div>
+            <div class="skeleton-line skeleton-price"></div>
+          </div>
+          <div class="skeleton-footer">
+            <div class="skeleton-author">
+              <div class="skeleton-avatar"></div>
+              <div class="skeleton-author-info">
+                <div class="skeleton-line skeleton-nickname"></div>
+                <div class="skeleton-line skeleton-date"></div>
+              </div>
+            </div>
+            <div class="skeleton-stats">
+              <div class="skeleton-stat-pill"></div>
+              <div class="skeleton-stat-pill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 초기 로딩 스켈레톤: 리스트 뷰 -->
+    <div v-else-if="loading && feeds.length === 0 && viewMode === 'list'" class="list-view">
+      <div v-for="n in 5" :key="'skeleton-list-' + n" class="skeleton-list-item">
+        <div class="skeleton-list-image"></div>
+        <div class="skeleton-list-content">
+          <div class="skeleton-list-header">
+            <div class="skeleton-line skeleton-list-category"></div>
+            <div class="skeleton-line skeleton-list-time"></div>
+          </div>
+          <div class="skeleton-line skeleton-list-title"></div>
+          <div class="skeleton-line skeleton-list-review"></div>
+          <div class="skeleton-line skeleton-list-review-short"></div>
+          <div class="skeleton-list-footer">
+            <div class="skeleton-list-author">
+              <div class="skeleton-list-avatar"></div>
+              <div class="skeleton-line skeleton-list-nickname"></div>
+            </div>
+            <div class="skeleton-list-stats">
+              <div class="skeleton-line skeleton-list-stat"></div>
+              <div class="skeleton-line skeleton-list-stat"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Feed Grid View -->
-    <div v-if="viewMode === 'feed'" class="modern-grid">
+    <div v-else-if="viewMode === 'feed'" class="modern-grid">
       <FeedCard
           v-for="feed in feeds"
           :key="feed.feedId"
@@ -68,8 +130,8 @@
 
     <!-- Loading & Empty States -->
     <div ref="observerTarget" class="scroll-status">
-      <span v-if="loading" class="loader"></span>
-      <div v-else-if="feeds.length === 0" class="empty-state">
+      <span v-if="loading && feeds.length > 0" class="loader"></span>
+      <div v-else-if="!loading && feeds.length === 0" class="empty-state">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
         <span>아직 게시물이 없습니다</span>
       </div>
@@ -241,6 +303,250 @@ defineExpose({ observerTarget });
 .loader { width: 24px; height: 24px; border: 3px solid #f4f4f5; border-top-color: #9993ea; border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ===== 스켈레톤 애니메이션 ===== */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-line {
+  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ===== 그리드 뷰 스켈레톤 ===== */
+.skeleton-card {
+  background: white;
+  border-radius: 28px;
+  border: 1px solid #f0f0f5;
+  overflow: hidden;
+}
+
+.skeleton-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-content {
+  padding: 22px;
+}
+
+.skeleton-review {
+  height: 18px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.skeleton-review-short {
+  height: 18px;
+  width: 70%;
+  margin-bottom: 14px;
+}
+
+.skeleton-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.skeleton-tag {
+  height: 16px;
+  width: 50px;
+  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.skeleton-product-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f8fa;
+  margin-left: -10px;
+  margin-right: -10px;
+  padding: 10px 20px;
+  border-radius: 16px;
+  margin-bottom: 22px;
+  border: 1px solid #f1f1f5;
+}
+
+.skeleton-product-info {
+  flex: 1;
+}
+
+.skeleton-category {
+  height: 12px;
+  width: 60px;
+  margin-bottom: 6px;
+}
+
+.skeleton-product-name {
+  height: 16px;
+  width: 120px;
+}
+
+.skeleton-price {
+  height: 18px;
+  width: 70px;
+}
+
+.skeleton-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 18px;
+  border-top: 1px solid #f4f4f7;
+}
+
+.skeleton-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.skeleton-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.skeleton-nickname {
+  height: 14px;
+  width: 60px;
+}
+
+.skeleton-date {
+  height: 12px;
+  width: 40px;
+}
+
+.skeleton-stats {
+  display: flex;
+  gap: 6px;
+}
+
+.skeleton-stat-pill {
+  width: 50px;
+  height: 30px;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ===== 리스트 뷰 스켈레톤 ===== */
+.skeleton-list-item {
+  display: flex;
+  gap: 0;
+  background: white;
+  border: 1px solid #f1f1f5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.skeleton-list-image {
+  width: 180px;
+  min-width: 180px;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-list-content {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-list-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeleton-list-category {
+  height: 12px;
+  width: 70px;
+}
+
+.skeleton-list-time {
+  height: 12px;
+  width: 50px;
+}
+
+.skeleton-list-title {
+  height: 20px;
+  width: 60%;
+}
+
+.skeleton-list-review {
+  height: 16px;
+  width: 100%;
+}
+
+.skeleton-list-review-short {
+  height: 16px;
+  width: 80%;
+  flex: 1;
+}
+
+.skeleton-list-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f4f4f7;
+}
+
+.skeleton-list-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skeleton-list-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f0f0f5 25%, #e8e8ed 50%, #f0f0f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-list-nickname {
+  height: 14px;
+  width: 60px;
+}
+
+.skeleton-list-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.skeleton-list-stat {
+  height: 14px;
+  width: 40px;
+}
+
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -307,5 +613,110 @@ defineExpose({ observerTarget });
   .list-nickname { font-size: 11px; }
   .stat { font-size: 11px; }
   .stat svg { width: 13px; height: 13px; }
+
+  /* 모바일 스켈레톤: 그리드 뷰 */
+  .skeleton-card {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid #d0d0d0;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+
+  .skeleton-content {
+    padding: 14px 16px 4px;
+  }
+
+  .skeleton-review {
+    height: 14px;
+    margin-bottom: 6px;
+  }
+
+  .skeleton-review-short {
+    height: 14px;
+    margin-bottom: 10px;
+  }
+
+  .skeleton-tags {
+    margin-bottom: 12px;
+  }
+
+  .skeleton-tag {
+    height: 14px;
+    width: 40px;
+  }
+
+  .skeleton-product-box {
+    margin-left: -4px;
+    margin-right: -4px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border: none;
+  }
+
+  .skeleton-footer {
+    padding-top: 8px;
+    border-top: none;
+  }
+
+  .skeleton-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .skeleton-stat-pill {
+    width: 45px;
+    height: 26px;
+  }
+
+  /* 모바일 스켈레톤: 리스트 뷰 */
+  .skeleton-list-item {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .skeleton-list-image {
+    width: 120px;
+    min-width: 120px;
+  }
+
+  .skeleton-list-content {
+    padding: 12px 14px;
+    gap: 4px;
+  }
+
+  .skeleton-list-title {
+    height: 14px;
+  }
+
+  .skeleton-list-review,
+  .skeleton-list-review-short {
+    height: 13px;
+  }
+
+  .skeleton-list-footer {
+    padding-top: 8px;
+  }
+
+  .skeleton-list-avatar {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* 접근성: 모션 감소 선호 시 */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-line,
+  .skeleton-image,
+  .skeleton-tag,
+  .skeleton-avatar,
+  .skeleton-stat-pill,
+  .skeleton-list-image,
+  .skeleton-list-avatar {
+    animation: none;
+    background: #f0f0f5;
+  }
 }
 </style>
