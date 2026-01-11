@@ -23,10 +23,71 @@
             @category-change="handleCategoryChange"
         />
 
-        <!-- 로딩 -->
-        <div v-if="loading && !products.length" class="loading-state">
-          <div class="spinner"></div>
-          <p>랭킹을 불러오는 중...</p>
+        <!-- 스켈레톤 로딩 -->
+        <div v-if="loading && !products.length" class="skeleton-container">
+          <!-- Top 3 스켈레톤 -->
+          <section class="top-section">
+            <div class="top-grid">
+              <!-- 1위 스켈레톤 -->
+              <div class="hero-card skeleton-card">
+                <div class="rank-badge gold skeleton-badge"></div>
+                <div class="hero-image-wrap">
+                  <div class="hero-image skeleton-image"></div>
+                </div>
+                <div class="hero-info">
+                  <div class="skeleton-text skeleton-brand"></div>
+                  <div class="skeleton-text skeleton-name"></div>
+                  <div class="skeleton-row">
+                    <div class="skeleton-text skeleton-rating"></div>
+                    <div class="skeleton-text skeleton-change"></div>
+                  </div>
+                  <div class="skeleton-popularity">
+                    <div class="skeleton-text skeleton-label"></div>
+                    <div class="skeleton-bar"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2, 3위 스켈레톤 -->
+              <div v-for="n in 2" :key="`runner-skeleton-${n}`" class="runner-card skeleton-card">
+                <div class="rank-badge skeleton-badge" :class="n === 1 ? 'silver' : 'bronze'"></div>
+                <div class="runner-image-wrap">
+                  <div class="runner-image skeleton-image"></div>
+                </div>
+                <div class="runner-info">
+                  <div class="skeleton-text skeleton-brand"></div>
+                  <div class="skeleton-text skeleton-name-short"></div>
+                  <div class="skeleton-row">
+                    <div class="skeleton-text skeleton-rating"></div>
+                    <div class="skeleton-text skeleton-change"></div>
+                  </div>
+                  <div class="skeleton-popularity">
+                    <div class="skeleton-text skeleton-label"></div>
+                    <div class="skeleton-bar"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4위 이하 리스트 스켈레톤 -->
+          <section class="chart-section">
+            <div class="chart-list">
+              <div v-for="n in 7" :key="`chart-skeleton-${n}`" class="chart-item skeleton-item">
+                <div class="chart-rank">
+                  <div class="skeleton-text skeleton-rank-num"></div>
+                </div>
+                <div class="chart-image skeleton-image"></div>
+                <div class="chart-info">
+                  <div class="skeleton-text skeleton-item-name"></div>
+                  <div class="skeleton-text skeleton-item-brand"></div>
+                </div>
+                <div class="chart-metrics skeleton-metrics">
+                  <div class="skeleton-text skeleton-metric"></div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
 
         <!-- 빈 상태 -->
@@ -414,8 +475,8 @@ onMounted(async () => {
   margin: 8px 0 0;
 }
 
-/* 로딩 & 빈 상태 */
-.loading-state, .empty-state {
+/* 빈 상태 */
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -424,18 +485,153 @@ onMounted(async () => {
   color: #888;
 }
 
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 2px solid #f0f0f0;
-  border-top-color: #7c3aed;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 16px;
+/* 스켈레톤 로딩 */
+.skeleton-container {
+  animation: fadeIn 0.3s ease;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-image {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.hero-card.skeleton-card .hero-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+}
+
+.runner-card.skeleton-card .runner-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+}
+
+.skeleton-badge {
+  opacity: 0.5;
+}
+
+.skeleton-text {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-brand {
+  width: 60px;
+  height: 13px;
+  margin-bottom: 6px;
+}
+
+.skeleton-name {
+  width: 80%;
+  height: 20px;
+  margin-bottom: 12px;
+}
+
+.skeleton-name-short {
+  width: 70%;
+  height: 16px;
+  margin-bottom: 10px;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.skeleton-rating {
+  width: 80px;
+  height: 14px;
+}
+
+.skeleton-change {
+  width: 40px;
+  height: 14px;
+}
+
+.skeleton-popularity {
+  margin-top: auto;
+}
+
+.skeleton-label {
+  width: 100%;
+  height: 11px;
+  margin-bottom: 6px;
+}
+
+.skeleton-bar {
+  height: 6px;
+  width: 100%;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 3px;
+}
+
+/* 4위 이하 스켈레톤 */
+.skeleton-item {
+  pointer-events: none;
+}
+
+.skeleton-item .chart-image {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.skeleton-rank-num {
+  width: 24px;
+  height: 20px;
+  margin: 0 auto;
+}
+
+.skeleton-item-name {
+  width: 120px;
+  height: 15px;
+  margin-bottom: 6px;
+}
+
+.skeleton-item-brand {
+  width: 80px;
+  height: 12px;
+}
+
+.skeleton-metrics {
+  display: flex;
+  align-items: center;
+}
+
+.skeleton-metric {
+  width: 60px;
+  height: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-image,
+  .skeleton-text,
+  .skeleton-bar {
+    animation: none;
+  }
 }
 
 /* Top 3 섹션 */
