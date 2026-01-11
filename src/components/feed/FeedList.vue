@@ -323,8 +323,21 @@ defineExpose({ observerTarget });
   display: block;
 }
 
+/* ===== 그리드 뷰 스켈레톤 카드 (FeedCard와 동일한 레이아웃) ===== */
 .skeleton-card {
   pointer-events: none;
+  background: white;
+  border-radius: 28px;
+  border: 1px solid #f0f0f5;
+  overflow: hidden;
+}
+
+.skeleton-card .post-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #f8f8fa;
 }
 
 .skeleton-image {
@@ -334,12 +347,67 @@ defineExpose({ observerTarget });
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+.skeleton-card .post-content {
+  padding: 22px;
+}
+
+.skeleton-card .hashtag-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.skeleton-card .product-info-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f8fa;
+  margin-left: -10px;
+  margin-right: -10px;
+  padding: 10px 20px;
+  border-radius: 16px;
+  margin-bottom: 22px;
+  border: 1px solid #f1f1f5;
+}
+
+.skeleton-card .product-details {
+  flex: 1;
+  padding-right: 12px;
+}
+
+.skeleton-card .post-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 18px;
+  border-top: 1px solid #f4f4f7;
+}
+
+.skeleton-card .user-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.skeleton-card .user-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.skeleton-card .interaction-group {
+  display: flex;
+  gap: 6px;
+}
+
 .skeleton-avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
   background-color: #e5e7eb;
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  flex-shrink: 0;
 }
 
 .skeleton-stat-pill {
@@ -350,7 +418,7 @@ defineExpose({ observerTarget });
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* 리스트 뷰 스켈레톤 */
+/* ===== 리스트 뷰 스켈레톤 ===== */
 .skeleton-list-item {
   pointer-events: none;
 }
@@ -362,12 +430,45 @@ defineExpose({ observerTarget });
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+.skeleton-list-item .list-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-list-item .list-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeleton-list-item .list-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f4f4f7;
+}
+
+.skeleton-list-item .list-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skeleton-list-item .list-stats {
+  display: flex;
+  gap: 16px;
+}
+
 .skeleton-list-avatar {
   width: 28px;
   height: 28px;
   border-radius: 8px;
   background-color: #e5e7eb;
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  flex-shrink: 0;
 }
 
 .empty-state {
@@ -437,7 +538,43 @@ defineExpose({ observerTarget });
   .stat { font-size: 11px; }
   .stat svg { width: 13px; height: 13px; }
 
-  /* 모바일 스켈레톤 */
+  /* 모바일 스켈레톤: 그리드 뷰 */
+  .skeleton-card {
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #d0d0d0;
+  }
+
+  .skeleton-card .post-image-container {
+    border-radius: 0;
+  }
+
+  .skeleton-card .post-content {
+    padding: 14px 16px 4px;
+  }
+
+  .skeleton-card .hashtag-group {
+    margin-bottom: 12px;
+    gap: 6px;
+  }
+
+  .skeleton-card .product-info-box {
+    margin-left: -4px;
+    margin-right: -4px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border: none;
+  }
+
+  .skeleton-card .post-footer {
+    padding-top: 8px;
+    border-top: none;
+  }
+
   .skeleton-avatar {
     width: 28px;
     height: 28px;
@@ -448,9 +585,14 @@ defineExpose({ observerTarget });
     height: 26px;
   }
 
+  /* 모바일 스켈레톤: 리스트 뷰 */
   .skeleton-list-avatar {
     width: 22px;
     height: 22px;
+  }
+
+  .skeleton-list-item .list-footer {
+    padding-top: 8px;
   }
 }
 
