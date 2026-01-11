@@ -15,7 +15,7 @@
           <p class="header-desc">이번 주 가장 인기 있는 제품들을 확인해보세요</p>
         </header>
 
-        <!-- 카테고리 필터 (Design 2 적용) -->
+        <!-- 카테고리 필터 -->
         <CommonCategoryFilter
             :categories="categories"
             :show-view-toggle="false"
@@ -37,68 +37,74 @@
         <template v-else>
           <!-- Top 3 섹션 -->
           <section class="top-section">
-            <!-- 1위 -->
-            <div v-if="hero" class="hero-card" @click="goToDetail(hero)">
-              <div class="hero-rank">
-                <span class="rank-number">1</span>
-                <RankChange :change="hero.rankChange" :isNew="hero.isNew" />
-              </div>
-              <div class="hero-image-wrap">
-                <img :src="getThumbnailUrl(hero)" :alt="hero.name" class="hero-image" />
-              </div>
-              <div class="hero-info">
-                <span class="brand">{{ hero.brand }}</span>
-                <h2 class="name">{{ hero.name }}</h2>
-                <div class="stats">
-                  <span class="stat">
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="#fbbf24">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                    {{ formatRating(hero.averageRating) }}
-                    <span class="stat-sub">({{ hero.reviewCount || 0 }})</span>
-                  </span>
-                  <span class="stat hot">
-                    🔥 {{ formatScore(getPopularityScore(hero)) }}
-                  </span>
+            <div class="top-grid">
+              <!-- 1위 카드 -->
+              <div v-if="hero" class="hero-card" @click="goToDetail(hero)">
+                <div class="rank-badge gold">
+                  <span>1</span>
+                </div>
+                <div class="hero-image-wrap">
+                  <img :src="getThumbnailUrl(hero)" :alt="hero.name" class="hero-image" />
+                </div>
+                <div class="hero-info">
+                  <span class="brand">{{ hero.brand }}</span>
+                  <h2 class="name">{{ hero.name }}</h2>
+                  <div class="meta-row">
+                    <div class="rating">
+                      <svg width="14" height="14" viewBox="0 0 20 20" fill="#FBBF24">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                      <span class="rating-value">{{ formatRating(hero.averageRating) }}</span>
+                      <span class="review-count">리뷰 {{ formatCount(hero.reviewCount) }}</span>
+                    </div>
+                    <RankChange :change="hero.rankChange" :isNew="hero.isNew" />
+                  </div>
+                  <div class="popularity-section">
+                    <div class="popularity-header">
+                      <span class="popularity-label">이번 주 관심도</span>
+                      <span class="popularity-value">{{ getScorePercent(getPopularityScore(hero)) }}%</span>
+                    </div>
+                    <div class="popularity-bar">
+                      <div class="popularity-fill" style="width: 100%"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="hero-score">
-                <div class="score-bar">
-                  <div class="score-fill" style="width: 100%"></div>
-                </div>
-                <span class="score-label">최고 점수</span>
-              </div>
-            </div>
 
-            <!-- 2, 3위 -->
-            <div class="runner-grid">
+              <!-- 2, 3위 카드 -->
               <div
                   v-for="(product, index) in runnerUps"
                   :key="product.id"
                   class="runner-card"
                   @click="goToDetail(product)"
               >
-                <div class="runner-rank">
-                  <span class="rank-number">{{ index + 2 }}</span>
-                  <RankChange :change="product.rankChange" :isNew="product.isNew" />
+                <div class="rank-badge" :class="index === 0 ? 'silver' : 'bronze'">
+                  <span>{{ index + 2 }}</span>
                 </div>
-                <img :src="getThumbnailUrl(product)" :alt="product.name" class="runner-image" />
+                <div class="runner-image-wrap">
+                  <img :src="getThumbnailUrl(product)" :alt="product.name" class="runner-image" />
+                </div>
                 <div class="runner-info">
                   <span class="brand">{{ product.brand }}</span>
                   <h3 class="name">{{ product.name }}</h3>
-                  <div class="stats">
-                    <span class="stat">
-                      <svg width="12" height="12" viewBox="0 0 20 20" fill="#fbbf24">
+                  <div class="meta-row">
+                    <div class="rating">
+                      <svg width="12" height="12" viewBox="0 0 20 20" fill="#FBBF24">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                       </svg>
-                      {{ formatRating(product.averageRating) }}
-                    </span>
-                    <span class="stat hot">🔥 {{ formatScore(getPopularityScore(product)) }}</span>
+                      <span class="rating-value">{{ formatRating(product.averageRating) }}</span>
+                      <span class="review-count">{{ formatCount(product.reviewCount) }}</span>
+                    </div>
+                    <RankChange :change="product.rankChange" :isNew="product.isNew" />
                   </div>
-                </div>
-                <div class="runner-score">
-                  <div class="score-bar">
-                    <div class="score-fill" :style="{ width: getScorePercent(getPopularityScore(product)) + '%' }"></div>
+                  <div class="popularity-section">
+                    <div class="popularity-header">
+                      <span class="popularity-label">이번 주 관심도</span>
+                      <span class="popularity-value">{{ getScorePercent(getPopularityScore(product)) }}%</span>
+                    </div>
+                    <div class="popularity-bar">
+                      <div class="popularity-fill" :style="{ width: getScorePercent(getPopularityScore(product)) + '%' }"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -114,29 +120,49 @@
                   class="chart-item"
                   @click="goToDetail(product)"
               >
+                <!-- 순위 + 변동 -->
                 <div class="chart-rank">
                   <span class="rank-number">{{ index + 4 }}</span>
-                  <RankChange :change="product.rankChange" :isNew="product.isNew" />
+                  <RankChange :change="product.rankChange" :isNew="product.isNew" size="small" />
                 </div>
+
+                <!-- 썸네일 -->
                 <img :src="getThumbnailUrl(product)" :alt="product.name" class="chart-image" />
+
+                <!-- 정보 -->
                 <div class="chart-info">
-                  <h3 class="name">{{ product.name }}</h3>
-                  <span class="brand">{{ product.brand }}</span>
-                </div>
-                <div class="chart-stats">
-                  <span class="stat">
-                    <svg width="12" height="12" viewBox="0 0 20 20" fill="#fbbf24">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                    {{ formatRating(product.averageRating) }}
-                  </span>
-                  <span class="stat hot">🔥 {{ formatScore(getPopularityScore(product)) }}</span>
-                </div>
-                <div class="chart-bar">
-                  <div class="score-bar small">
-                    <div class="score-fill" :style="{ width: getScorePercent(getPopularityScore(product)) + '%' }"></div>
+                  <div class="info-top">
+                    <h3 class="name">{{ product.name }}</h3>
+                    <span v-if="getFirstTag(product)" class="tag">{{ getFirstTag(product) }}</span>
+                  </div>
+                  <div class="info-bottom">
+                    <span class="brand">{{ product.brand }}</span>
+                    <span v-if="product.price" class="price">{{ product.price }}</span>
                   </div>
                 </div>
+
+                <!-- 핵심 지표 -->
+                <div class="chart-metrics">
+                  <div class="rating-block">
+                    <div class="rating">
+                      <svg width="12" height="12" viewBox="0 0 20 20" fill="#FBBF24">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                      <span class="rating-value">{{ formatRating(product.averageRating) }}</span>
+                    </div>
+                    <span class="review-count">{{ formatCount(product.reviewCount) }}개</span>
+                  </div>
+                  <div class="popularity-mini">
+                    <div class="popularity-bar small">
+                      <div class="popularity-fill" :style="{ width: getScorePercent(getPopularityScore(product)) + '%' }"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 화살표 -->
+                <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
               </div>
             </div>
           </section>
@@ -182,13 +208,12 @@ const currentPage = ref(0)
 const pageSize = 10
 const totalElements = ref(0)
 
-// 인기도 점수 계산 (API에서 제공하지 않을 경우 대비)
+// 인기도 점수 계산
 const getPopularityScore = (product) => {
   if (!product) return 0
   if (product.popularityScore !== undefined && product.popularityScore !== null) {
     return product.popularityScore
   }
-  // fallback: viewCount + likeCount*3 + shareCount*5 + reviewCount*2
   const viewCount = product.viewCount || 0
   const likeCount = product.likeCount || 0
   const shareCount = product.shareCount || 0
@@ -207,11 +232,11 @@ const getThumbnailUrl = (product) => {
   return product.thumbnailDto?.fileUrl || product.thumbnailDto?.filePath || DEFAULT_THUMBNAIL
 }
 
-const formatScore = (score) => {
-  if (!score) return '0'
-  if (score >= 10000) return (score / 10000).toFixed(1) + '만'
-  if (score >= 1000) return (score / 1000).toFixed(1) + 'k'
-  return score.toLocaleString()
+const formatCount = (count) => {
+  if (!count) return '0'
+  if (count >= 10000) return (count / 10000).toFixed(1) + '만'
+  if (count >= 1000) return (count / 1000).toFixed(1) + 'k'
+  return count.toLocaleString()
 }
 
 const formatRating = (rating) => {
@@ -224,13 +249,18 @@ const getScorePercent = (score) => {
   return Math.round((score / maxScore.value) * 100)
 }
 
+const getFirstTag = (product) => {
+  if (!product.tags) return null
+  const tagList = product.tags.split(';').filter(t => t.trim())
+  return tagList[0] || null
+}
+
 const goToDetail = (product) => {
   router.push({ name: 'ProductDetail', params: { id: product.id } })
 }
 
 // 카테고리 변경 핸들러
 const handleCategoryChange = ({ categoryId }) => {
-  console.log('🔄 [RANKING] 카테고리 변경:', categoryId)
   selectedCategoryId.value = categoryId
   fetchRanking(true)
 }
@@ -247,10 +277,7 @@ const fetchRanking = async (reset = false) => {
       hasNext.value = true
     }
 
-    const searchCondition = {
-      status: 'APPROVED'
-    }
-
+    const searchCondition = { status: 'APPROVED' }
     if (selectedCategoryId.value) {
       searchCondition.categoryId = selectedCategoryId.value
     }
@@ -261,40 +288,23 @@ const fetchRanking = async (reset = false) => {
       sort: 'popularityScore,DESC'
     }
 
-    console.log('📤 [RANKING] API 요청:', { searchCondition, pageable })
-
     const response = await productService.getProducts(searchCondition, pageable)
-
-    console.log('📥 [RANKING] API 응답:', response)
 
     if (response.success && response.data) {
       const pageData = response.data
-
       if (pageData.content) {
-        if (reset) {
-          products.value = pageData.content
-        } else {
-          products.value = [...products.value, ...pageData.content]
-        }
-
+        products.value = reset ? pageData.content : [...products.value, ...pageData.content]
         hasNext.value = !pageData.last
         totalElements.value = pageData.totalElements || 0
-
-        console.log('✅ [RANKING] 로드 완료:', {
-          loaded: products.value.length,
-          total: totalElements.value,
-          hasNext: hasNext.value
-        })
       } else if (Array.isArray(pageData)) {
         products.value = reset ? pageData : [...products.value, ...pageData]
         hasNext.value = pageData.length >= pageSize
       }
     } else {
-      console.error('❌ [RANKING] API 오류:', response.message)
       hasNext.value = false
     }
   } catch (e) {
-    console.error('❌ [RANKING] 랭킹 로드 실패:', e)
+    console.error('랭킹 로드 실패:', e)
     hasNext.value = false
   } finally {
     loading.value = false
@@ -304,18 +314,12 @@ const fetchRanking = async (reset = false) => {
 // 카테고리 조회
 const fetchCategories = async () => {
   try {
-    console.log('📤 [RANKING] 카테고리 API 호출 중...')
     const response = await categoryService.getCategories({isActive: true})
-
-    console.log('📥 [RANKING] 카테고리 API 응답:', response)
-
     if (response.success && response.data) {
-      // 계층 구조 그대로 유지 (children 포함)
       categories.value = Array.isArray(response.data) ? response.data : []
-      console.log('✅ [RANKING] 카테고리 로드 완료:', categories.value)
     }
   } catch (e) {
-    console.error('❌ [RANKING] 카테고리 로드 실패:', e)
+    console.error('카테고리 로드 실패:', e)
   }
 }
 
@@ -324,14 +328,12 @@ const loadMore = () => {
   fetchRanking(false)
 }
 
-// URL 쿼리 파라미터 감시
 watch(() => route.query, (query) => {
   if (query.categoryId) {
     selectedCategoryId.value = Number(query.categoryId)
   }
 }, {immediate: true})
 
-// 마운트 시 데이터 로드
 onMounted(async () => {
   await fetchCategories()
   fetchRanking(true)
@@ -339,7 +341,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 - 변경 없음 */
 * {
   box-sizing: border-box;
 }
@@ -355,23 +356,14 @@ onMounted(async () => {
 }
 
 @media (min-width: 768px) {
-  .app-container {
-    padding: 0 2rem;
-  }
+  .app-container { padding: 0 2rem; }
 }
 
 @media (min-width: 1280px) {
   .app-container {
     padding: 0 3rem;
     max-width: 1920px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-}
-
-@media (min-width: 1920px) {
-  .app-container {
-    padding: 0 4rem;
+    margin: 0 auto;
   }
 }
 
@@ -383,15 +375,11 @@ onMounted(async () => {
 }
 
 @media (max-width: 767px) {
-  .main-content {
-    padding-left: 0;
-  }
+  .main-content { padding-left: 0; }
 }
 
 @media (min-width: 768px) {
-  .main-content {
-    padding-bottom: 0;
-  }
+  .main-content { padding-bottom: 0; }
 }
 
 .ranking-view {
@@ -422,7 +410,7 @@ onMounted(async () => {
 
 .header-desc {
   font-size: 14px;
-  color: #999;
+  color: #888;
   margin: 8px 0 0;
 }
 
@@ -433,13 +421,13 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   padding: 80px 0;
-  color: #999;
+  color: #888;
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 2px solid #eee;
+  border: 2px solid #f0f0f0;
   border-top-color: #7c3aed;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -447,161 +435,129 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
-/* Top 섹션 */
+/* Top 3 섹션 */
 .top-section {
   padding: 24px;
 }
 
-/* 1위 히어로 카드 */
-.hero-card {
+.top-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 16px;
+}
+
+/* 순위 배지 */
+.rank-badge {
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 24px;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 1;
+}
+
+.rank-badge.gold {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+}
+
+.rank-badge.silver {
+  background: linear-gradient(135deg, #E8E8E8, #B8B8B8);
+  color: #fff;
+}
+
+.rank-badge.bronze {
+  background: linear-gradient(135deg, #CD7F32, #8B4513);
+  color: #fff;
+}
+
+/* 1위 히어로 카드 */
+.hero-card {
+  position: relative;
   background: #fff;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  border: 2px solid #7c3aed;
+  border-radius: 16px;
+  padding: 20px;
   cursor: pointer;
-  margin-bottom: 16px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: box-shadow 0.2s, transform 0.2s;
+  grid-row: span 1;
 }
 
 .hero-card:hover {
-  border-color: #ddd;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.hero-rank {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.hero-rank .rank-number {
-  font-size: 40px;
-  font-weight: 800;
-  color: #7c3aed;
-  line-height: 1;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15);
+  transform: translateY(-2px);
 }
 
 .hero-image-wrap {
-  flex-shrink: 0;
+  margin-top: 8px;
+  margin-bottom: 16px;
 }
 
 .hero-image {
-  width: 120px;
-  height: 120px;
-  border-radius: 12px;
+  width: 100%;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
-}
-
-.hero-info {
-  flex: 1;
-  min-width: 0;
+  border-radius: 12px;
+  background: #f5f5f5;
 }
 
 .hero-info .brand {
   font-size: 13px;
-  color: #999;
+  color: #888;
   display: block;
   margin-bottom: 4px;
 }
 
 .hero-info .name {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: #111;
   margin: 0 0 12px;
+  line-height: 1.3;
 }
 
-.hero-score {
-  width: 100px;
-  text-align: right;
-}
-
-.score-bar {
-  height: 6px;
-  background: #f5f5f5;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.score-bar.small {
-  height: 4px;
-}
-
-.score-fill {
-  height: 100%;
-  background: #7c3aed;
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.score-label {
-  font-size: 11px;
-  color: #999;
-  margin-top: 6px;
-  display: block;
-}
-
-/* 2, 3위 */
-.runner-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
+/* 2, 3위 카드 */
 .runner-card {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
+  position: relative;
   background: #fff;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .runner-card:hover {
-  border-color: #ddd;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
-.runner-rank {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.runner-image-wrap {
+  margin-top: 8px;
   margin-bottom: 12px;
-}
-
-.runner-rank .rank-number {
-  font-size: 28px;
-  font-weight: 800;
-  color: #ddd;
-  line-height: 1;
 }
 
 .runner-image {
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: 8px;
   object-fit: cover;
-  margin-bottom: 12px;
-}
-
-.runner-info {
-  flex: 1;
+  border-radius: 10px;
+  background: #f5f5f5;
 }
 
 .runner-info .brand {
   font-size: 12px;
-  color: #999;
+  color: #888;
   display: block;
   margin-bottom: 2px;
 }
@@ -610,49 +566,90 @@ onMounted(async () => {
   font-size: 15px;
   font-weight: 600;
   color: #111;
-  margin: 0 0 8px;
-  white-space: nowrap;
+  margin: 0 0 10px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.runner-score {
-  margin-top: 12px;
-}
-
-/* 공통 통계 */
-.stats {
+/* 공통: 메타 정보 행 */
+.meta-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
-.stat {
+.rating {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.rating-value {
+  font-weight: 600;
   font-size: 13px;
-  font-weight: 500;
-  color: #666;
+  color: #333;
 }
 
-.stat-sub {
-  color: #999;
-  font-weight: 400;
+.review-count {
+  font-size: 12px;
+  color: #888;
+  margin-left: 4px;
 }
 
-.stat.hot {
+/* 인기도 섹션 */
+.popularity-section {
+  margin-top: auto;
+}
+
+.popularity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.popularity-label {
+  font-size: 11px;
+  color: #888;
+}
+
+.popularity-value {
+  font-size: 11px;
+  font-weight: 600;
   color: #7c3aed;
 }
 
-/* 차트 리스트 */
+.popularity-bar {
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.popularity-bar.small {
+  height: 4px;
+}
+
+.popularity-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* 4위 이하 리스트 */
 .chart-section {
   padding: 0 24px 24px;
 }
 
 .chart-list {
-  border: 1px solid #eee;
-  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
   overflow: hidden;
 }
 
@@ -661,9 +658,8 @@ onMounted(async () => {
   align-items: center;
   gap: 16px;
   padding: 16px 20px;
-  background: #fff;
   cursor: pointer;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid #f3f4f6;
   transition: background 0.15s;
 }
 
@@ -677,25 +673,26 @@ onMounted(async () => {
 
 .chart-rank {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  width: 70px;
+  gap: 2px;
+  width: 40px;
+  flex-shrink: 0;
 }
 
 .chart-rank .rank-number {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  color: #999;
-  width: 24px;
-  text-align: center;
+  color: #888;
 }
 
 .chart-image {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
+  background: #f5f5f5;
 }
 
 .chart-info {
@@ -703,8 +700,15 @@ onMounted(async () => {
   min-width: 0;
 }
 
+.info-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 .chart-info .name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #111;
   margin: 0;
@@ -713,59 +717,59 @@ onMounted(async () => {
   text-overflow: ellipsis;
 }
 
-.chart-info .brand {
-  font-size: 12px;
-  color: #999;
+.tag {
+  font-size: 10px;
+  background: #f3f4f6;
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.chart-stats {
+.info-bottom {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  font-size: 12px;
+  color: #888;
 }
 
-.chart-bar {
-  width: 80px;
+.price {
+  color: #666;
 }
 
-@media (max-width: 768px) {
-  .page-header {
-    padding: 20px 16px;
-  }
+.chart-metrics {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
 
-  .top-section {
-    padding: 16px;
-  }
+.rating-block {
+  text-align: center;
+}
 
-  .chart-section {
-    padding: 0 16px 16px;
-  }
+.rating-block .review-count {
+  display: block;
+  margin-left: 0;
+  margin-top: 2px;
+  font-size: 10px;
+}
 
-  .page-header h1 {
-    font-size: 24px;
-  }
+.popularity-mini {
+  width: 60px;
+}
 
-  .hero-card {
-    flex-wrap: wrap;
-    gap: 16px;
-  }
+.arrow-icon {
+  color: #ccc;
+  flex-shrink: 0;
+  transition: color 0.15s, transform 0.15s;
+}
 
-  .hero-image {
-    width: 80px;
-    height: 80px;
-  }
-
-  .hero-score {
-    width: 100%;
-  }
-
-  .runner-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .chart-stats, .chart-bar {
-    display: none;
-  }
+.chart-item:hover .arrow-icon {
+  color: #7c3aed;
+  transform: translateX(2px);
 }
 
 /* 더보기 */
@@ -777,8 +781,8 @@ onMounted(async () => {
 .load-more-btn {
   padding: 12px 32px;
   background: #fff;
-  border: 1px solid #eee;
-  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
   color: #666;
@@ -787,12 +791,72 @@ onMounted(async () => {
 }
 
 .load-more-btn:hover:not(:disabled) {
-  border-color: #ddd;
-  color: #333;
+  border-color: #7c3aed;
+  color: #7c3aed;
 }
 
 .load-more-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 반응형: 태블릿 */
+@media (max-width: 900px) {
+  .top-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero-card {
+    grid-column: span 2;
+  }
+}
+
+/* 반응형: 모바일 */
+@media (max-width: 640px) {
+  .page-header {
+    padding: 20px 16px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .top-section {
+    padding: 16px;
+  }
+
+  .top-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .hero-card {
+    grid-column: span 1;
+  }
+
+  .hero-image {
+    aspect-ratio: 4 / 3;
+  }
+
+  .chart-section {
+    padding: 0 16px 16px;
+  }
+
+  .chart-item {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .chart-metrics {
+    display: none;
+  }
+
+  .chart-info .name {
+    font-size: 14px;
+  }
+
+  .arrow-icon {
+    display: none;
+  }
 }
 </style>
