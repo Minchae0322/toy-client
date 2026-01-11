@@ -146,8 +146,8 @@ const handleProtectedRoute = async (routeName) => {
 <style scoped>
 .sidebar-left {
   width: 240px;
-  height: calc(100vh - 64px);
-  top: 64px;
+  height: calc(100vh - 56px);
+  top: 56px;
   background: #ffffff;
   border-right: 1px solid rgba(0, 0, 0, 0.06);
   padding: 28px 16px;
