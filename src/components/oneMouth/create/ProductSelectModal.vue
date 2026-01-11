@@ -130,9 +130,10 @@ onMounted(() => {
 const fetchProducts = async (page = 0) => {
   loading.value = true;
   try {
-    const searchCondition = searchKeyword.value.trim()
-        ? { keyword: searchKeyword.value.trim() }
-        : {};
+    const searchCondition = {
+      status: 'APPROVED',
+      ...(searchKeyword.value.trim() ? { keyword: searchKeyword.value.trim() } : {})
+    };
 
     const pageable = {
       page: page,

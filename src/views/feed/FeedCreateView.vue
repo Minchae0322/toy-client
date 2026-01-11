@@ -82,12 +82,43 @@
           <!-- Product Name -->
           <section class="card">
             <label class="form-label required">제품명</label>
-            <div class="autocomplete-wrapper">
-              <input type="text" class="form-input" placeholder="예: 조던 4 레트로 브레드" v-model="formData.productNameCustom" @input="handleProductNameInput" />
-              <div v-if="productSuggestions.length > 0" class="suggestions">
-                <button v-for="suggestion in productSuggestions" :key="suggestion" class="suggestion-item" @click="selectSuggestion(suggestion)">
-                  {{ suggestion }}
-                </button>
+
+            <!-- 선택된 제품 표시 -->
+            <div v-if="selectedProduct" class="selected-product-card">
+              <img
+                :src="selectedProduct.thumbnailUrl || '/default-product.png'"
+                :alt="selectedProduct.name"
+                class="selected-product-image"
+              />
+              <div class="selected-product-info">
+                <p class="selected-product-name">{{ selectedProduct.name }}</p>
+                <p class="selected-product-brand">{{ selectedProduct.brand }}</p>
+              </div>
+              <button type="button" class="btn-clear-product" @click="clearSelectedProduct">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- 제품 선택 버튼 및 직접 입력 -->
+            <div v-else class="product-input-wrapper">
+              <button type="button" class="btn-select-product" @click="openProductModal">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <span>제품 검색</span>
+              </button>
+              <div class="input-divider">
+                <span>또는</span>
+              </div>
+              <div class="autocomplete-wrapper">
+                <input type="text" class="form-input" placeholder="제품명 직접 입력 (예: 조던 4 레트로 브레드)" v-model="formData.productNameCustom" @input="handleProductNameInput" />
+                <div v-if="productSuggestions.length > 0" class="suggestions">
+                  <button v-for="suggestion in productSuggestions" :key="suggestion" class="suggestion-item" @click="selectSuggestion(suggestion)">
+                    {{ suggestion }}
+                  </button>
+                </div>
               </div>
             </div>
           </section>
@@ -268,6 +299,13 @@
         <span>인증이 게시되었습니다!</span>
       </div>
     </Transition>
+
+    <!-- Product Select Modal -->
+    <ProductSelectModal
+      v-if="showProductModal"
+      @select="handleProductSelect"
+      @close="closeProductModal"
+    />
   </div>
 </template>
 
@@ -277,6 +315,7 @@ import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useCategory } from '@/services/CategoryService.js'
 import { getUserId } from '@/utils/auth.js'
+import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
 
 const router = useRouter()
 const feedService = useFeed()
@@ -297,6 +336,8 @@ const categoriesLoading = ref(false)
 const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
 const categoryDropdownRef = ref(null)
+const showProductModal = ref(false)
+const selectedProduct = ref(null)
 
 const formData = ref({
   userId: getUserId(),
@@ -524,6 +565,22 @@ const handleProductNameInput = () => {
   }
 }
 const selectSuggestion = (s) => { formData.value.productNameCustom = s; productSuggestions.value = [] }
+
+// Product Modal
+const openProductModal = () => { showProductModal.value = true }
+const closeProductModal = () => { showProductModal.value = false }
+const handleProductSelect = (product) => {
+  selectedProduct.value = product
+  formData.value.productId = product.productId
+  formData.value.productNameCustom = product.name
+  showProductModal.value = false
+  productSuggestions.value = []
+}
+const clearSelectedProduct = () => {
+  selectedProduct.value = null
+  formData.value.productId = null
+  formData.value.productNameCustom = ''
+}
 
 // Hashtags
 const addHashtag = () => {
@@ -791,6 +848,117 @@ onBeforeUnmount(() => {
 }
 .form-textarea { resize: vertical; min-height: 100px; }
 .mt-2 { margin-top: 8px; }
+
+/* Product Input */
+.product-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-select-product {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: #f3e8ff;
+  border: 2px dashed var(--accent);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-select-product:hover {
+  background: #ede4fc;
+  border-style: solid;
+}
+.btn-select-product .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.input-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.input-divider::before,
+.input-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.input-divider span {
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+/* Selected Product Card */
+.selected-product-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.selected-product-image {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: #e5e7eb;
+}
+.selected-product-info {
+  flex: 1;
+  min-width: 0;
+}
+.selected-product-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.selected-product-brand {
+  font-size: 13px;
+  color: var(--secondary);
+  margin: 0;
+}
+.btn-clear-product {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.btn-clear-product:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+.btn-clear-product .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--secondary);
+}
+.btn-clear-product:hover .icon {
+  color: #ef4444;
+}
 
 /* Autocomplete */
 .autocomplete-wrapper { position: relative; }
