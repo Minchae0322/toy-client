@@ -87,14 +87,7 @@ onUnmounted(() => {
     <div class="header-content">
       <!-- 로고 -->
       <RouterLink to="/home" class="logo">
-        <div class="logo-icon-wrapper">
-          <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <span class="logo-text">요거뜨</span>
+        <img src="/images/logo1.png" alt="요거뜨" class="logo-image" />
       </RouterLink>
 
       <!-- 데스크톱 네비게이션 -->
@@ -308,31 +301,13 @@ onUnmounted(() => {
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
   text-decoration: none;
 }
 
-.logo-icon-wrapper {
-  width: 32px;
-  height: 32px;
-  background: #9933EA;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-icon {
-  width: 18px;
-  height: 18px;
-  color: #ffffff;
-}
-
-.logo-text {
-  font-size: 17px;
-  font-weight: 800;
-  color: #111111;
-  letter-spacing: -0.3px;
+.logo-image {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 /* ===================== 데스크톱 네비게이션 ===================== */
