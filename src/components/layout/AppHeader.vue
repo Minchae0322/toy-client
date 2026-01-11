@@ -11,7 +11,9 @@
 
     <div class="header-container">
       <div class="logo">
-        <RouterLink to="/home" class="mz-title">🍽️ 한입만</RouterLink>
+        <RouterLink to="/home" class="mz-title">
+          <img src="/images/logo1.png" alt="한입만" class="logo-image" />
+        </RouterLink>
       </div>
 
       <nav class="main-nav">
@@ -329,14 +331,15 @@ onUnmounted(() => {
 }
 
 .logo .mz-title {
-  font-size: 1.5rem;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
   text-decoration: none;
-  background: linear-gradient(to right, #9333ea, #db2777);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
+}
+
+.logo-image {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .main-nav {
