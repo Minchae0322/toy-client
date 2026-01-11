@@ -58,7 +58,7 @@
                     <span class="stat-sub">({{ hero.reviewCount || 0 }})</span>
                   </span>
                   <span class="stat hot">
-                    🔥 {{ formatScore(hero.popularityScore) }}
+                    🔥 {{ formatScore(getPopularityScore(hero)) }}
                   </span>
                 </div>
               </div>
@@ -93,12 +93,12 @@
                       </svg>
                       {{ formatRating(product.averageRating) }}
                     </span>
-                    <span class="stat hot">🔥 {{ formatScore(product.popularityScore) }}</span>
+                    <span class="stat hot">🔥 {{ formatScore(getPopularityScore(product)) }}</span>
                   </div>
                 </div>
                 <div class="runner-score">
                   <div class="score-bar">
-                    <div class="score-fill" :style="{ width: getScorePercent(product.popularityScore) + '%' }"></div>
+                    <div class="score-fill" :style="{ width: getScorePercent(getPopularityScore(product)) + '%' }"></div>
                   </div>
                 </div>
               </div>
@@ -130,11 +130,11 @@
                     </svg>
                     {{ formatRating(product.averageRating) }}
                   </span>
-                  <span class="stat hot">🔥 {{ formatScore(product.popularityScore) }}</span>
+                  <span class="stat hot">🔥 {{ formatScore(getPopularityScore(product)) }}</span>
                 </div>
                 <div class="chart-bar">
                   <div class="score-bar small">
-                    <div class="score-fill" :style="{ width: getScorePercent(product.popularityScore) + '%' }"></div>
+                    <div class="score-fill" :style="{ width: getScorePercent(getPopularityScore(product)) + '%' }"></div>
                   </div>
                 </div>
               </div>
@@ -182,15 +182,29 @@ const currentPage = ref(0)
 const pageSize = 10
 const totalElements = ref(0)
 
+// 인기도 점수 계산 (API에서 제공하지 않을 경우 대비)
+const getPopularityScore = (product) => {
+  if (!product) return 0
+  if (product.popularityScore !== undefined && product.popularityScore !== null) {
+    return product.popularityScore
+  }
+  // fallback: viewCount + likeCount*3 + shareCount*5 + reviewCount*2
+  const viewCount = product.viewCount || 0
+  const likeCount = product.likeCount || 0
+  const shareCount = product.shareCount || 0
+  const reviewCount = product.reviewCount || 0
+  return viewCount + (likeCount * 3) + (shareCount * 5) + (reviewCount * 2)
+}
+
 // Computed
 const hero = computed(() => products.value[0] || null)
 const runnerUps = computed(() => products.value.slice(1, 3))
 const restList = computed(() => products.value.slice(3))
-const maxScore = computed(() => hero.value?.popularityScore || 1)
+const maxScore = computed(() => getPopularityScore(hero.value) || 1)
 
 // 유틸리티 함수
 const getThumbnailUrl = (product) => {
-  return product.thumbnailDto?.filePath || DEFAULT_THUMBNAIL
+  return product.thumbnailDto?.fileUrl || product.thumbnailDto?.filePath || DEFAULT_THUMBNAIL
 }
 
 const formatScore = (score) => {
