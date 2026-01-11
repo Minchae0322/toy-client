@@ -14,71 +14,48 @@
       </div>
     </header>
 
-    <!-- 초기 로딩 스켈레톤: 그리드 뷰 -->
-    <div v-if="loading && feeds.length === 0 && viewMode === 'feed'" class="modern-grid">
-      <div v-for="n in 6" :key="'skeleton-grid-' + n" class="skeleton-card">
-        <div class="skeleton-image"></div>
-        <div class="skeleton-content">
-          <div class="skeleton-line skeleton-review"></div>
-          <div class="skeleton-line skeleton-review-short"></div>
-          <div class="skeleton-tags">
-            <div class="skeleton-tag"></div>
-            <div class="skeleton-tag"></div>
-            <div class="skeleton-tag"></div>
+    <!-- Feed Grid View -->
+    <div v-if="viewMode === 'feed'" class="modern-grid">
+      <!-- 스켈레톤: 초기 로딩 -->
+      <template v-if="loading && feeds.length === 0">
+        <article v-for="n in 12" :key="'skeleton-' + n" class="post-card skeleton-card">
+          <div class="post-image-container">
+            <div class="skeleton-image"></div>
           </div>
-          <div class="skeleton-product-box">
-            <div class="skeleton-product-info">
-              <div class="skeleton-line skeleton-category"></div>
-              <div class="skeleton-line skeleton-product-name"></div>
+          <div class="post-content">
+            <div class="skeleton-line" style="height: 16px; width: 90%; margin-bottom: 6px;"></div>
+            <div class="skeleton-line" style="height: 16px; width: 70%; margin-bottom: 14px;"></div>
+            <div class="hashtag-group">
+              <span class="skeleton-line" style="height: 14px; width: 45px;"></span>
+              <span class="skeleton-line" style="height: 14px; width: 55px;"></span>
+              <span class="skeleton-line" style="height: 14px; width: 40px;"></span>
             </div>
-            <div class="skeleton-line skeleton-price"></div>
-          </div>
-          <div class="skeleton-footer">
-            <div class="skeleton-author">
-              <div class="skeleton-avatar"></div>
-              <div class="skeleton-author-info">
-                <div class="skeleton-line skeleton-nickname"></div>
-                <div class="skeleton-line skeleton-date"></div>
+            <div class="product-info-box">
+              <div class="product-details">
+                <div class="skeleton-line" style="height: 10px; width: 50px; margin-bottom: 4px;"></div>
+                <div class="skeleton-line" style="height: 14px; width: 100px;"></div>
+              </div>
+              <div class="skeleton-line" style="height: 16px; width: 60px;"></div>
+            </div>
+            <div class="post-footer">
+              <div class="user-block">
+                <div class="skeleton-avatar"></div>
+                <div class="user-meta">
+                  <div class="skeleton-line" style="height: 12px; width: 50px; margin-bottom: 2px;"></div>
+                  <div class="skeleton-line" style="height: 10px; width: 35px;"></div>
+                </div>
+              </div>
+              <div class="interaction-group">
+                <div class="skeleton-stat-pill"></div>
+                <div class="skeleton-stat-pill"></div>
               </div>
             </div>
-            <div class="skeleton-stats">
-              <div class="skeleton-stat-pill"></div>
-              <div class="skeleton-stat-pill"></div>
-            </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 초기 로딩 스켈레톤: 리스트 뷰 -->
-    <div v-else-if="loading && feeds.length === 0 && viewMode === 'list'" class="list-view">
-      <div v-for="n in 5" :key="'skeleton-list-' + n" class="skeleton-list-item">
-        <div class="skeleton-list-image"></div>
-        <div class="skeleton-list-content">
-          <div class="skeleton-list-header">
-            <div class="skeleton-line skeleton-list-category"></div>
-            <div class="skeleton-line skeleton-list-time"></div>
-          </div>
-          <div class="skeleton-line skeleton-list-title"></div>
-          <div class="skeleton-line skeleton-list-review"></div>
-          <div class="skeleton-line skeleton-list-review-short"></div>
-          <div class="skeleton-list-footer">
-            <div class="skeleton-list-author">
-              <div class="skeleton-list-avatar"></div>
-              <div class="skeleton-line skeleton-list-nickname"></div>
-            </div>
-            <div class="skeleton-list-stats">
-              <div class="skeleton-line skeleton-list-stat"></div>
-              <div class="skeleton-line skeleton-list-stat"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Feed Grid View -->
-    <div v-else-if="viewMode === 'feed'" class="modern-grid">
+        </article>
+      </template>
+      <!-- 실제 피드 카드 -->
       <FeedCard
+          v-else
           v-for="feed in feeds"
           :key="feed.feedId"
           :feed="feed"
@@ -89,43 +66,73 @@
 
     <!-- List View -->
     <div v-else class="list-view">
-      <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="$emit('post-click', feed.feedId)">
-        <div class="list-image">
-          <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
-          <div v-if="feed.feedEvaluation" class="list-eval-overlay">
-            <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
-              {{ getEvaluationLabel(feed.feedEvaluation) }}
-            </span>
+      <!-- 스켈레톤: 초기 로딩 -->
+      <template v-if="loading && feeds.length === 0">
+        <article v-for="n in 8" :key="'skeleton-list-' + n" class="list-item skeleton-list-item">
+          <div class="list-image">
+            <div class="skeleton-list-image"></div>
           </div>
-          <div v-if="feed.price" class="list-price-overlay">
-            {{ formatPrice(feed.price) }}
-          </div>
-        </div>
-        <div class="list-content">
-          <div class="list-header">
-            <span class="list-category">{{ feed.categoryName }}</span>
-            <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
-          </div>
-          <h3 class="list-title">{{ feed.productName }}</h3>
-          <p class="list-review">{{ feed.reviewSummary }}</p>
-          <div class="list-footer">
-            <div class="list-author">
-              <img :src="getProfileImageUrl(feed) || '/default-avatar.png'" class="list-avatar" />
-              <span class="list-nickname">{{ getDisplayNickname(feed) }}</span>
+          <div class="list-content">
+            <div class="list-header">
+              <span class="skeleton-line" style="height: 11px; width: 60px;"></span>
+              <span class="skeleton-line" style="height: 11px; width: 40px;"></span>
             </div>
-            <div class="list-stats">
-              <span :class="['stat', { active: feed.userReactions?.hasLike }]">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                {{ formatCount(feed.likeCount || 0) }}
-              </span>
-              <span class="stat">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                {{ formatCount(feed.commentCount || 0) }}
-              </span>
+            <div class="skeleton-line" style="height: 18px; width: 70%; margin: 4px 0;"></div>
+            <div class="skeleton-line" style="height: 14px; width: 100%; margin-bottom: 4px;"></div>
+            <div class="skeleton-line" style="height: 14px; width: 85%; flex: 1;"></div>
+            <div class="list-footer">
+              <div class="list-author">
+                <div class="skeleton-list-avatar"></div>
+                <span class="skeleton-line" style="height: 13px; width: 50px;"></span>
+              </div>
+              <div class="list-stats">
+                <span class="skeleton-line" style="height: 13px; width: 35px;"></span>
+                <span class="skeleton-line" style="height: 13px; width: 35px;"></span>
+              </div>
             </div>
           </div>
-        </div>
-      </article>
+        </article>
+      </template>
+      <!-- 실제 리스트 아이템 -->
+      <template v-else>
+        <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="$emit('post-click', feed.feedId)">
+          <div class="list-image">
+            <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
+            <div v-if="feed.feedEvaluation" class="list-eval-overlay">
+              <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+                {{ getEvaluationLabel(feed.feedEvaluation) }}
+              </span>
+            </div>
+            <div v-if="feed.price" class="list-price-overlay">
+              {{ formatPrice(feed.price) }}
+            </div>
+          </div>
+          <div class="list-content">
+            <div class="list-header">
+              <span class="list-category">{{ feed.categoryName }}</span>
+              <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
+            </div>
+            <h3 class="list-title">{{ feed.productName }}</h3>
+            <p class="list-review">{{ feed.reviewSummary }}</p>
+            <div class="list-footer">
+              <div class="list-author">
+                <img :src="getProfileImageUrl(feed) || '/default-avatar.png'" class="list-avatar" />
+                <span class="list-nickname">{{ getDisplayNickname(feed) }}</span>
+              </div>
+              <div class="list-stats">
+                <span :class="['stat', { active: feed.userReactions?.hasLike }]">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  {{ formatCount(feed.likeCount || 0) }}
+                </span>
+                <span class="stat">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                  {{ formatCount(feed.commentCount || 0) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </template>
     </div>
 
     <!-- Loading & Empty States -->
@@ -303,115 +310,28 @@ defineExpose({ observerTarget });
 .loader { width: 24px; height: 24px; border: 3px solid #f4f4f5; border-top-color: #9993ea; border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ===== 스켈레톤 애니메이션 (부드러운 pulse) ===== */
+/* ===== 스켈레톤 애니메이션 ===== */
 @keyframes skeleton-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
-}
-
-.skeleton-bone {
-  background-color: #e5e7eb;
-  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  border-radius: 6px;
-}
-
-/* ===== 그리드 뷰 스켈레톤 ===== */
-.skeleton-card {
-  background: white;
-  border-radius: 28px;
-  border: 1px solid #f0f0f5;
-  overflow: hidden;
-  width: 100%;
-}
-
-.skeleton-image {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  background-color: #e5e7eb;
-  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.skeleton-content {
-  padding: 22px;
 }
 
 .skeleton-line {
   background-color: #e5e7eb;
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 6px;
+  display: block;
 }
 
-.skeleton-review {
-  height: 18px;
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-image {
   width: 100%;
-  margin-bottom: 8px;
-}
-
-.skeleton-review-short {
-  height: 18px;
-  width: 70%;
-  margin-bottom: 14px;
-}
-
-.skeleton-tags {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.skeleton-tag {
-  height: 16px;
-  width: 50px;
+  height: 100%;
   background-color: #e5e7eb;
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  border-radius: 4px;
-}
-
-.skeleton-product-box {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f8f8fa;
-  margin-left: -10px;
-  margin-right: -10px;
-  padding: 10px 20px;
-  border-radius: 16px;
-  margin-bottom: 22px;
-  border: 1px solid #f1f1f5;
-}
-
-.skeleton-product-info {
-  flex: 1;
-}
-
-.skeleton-category {
-  height: 12px;
-  width: 60px;
-  margin-bottom: 6px;
-}
-
-.skeleton-product-name {
-  height: 16px;
-  width: 120px;
-}
-
-.skeleton-price {
-  height: 18px;
-  width: 70px;
-}
-
-.skeleton-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 18px;
-  border-top: 1px solid #f4f4f7;
-}
-
-.skeleton-author {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .skeleton-avatar {
@@ -422,27 +342,6 @@ defineExpose({ observerTarget });
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.skeleton-author-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.skeleton-nickname {
-  height: 14px;
-  width: 60px;
-}
-
-.skeleton-date {
-  height: 12px;
-  width: 40px;
-}
-
-.skeleton-stats {
-  display: flex;
-  gap: 6px;
-}
-
 .skeleton-stat-pill {
   width: 50px;
   height: 30px;
@@ -451,77 +350,16 @@ defineExpose({ observerTarget });
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* ===== 리스트 뷰 스켈레톤 ===== */
+/* 리스트 뷰 스켈레톤 */
 .skeleton-list-item {
-  display: flex;
-  gap: 0;
-  background: white;
-  border: 1px solid #f1f1f5;
-  border-radius: 20px;
-  overflow: hidden;
+  pointer-events: none;
 }
 
 .skeleton-list-image {
-  width: 180px;
-  min-width: 180px;
-  aspect-ratio: 1 / 1;
+  width: 100%;
+  height: 100%;
   background-color: #e5e7eb;
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.skeleton-list-content {
-  flex: 1;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.skeleton-list-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.skeleton-list-category {
-  height: 12px;
-  width: 70px;
-}
-
-.skeleton-list-time {
-  height: 12px;
-  width: 50px;
-}
-
-.skeleton-list-title {
-  height: 20px;
-  width: 60%;
-}
-
-.skeleton-list-review {
-  height: 16px;
-  width: 100%;
-}
-
-.skeleton-list-review-short {
-  height: 16px;
-  width: 80%;
-  flex: 1;
-}
-
-.skeleton-list-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid #f4f4f7;
-}
-
-.skeleton-list-author {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .skeleton-list-avatar {
@@ -530,21 +368,6 @@ defineExpose({ observerTarget });
   border-radius: 8px;
   background-color: #e5e7eb;
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.skeleton-list-nickname {
-  height: 14px;
-  width: 60px;
-}
-
-.skeleton-list-stats {
-  display: flex;
-  gap: 16px;
-}
-
-.skeleton-list-stat {
-  height: 14px;
-  width: 40px;
 }
 
 .empty-state {
@@ -614,52 +437,7 @@ defineExpose({ observerTarget });
   .stat { font-size: 11px; }
   .stat svg { width: 13px; height: 13px; }
 
-  /* 모바일 스켈레톤: 그리드 뷰 */
-  .skeleton-card {
-    border-radius: 0;
-    border: none;
-    border-bottom: 1px solid #d0d0d0;
-    padding-bottom: 16px;
-    margin-bottom: 16px;
-  }
-
-  .skeleton-content {
-    padding: 14px 16px 4px;
-  }
-
-  .skeleton-review {
-    height: 14px;
-    margin-bottom: 6px;
-  }
-
-  .skeleton-review-short {
-    height: 14px;
-    margin-bottom: 10px;
-  }
-
-  .skeleton-tags {
-    margin-bottom: 12px;
-  }
-
-  .skeleton-tag {
-    height: 14px;
-    width: 40px;
-  }
-
-  .skeleton-product-box {
-    margin-left: -4px;
-    margin-right: -4px;
-    padding: 10px 14px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-    border: none;
-  }
-
-  .skeleton-footer {
-    padding-top: 8px;
-    border-top: none;
-  }
-
+  /* 모바일 스켈레톤 */
   .skeleton-avatar {
     width: 28px;
     height: 28px;
@@ -668,36 +446,6 @@ defineExpose({ observerTarget });
   .skeleton-stat-pill {
     width: 45px;
     height: 26px;
-  }
-
-  /* 모바일 스켈레톤: 리스트 뷰 */
-  .skeleton-list-item {
-    border-radius: 0;
-    border: none;
-    border-bottom: 1px solid #e5e5e5;
-  }
-
-  .skeleton-list-image {
-    width: 120px;
-    min-width: 120px;
-  }
-
-  .skeleton-list-content {
-    padding: 12px 14px;
-    gap: 4px;
-  }
-
-  .skeleton-list-title {
-    height: 14px;
-  }
-
-  .skeleton-list-review,
-  .skeleton-list-review-short {
-    height: 13px;
-  }
-
-  .skeleton-list-footer {
-    padding-top: 8px;
   }
 
   .skeleton-list-avatar {
@@ -710,13 +458,12 @@ defineExpose({ observerTarget });
 @media (prefers-reduced-motion: reduce) {
   .skeleton-line,
   .skeleton-image,
-  .skeleton-tag,
   .skeleton-avatar,
   .skeleton-stat-pill,
   .skeleton-list-image,
   .skeleton-list-avatar {
     animation: none;
-    background: #f0f0f5;
+    background-color: #e5e7eb;
   }
 }
 </style>
