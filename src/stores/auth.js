@@ -5,12 +5,24 @@ import { authService } from '@/services/AuthService.js'
 import { userService } from '@/services/UserService.js'
 
 export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-        lastActivity: Date.now()
-    }),
+    state: () => {
+        // 새로고침 시 localStorage에서 동기적으로 초기 상태 복원
+        // 이렇게 하면 Pinia store 생성 시점부터 올바른 인증 상태를 가짐
+        const accessToken = authUtils.getAccessToken()
+        const savedUser = accessToken ? authUtils.getCurrentUser() : null
+        const isAuth = !!(accessToken && savedUser?.id)
+
+        if (isAuth) {
+            console.log('🔄 [AuthStore] 초기 상태 복원:', savedUser?.nickname || savedUser?.username)
+        }
+
+        return {
+            user: savedUser,
+            isAuthenticated: isAuth,
+            loading: false,
+            lastActivity: Date.now()
+        }
+    },
 
     getters: {
         // 기본 사용자 정보
