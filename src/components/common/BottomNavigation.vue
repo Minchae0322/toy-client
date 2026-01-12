@@ -112,7 +112,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
 <style scoped>
 .safe-area-bottom {
   /* Design Tokens - Modern Neutral & Suble Accent */
-  --main: #9993ea;
+  --main: #9333ea;
+  --main-dark: #7c3aed;
   --bg-nav: rgba(255, 255, 255, 0.85);
   --border-light: rgba(0, 0, 0, 0.05);
   --text-dim: #a1a1aa;
@@ -205,13 +206,13 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(153, 147, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.35);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
 
 .action-btn svg { width: 24px; height: 24px; }
-.action-btn.open { transform: rotate(45deg); background: #3f3f46; }
+.action-btn.open { transform: rotate(45deg); background: var(--main-dark); box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); }
 
 /* Notion-like Action Menu */
 .action-menu {
