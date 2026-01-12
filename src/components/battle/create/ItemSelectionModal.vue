@@ -31,13 +31,9 @@
             <!-- 검색 상태 피드백 -->
             <div class="search-feedback">
               <!-- 타이핑 중 -->
-              <div v-if="isTyping && searchQuery.length >= 2" class="feedback-typing">
+              <div v-if="isTyping && searchQuery.trim().length >= 1" class="feedback-typing">
                 <span class="typing-dots"></span>
                 <span>입력 중...</span>
-              </div>
-              <!-- 최소 글자 수 안내 -->
-              <div v-else-if="searchQuery.length > 0 && searchQuery.length < 2" class="feedback-hint">
-                <span>2글자 이상 입력해주세요</span>
               </div>
               <!-- 로딩 중 -->
               <div v-else-if="loading" class="feedback-loading">
@@ -45,7 +41,7 @@
                 <span>검색 중...</span>
               </div>
               <!-- 엔터키 힌트 -->
-              <div v-else-if="searchQuery.length >= 2 && !loading" class="feedback-enter-hint">
+              <div v-else-if="searchQuery.trim().length >= 1 && !loading && !isTyping" class="feedback-enter-hint">
                 <span>Enter로 즉시 검색</span>
               </div>
             </div>
@@ -295,14 +291,17 @@ const handleSearch = () => {
     clearTimeout(searchTimeout);
   }
 
-  // 타이핑 시작 표시
-  if (searchQuery.value.length > 0) {
-    isTyping.value = true;
-  } else {
+  const trimmedQuery = searchQuery.value.trim();
+
+  // 빈 검색어 처리
+  if (trimmedQuery.length === 0) {
     isTyping.value = false;
     products.value = [];
     return;
   }
+
+  // 타이핑 시작 표시
+  isTyping.value = true;
 
   // 500ms 디바운스 적용 - 사용자가 타이핑을 멈춘 후 검색
   searchTimeout = setTimeout(async () => {
@@ -323,7 +322,9 @@ const handleSearchKeydown = (event) => {
 };
 
 const performSearch = async () => {
-  if (!searchQuery.value || searchQuery.value.length < 2) {
+  const trimmedQuery = searchQuery.value.trim();
+
+  if (!trimmedQuery || trimmedQuery.length < 1) {
     products.value = [];
     return;
   }
@@ -332,7 +333,7 @@ const performSearch = async () => {
     loading.value = true;
 
     const response = await productService.getProducts({
-      keyword: searchQuery.value,
+      keyword: trimmedQuery,
       status: 'APPROVED'
     }, {
       page: 0,
