@@ -657,6 +657,7 @@ defineExpose({ observerTarget });
   .feed-empty-state {
     padding: 60px 24px;
     min-height: 300px;
+    margin-top: 16px;
   }
   .feed-empty-state .empty-illustration {
     width: 100px;
