@@ -4,7 +4,10 @@
 
     <div class="img-box">
       <img :src="itemImage" :alt="itemName" @error="handleImageError" />
-      <div class="score-overlay">{{ percentage }}%</div>
+      <div class="score-overlay">
+        <span class="score-count">{{ voteCount }}{{ isWeightedVote ? '점' : '표' }}</span>
+        <span class="score-percent">{{ percentage }}%</span>
+      </div>
     </div>
 
     <div class="info-box">
@@ -19,22 +22,20 @@
 
       <!-- Vote Actions -->
       <div v-if="canVote" class="vote-actions">
-        <template v-if="isWeightedVote">
-          <div class="rank-buttons">
-            <button
-                v-for="r in [1, 2, 3]"
-                :key="r"
-                @click="$emit('vote', item.id, r)"
-                :disabled="submitting"
-                :class="['rank-btn', { active: productRank === r }]"
-            >
-              {{ r }}위
-            </button>
-          </div>
-        </template>
+        <div v-if="isWeightedVote" class="rank-buttons">
+          <button
+              v-for="r in [1, 2, 3]"
+              :key="r"
+              @click="onVote(r)"
+              :disabled="submitting"
+              :class="['rank-btn', { active: productRank === r }]"
+          >
+            {{ r }}위
+          </button>
+        </div>
         <button
             v-else
-            @click="$emit('vote', item.id, 1)"
+            @click="onVote(1)"
             :disabled="submitting"
             :class="['simple-vote-btn', { active: productRank !== null }]"
         >
@@ -79,7 +80,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['vote'])
+const emit = defineEmits(['vote'])
 
 const itemName = computed(() => {
   return props.item.battleItemProduct?.name || props.item.customName || '제품명 없음'
@@ -95,8 +96,16 @@ const itemImage = computed(() => {
       'https://placehold.co/400x400?text=No+Image'
 })
 
+const voteCount = computed(() => {
+  return props.item.voteCount || props.item.totalScore || 0
+})
+
 const handleImageError = (e) => {
   e.target.src = 'https://placehold.co/400x400?text=No+Image'
+}
+
+const onVote = (rank) => {
+  emit('vote', props.item.id, rank)
 }
 </script>
 
@@ -161,13 +170,25 @@ const handleImageError = (e) => {
   position: absolute;
   bottom: 12px;
   right: 12px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   color: #fff;
-  padding: 6px 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   backdrop-filter: blur(4px);
+}
+
+.score-count {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.score-percent {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
 .info-box {
