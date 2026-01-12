@@ -1,5 +1,5 @@
 <template>
-  <div class="battle-detail">
+  <div class="soft-modern-v1">
     <!-- Loading -->
     <div v-if="loading" class="loading-container">
       <div class="spinner"></div>
@@ -16,11 +16,12 @@
     <template v-else-if="battle">
       <!-- Header -->
       <BattleDetailHeader
+          :title="battle.title"
           @back="goBack"
           @share="shareBattle"
       />
 
-      <div class="container">
+      <main class="content-wrapper">
         <!-- Battle Info -->
         <BattleInfoCard
             :battle="battle"
@@ -30,7 +31,7 @@
             @add-product="showAddModal = true"
         />
 
-        <!-- Vote Selection Sticky Bar -->
+        <!-- Vote Selection Bar -->
         <VoteSelectionBar
             v-if="canVote && hasSelectedItems"
             :selected-ranks="selectedRanks"
@@ -42,7 +43,7 @@
         />
 
         <!-- Product Grid -->
-        <div class="product-grid">
+        <div class="modern-grid">
           <ProductCard
               v-for="(item, index) in sortedItems"
               :key="item.id"
@@ -56,7 +57,7 @@
               @vote="handleVote"
           />
         </div>
-      </div>
+      </main>
 
       <!-- Add Product Modal -->
       <AddProductModal
@@ -404,9 +405,10 @@ export default {
 </script>
 
 <style scoped>
-.battle-detail {
+.soft-modern-v1 {
+  background: #fdfeff;
   min-height: 100vh;
-  background-color: #f9fafb;
+  padding-bottom: 100px;
 }
 
 /* Loading & Error */
@@ -423,14 +425,16 @@ export default {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #3b82f6;
+  border: 3px solid #f0f0f0;
+  border-top-color: #4a6cf7;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {
@@ -439,50 +443,51 @@ export default {
 }
 
 .btn-retry {
-  padding: 10px 20px;
-  background-color: #3b82f6;
+  padding: 12px 24px;
+  background: #4a6cf7;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
 }
 
-/* Container */
-.container {
-  max-width: 1400px;
+.btn-retry:hover {
+  background: #3a5ce7;
+}
+
+/* Content Wrapper */
+.content-wrapper {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
 }
 
-/* Product Grid */
-.product-grid {
+/* Modern Grid */
+.modern-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .product-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+  padding: 0 20px 40px;
 }
 
 @media (max-width: 768px) {
-  .product-grid {
+  .modern-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 0 16px 40px;
   }
 }
 
 @media (max-width: 480px) {
-  .product-grid {
+  .modern-grid {
     grid-template-columns: 1fr;
   }
 
-  .container {
-    padding: 16px;
+  .soft-modern-v1 {
+    padding-bottom: 120px;
   }
 }
 </style>
