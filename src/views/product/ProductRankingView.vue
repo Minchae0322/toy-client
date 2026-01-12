@@ -363,7 +363,14 @@ onMounted(async () => {
   .app-container {
     padding: 0 3rem;
     max-width: 1920px;
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container {
+    padding: 0 4rem;
   }
 }
 
