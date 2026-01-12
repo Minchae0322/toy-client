@@ -194,7 +194,7 @@ defineExpose({ observerTarget });
 <style scoped>
 .feed-container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
 
-.feed-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; }
+.feed-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; width: 100%; }
 .main-title { font-size: 26px; font-weight: 900; color: #18181b; }
 .sub-title { font-size: 14px; color: #71717a; margin-top: 4px; }
 
