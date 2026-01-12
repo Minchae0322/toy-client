@@ -1,98 +1,105 @@
 <template>
-  <header class="battle-header">
-    <div class="header-container">
-      <button @click="$emit('back')" class="back-button">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        목록
+  <header class="glass-header">
+    <div class="inner">
+      <button @click="$emit('back')" class="back-pill">
+        <span class="icon">←</span> 배틀 목록
       </button>
-
-      <div class="header-actions">
-        <button @click="$emit('share')" class="share-button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="18" cy="5" r="3"/>
-            <circle cx="6" cy="12" r="3"/>
-            <circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-          </svg>
-        </button>
-      </div>
+      <h2 class="battle-title-mini">{{ title }}</h2>
+      <button @click="$emit('share')" class="share-circle">↗</button>
     </div>
   </header>
 </template>
 
 <script setup>
+defineProps({
+  title: {
+    type: String,
+    default: ''
+  }
+})
+
 defineEmits(['back', 'share'])
 </script>
 
 <style scoped>
-.battle-header {
+.glass-header {
   position: sticky;
   top: 0;
-  background: white;
-  border-bottom: 1px solid #E5E7EB;
-  z-index: 50;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.header-container {
-  max-width: 1400px;
+.inner {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
-  height: 56px;
+  padding: 12px 20px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
 }
 
-.back-button {
+.back-pill {
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  margin-left: -8px;
-  background: transparent;
-  border: none;
-  color: #374151;
-  font-size: 14px;
-  font-weight: 400;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s ease;
+  gap: 6px;
   font-family: inherit;
+  font-size: 14px;
+  transition: all 0.2s;
 }
 
-.back-button:hover {
-  background: #F9FAFB;
-  color: #111827;
+.back-pill:hover {
+  background: #f9f9f9;
+  border-color: #ddd;
 }
 
-.header-actions {
-  display: flex;
-  gap: 8px;
+.back-pill .icon {
+  font-size: 14px;
 }
 
-.share-button {
-  padding: 8px;
-  background: transparent;
-  border: none;
-  color: #6B7280;
+.battle-title-mini {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.share-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #eee;
+  font-size: 16px;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s;
 }
 
-.share-button:hover {
-  background: #F9FAFB;
+.share-circle:hover {
+  background: #f9f9f9;
+  border-color: #ddd;
 }
 
 @media (max-width: 768px) {
-  .header-container {
-    padding: 0 16px;
+  .battle-title-mini {
+    display: none;
+  }
+
+  .inner {
+    padding: 12px 16px;
   }
 }
 </style>

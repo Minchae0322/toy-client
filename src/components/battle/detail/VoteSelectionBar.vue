@@ -1,31 +1,32 @@
 <template>
-  <div class="vote-bar">
-    <div class="vote-bar-content">
-      <div class="vote-selected">
-        <span class="vote-label">선택:</span>
-        <div v-if="isWeightedVote" class="vote-ranks">
-          <div v-for="rank in [1, 2, 3]" :key="rank" class="vote-rank-item">
-            <span :class="['rank-badge', `rank-${rank}`]">
-              {{ rank }}위
-            </span>
-            <span class="vote-product-name">
-              {{ getSelectedProductName(rank) }}
-            </span>
-          </div>
+  <transition name="slide-up">
+    <div class="sticky-vote-pill">
+      <div class="selection-dots">
+        <div
+            v-for="rank in (isWeightedVote ? [1, 2, 3] : [1])"
+            :key="rank"
+            :class="['dot', { filled: selectedRanks[rank] }]"
+        >
+          {{ rank }}
         </div>
-        <span v-else class="vote-product-name">
-          {{ getSelectedProductName(1) }}
+      </div>
+
+      <div class="selection-names" v-if="hasAllSelections">
+        <span v-for="rank in (isWeightedVote ? [1, 2, 3] : [1])" :key="rank" class="selected-name">
+          {{ getSelectedProductName(rank) }}
         </span>
       </div>
 
-      <button @click="$emit('submit')" :disabled="submitting" class="btn-submit">
-        {{ submitting ? '투표 중...' : '투표 완료하기' }}
+      <button @click="$emit('submit')" :disabled="submitting" class="glow-submit-btn">
+        {{ submitting ? '전송 중...' : '투표 확정하기' }}
       </button>
     </div>
-  </div>
+  </transition>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   selectedRanks: {
     type: Object,
@@ -51,123 +52,129 @@ const props = defineProps({
 
 defineEmits(['submit'])
 
+const hasAllSelections = computed(() => {
+  if (props.isWeightedVote) {
+    return props.selectedRanks[1] && props.selectedRanks[2] && props.selectedRanks[3]
+  }
+  return props.selectedRanks[1]
+})
+
 const getSelectedProductName = (rank) => {
   const itemId = props.selectedRanks[rank]
   const item = props.sortedItems.find(i => i.id === itemId)
-  return item ? props.getItemName(item) : '미선택'
+  if (!item) return ''
+  const name = props.getItemName(item)
+  return name.length > 10 ? name.slice(0, 10) + '...' : name
 }
 </script>
 
 <style scoped>
-.vote-bar {
-  position: sticky;
-  top: 56px;
-  background: white;
-  border: 1px solid #bfdbfe;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 24px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  z-index: 40;
-}
-
-.vote-bar-content {
+.sticky-vote-pill {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;
+  color: #fff;
+  padding: 14px 24px;
+  border-radius: 40px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  z-index: 1000;
 }
 
-.vote-selected {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.vote-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.vote-ranks {
+.selection-dots {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
-.vote-rank-item {
+.dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #333;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s;
 }
 
-.rank-badge {
-  font-size: 12px;
-  font-weight: bold;
+.dot.filled {
+  background: #4a6cf7;
+  box-shadow: 0 0 12px rgba(74, 108, 247, 0.5);
+}
+
+.selection-names {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.selected-name {
   padding: 4px 8px;
-  border-radius: 4px;
+  background: #222;
+  border-radius: 6px;
 }
 
-.rank-badge.rank-1 {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.rank-badge.rank-2 {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.rank-badge.rank-3 {
-  background-color: #fed7aa;
-  color: #9a3412;
-}
-
-.vote-product-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #111827;
-}
-
-.btn-submit {
-  padding: 10px 24px;
-  background-color: #3b82f6;
-  color: white;
+.glow-submit-btn {
+  background: #4a6cf7;
+  color: #fff;
   border: none;
-  border-radius: 8px;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-weight: 700;
   font-size: 14px;
-  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  white-space: nowrap;
+  transition: all 0.2s;
   font-family: inherit;
+  white-space: nowrap;
 }
 
-.btn-submit:hover:not(:disabled) {
-  background-color: #2563eb;
+.glow-submit-btn:hover:not(:disabled) {
+  background: #3a5ce7;
+  box-shadow: 0 0 20px rgba(74, 108, 247, 0.4);
 }
 
-.btn-submit:disabled {
-  opacity: 0.5;
+.glow-submit-btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
+/* Transition */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+}
+
 @media (max-width: 768px) {
-  .vote-bar-content {
-    flex-direction: column;
+  .sticky-vote-pill {
+    bottom: 20px;
+    padding: 12px 16px;
     gap: 12px;
-    align-items: stretch;
+    left: 16px;
+    right: 16px;
+    transform: none;
+    border-radius: 20px;
   }
 
-  .vote-selected {
-    flex-direction: column;
-    align-items: flex-start;
+  .selection-names {
+    display: none;
   }
 
-  .btn-submit {
-    width: 100%;
+  .glow-submit-btn {
+    flex: 1;
+    text-align: center;
   }
 }
 </style>
