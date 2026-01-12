@@ -141,7 +141,7 @@
                 <span class="list-nickname">{{ getDisplayNickname(feed) }}</span>
               </div>
               <div class="list-stats">
-                <span :class="['stat', { active: feed.userReactions?.hasLike }]">
+                <span :class="['stat', 'like-btn', { active: feed.userReactions?.hasLike }]" @click.stop="handleLike(feed)">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                   {{ formatCount(feed.likeCount || 0) }}
                 </span>
@@ -166,7 +166,7 @@
 <script setup>
 import { ref } from 'vue';
 import FeedCard from './FeedCard.vue';
-import { feedUtils } from '@/services/FeedService';
+import feedService, { feedUtils } from '@/services/FeedService';
 
 const props = defineProps({
   feeds: { type: Array, default: () => [] },
@@ -187,6 +187,31 @@ const getEvaluationClass = (evaluation) => {
 const formatDate = (dateString) => feedUtils.formatDate(dateString);
 const formatPrice = (price) => feedUtils.formatPrice(price);
 const formatCount = (count) => feedUtils.formatCount(count);
+
+const handleLike = async (feed) => {
+  const prevLiked = feed.userReactions?.hasLike;
+  const prevCount = feed.likeCount || 0;
+
+  // Optimistic update
+  if (!feed.userReactions) feed.userReactions = {};
+  feed.userReactions.hasLike = !prevLiked;
+  feed.likeCount = prevLiked ? prevCount - 1 : prevCount + 1;
+
+  try {
+    const response = await feedService.toggleLike(feed.feedId);
+    if (!response.success) throw new Error();
+    // 서버 응답으로 정확한 값 업데이트
+    if (response.data) {
+      feed.likeCount = response.data.likeCount ?? feed.likeCount;
+      feed.userReactions.hasLike = response.data.hasLike ?? feed.userReactions.hasLike;
+    }
+    emit('update', { feedId: feed.feedId, likeCount: feed.likeCount, hasLike: feed.userReactions.hasLike });
+  } catch (e) {
+    // 실패 시 롤백
+    feed.userReactions.hasLike = prevLiked;
+    feed.likeCount = prevCount;
+  }
+};
 
 defineExpose({ observerTarget });
 </script>
@@ -321,6 +346,8 @@ defineExpose({ observerTarget });
 }
 .stat svg { width: 16px; height: 16px; }
 .stat.active { color: #9993ea; }
+.stat.like-btn { cursor: pointer; transition: all 0.2s; }
+.stat.like-btn:hover { color: #9993ea; transform: scale(1.05); }
 
 /* Scroll Status */
 .scroll-status { height: 80px; display: flex; align-items: center; justify-content: center; }
