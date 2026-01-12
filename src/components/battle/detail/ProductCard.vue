@@ -15,8 +15,8 @@
       <h3 class="name">{{ itemName }}</h3>
 
       <!-- Previous Vote Badge -->
-      <div v-if="item.userBattleVote" class="previous-vote-badge">
-        <span v-if="isWeightedVote">이전 투표: {{ item.userBattleVote.rank }}위</span>
+      <div v-if="item.userBattleVote && !canVote" class="previous-vote-badge">
+        <span v-if="isWeightedVote">내 투표: {{ item.userBattleVote.rank }}위</span>
         <span v-else>내 투표</span>
       </div>
 
@@ -28,18 +28,25 @@
               :key="r"
               @click="onVote(r)"
               :disabled="submitting"
-              :class="['rank-btn', { active: productRank === r }]"
+              :class="['rank-btn', {
+                active: productRank === r,
+                'prev-vote': !productRank && item.userBattleVote?.rank === r
+              }]"
           >
             {{ r }}위
+            <span v-if="!productRank && item.userBattleVote?.rank === r" class="prev-mark">✓</span>
           </button>
         </div>
         <button
             v-else
             @click="onVote(1)"
             :disabled="submitting"
-            :class="['simple-vote-btn', { active: productRank !== null }]"
+            :class="['simple-vote-btn', {
+              active: productRank !== null,
+              'prev-vote': !productRank && item.userBattleVote
+            }]"
         >
-          {{ productRank !== null ? '선택됨' : '투표' }}
+          {{ productRank !== null ? '선택됨' : (item.userBattleVote ? '다시 투표' : '투표') }}
         </button>
       </div>
     </div>
@@ -267,6 +274,17 @@ const onVote = (rank) => {
   border-color: #4a6cf7;
 }
 
+.rank-btn.prev-vote {
+  border-color: #4a6cf7;
+  color: #4a6cf7;
+  background: #f0f4ff;
+}
+
+.prev-mark {
+  font-size: 10px;
+  margin-left: 2px;
+}
+
 .simple-vote-btn {
   width: 100%;
   padding: 12px;
@@ -296,5 +314,11 @@ const onVote = (rank) => {
   background: #4a6cf7;
   color: #fff;
   border-color: #4a6cf7;
+}
+
+.simple-vote-btn.prev-vote {
+  border-color: #4a6cf7;
+  color: #4a6cf7;
+  background: #f0f4ff;
 }
 </style>

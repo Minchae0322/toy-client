@@ -132,10 +132,9 @@ export default {
     },
     canVote() {
       if (!this.battle) return false
-      if (this.hasVoted) return false
 
       const status = this.battle.status?.title || this.battle.status
-      // ACTIVE 또는 NORMAL 상태일 때 투표 가능
+      // ACTIVE 또는 NORMAL 상태일 때 투표 가능 (다시 투표도 가능)
       return status === 'ACTIVE' || status === 'NORMAL'
     },
     canUserAddItem() {
