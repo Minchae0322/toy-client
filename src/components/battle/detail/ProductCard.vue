@@ -96,8 +96,12 @@ const itemImage = computed(() => {
       'https://placehold.co/400x400?text=No+Image'
 })
 
+// 순위 투표: totalScore(점수), 단순 투표: voteCount(투표수)
 const voteCount = computed(() => {
-  return props.item.voteCount || props.item.totalScore || 0
+  if (props.isWeightedVote) {
+    return props.item.totalScore || 0
+  }
+  return props.item.voteCount || 0
 })
 
 const handleImageError = (e) => {

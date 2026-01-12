@@ -132,15 +132,11 @@ export default {
     },
     canVote() {
       if (!this.battle) return false
+      if (this.hasVoted) return false
 
       const status = this.battle.status?.title || this.battle.status
-      if (status !== 'ACTIVE') return false
-
-      const now = new Date()
-      const startDate = new Date(this.battle.participationStartDate)
-      const endDate = new Date(this.battle.endDate)
-
-      return now >= startDate && now <= endDate
+      // ACTIVE 또는 NORMAL 상태일 때 투표 가능
+      return status === 'ACTIVE' || status === 'NORMAL'
     },
     canUserAddItem() {
       if (!this.battle) return false
@@ -216,6 +212,10 @@ export default {
     },
 
     calculateItemScore(item) {
+      // 순위 투표: totalScore(점수), 단순 투표: voteCount(투표수)
+      if (this.isWeightedVote) {
+        return item.totalScore || 0
+      }
       return item.voteCount || 0
     },
 
