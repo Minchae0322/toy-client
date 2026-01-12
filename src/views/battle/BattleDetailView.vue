@@ -132,15 +132,10 @@ export default {
     },
     canVote() {
       if (!this.battle) return false
+      if (this.hasVoted) return false
 
       const status = this.battle.status?.title || this.battle.status
-      if (status !== 'ACTIVE') return false
-
-      const now = new Date()
-      const startDate = new Date(this.battle.participationStartDate)
-      const endDate = new Date(this.battle.endDate)
-
-      return now >= startDate && now <= endDate
+      return status === 'ACTIVE'
     },
     canUserAddItem() {
       if (!this.battle) return false
