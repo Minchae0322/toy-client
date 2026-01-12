@@ -14,10 +14,12 @@
       <p class="brand">{{ itemBrand }}</p>
       <h3 class="name">{{ itemName }}</h3>
 
-      <!-- Previous Vote Badge -->
-      <div v-if="item.userBattleVote && !canVote" class="previous-vote-badge">
-        <span v-if="isWeightedVote">내 투표: {{ item.userBattleVote.rank }}위</span>
-        <span v-else>내 투표</span>
+      <!-- Previous Vote Badge - 항상 표시 -->
+      <div v-if="item.userBattleVote && isWeightedVote" class="my-vote-badge">
+        <span class="my-vote-label">내 투표</span>
+        <span :class="['my-vote-rank', `rank-${item.userBattleVote.rank}`]">
+          {{ item.userBattleVote.rank }}위
+        </span>
       </div>
 
       <!-- Vote Actions -->
@@ -28,13 +30,10 @@
               :key="r"
               @click="onVote(r)"
               :disabled="submitting"
-              :class="['rank-btn', {
-                active: productRank === r,
-                'prev-vote': !productRank && item.userBattleVote?.rank === r
-              }]"
+              :class="['rank-btn', `rank-btn-${r}`, { active: productRank === r }]"
           >
-            {{ r }}위
-            <span v-if="!productRank && item.userBattleVote?.rank === r" class="prev-mark">✓</span>
+            <span class="rank-num">{{ r }}</span>
+            <span class="rank-text">위</span>
           </button>
         </div>
         <button
@@ -48,6 +47,11 @@
         >
           {{ productRank !== null ? '선택됨' : (item.userBattleVote ? '다시 투표' : '투표') }}
         </button>
+      </div>
+
+      <!-- 투표 불가 시 이전 투표 표시 -->
+      <div v-else-if="item.userBattleVote && !isWeightedVote" class="previous-vote-badge">
+        내 투표
       </div>
     </div>
   </div>
@@ -103,7 +107,6 @@ const itemImage = computed(() => {
       'https://placehold.co/400x400?text=No+Image'
 })
 
-// 순위 투표: totalScore(점수), 단순 투표: voteCount(투표수)
 const voteCount = computed(() => {
   if (props.isWeightedVote) {
     return props.item.totalScore || 0
@@ -224,12 +227,52 @@ const onVote = (rank) => {
   overflow: hidden;
 }
 
+/* 내 투표 배지 */
+.my-vote-badge {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e0e7ff;
+}
+
+.my-vote-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.my-vote-rank {
+  font-size: 13px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.my-vote-rank.rank-1 {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #fff;
+}
+
+.my-vote-rank.rank-2 {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  color: #fff;
+}
+
+.my-vote-rank.rank-3 {
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+  color: #fff;
+}
+
 .previous-vote-badge {
   margin-top: 12px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: #f0f4ff;
-  border-radius: 8px;
-  font-size: 12px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 600;
   color: #4a6cf7;
   text-align: center;
@@ -241,26 +284,115 @@ const onVote = (rank) => {
 
 .rank-buttons {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .rank-btn {
   flex: 1;
-  padding: 10px 0;
-  border-radius: 12px;
-  border: 1px solid #eee;
+  padding: 12px 8px;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
   background: #fff;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
-  color: #666;
-  transition: all 0.2s;
   font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.2s ease;
 }
 
-.rank-btn:hover:not(:disabled) {
-  border-color: #ddd;
-  background: #f9f9f9;
+.rank-num {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.rank-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+}
+
+/* 1위 버튼 */
+.rank-btn-1 {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.rank-btn-1 .rank-num {
+  color: #d97706;
+}
+
+.rank-btn-1:hover:not(:disabled) {
+  border-color: #fbbf24;
+  background: #fef3c7;
+  transform: scale(1.02);
+}
+
+.rank-btn-1.active {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+.rank-btn-1.active .rank-num,
+.rank-btn-1.active .rank-text {
+  color: #fff;
+}
+
+/* 2위 버튼 */
+.rank-btn-2 {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.rank-btn-2 .rank-num {
+  color: #64748b;
+}
+
+.rank-btn-2:hover:not(:disabled) {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+  transform: scale(1.02);
+}
+
+.rank-btn-2.active {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  border-color: #64748b;
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.4);
+}
+
+.rank-btn-2.active .rank-num,
+.rank-btn-2.active .rank-text {
+  color: #fff;
+}
+
+/* 3위 버튼 */
+.rank-btn-3 {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.rank-btn-3 .rank-num {
+  color: #ea580c;
+}
+
+.rank-btn-3:hover:not(:disabled) {
+  border-color: #fb923c;
+  background: #ffedd5;
+  transform: scale(1.02);
+}
+
+.rank-btn-3.active {
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+  border-color: #ea580c;
+  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.4);
+}
+
+.rank-btn-3.active .rank-num,
+.rank-btn-3.active .rank-text {
+  color: #fff;
 }
 
 .rank-btn:disabled {
@@ -268,34 +400,17 @@ const onVote = (rank) => {
   cursor: not-allowed;
 }
 
-.rank-btn.active {
-  background: #4a6cf7;
-  color: #fff;
-  border-color: #4a6cf7;
-}
-
-.rank-btn.prev-vote {
-  border-color: #4a6cf7;
-  color: #4a6cf7;
-  background: #f0f4ff;
-}
-
-.prev-mark {
-  font-size: 10px;
-  margin-left: 2px;
-}
-
 .simple-vote-btn {
   width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #eee;
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
   background: #fff;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   color: #666;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   font-family: inherit;
 }
 
@@ -303,6 +418,7 @@ const onVote = (rank) => {
   border-color: #4a6cf7;
   color: #4a6cf7;
   background: #f8faff;
+  transform: scale(1.01);
 }
 
 .simple-vote-btn:disabled {
@@ -311,9 +427,10 @@ const onVote = (rank) => {
 }
 
 .simple-vote-btn.active {
-  background: #4a6cf7;
+  background: linear-gradient(135deg, #4a6cf7 0%, #3b5bdb 100%);
   color: #fff;
-  border-color: #4a6cf7;
+  border-color: #3b5bdb;
+  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.4);
 }
 
 .simple-vote-btn.prev-vote {
