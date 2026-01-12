@@ -1,58 +1,62 @@
 <template>
-  <div class="battle-info-section">
-    <div class="info-card">
-      <div class="card-header">
-        <div class="header-content">
-          <div class="meta-badges">
-            <span class="category-badge">{{ battle.category }}</span>
-            <span v-if="isWeighted" class="weighted-badge">
-              순위 투표 (1위 3점, 2위 2점, 3위 1점)
-            </span>
-          </div>
-
-          <h1 class="battle-title">{{ battle.title }}</h1>
-          <p class="battle-desc">{{ battle.description }}</p>
+  <div class="battle-info">
+    <div class="battle-info-main">
+      <div class="battle-info-left">
+        <div class="tags">
+          <span class="tag">{{ categoryName }}</span>
+          <span v-if="isWeightedVote" class="tag tag-primary">
+            순위 투표 (1위 3점, 2위 2점, 3위 1점)
+          </span>
+          <span :class="['tag', 'tag-status', statusClass]">
+            {{ statusLabel }}
+          </span>
         </div>
-
-        <div class="stats-group">
-          <div class="stat-box">
-            <div class="stat-number">{{ remainingDays }}</div>
-            <div class="stat-text">일 남음</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-number">{{ formatParticipants }}</div>
-            <div class="stat-text">참여</div>
-          </div>
-        </div>
+        <h1 class="title">{{ battle.title }}</h1>
+        <p v-if="battle.description" class="description">{{ battle.description }}</p>
       </div>
 
-      <button
-          v-if="battle.itemAddPermissionType !== 'CREATOR_ONLY' && !hasVoted && battle.status === 'ACTIVE'"
-          @click="$emit('add-product')"
-          class="add-btn"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
-        </svg>
-        내가 아는 좋은 제품 추가하기
-      </button>
+      <div class="battle-stats">
+        <div class="stat">
+          <div class="stat-value">{{ formattedDaysLeft }}</div>
+          <div class="stat-label">남은 기간</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">{{ formattedParticipants }}</div>
+          <div class="stat-label">참여</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">{{ formattedVotes }}</div>
+          <div class="stat-label">투표</div>
+        </div>
+      </div>
     </div>
+
+    <!-- Add Product Button -->
+    <button
+        v-if="canUserAddItem && !hasVoted"
+        @click="$emit('add-product')"
+        class="btn-add-product"
+    >
+      <span class="icon">+</span>
+      내가 아는 좋은 제품 추가하기
+    </button>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import { battleUtils } from '@/services/BattleService.js'
 
 const props = defineProps({
   battle: {
     type: Object,
     required: true
   },
-  remainingDays: {
-    type: Number,
+  isWeightedVote: {
+    type: Boolean,
     required: true
   },
-  isWeighted: {
+  canUserAddItem: {
     type: Boolean,
     required: true
   },
@@ -64,144 +68,187 @@ const props = defineProps({
 
 defineEmits(['add-product'])
 
-const formatParticipants = computed(() => {
-  const num = props.battle.totalParticipants || 0
-  if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
-  return num.toString()
+const categoryName = computed(() => {
+  return props.battle.subCategoryDetail?.subCategoryName || '카테고리'
+})
+
+const statusTitle = computed(() => {
+  return props.battle.status?.title || props.battle.status
+})
+
+const statusClass = computed(() => {
+  const classes = {
+    'DRAFT': 'status-draft',
+    'ACTIVE': 'status-active',
+    'CLOSED': 'status-closed',
+    'EARLY_CLOSED': 'status-early-closed'
+  }
+  return classes[statusTitle.value] || ''
+})
+
+const statusLabel = computed(() => {
+  const labels = {
+    'DRAFT': '임시저장',
+    'ACTIVE': '진행중',
+    'CLOSED': '종료',
+    'EARLY_CLOSED': '조기종료'
+  }
+  return labels[statusTitle.value] || ''
+})
+
+const formattedDaysLeft = computed(() => {
+  return battleUtils.formatDaysLeft(props.battle.endDate)
+})
+
+const formattedParticipants = computed(() => {
+  return battleUtils.formatCount(props.battle.totalParticipants)
+})
+
+const formattedVotes = computed(() => {
+  return battleUtils.formatCount(props.battle.totalVotes)
 })
 </script>
 
 <style scoped>
-.battle-info-section {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-.info-card {
+.battle-info {
   background: white;
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid #e5e7eb;
   padding: 24px;
   margin-bottom: 24px;
 }
 
-.card-header {
+.battle-info-main {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 16px;
 }
 
-.header-content {
+.battle-info-left {
   flex: 1;
 }
 
-.meta-badges {
+.tags {
   display: flex;
-  align-items: center;
   gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.tag-primary {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.tag-status {
+  font-weight: 600;
+}
+
+.status-draft {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.status-active {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.status-closed {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-early-closed {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #111827;
   margin-bottom: 8px;
 }
 
-.category-badge {
-  font-size: 12px;
-  font-weight: 500;
-  color: #6B7280;
-  padding: 4px 8px;
-  background: #F3F4F6;
-  border-radius: 4px;
-}
-
-.weighted-badge {
-  font-size: 12px;
-  font-weight: 500;
-  color: #2563EB;
-  padding: 4px 8px;
-  background: #DBEAFE;
-  border-radius: 4px;
-}
-
-.battle-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 8px 0;
-  line-height: 1.3;
-}
-
-.battle-desc {
+.description {
   font-size: 14px;
-  color: #6B7280;
-  margin: 0;
-  line-height: 1.4;
+  color: #6b7280;
+  line-height: 1.5;
 }
 
-.stats-group {
+.battle-stats {
   display: flex;
-  align-items: center;
   gap: 24px;
   margin-left: 24px;
-  flex-shrink: 0;
 }
 
-.stat-box {
+.stat {
   text-align: center;
 }
 
-.stat-number {
-  font-size: 20px;
-  font-weight: 700;
+.stat-value {
+  font-size: 18px;
+  font-weight: bold;
   color: #111827;
 }
 
-.stat-text {
+.stat-label {
   font-size: 12px;
-  color: #6B7280;
+  color: #6b7280;
   margin-top: 2px;
 }
 
-.add-btn {
+.btn-add-product {
   width: 100%;
   padding: 12px;
-  border: 2px dashed #D1D5DB;
+  border: 2px dashed #d1d5db;
   border-radius: 8px;
-  background: transparent;
-  color: #6B7280;
+  background: white;
   font-size: 14px;
   font-weight: 600;
+  color: #6b7280;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
   font-family: inherit;
 }
 
-.add-btn:hover {
-  border-color: #3B82F6;
-  color: #2563EB;
-  background: #EFF6FF;
+.btn-add-product:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.icon {
+  font-size: 16px;
+  line-height: 1;
 }
 
 @media (max-width: 768px) {
-  .battle-info-section {
-    padding: 16px;
-  }
-
-  .card-header {
+  .battle-info-main {
     flex-direction: column;
+    gap: 16px;
   }
 
-  .stats-group {
+  .battle-stats {
     margin-left: 0;
-    margin-top: 16px;
-    width: 100%;
-    justify-content: flex-start;
   }
 
-  .battle-title {
+  .title {
     font-size: 20px;
   }
 }

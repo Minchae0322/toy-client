@@ -1,70 +1,67 @@
 <template>
-  <div :class="['product-card', { 'is-selected': isSelected }]">
-    <!-- Image Section with Rank Badge -->
-    <div class="image-section">
-      <div :class="['rank-badge', getRankBadgeClass]">
-        {{ rank }}
+  <div :class="['product-card', { 'selected': productRank !== null }]">
+    <!-- Rank Badge -->
+    <div class="product-image-wrapper">
+      <div :class="['product-rank-badge', `rank-${displayRank}`]">
+        {{ displayRank }}
       </div>
 
-      <div class="product-img-wrapper">
+      <!-- Product Image -->
+      <div class="product-image">
         <img
-            v-if="product.imageUrl"
-            :src="product.imageUrl"
-            :alt="product.name"
-            class="product-img"
+            :src="itemImage"
+            :alt="itemName"
+            @error="handleImageError"
         />
-        <div v-else class="img-placeholder">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-        </div>
       </div>
     </div>
 
-    <!-- Info Section -->
-    <div class="info-section">
-      <h3 class="product-title">{{ product.name }}</h3>
-      <p class="product-brand">{{ product.brand }}</p>
+    <!-- Product Info -->
+    <div class="product-content">
+      <h3 class="product-name">{{ itemName }}</h3>
+      <p class="product-brand">{{ itemBrand }}</p>
 
-      <!-- Score Section -->
-      <div class="score-section">
-        <div class="score-main">
-          <span class="score-num">{{ product.totalWeightedScore.toLocaleString() }}</span>
-          <span class="score-label">점</span>
+      <!-- Score -->
+      <div class="product-score">
+        <div class="score-number">
+          <span class="score-value">{{ item.totalScore || 0 }}</span>
+          <span class="score-unit">{{ isWeightedVote ? '점' : '표' }}</span>
         </div>
-
         <div class="score-bar-wrapper">
-          <div class="score-bar-bg">
-            <div
-                class="score-bar-fill"
-                :style="{ width: product.percentage + '%' }"
-            />
+          <div class="score-bar">
+            <div class="score-fill" :style="{ width: `${percentage}%` }"></div>
           </div>
-          <span class="score-percent">{{ product.percentage }}%</span>
+          <span class="score-percent">{{ percentage }}%</span>
         </div>
       </div>
 
+      <!-- Previous Vote Badge -->
+      <div v-if="item.userBattleVote" class="previous-vote-badge">
+        <span class="vote-icon">✓</span>
+        <span v-if="isWeightedVote">이전 투표: {{ item.userBattleVote.rank }}위</span>
+        <span v-else>내 투표</span>
+      </div>
+
       <!-- Vote Buttons -->
-      <div v-if="!hasVoted && battleStatus === 'ACTIVE'" class="vote-section">
-        <div v-if="isWeighted" class="weighted-btns">
+      <div v-if="canVote" class="vote-buttons">
+        <div v-if="isWeightedVote" class="vote-buttons-weighted">
           <button
               v-for="r in [1, 2, 3]"
               :key="r"
-              @click="$emit('vote', product.id, r)"
-              :class="['rank-btn', { 'is-active': productRank === r, [`rank-${r}`]: productRank === r }]"
+              @click="$emit('vote', item.id, r)"
+              :disabled="submitting"
+              :class="['btn-vote-rank', { 'active': productRank === r }, `rank-${r}`]"
           >
             {{ r }}위 선택
           </button>
         </div>
-
         <button
             v-else
-            @click="$emit('vote', product.id, 1)"
-            :class="['simple-btn', { 'is-active': isSelected }]"
+            @click="$emit('vote', item.id, 1)"
+            :disabled="submitting"
+            :class="['btn-vote-simple', { 'active': productRank !== null }]"
         >
-          {{ isSelected ? '✓ 선택됨' : '투표하기' }}
+          {{ productRank !== null ? '✓ 선택됨' : '투표하기' }}
         </button>
       </div>
     </div>
@@ -75,71 +72,81 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  product: {
+  item: {
     type: Object,
     required: true
   },
-  rank: {
+  displayRank: {
     type: Number,
-    required: true
-  },
-  isSelected: {
-    type: Boolean,
     required: true
   },
   productRank: {
     type: Number,
     default: null
   },
-  isWeighted: {
+  isWeightedVote: {
     type: Boolean,
     required: true
   },
-  hasVoted: {
+  canVote: {
     type: Boolean,
     required: true
   },
-  battleStatus: {
-    type: String,
+  submitting: {
+    type: Boolean,
+    default: false
+  },
+  percentage: {
+    type: [Number, String],
     required: true
   }
 })
 
 defineEmits(['vote'])
 
-const getRankBadgeClass = computed(() => {
-  if (props.rank === 1) return 'gold'
-  if (props.rank === 2) return 'silver'
-  if (props.rank === 3) return 'bronze'
-  return 'default'
+const itemName = computed(() => {
+  return props.item.battleItemProduct?.name || props.item.customName || '제품명 없음'
 })
+
+const itemBrand = computed(() => {
+  return props.item.battleItemProduct?.brand || props.item.customBrand || ''
+})
+
+const itemImage = computed(() => {
+  return props.item.battleItemProduct?.thumbnailDto?.storedPath ||
+      props.item.customImageUrl ||
+      'https://placehold.co/400x400?text=No+Image'
+})
+
+const handleImageError = (e) => {
+  e.target.src = 'https://placehold.co/400x400?text=No+Image'
+}
 </script>
 
 <style scoped>
 .product-card {
   background: white;
   border-radius: 12px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid #e5e7eb;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .product-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  border-color: #D1D5DB;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
 }
 
-.product-card.is-selected {
-  border-color: #3B82F6;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+.product-card.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
 }
 
-/* Image Section */
-.image-section {
+.product-image-wrapper {
   position: relative;
 }
 
-.rank-badge {
+.product-rank-badge {
   position: absolute;
   top: 12px;
   left: 12px;
@@ -151,103 +158,92 @@ const getRankBadgeClass = computed(() => {
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-weight: bold;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.rank-badge.gold {
-  background: linear-gradient(to bottom right, #FBBF24, #F59E0B);
+.product-rank-badge.rank-1 {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   color: white;
 }
 
-.rank-badge.silver {
-  background: linear-gradient(to bottom right, #D1D5DB, #9CA3AF);
+.product-rank-badge.rank-2 {
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
   color: white;
 }
 
-.rank-badge.bronze {
-  background: linear-gradient(to bottom right, #FB923C, #F97316);
+.product-rank-badge.rank-3 {
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
   color: white;
 }
 
-.rank-badge.default {
+.product-rank-badge:not(.rank-1):not(.rank-2):not(.rank-3) {
   background: white;
   color: #374151;
-  border: 2px solid #E5E7EB;
+  border: 2px solid #e5e7eb;
 }
 
-.product-img-wrapper {
+.product-image {
   aspect-ratio: 1;
-  background: #F3F4F6;
+  background-color: #f3f4f6;
   overflow: hidden;
 }
 
-.product-img {
+.product-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s;
 }
 
-.product-card:hover .product-img {
+.product-card:hover .product-image img {
   transform: scale(1.05);
 }
 
-.img-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #F9FAFB;
-}
-
-/* Info Section */
-.info-section {
+.product-content {
   padding: 16px;
 }
 
-.product-title {
+.product-name {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: bold;
   color: #111827;
-  margin: 0 0 4px 0;
-  line-height: 1.3;
+  margin-bottom: 4px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.4;
 }
 
 .product-brand {
   font-size: 14px;
-  color: #6B7280;
-  margin: 0 0 12px 0;
+  color: #6b7280;
+  margin-bottom: 12px;
 }
 
-/* Score Section */
-.score-section {
-  padding-bottom: 16px;
+.product-score {
   margin-bottom: 16px;
-  border-bottom: 1px solid #F3F4F6;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.score-main {
+.score-number {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
-.score-num {
+.score-value {
   font-size: 24px;
-  font-weight: 700;
+  font-weight: bold;
   color: #111827;
 }
 
-.score-label {
+.score-unit {
   font-size: 14px;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .score-bar-wrapper {
@@ -256,95 +252,122 @@ const getRankBadgeClass = computed(() => {
   gap: 8px;
 }
 
-.score-bar-bg {
+.score-bar {
   flex: 1;
   height: 6px;
-  background: #F3F4F6;
+  background-color: #f3f4f6;
   border-radius: 999px;
   overflow: hidden;
 }
 
-.score-bar-fill {
+.score-fill {
   height: 100%;
-  background: linear-gradient(to right, #3B82F6, #2563EB);
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
   border-radius: 999px;
-  transition: width 0.3s ease;
+  transition: width 0.3s;
 }
 
 .score-percent {
   font-size: 12px;
   font-weight: 600;
-  color: #2563EB;
+  color: #2563eb;
 }
 
-/* Vote Section */
-.vote-section {
+.previous-vote-badge {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background-color: #dbeafe;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d4ed8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.previous-vote-badge .vote-icon {
+  font-size: 12px;
+}
+
+.vote-buttons {
   margin-top: 8px;
 }
 
-.weighted-btns {
+.vote-buttons-weighted {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-.rank-btn {
-  padding: 8px 4px;
+.btn-vote-rank {
+  padding: 8px;
   border: none;
-  background: #F3F4F6;
-  color: #6B7280;
   border-radius: 8px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: bold;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s;
+  background-color: #f3f4f6;
+  color: #6b7280;
   font-family: inherit;
 }
 
-.rank-btn:hover {
-  background: #E5E7EB;
+.btn-vote-rank:hover:not(:disabled) {
+  background-color: #e5e7eb;
 }
 
-.rank-btn.is-active.rank-1 {
-  background: #FBBF24;
+.btn-vote-rank:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-vote-rank.active.rank-1 {
+  background-color: #fbbf24;
   color: white;
-  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
 }
 
-.rank-btn.is-active.rank-2 {
-  background: #9CA3AF;
+.btn-vote-rank.active.rank-2 {
+  background-color: #9ca3af;
   color: white;
-  box-shadow: 0 2px 8px rgba(156, 163, 175, 0.4);
+  box-shadow: 0 2px 4px rgba(156, 163, 175, 0.3);
 }
 
-.rank-btn.is-active.rank-3 {
-  background: #FB923C;
+.btn-vote-rank.active.rank-3 {
+  background-color: #fb923c;
   color: white;
-  box-shadow: 0 2px 8px rgba(251, 146, 60, 0.4);
+  box-shadow: 0 2px 4px rgba(251, 146, 60, 0.3);
 }
 
-.simple-btn {
+.btn-vote-simple {
   width: 100%;
   padding: 10px;
   border: none;
-  background: #F3F4F6;
-  color: #374151;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: bold;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s;
+  background-color: #f3f4f6;
+  color: #374151;
   font-family: inherit;
 }
 
-.simple-btn:hover {
-  background: #EFF6FF;
-  color: #2563EB;
+.btn-vote-simple:hover:not(:disabled) {
+  background-color: #eff6ff;
+  color: #2563eb;
 }
 
-.simple-btn.is-active {
-  background: #2563EB;
+.btn-vote-simple:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-vote-simple.active {
+  background-color: #3b82f6;
   color: white;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 </style>

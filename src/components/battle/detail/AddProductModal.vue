@@ -1,78 +1,74 @@
 <template>
-  <div class="modal-backdrop" @click.self="$emit('close')">
-    <div class="modal-box">
-      <!-- Header -->
-      <div class="modal-head">
-        <h2 class="modal-heading">제품 추가하기</h2>
-        <button @click="$emit('close')" class="close-x">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12"/>
-          </svg>
+  <div class="modal-overlay" @click.self="$emit('close')">
+    <div class="modal">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h2 class="modal-title">제품 추가하기</h2>
+        <button @click="$emit('close')" class="btn-close">
+          <span class="icon">×</span>
         </button>
       </div>
 
-      <!-- Body -->
-      <div class="modal-main">
+      <!-- Modal Body -->
+      <div class="modal-body">
         <!-- Image Upload -->
         <div class="form-group">
-          <label class="group-label">제품 사진 *</label>
-
-          <div v-if="newProduct.imagePreview" class="preview-box">
-            <img :src="newProduct.imagePreview" alt="미리보기" class="preview-img" />
-            <button @click="$emit('clear-image')" class="remove-x">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12"/>
-              </svg>
-            </button>
+          <label class="form-label">제품 사진 *</label>
+          <div class="image-upload">
+            <div v-if="imagePreview" class="image-preview">
+              <img :src="imagePreview" alt="Preview" />
+              <button @click="$emit('clear-image')" class="btn-remove-image">
+                <span class="icon">×</span>
+              </button>
+            </div>
+            <label v-else class="image-upload-label">
+              <span class="icon upload-icon">⬆</span>
+              <span class="upload-text">사진 업로드</span>
+              <span class="upload-hint">클릭하여 선택</span>
+              <input
+                  type="file"
+                  accept="image/*"
+                  @change="handleImageChange"
+                  style="display: none"
+              />
+            </label>
           </div>
-
-          <label v-else class="upload-box">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-            </svg>
-            <span class="upload-main">사진 업로드</span>
-            <span class="upload-sub">클릭하여 선택</span>
-            <input
-                type="file"
-                accept="image/*"
-                @change="$emit('update:image', $event)"
-                class="hidden-file"
-            />
-          </label>
         </div>
 
         <!-- Product Name -->
         <div class="form-group">
-          <label class="group-label">제품명 *</label>
+          <label class="form-label">제품명 *</label>
           <input
-              type="text"
-              :value="newProduct.name"
+              :value="name"
               @input="$emit('update:name', $event.target.value)"
+              type="text"
               placeholder="예: AirPods Pro 2"
-              class="text-field"
+              maxlength="30"
+              class="form-input"
           />
         </div>
 
         <!-- Brand -->
         <div class="form-group">
-          <label class="group-label">브랜드 *</label>
+          <label class="form-label">브랜드 *</label>
           <input
-              type="text"
-              :value="newProduct.brand"
+              :value="brand"
               @input="$emit('update:brand', $event.target.value)"
+              type="text"
               placeholder="예: Apple"
-              class="text-field"
+              maxlength="20"
+              class="form-input"
           />
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="modal-foot">
-        <button @click="$emit('close')" class="cancel-btn">
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button @click="$emit('close')" class="btn-cancel">
           취소
         </button>
-        <button @click="$emit('submit')" class="submit-btn">
-          제품 등록
+        <button @click="$emit('submit')" :disabled="submitting" class="btn-confirm">
+          {{ submitting ? '등록 중...' : '제품 등록' }}
         </button>
       </div>
     </div>
@@ -81,20 +77,36 @@
 
 <script setup>
 defineProps({
-  newProduct: {
-    type: Object,
-    required: true
+  imagePreview: {
+    type: String,
+    default: null
+  },
+  name: {
+    type: String,
+    default: ''
+  },
+  brand: {
+    type: String,
+    default: ''
+  },
+  submitting: {
+    type: Boolean,
+    default: false
   }
 })
 
-defineEmits(['close', 'update:image', 'clear-image', 'update:name', 'update:brand', 'submit'])
+const emit = defineEmits(['close', 'update:image', 'clear-image', 'update:name', 'update:brand', 'submit'])
+
+const handleImageChange = (e) => {
+  emit('update:image', e)
+}
 </script>
 
 <style scoped>
-.modal-backdrop {
+.modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -102,7 +114,7 @@ defineEmits(['close', 'update:image', 'clear-image', 'update:name', 'update:bran
   padding: 16px;
 }
 
-.modal-box {
+.modal {
   background: white;
   border-radius: 16px;
   max-width: 512px;
@@ -111,73 +123,91 @@ defineEmits(['close', 'update:image', 'clear-image', 'update:name', 'update:bran
   overflow-y: auto;
 }
 
-.modal-head {
+.modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.modal-heading {
+.modal-title {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: bold;
   color: #111827;
-  margin: 0;
 }
 
-.close-x {
+.btn-close {
   padding: 8px;
-  background: transparent;
   border: none;
+  background: none;
   cursor: pointer;
-  color: #6B7280;
   border-radius: 8px;
-  transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: background-color 0.2s;
 }
 
-.close-x:hover {
-  background: #F3F4F6;
+.btn-close:hover {
+  background-color: #f3f4f6;
 }
 
-.modal-main {
+.btn-close .icon {
+  font-size: 20px;
+  color: #6b7280;
+}
+
+.modal-body {
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
-.form-group:last-child {
-  margin-bottom: 0;
-}
-
-.group-label {
-  display: block;
+.form-label {
   font-size: 14px;
   font-weight: 600;
   color: #374151;
   margin-bottom: 8px;
 }
 
-.preview-box {
+.form-input {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.image-upload {
+  position: relative;
+}
+
+.image-preview {
   position: relative;
   aspect-ratio: 1;
   border-radius: 8px;
   overflow: hidden;
-  border: 2px solid #E5E7EB;
+  border: 2px solid #e5e7eb;
 }
 
-.preview-img {
+.image-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.remove-x {
+.btn-remove-image {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -186,113 +216,103 @@ defineEmits(['close', 'update:image', 'clear-image', 'update:name', 'update:bran
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  color: #6B7280;
-  transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.remove-x:hover {
-  background: #F3F4F6;
+.btn-remove-image:hover {
+  background-color: #f3f4f6;
 }
 
-.upload-box {
+.btn-remove-image .icon {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.image-upload-label {
   aspect-ratio: 1;
-  border: 2px dashed #D1D5DB;
+  border: 2px dashed #d1d5db;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #9CA3AF;
+  transition: all 0.2s;
 }
 
-.upload-box:hover {
-  border-color: #3B82F6;
-  background: #EFF6FF;
-  color: #2563EB;
+.image-upload-label:hover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
 }
 
-.upload-main {
+.upload-icon {
+  font-size: 32px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.upload-text {
   font-size: 14px;
   font-weight: 500;
-  margin-top: 8px;
+  color: #6b7280;
 }
 
-.upload-sub {
+.upload-hint {
   font-size: 12px;
+  color: #9ca3af;
   margin-top: 4px;
 }
 
-.hidden-file {
-  display: none;
-}
-
-.text-field {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #111827;
-  transition: all 0.15s ease;
-  font-family: inherit;
-}
-
-.text-field:focus {
-  outline: none;
-  border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.text-field::placeholder {
-  color: #9CA3AF;
-}
-
-.modal-foot {
+.modal-footer {
   padding: 16px 24px;
-  border-top: 1px solid #E5E7EB;
+  border-top: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
 }
 
-.cancel-btn {
+.btn-cancel {
   padding: 10px 20px;
-  border: 1px solid #D1D5DB;
-  background: white;
-  color: #374151;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
+  background: white;
   font-size: 14px;
   font-weight: 600;
+  color: #374151;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.2s;
   font-family: inherit;
 }
 
-.cancel-btn:hover {
-  background: #F9FAFB;
+.btn-cancel:hover {
+  background-color: #f3f4f6;
 }
 
-.submit-btn {
+.btn-confirm {
   padding: 10px 20px;
-  background: #2563EB;
-  color: white;
+  background-color: #3b82f6;
   border: none;
   border-radius: 8px;
+  color: white;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: bold;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.2s;
   font-family: inherit;
 }
 
-.submit-btn:hover {
-  background: #1D4ED8;
+.btn-confirm:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.btn-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.icon {
+  font-size: 16px;
+  line-height: 1;
 }
 </style>
