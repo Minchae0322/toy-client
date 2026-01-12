@@ -102,8 +102,12 @@ class AuthService extends BaseApiService {
       const refreshTokenValue = authUtils.getRefreshToken()
 
       if (refreshTokenValue) {
+        // retryOnAuth: false - accessToken이 만료되어도 토큰 갱신 시도하지 않음
+        // 로그아웃은 토큰 상태와 관계없이 항상 성공해야 함
         await this.post('/auth/logout', {
           refreshToken: refreshTokenValue
+        }, {
+          retryOnAuth: false
         })
         console.log('✅ [AUTH] 백엔드 로그아웃 완료')
       }
