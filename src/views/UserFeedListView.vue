@@ -116,9 +116,14 @@ const loadUserFeeds = async () => {
         if (feed.userReactions?.hasLike) likedPosts.value.add(feed.feedId);
         if (feed.userReactions?.hasHot) hotPosts.value.add(feed.feedId);
       });
+    } else {
+      // API 실패 시 더 이상 호출하지 않도록 설정
+      hasNext.value = false;
     }
   } catch (error) {
     console.error('❌ 사용자 피드 로드 실패:', error);
+    // 에러 발생 시 무한 스크롤 중단
+    hasNext.value = false;
   } finally {
     loading.value = false;
   }

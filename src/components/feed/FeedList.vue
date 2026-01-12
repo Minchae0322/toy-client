@@ -14,8 +14,23 @@
       </div>
     </header>
 
+    <!-- Empty State -->
+    <div v-if="!loading && feeds.length === 0" class="feed-empty-state">
+      <div class="empty-illustration">
+        <div class="illustration-circle circle-1"></div>
+        <div class="illustration-circle circle-2"></div>
+        <svg class="illustration-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+        </svg>
+      </div>
+      <div class="empty-content">
+        <h3 class="empty-title">아직 게시물이 없습니다</h3>
+        <p class="empty-description">첫 번째 리뷰를 작성해 보세요!</p>
+      </div>
+    </div>
+
     <!-- Feed Grid View -->
-    <div v-if="viewMode === 'feed'" class="modern-grid">
+    <div v-else-if="viewMode === 'feed'" class="modern-grid">
       <!-- 스켈레톤: 초기 로딩 -->
       <template v-if="loading && feeds.length === 0">
         <article v-for="n in 12" :key="'skeleton-' + n" class="skeleton-card">
@@ -71,7 +86,7 @@
     </div>
 
     <!-- List View -->
-    <div v-else class="list-view">
+    <div v-else-if="viewMode === 'list'" class="list-view">
       <!-- 스켈레톤: 초기 로딩 -->
       <template v-if="loading && feeds.length === 0">
         <article v-for="n in 8" :key="'skeleton-list-' + n" class="list-item skeleton-list-item">
@@ -141,13 +156,9 @@
       </template>
     </div>
 
-    <!-- Loading & Empty States -->
+    <!-- Loading Indicator & Infinite Scroll Target -->
     <div ref="observerTarget" class="scroll-status">
       <span v-if="loading && feeds.length > 0" class="loader"></span>
-      <div v-else-if="!loading && feeds.length === 0" class="empty-state">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-        <span>아직 게시물이 없습니다</span>
-      </div>
     </div>
   </section>
 </template>
@@ -547,15 +558,82 @@ defineExpose({ observerTarget });
   flex-shrink: 0;
 }
 
-.empty-state {
+/* Feed Empty State */
+.feed-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  color: #a1a1aa;
-  font-size: 14px;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+  min-height: 400px;
 }
-.empty-state svg { width: 40px; height: 40px; }
+
+.feed-empty-state .empty-illustration {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feed-empty-state .illustration-circle {
+  position: absolute;
+  border-radius: 50%;
+  animation: empty-pulse 3s ease-in-out infinite;
+}
+
+.feed-empty-state .circle-1 {
+  width: 140px;
+  height: 140px;
+  background: linear-gradient(135deg, rgba(153, 147, 234, 0.15) 0%, rgba(153, 147, 234, 0.05) 100%);
+  animation-delay: 0s;
+}
+
+.feed-empty-state .circle-2 {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, rgba(153, 147, 234, 0.2) 0%, rgba(153, 147, 234, 0.1) 100%);
+  animation-delay: 0.5s;
+}
+
+.feed-empty-state .illustration-icon {
+  width: 56px;
+  height: 56px;
+  color: #9993ea;
+  z-index: 1;
+}
+
+@keyframes empty-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.7;
+  }
+}
+
+.feed-empty-state .empty-content {
+  max-width: 300px;
+}
+
+.feed-empty-state .empty-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #18181b;
+  margin: 0 0 8px 0;
+}
+
+.feed-empty-state .empty-description {
+  font-size: 14px;
+  color: #71717a;
+  line-height: 1.5;
+  margin: 0;
+}
 
 /* Mobile: 인스타/스레드 스타일 (경계선만 있는 형태) */
 @media (max-width: 768px) {
@@ -574,6 +652,35 @@ defineExpose({ observerTarget });
   }
   .main-title { font-size: 20px; }
   .sub-title { font-size: 12px; }
+
+  /* 모바일 Empty State */
+  .feed-empty-state {
+    padding: 60px 24px;
+    min-height: 300px;
+  }
+  .feed-empty-state .empty-illustration {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
+  }
+  .feed-empty-state .circle-1 {
+    width: 100px;
+    height: 100px;
+  }
+  .feed-empty-state .circle-2 {
+    width: 70px;
+    height: 70px;
+  }
+  .feed-empty-state .illustration-icon {
+    width: 40px;
+    height: 40px;
+  }
+  .feed-empty-state .empty-title {
+    font-size: 17px;
+  }
+  .feed-empty-state .empty-description {
+    font-size: 13px;
+  }
 
   /* 그리드 뷰: 간격 제거, 전체 너비 */
   .modern-grid {
