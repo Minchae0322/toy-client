@@ -18,6 +18,7 @@
                   class="search-input"
                   placeholder="제품명이나 브랜드를 검색해보세요..."
                   @input="handleSearch"
+                  @keydown="handleSearchKeydown"
               >
               <button
                   v-if="searchQuery"
@@ -27,9 +28,26 @@
                 ×
               </button>
             </div>
-            <!-- 로딩 인디케이터 -->
-            <div v-if="loading" class="loading-indicator">
-              <span>검색 중...</span>
+            <!-- 검색 상태 피드백 -->
+            <div class="search-feedback">
+              <!-- 타이핑 중 -->
+              <div v-if="isTyping && searchQuery.length >= 2" class="feedback-typing">
+                <span class="typing-dots"></span>
+                <span>입력 중...</span>
+              </div>
+              <!-- 최소 글자 수 안내 -->
+              <div v-else-if="searchQuery.length > 0 && searchQuery.length < 2" class="feedback-hint">
+                <span>2글자 이상 입력해주세요</span>
+              </div>
+              <!-- 로딩 중 -->
+              <div v-else-if="loading" class="feedback-loading">
+                <span class="loading-spinner"></span>
+                <span>검색 중...</span>
+              </div>
+              <!-- 엔터키 힌트 -->
+              <div v-else-if="searchQuery.length >= 2 && !loading" class="feedback-enter-hint">
+                <span>Enter로 즉시 검색</span>
+              </div>
             </div>
           </div>
 
@@ -227,6 +245,7 @@ const tempSelectedItems = ref([]);
 const products = ref([]);
 const loading = ref(false);
 const uploadingImage = ref(false);
+const isTyping = ref(false); // 타이핑 중 상태
 
 const newItem = ref({
   productId: null,
@@ -276,9 +295,31 @@ const handleSearch = () => {
     clearTimeout(searchTimeout);
   }
 
+  // 타이핑 시작 표시
+  if (searchQuery.value.length > 0) {
+    isTyping.value = true;
+  } else {
+    isTyping.value = false;
+    products.value = [];
+    return;
+  }
+
+  // 500ms 디바운스 적용 - 사용자가 타이핑을 멈춘 후 검색
   searchTimeout = setTimeout(async () => {
+    isTyping.value = false;
     await performSearch();
-  }, 300);
+  }, 500);
+};
+
+// 엔터키로 즉시 검색
+const handleSearchKeydown = (event) => {
+  if (event.key === 'Enter') {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    isTyping.value = false;
+    performSearch();
+  }
 };
 
 const performSearch = async () => {
@@ -322,6 +363,7 @@ const performSearch = async () => {
 const clearSearch = () => {
   searchQuery.value = '';
   products.value = [];
+  isTyping.value = false;
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
@@ -467,6 +509,7 @@ const resetModal = () => {
   tempSelectedItems.value = [];
   searchQuery.value = '';
   products.value = [];
+  isTyping.value = false;
   resetNewItemForm();
 
   if (searchTimeout) {
@@ -625,6 +668,99 @@ watch(() => props.modelValue, (newVal) => {
 
 .search-clear:hover {
   background: #D1D5DB;
+}
+
+/* 검색 피드백 영역 */
+.search-feedback {
+  min-height: 28px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-typing,
+.feedback-hint,
+.feedback-loading,
+.feedback-enter-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 16px;
+}
+
+.feedback-typing {
+  color: #9333ea;
+  background: #f3e8ff;
+}
+
+.feedback-hint {
+  color: #f59e0b;
+  background: #fef3c7;
+}
+
+.feedback-loading {
+  color: #3b82f6;
+  background: #dbeafe;
+}
+
+.feedback-enter-hint {
+  color: #6b7280;
+  background: #f3f4f6;
+  font-size: 12px;
+}
+
+/* 타이핑 애니메이션 */
+.typing-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.typing-dots::before,
+.typing-dots::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #9333ea;
+  border-radius: 50%;
+  animation: typingBounce 1.2s infinite ease-in-out;
+}
+
+.typing-dots::before {
+  animation-delay: -0.4s;
+}
+
+.typing-dots::after {
+  animation-delay: 0s;
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 로딩 스피너 */
+.loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #dbeafe;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-indicator {
