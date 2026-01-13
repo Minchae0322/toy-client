@@ -169,7 +169,7 @@ const onVote = (rank) => {
 
 .rank-indicator {
   position: absolute;
-  top: 50px;
+  top: 12px;
   left: 12px;
   z-index: 10;
   width: 32px;
