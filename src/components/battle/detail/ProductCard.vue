@@ -127,6 +127,8 @@ const onVote = (rank) => {
   transition: all 0.25s ease;
   position: relative;
   border: 1.5px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-card-v1:hover {
@@ -234,6 +236,9 @@ const onVote = (rank) => {
 
 .info-box {
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .brand {
@@ -276,7 +281,8 @@ const onVote = (rank) => {
 }
 
 .vote-actions {
-  margin-top: 14px;
+  margin-top: auto;
+  padding-top: 14px;
 }
 
 /* 순위 선택 칩 */
