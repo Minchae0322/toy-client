@@ -488,7 +488,7 @@ const handleCreateBattle = () => {
 
 const handleVote = (battleId) => {
   if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '투표하려면 로그인해주세요.')
-  router.push(`/battle/${battleId}/vote`)
+  router.push(`/battles/${battleId}`)
 }
 
 const viewBattle = (battleId) => { router.push(`/battle/${battleId}`) }
