@@ -372,6 +372,26 @@ class ProductService extends BaseApiService {
   normalizeProduct(product) {
     if (!product) return null
 
+    // thumbnailUrl 매핑: attachmentFiles에서 첫 번째 이미지 URL 추출
+    if (!product.thumbnailUrl && product.attachmentFiles?.length > 0) {
+      product.thumbnailUrl = product.attachmentFiles[0].fileUrl
+    }
+
+    // category.name 매핑: categoryName을 name으로도 접근 가능하게
+    if (product.category && product.category.categoryName && !product.category.name) {
+      product.category.name = product.category.categoryName
+    }
+
+    // avgRating 매핑: averageRating을 avgRating으로도 접근 가능하게
+    if (product.averageRating !== undefined && product.avgRating === undefined) {
+      product.avgRating = product.averageRating
+    }
+
+    // tags 매핑: 배열을 세미콜론 구분 문자열로 변환 (parseTags 함수 호환)
+    if (Array.isArray(product.tags)) {
+      product.tags = product.tags.join(';')
+    }
+
     // popularityScore가 없으면 viewCount, likeCount, shareCount, reviewCount 기반으로 계산
     if (product.popularityScore === undefined || product.popularityScore === null) {
       const viewCount = product.viewCount || 0
