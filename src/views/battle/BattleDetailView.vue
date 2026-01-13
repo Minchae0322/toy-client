@@ -83,6 +83,7 @@
 <script>
 import { battleService } from '@/services/BattleService.js'
 import { fileService } from '@/services/FileService.js'
+import { getUserId } from '@/utils/auth.js'
 import ShareModal from '@/components/common/ShareModal.vue'
 import BattleInfoCard from '@/components/battle/detail/BattleInfoCard.vue'
 import VoteSelectionBar from '@/components/battle/detail/VoteSelectionBar.vue'
@@ -131,7 +132,7 @@ export default {
     },
     canUserAddItem() {
       if (!this.battle) return false
-      const userId = this.$store?.state?.auth?.user?.userId
+      const userId = getUserId()
       const status = this.battle.status?.title || this.battle.status
       const permissionType = this.battle.itemAddPermissionType?.code || this.battle.itemAddPermissionType
 
