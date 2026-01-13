@@ -135,8 +135,8 @@ export default {
       const status = this.battle.status?.title || this.battle.status
       const permissionType = this.battle.itemAddPermissionType?.code || this.battle.itemAddPermissionType
 
-      // 배틀이 ACTIVE 상태가 아니면 추가 불가
-      if (status !== 'ACTIVE') return false
+      // 배틀이 NORMAL 상태가 아니면 추가 불가
+      if (status !== 'NORMAL') return false
 
       // 로그인하지 않은 사용자는 추가 불가
       if (!userId) return false
