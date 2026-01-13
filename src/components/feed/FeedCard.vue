@@ -150,7 +150,12 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .eval-bad .eval-dot { background-color: #ef4444; }
 
 /* 콘텐츠 영역 */
-.post-content { padding: 22px; }
+.post-content {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  min-height: 220px; /* 최소 높이로 일관된 레이아웃 유지 */
+}
 
 .primary-review {
   font-size: 16.5px; font-weight: 600; color: #1a1a1b; line-height: 1.55; margin-bottom: 14px;
@@ -170,6 +175,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   border-radius: 16px;
   margin-bottom: 22px;
   border: 1px solid #f1f1f5;
+  margin-top: auto; /* 해시태그 유무와 상관없이 하단 고정 */
 }
 .product-details { flex: 1; padding-right: 12px; }
 .category-tag { font-size: 10px; font-weight: 800; color: #9333ea; text-transform: uppercase; margin-bottom: 3px; display: block; }
@@ -237,6 +243,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   /* 콘텐츠 영역 */
   .post-content {
     padding: 14px 16px 4px;
+    min-height: 180px; /* 모바일에서도 최소 높이 유지 */
   }
 
   .primary-review {
