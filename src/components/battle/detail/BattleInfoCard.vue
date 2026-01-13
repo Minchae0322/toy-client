@@ -36,7 +36,7 @@
 
     <!-- Add Product Button -->
     <button
-        v-if="canUserAddItem && !hasVoted"
+        v-if="canUserAddItem"
         @click="$emit('add-product')"
         class="add-product-btn"
     >
@@ -60,10 +60,6 @@ const props = defineProps({
     required: true
   },
   canUserAddItem: {
-    type: Boolean,
-    required: true
-  },
-  hasVoted: {
     type: Boolean,
     required: true
   }

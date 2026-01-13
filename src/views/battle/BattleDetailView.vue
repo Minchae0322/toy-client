@@ -20,7 +20,6 @@
             :battle="battle"
             :is-weighted-vote="isWeightedVote"
             :can-user-add-item="canUserAddItem"
-            :has-voted="hasVoted"
             @add-product="showAddModal = true"
             @back="goBack"
             @share="shareBattle"
@@ -136,10 +135,18 @@ export default {
       const status = this.battle.status?.title || this.battle.status
       const permissionType = this.battle.itemAddPermissionType?.code || this.battle.itemAddPermissionType
 
+      // 배틀이 ACTIVE 상태가 아니면 추가 불가
       if (status !== 'ACTIVE') return false
+
+      // 로그인하지 않은 사용자는 추가 불가
+      if (!userId) return false
+
+      // CREATOR_ONLY: 생성자만 추가 가능
       if (permissionType === 'CREATOR_ONLY') {
         return this.battle.creatorUserInfo?.userId === userId
       }
+
+      // PUBLIC_FREE, PUBLIC_APPROVAL: 로그인한 사용자 모두 추가 가능
       return true
     },
     sortedItems() {
