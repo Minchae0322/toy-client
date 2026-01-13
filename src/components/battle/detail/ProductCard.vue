@@ -97,7 +97,7 @@ const itemBrand = computed(() => {
 })
 
 const itemImage = computed(() => {
-  return props.item.battleItemProduct?.thumbnailDto?.storedPath ||
+  return props.item.battleItemProduct?.thumbnailDto?.fileUrl ||
       props.item.customImageUrl ||
       'https://placehold.co/400x400?text=No+Image'
 })
