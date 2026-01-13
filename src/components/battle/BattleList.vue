@@ -2,15 +2,37 @@
   <div class="battles-container">
     <!-- 로딩 스켈레톤 -->
     <div v-if="loading && battles.length === 0" class="battles-grid">
-      <div v-for="i in skeletonCount" :key="`skeleton-${i}`" class="skeleton-card">
-        <div class="skeleton-thumbnail"></div>
-        <div class="skeleton-content">
-          <div class="skeleton-line w-24"></div>
-          <div class="skeleton-line w-full"></div>
-          <div class="skeleton-line w-3/4"></div>
-          <div class="skeleton-line w-32 mt"></div>
+      <article v-for="i in skeletonCount" :key="`skeleton-${i}`" class="skeleton-card">
+        <!-- 썸네일 영역 -->
+        <div class="skeleton-thumbnail">
+          <div class="skeleton-image"></div>
+          <!-- 배지 영역 -->
+          <div class="skeleton-badges-top">
+            <span class="skeleton-badge"></span>
+            <span class="skeleton-badge small"></span>
+          </div>
+          <span class="skeleton-dday-badge"></span>
         </div>
-      </div>
+        <!-- 컨텐츠 영역 -->
+        <div class="skeleton-content">
+          <div class="skeleton-category"></div>
+          <div class="skeleton-title"></div>
+          <div class="skeleton-title short"></div>
+          <div class="skeleton-stats">
+            <span class="skeleton-stat"></span>
+            <span class="skeleton-stat"></span>
+            <span class="skeleton-stat"></span>
+          </div>
+          <!-- 푸터 영역 -->
+          <div class="skeleton-footer">
+            <div class="skeleton-creator">
+              <div class="skeleton-avatar"></div>
+              <div class="skeleton-creator-name"></div>
+            </div>
+            <div class="skeleton-action-hint"></div>
+          </div>
+        </div>
+      </article>
     </div>
 
     <!-- 빈 상태 -->
@@ -99,45 +121,153 @@ defineExpose({ observerTarget })
   grid-template-columns: 1fr;
 }
 
-/* 스켈레톤 */
+/* ===== 스켈레톤 애니메이션 ===== */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===== 스켈레톤 카드 (BattleCard와 동일한 레이아웃) ===== */
 .skeleton-card {
   background: #fff;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   border: 1px solid #f1f5f9;
+  pointer-events: none;
 }
 
+/* 썸네일 영역 - BattleCard .card-thumbnail과 동일 */
 .skeleton-thumbnail {
+  position: relative;
   aspect-ratio: 16/10;
-  background: linear-gradient(90deg, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  background: #f8fafc;
+  overflow: hidden;
 }
 
-.skeleton-content {
-  padding: 16px;
+.skeleton-image {
+  width: 100%;
+  height: 100%;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 배지 영역 - BattleCard .badges-top과 동일 */
+.skeleton-badges-top {
+  position: absolute;
+  top: 8px;
+  left: 8px;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
-.skeleton-line {
-  height: 12px;
-  background: linear-gradient(90deg, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+.skeleton-badge {
+  width: 45px;
+  height: 18px;
+  background-color: rgba(229, 231, 235, 0.8);
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
 }
 
-.skeleton-line.w-24 { width: 96px; }
-.skeleton-line.w-full { width: 100%; }
-.skeleton-line.w-3\/4 { width: 75%; }
-.skeleton-line.w-32 { width: 128px; }
-.skeleton-line.mt { margin-top: 4px; }
+.skeleton-badge.small {
+  width: 30px;
+}
 
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+.skeleton-dday-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 35px;
+  height: 18px;
+  background-color: rgba(229, 231, 235, 0.8);
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 4px;
+}
+
+/* 컨텐츠 영역 - BattleCard .card-content와 동일 */
+.skeleton-content {
+  padding: 16px;
+}
+
+.skeleton-category {
+  width: 50px;
+  height: 11px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.skeleton-title {
+  width: 100%;
+  height: 15px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.skeleton-title.short {
+  width: 70%;
+  margin-bottom: 10px;
+}
+
+/* 통계 영역 - BattleCard .stats와 동일 */
+.skeleton-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.skeleton-stat {
+  width: 55px;
+  height: 11px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 4px;
+}
+
+.skeleton-stat:nth-child(2) { width: 50px; }
+.skeleton-stat:nth-child(3) { width: 45px; }
+
+/* 푸터 영역 - BattleCard .card-footer와 동일 */
+.skeleton-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.skeleton-creator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skeleton-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  flex-shrink: 0;
+}
+
+.skeleton-creator-name {
+  width: 50px;
+  height: 11px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 4px;
+}
+
+.skeleton-action-hint {
+  width: 60px;
+  height: 11px;
+  background-color: #e5e7eb;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 4px;
 }
 
 /* 빈 상태 */
@@ -225,11 +355,20 @@ defineExpose({ observerTarget })
   transition: transform 0.3s ease;
 }
 
+/* 접근성: 모션 감소 선호 시 */
 @media (prefers-reduced-motion: reduce) {
-  .skeleton-thumbnail,
-  .skeleton-line,
+  .skeleton-image,
+  .skeleton-badge,
+  .skeleton-dday-badge,
+  .skeleton-category,
+  .skeleton-title,
+  .skeleton-stat,
+  .skeleton-avatar,
+  .skeleton-creator-name,
+  .skeleton-action-hint,
   .spinner {
     animation: none;
+    background-color: #e5e7eb;
   }
 
   .card-enter-active,
@@ -244,6 +383,88 @@ defineExpose({ observerTarget })
   .battles-grid.view-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
+  }
+
+  /* 모바일 스켈레톤 - BattleCard 모바일과 동일 */
+  .skeleton-card {
+    border-radius: 12px;
+  }
+
+  .skeleton-thumbnail {
+    aspect-ratio: 4/3;
+  }
+
+  .skeleton-badges-top {
+    top: 6px;
+    left: 6px;
+    gap: 3px;
+  }
+
+  .skeleton-badge {
+    width: 35px;
+    height: 15px;
+  }
+
+  .skeleton-badge.small {
+    width: 25px;
+  }
+
+  .skeleton-dday-badge {
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 15px;
+  }
+
+  .skeleton-content {
+    padding: 10px;
+  }
+
+  .skeleton-category {
+    width: 40px;
+    height: 10px;
+    margin-bottom: 4px;
+  }
+
+  .skeleton-title {
+    height: 12px;
+    margin-bottom: 4px;
+  }
+
+  .skeleton-title.short {
+    width: 60%;
+    margin-bottom: 6px;
+  }
+
+  .skeleton-stats {
+    gap: 6px;
+  }
+
+  .skeleton-stat {
+    width: 45px;
+    height: 10px;
+  }
+
+  .skeleton-stat:nth-child(2) { width: 40px; }
+  .skeleton-stat:nth-child(3) { width: 35px; }
+
+  .skeleton-footer {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .skeleton-avatar {
+    width: 16px;
+    height: 16px;
+  }
+
+  .skeleton-creator-name {
+    width: 40px;
+    height: 10px;
+  }
+
+  .skeleton-action-hint {
+    display: none;
   }
 }
 </style>
