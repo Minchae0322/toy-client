@@ -26,10 +26,12 @@
         <span class="quote">“</span>{{ feed.reviewSummary }}<span class="quote">”</span>
       </p>
 
-      <div v-if="feed.hashtags?.length" class="hashtag-group">
-        <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="tag-item">
-          #{{ tag }}
-        </span>
+      <div class="hashtag-group">
+        <template v-if="feed.hashtags?.length">
+          <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="tag-item">
+            #{{ tag }}
+          </span>
+        </template>
       </div>
 
       <div class="product-info-box">
@@ -152,9 +154,6 @@ const formatDate = (date) => feedUtils.formatDate(date);
 /* 콘텐츠 영역 */
 .post-content {
   padding: 22px;
-  display: flex;
-  flex-direction: column;
-  min-height: 220px; /* 최소 높이로 일관된 레이아웃 유지 */
 }
 
 .primary-review {
@@ -163,7 +162,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 }
 .quote { color: #9993ea; font-size: 18px; font-family: serif; margin-right: 2px; }
 
-.hashtag-group { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.hashtag-group { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; min-height: 18px; }
 .tag-item { font-size: 12px; color: #6b6b72; font-weight: 500; }
 
 /* [수정] 제품 정보 섹션: 가로 확장 및 배치 최적화 */
@@ -175,7 +174,6 @@ const formatDate = (date) => feedUtils.formatDate(date);
   border-radius: 16px;
   margin-bottom: 22px;
   border: 1px solid #f1f1f5;
-  margin-top: auto; /* 해시태그 유무와 상관없이 하단 고정 */
 }
 .product-details { flex: 1; padding-right: 12px; }
 .category-tag { font-size: 10px; font-weight: 800; color: #9333ea; text-transform: uppercase; margin-bottom: 3px; display: block; }
@@ -243,7 +241,6 @@ const formatDate = (date) => feedUtils.formatDate(date);
   /* 콘텐츠 영역 */
   .post-content {
     padding: 14px 16px 4px;
-    min-height: 180px; /* 모바일에서도 최소 높이 유지 */
   }
 
   .primary-review {
@@ -258,6 +255,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   .hashtag-group {
     margin-bottom: 12px;
     gap: 6px;
+    min-height: 16px;
   }
   .tag-item {
     font-size: 11px;
