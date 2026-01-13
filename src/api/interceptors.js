@@ -84,29 +84,6 @@ const handleLogout = async (reason = 'Token expired') => {
 }
 
 /**
- * OAuth 사용자인지 확인
- */
-const isOAuthUser = () => {
-  const userInfo = authUtils.getUserInfo()
-  return userInfo?.provider && userInfo.provider !== 'local'
-}
-
-/**
- * AccessToken이 최근 발급되었는지 확인 (1시간 이내)
- */
-const isRecentlyIssuedToken = () => {
-  const accessToken = authUtils.getAccessToken()
-  if (!accessToken) return false
-
-  const payload = authUtils.parseJwtToken(accessToken)
-  if (!payload?.iat) return false
-
-  const tokenAge = Date.now() / 1000 - payload.iat
-  const oneHour = 60 * 60
-  return tokenAge < oneHour
-}
-
-/**
  * /reissue API를 통한 토큰 갱신 (HttpOnly Cookie 사용)
  * - RefreshToken은 백엔드가 HttpOnly 쿠키로 설정하므로 JS에서 접근 불가
  * - withCredentials: true로 요청하면 브라우저가 자동으로 쿠키 전송
@@ -145,16 +122,9 @@ const refreshTokenViaBackend = async () => {
       data: error.response?.data
     })
 
-    // 🚨 401 에러면 RefreshToken 만료 또는 없음
+    // 🚨 401 에러면 RefreshToken 만료 또는 없음 - 로그아웃 처리
     if (error.response?.status === 401) {
-      console.log('🚨 [Interceptor] RefreshToken 만료 또는 없음')
-
-      // ⭐ OAuth 사용자이고 토큰이 최근 발급되었으면 예외 처리
-      if (isOAuthUser() && isRecentlyIssuedToken()) {
-        console.log('⚠️ [Interceptor] OAuth 사용자 - 최근 발급 토큰, 로그아웃 보류')
-        throw new Error('OAuth user - skip logout')
-      }
-
+      console.log('🚨 [Interceptor] RefreshToken 만료 또는 없음 - 로그아웃 필요')
       throw new Error('Refresh token expired')
     }
 
@@ -212,19 +182,6 @@ const errorInterceptor = async (error) => {
 
   console.log('🔄 [Interceptor] 401 에러 감지 - 토큰 갱신 시도')
 
-  // ⭐ OAuth 사용자이고 최근 발급된 토큰이면 /reissue 시도 없이 그냥 에러 반환
-  // (무한 루프 방지 - 백엔드에서 쿠키가 설정되지 않았을 가능성)
-  if (isOAuthUser() && isRecentlyIssuedToken()) {
-    console.log('⚠️ [Interceptor] OAuth 사용자 - 최근 발급 토큰, /reissue 시도 안 함')
-    console.log('💡 [Interceptor] 힌트: 백엔드에서 OAuth 로그인 시 refreshToken 쿠키 설정 확인 필요')
-
-    // 무한 루프 방지를 위해 재시도 플래그 설정
-    originalRequest._retry = true
-
-    // 에러를 그대로 반환 (로그아웃하지 않음)
-    return Promise.reject(error)
-  }
-
   // 이미 갱신 중이면 대기열에 추가
   if (isRefreshing) {
     console.log('⏳ [Interceptor] 토큰 갱신 중 - 대기열 추가')
@@ -264,19 +221,6 @@ const errorInterceptor = async (error) => {
 
   } catch (refreshError) {
     console.error('❌ [Interceptor] 토큰 갱신 실패:', refreshError.message)
-
-    // ⭐ OAuth 사용자 예외 처리 - 토큰 갱신 실패해도 로그아웃하지 않음
-    if (refreshError.message === 'OAuth user - skip logout') {
-      console.log('⚠️ [Interceptor] OAuth 사용자 - 기존 토큰으로 요청 재시도')
-      processQueue(null, authUtils.getAccessToken())
-
-      // 기존 토큰으로 요청 재시도
-      const currentToken = authUtils.getAccessToken()
-      if (currentToken) {
-        originalRequest.headers.Authorization = `Bearer ${currentToken}`
-        return axios(originalRequest)
-      }
-    }
 
     // 🚨 RefreshToken 만료 또는 갱신 실패 - 자동 로그아웃!
     processQueue(refreshError, null)
