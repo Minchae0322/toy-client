@@ -3,8 +3,8 @@
     <!-- 헤더 -->
     <div class="battle-header">
       <div class="header-left">
-        <span :class="['status-badge', battle.status.toLowerCase()]">
-          <span v-if="battle.status === 'LIVE'" class="pulse-dot"></span>
+        <span :class="['status-badge', statusClass]">
+          <span v-if="statusClass === 'live'" class="pulse-dot"></span>
           {{ statusText }}
         </span>
         <h3 class="title">{{ battle.title }}</h3>
@@ -61,7 +61,7 @@
         <span class="stat">{{ formatNumber(battle.totalVotes) }} 투표</span>
       </div>
       <button
-          v-if="battle.status === 'LIVE'"
+          v-if="isLive"
           class="vote-btn"
           @click.stop="$emit('vote', battle.id)"
       >
@@ -83,13 +83,51 @@ const props = defineProps({
 
 defineEmits(['vote', 'view'])
 
-const statusText = computed(() => {
-  switch (props.battle.status) {
-    case 'LIVE': return 'LIVE'
-    case 'UPCOMING': return '예정'
-    case 'ENDED': return '종료'
-    default: return props.battle.status
+const normalizedStatus = computed(() => {
+  const status = props.battle.status
+  if (typeof status === 'object') {
+    return status?.title || 'NORMAL'
   }
+  return status || 'LIVE'
+})
+
+const statusClass = computed(() => {
+  const status = normalizedStatus.value.toUpperCase()
+  switch (status) {
+    case 'LIVE':
+    case 'NORMAL':
+      return 'live'
+    case 'UPCOMING':
+    case 'PENDING':
+      return 'upcoming'
+    case 'ENDED':
+    case 'FINISHED':
+      return 'ended'
+    default:
+      return 'live'
+  }
+})
+
+const statusText = computed(() => {
+  const status = normalizedStatus.value.toUpperCase()
+  switch (status) {
+    case 'LIVE':
+    case 'NORMAL':
+      return 'LIVE'
+    case 'UPCOMING':
+    case 'PENDING':
+      return '예정'
+    case 'ENDED':
+    case 'FINISHED':
+      return '종료'
+    default:
+      return 'LIVE'
+  }
+})
+
+const isLive = computed(() => {
+  const status = normalizedStatus.value.toUpperCase()
+  return status === 'LIVE' || status === 'NORMAL'
 })
 
 const formatNumber = (num) => (num || 0).toLocaleString()
