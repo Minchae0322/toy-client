@@ -1,5 +1,16 @@
 <template>
   <section class="hero-section">
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+      <button @click="$emit('back')" class="nav-btn back-btn">
+        <span class="icon">←</span>
+        <span class="label">목록</span>
+      </button>
+      <button @click="$emit('share')" class="nav-btn share-btn">
+        <span class="icon">↗</span>
+      </button>
+    </div>
+
     <div class="category-pill">{{ categoryName }}</div>
     <span v-if="isWeightedVote" class="weighted-pill">순위 투표</span>
 
@@ -58,7 +69,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['add-product'])
+defineEmits(['add-product', 'back', 'share'])
 
 const categoryName = computed(() => {
   return props.battle.subCategoryDetail?.subCategoryName || '카테고리'
@@ -80,9 +91,58 @@ const formattedVotes = computed(() => {
 <style scoped>
 .hero-section {
   text-align: center;
-  padding: 60px 20px 40px;
+  padding: 20px 20px 40px;
   max-width: 800px;
   margin: 0 auto;
+  position: relative;
+}
+
+/* Navigation Bar */
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.nav-btn {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  font-family: inherit;
+  color: #666;
+}
+
+.back-btn {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.back-btn .icon {
+  font-size: 16px;
+}
+
+.share-btn {
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+}
+
+.share-btn .icon {
+  font-size: 18px;
+}
+
+.nav-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #333;
 }
 
 .category-pill {

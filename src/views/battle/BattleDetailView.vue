@@ -14,13 +14,6 @@
 
     <!-- Content -->
     <template v-else-if="battle">
-      <!-- Header -->
-      <BattleDetailHeader
-          :title="battle.title"
-          @back="goBack"
-          @share="shareBattle"
-      />
-
       <main class="content-wrapper">
         <!-- Battle Info -->
         <BattleInfoCard
@@ -29,6 +22,8 @@
             :can-user-add-item="canUserAddItem"
             :has-voted="hasVoted"
             @add-product="showAddModal = true"
+            @back="goBack"
+            @share="shareBattle"
         />
 
         <!-- Vote Selection Bar -->
@@ -90,7 +85,6 @@
 import { battleService } from '@/services/BattleService.js'
 import { fileService } from '@/services/FileService.js'
 import ShareModal from '@/components/common/ShareModal.vue'
-import BattleDetailHeader from '@/components/battle/detail/BattleDetailHeader.vue'
 import BattleInfoCard from '@/components/battle/detail/BattleInfoCard.vue'
 import VoteSelectionBar from '@/components/battle/detail/VoteSelectionBar.vue'
 import ProductCard from '@/components/battle/detail/ProductCard.vue'
@@ -100,7 +94,6 @@ export default {
   name: 'BattleDetail',
   components: {
     ShareModal,
-    BattleDetailHeader,
     BattleInfoCard,
     VoteSelectionBar,
     ProductCard,
