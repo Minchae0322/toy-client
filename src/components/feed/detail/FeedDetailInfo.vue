@@ -1,91 +1,95 @@
 <template>
   <div class="info-section">
-    <section class="review-section">
-      <div :class="['eval-badge', getEvaluationClass(feed.feedEvaluation)]">
-        <span class="eval-dot" />
-        {{ getEvaluationLabel(feed.feedEvaluation) }}
-      </div>
+    <div class="info-content">
+      <section class="review-section">
+        <div :class="['eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+          <span class="eval-dot" />
+          {{ getEvaluationLabel(feed.feedEvaluation) }}
+        </div>
 
-      <div class="quote-wrapper">
-        <svg class="quote-icon" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-        </svg>
-        <p class="review-text">{{ feed.review }}</p>
-      </div>
-    </section>
+        <div class="quote-wrapper">
+          <svg class="quote-icon" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+          </svg>
+          <p class="review-text">{{ feed.review }}</p>
+        </div>
+      </section>
 
-    <section class="product-info-banner" @click="$emit('search-store', getProductName)">
-      <div class="product-main">
-        <span class="category-tag">{{ getCategoryName }}</span>
-        <h1 class="product-title">{{ getProductName }}</h1>
-      </div>
-      <div class="price-area">
-        <span class="price-label">구매가</span>
-        <span class="price-value">{{ formatPrice(feed.buyPrice || feed.price) }}</span>
-      </div>
-    </section>
+      <section class="product-info-banner" @click="$emit('search-store', getProductName)">
+        <div class="product-main">
+          <span class="category-tag">{{ getCategoryName }}</span>
+          <h1 class="product-title">{{ getProductName }}</h1>
+        </div>
+        <div class="price-area">
+          <span class="price-label">구매가</span>
+          <span class="price-value">{{ formatPrice(feed.buyPrice || feed.price) }}</span>
+        </div>
+      </section>
 
-    <section class="interaction-bar">
-      <div class="stat-group">
+      <section class="interaction-bar">
+        <div class="stat-group">
+          <button
+              :class="['stat-btn', { active: feed.userReactions?.hasLike }]"
+              @click="$emit('like')"
+          >
+            <svg class="icon" :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+            </svg>
+            <span>{{ feed.likeCount || 0 }}</span>
+          </button>
+          <button class="stat-btn" @click="$emit('scroll-to-comments')">
+            <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <span>{{ feed.commentCount || 0 }}</span>
+          </button>
+        </div>
+        <button :class="['bookmark-btn', { active: isSaved }]" @click="$emit('save')">
+          <svg class="icon" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+          </svg>
+        </button>
+      </section>
+
+      <section v-if="feed.hashtags?.length" class="hashtag-section">
         <button
-            :class="['stat-btn', { active: feed.userReactions?.hasLike }]"
-            @click="$emit('like')"
+            v-for="tag in feed.hashtags"
+            :key="tag.hashtagId"
+            class="tag-chip"
+            @click="$emit('search-hashtag', tag.name)"
         >
-          <svg class="icon" :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-          </svg>
-          <span>{{ feed.likeCount || 0 }}</span>
+          #{{ tag.name }}
         </button>
-        <button class="stat-btn" @click="$emit('scroll-to-comments')">
-          <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-          </svg>
-          <span>{{ feed.commentCount || 0 }}</span>
+      </section>
+    </div>
+
+    <div class="info-footer">
+      <div class="divider" />
+
+      <section class="author-section">
+        <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
+        <div class="author-meta">
+          <span class="author-name">{{ getAuthorNickname }}</span>
+          <span class="post-info">{{ formatDate(feed.createdAt) }} · 조회 {{ feed.viewCount?.toLocaleString() }}</span>
+        </div>
+        <button
+            @click="isFollowing ? $emit('unfollow') : $emit('follow')"
+            :class="['follow-btn', { active: isFollowing }]"
+        >
+          {{ isFollowing ? '팔로잉' : '팔로우' }}
         </button>
-      </div>
-      <button :class="['bookmark-btn', { active: isSaved }]" @click="$emit('save')">
-        <svg class="icon" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-        </svg>
+      </section>
+
+      <button class="cta-floating-btn" @click="handleSendMessage" :disabled="isCreatingChatRoom">
+        <template v-if="!isCreatingChatRoom">
+          <svg class="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          이 유저에게 문의하기
+        </template>
+        <span v-else class="loader">연결 중...</span>
       </button>
-    </section>
-
-    <section v-if="feed.hashtags?.length" class="hashtag-section">
-      <button
-          v-for="tag in feed.hashtags"
-          :key="tag.hashtagId"
-          class="tag-chip"
-          @click="$emit('search-hashtag', tag.name)"
-      >
-        #{{ tag.name }}
-      </button>
-    </section>
-
-    <div class="divider" />
-
-    <section class="author-section">
-      <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
-      <div class="author-meta">
-        <span class="author-name">{{ getAuthorNickname }}</span>
-        <span class="post-info">{{ formatDate(feed.createdAt) }} · 조회 {{ feed.viewCount?.toLocaleString() }}</span>
-      </div>
-      <button
-          @click="isFollowing ? $emit('unfollow') : $emit('follow')"
-          :class="['follow-btn', { active: isFollowing }]"
-      >
-        {{ isFollowing ? '팔로잉' : '팔로우' }}
-      </button>
-    </section>
-
-    <button class="cta-floating-btn" @click="handleSendMessage" :disabled="isCreatingChatRoom">
-      <template v-if="!isCreatingChatRoom">
-        <svg class="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-        </svg>
-        이 유저에게 문의하기
-      </template>
-      <span v-else class="loader">연결 중...</span>
-    </button>
+    </div>
   </div>
 </template>
 
@@ -128,7 +132,23 @@ const handleSendMessage = () => {
 </script>
 
 <style scoped>
-.info-section { padding: 24px; background: #fff; max-width: 600px; margin: 0 auto; }
+.info-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px;
+  background: #fff;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-footer {
+  margin-top: auto;
+}
 
 /* 2. Review Section */
 .review-section { margin-bottom: 28px; }
@@ -184,10 +204,10 @@ const handleSendMessage = () => {
 }
 .tag-chip:active { background: #e5e7eb; }
 
-.divider { height: 1px; background: #f1f5f9; margin-bottom: 32px; }
+.divider { height: 1px; background: #f1f5f9; margin-bottom: 20px; }
 
 /* 7. Author Section */
-.author-section { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.author-section { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .author-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #f1f5f9; }
 .author-meta { flex: 1; }
 .author-name { display: block; font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 2px; }
