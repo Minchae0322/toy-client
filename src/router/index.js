@@ -38,10 +38,21 @@ import BattleDetailView from '@/views/battle/BattleDetailView.vue'
 // User Views import
 import MyPageView from '@/views/MyPageView.vue'
 
+// Dashboard View import
+import DashboardView from '@/views/DashboardView.vue'
+
 // ⭐ Admin Views import
 import ProductAdminView from '@/views/product/ProductAdminView.vue'
 
 const routes = [
+  // ==================== 대시보드 (홈) ====================
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: DashboardView,
+    meta: { requiresAuth: false, public: true, title: '홈' }
+  },
+
   // ==================== 상품 관련 라우트 ====================
   {
     path: '/products',
@@ -263,8 +274,8 @@ const routes = [
   },
 
   // ==================== 리다이렉트 ====================
-  { path: '/', redirect: '/feed' },
-  { path: '/:pathMatch(.*)*', redirect: '/feed' }
+  { path: '/', redirect: '/dashboard' },
+  { path: '/:pathMatch(.*)*', redirect: '/dashboard' }
 ]
 
 const router = createRouter({
@@ -589,6 +600,17 @@ export const userNavigation = {
   }
 }
 
+// ==================== 대시보드 네비게이션 헬퍼 ====================
+export const dashboardNavigation = {
+  toDashboard() {
+    return router.push({ name: 'Dashboard' })
+  },
+  isDashboardPage() {
+    const route = router.currentRoute.value
+    return route.name === 'Dashboard'
+  }
+}
+
 // ==================== 통합 네비게이션 헬퍼 ====================
 export const navigation = {
   admin: adminNavigation,  // ⭐ 추가
@@ -598,8 +620,9 @@ export const navigation = {
   feed: feedNavigation,
   battle: battleNavigation,
   user: userNavigation,
+  dashboard: dashboardNavigation,
 
-  toHome() { return router.push({ name: 'FeedHome' }) },
+  toHome() { return router.push({ name: 'Dashboard' }) },
   toMyPage() { return userNavigation.toMyPage() },
   toLogin(redirectPath) {
     const query = redirectPath ? { redirect: redirectPath } : {}
