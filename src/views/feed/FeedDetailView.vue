@@ -22,29 +22,31 @@
 
       <main class="detail-main">
         <div class="content-wrapper">
-          <div class="image-area">
-            <FeedDetailImageGallery
-                :images="imageList"
-                :product-name="getProductName"
-                @like="handleLike"
-            />
-          </div>
+          <div class="main-card">
+            <div class="image-area">
+              <FeedDetailImageGallery
+                  :images="imageList"
+                  :product-name="getProductName"
+                  @like="handleLike"
+              />
+            </div>
 
-          <div class="info-area">
-            <FeedDetailInfo
-                v-if="feed"
-                :feed="feed"
-                :is-following="isFollowing"
-                :is-saved="isSaved"
-                @follow="handleFollow"
-                @unfollow="handleUnfollow"
-                @like="handleLike"
-                @hot="handleHot"
-                @save="handleSave"
-                @search-store="searchByStore"
-                @search-hashtag="searchByHashtag"
-                @scroll-to-comments="scrollToComments"
-            />
+            <div class="info-area">
+              <FeedDetailInfo
+                  v-if="feed"
+                  :feed="feed"
+                  :is-following="isFollowing"
+                  :is-saved="isSaved"
+                  @follow="handleFollow"
+                  @unfollow="handleUnfollow"
+                  @like="handleLike"
+                  @hot="handleHot"
+                  @save="handleSave"
+                  @search-store="searchByStore"
+                  @search-hashtag="searchByHashtag"
+                  @scroll-to-comments="scrollToComments"
+              />
+            </div>
           </div>
         </div>
 
@@ -371,25 +373,29 @@ onMounted(() => loadFeedDetail())
   gap: 24px;
 }
 
-.image-area {
+.main-card {
+  display: flex;
+  flex-direction: column;
   background: white;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.image-area {
+  background: white;
+  overflow: hidden;
 }
 
 .info-area {
   background: white;
-  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 @media (min-width: 1024px) {
-  .content-wrapper {
+  .main-card {
     flex-direction: row;
-    align-items: flex-start;
-    gap: 24px;
+    align-items: stretch;
   }
 
   .image-area {
