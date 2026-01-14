@@ -89,10 +89,18 @@ const formattedVotes = computed(() => {
 /* 전체 레이아웃 */
 .hero-section {
   text-align: center;
-  padding: 32px 24px 56px;
-  max-width: 680px;
-  margin: 0 auto;
+  padding: 32px 20px 56px;
+  width: 100%;
+  box-sizing: border-box;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+.main-title,
+.sub-desc,
+.badge-wrapper {
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* 네비게이션 */
@@ -183,7 +191,7 @@ const formattedVotes = computed(() => {
   font-weight: 800;
   color: #111827;
   letter-spacing: -0.025em;
-  margin: 0 0 16px;
+  margin: 0 auto 16px;
   line-height: 1.3;
 }
 
