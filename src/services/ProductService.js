@@ -417,6 +417,11 @@ class ProductService extends BaseApiService {
   normalizeProduct(product) {
     if (!product) return null
 
+    // productId 매핑: API에서 id로 반환되는 경우 productId로도 접근 가능하게
+    if (product.id !== undefined && product.productId === undefined) {
+      product.productId = product.id
+    }
+
     // thumbnailUrl 매핑: attachmentFiles에서 첫 번째 이미지 URL 추출
     if (!product.thumbnailUrl && product.attachmentFiles?.length > 0) {
       product.thumbnailUrl = product.attachmentFiles[0].fileUrl
