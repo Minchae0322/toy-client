@@ -388,8 +388,6 @@ onMounted(() => loadFeedDetail())
 }
 
 .info-area {
-  display: flex;
-  flex-direction: column;
   background: white;
   overflow: hidden;
 }
@@ -401,9 +399,10 @@ onMounted(() => loadFeedDetail())
   }
 
   .image-area {
-    flex: 0 0 auto;
-    width: 480px;
+    flex: 1;
     min-width: 0;
+    position: sticky;
+    top: 80px;
   }
 
   .info-area {
