@@ -138,8 +138,6 @@ const handleSendMessage = () => {
   height: 100%;
   padding: 24px;
   background: #fff;
-  max-width: 600px;
-  margin: 0 auto;
 }
 
 .info-content {
