@@ -42,7 +42,7 @@
               v-for="(item, index) in sortedItems"
               :key="item.id"
               :item="item"
-              :display-rank="index + 1"
+              :display-rank="item.rank || (index + 1)"
               :product-rank="getProductRank(item.id)"
               :is-weighted-vote="isWeightedVote"
               :can-vote="canVote"
@@ -159,6 +159,11 @@ export default {
             return statusTitle === 'ACTIVE'
           })
           .sort((a, b) => {
+            // 서버에서 받은 rank가 있으면 rank 기준 정렬
+            if (a.rank != null && b.rank != null) {
+              return a.rank - b.rank
+            }
+            // rank가 없으면 점수 기준 정렬 (fallback)
             const scoreA = this.calculateItemScore(a)
             const scoreB = this.calculateItemScore(b)
             return scoreB - scoreA
