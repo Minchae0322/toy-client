@@ -430,6 +430,8 @@ class BattleService extends BaseApiService {
       battleItemProduct: this.normalizeBattleItemProduct(item.battleItemProduct),
       voteCount: item.voteCount || 0,
       votePercentage: item.votePercentage || 0,
+      totalScore: item.totalScore || 0,
+      rank: item.rank || null,
       reportCount: item.reportCount || 0,
       userBattleVote: item.userBattleVote || null,
       status: item.status
