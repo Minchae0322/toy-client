@@ -352,4 +352,87 @@ const onVote = (rank) => {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* 모바일 컴팩트 디자인 */
+@media (max-width: 480px) {
+  .product-card-v1 {
+    border-radius: 12px;
+    border-width: 1px;
+  }
+
+  .product-card-v1:hover {
+    transform: none;
+  }
+
+  .rank-indicator {
+    top: 6px;
+    left: 6px;
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
+
+  .product-card-v1.selected .rank-indicator {
+    top: 32px;
+  }
+
+  .selected-rank-overlay {
+    padding: 5px 0;
+    font-size: 11px;
+  }
+
+  .score-overlay {
+    bottom: 6px;
+    right: 6px;
+    padding: 4px 7px;
+    border-radius: 6px;
+    font-size: 10px;
+    gap: 3px;
+  }
+
+  .info-box {
+    padding: 10px;
+  }
+
+  .brand {
+    font-size: 10px;
+    margin: 0 0 2px;
+  }
+
+  .name {
+    font-size: 12px;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+  }
+
+  .prev-vote-info {
+    margin-top: 6px;
+    padding: 4px 6px;
+    font-size: 10px;
+    gap: 4px;
+  }
+
+  .vote-actions {
+    padding-top: 8px;
+  }
+
+  .rank-selector {
+    gap: 4px;
+  }
+
+  .rank-chip {
+    padding: 6px 0;
+    font-size: 11px;
+    border-radius: 6px;
+    border-width: 1px;
+  }
+
+  .vote-btn {
+    padding: 8px;
+    font-size: 12px;
+    border-radius: 8px;
+    border-width: 1px;
+  }
+}
 </style>

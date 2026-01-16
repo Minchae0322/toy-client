@@ -483,7 +483,9 @@ export default {
 
 @media (max-width: 480px) {
   .modern-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 0 12px 40px;
   }
 
   .soft-modern-v1 {
