@@ -60,7 +60,10 @@
                     v-for="product in filteredProducts"
                     :key="product.id"
                     class="product-card"
-                    :class="{ 'product-selected': isProductSelected(product.id) }"
+                    :class="{
+                      'product-selected': isProductSelected(product.id),
+                      'product-disabled': isAlreadyAdded(product.id)
+                    }"
                     @click="selectProduct(product)"
                 >
                   <div class="product-image">
@@ -74,7 +77,8 @@
                   </div>
                   <div class="product-name">{{ product.name }}</div>
                   <div class="product-brand">{{ product.brand }}</div>
-                  <div v-if="isProductSelected(product.id)" class="product-check">✓</div>
+                  <div v-if="isAlreadyAdded(product.id)" class="product-added-badge">이미 추가됨</div>
+                  <div v-else-if="isProductSelected(product.id)" class="product-check">✓</div>
                 </div>
               </div>
             </div>
@@ -372,7 +376,19 @@ const clearSearch = () => {
 
 const isProductSelected = (productId) => {
   return tempSelectedItems.value.some(item => item.productId === productId);
-};const selectProduct = (product) => {
+};
+
+// 이미 배틀에 추가된 제품인지 확인
+const isAlreadyAdded = (productId) => {
+  return props.currentItems.some(item => item.productId === productId);
+};
+
+const selectProduct = (product) => {
+  // 이미 배틀에 추가된 제품은 선택 불가
+  if (isAlreadyAdded(product.id)) {
+    return;
+  }
+
   const index = tempSelectedItems.value.findIndex(item => item.productId === product.id);
 
   if (index !== -1) {
@@ -845,6 +861,19 @@ watch(() => props.modelValue, (newVal) => {
   background: #FAFBFC;
 }
 
+.product-card.product-disabled {
+  border-color: #E5E7EB;
+  background: #F3F4F6;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.product-card.product-disabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #E5E7EB;
+}
+
 .product-image {
   width: 100%;
   height: 80px;
@@ -893,6 +922,18 @@ watch(() => props.modelValue, (newVal) => {
   align-items: center;
   justify-content: center;
   font-size: 12px;
+}
+
+.product-added-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  background: #9CA3AF;
+  color: white;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
 }
 
 .no-results {
