@@ -322,7 +322,9 @@ class ProductService extends BaseApiService {
         rank: item.rank,
         name: item.productName || item.name,
         isThis: item.isCurrentProduct ?? item.isThis ?? false,
-        votes: item.votePercentage ?? item.votes ?? 0
+        votes: item.votePercentage != null
+          ? parseFloat((item.votePercentage * 100).toFixed(1))
+          : (item.votes ?? 0)
       })),
       participants: battle.participants || 0,
       totalVotes: battle.totalVotes || 0
