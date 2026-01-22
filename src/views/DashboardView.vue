@@ -1,13 +1,17 @@
 <template>
-  <div class="dashboard-container">
-    <!-- 헤더 -->
-    <header class="dashboard-header">
-      <h1 class="dashboard-title">오늘의 HOT</h1>
-      <p class="dashboard-subtitle">지금 가장 인기있는 콘텐츠를 만나보세요</p>
-    </header>
+  <div class="app-container">
+    <AppSidebar />
 
-    <!-- 피드 핫 섹션 -->
-    <section class="hot-section">
+    <main class="main-content">
+      <!-- 헤더 -->
+      <header class="dashboard-header">
+        <h1 class="dashboard-title">오늘의 HOT</h1>
+        <p class="dashboard-subtitle">지금 가장 인기있는 콘텐츠를 만나보세요</p>
+      </header>
+
+      <div class="dashboard-content">
+        <!-- 피드 핫 섹션 -->
+        <section class="hot-section">
       <div class="section-header">
         <div class="section-title-group">
           <span class="section-icon">🔥</span>
@@ -102,14 +106,20 @@
           view-mode="grid"
           @view-detail="goToProductDetail"
         />
-      </div>
-    </section>
+        </div>
+      </section>
+    </div>
+    </main>
+
+    <BottomNavigation />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import AppSidebar from '@/components/feed/AppSidebar.vue'
+import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import FeedCard from '@/components/feed/FeedCard.vue'
 import BattleCard from '@/components/battle/BattleCard.vue'
 import ProductCard from '@/components/product/ProductCard.vue'
@@ -188,12 +198,67 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.dashboard-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 20px 80px;
-  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app-container {
+  background: #ffffff;
   min-height: 100vh;
+  color: #1a1a1a;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
+  display: flex;
+  max-width: 100vw;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-container {
+    padding: 0 3rem;
+    max-width: 1920px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container {
+    padding: 0 4rem;
+  }
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  padding-bottom: 5rem;
+  padding-left: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    padding-bottom: 2.5rem;
+  }
+}
+
+.dashboard-content {
+  max-width: 1200px;
+  padding: 0 20px 40px;
+  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
 }
 
 /* 헤더 */
@@ -376,8 +441,8 @@ onMounted(() => {
 
 /* 반응형: 모바일 */
 @media (max-width: 768px) {
-  .dashboard-container {
-    padding: 16px 0 80px;
+  .dashboard-content {
+    padding: 0 0 40px;
     background: #f8f8fc;
   }
 
