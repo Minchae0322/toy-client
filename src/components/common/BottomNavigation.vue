@@ -1,18 +1,6 @@
 <template>
   <nav class="safe-area-bottom">
     <div class="nav-wrapper">
-      <!-- 홈 -->
-      <router-link to="/dashboard" class="nav-item" :class="{ active: isActive('/dashboard') }">
-        <svg v-if="!isActive('/dashboard')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-        </svg>
-        <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z"/>
-          <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z"/>
-        </svg>
-        <span class="nav-label">홈</span>
-      </router-link>
-
       <!-- 피드 -->
       <router-link to="/feed" class="nav-item" :class="{ active: isActive('/feed') }">
         <svg v-if="!isActive('/feed')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,14 +26,14 @@
 
       <!-- 중앙 FAB -->
       <div class="fab-container">
-        <button class="fab-btn" :class="{ open: isMenuOpen }" @click="toggleMenu">
+        <button class="fab-btn" :class="{ open: isCreateMenuOpen }" @click="toggleCreateMenu">
           <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
           </svg>
         </button>
 
         <Transition name="fade-up">
-          <div v-if="isMenuOpen" class="fab-menu">
+          <div v-if="isCreateMenuOpen" class="fab-menu">
             <button class="fab-menu-item" @click="handleCreate('feed')">
               <span class="menu-icon feed">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,21 +74,41 @@
         <span class="nav-label">제품</span>
       </router-link>
 
-      <!-- MY -->
-      <button class="nav-item" :class="{ active: isActive('/mypage') }" @click="handleProtectedNav('mypage')">
-        <svg v-if="!isActive('/mypage')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
-        <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd"/>
-        </svg>
-        <span class="nav-label">MY</span>
-      </button>
+      <!-- 더보기 -->
+      <div class="more-container">
+        <button class="nav-item" :class="{ active: isMoreMenuOpen || isActive('/mypage') || isActive('/chat') }" @click="toggleMoreMenu">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/>
+          </svg>
+          <span class="nav-label">더보기</span>
+        </button>
+
+        <Transition name="fade-up-right">
+          <div v-if="isMoreMenuOpen" class="more-menu">
+            <button class="more-menu-item" @click="handleMoreNav('chat')">
+              <span class="more-icon chat">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+              </span>
+              <span class="more-text">메시지</span>
+            </button>
+            <button class="more-menu-item" @click="handleMoreNav('mypage')">
+              <span class="more-icon mypage">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </span>
+              <span class="more-text">마이페이지</span>
+            </button>
+          </div>
+        </Transition>
+      </div>
     </div>
 
     <!-- Overlay -->
     <Transition name="fade">
-      <div v-if="isMenuOpen" class="overlay" @click="closeMenu"></div>
+      <div v-if="isCreateMenuOpen || isMoreMenuOpen" class="overlay" @click="closeAllMenus"></div>
     </Transition>
   </nav>
 </template>
@@ -113,35 +121,30 @@ import { useAuth } from '@/composables/useAuth';
 const router = useRouter();
 const route = useRoute();
 const { isLoggedIn } = useAuth();
-const isMenuOpen = ref(false);
+const isCreateMenuOpen = ref(false);
+const isMoreMenuOpen = ref(false);
 
 const isActive = (path) => {
-  if (path === '/dashboard') {
-    return route.path === '/dashboard' || route.path === '/';
-  }
   return route.path.startsWith(path);
 };
 
-const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value;
+const toggleCreateMenu = () => {
+  isMoreMenuOpen.value = false;
+  isCreateMenuOpen.value = !isCreateMenuOpen.value;
 };
 
-const closeMenu = () => {
-  isMenuOpen.value = false;
+const toggleMoreMenu = () => {
+  isCreateMenuOpen.value = false;
+  isMoreMenuOpen.value = !isMoreMenuOpen.value;
 };
 
-const handleProtectedNav = async (name) => {
-  if (isLoggedIn.value) {
-    router.push({ name: name === 'chat' ? 'Chat' : 'MyPage' });
-    return;
-  }
-  if (confirm('로그인이 필요합니다.')) {
-    await router.push({ name: 'Login', query: { redirect: route.fullPath } });
-  }
+const closeAllMenus = () => {
+  isCreateMenuOpen.value = false;
+  isMoreMenuOpen.value = false;
 };
 
 const handleCreate = async (type) => {
-  closeMenu();
+  closeAllMenus();
 
   const routes = {
     feed: { name: 'FeedCreate', redirect: '/feed/create' },
@@ -161,8 +164,21 @@ const handleCreate = async (type) => {
   }
 };
 
+const handleMoreNav = async (name) => {
+  closeAllMenus();
+
+  if (isLoggedIn.value) {
+    router.push({ name: name === 'chat' ? 'Chat' : 'MyPage' });
+    return;
+  }
+
+  if (confirm('로그인이 필요합니다.')) {
+    await router.push({ name: 'Login', query: { redirect: route.fullPath } });
+  }
+};
+
 const onKeydown = (e) => {
-  if (e.key === 'Escape') closeMenu();
+  if (e.key === 'Escape') closeAllMenus();
 };
 
 onMounted(() => {
@@ -349,6 +365,76 @@ onBeforeUnmount(() => {
   color: #3f3f46;
 }
 
+/* 더보기 Container */
+.more-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+/* 더보기 Menu */
+.more-menu {
+  position: absolute;
+  bottom: 50px;
+  right: 0;
+  background: white;
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+  z-index: 1002;
+}
+
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: none;
+  background: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.more-menu-item:hover {
+  background: #f4f4f5;
+}
+
+.more-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.more-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.more-icon.chat {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.more-icon.mypage {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.more-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #3f3f46;
+}
+
 /* Overlay */
 .overlay {
   position: fixed;
@@ -367,6 +453,17 @@ onBeforeUnmount(() => {
 .fade-up-leave-to {
   opacity: 0;
   transform: translateX(-50%) translateY(10px);
+}
+
+.fade-up-right-enter-active,
+.fade-up-right-leave-active {
+  transition: all 0.2s ease;
+}
+
+.fade-up-right-enter-from,
+.fade-up-right-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 
 .fade-enter-active,
