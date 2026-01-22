@@ -122,7 +122,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #fafafa;
+  background-color: #ffffff;
   padding: 20px;
 }
 
