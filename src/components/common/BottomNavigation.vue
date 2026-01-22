@@ -36,6 +36,44 @@
         <span class="nav-label">배틀</span>
       </router-link>
 
+      <!-- 중앙 FAB -->
+      <div class="fab-container">
+        <button class="fab-btn" :class="{ open: isMenuOpen }" @click="toggleMenu">
+          <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+        </button>
+
+        <Transition name="fade-up">
+          <div v-if="isMenuOpen" class="fab-menu">
+            <button class="fab-menu-item" @click="handleCreate('feed')">
+              <span class="menu-icon feed">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </span>
+              <span class="menu-text">피드 작성</span>
+            </button>
+            <button class="fab-menu-item" @click="handleCreate('battle')">
+              <span class="menu-icon battle">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+              </span>
+              <span class="menu-text">배틀 생성</span>
+            </button>
+            <button class="fab-menu-item" @click="handleCreate('product')">
+              <span class="menu-icon product">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+              </span>
+              <span class="menu-text">제품 등록</span>
+            </button>
+          </div>
+        </Transition>
+      </div>
+
       <!-- 제품 -->
       <router-link to="/products" class="nav-item" :class="{ active: isActive('/products') }">
         <svg v-if="!isActive('/products')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,44 +96,6 @@
         </svg>
         <span class="nav-label">MY</span>
       </button>
-    </div>
-
-    <!-- 우측 FAB -->
-    <div class="fab-container">
-      <button class="fab-btn" :class="{ open: isMenuOpen }" @click="toggleMenu">
-        <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-        </svg>
-      </button>
-
-      <Transition name="fade-up">
-        <div v-if="isMenuOpen" class="fab-menu">
-          <button class="fab-menu-item" @click="handleCreate('feed')">
-            <span class="menu-icon feed">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-              </svg>
-            </span>
-            <span class="menu-text">피드 작성</span>
-          </button>
-          <button class="fab-menu-item" @click="handleCreate('battle')">
-            <span class="menu-icon battle">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-              </svg>
-            </span>
-            <span class="menu-text">배틀 생성</span>
-          </button>
-          <button class="fab-menu-item" @click="handleCreate('product')">
-            <span class="menu-icon product">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-              </svg>
-            </span>
-            <span class="menu-text">제품 등록</span>
-          </button>
-        </div>
-      </Transition>
     </div>
 
     <!-- Overlay -->
@@ -187,26 +187,25 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   z-index: 1000;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
-  align-items: flex-end;
-  gap: 10px;
 }
 
 .nav-wrapper {
-  max-width: 420px;
-  flex: 1;
+  max-width: 480px;
+  width: 100%;
   height: 56px;
   background: var(--bg-nav);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-light);
-  border-radius: 20px;
+  border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: space-around;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  position: relative;
 }
 
 .nav-item {
@@ -242,17 +241,22 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-/* FAB Container */
+/* 중앙 FAB Container */
 .fab-container {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  margin: 0 4px;
 }
 
 .fab-btn {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   background: var(--main);
   border: none;
-  border-radius: 18px;
+  border-radius: 16px;
   color: white;
   display: flex;
   align-items: center;
@@ -264,7 +268,7 @@ onBeforeUnmount(() => {
 
 .fab-btn:hover {
   background: var(--main-light);
-  transform: scale(1.02);
+  transform: scale(1.05);
 }
 
 .fab-btn.open {
@@ -273,15 +277,16 @@ onBeforeUnmount(() => {
 }
 
 .fab-icon {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
 }
 
 /* FAB Menu */
 .fab-menu {
   position: absolute;
-  bottom: 68px;
-  right: 0;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
   background: white;
   border-radius: 16px;
   padding: 8px;
@@ -361,7 +366,7 @@ onBeforeUnmount(() => {
 .fade-up-enter-from,
 .fade-up-leave-to {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateX(-50%) translateY(10px);
 }
 
 .fade-enter-active,
