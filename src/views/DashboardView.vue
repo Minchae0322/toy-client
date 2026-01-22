@@ -3,112 +3,136 @@
     <AppSidebar />
 
     <main class="main-content">
-      <!-- 헤더 -->
-      <header class="dashboard-header">
-        <h1 class="dashboard-title">오늘의 HOT</h1>
-        <p class="dashboard-subtitle">지금 가장 인기있는 콘텐츠를 만나보세요</p>
+      <!-- 페이지 헤더 -->
+      <header class="page-header">
+        <div class="header-content">
+          <div class="title-group">
+            <span class="title-badge">HOT</span>
+            <h1 class="page-title">오늘의 트렌드</h1>
+          </div>
+          <p class="page-description">지금 가장 인기 있는 콘텐츠를 확인하세요</p>
+        </div>
       </header>
 
       <div class="dashboard-content">
-        <!-- 피드 핫 섹션 -->
-        <section class="hot-section">
-      <div class="section-header">
-        <div class="section-title-group">
-          <span class="section-icon">🔥</span>
-          <h2 class="section-title">피드 HOT</h2>
-        </div>
-        <button class="view-all-btn" @click="goToFeeds">
-          전체보기
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>
-      </div>
+        <!-- 인기 피드 섹션 -->
+        <section class="content-section">
+          <div class="section-header">
+            <div class="title-group">
+              <span class="section-icon">🔥</span>
+              <h2 class="section-title">인기 피드</h2>
+              <span v-if="hotFeeds.length" class="section-count">{{ hotFeeds.length }}</span>
+            </div>
+            <button class="view-all-btn" @click="goToFeeds">
+              전체보기
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
 
-      <div v-if="feedsLoading" class="loading-container">
-        <div class="skeleton-grid">
-          <div v-for="i in 4" :key="i" class="skeleton-card"></div>
-        </div>
-      </div>
-      <div v-else-if="hotFeeds.length === 0" class="empty-state">
-        <p>아직 인기 피드가 없어요</p>
-      </div>
-      <div v-else class="feed-grid">
-        <FeedCard
-          v-for="feed in hotFeeds"
-          :key="feed.feedId"
-          :feed="feed"
-          @click="goToFeedDetail"
-        />
-      </div>
-    </section>
+          <div v-if="feedsLoading" class="card-scroll">
+            <div v-for="i in 4" :key="i" class="skeleton-card">
+              <div class="skeleton-image shimmer"></div>
+              <div class="skeleton-info">
+                <div class="skeleton-line shimmer"></div>
+                <div class="skeleton-line short shimmer"></div>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="hotFeeds.length === 0" class="empty-state">
+            <span class="empty-icon">📭</span>
+            <p>아직 인기 피드가 없습니다</p>
+          </div>
+          <div v-else class="card-scroll">
+            <FeedCard
+              v-for="feed in hotFeeds"
+              :key="feed.feedId"
+              :feed="feed"
+              class="scroll-card"
+              @click="goToFeedDetail"
+            />
+          </div>
+        </section>
 
-    <!-- 배틀 핫 섹션 -->
-    <section class="hot-section">
-      <div class="section-header">
-        <div class="section-title-group">
-          <span class="section-icon">⚔️</span>
-          <h2 class="section-title">배틀 HOT</h2>
-        </div>
-        <button class="view-all-btn" @click="goToBattles">
-          전체보기
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>
-      </div>
+        <!-- 실시간 배틀 섹션 -->
+        <section class="content-section">
+          <div class="section-header">
+            <div class="title-group">
+              <span class="section-icon">⚔️</span>
+              <h2 class="section-title">실시간 배틀</h2>
+              <span v-if="hotBattles.length" class="section-count">{{ hotBattles.length }}</span>
+            </div>
+            <button class="view-all-btn" @click="goToBattles">
+              전체보기
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
 
-      <div v-if="battlesLoading" class="loading-container">
-        <div class="skeleton-grid battle-skeleton">
-          <div v-for="i in 3" :key="i" class="skeleton-card battle"></div>
-        </div>
-      </div>
-      <div v-else-if="hotBattles.length === 0" class="empty-state">
-        <p>아직 인기 배틀이 없어요</p>
-      </div>
-      <div v-else class="battle-grid">
-        <BattleCard
-          v-for="battle in hotBattles"
-          :key="battle.battleId || battle.id"
-          :battle="battle"
-        />
-      </div>
-    </section>
+          <div v-if="battlesLoading" class="battle-grid">
+            <div v-for="i in 3" :key="i" class="skeleton-card battle">
+              <div class="skeleton-image shimmer"></div>
+              <div class="skeleton-info">
+                <div class="skeleton-line shimmer"></div>
+                <div class="skeleton-line short shimmer"></div>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="hotBattles.length === 0" class="empty-state">
+            <span class="empty-icon">⚔️</span>
+            <p>아직 진행 중인 배틀이 없습니다</p>
+          </div>
+          <div v-else class="battle-grid">
+            <BattleCard
+              v-for="battle in hotBattles"
+              :key="battle.battleId || battle.id"
+              :battle="battle"
+            />
+          </div>
+        </section>
 
-    <!-- 제품 핫 섹션 -->
-    <section class="hot-section">
-      <div class="section-header">
-        <div class="section-title-group">
-          <span class="section-icon">🏆</span>
-          <h2 class="section-title">제품 HOT</h2>
-        </div>
-        <button class="view-all-btn" @click="goToProducts">
-          전체보기
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>
-      </div>
+        <!-- 명예의 전당 섹션 -->
+        <section class="content-section">
+          <div class="section-header">
+            <div class="title-group">
+              <span class="section-icon">🏆</span>
+              <h2 class="section-title">명예의 전당</h2>
+              <span v-if="hotProducts.length" class="section-count">{{ hotProducts.length }}</span>
+            </div>
+            <button class="view-all-btn" @click="goToProducts">
+              전체보기
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
 
-      <div v-if="productsLoading" class="loading-container">
-        <div class="skeleton-grid product-skeleton">
-          <div v-for="i in 4" :key="i" class="skeleton-card product"></div>
-        </div>
+          <div v-if="productsLoading" class="product-grid">
+            <div v-for="i in 4" :key="i" class="skeleton-card">
+              <div class="skeleton-image shimmer"></div>
+              <div class="skeleton-info">
+                <div class="skeleton-line shimmer"></div>
+                <div class="skeleton-line short shimmer"></div>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="hotProducts.length === 0" class="empty-state">
+            <span class="empty-icon">🏆</span>
+            <p>아직 등록된 제품이 없습니다</p>
+          </div>
+          <div v-else class="product-grid">
+            <ProductCard
+              v-for="product in hotProducts"
+              :key="product.id"
+              :product="product"
+              view-mode="grid"
+              @view-detail="goToProductDetail"
+            />
+          </div>
+        </section>
       </div>
-      <div v-else-if="hotProducts.length === 0" class="empty-state">
-        <p>아직 인기 제품이 없어요</p>
-      </div>
-      <div v-else class="product-grid">
-        <ProductCard
-          v-for="product in hotProducts"
-          :key="product.id"
-          :product="product"
-          view-mode="grid"
-          @view-detail="goToProductDetail"
-        />
-        </div>
-      </section>
-    </div>
     </main>
 
     <BottomNavigation />
@@ -129,7 +153,7 @@ import ProductService from '@/services/ProductService'
 
 const router = useRouter()
 
-// 상태
+// 상태 관리
 const hotFeeds = ref([])
 const hotBattles = ref([])
 const hotProducts = ref([])
@@ -138,11 +162,11 @@ const feedsLoading = ref(true)
 const battlesLoading = ref(true)
 const productsLoading = ref(true)
 
-// 데이터 로드
+// 데이터 로딩 함수들
 const loadHotFeeds = async () => {
   feedsLoading.value = true
   try {
-    const response = await feedService.getHotFeeds({ size: 4 })
+    const response = await feedService.getHotFeeds({ size: 5 })
     if (response.success) {
       hotFeeds.value = response.data?.content || response.data || []
     }
@@ -189,7 +213,6 @@ const goToBattles = () => router.push({ name: 'BattleList' })
 const goToProducts = () => router.push({ name: 'ProductRanking' })
 const goToProductDetail = (product) => router.push({ name: 'ProductDetail', params: { id: product.id } })
 
-// 초기화
 onMounted(() => {
   loadHotFeeds()
   loadHotBattles()
@@ -229,12 +252,6 @@ onMounted(() => {
   }
 }
 
-@media (min-width: 1920px) {
-  .app-container {
-    padding: 0 4rem;
-  }
-}
-
 .main-content {
   flex: 1;
   min-width: 0;
@@ -255,88 +272,140 @@ onMounted(() => {
   }
 }
 
-.dashboard-content {
+/* 페이지 헤더 */
+.page-header {
+  padding: 32px 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+@media (min-width: 768px) {
+  .page-header {
+    padding: 40px 24px 28px;
+  }
+}
+
+.header-content {
   max-width: 1200px;
-  padding: 0 20px 40px;
-  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
 }
 
-/* 헤더 */
-.dashboard-header {
-  text-align: center;
-  margin-bottom: 40px;
-  padding: 32px 0;
+.page-header .title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
-.dashboard-title {
-  font-size: 32px;
-  font-weight: 800;
-  color: #1a1a2e;
-  margin: 0 0 8px;
+.title-badge {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
   letter-spacing: -0.02em;
 }
 
-.dashboard-subtitle {
-  font-size: 15px;
-  color: #8b8b9e;
+@media (min-width: 768px) {
+  .page-title {
+    font-size: 24px;
+  }
+}
+
+.page-description {
+  font-size: 14px;
+  color: #64748b;
   margin: 0;
-  font-weight: 400;
+}
+
+/* 대시보드 컨텐츠 */
+.dashboard-content {
+  max-width: 1200px;
 }
 
 /* 섹션 공통 */
-.hot-section {
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 28px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid #f0f0f5;
+.content-section {
+  padding: 28px 20px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
+.content-section:last-child {
+  border-bottom: none;
+}
+
+@media (min-width: 768px) {
+  .content-section {
+    padding: 32px 24px;
+  }
+}
+
+/* 섹션 헤더 */
 .section-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  justify-content: space-between;
+  margin-bottom: 20px;
 }
 
-.section-title-group {
+.section-header .title-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .section-icon {
-  font-size: 24px;
+  font-size: 18px;
 }
 
 .section-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1a1a2e;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
   margin: 0;
   letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 18px;
+  }
+}
+
+.section-count {
+  padding: 2px 8px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
 }
 
 .view-all-btn {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 10px 16px;
-  background: #f8f8fc;
-  border: 1px solid #ebebf0;
-  border-radius: 100px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   font-size: 13px;
-  font-weight: 600;
-  color: #6b6b80;
+  font-weight: 500;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-family: inherit;
 }
 
 .view-all-btn:hover {
-  background: #f0f0f8;
-  color: #9333ea;
-  border-color: #e0e0eb;
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
 }
 
 .view-all-btn svg {
@@ -347,54 +416,147 @@ onMounted(() => {
   transform: translateX(2px);
 }
 
-/* 그리드 레이아웃 */
-.feed-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+/* 카드 스크롤 (피드) */
+.card-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin: 0 -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
+.card-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .card-scroll {
+    margin: 0 -24px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-scroll {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    overflow-x: visible;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.scroll-card {
+  flex-shrink: 0;
+  width: 200px;
+}
+
+@media (min-width: 1024px) {
+  .scroll-card {
+    width: auto;
+  }
+}
+
+/* 배틀 그리드 */
 .battle-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
+@media (min-width: 640px) {
+  .battle-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .battle-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+/* 제품 그리드 */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
 }
 
-/* 로딩 스켈레톤 */
-.loading-container {
-  padding: 8px 0;
+@media (min-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.skeleton-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+@media (min-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
 }
 
-.skeleton-grid.battle-skeleton {
-  grid-template-columns: repeat(3, 1fr);
-}
-
+/* 스켈레톤 카드 */
 .skeleton-card {
-  background: linear-gradient(90deg, #f0f0f5 25%, #fafafa 50%, #f0f0f5 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 20px;
-  height: 320px;
+  flex-shrink: 0;
+  width: 200px;
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .skeleton-card.battle {
-  height: 280px;
+  width: auto;
 }
 
-.skeleton-card.product {
-  height: 360px;
+@media (min-width: 1024px) {
+  .skeleton-card {
+    width: auto;
+  }
+}
+
+.skeleton-image {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: #f8fafc;
+}
+
+.skeleton-card.battle .skeleton-image {
+  aspect-ratio: 4 / 3;
+}
+
+.skeleton-info {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-line {
+  height: 14px;
+  width: 100%;
+  border-radius: 4px;
+  background: #f8fafc;
+}
+
+.skeleton-line.short {
+  width: 60%;
+  height: 12px;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
 @keyframes shimmer {
@@ -405,138 +567,34 @@ onMounted(() => {
 /* 빈 상태 */
 .empty-state {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 48px 20px;
-  background: #fafbfc;
-  border-radius: 16px;
-  border: 1px dashed #e0e0e8;
+  background: #fafafa;
+  border-radius: 12px;
+  border: 1px dashed #e2e8f0;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.5;
 }
 
 .empty-state p {
-  color: #9898a8;
   font-size: 14px;
+  color: #94a3b8;
   margin: 0;
-}
-
-/* 반응형: 태블릿 */
-@media (max-width: 1024px) {
-  .feed-grid,
-  .product-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .battle-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .skeleton-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .skeleton-grid.battle-skeleton {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* 반응형: 모바일 */
-@media (max-width: 768px) {
-  .dashboard-content {
-    padding: 0 0 40px;
-    background: #f8f8fc;
-  }
-
-  .dashboard-header {
-    padding: 24px 16px;
-    margin-bottom: 16px;
-  }
-
-  .dashboard-title {
-    font-size: 24px;
-  }
-
-  .dashboard-subtitle {
-    font-size: 13px;
-  }
-
-  .hot-section {
-    border-radius: 0;
-    padding: 20px 16px;
-    margin-bottom: 12px;
-    border-left: none;
-    border-right: none;
-  }
-
-  .section-header {
-    margin-bottom: 16px;
-  }
-
-  .section-icon {
-    font-size: 20px;
-  }
-
-  .section-title {
-    font-size: 17px;
-  }
-
-  .view-all-btn {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-
-  .feed-grid,
-  .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .battle-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .skeleton-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .skeleton-grid.battle-skeleton {
-    grid-template-columns: 1fr;
-  }
-
-  .skeleton-card {
-    height: 260px;
-  }
-
-  .skeleton-card.battle {
-    height: 220px;
-  }
-
-  .skeleton-card.product {
-    height: 300px;
-  }
-}
-
-/* 반응형: 작은 모바일 */
-@media (max-width: 480px) {
-  .feed-grid,
-  .product-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .skeleton-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* 접근성 */
 @media (prefers-reduced-motion: reduce) {
-  .skeleton-card {
+  .shimmer {
     animation: none;
-    background: #f0f0f5;
+    background: #f1f5f9;
   }
 
-  .view-all-btn,
   .view-all-btn svg {
     transition: none;
   }
