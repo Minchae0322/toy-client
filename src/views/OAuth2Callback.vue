@@ -230,7 +230,7 @@ onMounted(handleOAuthCallback)
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f8f9fa;
+  background-color: #ffffff;
 }
 
 .callback-container {
