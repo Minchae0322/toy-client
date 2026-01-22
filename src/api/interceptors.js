@@ -293,3 +293,88 @@ export const checkTokenStatus = () => {
     needsRefresh: accessToken ? authUtils.shouldRefreshToken(accessToken) : true
   }
 }
+
+// ==================== 토큰 모니터링 (백그라운드 체크) ====================
+
+/**
+ * 토큰 모니터 - 주기적 체크 및 선제적 갱신
+ */
+class TokenMonitor {
+  constructor() {
+    this.checkInterval = null
+    this.CHECK_INTERVAL_MS = 60 * 1000 // 1분마다 체크
+  }
+
+  /**
+   * 모니터링 시작 (앱 초기화 시 호출)
+   */
+  start() {
+    // 1. 앱 시작 시 즉시 체크
+    this.checkAndRefresh()
+
+    // 2. 주기적 체크 시작
+    this.checkInterval = setInterval(() => {
+      this.checkAndRefresh()
+    }, this.CHECK_INTERVAL_MS)
+
+    // 3. 탭 활성화 시 체크
+    document.addEventListener('visibilitychange', this.handleVisibilityChange)
+
+    console.log('✅ [TokenMonitor] 토큰 모니터링 시작')
+  }
+
+  /**
+   * 모니터링 중지
+   */
+  stop() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval)
+      this.checkInterval = null
+    }
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange)
+    console.log('🛑 [TokenMonitor] 토큰 모니터링 중지')
+  }
+
+  /**
+   * 탭 활성화 시 체크
+   */
+  handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      console.log('👁️ [TokenMonitor] 탭 활성화 - 토큰 체크')
+      this.checkAndRefresh()
+    }
+  }
+
+  /**
+   * 토큰 체크 및 필요 시 갱신
+   */
+  async checkAndRefresh() {
+    const accessToken = authUtils.getAccessToken()
+
+    // 로그인 상태가 아니면 무시
+    if (!accessToken) {
+      return
+    }
+
+    // AccessToken 완전 만료 → 즉시 갱신 시도
+    if (authUtils.isTokenExpired(accessToken)) {
+      console.log('⏰ [TokenMonitor] AccessToken 만료됨 - 갱신 시도')
+      const success = await manualRefreshToken()
+      if (!success) {
+        console.log('❌ [TokenMonitor] 갱신 실패 - 로그아웃')
+        handleLogout('세션이 만료되었습니다')
+      }
+      return
+    }
+
+    // AccessToken 만료 임박 (5분 이내) → 선제적 갱신
+    if (authUtils.shouldRefreshToken(accessToken)) {
+      const remaining = authUtils.getTokenTimeRemaining(accessToken)
+      console.log(`⚠️ [TokenMonitor] AccessToken ${remaining}분 후 만료 - 선제적 갱신`)
+      await manualRefreshToken()
+    }
+  }
+}
+
+// 싱글톤 인스턴스
+export const tokenMonitor = new TokenMonitor()
