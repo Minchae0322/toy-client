@@ -1,14 +1,18 @@
-<!-- DashboardView.vue -->
+<!-- HomeView.vue -->
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <MBTIRecommendationBanner />
-    <NavigationTabs :active-tab="activeTab" @update-tab="setActiveTab" />
+  <div class="app-container">
+    <AppSidebar />
 
-    <main class="p-4 space-y-6">
-      <AIMemeGeneratorPromo />
-      <TrendingMemesSection :memes="trendingMemes" :liked-items="likedItems" @like="handleLike" />
-      <TrendingFoodsSection :foods="trendingFoods" />
-      <QuickActions />
+    <main class="main-content">
+      <MBTIRecommendationBanner />
+      <NavigationTabs :active-tab="activeTab" @update-tab="setActiveTab" />
+
+      <div class="content-wrapper">
+        <AIMemeGeneratorPromo />
+        <TrendingMemesSection :memes="trendingMemes" :liked-items="likedItems" @like="handleLike" />
+        <TrendingFoodsSection :foods="trendingFoods" />
+        <QuickActions />
+      </div>
     </main>
 
     <BottomNavigation />
@@ -17,13 +21,14 @@
 
 <script setup>
 import {ref} from 'vue';
+import AppSidebar from '@/components/feed/AppSidebar.vue';
 import MBTIRecommendationBanner from '@/components/MZLifestyle/MBTIRecommendationBanner.vue';
 import NavigationTabs from '@/components/MZLifestyle/NavigationTabs.vue';
 import AIMemeGeneratorPromo from '@/components/MZLifestyle/AIMemeGeneratorPromo.vue';
 import TrendingMemesSection from '@/components/MZLifestyle/TrendingMemesSection.vue';
 import TrendingFoodsSection from '@/components/MZLifestyle/TrendingFoodsSection.vue';
 import QuickActions from '@/components/MZLifestyle/QuickActions.vue';
-import BottomNavigation from '@/components/MZLifestyle/BottomNavigation.vue';
+import BottomNavigation from '@/components/common/BottomNavigation.vue';
 
 const activeTab = ref('home');
 const likedItems = ref({});
@@ -99,3 +104,75 @@ const trendingFoods = ref([
   }
 ]);
 </script>
+
+<style scoped>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app-container {
+  background: #ffffff;
+  min-height: 100vh;
+  color: #1a1a1a;
+  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
+  display: flex;
+  max-width: 100vw;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-container {
+    padding: 0 3rem;
+    max-width: 1920px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container {
+    padding: 0 4rem;
+  }
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  padding-bottom: 5rem;
+  padding-left: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    padding-bottom: 2.5rem;
+  }
+}
+
+.content-wrapper {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .content-wrapper {
+    padding: 1.5rem;
+  }
+}
+</style>
