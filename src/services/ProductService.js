@@ -279,7 +279,55 @@ class ProductService extends BaseApiService {
       size: Math.min(100, Math.max(1, options.size || 20))
     })
     console.log('📤 [PRODUCT_SERVICE] getProductFeeds 요청:', { productId, params })
-    return await this.get(`/products/${productId}/feeds`, params)
+    const response = await this.get(`/products/${productId}/feeds`, params)
+
+    // 피드 데이터 정규화
+    if (response.success && response.data) {
+      const feeds = response.data.content || response.data || []
+      response.data.content = feeds.map(feed => this.normalizeProductFeed(feed))
+    }
+    return response
+  }
+
+  normalizeProductFeed(feed) {
+    if (!feed) return null
+
+    const getTimeAgo = (dateStr) => {
+      if (!dateStr) return ''
+      const date = new Date(dateStr)
+      const now = new Date()
+      const diff = now - date
+      const minutes = Math.floor(diff / 60000)
+      const hours = Math.floor(diff / 3600000)
+      const days = Math.floor(diff / 86400000)
+
+      if (minutes < 1) return '방금 전'
+      if (minutes < 60) return `${minutes}분 전`
+      if (hours < 24) return `${hours}시간 전`
+      if (days < 7) return `${days}일 전`
+      return date.toLocaleDateString('ko-KR')
+    }
+
+    const getAvatar = (userInfo) => {
+      if (userInfo?.profileImageFile?.fileUrl) return null // 이미지 URL 사용 시
+      const nickname = userInfo?.nickname || '익명'
+      return nickname.charAt(0).toUpperCase()
+    }
+
+    return {
+      id: feed.feedId || feed.id,
+      user: feed.userInfo?.nickname || '익명',
+      avatar: getAvatar(feed.userInfo),
+      avatarUrl: feed.userInfo?.profileImageFile?.fileUrl || null,
+      time: getTimeAgo(feed.createdAt),
+      content: feed.feedTitle || feed.description || '',
+      image: feed.feedThumbnail?.fileUrl || null,
+      likes: feed.likeCount || 0,
+      comments: feed.commentCount || 0,
+      liked: feed.hasLiked || false,
+      // 원본 데이터 보존
+      _raw: feed
+    }
   }
 
   async getProductBattles(productId, options = {}) {

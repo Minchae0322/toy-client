@@ -2,7 +2,8 @@
   <article class="feed-card">
     <!-- 헤더 -->
     <div class="feed-header">
-      <div class="avatar">{{ feed.avatar }}</div>
+      <img v-if="feed.avatarUrl" :src="feed.avatarUrl" class="avatar avatar-img" alt="" />
+      <div v-else class="avatar">{{ feed.avatar }}</div>
       <div class="user-info">
         <p class="username">{{ feed.user }}</p>
         <p class="time">{{ feed.time }}</p>
@@ -90,6 +91,10 @@ defineEmits(['like'])
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
+}
+
+.avatar.avatar-img {
+  object-fit: cover;
 }
 
 .user-info {
