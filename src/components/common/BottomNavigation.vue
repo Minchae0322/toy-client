@@ -106,10 +106,8 @@
       </div>
     </div>
 
-    <!-- Overlay -->
-    <Transition name="fade">
-      <div v-if="isCreateMenuOpen || isMoreMenuOpen" class="overlay" @click="closeAllMenus"></div>
-    </Transition>
+    <!-- Overlay (투명) -->
+    <div v-if="isCreateMenuOpen || isMoreMenuOpen" class="overlay" @click="closeAllMenus"></div>
   </nav>
 </template>
 
@@ -209,23 +207,23 @@ onBeforeUnmount(() => {
 }
 
 .nav-wrapper {
-  max-width: 480px;
+  max-width: 400px;
   width: 100%;
-  height: 56px;
+  height: 60px;
   background: var(--bg-nav);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-light);
-  border-radius: 28px;
+  border-radius: 30px;
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-evenly;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   position: relative;
+  padding: 0 8px;
 }
 
 .nav-item {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -234,10 +232,9 @@ onBeforeUnmount(() => {
   background: none;
   border: none;
   color: var(--text-dim);
-  transition: color 0.2s ease;
-  padding: 6px 0;
+  transition: color 0.15s ease;
+  padding: 8px 12px;
   cursor: pointer;
-  min-width: 0;
 }
 
 .nav-item.active {
@@ -245,15 +242,14 @@ onBeforeUnmount(() => {
 }
 
 .nav-icon {
-  width: 22px;
-  height: 22px;
-  margin-bottom: 2px;
+  width: 24px;
+  height: 24px;
+  margin-bottom: 4px;
 }
 
 .nav-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: 11px;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -263,28 +259,26 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  margin: 0 4px;
+  padding: 0 8px;
 }
 
 .fab-btn {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   background: var(--main);
   border: none;
-  border-radius: 16px;
+  border-radius: 14px;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.4);
+  box-shadow: 0 2px 12px rgba(147, 51, 234, 0.35);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
 }
 
-.fab-btn:hover {
-  background: var(--main-light);
-  transform: scale(1.05);
+.fab-btn:active {
+  transform: scale(0.95);
 }
 
 .fab-btn.open {
@@ -293,55 +287,55 @@ onBeforeUnmount(() => {
 }
 
 .fab-icon {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 
 /* FAB Menu */
 .fab-menu {
   position: absolute;
-  bottom: 60px;
+  bottom: 54px;
   left: 50%;
   transform: translateX(-50%);
   background: white;
-  border-radius: 16px;
-  padding: 8px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 150px;
+  gap: 2px;
   z-index: 1002;
 }
 
 .fab-menu-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 10px 12px;
   border: none;
   background: none;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s ease;
+  white-space: nowrap;
 }
 
-.fab-menu-item:hover {
+.fab-menu-item:active {
   background: #f4f4f5;
 }
 
 .menu-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .menu-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .menu-icon.feed {
@@ -362,13 +356,13 @@ onBeforeUnmount(() => {
 .menu-text {
   font-size: 14px;
   font-weight: 500;
-  color: #3f3f46;
+  color: #262626;
+  white-space: nowrap;
 }
 
 /* 더보기 Container */
 .more-container {
   position: relative;
-  flex: 1;
   display: flex;
   justify-content: center;
 }
@@ -376,47 +370,47 @@ onBeforeUnmount(() => {
 /* 더보기 Menu */
 .more-menu {
   position: absolute;
-  bottom: 50px;
-  right: 0;
+  bottom: 54px;
+  right: -8px;
   background: white;
-  border-radius: 16px;
-  padding: 8px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 140px;
+  gap: 2px;
   z-index: 1002;
 }
 
 .more-menu-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 10px 12px;
   border: none;
   background: none;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s ease;
+  white-space: nowrap;
 }
 
-.more-menu-item:hover {
+.more-menu-item:active {
   background: #f4f4f5;
 }
 
 .more-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .more-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .more-icon.chat {
@@ -432,48 +426,38 @@ onBeforeUnmount(() => {
 .more-text {
   font-size: 14px;
   font-weight: 500;
-  color: #3f3f46;
+  color: #262626;
+  white-space: nowrap;
 }
 
-/* Overlay */
+/* Overlay (투명 - 클릭 감지용) */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.2);
   z-index: 999;
 }
 
 /* Transitions */
 .fade-up-enter-active,
 .fade-up-leave-active {
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .fade-up-enter-from,
 .fade-up-leave-to {
   opacity: 0;
-  transform: translateX(-50%) translateY(10px);
+  transform: translateX(-50%) translateY(8px);
 }
 
 .fade-up-right-enter-active,
 .fade-up-right-leave-active {
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .fade-up-right-enter-from,
 .fade-up-right-leave-to {
   opacity: 0;
-  transform: translateY(10px);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+  transform: translateY(8px);
 }
 
 /* 태블릿 이상에서 숨김 */
