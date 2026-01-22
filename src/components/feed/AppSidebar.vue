@@ -3,11 +3,18 @@
     <nav class="nav-menu">
       <!-- 메인 메뉴 섹션 -->
       <div class="nav-section">
-        <router-link to="/feed" class="nav-item" active-class="active">
+        <router-link to="/" class="nav-item" active-class="active" exact>
           <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
           </svg>
           <span class="nav-text">홈</span>
+        </router-link>
+
+        <router-link to="/feed" class="nav-item" active-class="active">
+          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14H7v-2h5v2zm3-4H7v-2h8v2zm0-4H7V7h8v2z"/>
+          </svg>
+          <span class="nav-text">피드</span>
         </router-link>
 
         <router-link to="/battle" class="nav-item" active-class="active">
