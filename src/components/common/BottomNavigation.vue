@@ -48,17 +48,6 @@
         <span class="nav-label">제품</span>
       </router-link>
 
-      <!-- 메시지 -->
-      <button class="nav-item" :class="{ active: isActive('/chat') }" @click="handleProtectedNav('chat')">
-        <svg v-if="!isActive('/chat')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-        </svg>
-        <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z"/>
-        </svg>
-        <span class="nav-label">메시지</span>
-      </button>
-
       <!-- MY -->
       <button class="nav-item" :class="{ active: isActive('/mypage') }" @click="handleProtectedNav('mypage')">
         <svg v-if="!isActive('/mypage')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,22 +59,75 @@
         <span class="nav-label">MY</span>
       </button>
     </div>
+
+    <!-- 우측 FAB -->
+    <div class="fab-container">
+      <button class="fab-btn" :class="{ open: isMenuOpen }" @click="toggleMenu">
+        <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+      </button>
+
+      <Transition name="fade-up">
+        <div v-if="isMenuOpen" class="fab-menu">
+          <button class="fab-menu-item" @click="handleCreate('feed')">
+            <span class="menu-icon feed">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+            </span>
+            <span class="menu-text">피드 작성</span>
+          </button>
+          <button class="fab-menu-item" @click="handleCreate('battle')">
+            <span class="menu-icon battle">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </span>
+            <span class="menu-text">배틀 생성</span>
+          </button>
+          <button class="fab-menu-item" @click="handleCreate('product')">
+            <span class="menu-icon product">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+              </svg>
+            </span>
+            <span class="menu-text">제품 등록</span>
+          </button>
+        </div>
+      </Transition>
+    </div>
+
+    <!-- Overlay -->
+    <Transition name="fade">
+      <div v-if="isMenuOpen" class="overlay" @click="closeMenu"></div>
+    </Transition>
   </nav>
 </template>
 
 <script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 
 const router = useRouter();
 const route = useRoute();
 const { isLoggedIn } = useAuth();
+const isMenuOpen = ref(false);
 
 const isActive = (path) => {
   if (path === '/dashboard') {
     return route.path === '/dashboard' || route.path === '/';
   }
   return route.path.startsWith(path);
+};
+
+const toggleMenu = () => {
+  isMenuOpen.value = !isMenuOpen.value;
+};
+
+const closeMenu = () => {
+  isMenuOpen.value = false;
 };
 
 const handleProtectedNav = async (name) => {
@@ -97,11 +139,45 @@ const handleProtectedNav = async (name) => {
     await router.push({ name: 'Login', query: { redirect: route.fullPath } });
   }
 };
+
+const handleCreate = async (type) => {
+  closeMenu();
+
+  const routes = {
+    feed: { name: 'FeedCreate', redirect: '/feed/create' },
+    battle: { name: 'BattleCreate', redirect: '/battle/create' },
+    product: { name: 'ProductCreate', redirect: '/products/create' }
+  };
+
+  const target = routes[type];
+
+  if (isLoggedIn.value) {
+    router.push({ name: target.name });
+    return;
+  }
+
+  if (confirm('로그인이 필요합니다.')) {
+    await router.push({ name: 'Login', query: { redirect: target.redirect } });
+  }
+};
+
+const onKeydown = (e) => {
+  if (e.key === 'Escape') closeMenu();
+};
+
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeydown);
+});
 </script>
 
 <style scoped>
 .safe-area-bottom {
   --main: #9333ea;
+  --main-light: #a855f7;
   --bg-nav: rgba(255, 255, 255, 0.95);
   --border-light: rgba(0, 0, 0, 0.06);
   --text-dim: #9ca3af;
@@ -111,14 +187,16 @@ const handleProtectedNav = async (name) => {
   left: 0;
   right: 0;
   z-index: 1000;
-  padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
+  align-items: flex-end;
+  gap: 10px;
 }
 
 .nav-wrapper {
-  max-width: 480px;
-  width: 100%;
+  max-width: 420px;
+  flex: 1;
   height: 56px;
   background: var(--bg-nav);
   backdrop-filter: blur(16px);
@@ -152,16 +230,148 @@ const handleProtectedNav = async (name) => {
 }
 
 .nav-icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   margin-bottom: 2px;
 }
 
 .nav-label {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: -0.02em;
   white-space: nowrap;
+}
+
+/* FAB Container */
+.fab-container {
+  position: relative;
+}
+
+.fab-btn {
+  width: 56px;
+  height: 56px;
+  background: var(--main);
+  border: none;
+  border-radius: 18px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.4);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-btn:hover {
+  background: var(--main-light);
+  transform: scale(1.02);
+}
+
+.fab-btn.open {
+  transform: rotate(45deg);
+  background: #7c3aed;
+}
+
+.fab-icon {
+  width: 26px;
+  height: 26px;
+}
+
+/* FAB Menu */
+.fab-menu {
+  position: absolute;
+  bottom: 68px;
+  right: 0;
+  background: white;
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+  z-index: 1002;
+}
+
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: none;
+  background: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.fab-menu-item:hover {
+  background: #f4f4f5;
+}
+
+.menu-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.menu-icon.feed {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+.menu-icon.battle {
+  background: #fae8ff;
+  color: #9333ea;
+}
+
+.menu-icon.product {
+  background: #d1fae5;
+  color: #10b981;
+}
+
+.menu-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #3f3f46;
+}
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 999;
+}
+
+/* Transitions */
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: all 0.2s ease;
+}
+
+.fade-up-enter-from,
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 /* 태블릿 이상에서 숨김 */
