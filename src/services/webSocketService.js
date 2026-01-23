@@ -173,7 +173,7 @@ class WebSocketService {
         try { this.client.deactivate() } catch (e) { /* ignore */ }
       }
 
-      const socketUrl = `${this.baseURL}/api/ws`
+      const socketUrl = this.wsURL
       console.log('🔌 [WebSocket] Connecting to:', socketUrl)
 
       const socket = new SockJS(socketUrl)

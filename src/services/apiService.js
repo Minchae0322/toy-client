@@ -376,7 +376,6 @@ class IntegratedApiService {
     try {
       const testEndpoints = [
         `${this.authServerURL}/actuator/health`,
-        `${this.authServerURL}/api/health`,
         `${this.authServerURL}/health`
       ]
 
@@ -404,7 +403,6 @@ class IntegratedApiService {
     try {
       const testEndpoints = [
         `${this.chatServerURL}/actuator/health`,
-        `${this.chatServerURL}/api/health`,
         `${this.chatServerURL}/health`
       ]
 

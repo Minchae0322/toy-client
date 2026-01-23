@@ -6,7 +6,7 @@ import { ENV, getServiceUrl } from '@/config/env.js'
 
 class BattleService extends BaseApiService {
   constructor() {
-    const baseURL = `${getServiceUrl('CONTENT')}/api`
+    const baseURL = getServiceUrl('CONTENT')
     super(baseURL, 'BATTLE')
     console.log(`⚔️ [BATTLE] Content Server URL: ${this.baseURL}`)
     console.log(`🌍 [BATTLE] Environment: ${ENV.MODE}`)

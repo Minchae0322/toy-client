@@ -11,7 +11,7 @@ import * as authUtils from '@/utils/auth.js'
  */
 class ChatService extends BaseApiService {
   constructor() {
-    const baseURL = `${getServiceUrl('CHAT')}/api`
+    const baseURL = getServiceUrl('CHAT')
     super(baseURL, 'CHAT')
 
     this.wsURL = ENV.WS_URL

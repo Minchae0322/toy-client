@@ -4,10 +4,7 @@ import { ENV, getServiceUrl } from '@/config/env.js'
 
 class CategoryService extends BaseApiService {
   constructor() {
-    // 개발: http://54.180.89.70:8082/api (단일 서버)
-    // 프로덕션: https://content.yourdomain.com/api (MSA)
-    const baseURL = `${getServiceUrl('CONTENT')}/api`
-
+    const baseURL = getServiceUrl('CONTENT')
     super(baseURL, 'CATEGORY')
     console.log(`⚔️ [CATEGORY] Content Server URL: ${this.baseURL}`)
     console.log(`🌍 [CATEGORY] Environment: ${ENV.MODE}`)

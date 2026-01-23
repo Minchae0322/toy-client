@@ -6,7 +6,7 @@ import { ENV, getServiceUrl } from "@/config/env.js"
 
 class FeedService extends BaseApiService {
   constructor() {
-    const baseURL = `${getServiceUrl('CONTENT')}/api`
+    const baseURL = getServiceUrl('CONTENT')
     super(baseURL, 'FEED')
     console.log(`⚔️ [FEED] Content Server URL: ${this.baseURL}`)
     console.log(`🌍 [FEED] Environment: ${ENV.MODE}`)

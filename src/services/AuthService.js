@@ -11,7 +11,7 @@ import {ENV, getServiceUrl} from "@/config/env.js";
  */
 class AuthService extends BaseApiService {
   constructor() {
-    const baseURL = `${getServiceUrl('AUTH')}/api`
+    const baseURL = getServiceUrl('AUTH')
     super(baseURL, 'AUTH')
     console.log(`[AUTH] AUTH Server URL: ${this.baseURL}`)
     console.log(`[AUTH] Environment: ${ENV.MODE}`)

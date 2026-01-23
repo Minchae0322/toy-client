@@ -105,7 +105,7 @@ const handleRegister = async (formData) => {
 
 const handleSocialLogin = (provider) => {
   const authBaseUrl = import.meta.env.VITE_AUTH_BASE_URL
-  window.location.href = `${authBaseUrl}/api/oauth2/authorization/${provider}`
+  window.location.href = `${authBaseUrl}/oauth2/authorization/${provider}`
 }
 
 onMounted(() => {

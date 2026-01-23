@@ -10,7 +10,7 @@ import { ENV, getServiceUrl } from '@/config/env.js'
  */
 class FileService extends BaseApiService {
   constructor() {
-    const baseURL = `${getServiceUrl('AUTH')}/api`
+    const baseURL = getServiceUrl('AUTH')
     super(baseURL, 'FILE')
     console.log(`📁 [FILE] File Server URL: ${this.baseURL}`)
     console.log(`🌍 [FILE] Environment: ${ENV.MODE}`)

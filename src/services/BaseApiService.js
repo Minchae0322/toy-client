@@ -366,7 +366,6 @@ export class BaseApiService {
   async testConnection() {
     const testEndpoints = [
       '/actuator/health',
-      '/api/health',
       '/health'
     ]
 
