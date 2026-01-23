@@ -252,6 +252,12 @@ onMounted(() => {
   }
 }
 
+@media (min-width: 1920px) {
+  .app-container {
+    padding: 0 4rem;
+  }
+}
+
 .main-content {
   flex: 1;
   min-width: 0;
