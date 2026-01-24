@@ -406,8 +406,20 @@ const removeImage = () => {
 }
 
 .type-option.selected {
-  border-color: #1A1A1A;
   background: #FAFBFC;
+}
+
+/* 선택 상태 테두리 - 각 타입별 색상 */
+.type-option.selected:has(.type-icon.lock) {
+  border-color: #374151;
+}
+
+.type-option.selected:has(.type-icon.globe) {
+  border-color: #2563EB;
+}
+
+.type-option.selected:has(.type-icon.check-circle) {
+  border-color: #059669;
 }
 
 .type-icon {
@@ -438,8 +450,19 @@ const removeImage = () => {
   background: #ECFDF5;
 }
 
-.type-option.selected .type-icon {
-  background: #1A1A1A;
+/* 선택 상태 - 각 아이콘별 진한 색상 */
+.type-option.selected .type-icon.lock {
+  background: #374151;
+  color: #fff;
+}
+
+.type-option.selected .type-icon.globe {
+  background: #2563EB;
+  color: #fff;
+}
+
+.type-option.selected .type-icon.check-circle {
+  background: #059669;
   color: #fff;
 }
 

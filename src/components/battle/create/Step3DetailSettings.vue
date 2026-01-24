@@ -199,8 +199,16 @@ const descriptionCharCount = computed(() => {
 }
 
 .vote-type-option.selected {
-  border-color: #1A1A1A;
   background: #FAFBFC;
+}
+
+/* 선택 상태 테두리 - 각 타입별 색상 */
+.vote-type-option.selected:has(.vote-type-icon.vote-single) {
+  border-color: #4F46E5;
+}
+
+.vote-type-option.selected:has(.vote-type-icon.vote-multiple) {
+  border-color: #D97706;
 }
 
 .vote-radio {
@@ -237,8 +245,15 @@ const descriptionCharCount = computed(() => {
   color: #F59E0B;
 }
 
-.vote-type-option.selected .vote-type-icon {
-  background: #1A1A1A;
+/* 선택 상태 - 각 아이콘별 진한 색상 */
+.vote-type-option.selected .vote-type-icon.vote-single {
+  background: #4F46E5;
+  transform: scale(1.05);
+  color: #fff;
+}
+
+.vote-type-option.selected .vote-type-icon.vote-multiple {
+  background: #D97706;
   transform: scale(1.05);
   color: #fff;
 }
