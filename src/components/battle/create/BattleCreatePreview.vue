@@ -2,7 +2,18 @@
   <div class="preview-section" :class="{ collapsed: isCollapsed }">
     <!-- 모바일 토글 버튼 -->
     <button class="preview-toggle" @click="isCollapsed = !isCollapsed">
-      <span class="toggle-icon">{{ isCollapsed ? '👁️' : '✕' }}</span>
+      <span class="toggle-icon">
+        <!-- Eye Icon -->
+        <svg v-if="isCollapsed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <!-- Close Icon -->
+        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </span>
       <span class="toggle-text">{{ isCollapsed ? '미리보기' : '닫기' }}</span>
     </button>
 
@@ -35,7 +46,10 @@
               :key="i"
               style="background: rgba(255,255,255,0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; backdrop-filter: blur(10px);"
           >
-            {{ selectedItems[i]?.emoji || '👟' }}
+            <span v-if="selectedItems[i]?.emoji">{{ selectedItems[i].emoji }}</span>
+            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: rgba(255,255,255,0.7);">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            </svg>
           </div>
         </div>
         <div class="preview-type-badge">큐레이션</div>
@@ -43,7 +57,14 @@
 
       <!-- 기본 플레이스홀더 -->
       <div v-else class="preview-visual">
-        <div class="preview-visual-placeholder">{{ previewEmoji }}</div>
+        <div class="preview-visual-placeholder">
+          <span v-if="previewEmoji">{{ previewEmoji }}</span>
+          <svg v-else width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+        </div>
         <div class="preview-type-badge">{{ previewTypeName }}</div>
       </div>
 
@@ -89,7 +110,7 @@ const props = defineProps({
   },
   previewEmoji: {
     type: String,
-    default: '📦'
+    default: null
   },
   previewTypeName: {
     type: String,
@@ -154,6 +175,10 @@ const previewImageUrl = computed(() => {
 .preview-visual-placeholder {
   font-size: 48px;
   opacity: 0.5;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .preview-type-badge {
@@ -281,7 +306,9 @@ const previewImageUrl = computed(() => {
   }
 
   .toggle-icon {
-    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .preview-card {
