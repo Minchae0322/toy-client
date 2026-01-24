@@ -21,7 +21,18 @@
               class="vote-radio"
           >
           <div class="vote-type-content">
-            <div class="vote-type-icon">{{ type.icon }}</div>
+            <div class="vote-type-icon">
+              <!-- Single Vote Icon -->
+              <svg v-if="type.iconType === 'vote-single'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <text x="12" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="12" font-weight="600">1</text>
+              </svg>
+              <!-- Multiple Vote Icon -->
+              <svg v-else-if="type.iconType === 'vote-multiple'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <text x="12" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="12" font-weight="600">3</text>
+              </svg>
+            </div>
             <div class="vote-type-info">
               <div class="vote-type-title">{{ type.title }}</div>
               <div class="vote-type-desc">{{ type.desc }}</div>
@@ -52,7 +63,13 @@
 
     <!-- 안내 박스 -->
     <div class="info-box">
-      <div class="info-icon">💡</div>
+      <div class="info-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      </div>
       <div class="info-content">
         <div class="info-title">투표 방식에 따른 점수 계산</div>
         <div class="info-desc">
@@ -206,14 +223,15 @@ const descriptionCharCount = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
   flex-shrink: 0;
   transition: all 0.2s;
+  color: #6B7280;
 }
 
 .vote-type-option.selected .vote-type-icon {
   background: #1A1A1A;
   transform: scale(1.05);
+  color: #fff;
 }
 
 .vote-type-info {
@@ -245,8 +263,11 @@ const descriptionCharCount = computed(() => {
 }
 
 .info-icon {
-  font-size: 24px;
   flex-shrink: 0;
+  color: #1E40AF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .info-content {
@@ -313,8 +334,9 @@ const descriptionCharCount = computed(() => {
     padding: 16px;
   }
 
-  .info-icon {
-    font-size: 20px;
+  .info-icon svg {
+    width: 20px;
+    height: 20px;
   }
 
   .info-title {

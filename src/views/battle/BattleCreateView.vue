@@ -100,19 +100,19 @@ const currentStep = ref(1);
 const itemAddPermissionTypes = [
   {
     value: 'CREATOR_ONLY',
-    icon: '🔒',
+    iconType: 'lock',
     title: '생성자만 추가 가능',
     desc: '배틀 생성자만 아이템을 추가할 수 있어요'
   },
   {
     value: 'PUBLIC_FREE',
-    icon: '🌐',
+    iconType: 'globe',
     title: '누구나 추가 가능',
     desc: '모든 사용자가 자유롭게 아이템을 추가할 수 있어요'
   },
   {
     value: 'PUBLIC_APPROVAL',
-    icon: '✅',
+    iconType: 'check-circle',
     title: '승인 후 추가 가능',
     desc: '아이템 등록 후 생성자의 승인을 받아야 해요'
   }
@@ -122,13 +122,13 @@ const itemAddPermissionTypes = [
 const voteTypes = [
   {
     value: 'SINGLE',
-    icon: '1️⃣',
+    iconType: 'vote-single',
     title: '1인 1표',
     desc: '한 명당 하나의 아이템에만 투표할 수 있어요'
   },
   {
     value: 'MULTIPLE',
-    icon: '3️⃣',
+    iconType: 'vote-multiple',
     title: '1인 3표 (순위)',
     desc: '1위부터 3위까지 순위를 매겨 투표할 수 있어요'
   }
@@ -176,16 +176,16 @@ const previewCategoryName = computed(() => {
 });
 
 const previewEmoji = computed(() => {
-  if (!battleForm.value.subCategoryId) return '📦';
+  if (!battleForm.value.subCategoryId) return null;
 
   const parentCategory = categories.value.find(c =>
       c.children?.some(s => s.categoryId === battleForm.value.subCategoryId)
   );
 
-  if (!parentCategory) return '📦';
+  if (!parentCategory) return null;
 
   const subCategory = parentCategory.children?.find(s => s.categoryId === battleForm.value.subCategoryId);
-  return subCategory?.emoji || parentCategory.emoji || '📦';
+  return subCategory?.emoji || parentCategory.emoji || null;
 });
 
 const previewVoteTypeName = computed(() => {
@@ -441,7 +441,7 @@ const createBattle = async () => {
 
     if (response.success) {
       localStorage.removeItem('battleDraft');
-      alert('배틀이 성공적으로 생성되었습니다! 🎉');
+      alert('배틀이 성공적으로 생성되었습니다!');
       router.push({
         name: 'BattleDetail',
         params: { id: response.data.id }

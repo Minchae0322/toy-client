@@ -28,7 +28,24 @@
             :class="{ selected: battleForm.itemAddPermissionType === type.value }"
             @click="$emit('update:battleForm', { ...battleForm, itemAddPermissionType: type.value })"
         >
-          <div class="type-icon">{{ type.icon }}</div>
+          <div class="type-icon">
+            <!-- Lock Icon -->
+            <svg v-if="type.iconType === 'lock'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <!-- Globe Icon -->
+            <svg v-else-if="type.iconType === 'globe'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <!-- Check Circle Icon -->
+            <svg v-else-if="type.iconType === 'check-circle'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
           <div class="type-title">{{ type.title }}</div>
           <div class="type-desc">{{ type.desc }}</div>
         </div>
@@ -52,7 +69,12 @@
               :class="{ selected: selectedParentCategory?.categoryId === category.categoryId }"
               @click="selectParentCategory(category)"
           >
-            <div class="category-emoji">{{ category.emoji || '📁' }}</div>
+            <div class="category-emoji">
+              <span v-if="category.emoji">{{ category.emoji }}</span>
+              <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
             <div class="category-name">{{ category.categoryName }}</div>
             <div class="sub-count">{{ (category.children?.length || 0) }}개</div>
           </div>
@@ -74,7 +96,13 @@
               :class="{ selected: battleForm.subCategoryId === subCategory.categoryId }"
               @click="selectSubCategory(subCategory)"
           >
-            <div class="category-emoji">{{ subCategory.emoji || '📄' }}</div>
+            <div class="category-emoji">
+              <span v-if="subCategory.emoji">{{ subCategory.emoji }}</span>
+              <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+            </div>
             <div class="category-name">{{ subCategory.categoryName }}</div>
           </div>
         </div>
@@ -95,7 +123,12 @@
         먼저 상위 카테고리를 선택해주세요
       </div>
       <div v-else-if="!battleForm.subCategoryId" class="form-hint error">
-        ⚠️ 하위 카테고리를 반드시 선택해야 합니다
+        <svg class="hint-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        하위 카테고리를 반드시 선택해야 합니다
       </div>
     </div>
 
@@ -152,7 +185,13 @@
             class="upload-placeholder"
             @click="$refs.thumbnailInput.click()"
         >
-          <div class="upload-icon">🖼️</div>
+          <div class="upload-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </div>
           <div class="upload-text">클릭하여 이미지 업로드</div>
           <div class="upload-hint">JPG, PNG, GIF (최대 5MB)</div>
         </div>
@@ -312,6 +351,13 @@ const removeImage = () => {
 .form-hint.error {
   color: #DC2626;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hint-icon {
+  flex-shrink: 0;
 }
 
 .form-input {
@@ -368,12 +414,13 @@ const removeImage = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   margin-bottom: 8px;
+  color: #6B7280;
 }
 
 .type-option.selected .type-icon {
   background: #1A1A1A;
+  color: #fff;
 }
 
 .type-title {
@@ -460,6 +507,14 @@ const removeImage = () => {
 .category-emoji {
   font-size: 24px;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6B7280;
+}
+
+.category-item.selected .category-emoji {
+  color: #fff;
 }
 
 .sub-item .category-emoji {
@@ -566,8 +621,13 @@ const removeImage = () => {
 }
 
 .upload-icon {
-  font-size: 48px;
   margin-bottom: 12px;
+  color: #9CA3AF;
+}
+
+.upload-icon svg {
+  width: 48px;
+  height: 48px;
 }
 
 .upload-text {
@@ -696,8 +756,12 @@ const removeImage = () => {
     padding: 32px 16px;
   }
 
+  .upload-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
   .upload-icon {
-    font-size: 40px;
     margin-bottom: 8px;
   }
 
