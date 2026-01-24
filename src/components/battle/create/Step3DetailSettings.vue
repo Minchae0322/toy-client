@@ -21,7 +21,7 @@
               class="vote-radio"
           >
           <div class="vote-type-content">
-            <div class="vote-type-icon">
+            <div class="vote-type-icon" :class="type.iconType">
               <!-- Single Vote Icon -->
               <svg v-if="type.iconType === 'vote-single'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -218,14 +218,23 @@ const descriptionCharCount = computed(() => {
 .vote-type-icon {
   width: 48px;
   height: 48px;
-  background: #F3F4F6;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition: all 0.2s;
-  color: #6B7280;
+}
+
+/* 투표 아이콘별 색상 */
+.vote-type-icon.vote-single {
+  background: #EEF2FF;
+  color: #6366F1;
+}
+
+.vote-type-icon.vote-multiple {
+  background: #FEF3C7;
+  color: #F59E0B;
 }
 
 .vote-type-option.selected .vote-type-icon {

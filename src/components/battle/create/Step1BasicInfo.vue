@@ -28,7 +28,7 @@
             :class="{ selected: battleForm.itemAddPermissionType === type.value }"
             @click="$emit('update:battleForm', { ...battleForm, itemAddPermissionType: type.value })"
         >
-          <div class="type-icon">
+          <div class="type-icon" :class="type.iconType">
             <!-- Lock Icon -->
             <svg v-if="type.iconType === 'lock'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -71,7 +71,7 @@
           >
             <div class="category-emoji">
               <span v-if="category.emoji">{{ category.emoji }}</span>
-              <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg v-else class="folder-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
               </svg>
             </div>
@@ -98,7 +98,7 @@
           >
             <div class="category-emoji">
               <span v-if="subCategory.emoji">{{ subCategory.emoji }}</span>
-              <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg v-else class="file-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
               </svg>
@@ -123,7 +123,7 @@
         먼저 상위 카테고리를 선택해주세요
       </div>
       <div v-else-if="!battleForm.subCategoryId" class="form-hint error">
-        <svg class="hint-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="hint-icon warning" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
           <line x1="12" y1="9" x2="12" y2="13"></line>
           <line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -360,6 +360,10 @@ const removeImage = () => {
   flex-shrink: 0;
 }
 
+.hint-icon.warning {
+  color: #F59E0B;
+}
+
 .form-input {
   width: 100%;
   padding: 12px 16px;
@@ -415,7 +419,23 @@ const removeImage = () => {
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+/* 아이콘별 색상 */
+.type-icon.lock {
   color: #6B7280;
+  background: #F3F4F6;
+}
+
+.type-icon.globe {
+  color: #3B82F6;
+  background: #EFF6FF;
+}
+
+.type-icon.check-circle {
+  color: #10B981;
+  background: #ECFDF5;
 }
 
 .type-option.selected .type-icon {
@@ -510,10 +530,18 @@ const removeImage = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6B7280;
 }
 
-.category-item.selected .category-emoji {
+.category-emoji .folder-icon {
+  color: #F59E0B;
+}
+
+.category-emoji .file-icon {
+  color: #6366F1;
+}
+
+.category-item.selected .category-emoji .folder-icon,
+.category-item.selected .category-emoji .file-icon {
   color: #fff;
 }
 
@@ -622,7 +650,7 @@ const removeImage = () => {
 
 .upload-icon {
   margin-bottom: 12px;
-  color: #9CA3AF;
+  color: #6366F1;
 }
 
 .upload-icon svg {
