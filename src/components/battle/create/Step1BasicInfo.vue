@@ -538,9 +538,19 @@ const removeImage = () => {
 }
 
 .category-item.selected {
-  border-color: #1A1A1A;
-  background: #1A1A1A;
   color: white;
+}
+
+/* 상위 카테고리 선택 - 노란/주황 계열 */
+.category-grid.parent .category-item.selected {
+  border-color: #D97706;
+  background: #D97706;
+}
+
+/* 하위 카테고리 선택 - 보라색 계열 */
+.category-grid.sub .category-item.selected {
+  border-color: #4F46E5;
+  background: #4F46E5;
 }
 
 .sub-item {
