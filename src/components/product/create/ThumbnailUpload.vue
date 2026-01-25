@@ -97,10 +97,12 @@ const props = defineProps({
 
 const emit = defineEmits(['update', 'remove'])
 
-const { isImageFile, createPreview } = useFile()
+const fileService = useFile()
+const { isImageFile, createPreview } = fileService
 
 const fileInput = ref(null)
 const isDragOver = ref(false)
+const isUploading = ref(false)
 
 const triggerInput = () => {
   fileInput.value?.click()
@@ -156,20 +158,69 @@ const processFile = async (file) => {
     return
   }
 
+  // 로컬 미리보기 생성
   const previewResult = await createPreview(file)
   if (!previewResult.success) {
     console.error('미리보기 생성 실패:', previewResult.error)
     return
   }
 
+  // 로컬 미리보기로 먼저 업데이트
   const fileObj = {
     file: file,
     name: file.name,
     size: file.size,
-    preview: previewResult.previewUrl
+    preview: previewResult.previewUrl,
+    uploading: true,
+    attachmentInfo: null
   }
-
   emit('update', fileObj)
+
+  // Presigned URL로 S3 업로드
+  isUploading.value = true
+  try {
+    const uploadResult = await fileService.upload(file, { fileCode: 'PRODUCT' })
+
+    if (uploadResult.success && uploadResult.data) {
+      const serverUrl = uploadResult.data.fileUrl || uploadResult.data.storedPath
+
+      // 서버 URL로 업데이트
+      const updatedFileObj = {
+        file: file,
+        name: file.name,
+        size: file.size,
+        preview: serverUrl, // 서버 URL로 교체
+        uploading: false,
+        attachmentInfo: {
+          fileId: uploadResult.data.id,
+          storedPath: uploadResult.data.fileUrl,
+          originName: uploadResult.data.orgFileNm || file.name,
+          fileSize: uploadResult.data.fileSize || file.size,
+          contentType: uploadResult.data.contentType || file.type
+        }
+      }
+      emit('update', updatedFileObj)
+      console.log('✅ [PRODUCT] 대표 이미지 업로드 완료')
+    } else {
+      throw new Error(uploadResult.error || '업로드 실패')
+    }
+  } catch (error) {
+    console.error('❌ [PRODUCT] 대표 이미지 업로드 실패:', error)
+    alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.')
+    // 실패 시 로컬 미리보기 유지, 제출 시 재업로드
+    const failedFileObj = {
+      file: file,
+      name: file.name,
+      size: file.size,
+      preview: previewResult.previewUrl,
+      uploading: false,
+      uploadFailed: true,
+      attachmentInfo: null
+    }
+    emit('update', failedFileObj)
+  } finally {
+    isUploading.value = false
+  }
 }
 
 const handleRemove = () => {

@@ -197,7 +197,14 @@
         </div>
         <div v-else class="image-preview">
           <img :src="previewImage" alt="대표 이미지">
-          <button class="image-remove" @click="removeImage">×</button>
+          <!-- 업로드 중 오버레이 -->
+          <div v-if="isUploading" class="upload-overlay">
+            <svg class="upload-spinner" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <button class="image-remove" @click="removeImage" :disabled="isUploading">×</button>
         </div>
       </div>
       <input
@@ -214,6 +221,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useFile } from '@/services/FileService.js';
 
 const props = defineProps({
   battleForm: {
@@ -231,6 +239,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:battleForm']);
+
+const fileService = useFile();
+const isUploading = ref(false);
 
 const thumbnailInput = ref(null);
 const selectedParentCategory = ref(null);
@@ -259,9 +270,17 @@ const selectedCategoryPath = computed(() => {
   return `${selectedParentCategory.value.categoryName} > ${subCategory.categoryName}`;
 });
 
+// 미리보기: 서버 URL 우선, 없으면 로컬 preview
 const previewImage = computed(() => {
-  if (!props.battleForm.thumbnailFile) return null;
-  return URL.createObjectURL(props.battleForm.thumbnailFile);
+  // 서버에서 받은 URL이 있으면 사용
+  if (props.battleForm.thumbnailPreviewUrl) {
+    return props.battleForm.thumbnailPreviewUrl;
+  }
+  // 로컬 파일만 있는 경우 (업로드 중)
+  if (props.battleForm.thumbnailFile) {
+    return URL.createObjectURL(props.battleForm.thumbnailFile);
+  }
+  return null;
 });
 
 // 상위 카테고리 선택
@@ -287,7 +306,7 @@ const selectSubCategory = (subCategory) => {
   });
 };
 
-const handleImageUpload = (event) => {
+const handleImageUpload = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -301,16 +320,60 @@ const handleImageUpload = (event) => {
     return;
   }
 
+  // 로컬 미리보기와 업로드 상태 먼저 설정
+  isUploading.value = true;
   emit('update:battleForm', {
     ...props.battleForm,
-    thumbnailFile: file
+    thumbnailFile: file,
+    thumbnailPreviewUrl: null,
+    thumbnailAttachmentInfo: null
   });
+
+  try {
+    // Presigned URL로 S3 업로드
+    const uploadResult = await fileService.upload(file, { fileCode: 'BATTLE' });
+
+    if (uploadResult.success && uploadResult.data) {
+      const attachmentData = uploadResult.data;
+      const serverUrl = attachmentData.fileUrl || attachmentData.storedPath;
+
+      emit('update:battleForm', {
+        ...props.battleForm,
+        thumbnailFile: file,
+        thumbnailPreviewUrl: serverUrl, // 서버 URL로 미리보기
+        thumbnailAttachmentInfo: {
+          fileId: attachmentData.id,
+          storedPath: attachmentData.fileUrl,
+          originName: attachmentData.orgFileNm || file.name,
+          fileSize: attachmentData.fileSize || file.size,
+          contentType: attachmentData.contentType || file.type
+        }
+      });
+      console.log('✅ [BATTLE] 대표 이미지 업로드 완료');
+    } else {
+      throw new Error(uploadResult.error || '업로드 실패');
+    }
+  } catch (error) {
+    console.error('❌ [BATTLE] 대표 이미지 업로드 실패:', error);
+    alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+    // 실패 시 초기화
+    emit('update:battleForm', {
+      ...props.battleForm,
+      thumbnailFile: null,
+      thumbnailPreviewUrl: null,
+      thumbnailAttachmentInfo: null
+    });
+  } finally {
+    isUploading.value = false;
+  }
 };
 
 const removeImage = () => {
   emit('update:battleForm', {
     ...props.battleForm,
-    thumbnailFile: null
+    thumbnailFile: null,
+    thumbnailPreviewUrl: null,
+    thumbnailAttachmentInfo: null
   });
 };
 </script>
@@ -738,6 +801,28 @@ const removeImage = () => {
 .image-remove:hover {
   background: rgba(0, 0, 0, 0.9);
   transform: scale(1.1);
+}
+
+/* 업로드 중 오버레이 */
+.upload-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.upload-spinner {
+  width: 48px;
+  height: 48px;
+  color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {

@@ -107,7 +107,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update', 'remove'])
 
-const { isImageFile, createPreview } = useFile()
+const fileService = useFile()
+const { isImageFile, createPreview } = fileService
 
 const fileInput = ref(null)
 const isDragOver = ref(false)
@@ -177,15 +178,57 @@ const processFiles = async (files) => {
       continue
     }
 
-    newFiles.push({
+    // 로컬 미리보기로 먼저 추가
+    const fileIndex = newFiles.length
+    const fileObj = {
       file: file,
       name: file.name,
       size: file.size,
-      preview: previewResult.previewUrl
-    })
-  }
+      preview: previewResult.previewUrl,
+      uploading: true,
+      attachmentInfo: null
+    }
+    newFiles.push(fileObj)
+    emit('update', [...newFiles])
 
-  emit('update', newFiles)
+    // Presigned URL로 S3 업로드
+    try {
+      const uploadResult = await fileService.upload(file, { fileCode: 'PRODUCT' })
+
+      if (uploadResult.success && uploadResult.data) {
+        const serverUrl = uploadResult.data.fileUrl || uploadResult.data.storedPath
+
+        // 서버 URL로 업데이트
+        newFiles[fileIndex] = {
+          file: file,
+          name: file.name,
+          size: file.size,
+          preview: serverUrl,
+          uploading: false,
+          attachmentInfo: {
+            fileId: uploadResult.data.id,
+            storedPath: uploadResult.data.fileUrl,
+            originName: uploadResult.data.orgFileNm || file.name,
+            fileSize: uploadResult.data.fileSize || file.size,
+            contentType: uploadResult.data.contentType || file.type
+          }
+        }
+        emit('update', [...newFiles])
+        console.log(`✅ [PRODUCT] 추가 이미지 ${fileIndex + 1} 업로드 완료`)
+      } else {
+        throw new Error(uploadResult.error || '업로드 실패')
+      }
+    } catch (error) {
+      console.error(`❌ [PRODUCT] 추가 이미지 업로드 실패:`, error)
+      // 실패 시 로컬 미리보기 유지
+      newFiles[fileIndex] = {
+        ...newFiles[fileIndex],
+        uploading: false,
+        uploadFailed: true
+      }
+      emit('update', [...newFiles])
+    }
+  }
 }
 
 const handleRemove = (index) => {

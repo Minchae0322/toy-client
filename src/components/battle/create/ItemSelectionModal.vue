@@ -220,7 +220,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import productService from '@/services/ProductService';
-import fileService from '@/services/FileService';
+import { useFile } from '@/services/FileService';
 
 const props = defineProps({
   modelValue: {
@@ -239,6 +239,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'confirm']);
 
+const fileService = useFile();
+
 // 상태
 const searchQuery = ref('');
 const tempSelectedItems = ref([]);
@@ -253,7 +255,8 @@ const newItem = ref({
   customBrand: '',
   customImageUrl: '',
   customImageFile: null,
-  customImagePreview: null
+  customImagePreview: null,
+  customImageAttachmentInfo: null // 업로드 완료된 정보
 });
 
 // 디바운스 타이머
@@ -415,7 +418,7 @@ const selectProduct = (product) => {
   }
 };
 
-// 이미지 파일 선택 핸들러
+// 이미지 파일 선택 핸들러 - Presigned URL로 바로 업로드
 const handleImageSelect = async (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -432,17 +435,45 @@ const handleImageSelect = async (event) => {
     return;
   }
 
+  // 로컬 미리보기 먼저 설정
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    newItem.value.customImagePreview = e.target.result;
+  };
+  reader.readAsDataURL(file);
+
+  newItem.value.customImageFile = file;
+  newItem.value.customImageUrl = '';
+  newItem.value.customImageAttachmentInfo = null;
+
+  // Presigned URL로 S3 업로드
+  uploadingImage.value = true;
   try {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      newItem.value.customImagePreview = e.target.result;
-      newItem.value.customImageFile = file;
-      newItem.value.customImageUrl = '';
-    };
-    reader.readAsDataURL(file);
+    const uploadResult = await fileService.upload(file, { fileCode: 'BATTLE_ITEM' });
+
+    if (uploadResult.success && uploadResult.data) {
+      const attachmentData = uploadResult.data;
+      const serverUrl = attachmentData.fileUrl || attachmentData.storedPath;
+
+      // 서버 URL로 미리보기 교체 및 attachmentInfo 저장
+      newItem.value.customImagePreview = serverUrl;
+      newItem.value.customImageAttachmentInfo = {
+        fileId: attachmentData.id,
+        storedPath: attachmentData.fileUrl,
+        originName: attachmentData.orgFileNm || file.name,
+        fileSize: attachmentData.fileSize || file.size,
+        contentType: attachmentData.contentType || file.type
+      };
+      console.log('✅ [BATTLE_ITEM] 이미지 업로드 완료');
+    } else {
+      throw new Error(uploadResult.error || '업로드 실패');
+    }
   } catch (error) {
-    console.error('이미지 미리보기 생성 실패:', error);
-    alert('이미지 미리보기 생성에 실패했습니다.');
+    console.error('❌ [BATTLE_ITEM] 이미지 업로드 실패:', error);
+    alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+    // 실패해도 로컬 미리보기는 유지, 제출 시 재업로드 시도
+  } finally {
+    uploadingImage.value = false;
   }
 };
 
@@ -451,6 +482,7 @@ const removeCustomImage = () => {
   newItem.value.customImageFile = null;
   newItem.value.customImagePreview = null;
   newItem.value.customImageUrl = '';
+  newItem.value.customImageAttachmentInfo = null;
 
   const fileInput = document.getElementById('custom-image-input');
   if (fileInput) {
@@ -472,11 +504,16 @@ const handleUrlInput = () => {
     return;
   }
 
-  // ⭐ 미리보기 URL 생성
+  // 미리보기 URL: 서버 URL 우선, 없으면 로컬 미리보기 또는 URL 입력값
   let previewUrl = null;
-  if (newItem.value.customImageFile) {
+  if (newItem.value.customImageAttachmentInfo?.storedPath) {
+    // 이미 업로드된 서버 URL
+    previewUrl = newItem.value.customImageAttachmentInfo.storedPath;
+  } else if (newItem.value.customImageFile) {
+    // 업로드 실패한 경우 로컬 미리보기
     previewUrl = URL.createObjectURL(newItem.value.customImageFile);
   } else if (newItem.value.customImageUrl.trim()) {
+    // URL 직접 입력
     previewUrl = newItem.value.customImageUrl.trim();
   }
 
@@ -484,9 +521,10 @@ const handleUrlInput = () => {
     productId: null,
     customName: newItem.value.customName.trim(),
     customBrand: newItem.value.customBrand.trim(),
-    customImageFile: newItem.value.customImageFile, // ⭐ File 객체 저장 (업로드용)
+    customImageFile: newItem.value.customImageFile, // File 객체 (업로드 실패 시 재업로드용)
     customImageUrl: newItem.value.customImageUrl.trim() || null, // URL 입력한 경우
-    imageUrl: previewUrl // ⭐ 미리보기용 URL
+    customImageAttachmentInfo: newItem.value.customImageAttachmentInfo, // 업로드된 정보
+    imageUrl: previewUrl // 미리보기용 URL
   };
 
   tempSelectedItems.value.push(item);
@@ -500,7 +538,8 @@ const resetNewItemForm = () => {
     customBrand: '',
     customImageUrl: '',
     customImageFile: null,
-    customImagePreview: null
+    customImagePreview: null,
+    customImageAttachmentInfo: null
   };
 
   const fileInput = document.getElementById('custom-image-input');

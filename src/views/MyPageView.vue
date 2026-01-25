@@ -188,6 +188,8 @@ const error = ref(null)
 const isEditing = ref(false)
 const previewImage = ref(null)
 const selectedFile = ref(null)
+const uploadedProfileImgInfo = ref(null) // 업로드 완료된 정보
+const uploadingImage = ref(false)
 const imageKey = ref(Date.now())
 
 const profile = reactive({
@@ -269,6 +271,7 @@ const cancelEditing = () => {
   editForm.description = profile.description || ''
   previewImage.value = null
   selectedFile.value = null
+  uploadedProfileImgInfo.value = null
   isEditing.value = false
 }
 
@@ -278,17 +281,28 @@ const saveProfile = async () => {
     return
   }
 
+  // 이미지 업로드 중이면 대기
+  if (uploadingImage.value) {
+    alert('이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.')
+    return
+  }
+
   saving.value = true
 
   try {
     let profileImgInfo = null
 
-    // 1. 파일 업로드 처리 (실패 시 early return)
-    if (selectedFile.value) {
-      console.log('[PROFILE] 프로필 이미지 업로드 시작...')
+    // 1. 이미 업로드된 정보 사용 또는 재업로드
+    if (uploadedProfileImgInfo.value) {
+      // 이미 업로드 완료된 경우
+      profileImgInfo = uploadedProfileImgInfo.value
+      console.log('[PROFILE] 이미 업로드된 이미지 사용:', profileImgInfo)
+    } else if (selectedFile.value) {
+      // 업로드 실패 후 재시도
+      console.log('[PROFILE] 프로필 이미지 재업로드 시작...')
 
       const uploadResult = await fileService.upload(selectedFile.value, {
-        fileCode: 'FEED'
+        fileCode: 'PROFILE'
       })
 
       if (!uploadResult.success || !uploadResult.data) {
@@ -336,19 +350,56 @@ const saveProfile = async () => {
   }
 }
 
-const handleImageChange = (e) => {
+const handleImageChange = async (e) => {
   const file = e.target.files[0]
-  if (file) {
-    if (file.size > 5 * 1024 * 1024) {
-      alert('이미지 크기는 5MB 이하여야 합니다.')
-      return
+  if (!file) return
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert('이미지 크기는 5MB 이하여야 합니다.')
+    return
+  }
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드 가능합니다.')
+    return
+  }
+
+  // 로컬 미리보기 먼저 설정
+  selectedFile.value = file
+  previewImage.value = URL.createObjectURL(file)
+  uploadedProfileImgInfo.value = null
+
+  // Presigned URL로 바로 업로드
+  uploadingImage.value = true
+  try {
+    console.log('[PROFILE] 프로필 이미지 업로드 시작...')
+    const uploadResult = await fileService.upload(file, { fileCode: 'PROFILE' })
+
+    if (uploadResult.success && uploadResult.data) {
+      const serverUrl = uploadResult.data.fileUrl || uploadResult.data.storedPath
+      // 서버 URL로 미리보기 교체
+      if (previewImage.value && previewImage.value.startsWith('blob:')) {
+        URL.revokeObjectURL(previewImage.value)
+      }
+      previewImage.value = serverUrl
+
+      uploadedProfileImgInfo.value = {
+        fileId: uploadResult.data.id,
+        storedPath: uploadResult.data.fileUrl,
+        originName: uploadResult.data.orgFileNm || file.name,
+        fileSize: uploadResult.data.fileSize || file.size,
+        contentType: uploadResult.data.contentType || file.type,
+        fileExplain: '프로필 이미지'
+      }
+      console.log('[PROFILE] 프로필 이미지 업로드 완료:', uploadedProfileImgInfo.value)
+    } else {
+      throw new Error(uploadResult.error || '업로드 실패')
     }
-    if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 업로드 가능합니다.')
-      return
-    }
-    selectedFile.value = file
-    previewImage.value = URL.createObjectURL(file)
+  } catch (err) {
+    console.error('[PROFILE] 프로필 이미지 업로드 실패:', err)
+    alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.')
+    // 실패해도 로컬 미리보기는 유지, 저장 시 재업로드 시도
+  } finally {
+    uploadingImage.value = false
   }
 }
 

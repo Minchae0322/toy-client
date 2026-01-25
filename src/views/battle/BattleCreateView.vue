@@ -310,31 +310,17 @@ const createBattle = async () => {
       return dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
     };
 
-    // ⭐ 1. 업로드할 파일만 수집
-    const thumbnailFiles = [];
-    const itemFiles = [];
-    const fileIndexMap = new Map();
-
-    // Step1의 대표 이미지
-    if (battleForm.value.thumbnailFile) {
-      thumbnailFiles.push(battleForm.value.thumbnailFile);
-    }
-
-    // Step2의 커스텀 아이템 이미지 중 파일만 수집
-    selectedItems.value.forEach((item, index) => {
-      if (item.customImageFile) {
-        fileIndexMap.set(itemFiles.length, index);
-        itemFiles.push(item.customImageFile);
-      }
-    });
-
-    // ⭐ 2. 대표 이미지 배치 업로드 (BATTLE_THUMBNAIL)
+    // ⭐ 1. 대표 이미지 - 이미 업로드된 attachmentInfo 사용
     let thumbnailAttachmentInfo = null;
-    if (thumbnailFiles.length > 0) {
+    if (battleForm.value.thumbnailAttachmentInfo) {
+      // Step1에서 이미 업로드 완료
+      thumbnailAttachmentInfo = battleForm.value.thumbnailAttachmentInfo;
+      console.log(`✅ [BATTLE] 대표 이미지 이미 업로드됨:`, thumbnailAttachmentInfo);
+    } else if (battleForm.value.thumbnailFile) {
+      // 업로드 실패 후 재시도하는 경우
       console.log(`📤 [BATTLE] 대표 이미지 업로드 시작`);
-
-      const thumbnailResponse = await fileService.uploadMultiple(
-          thumbnailFiles,
+      const thumbnailResponse = await fileService.upload(
+          battleForm.value.thumbnailFile,
           { fileCode: 'BATTLE' }
       );
 
@@ -342,23 +328,33 @@ const createBattle = async () => {
         throw new Error('대표 이미지 업로드에 실패했습니다.');
       }
 
-      const uploadedData = thumbnailResponse.data;
-      const uploadedFile = Array.isArray(uploadedData) ? uploadedData[0] : uploadedData;
-
+      const uploadedFile = thumbnailResponse.data;
       if (uploadedFile) {
         thumbnailAttachmentInfo = {
           fileId: uploadedFile.id,
-          storedPath: uploadedFile.fileUrl,    // ✅ fileUrl → storedPath
-          originName: uploadedFile.orgFileNm,  // ✅ orgFileNm → originName
+          storedPath: uploadedFile.fileUrl,
+          originName: uploadedFile.orgFileNm,
           fileSize: uploadedFile.fileSize,
           contentType: uploadedFile.contentType || null
         };
       }
-
       console.log(`✅ [BATTLE] 대표 이미지 업로드 완료`);
     }
 
-    // ⭐ 3. 아이템 이미지 배치 업로드 (BATTLE_ITEM)
+    // ⭐ 2. 아이템 이미지 - 파일이 있는 것만 수집
+    const itemFiles = [];
+    const fileIndexMap = new Map();
+
+    // Step2의 커스텀 아이템 이미지 중 파일만 수집
+    selectedItems.value.forEach((item, index) => {
+      if (item.customImageFile && !item.customImageAttachmentInfo) {
+        // 아직 업로드되지 않은 파일만
+        fileIndexMap.set(itemFiles.length, index);
+        itemFiles.push(item.customImageFile);
+      }
+    });
+
+    // ⭐ 3. 아이템 이미지 배치 업로드 (아직 업로드되지 않은 것만)
     let itemImageUrlMap = new Map();
     if (itemFiles.length > 0) {
       console.log(`📤 [BATTLE] ${itemFiles.length}개 아이템 이미지 배치 업로드 시작`);
@@ -376,10 +372,9 @@ const createBattle = async () => {
           ? itemUploadResponse.data
           : [itemUploadResponse.data];
 
-      // ⭐ 업로드된 파일의 fileUrl을 매핑
+      // 업로드된 파일의 fileUrl을 매핑
       fileIndexMap.forEach((itemIndex, fileIndex) => {
         const uploadedFile = uploadedData[fileIndex];
-
         if (uploadedFile && uploadedFile.fileUrl) {
           itemImageUrlMap.set(itemIndex, uploadedFile.fileUrl);
         }
@@ -394,9 +389,12 @@ const createBattle = async () => {
         // 커스텀 아이템
         let customImageUrl = null;
 
-        // 우선순위: 파일 업로드 > URL 입력
-        if (itemImageUrlMap.has(index)) {
-          // ⭐ 파일 업로드한 경우 - fileUrl을 customImageUrl에 저장
+        // 우선순위: 이미 업로드된 URL > 새로 업로드한 URL > URL 직접 입력
+        if (item.customImageAttachmentInfo?.storedPath) {
+          // Step2에서 이미 업로드된 경우
+          customImageUrl = item.customImageAttachmentInfo.storedPath;
+        } else if (itemImageUrlMap.has(index)) {
+          // 제출 시 업로드한 경우
           customImageUrl = itemImageUrlMap.get(index);
         } else if (item.customImageUrl && item.customImageUrl.trim()) {
           // URL 직접 입력한 경우
