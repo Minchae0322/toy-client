@@ -34,13 +34,32 @@ class FileService extends BaseApiService {
 
     console.log(`🔗 [FILE] Presigned URL 발급 요청: ${fileName} (${contentType})`)
 
-    const response = await this.get('/api/files/presigned/upload', {
+    const response = await this.get('/files/presigned/upload', {
       fileName,
       contentType
     })
 
     console.log(`✅ [FILE] Presigned URL 발급 완료`)
     return response.data
+  }
+
+  /**
+   * S3 Presigned URL 업로드 완료 처리
+   * @param {Object} request - 완료 요청 정보
+   * @param {string} request.s3Key - S3 키
+   * @param {string} request.storeFileName - 저장된 파일명
+   * @param {string} request.originalFileName - 원본 파일명
+   * @param {string} request.contentType - MIME 타입
+   * @param {number} request.fileSize - 파일 크기
+   * @returns {Promise} 완료 처리 결과
+   */
+  async completePresignedUpload(request) {
+    console.log(`✅ [FILE] Presigned URL 업로드 완료 처리 요청:`, request)
+
+    const response = await this.post('/files/presigned/complete', request)
+
+    console.log(`✅ [FILE] Presigned URL 업로드 완료 처리 완료`)
+    return response
   }
 
   /**
@@ -157,7 +176,7 @@ class FileService extends BaseApiService {
 
     console.log(`🔗 [FILE] 다운로드 Presigned URL 발급 요청: ${fileKey}`)
 
-    const response = await this.get('/api/files/presigned/download', {
+    const response = await this.get('/files/presigned/download', {
       fileKey
     })
 
@@ -299,19 +318,27 @@ class FileService extends BaseApiService {
             // 2. S3에 직접 업로드
             await this.uploadToS3(file, presignedData.presignedUrl)
 
-            // 3. fileUrl 생성 (presignedUrl에서 쿼리 파라미터 제거)
-            const fileUrl = presignedData.presignedUrl.split('?')[0]
-
-            // 4. 기존 응답 형식과 호환되는 객체 반환
-            return {
-              id: presignedData.s3Key,
-              fileUrl: fileUrl,
-              fileKey: presignedData.s3Key,
+            // 3. 업로드 완료 처리 API 호출
+            const completeResponse = await this.completePresignedUpload({
+              s3Key: presignedData.s3Key,
               storeFileName: presignedData.storeFileName,
-              orgFileNm: file.name,
-              fileSize: file.size,
-              contentType: file.type,
-              fileExt: this.getFileExtension(file.name)
+              originalFileName: file.name,
+              fileCode: options.fileCode || null,
+              fileExplain: options.fileExplain || null
+            })
+
+            // 4. 완료 API 응답 반환 (기존 형식과 호환)
+            const responseData = completeResponse.data || {}
+            return {
+              id: responseData.id,
+              fileUrl: responseData.fileUrl,
+              fileCode: responseData.fileCode,
+              orgFileNm: responseData.orgFileNm || file.name,
+              storeFileNm: responseData.storeFileNm,
+              fileSize: responseData.fileSize || file.size,
+              fileExt: responseData.fileExt || this.getFileExtension(file.name),
+              fileExplain: responseData.fileExplain,
+              contentType: file.type
             }
           })
       )
