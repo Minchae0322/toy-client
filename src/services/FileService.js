@@ -39,8 +39,28 @@ class FileService extends BaseApiService {
       contentType
     })
 
-    console.log(`✅ [FILE] Presigned URL 발급 완료`)
-    return response.data
+    console.log(`✅ [FILE] Presigned URL 발급 응답:`, JSON.stringify(response, null, 2))
+
+    // response 자체에 presignedUrl이 있는 경우
+    if (response?.presignedUrl) {
+      console.log('📌 [FILE] response 자체에서 presignedUrl 찾음')
+      return response
+    }
+
+    // response.data에 presignedUrl이 있는 경우
+    if (response?.data?.presignedUrl) {
+      console.log('📌 [FILE] response.data에서 presignedUrl 찾음')
+      return response.data
+    }
+
+    // response.data.data에 presignedUrl이 있는 경우
+    if (response?.data?.data?.presignedUrl) {
+      console.log('📌 [FILE] response.data.data에서 presignedUrl 찾음')
+      return response.data.data
+    }
+
+    console.error('❌ [FILE] Presigned URL 응답 형식 오류:', JSON.stringify(response, null, 2))
+    throw new Error('Presigned URL 발급 응답 형식이 올바르지 않습니다.')
   }
 
   /**
