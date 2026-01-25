@@ -48,10 +48,23 @@
                   @drop="handleDrop($event, index)"
                   @dragenter="handleDragEnter(index)"
                   @dragleave="handleDragLeave"
-                  :class="{ 'drag-over': dragOverIndex === index }"
+                  :class="{ 'drag-over': dragOverIndex === index, 'uploading': photo.uploading, 'upload-failed': photo.uploadFailed }"
               >
                 <img :src="photo.preview" :alt="`Photo ${index + 1}`" />
-                <button class="btn-remove" @click="removePhoto(index)">
+                <!-- 업로드 중 오버레이 -->
+                <div v-if="photo.uploading" class="upload-overlay">
+                  <svg class="upload-spinner" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <!-- 업로드 실패 표시 -->
+                <div v-if="photo.uploadFailed" class="upload-failed-overlay">
+                  <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+                  </svg>
+                </div>
+                <button class="btn-remove" @click="removePhoto(index)" :disabled="photo.uploading">
                   <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
                   </svg>
@@ -314,12 +327,14 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useCategory } from '@/services/CategoryService.js'
+import { useFile } from '@/services/FileService.js'
 import { getUserId } from '@/utils/auth.js'
 import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
 
 const router = useRouter()
 const feedService = useFeed()
 const categoryService = useCategory()
+const fileService = useFile()
 
 const selectedPhotos = ref([])
 const showCancelDialog = ref(false)
@@ -374,6 +389,7 @@ const popularHashtags = ['조던4', '에어팟맥스', '디올립글로우', '�
 const mockProductNames = ['조던 4 레트로 브레드', '조던 4 화이트 시멘트', '조던 4 유니버시티 블루']
 
 const canSubmit = computed(() => {
+  const hasUploadingPhotos = selectedPhotos.value.some(p => p.uploading)
   return selectedPhotos.value.length > 0 &&
       formData.value.productNameCustom.trim() &&
       formData.value.subCategoryId &&
@@ -381,7 +397,8 @@ const canSubmit = computed(() => {
       formData.value.store.trim() &&
       formData.value.evaluation &&
       !isSubmitting.value &&
-      !isProcessingImage.value
+      !isProcessingImage.value &&
+      !hasUploadingPhotos
 })
 
 // 이미지 리사이징 유틸 함수
@@ -533,11 +550,52 @@ const handleFileSelect = async (e) => {
         // 리사이징 적용 (최대 1920px, 품질 85%)
         const resizedFile = await resizeImage(file, 1920, 0.85)
 
-        selectedPhotos.value.push({
-          id: Date.now() + Math.random(),
+        // 로컬 미리보기용 URL 생성 (업로드 중 표시용)
+        const localPreview = URL.createObjectURL(resizedFile)
+        const photoId = Date.now() + Math.random()
+
+        // 먼저 로컬 미리보기로 추가 (업로드 진행 중 상태)
+        const photoIndex = selectedPhotos.value.push({
+          id: photoId,
           file: resizedFile,
-          preview: URL.createObjectURL(resizedFile)
-        })
+          preview: localPreview,
+          uploading: true,
+          attachmentInfo: null
+        }) - 1
+
+        // Presigned URL로 S3 업로드 후 complete 콜백
+        try {
+          const uploadResult = await fileService.upload(resizedFile, { fileCode: 'FEED' })
+
+          if (uploadResult.success && uploadResult.data) {
+            const attachmentData = uploadResult.data
+            // complete 응답의 fileUrl로 미리보기 교체
+            const serverUrl = attachmentData.fileUrl || attachmentData.storedPath
+
+            // 해당 사진 찾아서 업데이트
+            const photo = selectedPhotos.value.find(p => p.id === photoId)
+            if (photo) {
+              // 로컬 URL 해제
+              URL.revokeObjectURL(photo.preview)
+              // 서버 URL로 교체 및 attachmentInfo 저장
+              photo.preview = serverUrl || localPreview
+              photo.uploading = false
+              photo.attachmentInfo = feedService.convertToAttachmentInfo(attachmentData)
+              console.log('✅ 파일 업로드 완료:', photo.attachmentInfo)
+            }
+          } else {
+            throw new Error(uploadResult.error || '업로드 실패')
+          }
+        } catch (uploadError) {
+          console.error('❌ 파일 업로드 실패:', uploadError)
+          // 업로드 실패해도 로컬 미리보기는 유지, 제출 시 재업로드 시도
+          const photo = selectedPhotos.value.find(p => p.id === photoId)
+          if (photo) {
+            photo.uploading = false
+            photo.uploadFailed = true
+          }
+          showError('이미지 업로드에 실패했습니다. 다시 시도해주세요.')
+        }
       } catch (error) {
         console.error('Image resize error:', error)
         showError('이미지 처리 중 오류가 발생했습니다.')
@@ -615,6 +673,42 @@ const handleSubmit = async () => {
 
   try {
     const [thumbnail, ...additional] = selectedPhotos.value
+
+    // 업로드 중인 파일이 있는지 확인
+    const uploadingPhotos = selectedPhotos.value.filter(p => p.uploading)
+    if (uploadingPhotos.length > 0) {
+      showError('이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.')
+      isSubmitting.value = false
+      return
+    }
+
+    // 업로드 실패한 파일 재업로드
+    for (const photo of selectedPhotos.value) {
+      if (photo.uploadFailed || !photo.attachmentInfo) {
+        console.log('🔄 업로드 실패한 파일 재업로드:', photo.file.name)
+        try {
+          const uploadResult = await fileService.upload(photo.file, { fileCode: 'FEED' })
+          if (uploadResult.success && uploadResult.data) {
+            photo.attachmentInfo = feedService.convertToAttachmentInfo(uploadResult.data)
+            photo.uploadFailed = false
+            console.log('✅ 재업로드 완료:', photo.attachmentInfo)
+          } else {
+            throw new Error('재업로드 실패')
+          }
+        } catch (err) {
+          showError('이미지 업로드에 실패했습니다.')
+          isSubmitting.value = false
+          return
+        }
+      }
+    }
+
+    // 이미 업로드된 attachmentInfo 사용
+    const thumbnailAttachmentInfo = thumbnail.attachmentInfo
+    const attachmentFileInfos = additional
+      .filter(p => p.attachmentInfo)
+      .map(p => p.attachmentInfo)
+
     const feedData = {
       userId: formData.value.userId,
       productId: formData.value.productId,
@@ -624,13 +718,21 @@ const handleSubmit = async () => {
       buyPlace: formData.value.store.trim(),
       buyPrice: formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null,
       evaluation: formData.value.evaluation,
-      hashtags: formData.value.hashtags
+      hashtags: formData.value.hashtags,
+      thumbnailAttachmentInfo,
+      attachmentFileInfos
     }
 
-    const result = await feedService.createFeedWithFiles(feedData, thumbnail.file, additional.map(p => p.file))
+    console.log('📤 Feed 생성 요청:', feedData)
+    const result = await feedService.createFeed(feedData)
 
     if (result.success) {
-      selectedPhotos.value.forEach(p => URL.revokeObjectURL(p.preview))
+      // 로컬 preview URL만 해제 (서버 URL은 해제 불필요)
+      selectedPhotos.value.forEach(p => {
+        if (p.preview && p.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(p.preview)
+        }
+      })
       showSuccessToast.value = true
       setTimeout(() => router.push('/feed'), 1500)
     } else {
@@ -765,6 +867,41 @@ onBeforeUnmount(() => {
 }
 .photo-item img { width: 100%; height: 100%; object-fit: cover; }
 .photo-item.drag-over { border: 2px dashed var(--accent); opacity: 0.5; }
+.photo-item.uploading { opacity: 0.7; }
+.photo-item.upload-failed { border: 2px solid #ef4444; }
+
+/* 업로드 중 오버레이 */
+.upload-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+.upload-spinner {
+  width: 32px;
+  height: 32px;
+  color: white;
+  animation: spin 1s linear infinite;
+}
+
+/* 업로드 실패 오버레이 */
+.upload-failed-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(239, 68, 68, 0.9);
+  border-radius: 50%;
+  padding: 8px;
+}
+.upload-failed-overlay .icon {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
 
 .btn-remove {
   position: absolute;

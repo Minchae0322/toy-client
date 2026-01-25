@@ -257,6 +257,18 @@ class FileService extends BaseApiService {
     return parts[parts.length - 1] || 'download'
   }
 
+  // ==================== 이미지 업로드 API (SalePost 등에서 사용) ====================
+
+  /**
+   * 이미지 파일 업로드 (SalePostCreateView 등에서 사용)
+   * @param {File[]} files - 업로드할 파일 배열
+   * @param {string} fileCode - 파일 코드 (SALE_POST, PRODUCT 등)
+   * @returns {Promise} 업로드 결과
+   */
+  async uploadImages(files, fileCode) {
+    return this.uploadFiles(files, { fileCode })
+  }
+
   // ==================== 파일 업로드 API (환경에 따라 자동 분기) ====================
 
   /**
@@ -331,6 +343,7 @@ class FileService extends BaseApiService {
             const responseData = completeResponse.data || {}
             return {
               id: responseData.id,
+              fileId: responseData.id,  // SalePostCreateView 호환용
               fileUrl: responseData.fileUrl,
               fileCode: responseData.fileCode,
               orgFileNm: responseData.orgFileNm || file.name,
@@ -338,6 +351,7 @@ class FileService extends BaseApiService {
               fileSize: responseData.fileSize || file.size,
               fileExt: responseData.fileExt || this.getFileExtension(file.name),
               fileExplain: responseData.fileExplain,
+              fileType: file.type,
               contentType: file.type
             }
           })
