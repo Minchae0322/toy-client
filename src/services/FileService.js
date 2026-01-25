@@ -34,7 +34,7 @@ class FileService extends BaseApiService {
 
     console.log(`🔗 [FILE] Presigned URL 발급 요청: ${fileName} (${contentType})`)
 
-    const response = await this.get('/v1/files/presigned/upload', {
+    const response = await this.get('/api/files/presigned/upload', {
       fileName,
       contentType
     })
@@ -157,7 +157,7 @@ class FileService extends BaseApiService {
 
     console.log(`🔗 [FILE] 다운로드 Presigned URL 발급 요청: ${fileKey}`)
 
-    const response = await this.get('/v1/files/presigned/download', {
+    const response = await this.get('/api/files/presigned/download', {
       fileKey
     })
 
