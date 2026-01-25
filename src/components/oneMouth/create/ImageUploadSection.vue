@@ -62,9 +62,22 @@ defineProps({
 
 const emit = defineEmits(['upload', 'remove']);
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 const handleFileChange = (event) => {
   const files = Array.from(event.target.files);
-  emit('upload', files);
+
+  const validFiles = files.filter(file => {
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`${file.name}: 파일 크기는 5MB 이하만 가능합니다.`);
+      return false;
+    }
+    return true;
+  });
+
+  if (validFiles.length > 0) {
+    emit('upload', validFiles);
+  }
   event.target.value = '';
 };
 </script>
