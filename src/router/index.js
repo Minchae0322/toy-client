@@ -20,9 +20,6 @@ import ProductDetailView from '@/views/product/ProductDetailView.vue'
 import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
 import MyProductView from '@/views/product/MyProductView.vue'
 
-// Sale Post Views import
-import SalePostCreateView from '@/views/SalePostCreateView.vue'
-
 // Feed Views import
 import FeedHomeView from '@/views/feed/FeedHomeView.vue'
 import FeedDetailView from '@/views/feed/FeedDetailView.vue'
@@ -92,12 +89,6 @@ const routes = [
     name: 'OneMouthList',
     component: OneMouthListView,
     meta: { requiresAuth: false, public: true, title: '한입만 거래' }
-  },
-  {
-    path: '/one-mouth/create',
-    name: 'SalePostCreate',
-    component: SalePostCreateView,
-    meta: { requiresAuth: true, title: '상품 등록' }
   },
   {
     path: '/one-mouth/:id',
@@ -528,7 +519,6 @@ export const productNavigation = {
 // ==================== 한입만 거래 네비게이션 헬퍼 ====================
 export const salePostNavigation = {
   toList(query = {}) { return router.push({ name: 'OneMouthList', query }) },
-  toCreate() { return router.push({ name: 'SalePostCreate' }) },
   toDetail(postId) {
     if (!postId) return this.toList()
     return router.push({ name: 'OneMouthDetail', params: { id: postId } })
