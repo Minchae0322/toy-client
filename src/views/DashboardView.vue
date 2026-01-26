@@ -121,11 +121,12 @@
                   <!-- 순위 뱃지 -->
                   <div :class="['rank-badge', `rank-${index + 1}`]">{{ index + 1 }}</div>
                   <!-- 급상승 뱃지 -->
-                  <div v-if="feed.viewTrend?.isHot" class="trend-badge">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  <div v-if="feed.isTrending" class="trend-badge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                      <polyline points="17 6 23 6 23 12"/>
                     </svg>
-                    {{ feed.viewTrend.hours }}h
+                    급상승
                   </div>
                 </div>
 
