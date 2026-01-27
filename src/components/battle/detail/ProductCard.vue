@@ -10,9 +10,8 @@
     <div class="img-box">
       <img :src="itemImage" :alt="itemName" @error="handleImageError" />
       <div class="score-overlay">
-        <span class="score-count">{{ voteCount }}{{ isWeightedVote ? '점' : '표' }}</span>
-        <span class="score-divider">·</span>
         <span class="score-percent">{{ percentage }}%</span>
+        <span class="score-count">{{ voteCount }}{{ isWeightedVote ? '점' : '표' }}</span>
       </div>
     </div>
 
@@ -209,29 +208,29 @@ const onVote = (rank) => {
 
 .score-overlay {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.6);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
   color: #fff;
-  padding: 6px 10px;
-  border-radius: 8px;
+  padding: 28px 14px 12px;
   display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  backdrop-filter: blur(4px);
-}
-
-.score-count {
-  font-weight: 700;
-}
-
-.score-divider {
-  opacity: 0.5;
+  align-items: baseline;
+  gap: 8px;
+  backdrop-filter: blur(2px);
 }
 
 .score-percent {
-  opacity: 0.9;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.score-count {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.85;
 }
 
 .info-box {
@@ -383,12 +382,16 @@ const onVote = (rank) => {
   }
 
   .score-overlay {
-    bottom: 6px;
-    right: 6px;
-    padding: 4px 7px;
-    border-radius: 6px;
-    font-size: 10px;
-    gap: 3px;
+    padding: 20px 10px 8px;
+    gap: 6px;
+  }
+
+  .score-percent {
+    font-size: 18px;
+  }
+
+  .score-count {
+    font-size: 11px;
   }
 
   .info-box {
