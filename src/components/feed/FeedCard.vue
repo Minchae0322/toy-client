@@ -7,10 +7,17 @@
           class="post-image"
       />
 
-      <div v-if="feed.feedEvaluation" class="eval-overlay-top">
-        <div :class="['evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
+      <div class="image-badges-top">
+        <div v-if="feed.feedEvaluation" :class="['evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
           <span class="eval-dot"></span>
           <span class="eval-text">{{ getEvaluationLabel(feed.feedEvaluation) }}</span>
+        </div>
+        <div v-if="feed.isTrending" class="trend-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+          급상승
         </div>
       </div>
 
@@ -128,8 +135,8 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .post-image-container { position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: #f8f8fa; }
 .post-image { width: 100%; height: 100%; object-fit: cover; }
 
-/* [수정] 제품평가 뱃지: 파스텔 스타일 */
-.eval-overlay-top { position: absolute; top: 16px; left: 16px; z-index: 2; }
+/* 이미지 상단 뱃지 영역 */
+.image-badges-top { position: absolute; top: 16px; left: 16px; z-index: 2; display: flex; align-items: center; gap: 6px; }
 .evaluation-badge {
   display: flex; align-items: center; gap: 6px;
   padding: 6px 14px; border-radius: 100px;
@@ -150,6 +157,20 @@ const formatDate = (date) => feedUtils.formatDate(date);
 
 .eval-bad { background-color: #fee2e2; color: #991b1b; }
 .eval-bad .eval-dot { background-color: #ef4444; }
+
+/* 급상승 뱃지 */
+.trend-badge {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 12px; border-radius: 100px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  font-size: 11px; font-weight: 800; color: white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  animation: pulse-trend 2s ease-in-out infinite;
+}
+@keyframes pulse-trend {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
 
 /* 콘텐츠 영역 */
 .post-content {
@@ -228,13 +249,17 @@ const formatDate = (date) => feedUtils.formatDate(date);
     border-radius: 0;
   }
 
-  /* 평가 뱃지 위치 조정 */
-  .eval-overlay-top {
+  /* 뱃지 위치 조정 */
+  .image-badges-top {
     top: 12px;
     left: 12px;
   }
   .evaluation-badge {
     padding: 5px 12px;
+    font-size: 10px;
+  }
+  .trend-badge {
+    padding: 5px 10px;
     font-size: 10px;
   }
 

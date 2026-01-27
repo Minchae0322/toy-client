@@ -2,9 +2,18 @@
   <div class="info-section">
     <div class="info-content">
       <section class="review-section">
-        <div :class="['eval-badge', getEvaluationClass(feed.feedEvaluation)]">
-          <span class="eval-dot" />
-          {{ getEvaluationLabel(feed.feedEvaluation) }}
+        <div class="badge-row">
+          <div :class="['eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+            <span class="eval-dot" />
+            {{ getEvaluationLabel(feed.feedEvaluation) }}
+          </div>
+          <div v-if="feed.isTrending" class="trend-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+              <polyline points="17 6 23 6 23 12"/>
+            </svg>
+            급상승
+          </div>
         </div>
 
         <div class="quote-wrapper">
@@ -151,11 +160,27 @@ const handleSendMessage = () => {
 /* 2. Review Section */
 .review-section { margin-bottom: 28px; }
 
+.badge-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+
 /* [중요] 파스텔톤 뱃지 스타일 */
 .eval-badge {
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 100px;
-  font-size: 11px; font-weight: 800; margin-bottom: 16px;
+  font-size: 11px; font-weight: 800;
   box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+/* 급상승 뱃지 */
+.trend-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 14px; border-radius: 100px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  font-size: 11px; font-weight: 800; color: white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  animation: pulse-trend 2s ease-in-out infinite;
+}
+@keyframes pulse-trend {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 .eval-badge.best { background-color: #fef3c7; color: #92400e; }
 .eval-badge.good { background-color: #dcfce7; color: #166534; }

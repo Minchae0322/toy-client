@@ -492,6 +492,31 @@ class ProductService extends BaseApiService {
       product.tags = product.tags.join(';')
     }
 
+    // thumbnailUrl 매핑: thumbnailDto에서도 추출
+    if (!product.thumbnailUrl && product.thumbnailDto?.fileUrl) {
+      product.thumbnailUrl = product.thumbnailDto.fileUrl
+    }
+
+    // categoryName 매핑: category 또는 subCategoryDetail에서 추출
+    if (!product.categoryName) {
+      product.categoryName = product.category?.categoryName
+          || product.category?.name
+          || product.subCategoryDetail?.subCategoryName
+          || product.subCategoryDetail?.categoryName
+          || ''
+    }
+
+    // displayPrice 매핑
+    if (!product.displayPrice) {
+      const price = product.price || product.buyPrice
+      if (price && price !== '0' && price !== 0) {
+        const numPrice = typeof price === 'string' ? parseInt(price) : price
+        product.displayPrice = new Intl.NumberFormat('ko-KR').format(numPrice) + '원'
+      } else {
+        product.displayPrice = '가격 미정'
+      }
+    }
+
     // popularityScore가 없으면 viewCount, likeCount, shareCount, reviewCount 기반으로 계산
     if (product.popularityScore === undefined || product.popularityScore === null) {
       const viewCount = product.viewCount || 0
