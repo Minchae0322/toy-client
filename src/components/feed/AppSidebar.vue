@@ -180,7 +180,7 @@ const handleProtectedRoute = async (routeName) => {
   gap: 12px;
   margin-bottom: 20px;
   padding: 12px;
-  background: #fafafa;
+  background: #ffffff;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
