@@ -371,7 +371,7 @@ onMounted(() => {
 }
 
 .app-container {
-  background: #fafafa;
+  background: #ffffff;
   min-height: 100vh;
   color: #1a1a1a;
   font-family: 'SUIT-Regular', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
