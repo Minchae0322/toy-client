@@ -1,72 +1,60 @@
 <template>
   <section class="hot-section">
     <div class="section-header">
-      <div class="title-group">
-        <div class="title-badge">HOT</div>
-        <h2 class="section-title">지금 가장 핫한 인증</h2>
+      <div class="title-with-badge">
+        <h2 class="section-title">지금 뜨는 핫-기록</h2>
+        <span class="live-indicator"><span class="dot"></span> LIVE</span>
       </div>
-      <button class="see-all" @click="handleSeeAll">
+      <button class="view-all-link" @click="handleSeeAll">
         전체보기
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-          <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6" /></svg>
       </button>
     </div>
 
     <!-- 로딩 상태 -->
-    <div v-if="loading" class="hot-grid">
-      <div v-for="n in 5" :key="n" class="hot-card">
-        <div class="hot-image skeleton"></div>
-        <div class="hot-info">
-          <div class="skeleton-text"></div>
-          <div class="skeleton-text-small"></div>
-        </div>
-      </div>
+    <div v-if="loading" class="dashboard-feed-scroll">
+      <div v-for="n in 3" :key="n" class="skeleton dash-card-skeleton"></div>
     </div>
 
     <!-- 데이터 없음 -->
     <div v-else-if="!hotFeeds || hotFeeds.length === 0" class="empty-state">
-      <span class="empty-icon">📭</span>
-      <p class="empty-text">아직 핫한 피드가 없습니다</p>
+      <div class="empty-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+        </svg>
+      </div>
+      <p class="empty-text">아직 인기 피드가 없습니다</p>
     </div>
 
     <!-- 핫 피드 목록 -->
-    <div v-else class="hot-grid">
+    <div v-else class="dashboard-feed-scroll">
       <div
-          v-for="(feed, index) in hotFeeds"
-          :key="feed.feedId"
-          class="hot-card"
-          @click="$emit('feed-click', feed.feedId)"
+        v-for="(feed, index) in hotFeeds"
+        :key="feed.feedId"
+        class="dash-feed-card"
+        @click="$emit('feed-click', feed.feedId)"
       >
-        <div class="hot-image">
-          <!-- 순위 뱃지 -->
-          <div v-if="index < 3" :class="['rank-badge', `rank-${index + 1}`]">
-            {{ index + 1 }}
-          </div>
-
+        <div class="card-visual-wrapper">
           <img
-              v-if="feed.hotFeedThumbnailDto?.fileUrl"
-              :src="feed.hotFeedThumbnailDto.fileUrl"
-              :alt="feed.content"
-              @error="handleImageError"
+            :src="feed.hotFeedThumbnailDto?.fileUrl"
+            :alt="feed.productName"
+            @error="handleImageError"
           />
-          <div v-else class="no-image">
-            <span>📷</span>
-          </div>
 
-          <!-- 호버 오버레이 -->
-          <div class="hot-overlay">
-            <div class="hot-stats">
-              <span class="stat-item">🥄 {{ formatNumber(feed.spoonCount) }}</span>
-              <span class="stat-item">👁 {{ formatNumber(feed.viewCount) }}</span>
+          <div class="card-overlay">
+            <div class="overlay-top">
+              <span class="rank-num">0{{ index + 1 }}</span>
+              <span v-if="feed.isTrending" class="trending-tag">HOT</span>
             </div>
-            <div class="nickname-badge">@{{ feed.nickname }}</div>
-          </div>
-        </div>
 
-        <div class="hot-info">
-          <p class="hot-nickname">{{ feed.nickname }}</p>
-          <p class="hot-content">{{ feed.content }}</p>
+            <div class="overlay-bottom">
+              <span v-if="feed.feedEvaluation?.code" :class="['eval-pill', feed.feedEvaluation.code.toLowerCase()]">
+                {{ feed.feedEvaluation.description }}
+              </span>
+              <p v-if="feed.reviewSummary" class="review-main">"{{ feed.reviewSummary }}"</p>
+              <span class="product-name-sub">{{ feed.productName }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -111,15 +99,7 @@ const loadHotFeeds = async () => {
 const handleSeeAll = () => emit('see-all');
 
 const handleImageError = (event) => {
-  event.target.style.display = 'none';
-  event.target.parentElement.classList.add('no-image');
-};
-
-const formatNumber = (num) => {
-  if (!num || num === 0) return '0';
-  if (num >= 10000) return Math.floor(num / 10000) + '만';
-  if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-  return num.toString();
+  event.target.src = 'https://placehold.co/200x280?text=No+Image';
 };
 
 onMounted(() => loadHotFeeds());
@@ -127,14 +107,8 @@ onMounted(() => loadHotFeeds());
 
 <style scoped>
 .hot-section {
-  padding: 32px 20px;
-  background: #FFFFFF;
-}
-
-@media (min-width: 1024px) {
-  .hot-section {
-    padding: 40px 32px;
-  }
+  padding: 20px 0;
+  margin-bottom: 1.5rem;
 }
 
 /* 헤더 */
@@ -142,253 +116,254 @@ onMounted(() => loadHotFeeds());
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 28px;
+  margin-bottom: 16px;
 }
 
-.title-group {
+.title-with-badge {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.title-badge {
-  padding: 6px 12px;
-  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 0.5px;
+  gap: 10px;
 }
 
 .section-title {
-  font-size: 20px;
-  font-weight: 650;
-  color: #1A1A1A;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
   margin: 0;
-  letter-spacing: -0.3px;
 }
 
-@media (min-width: 1024px) {
-  .section-title {
-    font-size: 22px;
-  }
-}
-
-.see-all {
+.live-indicator {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 14px;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.5px;
+}
+
+.live-indicator .dot {
+  width: 6px;
+  height: 6px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.view-all-link {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0.375rem 0.5rem;
   background: transparent;
-  border: 1px solid #E8E8E8;
-  border-radius: 10px;
-  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
   font-weight: 500;
-  color: #666;
+  color: #999;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-family: inherit;
 }
 
-.see-all:hover {
-  background: #F5F5F5;
-  border-color: #DDD;
-  color: #333;
+.view-all-link:hover {
+  background: #f5f5f5;
+  color: #666;
 }
 
-/* 그리드 */
-.hot-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+/* 가로 스크롤 영역 */
+.dashboard-feed-scroll {
+  display: flex;
   gap: 16px;
+  overflow-x: auto;
+  padding: 10px 4px 20px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-@media (min-width: 768px) {
-  .hot-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.dashboard-feed-scroll::-webkit-scrollbar {
+  display: none;
 }
 
-@media (min-width: 1024px) {
-  .hot-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 20px;
-  }
-}
-
-/* 카드 */
-.hot-card {
-  cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hot-card:hover {
-  transform: translateY(-6px);
-}
-
-/* 이미지 컨테이너 */
-.hot-image {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  background: #F5F5F5;
-  border-radius: 16px;
+/* 카드 디자인 */
+.dash-feed-card {
+  flex: 0 0 180px;
+  height: 260px;
+  border-radius: 24px;
   overflow: hidden;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 0.25s ease;
+  position: relative;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  cursor: pointer;
 }
 
-.hot-card:hover .hot-image {
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+@media (min-width: 640px) {
+  .dash-feed-card {
+    flex: 0 0 200px;
+    height: 280px;
+  }
 }
 
-.hot-image img {
-  position: absolute;
-  top: 0;
-  left: 0;
+.dash-feed-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 30px rgba(0,0,0,0.15);
+}
+
+.card-visual-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.card-visual-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
-.hot-card:hover .hot-image img {
-  transform: scale(1.03);
+.dash-feed-card:hover .card-visual-wrapper img {
+  transform: scale(1.05);
 }
 
-/* 순위 뱃지 */
-.rank-badge {
+/* 럭셔리 그라데이션 오버레이 */
+.card-overlay {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.3) 0%,
+    transparent 40%,
+    rgba(0,0,0,0.85) 100%
+  );
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px;
+}
+
+@media (min-width: 640px) {
+  .card-overlay {
+    padding: 16px;
+  }
+}
+
+.overlay-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.rank-num {
+  font-size: 22px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.35);
+  font-style: italic;
+  line-height: 1;
+}
+
+@media (min-width: 640px) {
+  .rank-num {
+    font-size: 24px;
+  }
+}
+
+.trending-tag {
+  background: rgba(251, 113, 133, 0.85);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 9px;
   font-weight: 700;
-  color: white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 100px;
+  letter-spacing: 0.3px;
 }
 
-.rank-1 {
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+.overlay-bottom {
+  color: #fff;
 }
 
-.rank-2 {
-  background: linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%);
+.eval-pill {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  backdrop-filter: blur(4px);
 }
 
-.rank-3 {
-  background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);
+.eval-pill.best {
+  background: rgba(251, 191, 36, 0.85);
+  color: #fff;
 }
 
-/* 이미지 없음 */
-.no-image {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background: #F0F0F0;
-  font-size: 40px;
-  opacity: 0.4;
+.eval-pill.good {
+  background: rgba(34, 197, 94, 0.8);
+  color: #fff;
 }
 
-/* 호버 오버레이 */
-.hot-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  border-radius: 0 0 16px 16px;
+.eval-pill.okay {
+  background: rgba(139, 92, 246, 0.8);
+  color: #fff;
 }
 
-.hot-card:hover .hot-overlay {
-  opacity: 1;
+.eval-pill.bad {
+  background: rgba(239, 68, 68, 0.8);
+  color: #fff;
 }
 
-.hot-stats {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
+.review-main {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 6px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.stat-item {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.95);
-  font-weight: 500;
+@media (min-width: 640px) {
+  .review-main {
+    font-size: 14px;
+  }
 }
 
-.nickname-badge {
-  display: inline-flex;
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  border-radius: 8px;
+.product-name-sub {
   font-size: 11px;
-  color: white;
-  font-weight: 600;
-}
-
-/* 피드 정보 */
-.hot-info {
-  padding: 0 4px;
-}
-
-.hot-nickname {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1A1A1A;
-  margin: 0 0 4px 0;
+  font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  display: block;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  letter-spacing: -0.2px;
 }
 
-.hot-content {
-  font-size: 12px;
-  color: #888;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.5;
-}
-
-/* 스켈레톤 로딩 */
-.skeleton {
-  background: linear-gradient(90deg, #F0F0F0 25%, #E8E8E8 50%, #F0F0F0 75%);
+/* 스켈레톤 */
+.dash-card-skeleton {
+  flex: 0 0 180px;
+  height: 260px;
+  border-radius: 24px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-.skeleton-text {
-  height: 16px;
-  border-radius: 6px;
-  margin-bottom: 8px;
-  background: linear-gradient(90deg, #F0F0F0 25%, #E8E8E8 50%, #F0F0F0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-.skeleton-text-small {
-  height: 14px;
-  width: 60%;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #F0F0F0 25%, #E8E8E8 50%, #F0F0F0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+@media (min-width: 640px) {
+  .dash-card-skeleton {
+    flex: 0 0 200px;
+    height: 280px;
+  }
 }
 
 @keyframes shimmer {
@@ -402,50 +377,26 @@ onMounted(() => loadHotFeeds());
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: #888;
+  padding: 2.5rem 1rem;
+  background: #fafafa;
+  border-radius: 10px;
 }
 
 .empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.4;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.625rem;
+  color: #bbb;
 }
 
 .empty-text {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  color: #999;
   margin: 0;
-}
-
-/* 모바일 최적화 */
-@media (max-width: 767px) {
-  .hot-grid {
-    gap: 12px;
-  }
-
-  .hot-image {
-    border-radius: 12px;
-  }
-
-  .rank-badge {
-    width: 24px;
-    height: 24px;
-    font-size: 11px;
-    top: 8px;
-    left: 8px;
-  }
-
-  .hot-overlay {
-    padding: 12px;
-  }
-
-  .hot-stats {
-    gap: 8px;
-  }
-
-  .stat-item {
-    font-size: 11px;
-  }
 }
 </style>

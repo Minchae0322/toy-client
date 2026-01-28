@@ -64,27 +64,23 @@
       </div>
 
       <div class="dashboard-content">
-        <!-- 인기 피드 섹션 -->
-        <section class="content-section">
+        <!-- 핫 피드 섹션 -->
+        <section class="content-section hot-feeds-section">
           <div class="section-header">
-            <h2 class="section-title">인기 피드</h2>
-            <button class="view-all-btn" @click="goToFeeds">
+            <div class="title-with-badge">
+              <h2 class="section-title">지금 뜨는 핫-기록</h2>
+              <span class="live-indicator"><span class="dot"></span> LIVE</span>
+            </div>
+            <button class="view-all-link" @click="goToFeeds">
               전체보기
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m9 18 6-6-6-6" />
-              </svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6" /></svg>
             </button>
           </div>
 
-          <div v-if="feedsLoading" class="feed-card-grid">
-            <div v-for="i in 5" :key="i" class="feed-card">
-              <div class="feed-card-image skeleton"></div>
-              <div class="feed-card-body">
-                <div class="skeleton-line"></div>
-                <div class="skeleton-line short"></div>
-              </div>
-            </div>
+          <div v-if="feedsLoading" class="dashboard-feed-scroll">
+            <div v-for="i in 3" :key="i" class="skeleton dash-card-skeleton"></div>
           </div>
+
           <div v-else-if="hotFeeds.length === 0" class="empty-state">
             <div class="empty-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -93,102 +89,29 @@
             </div>
             <p class="empty-text">아직 인기 피드가 없습니다</p>
           </div>
-          <div v-else class="feed-card-grid">
+
+          <div v-else class="dashboard-feed-scroll">
             <div
               v-for="(feed, index) in hotFeeds"
               :key="feed.feedId"
-              class="feed-card"
+              class="dash-feed-card"
               @click="goToFeedDetail(feed.feedId)"
             >
-              <!-- 이미지 영역 -->
-              <div class="feed-card-image">
-                <img
-                  v-if="getThumbnailUrl(feed)"
-                  :src="getThumbnailUrl(feed)"
-                  :alt="feed.productName"
-                  @error="handleImageError"
-                />
-                <div v-else class="no-image">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
-                  </svg>
-                </div>
+              <div class="card-visual-wrapper">
+                <img :src="feed.hotFeedThumbnailDto?.fileUrl" :alt="feed.productName" @error="handleImageError" />
 
-                <!-- 상단 뱃지 영역 -->
-                <div class="image-badges-top">
-                  <!-- 순위 뱃지 -->
-                  <div :class="['rank-badge', `rank-${index + 1}`]">{{ index + 1 }}</div>
-                  <!-- 급상승 뱃지 -->
-                  <div v-if="feed.isTrending" class="trend-badge">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                      <polyline points="17 6 23 6 23 12"/>
-                    </svg>
-                    급상승
+                <div class="card-overlay">
+                  <div class="overlay-top">
+                    <span class="rank-num">0{{ index + 1 }}</span>
+                    <span v-if="feed.isTrending" class="trending-tag">HOT</span>
                   </div>
-                </div>
 
-                <!-- 평가 뱃지 (좌측 하단) -->
-                <div v-if="feed.feedEvaluation?.code" :class="['eval-badge', feed.feedEvaluation.code.toLowerCase()]">
-                  <span class="eval-dot"></span>
-                  {{ feed.feedEvaluation.description || feed.feedEvaluation.code }}
-                </div>
-
-                <!-- 좋아요 누른 유저들 (우측 하단) -->
-                <div v-if="feed.recentLikers?.length" class="recent-likers">
-                  <div
-                    v-for="(liker, likerIndex) in feed.recentLikers.slice(0, 4)"
-                    :key="liker.userId"
-                    class="liker-avatar"
-                    :style="{ zIndex: 4 - likerIndex }"
-                  >
-                    <img
-                      v-if="liker.profileImageUrl"
-                      :src="liker.profileImageUrl"
-                      :alt="liker.nickname"
-                    />
-                    <span v-else class="liker-initial">{{ liker.nickname?.charAt(0) || '?' }}</span>
-                  </div>
-                  <div v-if="(feed.likeCount || 0) > 4" class="liker-more">
-                    +{{ (feed.likeCount || 0) - 4 }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- 카드 바디 -->
-              <div class="feed-card-body">
-                <!-- 리뷰 요약 -->
-                <p v-if="feed.reviewSummary" class="review-summary">
-                  "{{ feed.reviewSummary }}"
-                </p>
-
-                <!-- 제품 정보 -->
-                <div class="product-row">
-                  <div class="product-info">
-                    <span v-if="feed.subCategoryDetail?.subCategoryName" class="category-tag">
-                      {{ feed.subCategoryDetail.subCategoryName }}
+                  <div class="overlay-bottom">
+                    <span v-if="feed.feedEvaluation?.code" :class="['eval-pill', feed.feedEvaluation.code.toLowerCase()]">
+                      {{ feed.feedEvaluation.description }}
                     </span>
-                    <h4 class="product-name">{{ feed.productName || feed.content }}</h4>
-                  </div>
-                  <span v-if="feed.buyPrice || feed.price" class="price">
-                    {{ formatPrice(feed.buyPrice || feed.price) }}
-                  </span>
-                </div>
-
-                <!-- 하단: 작성자 + 통계 -->
-                <div class="card-footer">
-                  <span class="author-name">{{ feed.userInfo?.nickname || feed.nickname }}</span>
-                  <div class="card-stats">
-                    <span v-if="feed.likeCount" class="stat-item">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg>
-                      {{ feed.likeCount }}
-                    </span>
-                    <span v-if="feed.viewCount" class="stat-item">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      {{ feed.viewCount }}
-                    </span>
+                    <p v-if="feed.reviewSummary" class="review-main">"{{ feed.reviewSummary }}"</p>
+                    <span class="product-name-sub">{{ feed.productName }}</span>
                   </div>
                 </div>
               </div>
@@ -233,10 +156,13 @@
           </div>
         </section>
 
-        <!-- 지금 뜨는 제품 섹션 -->
-        <section class="content-section">
+        <!-- 실시간 제품 랭킹 섹션 -->
+        <section class="content-section ranking-section">
           <div class="section-header">
-            <h2 class="section-title">지금 뜨는 제품</h2>
+            <div class="title-with-badge">
+              <h2 class="section-title">실시간 제품 랭킹</h2>
+              <span class="trend-update-tag">LIVE UPDATE</span>
+            </div>
             <button class="view-all-btn" @click="goToProducts">
               전체보기
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -245,16 +171,10 @@
             </button>
           </div>
 
-          <div v-if="productsLoading" class="product-rank-list">
-            <div v-for="i in 5" :key="i" class="product-rank-skeleton">
-              <div class="skeleton" style="width:40px;height:40px;border-radius:50%;"></div>
-              <div class="skeleton" style="width:56px;height:56px;border-radius:10px;"></div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-                <div class="skeleton-line"></div>
-                <div class="skeleton-line short"></div>
-              </div>
-            </div>
+          <div v-if="productsLoading" class="product-rank-container">
+            <div class="skeleton hero-skeleton"></div>
           </div>
+
           <div v-else-if="hotProducts.length === 0" class="empty-state">
             <div class="empty-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -268,53 +188,62 @@
             </div>
             <p class="empty-text">등록된 제품이 없습니다</p>
           </div>
-          <div v-else class="product-rank-list">
-            <div
-              v-for="(product, index) in hotProducts"
-              :key="product.id"
-              class="product-rank-item"
-              @click="goToProductDetail(product)"
-            >
-              <!-- 순위 -->
-              <div :class="['product-rank-badge', `rank-${index + 1}`]">
-                {{ index + 1 }}
-              </div>
 
-              <!-- 썸네일 -->
-              <img
-                :src="getProductThumbnail(product)"
-                :alt="product.name"
-                class="product-rank-image"
-                @error="handleImageError"
-              />
-
-              <!-- 정보 -->
-              <div class="product-rank-info">
-                <span class="product-rank-brand">{{ product.brand }}</span>
-                <h4 class="product-rank-name">{{ product.name }}</h4>
-                <div class="product-rank-meta">
-                  <div v-if="product.averageRating" class="product-rank-rating">
-                    <svg width="12" height="12" viewBox="0 0 20 20" fill="#FBBF24">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                    {{ Number(product.averageRating).toFixed(1) }}
+          <div v-else class="product-rank-container">
+            <!-- 1위 히어로 카드 -->
+            <div class="rank-hero-card" @click="goToProductDetail(hotProducts[0])">
+              <div class="hero-badge">BEST 1</div>
+              <img :src="getProductThumbnail(hotProducts[0])" class="hero-image" />
+              <div class="hero-overlay">
+                <div class="hero-info">
+                  <span class="hero-brand">{{ hotProducts[0].brand }}</span>
+                  <h3 class="hero-name">{{ hotProducts[0].name }}</h3>
+                  <div class="hero-stats">
+                    <div class="trend-score">
+                      <span class="score-dot"></span>
+                      인기지수 {{ formatNumber(getProductPopularityScore(hotProducts[0])) }}
+                    </div>
+                    <div v-if="hotProducts[0].averageRating" class="hero-rating">
+                      <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                      {{ Number(hotProducts[0].averageRating).toFixed(1) }}
+                    </div>
                   </div>
-                  <span v-if="product.reviewCount" class="product-rank-reviews">리뷰 {{ formatNumber(product.reviewCount) }}</span>
                 </div>
               </div>
+            </div>
 
-              <!-- 관심도 바 -->
-              <div class="product-rank-score">
-                <span class="score-label">{{ getProductScorePercent(product, index) }}%</span>
-                <div class="score-bar">
-                  <div class="score-fill" :style="{ width: getProductScorePercent(product, index) + '%' }"></div>
+            <!-- 2-5위 리스트 -->
+            <div v-if="hotProducts.length > 1" class="rank-sub-list">
+              <div
+                v-for="(product, index) in hotProducts.slice(1)"
+                :key="product.id"
+                class="rank-sub-item"
+                @click="goToProductDetail(product)"
+              >
+                <div class="sub-rank-number">{{ index + 2 }}</div>
+                <img :src="getProductThumbnail(product)" class="sub-image" @error="handleImageError" />
+                <div class="sub-info">
+                  <span class="sub-brand">{{ product.brand }}</span>
+                  <h4 class="sub-name">{{ product.name }}</h4>
+                  <div class="sub-meta">
+                    <div v-if="product.averageRating" class="sub-rating">
+                      <svg width="10" height="10" viewBox="0 0 20 20" fill="#FBBF24">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                      {{ Number(product.averageRating).toFixed(1) }}
+                    </div>
+                    <span v-if="product.reviewCount" class="sub-reviews">리뷰 {{ formatNumber(product.reviewCount) }}</span>
+                  </div>
                 </div>
+                <div class="sub-score">
+                  <span class="sub-score-value">{{ getProductScorePercent(product, index + 1) }}%</span>
+                </div>
+                <svg class="sub-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
               </div>
-
-              <!-- 화살표 -->
-              <svg class="product-rank-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
             </div>
           </div>
         </section>
@@ -728,6 +657,240 @@ onMounted(() => {
 .view-all-btn:hover {
   background: #f5f5f5;
   color: #666;
+}
+
+/* 핫 피드 섹션 */
+.hot-feeds-section {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.5px;
+}
+
+.live-indicator .dot {
+  width: 6px;
+  height: 6px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.view-all-link {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0.375rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.view-all-link:hover {
+  background: #f5f5f5;
+  color: #666;
+}
+
+/* 가로 스크롤 영역 */
+.dashboard-feed-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 10px 4px 20px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dashboard-feed-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* 카드 디자인 */
+.dash-feed-card {
+  flex: 0 0 180px;
+  height: 260px;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .dash-feed-card {
+    flex: 0 0 200px;
+    height: 280px;
+  }
+}
+
+.dash-feed-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 30px rgba(0,0,0,0.15);
+}
+
+.card-visual-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.card-visual-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.dash-feed-card:hover .card-visual-wrapper img {
+  transform: scale(1.05);
+}
+
+/* 럭셔리 그라데이션 오버레이 */
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.3) 0%,
+    transparent 40%,
+    rgba(0,0,0,0.85) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px;
+}
+
+@media (min-width: 640px) {
+  .card-overlay {
+    padding: 16px;
+  }
+}
+
+.overlay-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.rank-num {
+  font-size: 22px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.35);
+  font-style: italic;
+  line-height: 1;
+}
+
+@media (min-width: 640px) {
+  .rank-num {
+    font-size: 24px;
+  }
+}
+
+.trending-tag {
+  background: rgba(251, 113, 133, 0.85);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 100px;
+  letter-spacing: 0.3px;
+}
+
+.overlay-bottom {
+  color: #fff;
+}
+
+.eval-pill {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  backdrop-filter: blur(4px);
+}
+
+.eval-pill.best {
+  background: rgba(251, 191, 36, 0.85);
+  color: #fff;
+}
+
+.eval-pill.good {
+  background: rgba(34, 197, 94, 0.8);
+  color: #fff;
+}
+
+.eval-pill.okay {
+  background: rgba(139, 92, 246, 0.8);
+  color: #fff;
+}
+
+.eval-pill.bad {
+  background: rgba(239, 68, 68, 0.8);
+  color: #fff;
+}
+
+.review-main {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 6px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .review-main {
+    font-size: 14px;
+  }
+}
+
+.product-name-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 스켈레톤 */
+.dash-card-skeleton {
+  flex: 0 0 180px;
+  height: 260px;
+  border-radius: 24px;
+}
+
+@media (min-width: 640px) {
+  .dash-card-skeleton {
+    flex: 0 0 200px;
+    height: 280px;
+  }
 }
 
 /* 피드 카드 그리드 */
@@ -1152,203 +1315,293 @@ onMounted(() => {
   }
 }
 
-/* 제품 랭킹 리스트 */
-.product-rank-list {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+/* 제품 랭킹 섹션 커스텀 스타일 */
+.ranking-section {
+  background: linear-gradient(to bottom, #ffffff, #fcfcfd);
+}
+
+.trend-update-tag {
+  font-size: 10px;
+  background: #fdf2f2;
+  color: #ef4444;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  animation: pulse-tag 2s ease-in-out infinite;
+}
+
+@keyframes pulse-tag {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.product-rank-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* 1위 히어로 카드 디자인 */
+.rank-hero-card {
+  position: relative;
+  height: 200px;
   border-radius: 16px;
   overflow: hidden;
-}
-
-.product-rank-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
   cursor: pointer;
-  border-bottom: 1px solid #f3f4f6;
-  transition: background 0.15s;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.product-rank-item:last-child {
-  border-bottom: none;
+.rank-hero-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
 }
 
-.product-rank-item:hover {
-  background: #fafafa;
-}
-
-/* 순위 뱃지 */
-.product-rank-badge {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.product-rank-badge.rank-1 {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #000;
-}
-
-.product-rank-badge.rank-2 {
-  background: linear-gradient(135deg, #E8E8E8, #B8B8B8);
-  color: #fff;
-}
-
-.product-rank-badge.rank-3 {
-  background: linear-gradient(135deg, #CD7F32, #8B4513);
-  color: #fff;
-}
-
-.product-rank-badge.rank-4,
-.product-rank-badge.rank-5 {
-  background: #f3f4f6;
-  color: #888;
-  box-shadow: none;
-}
-
-/* 썸네일 */
-.product-rank-image {
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
+.hero-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  flex-shrink: 0;
-  background: #f5f5f5;
+  transition: transform 0.3s ease;
 }
 
-/* 정보 */
-.product-rank-info {
-  flex: 1;
-  min-width: 0;
+.rank-hero-card:hover .hero-image {
+  transform: scale(1.05);
 }
 
-.product-rank-brand {
+.hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 1.25rem;
+}
+
+.hero-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #000;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 2;
+}
+
+.hero-info {
+  color: white;
+  width: 100%;
+}
+
+.hero-brand {
   font-size: 11px;
-  color: #888;
-  display: block;
-  margin-bottom: 2px;
+  opacity: 0.8;
+  font-weight: 500;
 }
 
-.product-rank-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111;
-  margin: 0 0 4px;
+.hero-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 2px 0 8px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.product-rank-meta {
+.hero-stats {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
 }
 
-.product-rank-rating {
+.trend-score {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 6px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.score-dot {
+  width: 6px;
+  height: 6px;
+  background: #4ade80;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #4ade80;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.hero-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   font-weight: 600;
-  color: #333;
+  color: #facc15;
 }
 
-.product-rank-reviews {
-  font-size: 11px;
-  color: #999;
+/* 2-5위 리스트 디자인 */
+.rank-sub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-/* 관심도 바 */
-.product-rank-score {
-  width: 72px;
+.rank-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.rank-sub-item:hover {
+  background: #f1f5f9;
+  transform: translateX(4px);
+}
+
+.sub-rank-number {
+  font-size: 14px;
+  font-weight: 800;
+  color: #6b7280;
+  width: 24px;
+  text-align: center;
   flex-shrink: 0;
-  text-align: right;
 }
 
-.score-label {
+.rank-sub-item:nth-child(1) .sub-rank-number {
+  color: #9ca3af;
+}
+
+.rank-sub-item:nth-child(2) .sub-rank-number {
+  color: #d97706;
+}
+
+.sub-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #e5e7eb;
+}
+
+.sub-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sub-brand {
+  font-size: 10px;
+  color: #9ca3af;
+  display: block;
+  margin-bottom: 1px;
+}
+
+.sub-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sub-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.sub-reviews {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.sub-score {
+  flex-shrink: 0;
+}
+
+.sub-score-value {
+  font-size: 12px;
   font-weight: 700;
   color: #7c3aed;
-  display: block;
-  margin-bottom: 4px;
+  background: #f3e8ff;
+  padding: 3px 8px;
+  border-radius: 12px;
 }
 
-.score-bar {
-  height: 5px;
-  background: #f3f4f6;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.score-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #8B5CF6, #A78BFA);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-/* 화살표 */
-.product-rank-arrow {
-  color: #ccc;
+.sub-arrow {
+  color: #d1d5db;
   flex-shrink: 0;
   transition: color 0.15s, transform 0.15s;
 }
 
-.product-rank-item:hover .product-rank-arrow {
+.rank-sub-item:hover .sub-arrow {
   color: #7c3aed;
   transform: translateX(2px);
 }
 
-/* 스켈레톤 */
-.product-rank-skeleton {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-bottom: 1px solid #f3f4f6;
+/* 히어로 스켈레톤 */
+.hero-skeleton {
+  height: 200px;
+  border-radius: 16px;
 }
 
-.product-rank-skeleton:last-child {
-  border-bottom: none;
-}
-
-/* 모바일 */
+/* 모바일 대응 */
 @media (max-width: 640px) {
-  .product-rank-item {
-    padding: 12px 14px;
+  .rank-hero-card {
+    height: 180px;
+  }
+
+  .hero-name {
+    font-size: 1rem;
+  }
+
+  .rank-sub-item {
+    padding: 8px 10px;
     gap: 10px;
   }
 
-  .product-rank-badge {
-    width: 26px;
-    height: 26px;
-    font-size: 11px;
-  }
-
-  .product-rank-image {
-    width: 44px;
-    height: 44px;
+  .sub-image {
+    width: 40px;
+    height: 40px;
     border-radius: 8px;
   }
 
-  .product-rank-name {
-    font-size: 13px;
+  .sub-name {
+    font-size: 12px;
   }
 
-  .product-rank-score {
+  .sub-score {
     display: none;
   }
 
-  .product-rank-arrow {
+  .sub-arrow {
     display: none;
   }
 }
