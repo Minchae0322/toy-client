@@ -5,9 +5,31 @@
     <main class="main-content">
       <!-- 페이지 헤더 -->
       <header class="page-header">
-        <h1 class="page-title">대시보드</h1>
-        <p class="page-description">오늘의 트렌드를 한눈에 확인하세요</p>
+        <h1 class="page-title">트렌드 한눈에</h1>
+        <p class="page-description">인기 피드, 배틀, 제품 랭킹을 모아봤어요</p>
       </header>
+
+      <!-- 글래스 배너 -->
+      <div class="glass-banner" @click="goToTopTrend">
+        <div class="banner-glow"></div>
+        <div class="banner-inner">
+          <div class="banner-left">
+            <span class="banner-tag">
+              <span class="tag-dot"></span>
+              실시간 1위
+            </span>
+            <div class="banner-text-group">
+              <p class="banner-title"><strong>{{ topTrendName }}</strong></p>
+              <p class="banner-sub">지금 가장 많이 보고 있어요</p>
+            </div>
+          </div>
+          <div class="banner-action">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </div>
+        </div>
+      </div>
 
       <!-- 통계 카드 -->
       <div class="stats-grid">
@@ -255,7 +277,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
@@ -359,6 +381,20 @@ const getProductPopularityScore = (product) => {
   return (product.viewCount || 0) + ((product.likeCount || 0) * 3) + ((product.reviewCount || 0) * 2)
 }
 
+const topTrendName = computed(() => {
+  if (hotFeeds.value.length > 0) return hotFeeds.value[0].productName || '인기 피드'
+  if (hotProducts.value.length > 0) return hotProducts.value[0].name || '인기 제품'
+  return '트렌드'
+})
+
+const goToTopTrend = () => {
+  if (hotFeeds.value.length > 0) {
+    router.push({ name: 'FeedDetail', params: { id: hotFeeds.value[0].feedId } })
+  } else {
+    router.push({ name: 'FeedHome' })
+  }
+}
+
 const goToFeeds = () => router.push({ name: 'FeedHome' })
 const goToFeedDetail = (feedId) => router.push({ name: 'FeedDetail', params: { id: feedId } })
 const goToBattles = () => router.push({ name: 'BattleList' })
@@ -432,20 +468,20 @@ onMounted(() => {
 
 /* 페이지 헤더 */
 .page-header {
-  padding: 1.75rem 0 1.25rem;
+  padding: 1.75rem 0 1rem;
 }
 
 @media (min-width: 768px) {
   .page-header {
-    padding: 2rem 0 1.5rem;
+    padding: 2rem 0 1.25rem;
   }
 }
 
 .page-title {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #1a1a1a;
-  margin-bottom: 0.125rem;
+  margin: 0 0 0.25rem;
   letter-spacing: -0.02em;
 }
 
@@ -457,8 +493,127 @@ onMounted(() => {
 
 .page-description {
   font-size: 0.8125rem;
-  color: #999;
+  color: #94a3b8;
   margin: 0;
+}
+
+/* 글래스 배너 */
+.glass-banner {
+  position: relative;
+  margin-bottom: 1.25rem;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.glass-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.glass-banner:active {
+  transform: scale(0.985);
+}
+
+.banner-glow {
+  display: none;
+}
+
+.banner-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.banner-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 8px;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  border: 1px solid rgba(220, 38, 38, 0.12);
+}
+
+.tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+  animation: dot-blink 1.5s ease-in-out infinite;
+}
+
+@keyframes dot-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.banner-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  min-width: 0;
+}
+
+.banner-title {
+  font-size: 0.9rem;
+  color: #1c1917;
+  margin: 0;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.banner-title strong {
+  font-weight: 700;
+  color: #1c1917;
+}
+
+.banner-sub {
+  font-size: 0.6875rem;
+  color: #a8a29e;
+  margin: 0;
+  font-weight: 400;
+}
+
+.banner-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a3a3a3;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.glass-banner:hover .banner-action {
+  background: #ebebeb;
+  color: #737373;
 }
 
 /* 통계 그리드 */
@@ -1567,6 +1722,17 @@ onMounted(() => {
 .hero-skeleton {
   height: 200px;
   border-radius: 16px;
+}
+
+/* 글래스 배너 모바일 대응 */
+@media (max-width: 640px) {
+  .banner-inner {
+    padding: 0.875rem 1rem;
+  }
+
+  .banner-title {
+    font-size: 0.8125rem;
+  }
 }
 
 /* 모바일 대응 */

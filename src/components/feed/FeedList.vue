@@ -119,26 +119,50 @@
         <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="$emit('post-click', feed.feedId)">
           <div class="list-image">
             <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
-            <div v-if="feed.feedEvaluation" class="list-eval-overlay">
-              <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+            <!-- 이미지 뱃지 영역 -->
+            <div class="list-badges-top">
+              <span v-if="feed.feedEvaluation" :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+                <span class="eval-dot"></span>
                 {{ getEvaluationLabel(feed.feedEvaluation) }}
               </span>
+              <span v-if="feed.isTrending" class="list-trend-badge">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                급상승
+              </span>
             </div>
+            <!-- 가격 오버레이 -->
             <div v-if="feed.price" class="list-price-overlay">
               {{ formatPrice(feed.price) }}
             </div>
           </div>
           <div class="list-content">
-            <div class="list-header">
-              <span class="list-category">{{ feed.categoryName }}</span>
-              <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
+            <!-- 리뷰 요약 -->
+            <p class="list-review">
+              <span class="list-quote">"</span>{{ feed.reviewSummary }}<span class="list-quote">"</span>
+            </p>
+            <!-- 해시태그 -->
+            <div v-if="feed.hashtags?.length" class="list-hashtags">
+              <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="list-tag">#{{ tag }}</span>
             </div>
-            <h3 class="list-title">{{ feed.productName }}</h3>
-            <p class="list-review">{{ feed.reviewSummary }}</p>
+            <!-- 제품 정보 박스 (그리드 뷰와 동일) -->
+            <div class="list-product-box">
+              <div class="list-product-details">
+                <span class="list-product-category">{{ feed.categoryName }}</span>
+                <span class="list-product-name">{{ feed.productName }}</span>
+              </div>
+              <span class="list-product-price">{{ formatPrice(feed.price) }}</span>
+            </div>
+            <!-- 푸터: 작성자 + 좋아요/댓글 -->
             <div class="list-footer">
               <div class="list-author">
                 <img :src="getProfileImageUrl(feed) || '/default-avatar.png'" class="list-avatar" />
-                <span class="list-nickname">{{ getDisplayNickname(feed) }}</span>
+                <div class="list-author-meta">
+                  <span class="list-nickname">{{ getDisplayNickname(feed) }}</span>
+                  <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
+                </div>
               </div>
               <div class="list-stats">
                 <span :class="['stat', 'like-btn', { active: feed.userReactions?.hasLike }]" @click.stop="handleLike(feed)">
@@ -286,68 +310,189 @@ defineExpose({ observerTarget });
 
 .list-image img { width: 100%; height: 100%; object-fit: cover; }
 
-.list-eval-overlay { position: absolute; top: 12px; left: 12px; }
+/* 이미지 뱃지 영역 */
+.list-badges-top {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 2;
+}
+
+/* 평가 뱃지 - 그리드 뷰와 동일한 파스텔 스타일 */
 .list-eval-badge {
-  padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800;
-  background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
-.eval-best { color: #f59e0b; }
-.eval-good { color: #10b981; }
-.eval-okay { color: #6366f1; }
-.eval-bad { color: #ef4444; }
 
+.list-eval-badge .eval-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.eval-best { background-color: #fef3c7; color: #92400e; }
+.eval-best .eval-dot { background-color: #f59e0b; }
+.eval-good { background-color: #dcfce7; color: #166534; }
+.eval-good .eval-dot { background-color: #10b981; }
+.eval-okay { background-color: #f3e8ff; color: #6b21a8; }
+.eval-okay .eval-dot { background-color: #9333ea; }
+.eval-bad { background-color: #fee2e2; color: #991b1b; }
+.eval-bad .eval-dot { background-color: #ef4444; }
+
+/* 급상승 뱃지 */
+.list-trend-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 9px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  font-size: 9px;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
+/* 가격 오버레이 */
 .list-price-overlay {
-  position: absolute; bottom: 10px; right: 10px;
-  background: rgba(24, 24, 27, 0.85); color: white;
-  padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; backdrop-filter: blur(4px);
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(24, 24, 27, 0.85);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  backdrop-filter: blur(4px);
 }
 
+/* 콘텐츠 영역 */
 .list-content {
   flex: 1;
-  padding: 20px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-width: 0;
 }
 
-.list-header { display: flex; align-items: center; gap: 12px; }
-.list-category { font-size: 11px; font-weight: 800; color: #9993ea; text-transform: uppercase; }
-.list-time { font-size: 11px; color: #a1a1aa; }
-
-.list-title {
-  font-size: 18px; font-weight: 800; color: #18181b; line-height: 1.4;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
+/* 리뷰 요약 */
 .list-review {
-  font-size: 14px; color: #52525b; line-height: 1.6;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1b;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
 }
 
+.list-quote {
+  color: #9993ea;
+  font-family: serif;
+  font-size: 16px;
+  margin-right: 1px;
+}
+
+/* 해시태그 */
+.list-hashtags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.list-tag {
+  font-size: 11px;
+  color: #71717a;
+  font-weight: 500;
+}
+
+/* 제품 정보 박스 - 그리드 뷰 product-info-box와 동일 구조 */
+.list-product-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f8fa;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #f1f1f5;
+  gap: 8px;
+}
+
+.list-product-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.list-product-category {
+  font-size: 9px;
+  font-weight: 800;
+  color: #9333ea;
+  text-transform: uppercase;
+}
+
+.list-product-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3a3a3f;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-product-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: #9333ea;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 푸터 */
 .list-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid #f4f4f7;
 }
 
 .list-author { display: flex; align-items: center; gap: 8px; }
-.list-avatar { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; }
-.list-nickname { font-size: 13px; font-weight: 700; color: #3f3f46; }
+.list-author-meta { display: flex; flex-direction: column; gap: 1px; }
+.list-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.list-nickname { font-size: 12px; font-weight: 700; color: #18181b; }
+.list-time { font-size: 10px; color: #a1a1aa; }
 
-.list-stats { display: flex; gap: 16px; }
+.list-stats { display: flex; gap: 6px; }
 .stat {
   display: flex; align-items: center; gap: 4px;
-  font-size: 13px; font-weight: 700; color: #a1a1aa;
+  padding: 5px 10px;
+  background: #f4f4f7;
+  border-radius: 100px;
+  font-size: 11px; font-weight: 700; color: #a1a1aa;
+  transition: all 0.2s;
 }
-.stat svg { width: 16px; height: 16px; }
-.stat.active { color: #9993ea; }
-.stat.like-btn { cursor: pointer; transition: all 0.2s; }
-.stat.like-btn:hover { color: #9993ea; transform: scale(1.05); }
+.stat svg { width: 14px; height: 14px; }
+.stat.active { background: #f5f4ff; color: #9993ea; }
+.stat.like-btn { cursor: pointer; }
+.stat.like-btn:hover { color: #9993ea; background: #f5f4ff; }
 
 /* Scroll Status */
 .scroll-status { height: 80px; display: flex; align-items: center; justify-content: center; }
@@ -739,15 +884,29 @@ defineExpose({ observerTarget });
 
   .list-image { width: 120px; min-width: 120px; }
 
-  .list-content { padding: 12px 14px; gap: 4px; }
-  .list-title { font-size: 14px; }
-  .list-review { font-size: 13px; -webkit-line-clamp: 2; }
+  .list-badges-top { top: 8px; left: 8px; gap: 4px; }
+  .list-eval-badge { padding: 3px 7px; font-size: 9px; gap: 4px; }
+  .list-eval-badge .eval-dot { width: 4px; height: 4px; }
+  .list-trend-badge { padding: 3px 6px; font-size: 8px; }
+  .list-price-overlay { bottom: 6px; right: 6px; font-size: 10px; padding: 2px 6px; }
 
-  .list-footer { padding-top: 8px; }
+  .list-content { padding: 10px 12px; gap: 5px; }
+  .list-review { font-size: 12px; -webkit-line-clamp: 2; }
+  .list-quote { font-size: 13px; }
+  .list-hashtags { gap: 5px; }
+  .list-tag { font-size: 10px; }
+
+  .list-product-box { padding: 6px 10px; border-radius: 8px; }
+  .list-product-category { font-size: 8px; }
+  .list-product-name { font-size: 11px; }
+  .list-product-price { font-size: 12px; }
+
+  .list-footer { padding-top: 6px; }
   .list-avatar { width: 22px; height: 22px; }
-  .list-nickname { font-size: 11px; }
-  .stat { font-size: 11px; }
-  .stat svg { width: 13px; height: 13px; }
+  .list-nickname { font-size: 10px; }
+  .list-time { font-size: 9px; }
+  .stat { font-size: 10px; padding: 4px 8px; }
+  .stat svg { width: 12px; height: 12px; }
 
   /* 모바일 스켈레톤: 그리드 뷰 - FeedCard 모바일과 동일 */
   .skeleton-card {
