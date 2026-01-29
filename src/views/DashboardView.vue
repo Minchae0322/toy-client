@@ -661,9 +661,6 @@ onMounted(() => {
 
 /* 핫 피드 섹션 */
 .hot-feeds-section {
-  border: none !important;
-  background: transparent !important;
-  padding: 0 !important;
   margin-bottom: 1.5rem !important;
 }
 
