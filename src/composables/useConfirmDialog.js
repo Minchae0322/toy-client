@@ -2,7 +2,7 @@ import { reactive, readonly } from 'vue'
 
 const state = reactive({
   visible: false,
-  type: 'confirm', // 'confirm' | 'alert' | 'danger'
+  type: 'confirm', // 'confirm' | 'alert' | 'danger' | 'login'
   title: '',
   message: '',
   confirmText: '확인',
@@ -14,7 +14,8 @@ function open({ type = 'confirm', title = '', message = '', confirmText, cancelT
   const defaults = {
     confirm: { confirmText: '확인', cancelText: '취소' },
     alert: { confirmText: '확인', cancelText: null },
-    danger: { confirmText: '삭제', cancelText: '취소' }
+    danger: { confirmText: '삭제', cancelText: '취소' },
+    login: { confirmText: '로그인하기', cancelText: '나중에' }
   }
 
   const d = defaults[type] || defaults.confirm
@@ -28,6 +29,14 @@ function open({ type = 'confirm', title = '', message = '', confirmText, cancelT
 
   return new Promise((resolve) => {
     state.resolve = resolve
+  })
+}
+
+function openLoginRequired(message = '이 기능을 사용하려면 로그인이 필요합니다.') {
+  return open({
+    type: 'login',
+    title: '로그인이 필요합니다',
+    message
   })
 }
 
@@ -50,6 +59,7 @@ export function useConfirmDialog() {
   return {
     state: readonly(state),
     open,
+    openLoginRequired,
     confirm,
     cancel
   }

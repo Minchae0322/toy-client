@@ -29,6 +29,12 @@ const handleOverlayClick = () => {
               <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
             </svg>
+            <!-- login -->
+            <svg v-else-if="state.type === 'login'" class="dialog-icon" width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+            </svg>
             <!-- danger -->
             <svg v-else class="dialog-icon" width="28" height="28" viewBox="0 0 24 24" fill="none">
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -116,6 +122,11 @@ const handleOverlayClick = () => {
   color: #38A169;
 }
 
+.dialog--login .dialog-icon-wrap {
+  background: #EBF5FF;
+  color: #3B82F6;
+}
+
 .dialog--danger .dialog-icon-wrap {
   background: #FFF5F5;
   color: #E53E3E;
@@ -196,6 +207,16 @@ const handleOverlayClick = () => {
 
 .dialog-btn--confirm.dialog-btn--alert:hover {
   background: #8529D4;
+}
+
+/* login 타입 */
+.dialog-btn--confirm.dialog-btn--login {
+  background: #3B82F6;
+  color: #ffffff;
+}
+
+.dialog-btn--confirm.dialog-btn--login:hover {
+  background: #2563EB;
 }
 
 /* danger 타입 */
