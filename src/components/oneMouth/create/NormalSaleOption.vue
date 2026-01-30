@@ -97,6 +97,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
 
 const props = defineProps({
   modelValue: Array
@@ -104,14 +105,16 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 
+const { open } = useConfirmDialog();
+
 const localValue = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 });
 
-const addOption = () => {
+const addOption = async () => {
   if (localValue.value.length >= 5) {
-    alert('옵션은 최대 5개까지만 추가 가능합니다.');
+    await open({ type: 'alert', title: '알림', message: '옵션은 최대 5개까지만 추가 가능합니다.' });
     return;
   }
 
@@ -126,9 +129,9 @@ const addOption = () => {
   ];
 };
 
-const removeOption = (index) => {
+const removeOption = async (index) => {
   if (localValue.value.length <= 1) {
-    alert('최소 1개의 옵션이 필요합니다.');
+    await open({ type: 'alert', title: '알림', message: '최소 1개의 옵션이 필요합니다.' });
     return;
   }
   localValue.value = localValue.value.filter((_, i) => i !== index);

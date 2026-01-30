@@ -117,6 +117,7 @@ import { useRouter } from 'vue-router'
 import { battleService } from '@/services/BattleService.js'
 import { categoryService } from '@/services/CategoryService.js'
 import { useAuthStore } from '@/stores/auth.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 // Components
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'
@@ -127,6 +128,7 @@ import BottomNavigation from '@/components/common/BottomNavigation.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { open } = useConfirmDialog()
 
 // State
 const allTabs = ref([
@@ -324,7 +326,7 @@ const handleCreateBattle = async () => {
     }
   } catch (error) {
     console.error('배틀 생성 권한 체크 실패:', error)
-    alert(error.message || '배틀을 생성할 수 없습니다.')
+    await open({ type: 'alert', title: '오류', message: error.message || '배틀을 생성할 수 없습니다.' })
   }
 }
 

@@ -104,9 +104,11 @@
 <script setup>
 import {useRouter} from 'vue-router';
 import {useAuth} from '@/composables/useAuth';
+import {useConfirmDialog} from '@/composables/useConfirmDialog';
 
 const router = useRouter();
 const {isLoggedIn, userId} = useAuth();
+const {openLoginRequired} = useConfirmDialog();
 
 const handleProtectedRoute = async (routeName) => {
   console.log(`=== ${routeName} 클릭 ===`);
@@ -136,7 +138,7 @@ const handleProtectedRoute = async (routeName) => {
     return;
   }
 
-  const confirmed = confirm('로그인이 필요한 페이지입니다.\n로그인 페이지로 이동하시겠습니까?');
+  const confirmed = await openLoginRequired('로그인이 필요한 페이지입니다.\n로그인 페이지로 이동하시겠습니까?');
 
   if (confirmed) {
     console.log('✅ 로그인 페이지로 이동');

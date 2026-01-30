@@ -82,6 +82,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { feedService } from '@/services/FeedService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 import FeedDetailHeader from '@/components/feed/detail/FeedDetailHeader.vue'
 import FeedDetailImageGallery from '@/components/feed/detail/FeedDetailImageGallery.vue'
@@ -91,6 +92,7 @@ import ShareModal from '@/components/common/ShareModal.vue'
 
 const router = useRouter()
 const route = useRoute()
+const { open } = useConfirmDialog()
 
 const loading = ref(true)
 const error = ref(null)
@@ -186,7 +188,7 @@ const submitComment = async (content) => {
     }
   } catch (err) {
     console.error('댓글 작성 실패:', err)
-    alert(err.message || '댓글 작성에 실패했습니다.')
+    await open({ type: 'alert', title: '오류', message: err.message || '댓글 작성에 실패했습니다.' })
   }
 }
 
@@ -202,12 +204,13 @@ const updateComment = async ({ commentId, content }) => {
     }
   } catch (err) {
     console.error('댓글 수정 실패:', err)
-    alert(err.message || '댓글 수정에 실패했습니다.')
+    await open({ type: 'alert', title: '오류', message: err.message || '댓글 수정에 실패했습니다.' })
   }
 }
 
 const deleteComment = async (commentId) => {
-  if (!confirm('댓글을 삭제하시겠습니까?')) return
+  const confirmed = await open({ type: 'danger', title: '댓글 삭제', message: '댓글을 삭제하시겠습니까?' })
+  if (!confirmed) return
   try {
     const response = await feedService.deleteComment(route.params.id, commentId)
     if (response.success) {
@@ -218,7 +221,7 @@ const deleteComment = async (commentId) => {
     }
   } catch (err) {
     console.error('댓글 삭제 실패:', err)
-    alert(err.message || '댓글 삭제에 실패했습니다.')
+    await open({ type: 'alert', title: '오류', message: err.message || '댓글 삭제에 실패했습니다.' })
   }
 }
 
@@ -298,8 +301,9 @@ const handleShare = () => {
   showShareModal.value = true
 }
 
-const handleCopyLink = () => {
-  navigator.clipboard.writeText(window.location.href).then(() => alert('링크가 복사되었습니다!'))
+const handleCopyLink = async () => {
+  await navigator.clipboard.writeText(window.location.href)
+  await open({ type: 'alert', title: '링크 복사', message: '링크가 복사되었습니다!' })
 }
 
 const closeShareModal = () => {

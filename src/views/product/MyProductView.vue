@@ -169,8 +169,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { productService } from '@/services/ProductService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const router = useRouter()
+const { open } = useConfirmDialog()
 const DEFAULT_THUMBNAIL = 'https://picsum.photos/200'
 
 // 상태
@@ -341,7 +343,8 @@ const editProduct = (product) => {
 }
 
 const deleteProduct = async (product) => {
-  if (!confirm(`"${product.name}"을(를) 삭제하시겠습니까?`)) return
+  const confirmed = await open({ type: 'danger', title: '상품 삭제', message: `"${product.name}"을(를) 삭제하시겠습니까?` })
+  if (!confirmed) return
 
   try {
     const response = await productService.deleteProduct(product.id)

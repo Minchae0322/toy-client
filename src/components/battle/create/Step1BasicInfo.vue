@@ -222,6 +222,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useFile } from '@/services/FileService.js';
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
 
 const props = defineProps({
   battleForm: {
@@ -241,6 +242,7 @@ const props = defineProps({
 const emit = defineEmits(['update:battleForm']);
 
 const fileService = useFile();
+const { open } = useConfirmDialog();
 const isUploading = ref(false);
 
 const thumbnailInput = ref(null);
@@ -311,12 +313,12 @@ const handleImageUpload = async (event) => {
   if (!file) return;
 
   if (file.size > 5 * 1024 * 1024) {
-    alert('파일 크기는 5MB를 초과할 수 없습니다.');
+    await open({ type: 'alert', title: '알림', message: '파일 크기는 5MB를 초과할 수 없습니다.' });
     return;
   }
 
   if (!file.type.startsWith('image/')) {
-    alert('이미지 파일만 업로드 가능합니다.');
+    await open({ type: 'alert', title: '알림', message: '이미지 파일만 업로드 가능합니다.' });
     return;
   }
 
@@ -355,7 +357,7 @@ const handleImageUpload = async (event) => {
     }
   } catch (error) {
     console.error('❌ [BATTLE] 대표 이미지 업로드 실패:', error);
-    alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+    await open({ type: 'alert', title: '오류', message: '이미지 업로드에 실패했습니다. 다시 시도해주세요.' });
     // 실패 시 초기화
     emit('update:battleForm', {
       ...props.battleForm,

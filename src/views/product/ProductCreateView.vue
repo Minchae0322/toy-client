@@ -406,6 +406,7 @@ import { useProduct } from '@/composables/useProduct.js'
 import { useCategory } from '@/services/CategoryService.js'
 import { useFile } from '@/services/FileService.js'
 import { useAuth } from '@/composables/useAuth.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 import AuthLoading from '@/components/product/create/AuthLoading.vue'
 import AuthError from '@/components/product/create/AuthError.vue'
@@ -418,6 +419,7 @@ const { user, isLoggedIn, loading: authLoading, userId, userNickname, checkAuthS
 const { createProduct, debugStatus } = useProduct()
 const { getCategories } = useCategory()
 const { upload } = useFile()
+const { open } = useConfirmDialog()
 
 // State
 const isLoading = ref(false)
@@ -529,10 +531,10 @@ const checkAuthenticationStatus = async () => {
 
 const showAuthRequiredMessage = () => { showLoginModal.value = true }
 
-const handleLoggedOut = () => {
+const handleLoggedOut = async () => {
   if (hasFormData()) {
     saveDraft()
-    alert('로그아웃되었습니다. 입력하신 내용은 임시저장되었습니다.')
+    await open({ type: 'alert', title: '알림', message: '로그아웃되었습니다. 입력하신 내용은 임시저장되었습니다.' })
   }
   router.push({ name: 'Login', query: { reason: 'session_expired', redirect: router.currentRoute.value.fullPath } })
 }
@@ -540,7 +542,8 @@ const handleLoggedOut = () => {
 const handleLoggedIn = async () => {
   await initializeComponent()
   if (localStorage.getItem('productFormDraft')) {
-    if (confirm('이전에 작성하던 내용이 있습니다. 복원하시겠습니까?')) restoreDraft()
+    const confirmed = await open({ type: 'confirm', title: '확인', message: '이전에 작성하던 내용이 있습니다. 복원하시겠습니까?' })
+    if (confirmed) restoreDraft()
   }
   showLoginModal.value = false
 }
@@ -575,11 +578,11 @@ const loadCategories = async () => {
         subCategories: parent.children || []
       }))
     } else {
-      alert('카테고리를 불러올 수 없습니다.')
+      await open({ type: 'alert', title: '오류', message: '카테고리를 불러올 수 없습니다.' })
       categories.value = []
     }
   } catch (error) {
-    alert('카테고리를 불러오는 중 오류가 발생했습니다.')
+    await open({ type: 'alert', title: '오류', message: '카테고리를 불러오는 중 오류가 발생했습니다.' })
     categories.value = []
   } finally {
     categoriesLoading.value = false
@@ -660,11 +663,11 @@ const removeAdditionalImage = (index) => {
 }
 
 // Feature & Tag
-const addCustomFeature = () => {
+const addCustomFeature = async () => {
   const feature = customFeature.value.trim()
   if (!feature) return
   if (selectedFeatures.value.includes(feature)) {
-    alert('이미 추가된 특징입니다')
+    await open({ type: 'alert', title: '중복', message: '이미 추가된 특징입니다' })
     customFeature.value = ''
     return
   }
@@ -672,15 +675,15 @@ const addCustomFeature = () => {
   customFeature.value = ''
 }
 
-const addTag = (tag) => {
+const addTag = async (tag) => {
   const t = tag?.trim()
   if (!t) return
   if (selectedTags.value.includes(t)) {
-    alert('이미 추가된 태그입니다')
+    await open({ type: 'alert', title: '중복', message: '이미 추가된 태그입니다' })
     return
   }
   if (selectedTags.value.length >= 10) {
-    alert('태그는 최대 10개까지입니다')
+    await open({ type: 'alert', title: '제한 초과', message: '태그는 최대 10개까지입니다' })
     return
   }
   selectedTags.value.push(t)
@@ -735,21 +738,21 @@ const handleClickOutside = (e) => {
 // Submit
 const handleSubmit = async () => {
   if (!isLoggedIn.value) {
-    alert('로그인이 필요합니다')
+    await open({ type: 'login', title: '로그인이 필요합니다', message: '제품을 등록하려면 로그인이 필요합니다.' })
     showAuthRequiredMessage()
     return
   }
   if (!userId.value) {
-    alert('사용자 정보를 확인할 수 없습니다')
+    await open({ type: 'alert', title: '오류', message: '사용자 정보를 확인할 수 없습니다' })
     await logout()
     return
   }
   if (!thumbnailFile.value) {
-    alert('대표 이미지는 필수입니다')
+    await open({ type: 'alert', title: '필수 항목', message: '대표 이미지는 필수입니다' })
     return
   }
   if (!validateForm()) {
-    alert('입력 정보를 확인해주세요')
+    await open({ type: 'alert', title: '입력 오류', message: '입력 정보를 확인해주세요' })
     return
   }
 
@@ -815,10 +818,10 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('제품 등록 실패:', error)
     if (error.message.includes('인증') || error.message.includes('권한')) {
-      alert('인증이 만료되었습니다. 다시 로그인해주세요')
+      await open({ type: 'alert', title: '인증 만료', message: '인증이 만료되었습니다. 다시 로그인해주세요' })
       await logout()
     } else {
-      alert(error.message || '제품 등록 중 오류가 발생했습니다')
+      await open({ type: 'alert', title: '오류', message: error.message || '제품 등록 중 오류가 발생했습니다' })
     }
   } finally {
     isLoading.value = false
@@ -840,14 +843,15 @@ const saveDraft = () => {
   localStorage.setItem('productFormDraft', JSON.stringify(draftData))
 }
 
-const restoreDraft = () => {
+const restoreDraft = async () => {
   if (!isLoggedIn.value) return
   const savedDraft = localStorage.getItem('productFormDraft')
   if (savedDraft) {
     try {
       const draftData = JSON.parse(savedDraft)
       if (draftData.userId && draftData.userId !== userId.value) {
-        if (confirm('다른 계정의 임시저장 데이터입니다. 삭제하시겠습니까?')) {
+        const confirmed = await open({ type: 'danger', title: '임시저장 데이터', message: '다른 계정의 임시저장 데이터입니다. 삭제하시겠습니까?' })
+        if (confirmed) {
           localStorage.removeItem('productFormDraft')
         }
         return
@@ -862,9 +866,10 @@ const restoreDraft = () => {
   }
 }
 
-const goBack = () => {
+const goBack = async () => {
   if (hasFormData()) {
-    if (confirm('작성을 취소하시겠습니까?\n입력된 내용은 임시저장됩니다.')) {
+    const confirmed = await open({ type: 'confirm', title: '작성 취소', message: '작성을 취소하시겠습니까?\n입력된 내용은 임시저장됩니다.' })
+    if (confirmed) {
       saveDraft()
       router.push('/')
     }

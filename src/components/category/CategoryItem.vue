@@ -2,6 +2,7 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue'
 import { categoryService } from '@/services/CategoryService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   category: {
@@ -32,6 +33,8 @@ const emit = defineEmits([
   'delete',
   'status-updated'
 ])
+
+const { open } = useConfirmDialog()
 
 const editingId = ref(null)
 const newKeyword = ref('')
@@ -81,7 +84,7 @@ const cancelToggleActive = () => {
 const executeToggleActive = async () => {
   const categoryId = props.category?.categoryId
   if (!categoryId) {
-    alert('카테고리 ID를 찾을 수 없습니다.')
+    await open({ type: 'alert', title: '오류', message: '카테고리 ID를 찾을 수 없습니다.' })
     return
   }
 
@@ -146,7 +149,7 @@ const executeToggleActive = async () => {
       reverted: true
     })
 
-    alert('상태 변경에 실패했습니다.')
+    await open({ type: 'alert', title: '오류', message: '상태 변경에 실패했습니다.' })
   }
 }
 
@@ -237,8 +240,9 @@ const handleUpdate = (field, value) => {
   emit('update', props.category.categoryId, field, value)
 }
 
-const handleDelete = () => {
-  if (confirm('정말로 이 카테고리를 삭제하시겠습니까?')) {
+const handleDelete = async () => {
+  const confirmed = await open({ type: 'danger', title: '확인', message: '정말로 이 카테고리를 삭제하시겠습니까?' })
+  if (confirmed) {
     emit('delete', props.category.categoryId)
   }
 }

@@ -84,6 +84,7 @@
 import { battleService } from '@/services/BattleService.js'
 import { fileService } from '@/services/FileService.js'
 import { getUserId } from '@/utils/auth.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import ShareModal from '@/components/common/ShareModal.vue'
 import BattleInfoCard from '@/components/battle/detail/BattleInfoCard.vue'
 import VoteSelectionBar from '@/components/battle/detail/VoteSelectionBar.vue'
@@ -98,6 +99,10 @@ export default {
     VoteSelectionBar,
     ProductCard,
     AddProductModal
+  },
+  setup() {
+    const { open } = useConfirmDialog()
+    return { open }
   },
   data() {
     return {
@@ -251,12 +256,12 @@ export default {
 
       if (this.isWeightedVote) {
         if (!this.selectedRanks[1] || !this.selectedRanks[2] || !this.selectedRanks[3]) {
-          alert('1위, 2위, 3위를 모두 선택해주세요')
+          await this.open({ type: 'alert', title: '투표 선택 필요', message: '1위, 2위, 3위를 모두 선택해주세요' })
           return
         }
       } else {
         if (!this.selectedRanks[1]) {
-          alert('제품을 선택해주세요')
+          await this.open({ type: 'alert', title: '투표 선택 필요', message: '제품을 선택해주세요' })
           return
         }
       }
@@ -279,7 +284,7 @@ export default {
         const response = await battleService.voteBattleItem(this.battleId, { votes })
 
         if (response.success) {
-          alert('투표가 완료되었습니다!')
+          await this.open({ type: 'alert', title: '투표 완료', message: '투표가 완료되었습니다!' })
           this.hasVoted = true
           this.selectedRanks = { 1: null, 2: null, 3: null }
           await this.loadBattle()
@@ -288,7 +293,7 @@ export default {
         }
       } catch (err) {
         console.error('투표 실패:', err)
-        alert(err.message || '투표에 실패했습니다.')
+        await this.open({ type: 'alert', title: '오류', message: err.message || '투표에 실패했습니다.' })
       } finally {
         this.submitting = false
       }
@@ -298,7 +303,7 @@ export default {
       if (this.submitting) return
 
       if (!this.newProduct.name || !this.newProduct.brand || !this.newProduct.imageFile) {
-        alert('모든 필드를 입력해주세요')
+        await this.open({ type: 'alert', title: '입력 필요', message: '모든 필드를 입력해주세요' })
         return
       }
 
@@ -322,7 +327,7 @@ export default {
         const response = await battleService.addBattleItems(this.battleId, itemData)
 
         if (response.success) {
-          alert('제품이 등록되었습니다!')
+          await this.open({ type: 'alert', title: '등록 완료', message: '제품이 등록되었습니다!' })
           this.closeAddModal()
           await this.loadBattle()
         } else {
@@ -330,7 +335,7 @@ export default {
         }
       } catch (err) {
         console.error('제품 등록 실패:', err)
-        alert(err.message || '제품 등록에 실패했습니다.')
+        await this.open({ type: 'alert', title: '오류', message: err.message || '제품 등록에 실패했습니다.' })
       } finally {
         this.submitting = false
       }
@@ -355,11 +360,11 @@ export default {
       return item.battleItemProduct?.name || item.customName || '제품명 없음'
     },
 
-    handleImageUpload(e) {
+    async handleImageUpload(e) {
       const file = e.target.files?.[0]
       if (file) {
         if (file.size > 5 * 1024 * 1024) {
-          alert('파일 크기는 5MB 이하여야 합니다.')
+          await this.open({ type: 'alert', title: '파일 크기 초과', message: '파일 크기는 5MB 이하여야 합니다.' })
           return
         }
 

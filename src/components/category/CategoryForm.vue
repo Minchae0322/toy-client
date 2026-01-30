@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   parentId: {
@@ -26,6 +27,8 @@ watch(() => props.parentId, (newVal) => {
   formData.value.parentId = newVal
 }, { immediate: true })
 
+const { open } = useConfirmDialog()
+
 const keywordInput = ref('')
 
 const availableParentCategories = computed(() => {
@@ -43,9 +46,9 @@ const onParentChange = (event) => {
   formData.value.parentId = value === '' || value === 'null' ? null : Number(value)
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!formData.value.categoryName.trim()) {
-    alert('카테고리 이름은 필수입니다.')
+    await open({ type: 'alert', title: '알림', message: '카테고리 이름은 필수입니다.' })
     return
   }
 
