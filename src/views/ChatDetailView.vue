@@ -223,6 +223,7 @@ import {
 } from 'lucide-vue-next'
 import { chatService } from '@/services/ChatService.js'
 import { webSocketService } from '@/services/webSocketService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 // ✅ Props 정의 추가
 const props = defineProps({
@@ -234,6 +235,7 @@ const emit = defineEmits(['back-to-list', 'new-message'])
 
 const route = useRoute()
 const router = useRouter()
+const { open } = useConfirmDialog()
 
 // State
 const loading = ref(true)
@@ -445,11 +447,14 @@ const reconnectWebSocket = async () => {
   }
 }
 
-const handleMenuAction = (action) => {
+const handleMenuAction = async (action) => {
   showRoomMenu.value = false
-  if (action === 'leave' && confirm('채팅방을 나가시겠습니까?')) {
-    emit('back-to-list')
-    router.back()
+  if (action === 'leave') {
+    const confirmed = await open({ type: 'danger', title: '채팅방 나가기', message: '채팅방을 나가시겠습니까?' })
+    if (confirmed) {
+      emit('back-to-list')
+      router.back()
+    }
   }
 }
 

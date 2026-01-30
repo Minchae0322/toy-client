@@ -79,6 +79,7 @@ import { useRouter } from 'vue-router';
 import { useBattle } from '@/services/BattleService.js';
 import { useCategory } from '@/services/CategoryService.js';
 import { useFile } from '@/services/FileService.js'; // ⭐ 수정
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import BattleCreateHeader from '@/components/battle/create/BattleCreateHeader.vue';
 import BattleCreatePreview from '@/components/battle/create/BattleCreatePreview.vue';
 import Step1BasicInfo from '@/components/battle/create/Step1BasicInfo.vue';
@@ -91,6 +92,7 @@ const router = useRouter();
 const battleService = useBattle();
 const categoryService = useCategory();
 const fileService = useFile(); // ⭐ 추가
+const { open } = useConfirmDialog();
 
 // ==================== 스텝 설정 ====================
 const steps = ['기본 정보', '아이템 설정', '상세 설정', '최종 확인'];
@@ -244,7 +246,7 @@ const loadCategories = async () => {
   } catch (error) {
     console.error('카테고리 로드 실패:', error);
     categories.value = [];
-    alert('카테고리를 불러오는데 실패했습니다.');
+    await open({ type: 'alert', title: '오류', message: '카테고리를 불러오는데 실패했습니다.' });
   } finally {
     loading.value = false;
   }
@@ -258,11 +260,12 @@ const handleNext = async () => {
   }
 };
 
-const handlePrevious = () => {
+const handlePrevious = async () => {
   if (currentStep.value > 1) {
     currentStep.value--;
   } else {
-    if (confirm('배틀 생성을 취소하시겠습니까?\n작성 중인 내용이 저장되지 않습니다.')) {
+    const confirmed = await open({ type: 'confirm', title: '배틀 생성 취소', message: '배틀 생성을 취소하시겠습니까?\n작성 중인 내용이 저장되지 않습니다.' });
+    if (confirmed) {
       handleBack();
     }
   }
@@ -272,7 +275,7 @@ const handleBack = () => {
   router.push({ name: 'BattleList' });
 };
 
-const saveDraft = () => {
+const saveDraft = async () => {
   const draftData = {
     ...battleForm.value,
     selectedItems: selectedItems.value,
@@ -280,15 +283,16 @@ const saveDraft = () => {
   };
 
   localStorage.setItem('battleDraft', JSON.stringify(draftData));
-  alert('임시저장되었습니다');
+  await open({ type: 'alert', title: '임시저장 완료', message: '임시저장되었습니다' });
 };
 
-const loadDraft = () => {
+const loadDraft = async () => {
   try {
     const draft = localStorage.getItem('battleDraft');
     if (draft) {
       const draftData = JSON.parse(draft);
-      if (confirm('임시저장된 데이터가 있습니다. 불러오시겠습니까?')) {
+      const confirmed = await open({ type: 'confirm', title: '임시저장 불러오기', message: '임시저장된 데이터가 있습니다. 불러오시겠습니까?' });
+      if (confirmed) {
         battleForm.value = { ...battleForm.value, ...draftData };
         selectedItems.value = draftData.selectedItems || [];
       }
@@ -439,7 +443,7 @@ const createBattle = async () => {
 
     if (response.success) {
       localStorage.removeItem('battleDraft');
-      alert('배틀이 성공적으로 생성되었습니다!');
+      await open({ type: 'alert', title: '배틀 생성 완료', message: '배틀이 성공적으로 생성되었습니다!' });
       router.push({
         name: 'BattleDetail',
         params: { id: response.data.id }
@@ -449,7 +453,7 @@ const createBattle = async () => {
     }
   } catch (error) {
     console.error('배틀 생성 실패:', error);
-    alert(error.message || '배틀 생성 중 오류가 발생했습니다.');
+    await open({ type: 'alert', title: '오류', message: error.message || '배틀 생성 중 오류가 발생했습니다.' });
   } finally {
     loading.value = false;
   }
@@ -461,7 +465,7 @@ const checkCreationPermission = async () => {
     const response = await battleService.validateCreation();
 
     if (!response.success) {
-      alert('배틀을 생성할 권한이 없습니다.');
+      await open({ type: 'alert', title: '권한 없음', message: '배틀을 생성할 권한이 없습니다.' });
       router.push({ name: 'BattleList' });
     }
   } catch (error) {
@@ -473,7 +477,7 @@ const checkCreationPermission = async () => {
 onMounted(async () => {
   await checkCreationPermission();
   await loadCategories();
-  loadDraft();
+  await loadDraft();
 
   // 기본 날짜 설정
   if (!battleForm.value.startDate) {

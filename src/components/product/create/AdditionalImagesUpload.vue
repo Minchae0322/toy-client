@@ -89,6 +89,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useFile } from '@/services/FileService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   additionalFiles: {
@@ -109,6 +110,7 @@ const emit = defineEmits(['update', 'remove'])
 
 const fileService = useFile()
 const { isImageFile, createPreview } = fileService
+const { open, openLoginRequired } = useConfirmDialog()
 
 const fileInput = ref(null)
 const isDragOver = ref(false)
@@ -143,14 +145,14 @@ const handleDragLeave = () => {
 
 const processFiles = async (files) => {
   if (!props.isLoggedIn) {
-    alert('로그인이 필요합니다')
+    await openLoginRequired()
     return
   }
 
   const remainingSlots = 4 - props.additionalFiles.length
 
   if (files.length > remainingSlots) {
-    alert(`추가 이미지는 최대 4개까지만 업로드할 수 있습니다 (현재: ${props.additionalFiles.length}/4)`)
+    await open({ type: 'alert', title: '업로드 제한', message: `추가 이미지는 최대 4개까지만 업로드할 수 있습니다 (현재: ${props.additionalFiles.length}/4)` })
     files = files.slice(0, remainingSlots)
   }
 
@@ -158,17 +160,17 @@ const processFiles = async (files) => {
 
   for (const file of files) {
     if (!isImageFile(file)) {
-      alert(`${file.name}: PNG, JPG, JPEG 파일만 업로드 가능합니다`)
+      await open({ type: 'alert', title: '파일 형식 오류', message: `${file.name}: PNG, JPG, JPEG 파일만 업로드 가능합니다` })
       continue
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert(`${file.name}: 파일 크기는 5MB 이하만 업로드 가능합니다`)
+      await open({ type: 'alert', title: '파일 크기 초과', message: `${file.name}: 파일 크기는 5MB 이하만 업로드 가능합니다` })
       continue
     }
 
     if (file.size === 0) {
-      alert(`${file.name}: 빈 파일은 업로드할 수 없습니다`)
+      await open({ type: 'alert', title: '파일 오류', message: `${file.name}: 빈 파일은 업로드할 수 없습니다` })
       continue
     }
 

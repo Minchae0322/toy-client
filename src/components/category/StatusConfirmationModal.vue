@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue'
 import StatusConfirmationModal from '@/components/category/StatusConfirmationModal.vue'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   category: {
@@ -31,6 +32,8 @@ const emit = defineEmits([
   'delete',
   'status-updated'
 ])
+
+const { open } = useConfirmDialog()
 
 const editingId = ref(null)
 const newKeyword = ref('')
@@ -99,7 +102,7 @@ const executeToggleActive = async () => {
   const categoryId = props.category?.categoryId
   if (!categoryId) {
     console.error('❌ categoryId가 없습니다:', props.category)
-    alert('카테고리 ID를 찾을 수 없습니다.')
+    await open({ type: 'alert', title: '오류', message: '카테고리 ID를 찾을 수 없습니다.' })
     return
   }
 
@@ -184,7 +187,7 @@ const executeToggleActive = async () => {
       reverted: true // 원복 플래그
     })
 
-    alert('상태 변경에 실패했습니다.')
+    await open({ type: 'alert', title: '오류', message: '상태 변경에 실패했습니다.' })
   }
 
   console.log('🔍 === executeToggleActive 완료, 최종 상태:', localIsActive.value, '===')
@@ -282,8 +285,9 @@ const handleUpdate = (field, value) => {
   emit('update', props.category.categoryId, field, value)
 }
 
-const handleDelete = () => {
-  if (confirm('정말로 이 카테고리를 삭제하시겠습니까?')) {
+const handleDelete = async () => {
+  const confirmed = await open({ type: 'danger', title: '확인', message: '정말로 이 카테고리를 삭제하시겠습니까?' })
+  if (confirmed) {
     emit('delete', props.category.categoryId)
   }
 }

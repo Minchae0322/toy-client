@@ -75,6 +75,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useOneMouth } from '@/services/SalePostService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import PaymentModal from '@/components/oneMouth/detail/PaymentModal.vue'
 import AppHeader from '@/components/oneMouth/detail/AppHeader.vue'
 import ImageGallery from '@/components/oneMouth/detail/ImageGallery.vue'
@@ -85,6 +86,7 @@ import PurchaseCard from '@/components/oneMouth/detail/PurchaseCard.vue'
 
 const route = useRoute()
 const oneMouthService = useOneMouth()
+const { open } = useConfirmDialog()
 
 const loading = ref(false)
 const error = ref(null)
@@ -158,7 +160,7 @@ const toggleFavorite = async () => {
   }
 }
 
-const handleShare = () => {
+const handleShare = async () => {
   if (navigator.share) {
     navigator.share({
       title: oneMouth.value?.title,
@@ -167,22 +169,22 @@ const handleShare = () => {
     })
   } else {
     navigator.clipboard.writeText(window.location.href)
-    alert('링크가 복사되었습니다')
+    await open({ type: 'alert', title: '링크 복사', message: '링크가 복사되었습니다' })
   }
 }
 
-const addToCart = () => {
+const addToCart = async () => {
   console.log('Add to cart:', {
     oneMouthId: oneMouth.value?.oneMouthId,
     quantity: quantity.value,
     option: selectedOption.value
   })
-  alert('장바구니에 추가되었습니다')
+  await open({ type: 'alert', title: '장바구니', message: '장바구니에 추가되었습니다' })
 }
 
-const handlePayment = (paymentData) => {
+const handlePayment = async (paymentData) => {
   console.log('Payment:', paymentData)
-  alert('결제가 완료되었습니다')
+  await open({ type: 'alert', title: '결제 완료', message: '결제가 완료되었습니다' })
   showPaymentModal.value = false
 }
 

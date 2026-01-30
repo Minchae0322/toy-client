@@ -189,9 +189,11 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { oneMouthService } from '@/services/SalePostService.js';
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import TradeCard from '@/components/oneMouth/TradeCard.vue';
 
 const router = useRouter();
+const { open, openLoginRequired } = useConfirmDialog();
 
 // State
 const trades = ref([]);
@@ -331,11 +333,11 @@ const viewDetail = (tradeId) => {
   });
 };
 
-const handleSellClick = () => {
+const handleSellClick = async () => {
   const token = localStorage.getItem('access_token');
   if (!token) {
-    alert('로그인이 필요합니다.');
-    router.push('/login');
+    const confirmed = await openLoginRequired();
+    if (confirmed) router.push('/login');
     return;
   }
   router.push('/one-mouth/create');

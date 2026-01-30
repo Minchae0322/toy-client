@@ -346,7 +346,9 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { productService } from '@/services/ProductService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
+const { open } = useConfirmDialog()
 const DEFAULT_THUMBNAIL = 'https://picsum.photos/200'
 
 // 상태
@@ -701,7 +703,8 @@ const confirmReject = async () => {
 }
 
 const deleteProduct = async (product) => {
-  if (!confirm(`"${product.name}"을(를) 삭제하시겠습니까?`)) return
+  const confirmed = await open({ type: 'danger', title: '상품 삭제', message: `"${product.name}"을(를) 삭제하시겠습니까?` })
+  if (!confirmed) return
 
   try {
     const response = await productService.updateProductStatus(product.id, 'DELETED')
@@ -741,7 +744,8 @@ const bulkReject = () => {
 }
 
 const bulkDelete = async () => {
-  if (!confirm(`${selectedProducts.value.length}개 상품을 삭제하시겠습니까?`)) return
+  const confirmed = await open({ type: 'danger', title: '일괄 삭제', message: `${selectedProducts.value.length}개 상품을 삭제하시겠습니까?` })
+  if (!confirmed) return
 
   try {
     const response = await productService.bulkDeleteProducts(selectedProducts.value)

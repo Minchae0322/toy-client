@@ -91,6 +91,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -101,6 +102,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'copied'])
+
+const { open } = useConfirmDialog()
 
 const copied = ref(false)
 const linkInput = ref(null)
@@ -134,7 +137,7 @@ const copyLink = async () => {
   }
 }
 
-const shareKakao = () => {
+const shareKakao = async () => {
   // 카카오톡 공유 (Kakao SDK가 있는 경우)
   if (window.Kakao && window.Kakao.isInitialized()) {
     window.Kakao.Share.sendDefault({
@@ -167,7 +170,7 @@ const shareKakao = () => {
     } else {
       // 데스크탑에서는 링크 복사 안내
       copyLink()
-      alert('링크가 복사되었습니다. 카카오톡에서 붙여넣기 해주세요.')
+      await open({ type: 'alert', title: '완료', message: '링크가 복사되었습니다. 카카오톡에서 붙여넣기 해주세요.' })
     }
   }
   close()

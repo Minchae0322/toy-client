@@ -84,6 +84,9 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { webSocketService } from '@/services/webSocketService.js'
 import * as authUtils from '@/utils/auth.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
+
+const { open } = useConfirmDialog()
 
 // 디버깅 모드
 const showDebug = ref(import.meta.env.DEV)
@@ -194,7 +197,8 @@ const debugWebSocketStatus = () => {
 
 // 로그아웃 처리
 const handleLogout = async () => {
-  if (confirm('정말 로그아웃하시겠습니까?')) {
+  const confirmed = await open({ type: 'confirm', title: '확인', message: '정말 로그아웃하시겠습니까?' })
+  if (confirmed) {
     isLoggingOut.value = true
     try {
       console.log('🚪 [AppHeader] 로그아웃 시작')

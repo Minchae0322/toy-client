@@ -1,6 +1,7 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import * as authUtils from '@/utils/auth.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 // Views import (기존 구조 유지)
 import LoginView from '@/views/LoginView.vue'
@@ -415,10 +416,12 @@ router.afterEach((to) => {
   console.log(`✅ [Router] 라우트 이동 완료: ${to.path}`)
 })
 
-router.onError((error) => {
+router.onError(async (error) => {
   console.error('❌ [Router] 라우트 오류:', error)
   if (error.message.includes('Loading chunk') || error.message.includes('fetch')) {
-    if (confirm('페이지 로드 중 오류가 발생했습니다. 새로고침하시겠습니까?')) {
+    const { open } = useConfirmDialog()
+    const confirmed = await open({ type: 'confirm', title: '페이지 로드 오류', message: '페이지 로드 중 오류가 발생했습니다. 새로고침하시겠습니까?' })
+    if (confirmed) {
       window.location.reload()
     }
   }

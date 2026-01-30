@@ -115,10 +115,12 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
 
 const router = useRouter();
 const route = useRoute();
 const { isLoggedIn } = useAuth();
+const { openLoginRequired } = useConfirmDialog();
 const isCreateMenuOpen = ref(false);
 const isMoreMenuOpen = ref(false);
 
@@ -157,7 +159,8 @@ const handleCreate = async (type) => {
     return;
   }
 
-  if (confirm('로그인이 필요합니다.')) {
+  const confirmed = await openLoginRequired();
+  if (confirmed) {
     await router.push({ name: 'Login', query: { redirect: target.redirect } });
   }
 };
@@ -170,7 +173,8 @@ const handleMoreNav = async (name) => {
     return;
   }
 
-  if (confirm('로그인이 필요합니다.')) {
+  const confirmed = await openLoginRequired();
+  if (confirmed) {
     await router.push({ name: 'Login', query: { redirect: route.fullPath } });
   }
 };

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import CategoryItem from '@/components/category/CategoryItem.vue'
 import CategoryEmpty from '@/components/category/CategoryEmpty.vue'
 import CategoryLoading from '@/components/category/CategoryLoading.vue'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   categories: {
@@ -33,6 +34,8 @@ const emit = defineEmits([
   'status-updated'
 ])
 
+const { open } = useConfirmDialog()
+
 const draggedItem = ref(null)
 const dragOverIndex = ref(-1)
 
@@ -61,7 +64,7 @@ const handleDrop = async (targetItem, targetIndex) => {
   }
 
   if (draggedItem.value.parentId !== targetItem.parentId) {
-    alert('같은 레벨의 카테고리끼리만 순서를 변경할 수 있습니다.')
+    await open({ type: 'alert', title: '알림', message: '같은 레벨의 카테고리끼리만 순서를 변경할 수 있습니다.' })
     draggedItem.value = null
     dragOverIndex.value = -1
     return

@@ -173,6 +173,7 @@ import {
 } from 'lucide-vue-next'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useUser, userUtils } from '@/services/UserService.js'
 import { useFile } from '@/services/FileService.js'
 import { getUserInfo, logout as authLogout } from '@/utils/auth.js'
@@ -180,6 +181,7 @@ import { getUserInfo, logout as authLogout } from '@/utils/auth.js'
 const router = useRouter()
 const userService = useUser()
 const fileService = useFile()
+const { open } = useConfirmDialog()
 
 // ==================== State ====================
 const loading = ref(true)
@@ -277,13 +279,13 @@ const cancelEditing = () => {
 
 const saveProfile = async () => {
   if (!editForm.nickname?.trim()) {
-    alert('닉네임을 입력해주세요.')
+    await open({ type: 'alert', title: '입력 확인', message: '닉네임을 입력해주세요.' })
     return
   }
 
   // 이미지 업로드 중이면 대기
   if (uploadingImage.value) {
-    alert('이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.')
+    await open({ type: 'alert', title: '업로드 중', message: '이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.' })
     return
   }
 
@@ -308,7 +310,7 @@ const saveProfile = async () => {
       if (!uploadResult.success || !uploadResult.data) {
         const errorMsg = uploadResult.message || '이미지 업로드에 실패했습니다.'
         console.error('[PROFILE] 이미지 업로드 실패:', errorMsg)
-        alert(errorMsg)
+        await open({ type: 'alert', title: '오류', message: errorMsg })
         return
       }
 
@@ -344,7 +346,7 @@ const saveProfile = async () => {
 
   } catch (err) {
     console.error('[PROFILE] 프로필 저장 실패:', err)
-    alert(err.message || '프로필 저장에 실패했습니다.')
+    await open({ type: 'alert', title: '오류', message: err.message || '프로필 저장에 실패했습니다.' })
   } finally {
     saving.value = false
   }
@@ -355,11 +357,11 @@ const handleImageChange = async (e) => {
   if (!file) return
 
   if (file.size > 5 * 1024 * 1024) {
-    alert('이미지 크기는 5MB 이하여야 합니다.')
+    await open({ type: 'alert', title: '파일 크기 초과', message: '이미지 크기는 5MB 이하여야 합니다.' })
     return
   }
   if (!file.type.startsWith('image/')) {
-    alert('이미지 파일만 업로드 가능합니다.')
+    await open({ type: 'alert', title: '파일 형식 오류', message: '이미지 파일만 업로드 가능합니다.' })
     return
   }
 
@@ -396,7 +398,7 @@ const handleImageChange = async (e) => {
     }
   } catch (err) {
     console.error('[PROFILE] 프로필 이미지 업로드 실패:', err)
-    alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.')
+    await open({ type: 'alert', title: '오류', message: '이미지 업로드에 실패했습니다. 다시 시도해주세요.' })
     // 실패해도 로컬 미리보기는 유지, 저장 시 재업로드 시도
   } finally {
     uploadingImage.value = false
@@ -417,8 +419,9 @@ const goToSavedPosts = () => console.log('저장한 글')
 const goToNotificationSettings = () => console.log('알림 설정')
 const goToAccountSettings = () => console.log('계정 설정')
 
-const handleLogout = () => {
-  if (confirm('로그아웃 하시겠습니까?')) {
+const handleLogout = async () => {
+  const confirmed = await open({ type: 'confirm', title: '로그아웃', message: '로그아웃 하시겠습니까?' })
+  if (confirmed) {
     authLogout()
     router.push('/login')
   }

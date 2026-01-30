@@ -71,6 +71,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   totalPrice: { type: Number, required: true },
@@ -84,12 +85,14 @@ const shippingInfo = ref({
   phone: ''
 })
 
+const { open } = useConfirmDialog()
+
 const selectedPayment = ref('카드')
 const paymentMethods = ['카드', '계좌이체', '카카오페이', '네이버페이']
 
-const processPayment = () => {
+const processPayment = async () => {
   if (!shippingInfo.value.address) {
-    alert('배송지를 입력해주세요')
+    await open({ type: 'alert', title: '알림', message: '배송지를 입력해주세요' })
     return
   }
 

@@ -140,10 +140,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { userService, userUtils } from '@/services/UserService'
 import { useAuth } from '@/composables/useAuth'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const route = useRoute()
 const router = useRouter()
 const { isLoggedIn, userId } = useAuth()
+const { open, openLoginRequired } = useConfirmDialog()
 
 const profileData = ref({
   userId: null,
@@ -194,7 +196,7 @@ const goToFollowList = (tab) => {
 
 const handleFollow = async () => {
   if (!isLoggedIn.value) {
-    const confirmed = confirm('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?')
+    const confirmed = await openLoginRequired('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?')
     if (confirmed) {
       await router.push({ name: 'Login', query: { redirect: route.fullPath } })
     }
@@ -211,7 +213,7 @@ const handleFollow = async () => {
     }
   } catch (error) {
     console.error('팔로우 토글 실패:', error)
-    alert('팔로우 처리 중 오류가 발생했습니다.')
+    await open({ type: 'alert', title: '오류', message: '팔로우 처리 중 오류가 발생했습니다.' })
   } finally {
     isFollowLoading.value = false
   }

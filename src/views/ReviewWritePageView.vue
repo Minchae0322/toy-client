@@ -138,6 +138,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useProductDetail } from '@/composables/useProduct'
 import { useFile } from '@/services/FileService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const router = useRouter()
 const route = useRoute()
@@ -149,6 +150,7 @@ const {
 } = useProductDetail()
 
 const { upload } = useFile()
+const { open } = useConfirmDialog()
 
 // State
 const product = ref(null)
@@ -206,24 +208,24 @@ const validateComment = () => {
   }
 }
 
-const handleImageUpload = (event) => {
+const handleImageUpload = async (event) => {
   const files = Array.from(event.target.files)
   const remainingSlots = 5 - previewImages.value.length
 
   if (files.length > remainingSlots) {
-    alert(`최대 ${remainingSlots}장까지 추가할 수 있습니다`)
+    await open({ type: 'alert', title: '첨부 제한', message: `최대 ${remainingSlots}장까지 추가할 수 있습니다` })
     return
   }
 
-  files.forEach(file => {
+  for (const file of files) {
     if (file.size > 5 * 1024 * 1024) {
-      alert(`${file.name}은(는) 5MB를 초과합니다`)
-      return
+      await open({ type: 'alert', title: '파일 크기 초과', message: `${file.name}은(는) 5MB를 초과합니다` })
+      continue
     }
 
     if (!file.type.startsWith('image/')) {
-      alert(`${file.name}은(는) 이미지 파일이 아닙니다`)
-      return
+      await open({ type: 'alert', title: '파일 형식 오류', message: `${file.name}은(는) 이미지 파일이 아닙니다` })
+      continue
     }
 
     const reader = new FileReader()
@@ -234,7 +236,7 @@ const handleImageUpload = (event) => {
       })
     }
     reader.readAsDataURL(file)
-  })
+  }
 
   event.target.value = ''
 }
@@ -268,7 +270,7 @@ const handleSubmit = async () => {
     const productId = route.params.id
 
     if (!productId) {
-      alert('상품 ID가 없습니다')
+      await open({ type: 'alert', title: '오류', message: '상품 ID가 없습니다' })
       return
     }
 
@@ -312,25 +314,26 @@ const handleSubmit = async () => {
     const result = await createReview(reviewData)
 
     if (result.success) {
-      alert('리뷰가 등록되었습니다')
+      await open({ type: 'alert', title: '등록 완료', message: '리뷰가 등록되었습니다' })
       router.push({
         name: 'ProductDetail',
         params: { id: productId }
       })
     } else {
-      alert(result.error || '리뷰 등록에 실패했습니다')
+      await open({ type: 'alert', title: '오류', message: result.error || '리뷰 등록에 실패했습니다' })
     }
   } catch (error) {
     console.error('❌ [REVIEW_WRITE] 리뷰 등록 실패:', error)
-    alert('리뷰 등록에 실패했습니다')
+    await open({ type: 'alert', title: '오류', message: '리뷰 등록에 실패했습니다' })
   } finally {
     isSubmitting.value = false
   }
 }
 
-const handleCancel = () => {
+const handleCancel = async () => {
   if (formData.rating > 0 || formData.comment.trim().length > 0) {
-    if (confirm('작성 중인 내용이 있습니다. 취소하시겠습니까?')) {
+    const confirmed = await open({ type: 'confirm', title: '작성 취소', message: '작성 중인 내용이 있습니다. 취소하시겠습니까?' })
+    if (confirmed) {
       handleBack()
     }
   } else {

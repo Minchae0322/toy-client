@@ -221,6 +221,7 @@
 import { ref, computed, watch } from 'vue';
 import productService from '@/services/ProductService';
 import { useFile } from '@/services/FileService';
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
 
 const props = defineProps({
   modelValue: {
@@ -240,6 +241,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'confirm']);
 
 const fileService = useFile();
+const { open } = useConfirmDialog();
 
 // 상태
 const searchQuery = ref('');
@@ -362,7 +364,7 @@ const performSearch = async () => {
   } catch (error) {
     console.error('상품 검색 오류:', error);
     products.value = [];
-    alert('검색 중 오류가 발생했습니다. 다시 시도해주세요.');
+    await open({ type: 'alert', title: '오류', message: '검색 중 오류가 발생했습니다. 다시 시도해주세요.' });
   } finally {
     loading.value = false;
   }
@@ -386,7 +388,7 @@ const isAlreadyAdded = (productId) => {
   return props.currentItems.some(item => item.productId === productId);
 };
 
-const selectProduct = (product) => {
+const selectProduct = async (product) => {
   // 이미 배틀에 추가된 제품은 선택 불가
   if (isAlreadyAdded(product.id)) {
     return;
@@ -398,7 +400,7 @@ const selectProduct = (product) => {
     tempSelectedItems.value.splice(index, 1);
   } else {
     if (props.currentItems.length + tempSelectedItems.value.length >= props.maxItems) {
-      alert(`최대 ${props.maxItems}개까지만 선택 가능합니다`);
+      await open({ type: 'alert', title: '알림', message: `최대 ${props.maxItems}개까지만 선택 가능합니다` });
       return;
     }
 
@@ -424,13 +426,13 @@ const handleImageSelect = async (event) => {
   if (!file) return;
 
   if (!file.type.startsWith('image/')) {
-    alert('이미지 파일만 선택 가능합니다.');
+    await open({ type: 'alert', title: '알림', message: '이미지 파일만 선택 가능합니다.' });
     event.target.value = '';
     return;
   }
 
   if (file.size > 5 * 1024 * 1024) {
-    alert('이미지 크기는 5MB 이하여야 합니다.');
+    await open({ type: 'alert', title: '알림', message: '이미지 크기는 5MB 이하여야 합니다.' });
     event.target.value = '';
     return;
   }
@@ -470,7 +472,7 @@ const handleImageSelect = async (event) => {
     }
   } catch (error) {
     console.error('❌ [BATTLE_ITEM] 이미지 업로드 실패:', error);
-    alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+    await open({ type: 'alert', title: '오류', message: '이미지 업로드에 실패했습니다. 다시 시도해주세요.' });
     // 실패해도 로컬 미리보기는 유지, 제출 시 재업로드 시도
   } finally {
     uploadingImage.value = false;
@@ -500,7 +502,7 @@ const handleUrlInput = () => {
   if (!isNewItemValid.value) return;
 
   if (props.currentItems.length + tempSelectedItems.value.length >= props.maxItems) {
-    alert(`최대 ${props.maxItems}개까지만 선택 가능합니다`);
+    await open({ type: 'alert', title: '알림', message: `최대 ${props.maxItems}개까지만 선택 가능합니다` });
     return;
   }
 

@@ -280,6 +280,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { productService } from '@/services/ProductService.js'
 
 import FeedCard from '@/components/product/detail/FeedCard.vue'
@@ -289,6 +290,7 @@ import LoginModal from '@/components/product/detail/LoginModal.vue'
 const route = useRoute()
 const router = useRouter()
 const { isLoggedIn, userId } = useAuth()
+const { open } = useConfirmDialog()
 
 const defaultImage = 'https://placehold.co/400x400?text=No+Image'
 
@@ -462,7 +464,7 @@ const handleShareAction = async () => {
       await navigator.share({ title: product.value.name, url: window.location.href })
     } else {
       await navigator.clipboard.writeText(window.location.href)
-      alert('링크가 복사되었습니다!')
+      await open({ type: 'alert', title: '링크 복사 완료', message: '링크가 복사되었습니다!' })
     }
   } catch (err) { console.log('공유 취소:', err) }
 }
@@ -495,12 +497,13 @@ const viewBattle = (battleId) => { router.push(`/battle/${battleId}`) }
 const editProduct = () => { router.push(`/products/${product.value.id}/edit`) }
 
 const deleteProduct = async () => {
-  if (confirm('정말로 이 상품을 삭제하시겠습니까?')) {
+  const confirmed = await open({ type: 'danger', title: '상품 삭제', message: '정말로 이 상품을 삭제하시겠습니까?' })
+  if (confirmed) {
     try {
       await productService.deleteProduct(product.value.id)
-      alert('상품이 삭제되었습니다.')
+      await open({ type: 'alert', title: '삭제 완료', message: '상품이 삭제되었습니다.' })
       router.push('/products')
-    } catch (err) { alert('삭제에 실패했습니다.') }
+    } catch (err) { await open({ type: 'alert', title: '오류', message: '삭제에 실패했습니다.' }) }
   }
 }
 

@@ -79,6 +79,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useFile } from '@/services/FileService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   thumbnailFile: {
@@ -98,6 +99,7 @@ const props = defineProps({
 const emit = defineEmits(['update', 'remove'])
 
 const fileService = useFile()
+const { open, openLoginRequired } = useConfirmDialog()
 const { isImageFile, createPreview } = fileService
 
 const fileInput = ref(null)
@@ -139,22 +141,22 @@ const handleDragLeave = () => {
 
 const processFile = async (file) => {
   if (!props.isLoggedIn) {
-    alert('로그인이 필요합니다')
+    await openLoginRequired()
     return
   }
 
   if (!isImageFile(file)) {
-    alert('PNG, JPG, JPEG 파일만 업로드 가능합니다')
+    await open({ type: 'alert', title: '파일 형식 오류', message: 'PNG, JPG, JPEG 파일만 업로드 가능합니다' })
     return
   }
 
   if (file.size > 5 * 1024 * 1024) {
-    alert('파일 크기는 5MB 이하만 업로드 가능합니다')
+    await open({ type: 'alert', title: '파일 크기 초과', message: '파일 크기는 5MB 이하만 업로드 가능합니다' })
     return
   }
 
   if (file.size === 0) {
-    alert('빈 파일은 업로드할 수 없습니다')
+    await open({ type: 'alert', title: '파일 오류', message: '빈 파일은 업로드할 수 없습니다' })
     return
   }
 
@@ -206,7 +208,7 @@ const processFile = async (file) => {
     }
   } catch (error) {
     console.error('❌ [PRODUCT] 대표 이미지 업로드 실패:', error)
-    alert('이미지 업로드에 실패했습니다. 다시 시도해주세요.')
+    await open({ type: 'alert', title: '업로드 실패', message: '이미지 업로드에 실패했습니다. 다시 시도해주세요.' })
     // 실패 시 로컬 미리보기 유지, 제출 시 재업로드
     const failedFileObj = {
       file: file,

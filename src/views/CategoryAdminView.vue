@@ -1,11 +1,14 @@
 <script setup>
 import {ref, computed, onMounted} from 'vue'
 import {categoryService} from '@/services/CategoryService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import CategoryHeader from '@/components/category/CategoryHeader.vue'
 import CategoryStats from '@/components/category/CategoryStats.vue'
 import CategoryForm from '@/components/category/CategoryForm.vue'
 import CategoryList from '@/components/category/CategoryList.vue'
 import NotificationToast from '@/components/category/NotificationToast.vue'
+
+const { open } = useConfirmDialog()
 
 const categories = ref([])
 const flatCategories = ref([])
@@ -109,10 +112,11 @@ const handleDeleteCategory = async (categoryId) => {
     const descendants = flatCategories.value.filter(c => c.parentId === categoryId)
 
     if (descendants.length > 0) {
-      const confirmed = confirm(
-          `이 카테고리에는 ${descendants.length}개의 하위 카테고리가 있습니다.\n` +
-          '하위 카테고리도 함께 삭제됩니다. 계속하시겠습니까?'
-      )
+      const confirmed = await open({
+        type: 'danger',
+        title: '카테고리 삭제',
+        message: `이 카테고리에는 ${descendants.length}개의 하위 카테고리가 있습니다.\n하위 카테고리도 함께 삭제됩니다. 계속하시겠습니까?`
+      })
       if (!confirmed) return
     }
 

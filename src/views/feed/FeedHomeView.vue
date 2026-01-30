@@ -62,6 +62,9 @@ import HotSection from '@/components/feed/HotSection.vue';
 import FeedList from '@/components/feed/FeedList.vue';
 import RightSidebar from '@/components/feed/RightSidebar.vue';
 import BottomNavigation from '@/components/common/BottomNavigation.vue';
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
+
+const { open } = useConfirmDialog();
 
 const router = useRouter();
 
@@ -230,8 +233,8 @@ const openPost = (feedId) => {
   router.push({name: 'FeedDetail', params: {id: feedId}});
 };
 
-const handleSeeAllHot = () => {
-  alert('핫 피드 전체보기 페이지는 준비중입니다.');
+const handleSeeAllHot = async () => {
+  await open({ type: 'alert', title: '안내', message: '핫 피드 전체보기 페이지는 준비중입니다.' });
 };
 
 // 사이드바 이벤트 핸들러

@@ -3,6 +3,7 @@ import {RouterLink, RouterView, useRoute, useRouter} from 'vue-router'
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {webSocketService} from '@/services/webSocketService.js'
 import {useAuth} from '@/composables/useAuth'
+import GlobalConfirmDialog from '@/components/common/GlobalConfirmDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -268,6 +269,9 @@ onUnmounted(() => {
   <Transition name="fade">
     <div v-if="showMobileMenu" class="mobile-overlay" @click="showMobileMenu = false"></div>
   </Transition>
+
+  <!-- 글로벌 확인 다이얼로그 -->
+  <GlobalConfirmDialog />
 </template>
 
 <style scoped>

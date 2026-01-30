@@ -106,6 +106,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { productService } from '@/services/ProductService.js';
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
 
 const props = defineProps({
   initialProducts: {
@@ -115,6 +116,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['select', 'close']);
+
+const { open } = useConfirmDialog();
 
 const products = ref([]);
 const loading = ref(false);
@@ -156,7 +159,7 @@ const fetchProducts = async (page = 0) => {
     }
   } catch (error) {
     console.error('상품 목록 조회 실패:', error);
-    alert('상품 목록을 불러올 수 없습니다.');
+    await open({ type: 'alert', title: '오류', message: '상품 목록을 불러올 수 없습니다.' });
     products.value = [];
   } finally {
     loading.value = false;
