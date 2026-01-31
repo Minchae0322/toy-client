@@ -468,12 +468,12 @@ onMounted(() => {
 
 /* 페이지 헤더 */
 .page-header {
-  padding: 1.75rem 0 1rem;
+  padding: 1.25rem 0 0.75rem;
 }
 
 @media (min-width: 768px) {
   .page-header {
-    padding: 2rem 0 1.25rem;
+    padding: 1.5rem 0 0.875rem;
   }
 }
 
@@ -500,7 +500,7 @@ onMounted(() => {
 /* 글래스 배너 */
 .glass-banner {
   position: relative;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
   border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
@@ -620,14 +620,14 @@ onMounted(() => {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1.75rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 @media (min-width: 768px) {
   .stats-grid {
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
   }
 }
 
@@ -740,15 +740,15 @@ onMounted(() => {
 .content-section {
   background: #fff;
   border-radius: 14px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
+  padding: 1rem;
+  margin-bottom: 0.625rem;
   border: 1px solid #f0f0f0;
 }
 
 @media (min-width: 768px) {
   .content-section {
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
   }
 }
 
@@ -761,7 +761,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .title-with-badge {
@@ -816,7 +816,7 @@ onMounted(() => {
 
 /* 핫 피드 섹션 */
 .hot-feeds-section {
-  margin-bottom: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
 }
 
 .live-indicator {
@@ -866,7 +866,7 @@ onMounted(() => {
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding: 10px 4px 20px 0;
+  padding: 6px 4px 14px 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -1491,7 +1491,7 @@ onMounted(() => {
 .product-rank-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.625rem;
 }
 
 /* 1위 히어로 카드 디자인 */
