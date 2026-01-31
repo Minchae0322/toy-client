@@ -45,6 +45,10 @@
       </div>
     </transition>
 
+    <transition name="fade">
+      <span v-if="verificationError && !verificationSent" class="error-msg">{{ verificationError }}</span>
+    </transition>
+
     <transition name="expand">
       <div v-if="verificationSent && !verified" class="verify-box">
         <div class="verify-header">
