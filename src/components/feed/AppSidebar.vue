@@ -235,7 +235,7 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .nav-text {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.6);
 }
@@ -252,7 +252,7 @@ const handleProtectedRoute = async (routeName) => {
   padding: 2px 6px;
   background: #ffffff;
   color: rgba(0, 0, 0, 0.5);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   border-radius: 5px;
   min-width: 20px;
@@ -352,7 +352,7 @@ const handleProtectedRoute = async (routeName) => {
 
 /* 버튼 텍스트 */
 .btn-text {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   transition: color 0.2s;
 }

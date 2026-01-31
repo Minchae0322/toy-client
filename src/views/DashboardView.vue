@@ -487,14 +487,32 @@ onMounted(() => {
 
 @media (min-width: 768px) {
   .page-title {
-    font-size: 1.375rem;
+    font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .page-title {
+    font-size: 1.75rem;
   }
 }
 
 .page-description {
   font-size: 0.8125rem;
-  color: #94a3b8;
+  color: #a78bfa;
   margin: 0;
+}
+
+@media (min-width: 768px) {
+  .page-description {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .page-description {
+    font-size: 0.9375rem;
+  }
 }
 
 /* 글래스 배너 */
@@ -510,7 +528,7 @@ onMounted(() => {
 
 .glass-banner:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(147, 51, 234, 0.08);
 }
 
 .glass-banner:active {
@@ -531,6 +549,11 @@ onMounted(() => {
   border-radius: 18px;
   background: #fff;
   border: 1px solid #f0f0f0;
+  transition: border-color 0.2s;
+}
+
+.glass-banner:hover .banner-inner {
+  border-color: #e9d5ff;
 }
 
 .banner-left {
@@ -547,7 +570,7 @@ onMounted(() => {
   padding: 0.375rem 0.75rem;
   background: #fef2f2;
   color: #dc2626;
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   border-radius: 8px;
   letter-spacing: 0.3px;
@@ -577,7 +600,7 @@ onMounted(() => {
 }
 
 .banner-title {
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
   color: #1c1917;
   margin: 0;
   font-weight: 400;
@@ -592,7 +615,7 @@ onMounted(() => {
 }
 
 .banner-sub {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: #a8a29e;
   margin: 0;
   font-weight: 400;
@@ -612,8 +635,8 @@ onMounted(() => {
 }
 
 .glass-banner:hover .banner-action {
-  background: #ebebeb;
-  color: #737373;
+  background: #f3e8ff;
+  color: #9333ea;
 }
 
 /* 통계 그리드 */
@@ -645,8 +668,8 @@ onMounted(() => {
 }
 
 .stat-card:hover {
-  border-color: #e5e5e5;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-color: #e9d5ff;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.08);
 }
 
 @media (min-width: 768px) {
@@ -689,13 +712,13 @@ onMounted(() => {
   display: block;
   font-size: 1.375rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #7c3aed;
   line-height: 1.2;
 }
 
 .stat-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #999;
   margin-top: 0.125rem;
 }
@@ -710,9 +733,24 @@ onMounted(() => {
   }
 }
 
+@media (min-width: 1280px) {
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+  }
+}
+
 .stat-arrow {
-  color: #ccc;
+  color: #d4d4d8;
   flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.stat-card:hover .stat-arrow {
+  color: #9333ea;
 }
 
 .live-dot {
@@ -771,15 +809,23 @@ onMounted(() => {
 }
 
 .section-title {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
+  padding-left: 10px;
+  border-left: 3px solid #9333ea;
 }
 
 @media (min-width: 768px) {
   .section-title {
-    font-size: 1rem;
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .section-title {
+    font-size: 1.3125rem;
   }
 }
 
@@ -787,7 +833,7 @@ onMounted(() => {
   padding: 0.125rem 0.375rem;
   background: #fef2f2;
   border-radius: 4px;
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: #dc2626;
   letter-spacing: 0.02em;
@@ -801,7 +847,7 @@ onMounted(() => {
   background: transparent;
   border: none;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #999;
   cursor: pointer;
@@ -810,8 +856,30 @@ onMounted(() => {
 }
 
 .view-all-btn:hover {
-  background: #f5f5f5;
-  color: #666;
+  background: #faf5ff;
+  color: #9333ea;
+}
+
+@media (min-width: 1280px) {
+  .view-all-btn {
+    font-size: 0.875rem;
+  }
+
+  .view-all-link {
+    font-size: 0.875rem;
+  }
+
+  .live-badge {
+    font-size: 0.75rem;
+  }
+
+  .live-indicator {
+    font-size: 12px;
+  }
+
+  .trend-update-tag {
+    font-size: 12px;
+  }
 }
 
 /* 핫 피드 섹션 */
@@ -823,7 +891,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #64748b;
   background: #f1f5f9;
@@ -848,7 +916,7 @@ onMounted(() => {
   background: transparent;
   border: none;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #999;
   cursor: pointer;
@@ -857,8 +925,8 @@ onMounted(() => {
 }
 
 .view-all-link:hover {
-  background: #f5f5f5;
-  color: #666;
+  background: #faf5ff;
+  color: #9333ea;
 }
 
 /* 가로 스크롤 영역 */
@@ -894,9 +962,16 @@ onMounted(() => {
   }
 }
 
+@media (min-width: 1280px) {
+  .dash-feed-card {
+    flex: 0 0 240px;
+    height: 320px;
+  }
+}
+
 .dash-feed-card:hover {
   transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 30px rgba(0,0,0,0.15);
+  box-shadow: 0 20px 30px rgba(124, 58, 237, 0.15);
 }
 
 .card-visual-wrapper {
@@ -945,7 +1020,7 @@ onMounted(() => {
 }
 
 .rank-num {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 900;
   color: rgba(255,255,255,0.35);
   font-style: italic;
@@ -954,7 +1029,13 @@ onMounted(() => {
 
 @media (min-width: 640px) {
   .rank-num {
-    font-size: 24px;
+    font-size: 26px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .rank-num {
+    font-size: 30px;
   }
 }
 
@@ -962,7 +1043,7 @@ onMounted(() => {
   background: rgba(251, 113, 133, 0.85);
   backdrop-filter: blur(4px);
   color: #fff;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 100px;
@@ -975,7 +1056,7 @@ onMounted(() => {
 
 .eval-pill {
   display: inline-block;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 6px;
@@ -1004,7 +1085,7 @@ onMounted(() => {
 }
 
 .review-main {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #fff;
   margin: 0 0 6px;
@@ -1017,12 +1098,18 @@ onMounted(() => {
 
 @media (min-width: 640px) {
   .review-main {
-    font-size: 14px;
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .review-main {
+    font-size: 16px;
   }
 }
 
 .product-name-sub {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: rgba(255,255,255,0.6);
   display: block;
@@ -1042,6 +1129,13 @@ onMounted(() => {
   .dash-card-skeleton {
     flex: 0 0 200px;
     height: 280px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .dash-card-skeleton {
+    flex: 0 0 240px;
+    height: 320px;
   }
 }
 
@@ -1469,11 +1563,11 @@ onMounted(() => {
 
 /* 제품 랭킹 섹션 커스텀 스타일 */
 .ranking-section {
-  background: linear-gradient(to bottom, #ffffff, #fcfcfd);
+  background: linear-gradient(to bottom, #ffffff, #faf8ff);
 }
 
 .trend-update-tag {
-  font-size: 10px;
+  font-size: 11px;
   background: #fdf2f2;
   color: #ef4444;
   padding: 2px 6px;
@@ -1510,6 +1604,12 @@ onMounted(() => {
   box-shadow: 0 15px 35px rgba(0,0,0,0.15);
 }
 
+@media (min-width: 1280px) {
+  .rank-hero-card {
+    height: 260px;
+  }
+}
+
 .hero-image {
   width: 100%;
   height: 100%;
@@ -1537,13 +1637,13 @@ onMounted(() => {
   position: absolute;
   top: 1rem;
   left: 1rem;
-  background: linear-gradient(135deg, #facc15, #f59e0b);
-  color: #000;
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #fff;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 13px;
   padding: 4px 10px;
   border-radius: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
   z-index: 2;
 }
 
@@ -1553,19 +1653,29 @@ onMounted(() => {
 }
 
 .hero-brand {
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.8;
   font-weight: 500;
 }
 
 .hero-name {
-  font-size: 1.1rem;
+  font-size: 1.125rem;
   font-weight: 700;
   margin: 2px 0 8px;
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (min-width: 1280px) {
+  .hero-brand {
+    font-size: 13px;
+  }
+
+  .hero-name {
+    font-size: 1.375rem;
+  }
 }
 
 .hero-stats {
@@ -1578,7 +1688,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13px;
   background: rgba(255,255,255,0.2);
   backdrop-filter: blur(4px);
   padding: 4px 10px;
@@ -1588,9 +1698,9 @@ onMounted(() => {
 .score-dot {
   width: 6px;
   height: 6px;
-  background: #4ade80;
+  background: #c084fc;
   border-radius: 50%;
-  box-shadow: 0 0 8px #4ade80;
+  box-shadow: 0 0 8px #c084fc;
   animation: pulse-dot 2s ease-in-out infinite;
 }
 
@@ -1598,7 +1708,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #facc15;
 }
@@ -1622,12 +1732,12 @@ onMounted(() => {
 }
 
 .rank-sub-item:hover {
-  background: #f1f5f9;
+  background: #faf5ff;
   transform: translateX(4px);
 }
 
 .sub-rank-number {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: #6b7280;
   width: 24px;
@@ -1658,14 +1768,14 @@ onMounted(() => {
 }
 
 .sub-brand {
-  font-size: 10px;
+  font-size: 11px;
   color: #9ca3af;
   display: block;
   margin-bottom: 1px;
 }
 
 .sub-name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 3px;
@@ -1684,13 +1794,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 2px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #374151;
 }
 
 .sub-reviews {
-  font-size: 10px;
+  font-size: 11px;
   color: #9ca3af;
 }
 
@@ -1699,7 +1809,7 @@ onMounted(() => {
 }
 
 .sub-score-value {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #7c3aed;
   background: #f3e8ff;
@@ -1718,6 +1828,37 @@ onMounted(() => {
   transform: translateX(2px);
 }
 
+@media (min-width: 1280px) {
+  .sub-rank-number {
+    font-size: 16px;
+  }
+
+  .sub-brand {
+    font-size: 12px;
+  }
+
+  .sub-name {
+    font-size: 15px;
+  }
+
+  .sub-rating {
+    font-size: 13px;
+  }
+
+  .sub-reviews {
+    font-size: 12px;
+  }
+
+  .sub-score-value {
+    font-size: 14px;
+  }
+
+  .sub-image {
+    width: 56px;
+    height: 56px;
+  }
+}
+
 /* 히어로 스켈레톤 */
 .hero-skeleton {
   height: 200px;
@@ -1731,7 +1872,21 @@ onMounted(() => {
   }
 
   .banner-title {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .banner-title {
+    font-size: 1.0625rem;
+  }
+
+  .banner-sub {
     font-size: 0.8125rem;
+  }
+
+  .banner-tag {
+    font-size: 0.75rem;
   }
 }
 
@@ -1833,7 +1988,7 @@ onMounted(() => {
 }
 
 .empty-text {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: #999;
   margin: 0;
 }

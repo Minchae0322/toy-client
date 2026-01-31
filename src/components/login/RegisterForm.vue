@@ -52,11 +52,17 @@
         <input type="checkbox" v-model="form.agreeTerms" />
         <span class="checkmark"></span>
         <span class="terms-label">
-          <a href="#" @click.prevent class="link">이용약관</a> 및
-          <a href="#" @click.prevent class="link">개인정보처리방침</a>에 동의합니다.
+          <a href="#" @click.prevent="openTerms('terms')" class="link">이용약관</a> 및
+          <a href="#" @click.prevent="openTerms('privacy')" class="link">개인정보처리방침</a>에 동의합니다.
         </span>
       </label>
     </div>
+
+    <TermsModal
+        :visible="termsModalVisible"
+        :initial-tab="termsModalTab"
+        @close="termsModalVisible = false"
+    />
 
     <button type="submit" class="submit-btn" :disabled="!canSubmit || loading">
       <div v-if="loading" class="spinner"></div>
@@ -76,6 +82,7 @@
 import { ref, computed } from 'vue'
 import EmailVerification from './EmailVerification.vue'
 import PasswordWithStrength from './PasswordWithStrength.vue'
+import TermsModal from './TermsModal.vue'
 
 const props = defineProps({
   loading: Boolean,
@@ -94,6 +101,14 @@ const form = ref({
   passwordError: false,
   agreeTerms: false
 })
+
+const termsModalVisible = ref(false)
+const termsModalTab = ref('terms')
+
+const openTerms = (tab) => {
+  termsModalTab.value = tab
+  termsModalVisible.value = true
+}
 
 const passwordStrength = ref(0)
 const displayError = computed(() => props.errorMessage || '')

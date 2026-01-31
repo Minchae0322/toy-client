@@ -294,8 +294,8 @@ const daysLeftText = computed(() => {
 }
 
 .status-badge {
-  padding: 2px 6px;
-  font-size: 10px;
+  padding: 3px 7px;
+  font-size: 11px;
   font-weight: 600;
   border-radius: 4px;
 }
@@ -360,14 +360,14 @@ const daysLeftText = computed(() => {
 }
 
 .category {
-  font-size: 11px;
+  font-size: 12px;
   color: #94a3b8;
   margin: 0 0 4px;
 }
 
 .title {
-  font-size: 15px;
-  font-weight: 1500;
+  font-size: 16px;
+  font-weight: 700;
   color: #0f172a;
   line-height: 1.5;
   margin: 0 0 10px;
@@ -381,7 +381,7 @@ const daysLeftText = computed(() => {
 .stats {
   display: flex;
   gap: 12px;
-  font-size: 11px;
+  font-size: 12px;
   color: #94a3b8;
 }
 
@@ -421,12 +421,12 @@ const daysLeftText = computed(() => {
 }
 
 .creator-name {
-  font-size: 11px;
+  font-size: 12px;
   color: #94a3b8;
 }
 
 .action-hint {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: #9333ea;
   opacity: 0;
@@ -517,6 +517,34 @@ const daysLeftText = computed(() => {
 
   .action-hint {
     display: none;
+  }
+}
+
+/* 큰 화면 */
+@media (min-width: 1280px) {
+  .category {
+    font-size: 13px;
+  }
+
+  .title {
+    font-size: 17px;
+  }
+
+  .stats {
+    font-size: 13px;
+  }
+
+  .creator-name {
+    font-size: 13px;
+  }
+
+  .action-hint {
+    font-size: 13px;
+  }
+
+  .status-badge {
+    font-size: 12px;
+    padding: 3px 8px;
   }
 }
 
