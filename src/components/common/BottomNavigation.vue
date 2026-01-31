@@ -225,6 +225,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   position: relative;
   padding: 0 8px;
+  z-index: 2;
 }
 
 .nav-item {
@@ -438,7 +439,7 @@ onBeforeUnmount(() => {
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 999;
+  z-index: 1;
 }
 
 /* Transitions */
