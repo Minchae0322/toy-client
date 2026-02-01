@@ -2014,4 +2014,303 @@ onMounted(() => {
     transform: none;
   }
 }
+
+/* ===== 모바일 컴팩트 레이아웃 ===== */
+@media (max-width: 767px) {
+  /* 페이지 헤더 축소 */
+  .page-header {
+    padding: 0.75rem 0 0.5rem;
+  }
+
+  .page-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.125rem;
+  }
+
+  .page-description {
+    font-size: 0.75rem;
+  }
+
+  /* 글래스 배너 컴팩트 */
+  .glass-banner {
+    margin-bottom: 0.5rem;
+    border-radius: 14px;
+  }
+
+  .banner-inner {
+    padding: 0.625rem 0.875rem;
+    border-radius: 14px;
+  }
+
+  .banner-tag {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
+    border-radius: 6px;
+  }
+
+  .tag-dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  .banner-text-group {
+    gap: 0.125rem;
+  }
+
+  .banner-title {
+    font-size: 0.8125rem;
+  }
+
+  .banner-sub {
+    font-size: 0.6875rem;
+  }
+
+  .banner-action {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+
+  .banner-action svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* 통계 카드 컴팩트 */
+  .stats-grid {
+    gap: 0.375rem;
+    margin-bottom: 0.625rem;
+  }
+
+  .stat-card {
+    padding: 0.625rem 0.5rem;
+    border-radius: 10px;
+    gap: 0.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .stat-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+  }
+
+  .stat-label {
+    font-size: 0.625rem;
+  }
+
+  .stat-arrow {
+    display: none;
+  }
+
+  .live-dot {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 6px;
+    height: 6px;
+  }
+
+  /* 섹션 컴팩트 */
+  .content-section {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 12px;
+  }
+
+  .hot-feeds-section {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .section-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .section-title {
+    font-size: 0.875rem;
+    padding-left: 8px;
+    border-left-width: 2.5px;
+  }
+
+  .live-indicator {
+    font-size: 9px;
+    padding: 2px 6px;
+    gap: 4px;
+  }
+
+  .live-indicator .dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  .live-badge {
+    font-size: 0.625rem;
+    padding: 0.0625rem 0.25rem;
+  }
+
+  .view-all-link,
+  .view-all-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.375rem;
+  }
+
+  /* 핫 피드 카드 컴팩트 */
+  .dashboard-feed-scroll {
+    gap: 10px;
+    padding: 4px 2px 10px 0;
+  }
+
+  .dash-feed-card {
+    flex: 0 0 140px;
+    height: 200px;
+    border-radius: 18px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  }
+
+  .dash-card-skeleton {
+    flex: 0 0 140px;
+    height: 200px;
+    border-radius: 18px;
+  }
+
+  .card-overlay {
+    padding: 10px;
+  }
+
+  .rank-num {
+    font-size: 18px;
+  }
+
+  .trending-tag {
+    font-size: 8px;
+    padding: 3px 7px;
+  }
+
+  .eval-pill {
+    font-size: 8px;
+    padding: 2px 6px;
+    margin-bottom: 4px;
+  }
+
+  .review-main {
+    font-size: 11px;
+    margin-bottom: 3px;
+    -webkit-line-clamp: 1;
+  }
+
+  .product-name-sub {
+    font-size: 10px;
+  }
+
+  /* 배틀 그리드 컴팩트 */
+  .battle-grid {
+    gap: 0.5rem;
+  }
+
+  /* 제품 랭킹 컴팩트 */
+  .trend-update-tag {
+    font-size: 9px;
+    padding: 1px 5px;
+  }
+
+  .product-rank-container {
+    gap: 0.5rem;
+  }
+
+  .rank-hero-card {
+    height: 150px;
+    border-radius: 14px;
+  }
+
+  .hero-badge {
+    top: 0.75rem;
+    left: 0.75rem;
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .hero-overlay {
+    padding: 0.875rem;
+  }
+
+  .hero-brand {
+    font-size: 10px;
+  }
+
+  .hero-name {
+    font-size: 0.875rem;
+    margin: 1px 0 5px;
+  }
+
+  .trend-score {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .hero-rating {
+    font-size: 11px;
+  }
+
+  .rank-sub-list {
+    gap: 0.375rem;
+  }
+
+  .rank-sub-item {
+    padding: 6px 8px;
+    gap: 8px;
+    border-radius: 10px;
+  }
+
+  .sub-rank-number {
+    font-size: 13px;
+    width: 20px;
+  }
+
+  .sub-image {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .sub-brand {
+    font-size: 9px;
+  }
+
+  .sub-name {
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+
+  .sub-rating {
+    font-size: 10px;
+  }
+
+  .sub-reviews {
+    font-size: 9px;
+  }
+
+  /* 빈 상태 컴팩트 */
+  .empty-state {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .empty-icon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-text {
+    font-size: 0.8125rem;
+  }
+}
 </style>
