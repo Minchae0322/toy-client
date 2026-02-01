@@ -523,70 +523,59 @@ const daysLeftText = computed(() => {
 /* 큰 화면 */
 @media (min-width: 1280px) {
   .battle-card {
-    border-radius: 20px;
+    border-radius: 18px;
   }
 
   .badges-top {
-    top: 10px;
-    left: 10px;
-    gap: 6px;
+    top: 9px;
+    left: 9px;
+    gap: 5px;
   }
 
   .status-badge {
-    font-size: 13px;
-    padding: 4px 10px;
-    border-radius: 6px;
-  }
-
-  .vote-type-badge {
-    padding: 3px 8px;
-    font-size: 11px;
-    border-radius: 6px;
+    font-size: 12.5px;
+    padding: 3.5px 9px;
   }
 
   .dday-badge {
-    top: 10px;
-    right: 10px;
-    padding: 3px 8px;
-    font-size: 12px;
-    border-radius: 6px;
+    top: 9px;
+    right: 9px;
+    font-size: 11.5px;
   }
 
   .card-content {
-    padding: 20px;
+    padding: 18px;
   }
 
   .category {
-    font-size: 14px;
-    margin-bottom: 6px;
+    font-size: 13.5px;
   }
 
   .title {
-    font-size: 19px;
-    margin-bottom: 12px;
+    font-size: 18px;
+    margin-bottom: 10px;
   }
 
   .stats {
-    font-size: 14px;
-    gap: 14px;
+    font-size: 13.5px;
   }
 
   .card-footer {
-    margin-top: 14px;
-    padding-top: 14px;
+    margin-top: 12px;
+    padding-top: 12px;
   }
 
   .creator-avatar {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
   }
 
   .creator-name {
-    font-size: 14px;
+    font-size: 13.5px;
   }
 
   .action-hint {
-    font-size: 14px;
+    font-size: 13.5px;
   }
 }
 
