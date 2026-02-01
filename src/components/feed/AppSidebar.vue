@@ -36,15 +36,6 @@
 
       <!-- 커뮤니케이션 섹션 -->
       <div class="nav-section">
-        <button class="nav-item" @click="handleProtectedRoute('messages')">
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
-            <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
-          </svg>
-          <span class="nav-text">메시지</span>
-          <span class="badge badge-red">3</span>
-        </button>
-
         <button class="nav-item" @click="handleProtectedRoute('collections')">
           <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
             <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM13 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z"/>
@@ -127,9 +118,6 @@ const handleProtectedRoute = async (routeName) => {
         break;
       case 'createBattle':
         router.push({name: 'BattleCreate'});
-        break;
-      case 'messages':
-        router.push({name: 'Chat'});
         break;
       case 'collections':
         console.log('컬렉션 페이지로 이동');
