@@ -33,7 +33,6 @@
           <RouterLink to="/home" class="nav-link">홈</RouterLink>
           <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
           <RouterLink to="/sell" class="nav-link">판매하기</RouterLink>
-          <RouterLink to="/chat" class="nav-link">채팅</RouterLink>
 
           <!-- 🎯 관리자 메뉴 -->
           <div v-if="isAdmin" class="admin-menu">
@@ -41,6 +40,15 @@
               🛠️ 관리자
             </RouterLink>
           </div>
+
+          <!-- 메시지 아이콘 -->
+          <button class="message-btn" @click="goToChat" title="메시지">
+            <svg class="message-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <span v-if="unreadMessageCount > 0" class="message-badge">{{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}</span>
+          </button>
 
           <!-- 사용자 메뉴 -->
           <div class="user-menu">
@@ -79,7 +87,7 @@
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { webSocketService } from '@/services/webSocketService.js'
@@ -87,6 +95,15 @@ import * as authUtils from '@/utils/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const { open } = useConfirmDialog()
+const router = useRouter()
+
+// 읽지 않은 메시지 수
+const unreadMessageCount = ref(0)
+
+// 채팅 페이지로 이동
+const goToChat = () => {
+  router.push({ name: 'Chat' })
+}
 
 // 디버깅 모드
 const showDebug = ref(import.meta.env.DEV)
@@ -157,6 +174,13 @@ const setupWebSocketStatusMonitoring = () => {
         console.log('📶 [AppHeader] WebSocket 상태 변경:', connected)
         wsConnected.value = connected
         wsError.value = false
+      })
+    }
+
+    // 읽지 않은 메시지 수 업데이트 리스너
+    if (typeof webSocketService.onUnreadCountChange === 'function') {
+      webSocketService.onUnreadCountChange((count) => {
+        unreadMessageCount.value = count
       })
     }
 
@@ -550,6 +574,55 @@ onUnmounted(() => {
   color: #6b7280;
   font-style: italic;
   animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* 메시지 버튼 */
+.message-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.message-btn:hover {
+  background: #f3f4f6;
+}
+
+.message-btn:hover .message-icon {
+  color: #9333ea;
+}
+
+.message-icon {
+  width: 22px;
+  height: 22px;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.message-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
 }
 
 /* 반응형 디자인 */
