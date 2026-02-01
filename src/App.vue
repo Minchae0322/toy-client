@@ -4,10 +4,12 @@ import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {webSocketService} from '@/services/webSocketService.js'
 import {useAuth} from '@/composables/useAuth'
 import GlobalConfirmDialog from '@/components/common/GlobalConfirmDialog.vue'
+import {useConfirmDialog} from '@/composables/useConfirmDialog'
 
 const route = useRoute()
 const router = useRouter()
 const {user, isLoggedIn, isAdmin, logout, userId} = useAuth()
+const {open} = useConfirmDialog()
 
 const isLoggingOut = ref(false)
 const wsConnected = ref(false)
@@ -42,11 +44,18 @@ const handleLogout = async () => {
   isLoggingOut.value = false
 }
 
-const handleChatClick = () => {
+const handleChatClick = async () => {
   if (isLoggedIn.value) {
     router.push({ name: 'Chat' })
   } else {
-    router.push({ name: 'Login' })
+    const confirmed = await open({
+      type: 'confirm',
+      title: '로그인 필요',
+      message: '메시지 기능은 로그인 후 이용할 수 있습니다. 로그인 페이지로 이동하시겠습니까?'
+    })
+    if (confirmed) {
+      router.push({ name: 'Login' })
+    }
   }
 }
 
