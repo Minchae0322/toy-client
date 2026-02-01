@@ -358,6 +358,61 @@ const handleImageError = (battleId) => {
   100% { background-position: -200% 0; }
 }
 
+/* 큰 화면 */
+@media (min-width: 1280px) {
+  .section-header {
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .view-all-btn {
+    font-size: 13px;
+  }
+
+  .hot-scroll {
+    gap: 16px;
+  }
+
+  .hot-card {
+    border-radius: 16px;
+  }
+
+  .rank-badge {
+    top: 10px;
+    left: 10px;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .hot-badge {
+    top: 10px;
+    right: 10px;
+    padding: 3px 8px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .info {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 15px;
+    margin-bottom: 8px;
+    min-height: 46px;
+  }
+
+  .votes {
+    font-size: 13px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hot-card,
   .thumb img,

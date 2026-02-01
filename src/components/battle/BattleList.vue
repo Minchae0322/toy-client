@@ -355,6 +355,92 @@ defineExpose({ observerTarget })
   transition: transform 0.3s ease;
 }
 
+/* 큰 화면: gap 확대 및 스켈레톤 확대 */
+@media (min-width: 1280px) {
+  .battles-grid {
+    gap: 20px;
+  }
+
+  .skeleton-card {
+    border-radius: 20px;
+  }
+
+  .skeleton-badges-top {
+    top: 10px;
+    left: 10px;
+    gap: 6px;
+  }
+
+  .skeleton-badge {
+    width: 52px;
+    height: 22px;
+    border-radius: 6px;
+  }
+
+  .skeleton-badge.small {
+    width: 36px;
+  }
+
+  .skeleton-dday-badge {
+    top: 10px;
+    right: 10px;
+    width: 42px;
+    height: 22px;
+    border-radius: 6px;
+  }
+
+  .skeleton-content {
+    padding: 20px;
+  }
+
+  .skeleton-category {
+    width: 60px;
+    height: 13px;
+    margin-bottom: 8px;
+  }
+
+  .skeleton-title {
+    height: 18px;
+    margin-bottom: 8px;
+  }
+
+  .skeleton-title.short {
+    margin-bottom: 12px;
+  }
+
+  .skeleton-stats {
+    gap: 14px;
+  }
+
+  .skeleton-stat {
+    width: 65px;
+    height: 13px;
+  }
+
+  .skeleton-stat:nth-child(2) { width: 58px; }
+  .skeleton-stat:nth-child(3) { width: 52px; }
+
+  .skeleton-footer {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+
+  .skeleton-avatar {
+    width: 26px;
+    height: 26px;
+  }
+
+  .skeleton-creator-name {
+    width: 60px;
+    height: 13px;
+  }
+
+  .skeleton-action-hint {
+    width: 70px;
+    height: 13px;
+  }
+}
+
 /* 접근성: 모션 감소 선호 시 */
 @media (prefers-reduced-motion: reduce) {
   .skeleton-image,

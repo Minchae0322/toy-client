@@ -522,29 +522,71 @@ const daysLeftText = computed(() => {
 
 /* 큰 화면 */
 @media (min-width: 1280px) {
-  .category {
-    font-size: 13px;
+  .battle-card {
+    border-radius: 20px;
   }
 
-  .title {
-    font-size: 17px;
-  }
-
-  .stats {
-    font-size: 13px;
-  }
-
-  .creator-name {
-    font-size: 13px;
-  }
-
-  .action-hint {
-    font-size: 13px;
+  .badges-top {
+    top: 10px;
+    left: 10px;
+    gap: 6px;
   }
 
   .status-badge {
-    font-size: 12px;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .vote-type-badge {
     padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
+
+  .dday-badge {
+    top: 10px;
+    right: 10px;
+    padding: 3px 8px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .card-content {
+    padding: 20px;
+  }
+
+  .category {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .title {
+    font-size: 19px;
+    margin-bottom: 12px;
+  }
+
+  .stats {
+    font-size: 14px;
+    gap: 14px;
+  }
+
+  .card-footer {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+
+  .creator-avatar {
+    width: 26px;
+    height: 26px;
+  }
+
+  .creator-name {
+    font-size: 14px;
+  }
+
+  .action-hint {
+    font-size: 14px;
   }
 }
 

@@ -686,4 +686,32 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
+/* 큰 화면: 섹션 헤더 확대 */
+@media (min-width: 1280px) {
+  .section-title {
+    font-size: 1rem;
+  }
+
+  .section-count {
+    font-size: 0.875rem;
+  }
+
+  .sort-select {
+    font-size: 0.8125rem;
+  }
+
+  .tab-button {
+    font-size: 0.9375rem;
+  }
+
+  .tab-count {
+    font-size: 0.75rem;
+  }
+
+  .create-battle-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
 </style>
