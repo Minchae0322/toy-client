@@ -361,55 +361,49 @@ const handleImageError = (battleId) => {
 /* 큰 화면 */
 @media (min-width: 1280px) {
   .section-header {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
 
   .section-title {
-    font-size: 17px;
+    font-size: 15.5px;
     font-weight: 700;
   }
 
-  .view-all-btn {
-    font-size: 13px;
-  }
-
   .hot-scroll {
-    gap: 16px;
+    gap: 14px;
   }
 
   .hot-card {
-    border-radius: 16px;
+    border-radius: 14px;
   }
 
   .rank-badge {
-    top: 10px;
-    left: 10px;
-    width: 28px;
-    height: 28px;
-    font-size: 13px;
-    border-radius: 8px;
+    top: 9px;
+    left: 9px;
+    width: 26px;
+    height: 26px;
+    font-size: 12.5px;
+    border-radius: 7px;
   }
 
   .hot-badge {
-    top: 10px;
-    right: 10px;
-    padding: 3px 8px;
-    font-size: 12px;
-    border-radius: 6px;
+    top: 9px;
+    right: 9px;
+    font-size: 11.5px;
   }
 
   .info {
-    padding: 16px;
+    padding: 14px;
   }
 
   .title {
-    font-size: 15px;
-    margin-bottom: 8px;
-    min-height: 46px;
+    font-size: 14px;
+    margin-bottom: 6px;
+    min-height: 42px;
   }
 
   .votes {
-    font-size: 13px;
+    font-size: 12px;
   }
 }
 
