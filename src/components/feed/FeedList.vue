@@ -51,11 +51,8 @@
             </div>
             <!-- product-info-box -->
             <div class="skeleton-product-box">
-              <div class="skeleton-product-details">
-                <div class="skeleton-category"></div>
-                <div class="skeleton-product-name"></div>
-              </div>
-              <div class="skeleton-price"></div>
+              <div class="skeleton-category"></div>
+              <div class="skeleton-product-name"></div>
             </div>
             <!-- post-footer -->
             <div class="skeleton-footer">
@@ -67,6 +64,7 @@
                 </div>
               </div>
               <div class="skeleton-actions">
+                <div class="skeleton-stat-pill"></div>
                 <div class="skeleton-stat-pill"></div>
                 <div class="skeleton-stat-pill"></div>
               </div>
@@ -119,43 +117,28 @@
         <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="$emit('post-click', feed.feedId)">
           <div class="list-image">
             <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
-            <!-- 이미지 뱃지 영역 -->
-            <div class="list-badges-top">
-              <span v-if="feed.feedEvaluation" :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+            <div v-if="feed.feedEvaluation" class="list-badges-top">
+              <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
                 <span class="eval-dot"></span>
                 {{ getEvaluationLabel(feed.feedEvaluation) }}
               </span>
-              <span v-if="feed.isTrending" class="list-trend-badge">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                  <polyline points="17 6 23 6 23 12"/>
-                </svg>
-                급상승
-              </span>
-            </div>
-            <!-- 가격 오버레이 -->
-            <div v-if="feed.price" class="list-price-overlay">
-              {{ formatPrice(feed.price) }}
             </div>
           </div>
           <div class="list-content">
-            <!-- 리뷰 요약 -->
+            <div class="list-product-info-box">
+              <span class="list-category-label">{{ feed.categoryName }}</span>
+              <span class="list-product-name">{{ feed.productName }}</span>
+            </div>
+
             <p class="list-review">
               <span class="list-quote">"</span>{{ feed.reviewSummary }}<span class="list-quote">"</span>
             </p>
-            <!-- 해시태그 -->
+
             <div v-if="feed.hashtags?.length" class="list-hashtags">
-              <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="list-tag">#{{ tag }}</span>
+              <span v-for="tag in feed.hashtags.slice(0, 2)" :key="tag" class="list-tag">#{{ tag }}</span>
             </div>
-            <!-- 제품 정보 박스 (그리드 뷰와 동일) -->
-            <div class="list-product-box">
-              <div class="list-product-details">
-                <span class="list-product-category">{{ feed.categoryName }}</span>
-                <span class="list-product-name">{{ feed.productName }}</span>
-              </div>
-              <span class="list-product-price">{{ formatPrice(feed.price) }}</span>
-            </div>
-            <!-- 푸터: 작성자 + 좋아요/댓글 -->
+
+            <!-- 푸터: 작성자 + 조회수/좋아요/댓글 -->
             <div class="list-footer">
               <div class="list-author">
                 <img :src="getProfileImageUrl(feed) || '/default-avatar.png'" class="list-avatar" />
@@ -165,12 +148,16 @@
                 </div>
               </div>
               <div class="list-stats">
+                <span class="stat">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  {{ formatCount(feed.viewCount || 0) }}
+                </span>
                 <span :class="['stat', 'like-btn', { active: feed.userReactions?.hasLike }]" @click.stop="handleLike(feed)">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  <svg :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                   {{ formatCount(feed.likeCount || 0) }}
                 </span>
                 <span class="stat">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                   {{ formatCount(feed.commentCount || 0) }}
                 </span>
               </div>
@@ -266,7 +253,7 @@ defineExpose({ observerTarget });
   .modern-grid :deep(.post-content) { padding: 16px; }
   .modern-grid :deep(.primary-review) { margin-bottom: 10px; font-size: 15px; }
   .modern-grid :deep(.hashtag-group) { margin-bottom: 12px; }
-  .modern-grid :deep(.product-info-box) { margin-bottom: 14px; padding: 8px 16px; }
+  .modern-grid :deep(.product-info-box) { margin-bottom: 14px; padding: 10px 12px; }
   .modern-grid :deep(.post-footer) { padding-top: 10px; }
   .modern-grid :deep(.user-avatar) { width: 28px; height: 28px; }
   .modern-grid :deep(.user-nickname) { font-size: 11px; }
@@ -362,20 +349,6 @@ defineExpose({ observerTarget });
   box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
 }
 
-/* 가격 오버레이 */
-.list-price-overlay {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: rgba(24, 24, 27, 0.85);
-  color: white;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 800;
-  backdrop-filter: blur(4px);
-}
-
 /* 콘텐츠 영역 */
 .list-content {
   flex: 1;
@@ -384,6 +357,35 @@ defineExpose({ observerTarget });
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+}
+
+/* 제품 정보 박스 */
+.list-product-info-box {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 6px 10px;
+  border: 1px solid #f1f1f5;
+}
+
+.list-category-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: block;
+}
+
+.list-product-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3f3f46;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  margin-top: 1px;
 }
 
 /* 리뷰 요약 */
@@ -415,54 +417,10 @@ defineExpose({ observerTarget });
 
 .list-tag {
   font-size: 11px;
-  color: #71717a;
+  color: #a1a1aa;
   font-weight: 500;
 }
 
-/* 제품 정보 박스 - 그리드 뷰 product-info-box와 동일 구조 */
-.list-product-box {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f8f8fa;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid #f1f1f5;
-  gap: 8px;
-}
-
-.list-product-details {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.list-product-category {
-  font-size: 9px;
-  font-weight: 800;
-  color: #9333ea;
-  text-transform: uppercase;
-}
-
-.list-product-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #3a3a3f;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.list-product-price {
-  font-size: 14px;
-  font-weight: 800;
-  color: #9333ea;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 
 /* 푸터 */
 .list-footer {
@@ -484,15 +442,15 @@ defineExpose({ observerTarget });
 .stat {
   display: flex; align-items: center; gap: 4px;
   padding: 5px 10px;
-  background: #f4f4f7;
+  background: #f4f4f5;
   border-radius: 100px;
-  font-size: 11px; font-weight: 700; color: #a1a1aa;
+  font-size: 11px; font-weight: 600; color: #a1a1aa;
   transition: all 0.2s;
 }
 .stat svg { width: 14px; height: 14px; }
-.stat.active { background: #f5f4ff; color: #9993ea; }
+.stat.active { background: #ede9fe; color: #7c3aed; }
 .stat.like-btn { cursor: pointer; }
-.stat.like-btn:hover { color: #9993ea; background: #f5f4ff; }
+.stat.like-btn:hover { color: #7c3aed; background: #ede9fe; }
 
 /* Scroll Status */
 .scroll-status { height: 80px; display: flex; align-items: center; justify-content: center; }
@@ -573,23 +531,13 @@ defineExpose({ observerTarget });
 .skeleton-tag:nth-child(2) { width: 60px; }
 .skeleton-tag:nth-child(3) { width: 45px; }
 
-/* 제품 정보 박스 - FeedCard .product-info-box와 동일 */
+/* 제품 정보 박스 스켈레톤 */
 .skeleton-product-box {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f8f8fa;
-  margin-left: -10px;
-  margin-right: -10px;
-  padding: 10px 20px;
-  border-radius: 16px;
-  margin-bottom: 22px;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
   border: 1px solid #f1f1f5;
-}
-
-.skeleton-product-details {
-  flex: 1;
-  padding-right: 12px;
 }
 
 .skeleton-category {
@@ -607,15 +555,6 @@ defineExpose({ observerTarget });
   background-color: #e5e7eb;
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 6px;
-}
-
-.skeleton-price {
-  height: 16px;
-  width: 60px;
-  background-color: #e5e7eb;
-  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  border-radius: 6px;
-  flex-shrink: 0;
 }
 
 /* 푸터 - FeedCard .post-footer와 동일 */
@@ -896,10 +835,11 @@ defineExpose({ observerTarget });
   .list-hashtags { gap: 5px; }
   .list-tag { font-size: 10px; }
 
-  .list-product-box { padding: 6px 10px; border-radius: 8px; }
-  .list-product-category { font-size: 8px; }
+  .list-product-info-box { padding: 5px 8px; border-radius: 6px; border: none; }
+  .list-category-label { font-size: 8px; }
   .list-product-name { font-size: 11px; }
-  .list-product-price { font-size: 12px; }
+  .list-hashtags { gap: 4px; }
+  .list-tag { font-size: 9px; }
 
   .list-footer { padding-top: 6px; }
   .list-avatar { width: 22px; height: 22px; }
@@ -949,11 +889,9 @@ defineExpose({ observerTarget });
   .skeleton-tag:nth-child(3) { width: 35px; }
 
   .skeleton-product-box {
-    margin-left: -4px;
-    margin-right: -4px;
-    padding: 10px 14px;
-    border-radius: 12px;
+    padding: 10px 12px;
     margin-bottom: 10px;
+    border-radius: 10px;
     border: none;
   }
 
@@ -965,11 +903,6 @@ defineExpose({ observerTarget });
   .skeleton-product-name {
     height: 13px;
     width: 80px;
-  }
-
-  .skeleton-price {
-    height: 14px;
-    width: 50px;
   }
 
   .skeleton-footer {
@@ -1017,7 +950,7 @@ defineExpose({ observerTarget });
   .skeleton-tag,
   .skeleton-category,
   .skeleton-product-name,
-  .skeleton-price,
+  .skeleton-category,
   .skeleton-nickname,
   .skeleton-date,
   .skeleton-list-image,

@@ -17,15 +17,10 @@
             <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
             <polyline points="17 6 23 6 23 12"/>
           </svg>
-          급상승
+          인기
         </div>
       </div>
 
-      <Transition name="heart-pop">
-        <div v-if="showLikeAnimation" class="like-animation">
-          <svg fill="#9993ea" viewBox="0 0 24 24"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>
-        </div>
-      </Transition>
     </div>
 
     <div class="post-content">
@@ -34,21 +29,12 @@
       </p>
 
       <div class="hashtag-group">
-        <template v-if="feed.hashtags?.length">
-          <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="tag-item">
-            #{{ tag }}
-          </span>
-        </template>
+        <span v-for="tag in feed.hashtags?.slice(0, 3)" :key="tag" class="tag-item">#{{ tag }}</span>
       </div>
 
       <div class="product-info-box">
-        <div class="product-details">
-          <span class="category-tag">{{ feed.categoryName }}</span>
-          <h3 class="product-name">{{ feed.productName }}</h3>
-        </div>
-        <div class="price-tag">
-          {{ formatPrice(feed.price) }}
-        </div>
+        <span class="category-label">{{ feed.categoryName }}</span>
+        <h3 class="product-name">{{ feed.productName }}</h3>
       </div>
 
       <div class="post-footer">
@@ -61,15 +47,22 @@
         </div>
 
         <div class="interaction-group">
+          <div class="stat-pill">
+            <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            {{ formatCount(feed.viewCount || 0) }}
+          </div>
           <div class="stat-pill" :class="{ active: localIsLiked }" @click.stop="handleLike">
-            <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+            <svg class="icon" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
             {{ formatCount(localLikeCount) }}
           </div>
-          <div class="stat-pill" @click.stop="handleComment">
+          <div class="stat-pill">
             <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
             {{ formatCount(feed.commentCount || 0) }}
           </div>
@@ -86,7 +79,6 @@ import { feedService, feedUtils } from '@/services/FeedService';
 const props = defineProps({ feed: { type: Object, required: true } });
 const emit = defineEmits(['update', 'click']);
 
-const showLikeAnimation = ref(false);
 const localIsLiked = ref(props.feed.userReactions?.hasLike === true);
 const localLikeCount = ref(props.feed.likeCount || 0);
 
@@ -106,20 +98,16 @@ const handleLike = async () => {
 const handleDoubleTapLike = () => {
   if (!localIsLiked.value) {
     handleLike();
-    showLikeAnimation.value = true;
-    setTimeout(() => { showLikeAnimation.value = false; }, 800);
   }
 };
 
 const handleCardClick = () => emit('click', props.feed.feedId);
-const handleComment = () => emit('click', props.feed.feedId);
 
 const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation);
 const getEvaluationClass = (evaluation) => {
   const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
   return { 'BEST': 'eb-best', 'GOOD': 'eb-good', 'OKAY': 'eb-okay', 'BAD': 'eval-bad' }[code] || '';
 };
-const formatPrice = (price) => feedUtils.formatPrice(price);
 const formatCount = (count) => feedUtils.formatCount(count);
 const formatDate = (date) => feedUtils.formatDate(date);
 </script>
@@ -158,18 +146,12 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .eval-bad { background-color: #fee2e2; color: #991b1b; }
 .eval-bad .eval-dot { background-color: #ef4444; }
 
-/* 급상승 뱃지 */
+/* 인기 뱃지 */
 .trend-badge {
   display: flex; align-items: center; gap: 4px;
-  padding: 6px 12px; border-radius: 100px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  padding: 6px 10px; border-radius: 100px;
+  background: linear-gradient(to right, #f43f5e, #ec4899);
   font-size: 11px; font-weight: 800; color: white;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-  animation: pulse-trend 2s ease-in-out infinite;
-}
-@keyframes pulse-trend {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
 }
 
 /* 콘텐츠 영역 */
@@ -183,23 +165,35 @@ const formatDate = (date) => feedUtils.formatDate(date);
 }
 .quote { color: #9993ea; font-size: 18px; font-family: serif; margin-right: 2px; }
 
-.hashtag-group { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; min-height: 18px; }
-.tag-item { font-size: 12px; color: #6b6b72; font-weight: 500; }
+.hashtag-group { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; min-height: 18px; }
+.tag-item { font-size: 12px; color: #a1a1aa; font-weight: 500; }
 
-/* [수정] 제품 정보 섹션: 가로 확장 및 배치 최적화 */
+/* 제품 정보 박스 */
 .product-info-box {
-  display: flex; justify-content: space-between; align-items: center;
-  background: #f8f8fa;
-  margin-left: -10px; margin-right: -10px; /* 카드 패딩보다 넓게 확장 */
-  padding: 10px 20px;
-  border-radius: 16px;
-  margin-bottom: 22px;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
   border: 1px solid #f1f1f5;
 }
-.product-details { flex: 1; padding-right: 12px; }
-.category-tag { font-size: 10px; font-weight: 800; color: #9333ea; text-transform: uppercase; margin-bottom: 3px; display: block; }
-.product-name { font-size: 15px; font-weight: 600; color: #3a3a3f; margin: 0; line-height: 1.3; }
-.price-tag { font-size: 16px; font-weight: 800; color: #9333ea; white-space: nowrap; }
+.category-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: block;
+}
+.product-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3f3f46;
+  margin: 2px 0 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* 푸터 레이아웃 */
 .post-footer {
@@ -212,19 +206,15 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .user-nickname { font-size: 13px; font-weight: 700; color: #18181b; }
 .post-date { font-size: 12px; color: #a1a1aa; font-weight: 400; }
 
-.interaction-group { display: flex; gap: 6px; }
+.interaction-group { display: flex; gap: 5px; }
 .stat-pill {
-  display: flex; align-items: center; gap: 5px; padding: 7px 12px;
-  background: #f4f4f7; border-radius: 100px; font-size: 12px; font-weight: 700; color: #a1a1aa; transition: 0.2s;
+  display: flex; align-items: center; gap: 4px; padding: 6px 10px;
+  background: #f4f4f5; border-radius: 100px; font-size: 12px; font-weight: 600; color: #a1a1aa;
+  transition: all 0.2s ease;
 }
-.stat-pill.active { background: #f5f4ff; color: #9993ea; }
-.icon { width: 16px; height: 16px; }
-
-/* 하트 팝 애니메이션 */
-.like-animation { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-.like-animation svg { width: 80px; height: 80px; }
-.heart-pop-enter-active { animation: heart-pop 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
-@keyframes heart-pop { 0% { transform: scale(0); } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 0; } }
+.stat-pill.active { background: #ede9fe; color: #7c3aed; }
+.stat-pill.active:hover { background: #ddd6fe; }
+.icon { width: 14px; height: 14px; }
 
 /* 모바일: 스레드 스타일 (얇은 경계선) */
 @media (max-width: 768px) {
@@ -278,7 +268,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   }
 
   .hashtag-group {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     gap: 6px;
     min-height: 16px;
   }
@@ -286,23 +276,18 @@ const formatDate = (date) => feedUtils.formatDate(date);
     font-size: 11px;
   }
 
-  /* 제품 정보 박스 - 경계 제거 */
+  /* 제품 정보 */
   .product-info-box {
-    margin-left: -4px;
-    margin-right: -4px;
-    padding: 10px 14px;
-    border-radius: 12px;
+    padding: 10px 12px;
     margin-bottom: 10px;
+    border-radius: 10px;
     border: none;
   }
-  .category-tag {
+  .category-label {
     font-size: 9px;
   }
   .product-name {
     font-size: 13px;
-  }
-  .price-tag {
-    font-size: 14px;
   }
 
   /* 푸터 - 경계 제거 */

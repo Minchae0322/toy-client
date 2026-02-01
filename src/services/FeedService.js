@@ -365,6 +365,10 @@ class FeedService extends BaseApiService {
       thumbnailUrl: feed.thumbnailUrl || null,
       hashtags: feed.hashtags || [],
       feedEvaluation: this.normalizeFeedEvaluation(feed.feedEvaluation),
+      categoryName: feed.subCategoryDetail?.subCategoryName
+          || feed.subCategoryDetail?.categoryName
+          || feed.categoryName
+          || '',
       likeCount: feed.likeCount || 0,
       hotCount: feed.hotCount || 0,
       commentCount: feed.commentCount || 0,
