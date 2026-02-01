@@ -43,9 +43,8 @@
 
           <!-- 메시지 아이콘 -->
           <button class="message-btn" @click="goToChat" title="메시지">
-            <svg class="message-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            <svg class="message-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
             </svg>
             <span v-if="unreadMessageCount > 0" class="message-badge">{{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}</span>
           </button>
@@ -600,9 +599,9 @@ onUnmounted(() => {
 }
 
 .message-icon {
-  width: 22px;
-  height: 22px;
-  color: #6b7280;
+  width: 24px;
+  height: 24px;
+  color: #4b5563;
   transition: color 0.2s ease;
 }
 
