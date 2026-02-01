@@ -42,6 +42,14 @@ const handleLogout = async () => {
   isLoggingOut.value = false
 }
 
+const handleChatClick = () => {
+  if (isLoggedIn.value) {
+    router.push({ name: 'Chat' })
+  } else {
+    router.push({ name: 'Login' })
+  }
+}
+
 const goToProfile = async () => {
   showMobileMenu.value = false
   if (!userId.value) {
@@ -93,6 +101,13 @@ onUnmounted(() => {
 
       <!-- 데스크톱 네비게이션 -->
       <nav class="nav-desktop">
+        <!-- 메시지 버튼 (항상 표시) -->
+        <button class="msg-btn" @click="handleChatClick" title="메시지">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+          </svg>
+        </button>
+
         <template v-if="!isLoggedIn">
           <RouterLink to="/one-mouth/list" class="nav-item">둘러보기</RouterLink>
           <div class="nav-divider"></div>
@@ -118,13 +133,6 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- 메시지 버튼 -->
-          <button class="msg-btn" @click="router.push({ name: 'Chat' })" title="메시지">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
-            </svg>
-          </button>
-
           <div class="nav-divider"></div>
 
           <div class="user-menu">
@@ -148,12 +156,12 @@ onUnmounted(() => {
 
       <!-- 모바일 우측 영역 -->
       <div class="nav-mobile">
+        <button class="mobile-msg-btn" @click="handleChatClick" title="메시지">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+          </svg>
+        </button>
         <template v-if="isLoggedIn">
-          <button class="mobile-msg-btn" @click="router.push({ name: 'Chat' })" title="메시지">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
-            </svg>
-          </button>
           <div class="mobile-ws-dot" :class="{ connected: wsConnected }"></div>
           <div class="mobile-avatar" @click="goToProfile">
             <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
