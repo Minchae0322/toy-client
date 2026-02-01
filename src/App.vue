@@ -118,6 +118,13 @@ onUnmounted(() => {
             </div>
           </div>
 
+          <!-- 메시지 버튼 -->
+          <button class="msg-btn" @click="router.push({ name: 'Chat' })" title="메시지">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+            </svg>
+          </button>
+
           <div class="nav-divider"></div>
 
           <div class="user-menu">
@@ -142,6 +149,11 @@ onUnmounted(() => {
       <!-- 모바일 우측 영역 -->
       <div class="nav-mobile">
         <template v-if="isLoggedIn">
+          <button class="mobile-msg-btn" @click="router.push({ name: 'Chat' })" title="메시지">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+            </svg>
+          </button>
           <div class="mobile-ws-dot" :class="{ connected: wsConnected }"></div>
           <div class="mobile-avatar" @click="goToProfile">
             <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
@@ -453,6 +465,45 @@ onUnmounted(() => {
   background: #FAF5FF;
   color: #9933EA;
   font-weight: 600;
+}
+
+/* ===================== 메시지 버튼 ===================== */
+.msg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: #888888;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.msg-btn:hover {
+  color: #9933EA;
+  background: #FAF5FF;
+}
+
+.mobile-msg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobile-msg-btn:hover {
+  color: #9933EA;
+  background: #FAF5FF;
 }
 
 /* ===================== 유저 메뉴 (데스크톱) ===================== */
