@@ -12,7 +12,7 @@
             <span class="header-label">WEEKLY CHART</span>
             <h1>HOT 100</h1>
           </div>
-          <p class="header-desc">이번 주 가장 인기 있는 제품들을 확인해보세요</p>
+          <p class="header-desc">이번 주 가장 인기 있는 아이템들을 확인해보세요</p>
         </header>
 
         <!-- 카테고리 필터 -->
@@ -31,7 +31,7 @@
 
         <!-- 빈 상태 -->
         <div v-else-if="!products.length" class="empty-state">
-          <p>등록된 제품이 없습니다</p>
+          <p>등록된 아이템이 없습니다</p>
         </div>
 
         <template v-else>

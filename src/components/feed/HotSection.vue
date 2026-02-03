@@ -107,8 +107,8 @@ onMounted(() => loadHotFeeds());
 
 <style scoped>
 .hot-section {
-  padding: 20px 0;
-  margin-bottom: 1.5rem;
+  padding: 12px 0;
+  margin-bottom: 0.5rem;
 }
 
 /* 헤더 */
@@ -209,6 +209,20 @@ onMounted(() => loadHotFeeds());
   .dash-feed-card {
     flex: 0 0 200px;
     height: 280px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dash-feed-card {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 320px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .dash-feed-card {
+    height: 360px;
   }
 }
 
@@ -363,6 +377,20 @@ onMounted(() => loadHotFeeds());
   .dash-card-skeleton {
     flex: 0 0 200px;
     height: 280px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dash-card-skeleton {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 320px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .dash-card-skeleton {
+    height: 360px;
   }
 }
 
