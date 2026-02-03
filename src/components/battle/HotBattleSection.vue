@@ -370,40 +370,89 @@ const handleImageError = (battleId) => {
   }
 
   .hot-scroll {
-    gap: 14px;
+    gap: 16px;
   }
 
   .hot-card {
     border-radius: 14px;
   }
 
+  .thumb {
+    aspect-ratio: 4 / 3.5;
+  }
+
   .rank-badge {
-    top: 9px;
-    left: 9px;
-    width: 26px;
-    height: 26px;
-    font-size: 12.5px;
-    border-radius: 7px;
+    top: 10px;
+    left: 10px;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    border-radius: 8px;
   }
 
   .hot-badge {
-    top: 9px;
-    right: 9px;
-    font-size: 11.5px;
+    top: 10px;
+    right: 10px;
+    padding: 3px 8px;
+    font-size: 11px;
   }
 
   .info {
-    padding: 14px;
+    padding: 16px;
   }
 
   .title {
-    font-size: 14px;
-    margin-bottom: 6px;
-    min-height: 42px;
+    font-size: 15px;
+    margin-bottom: 8px;
+    min-height: 46px;
   }
 
   .votes {
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .hot-scroll {
+    gap: 20px;
+  }
+
+  .hot-card {
+    border-radius: 16px;
+  }
+
+  .thumb {
+    aspect-ratio: 4 / 4;
+  }
+
+  .rank-badge {
+    top: 12px;
+    left: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+
+  .hot-badge {
+    top: 12px;
+    right: 12px;
+    padding: 4px 10px;
     font-size: 12px;
+  }
+
+  .info {
+    padding: 18px;
+  }
+
+  .title {
+    font-size: 16px;
+    margin-bottom: 10px;
+    min-height: 50px;
+  }
+
+  .votes {
+    font-size: 14px;
   }
 }
 
