@@ -107,8 +107,8 @@ onMounted(() => loadHotFeeds());
 
 <style scoped>
 .hot-section {
-  padding: 20px 0;
-  margin-bottom: 1.5rem;
+  padding: 12px 0;
+  margin-bottom: 0.5rem;
 }
 
 /* 헤더 */
