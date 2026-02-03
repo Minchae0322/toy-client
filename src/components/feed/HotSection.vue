@@ -212,20 +212,6 @@ onMounted(() => loadHotFeeds());
   }
 }
 
-@media (min-width: 1024px) {
-  .dash-feed-card {
-    flex: 1 1 0;
-    min-width: 0;
-    height: 320px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .dash-feed-card {
-    height: 360px;
-  }
-}
-
 .dash-feed-card:hover {
   transform: translateY(-8px) scale(1.02);
   box-shadow: 0 20px 30px rgba(0,0,0,0.15);
@@ -377,20 +363,6 @@ onMounted(() => loadHotFeeds());
   .dash-card-skeleton {
     flex: 0 0 200px;
     height: 280px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .dash-card-skeleton {
-    flex: 1 1 0;
-    min-width: 0;
-    height: 320px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .dash-card-skeleton {
-    height: 360px;
   }
 }
 
