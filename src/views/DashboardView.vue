@@ -945,9 +945,9 @@ onMounted(() => {
 
 /* 카드 디자인 */
 .dash-feed-card {
-  flex: 0 0 180px;
-  height: 260px;
-  border-radius: 24px;
+  flex: 0 0 160px;
+  height: 230px;
+  border-radius: 20px;
   overflow: hidden;
   position: relative;
   box-shadow: 0 10px 20px rgba(0,0,0,0.1);
@@ -957,15 +957,15 @@ onMounted(() => {
 
 @media (min-width: 640px) {
   .dash-feed-card {
-    flex: 0 0 200px;
-    height: 280px;
+    flex: 0 0 180px;
+    height: 250px;
   }
 }
 
 @media (min-width: 1280px) {
   .dash-feed-card {
-    flex: 0 0 240px;
-    height: 320px;
+    flex: 0 0 200px;
+    height: 280px;
   }
 }
 
@@ -1120,22 +1120,22 @@ onMounted(() => {
 
 /* 스켈레톤 */
 .dash-card-skeleton {
-  flex: 0 0 180px;
-  height: 260px;
-  border-radius: 24px;
+  flex: 0 0 160px;
+  height: 230px;
+  border-radius: 20px;
 }
 
 @media (min-width: 640px) {
   .dash-card-skeleton {
-    flex: 0 0 200px;
-    height: 280px;
+    flex: 0 0 180px;
+    height: 250px;
   }
 }
 
 @media (min-width: 1280px) {
   .dash-card-skeleton {
-    flex: 0 0 240px;
-    height: 320px;
+    flex: 0 0 200px;
+    height: 280px;
   }
 }
 
