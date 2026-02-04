@@ -94,6 +94,23 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
+          // CDN 캐시 전략: 파일명에 해시 포함
+          entryFileNames: 'js/[name].[hash].js',
+          chunkFileNames: 'js/[name].[hash].js',
+          assetFileNames: (assetInfo) => {
+            // 확장자별 폴더 분리
+            const ext = assetInfo.name?.split('.').pop() || ''
+            if (/css/i.test(ext)) {
+              return 'css/[name].[hash].[ext]'
+            }
+            if (/png|jpe?g|gif|svg|webp|ico/i.test(ext)) {
+              return 'images/[name].[hash].[ext]'
+            }
+            if (/woff2?|eot|ttf|otf/i.test(ext)) {
+              return 'fonts/[name].[hash].[ext]'
+            }
+            return 'assets/[name].[hash].[ext]'
+          },
           globals: {
             'sockjs-client': 'SockJS'
           }
