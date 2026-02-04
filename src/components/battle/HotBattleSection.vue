@@ -136,6 +136,8 @@ const handleImageError = (battleId) => {
   font-weight: 600;
   color: #0f172a;
   margin: 0;
+  padding-left: 8px;
+  border-left: 3px solid #9333ea;
 }
 
 .view-all-btn {
