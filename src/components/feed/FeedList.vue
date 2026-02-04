@@ -231,7 +231,9 @@ defineExpose({ observerTarget });
 .feed-container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; width: 100%; }
 
 .feed-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; width: 100%; }
-.main-title { font-size: 26px; font-weight: 900; color: #18181b; padding-left: 12px; border-left: 4px solid #9333ea; }
+.main-title { font-size: 1rem; font-weight: 600; color: #18181b; padding-left: 10px; border-left: 3px solid #9333ea; }
+@media (min-width: 768px) { .main-title { font-size: 1.125rem; } }
+@media (min-width: 1280px) { .main-title { font-size: 1.3125rem; } }
 .sub-title { font-size: 14px; color: #71717a; margin-top: 4px; }
 
 .view-switch { background: #f4f4f5; padding: 4px; border-radius: 12px; display: flex; }
@@ -761,7 +763,7 @@ defineExpose({ observerTarget });
     padding: 16px;
     border-bottom: 1px solid #e5e5e5;
   }
-  .main-title { font-size: 20px; }
+  .main-title { font-size: 0.875rem; }
   .sub-title { font-size: 12px; }
 
   /* 모바일 Empty State */

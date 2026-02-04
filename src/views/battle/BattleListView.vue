@@ -458,14 +458,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0;
   border-bottom: 1px solid var(--border);
-}
-
-@media (max-width: 768px) {
-  .tab-navigation {
-    padding: 0 1rem;
-  }
 }
 
 .tabs-group {
@@ -571,18 +565,12 @@ onUnmounted(() => {
 /* 배틀 섹션 */
 .battles-section {
   margin-top: 0;
-  padding: 20px 16px;
+  padding: 20px 0;
 }
 
 @media (min-width: 768px) {
   .battles-section {
-    padding: 24px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .battles-section {
-    padding: 24px 32px;
+    padding: 24px 0;
   }
 }
 
@@ -611,9 +599,23 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
+  padding-left: 10px;
+  border-left: 3px solid #9333ea;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .section-title {
+    font-size: 1.3125rem;
+  }
 }
 
 .section-count {
@@ -688,10 +690,6 @@ onUnmounted(() => {
 
 /* 큰 화면: 섹션 헤더 확대 */
 @media (min-width: 1280px) {
-  .section-title {
-    font-size: 0.9375rem;
-  }
-
   .sort-select {
     font-size: 0.8125rem;
   }

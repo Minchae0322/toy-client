@@ -126,12 +126,24 @@ onMounted(() => loadHotFeeds());
 }
 
 .section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: #1a1a1a;
   margin: 0;
   padding-left: 10px;
   border-left: 3px solid #9333ea;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .section-title {
+    font-size: 1.3125rem;
+  }
 }
 
 .live-indicator {

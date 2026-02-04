@@ -50,6 +50,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import * as authUtils from '@/utils/auth.js'
 import { authService } from '@/services/AuthService.js'
 import LoginForm from '@/components/login/LoginForm.vue'
@@ -58,6 +59,7 @@ import RegisterForm from '@/components/login/RegisterForm.vue'
 const router = useRouter()
 const route = useRoute()
 const { login } = useAuth()
+const { open } = useConfirmDialog()
 
 const activeTab = ref('login')
 const loading = ref(false)
@@ -93,7 +95,13 @@ const handleRegister = async (formData) => {
   registerError.value = ''
   try {
     await authService.signup(formData)
-    // 회원가입 성공 시 로그인 탭으로 전환
+    // 회원가입 성공 알림
+    await open({
+      type: 'alert',
+      title: '회원가입 완료',
+      message: '회원가입이 완료되었습니다.\n로그인해 주세요.'
+    })
+    // 로그인 탭으로 전환
     activeTab.value = 'login'
     loginError.value = ''
   } catch (error) {

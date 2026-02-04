@@ -108,18 +108,12 @@ const handleImageError = (battleId) => {
 
 <style scoped>
 .hot-section {
-  padding: 20px 16px 0;
+  padding: 20px 0 0;
 }
 
 @media (min-width: 768px) {
   .hot-section {
-    padding: 24px 24px 0;
-  }
-}
-
-@media (min-width: 1024px) {
-  .hot-section {
-    padding: 24px 32px 0;
+    padding: 24px 0 0;
   }
 }
 
@@ -132,12 +126,18 @@ const handleImageError = (battleId) => {
 }
 
 .section-title {
-  font-size: 12px;
+  font-size: 1rem;
   font-weight: 600;
   color: #0f172a;
   margin: 0;
-  padding-left: 8px;
+  padding-left: 10px;
   border-left: 3px solid #9333ea;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.125rem;
+  }
 }
 
 .view-all-btn {
@@ -154,41 +154,18 @@ const handleImageError = (battleId) => {
   color: #64748b;
 }
 
-/* 스크롤 */
+/* 스크롤 - 항상 가로 한 줄 */
 .hot-scroll {
   display: flex;
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 4px;
-  margin: 0 -16px;
-  padding-left: 16px;
-  padding-right: 16px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 .hot-scroll::-webkit-scrollbar {
   display: none;
-}
-
-@media (min-width: 768px) {
-  .hot-scroll {
-    margin: 0 -24px;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .hot-scroll {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    overflow-x: visible;
-    margin: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
 }
 
 /* 카드 */
@@ -208,9 +185,15 @@ const handleImageError = (battleId) => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .hot-card {
-    width: auto;
+    width: 200px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hot-card {
+    width: 220px;
   }
 }
 
@@ -367,8 +350,7 @@ const handleImageError = (battleId) => {
   }
 
   .section-title {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 1.3125rem;
   }
 
   .hot-scroll {
