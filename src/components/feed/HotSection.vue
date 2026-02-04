@@ -130,6 +130,8 @@ onMounted(() => loadHotFeeds());
   font-weight: 700;
   color: #1a1a1a;
   margin: 0;
+  padding-left: 10px;
+  border-left: 3px solid #9333ea;
 }
 
 .live-indicator {
