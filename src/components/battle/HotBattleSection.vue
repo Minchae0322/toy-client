@@ -132,8 +132,8 @@ const handleImageError = (battleId) => {
 }
 
 .section-title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   color: #0f172a;
   margin: 0;
 }
@@ -365,8 +365,8 @@ const handleImageError = (battleId) => {
   }
 
   .section-title {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   .hot-scroll {
