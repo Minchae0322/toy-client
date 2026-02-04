@@ -132,7 +132,7 @@ const handleImageError = (battleId) => {
 }
 
 .section-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: #0f172a;
   margin: 0;
@@ -180,8 +180,8 @@ const handleImageError = (battleId) => {
 @media (min-width: 1024px) {
   .hot-scroll {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
     overflow-x: visible;
     margin: 0;
     padding-left: 0;
@@ -296,7 +296,7 @@ const handleImageError = (battleId) => {
 
 .title {
   margin: 0 0 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #1e293b;
   line-height: 1.5;
@@ -304,13 +304,13 @@ const handleImageError = (battleId) => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 40px;
+  min-height: 42px;
   letter-spacing: -0.01em;
 }
 
 .votes {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   color: #94a3b8;
 }
 
@@ -361,16 +361,16 @@ const handleImageError = (battleId) => {
 /* 큰 화면 */
 @media (min-width: 1280px) {
   .section-header {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
 
   .section-title {
-    font-size: 15.5px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   .hot-scroll {
-    gap: 16px;
+    gap: 20px;
   }
 
   .hot-card {
@@ -378,7 +378,7 @@ const handleImageError = (battleId) => {
   }
 
   .thumb {
-    aspect-ratio: 4 / 3.5;
+    aspect-ratio: 4 / 3;
   }
 
   .rank-badge {
@@ -414,7 +414,7 @@ const handleImageError = (battleId) => {
 
 @media (min-width: 1536px) {
   .hot-scroll {
-    gap: 20px;
+    gap: 24px;
   }
 
   .hot-card {
@@ -422,7 +422,7 @@ const handleImageError = (battleId) => {
   }
 
   .thumb {
-    aspect-ratio: 4 / 4;
+    aspect-ratio: 4 / 3;
   }
 
   .rank-badge {

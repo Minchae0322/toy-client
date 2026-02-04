@@ -2,8 +2,8 @@
   <section class="feed-container">
     <header class="feed-header">
       <div class="title-group">
-        <h2 class="main-title">인기 포스트</h2>
-        <p class="sub-title">실시간으로 올라오는 솔직한 리뷰</p>
+        <h2 class="main-title">최신 피드</h2>
+        <p class="sub-title">사용자들이 올린 솔직한 리뷰</p>
       </div>
 
       <div class="filter-bar">

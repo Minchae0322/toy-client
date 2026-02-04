@@ -126,8 +126,8 @@ onMounted(() => loadHotFeeds());
 }
 
 .section-title {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #1a1a1a;
   margin: 0;
 }
