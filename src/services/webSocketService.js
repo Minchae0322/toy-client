@@ -145,6 +145,20 @@ class WebSocketService {
 
   // ==================== WebSocket 연결 ====================
 
+  /**
+   * SockJS용 URL 변환 (wss:// -> https://, ws:// -> http://)
+   * SockJS는 HTTP/HTTPS URL을 요구하며 내부적으로 WebSocket 업그레이드를 처리함
+   */
+  convertToSockJSUrl(url) {
+    if (url.startsWith('wss://')) {
+      return url.replace('wss://', 'https://')
+    }
+    if (url.startsWith('ws://')) {
+      return url.replace('ws://', 'http://')
+    }
+    return url
+  }
+
   connect() {
     return new Promise((resolve, reject) => {
       if (this.isConnected()) {
@@ -173,7 +187,7 @@ class WebSocketService {
         try { this.client.deactivate() } catch (e) { /* ignore */ }
       }
 
-      const socketUrl = this.wsURL
+      const socketUrl = this.convertToSockJSUrl(this.wsURL)
       console.log('🔌 [WebSocket] Connecting to:', socketUrl)
 
       const socket = new SockJS(socketUrl)
