@@ -5,58 +5,55 @@
 
     <!-- 메인 컨텐츠 -->
     <main class="main-content">
-      <!-- 통합 헤더 -->
-      <header class="main-header">
-        <!-- 탭 네비게이션 -->
-        <nav class="tab-navigation">
-          <div class="tabs-group">
-            <button
-                v-for="tab in tabs"
-                :key="tab.id"
-                class="tab-button"
-                :class="{ active: activeTab === tab.id }"
-                @click="activeTab = tab.id"
-            >
-              <span class="tab-label">{{ tab.label }}</span>
-              <span v-if="tab.count" class="tab-count">{{ formatCount(tab.count) }}</span>
-            </button>
-          </div>
+      <!-- 카테고리 필터 (최상단) -->
+      <CommonCategoryFilter
+          :categories="categories"
+          :initial-selected="selectedCategoryId"
+          @category-change="handleCategoryChange"
+      />
 
-          <!-- 뷰 모드 스위처 -->
-          <div class="view-switcher">
-            <button
-                class="view-btn"
-                :class="{ active: viewMode === 'grid' }"
-                @click="viewMode = 'grid'"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="1" y="1" width="6" height="6" rx="1"/>
-                <rect x="9" y="1" width="6" height="6" rx="1"/>
-                <rect x="1" y="9" width="6" height="6" rx="1"/>
-                <rect x="9" y="9" width="6" height="6" rx="1"/>
-              </svg>
-            </button>
-            <button
-                class="view-btn"
-                :class="{ active: viewMode === 'list' }"
-                @click="viewMode = 'list'"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="1" y="2" width="14" height="3" rx="0.5"/>
-                <rect x="1" y="7" width="14" height="3" rx="0.5"/>
-                <rect x="1" y="12" width="14" height="3" rx="0.5"/>
-              </svg>
-            </button>
-          </div>
-        </nav>
+      <!-- 탭 + 뷰모드 -->
+      <nav class="tab-navigation">
+        <div class="tabs-group">
+          <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              class="tab-button"
+              :class="{ active: activeTab === tab.id }"
+              @click="activeTab = tab.id"
+          >
+            <span class="tab-label">{{ tab.label }}</span>
+            <span v-if="tab.count" class="tab-count">{{ formatCount(tab.count) }}</span>
+          </button>
+        </div>
 
-        <!-- 카테고리 필터 -->
-        <CommonCategoryFilter
-            :categories="categories"
-            :initial-selected="selectedCategoryId"
-            @category-change="handleCategoryChange"
-        />
-      </header>
+        <!-- 뷰 모드 스위처 -->
+        <div class="view-switcher">
+          <button
+              class="view-btn"
+              :class="{ active: viewMode === 'grid' }"
+              @click="viewMode = 'grid'"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="1" y="1" width="6" height="6" rx="1"/>
+              <rect x="9" y="1" width="6" height="6" rx="1"/>
+              <rect x="1" y="9" width="6" height="6" rx="1"/>
+              <rect x="9" y="9" width="6" height="6" rx="1"/>
+            </svg>
+          </button>
+          <button
+              class="view-btn"
+              :class="{ active: viewMode === 'list' }"
+              @click="viewMode = 'list'"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="1" y="2" width="14" height="3" rx="0.5"/>
+              <rect x="1" y="7" width="14" height="3" rx="0.5"/>
+              <rect x="1" y="12" width="14" height="3" rx="0.5"/>
+            </svg>
+          </button>
+        </div>
+      </nav>
 
       <!-- 컨텐츠 영역 -->
       <div class="content-wrapper">
@@ -71,10 +68,13 @@
         <!-- 배틀 리스트 섹션 -->
         <section class="battles-section">
           <div class="section-header">
-            <h2 class="section-title">
-              {{ currentCategoryTitle }}
-              <span class="section-count">{{ formatCount(totalCount) }}</span>
-            </h2>
+            <div class="section-title-group">
+              <h2 class="section-title">
+                {{ currentCategoryTitle }}
+                <span class="section-count">{{ formatCount(totalCount) }}</span>
+              </h2>
+              <p class="section-subtitle">다들 뭘 골랐을까?</p>
+            </div>
 
             <div class="header-right">
               <!-- 정렬 옵션 -->
@@ -89,7 +89,7 @@
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
-                <span>배틀 만들기</span>
+                <span>요거픽 만들기</span>
               </button>
             </div>
           </div>
@@ -100,6 +100,7 @@
               :loading="loading"
               :has-next="hasNext"
               :view-mode="viewMode"
+              :initial-loaded="initialLoaded"
               @battle-click="openBattle"
           />
         </section>
@@ -134,7 +135,7 @@ const { open } = useConfirmDialog()
 const allTabs = ref([
   { id: 'ongoing', label: '진행중', count: 0 },
   { id: 'ended', label: '종료됨', count: 0 },
-  { id: 'my', label: '내 배틀', count: 0, requiresAuth: true }
+  { id: 'my', label: '내 요거픽', count: 0, requiresAuth: true }
 ])
 
 // 로그인 상태에 따라 탭 필터링
@@ -152,6 +153,7 @@ const totalCount = ref(0)
 const hasNext = ref(true)
 const loading = ref(false)
 const hotLoading = ref(true)
+const initialLoaded = ref(false)
 const battleListRef = ref(null)
 
 const selectedCategory = ref(null)
@@ -161,7 +163,7 @@ const categories = ref([])
 
 // Computed
 const currentCategoryTitle = computed(() => {
-  if (!selectedCategory.value) return '전체 배틀'
+  if (!selectedCategory.value) return '전체 요거픽'
   let title = selectedCategory.value.categoryName
   if (selectedSubCategory.value) {
     title += ` > ${selectedSubCategory.value.categoryName}`
@@ -326,7 +328,7 @@ const handleCreateBattle = async () => {
     }
   } catch (error) {
     console.error('배틀 생성 권한 체크 실패:', error)
-    await open({ type: 'alert', title: '오류', message: error.message || '배틀을 생성할 수 없습니다.' })
+    await open({ type: 'alert', title: '오류', message: error.message || '요거픽을 생성할 수 없습니다.' })
   }
 }
 
@@ -339,11 +341,13 @@ watch(activeTab, () => {
 let observer = null
 
 onMounted(async () => {
-  await Promise.all([loadCategories(), updateTabCounts()])
   await Promise.all([
+    loadCategories(),
+    updateTabCounts(),
     loadHotBattles(),
     loadBattles(true)
   ])
+  initialLoaded.value = true
 
   observer = new IntersectionObserver(
       (entries) => {
@@ -442,15 +446,6 @@ onUnmounted(() => {
   .main-content {
     padding-bottom: 2.5rem;
   }
-}
-
-/* 메인 헤더 */
-.main-header {
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 30;
 }
 
 /* 탭 네비게이션 */
@@ -595,6 +590,12 @@ onUnmounted(() => {
   gap: 0.75rem;
 }
 
+.section-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .section-title {
   display: flex;
   align-items: center;
@@ -604,6 +605,14 @@ onUnmounted(() => {
   color: var(--text-primary);
   padding-left: 10px;
   border-left: 3px solid #9333ea;
+}
+
+.section-subtitle {
+  margin: 0;
+  padding-left: 13px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 @media (min-width: 768px) {

@@ -1,25 +1,13 @@
 <template>
-  <section v-if="battles.length > 0 || loading" class="hot-section">
+  <section v-if="battles.length > 0" class="hot-section">
     <!-- 헤더 -->
     <div class="section-header">
       <h2 class="section-title">🔥 실시간 HOT</h2>
       <button class="view-all-btn" @click="$emit('view-all')">더보기</button>
     </div>
 
-    <!-- 로딩 -->
-    <div v-if="loading" class="hot-scroll">
-      <div v-for="i in 5" :key="`skeleton-${i}`" class="hot-card skeleton">
-        <div class="skeleton-thumb"></div>
-        <div class="skeleton-info">
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line tiny"></div>
-        </div>
-      </div>
-    </div>
-
     <!-- 배틀 리스트 -->
-    <div v-else class="hot-scroll">
+    <div class="hot-scroll">
       <article
           v-for="(battle, index) in battles.slice(0, 5)"
           :key="battle.id || battle.battleId"

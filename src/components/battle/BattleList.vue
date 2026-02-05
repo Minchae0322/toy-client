@@ -1,7 +1,7 @@
 <template>
   <div class="battles-container">
     <!-- 로딩 스켈레톤 -->
-    <div v-if="loading && battles.length === 0" class="battles-grid">
+    <div v-if="(loading || !initialLoaded) && battles.length === 0" class="battles-grid">
       <article v-for="i in skeletonCount" :key="`skeleton-${i}`" class="skeleton-card">
         <!-- 썸네일 영역 -->
         <div class="skeleton-thumbnail">
@@ -42,9 +42,9 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
       </div>
-      <p class="empty-text">아직 배틀이 없어요</p>
+      <p class="empty-text">아직 요거픽이 없어요</p>
       <button class="create-btn" @click="$emit('create-battle')">
-        + 새 배틀 만들기
+        + 새 요거픽 만들기
       </button>
     </div>
 
@@ -81,7 +81,8 @@ const props = defineProps({
   battles: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
   hasNext: { type: Boolean, default: true },
-  viewMode: { type: String, default: 'grid', validator: v => ['grid', 'list'].includes(v) }
+  viewMode: { type: String, default: 'grid', validator: v => ['grid', 'list'].includes(v) },
+  initialLoaded: { type: Boolean, default: true }
 })
 
 const emit = defineEmits(['battle-click', 'create-battle'])

@@ -22,7 +22,7 @@
             <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
             <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.5 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-5-2a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
           </svg>
-          <span class="nav-text">배틀</span>
+          <span class="nav-text">요거픽</span>
           <span class="badge">12</span>
         </router-link>
 
@@ -68,7 +68,7 @@
       </button>
 
       <button class="btn-subtle btn-dark" @click="handleProtectedRoute('createBattle')">
-        <span class="btn-text">배틀 등록하기</span>
+        <span class="btn-text">요거픽 등록하기</span>
         <div class="btn-icon-circle btn-icon-dark">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
