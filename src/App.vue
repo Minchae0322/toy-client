@@ -115,7 +115,6 @@ onUnmounted(() => {
 
         <template v-if="!isLoggedIn">
           <RouterLink to="/login" class="nav-item">로그인</RouterLink>
-          <RouterLink to="/register" class="btn-primary">시작하기</RouterLink>
         </template>
 
         <template v-else>
@@ -211,12 +210,6 @@ onUnmounted(() => {
                 <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               로그인
-            </RouterLink>
-            <RouterLink to="/register" class="mobile-menu-item highlight" @click="showMobileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8zM20 8v6M23 11h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              시작하기
             </RouterLink>
           </template>
 
@@ -476,38 +469,38 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border: none;
-  background: transparent;
-  border-radius: 8px;
-  color: #888888;
+  background: #FAF5FF;
+  border-radius: 10px;
+  color: #9933EA;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .msg-btn:hover {
-  color: #9933EA;
-  background: #FAF5FF;
+  color: #ffffff;
+  background: #9933EA;
 }
 
 .mobile-msg-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: none;
-  background: transparent;
-  border-radius: 8px;
-  color: #666;
+  background: #FAF5FF;
+  border-radius: 10px;
+  color: #9933EA;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .mobile-msg-btn:hover {
-  color: #9933EA;
-  background: #FAF5FF;
+  color: #ffffff;
+  background: #9933EA;
 }
 
 /* ===================== 유저 메뉴 (데스크톱) ===================== */
