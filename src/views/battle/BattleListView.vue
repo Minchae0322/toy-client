@@ -12,49 +12,6 @@
           @category-change="handleCategoryChange"
       />
 
-      <!-- 탭 + 뷰모드 -->
-      <nav class="tab-navigation">
-        <div class="tabs-group">
-          <button
-              v-for="tab in tabs"
-              :key="tab.id"
-              class="tab-button"
-              :class="{ active: activeTab === tab.id }"
-              @click="activeTab = tab.id"
-          >
-            <span class="tab-label">{{ tab.label }}</span>
-            <span v-if="tab.count" class="tab-count">{{ formatCount(tab.count) }}</span>
-          </button>
-        </div>
-
-        <!-- 뷰 모드 스위처 -->
-        <div class="view-switcher">
-          <button
-              class="view-btn"
-              :class="{ active: viewMode === 'grid' }"
-              @click="viewMode = 'grid'"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <rect x="1" y="1" width="6" height="6" rx="1"/>
-              <rect x="9" y="1" width="6" height="6" rx="1"/>
-              <rect x="1" y="9" width="6" height="6" rx="1"/>
-              <rect x="9" y="9" width="6" height="6" rx="1"/>
-            </svg>
-          </button>
-          <button
-              class="view-btn"
-              :class="{ active: viewMode === 'list' }"
-              @click="viewMode = 'list'"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <rect x="1" y="2" width="14" height="3" rx="0.5"/>
-              <rect x="1" y="7" width="14" height="3" rx="0.5"/>
-              <rect x="1" y="12" width="14" height="3" rx="0.5"/>
-            </svg>
-          </button>
-        </div>
-      </nav>
-
       <!-- 컨텐츠 영역 -->
       <div class="content-wrapper">
         <!-- HOT 배틀 섹션 -->
@@ -68,23 +25,53 @@
         <!-- 배틀 리스트 섹션 -->
         <section class="battles-section">
           <div class="section-header">
-            <div class="section-title-group">
-              <h2 class="section-title">
-                {{ currentCategoryTitle }}
-                <span class="section-count">{{ formatCount(totalCount) }}</span>
-              </h2>
-              <p class="section-subtitle">다들 뭘 골랐을까?</p>
+            <div class="filter-chips">
+              <button
+                  v-for="tab in tabs"
+                  :key="tab.id"
+                  class="filter-chip"
+                  :class="{ active: activeTab === tab.id }"
+                  @click="activeTab = tab.id"
+              >
+                {{ tab.label }}
+                <span v-if="tab.count" class="chip-count">{{ formatCount(tab.count) }}</span>
+              </button>
             </div>
 
-            <div class="header-right">
-              <!-- 정렬 옵션 -->
+            <div class="header-actions">
+              <!-- 뷰 모드 스위처 -->
+              <div class="view-switcher">
+                <button
+                    class="view-btn"
+                    :class="{ active: viewMode === 'grid' }"
+                    @click="viewMode = 'grid'"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <rect x="1" y="1" width="6" height="6" rx="1"/>
+                    <rect x="9" y="1" width="6" height="6" rx="1"/>
+                    <rect x="1" y="9" width="6" height="6" rx="1"/>
+                    <rect x="9" y="9" width="6" height="6" rx="1"/>
+                  </svg>
+                </button>
+                <button
+                    class="view-btn"
+                    :class="{ active: viewMode === 'list' }"
+                    @click="viewMode = 'list'"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <rect x="1" y="2" width="14" height="3" rx="0.5"/>
+                    <rect x="1" y="7" width="14" height="3" rx="0.5"/>
+                    <rect x="1" y="12" width="14" height="3" rx="0.5"/>
+                  </svg>
+                </button>
+              </div>
+
               <select class="sort-select">
                 <option value="latest">최신순</option>
                 <option value="popular">인기순</option>
                 <option value="ending">마감임박순</option>
               </select>
 
-              <!-- 배틀 만들기 버튼 -->
               <button class="create-battle-btn" @click="handleCreateBattle">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -448,109 +435,6 @@ onUnmounted(() => {
   }
 }
 
-/* 탭 네비게이션 */
-.tab-navigation {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.tabs-group {
-  display: flex;
-  gap: 1.5rem;
-}
-
-@media (max-width: 768px) {
-  .tabs-group {
-    gap: 1rem;
-  }
-}
-
-.tab-button {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 1rem 0;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-@media (max-width: 768px) {
-  .tab-button {
-    padding: 0.875rem 0;
-    font-size: 0.8125rem;
-  }
-}
-
-.tab-button:hover {
-  color: var(--text-secondary);
-}
-
-.tab-button.active {
-  color: var(--text-primary);
-  font-weight: 600;
-  border-bottom-color: var(--text-primary);
-}
-
-.tab-count {
-  padding: 0.125rem 0.375rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  border-radius: 0.25rem;
-  color: var(--text-muted);
-}
-
-.tab-button.active .tab-count {
-  color: var(--primary-accent);
-}
-
-.view-switcher {
-  display: flex;
-  background: var(--border);
-  border-radius: 0.5rem;
-  padding: 0.125rem;
-  gap: 0.125rem;
-}
-
-@media (max-width: 768px) {
-  .view-switcher {
-    display: none;
-  }
-}
-
-.view-btn {
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 0.375rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.view-btn:hover {
-  color: var(--text-secondary);
-}
-
-.view-btn.active {
-  background: var(--bg);
-  color: var(--text-primary);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
 @media (max-width: 768px) {
   .content-wrapper {
     padding: 0;
@@ -574,8 +458,6 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border);
 }
 
 @media (max-width: 640px) {
@@ -584,64 +466,104 @@ onUnmounted(() => {
   }
 }
 
-.header-right {
+/* 필터 칩 - 소프트 모던 */
+.filter-chips {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filter-chip {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.section-title-group {
-  display: flex;
-  flex-direction: column;
   gap: 0.25rem;
+  padding: 0.4375rem 0.875rem;
+  background: transparent;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 999px;
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
 }
 
-.section-title {
+.filter-chip:hover {
+  background: #faf5ff;
+  border-color: #d8b4fe;
+  color: #7c3aed;
+}
+
+.filter-chip.active {
+  background: #f5f3ff;
+  border-color: #c4b5fd;
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.chip-count {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #c4b5fd;
+}
+
+.filter-chip.active .chip-count {
+  color: #a78bfa;
+}
+
+/* 액션 그룹 */
+.header-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  padding-left: 10px;
-  border-left: 3px solid #9333ea;
 }
 
-.section-subtitle {
-  margin: 0;
-  padding-left: 13px;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 400;
+/* 뷰 모드 스위처 */
+.view-switcher {
+  display: flex;
+  gap: 0.125rem;
 }
 
-@media (min-width: 768px) {
-  .section-title {
-    font-size: 1.125rem;
+@media (max-width: 768px) {
+  .view-switcher {
+    display: none;
   }
 }
 
-@media (min-width: 1280px) {
-  .section-title {
-    font-size: 1.3125rem;
-  }
-}
-
-.section-count {
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
-.sort-select {
-  padding: 0.375rem 1.5rem 0.375rem 0.5rem;
+.view-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  border-radius: 0.375rem;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-btn:hover {
+  color: #94a3b8;
+}
+
+.view-btn.active {
+  color: #64748b;
+}
+
+/* 정렬 */
+.sort-select {
+  padding: 0.375rem 1.5rem 0.375rem 0;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0 center;
   font-family: inherit;
@@ -651,15 +573,16 @@ onUnmounted(() => {
   outline: none;
 }
 
+/* 만들기 버튼 */
 .create-battle-btn {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.875rem;
-  background: var(--primary-accent);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.875rem;
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1.5px solid #e9d5ff;
+  border-radius: 999px;
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -668,11 +591,13 @@ onUnmounted(() => {
   font-family: inherit;
 }
 
-@media (max-width: 768px) {
-  .create-battle-btn {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.75rem;
-  }
+.create-battle-btn:hover {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+}
+
+.create-battle-btn svg {
+  flex-shrink: 0;
 }
 
 @media (max-width: 640px) {
@@ -681,35 +606,22 @@ onUnmounted(() => {
   }
 
   .create-battle-btn {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2rem;
+    height: 2rem;
     padding: 0;
     justify-content: center;
-    border-radius: 0.5rem;
   }
 }
 
-.create-battle-btn:hover {
-  background: #7e22ce;
-}
-
-.create-battle-btn svg {
-  flex-shrink: 0;
-}
-
-/* 큰 화면: 섹션 헤더 확대 */
+/* 큰 화면 */
 @media (min-width: 1280px) {
-  .sort-select {
-    font-size: 0.8125rem;
-  }
-
-  .tab-button {
-    font-size: 0.9375rem;
+  .filter-chip {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
   }
 
   .create-battle-btn {
     padding: 0.5rem 1rem;
-    font-size: 0.8125rem;
   }
 }
 
