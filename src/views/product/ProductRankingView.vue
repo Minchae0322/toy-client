@@ -5,6 +5,14 @@
     <main class="main-content">
       <AppHeader />
 
+      <!-- 카테고리 필터 (최상단) -->
+      <CommonCategoryFilter
+          :categories="categories"
+          :show-view-toggle="false"
+          :initial-category-id="selectedCategoryId"
+          @category-change="handleCategoryChange"
+      />
+
       <div class="ranking-view">
         <!-- 페이지 헤더 -->
         <header class="page-header">
@@ -14,14 +22,6 @@
           </div>
           <p class="header-desc">이번 주 가장 인기 있는 아이템들을 확인해보세요</p>
         </header>
-
-        <!-- 카테고리 필터 -->
-        <CommonCategoryFilter
-            :categories="categories"
-            :show-view-toggle="false"
-            :initial-category-id="selectedCategoryId"
-            @category-change="handleCategoryChange"
-        />
 
         <!-- 로딩 -->
         <div v-if="loading && !products.length" class="loading-state">
@@ -396,7 +396,7 @@ onMounted(async () => {
 
 /* 페이지 헤더 */
 .page-header {
-  padding: 32px 24px 24px;
+  padding: 20px 0 16px;
 }
 
 .header-label {
@@ -406,19 +406,23 @@ onMounted(async () => {
   color: #7c3aed;
   display: block;
   margin-bottom: 4px;
+  padding-left: 13px;
 }
 
 .page-header h1 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: #111;
   margin: 0;
+  padding-left: 10px;
+  border-left: 3px solid #9333ea;
 }
 
 .header-desc {
-  font-size: 14px;
-  color: #888;
-  margin: 8px 0 0;
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 6px 0 0;
+  padding-left: 13px;
 }
 
 /* 로딩 & 빈 상태 */
@@ -447,7 +451,7 @@ onMounted(async () => {
 
 /* Top 3 섹션 */
 .top-section {
-  padding: 24px;
+  padding: 16px 0;
 }
 
 .top-grid {
@@ -650,7 +654,7 @@ onMounted(async () => {
 
 /* 4위 이하 리스트 */
 .chart-section {
-  padding: 0 24px 24px;
+  padding: 0 0 24px;
 }
 
 .chart-list {
@@ -821,15 +825,15 @@ onMounted(async () => {
 /* 반응형: 모바일 */
 @media (max-width: 640px) {
   .page-header {
-    padding: 20px 16px;
+    padding: 16px 0;
   }
 
   .page-header h1 {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .top-section {
-    padding: 16px;
+    padding: 12px 0;
   }
 
   .top-grid {
@@ -846,7 +850,7 @@ onMounted(async () => {
   }
 
   .chart-section {
-    padding: 0 16px 16px;
+    padding: 0 0 16px;
   }
 
   .chart-item {
