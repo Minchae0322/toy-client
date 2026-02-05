@@ -114,8 +114,6 @@ onUnmounted(() => {
         </button>
 
         <template v-if="!isLoggedIn">
-          <RouterLink to="/one-mouth/list" class="nav-item">둘러보기</RouterLink>
-          <div class="nav-divider"></div>
           <RouterLink to="/login" class="nav-item">로그인</RouterLink>
           <RouterLink to="/register" class="btn-primary">시작하기</RouterLink>
         </template>
@@ -208,13 +206,6 @@ onUnmounted(() => {
         <!-- 메뉴 리스트 -->
         <div class="mobile-menu-list">
           <template v-if="!isLoggedIn">
-            <RouterLink to="/one-mouth/list" class="mobile-menu-item" @click="showMobileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              둘러보기
-            </RouterLink>
             <RouterLink to="/login" class="mobile-menu-item" @click="showMobileMenu = false">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
