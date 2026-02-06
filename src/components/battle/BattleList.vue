@@ -1,64 +1,71 @@
 <template>
   <div class="battles-container">
-    <!-- 로딩 스켈레톤 -->
-    <div v-if="(loading || !initialLoaded) && battles.length === 0" class="battles-grid">
-      <article v-for="i in skeletonCount" :key="`skeleton-${i}`" class="skeleton-card">
-        <!-- 썸네일 영역 -->
-        <div class="skeleton-thumbnail">
-          <div class="skeleton-image"></div>
-          <!-- 배지 영역 -->
-          <div class="skeleton-badges-top">
-            <span class="skeleton-badge"></span>
-            <span class="skeleton-badge small"></span>
-          </div>
-          <span class="skeleton-dday-badge"></span>
-        </div>
-        <!-- 컨텐츠 영역 -->
-        <div class="skeleton-content">
-          <div class="skeleton-category"></div>
-          <div class="skeleton-title"></div>
-          <div class="skeleton-title short"></div>
-          <div class="skeleton-stats">
-            <span class="skeleton-stat"></span>
-            <span class="skeleton-stat"></span>
-            <span class="skeleton-stat"></span>
-          </div>
-          <!-- 푸터 영역 -->
-          <div class="skeleton-footer">
-            <div class="skeleton-creator">
-              <div class="skeleton-avatar"></div>
-              <div class="skeleton-creator-name"></div>
+    <Transition name="content-fade" mode="out-in">
+      <!-- 로딩 스켈레톤 (초기 로딩 시에만) -->
+      <div v-if="!initialLoaded && battles.length === 0" key="skeleton" class="battles-grid">
+        <article v-for="i in skeletonCount" :key="`skeleton-${i}`" class="skeleton-card">
+          <!-- 썸네일 영역 -->
+          <div class="skeleton-thumbnail">
+            <div class="skeleton-image"></div>
+            <!-- 배지 영역 -->
+            <div class="skeleton-badges-top">
+              <span class="skeleton-badge"></span>
+              <span class="skeleton-badge small"></span>
             </div>
-            <div class="skeleton-action-hint"></div>
+            <span class="skeleton-dday-badge"></span>
           </div>
-        </div>
-      </article>
-    </div>
-
-    <!-- 빈 상태 -->
-    <div v-else-if="battles.length === 0" class="empty-state">
-      <div class="empty-icon">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
+          <!-- 컨텐츠 영역 -->
+          <div class="skeleton-content">
+            <div class="skeleton-category"></div>
+            <div class="skeleton-title"></div>
+            <div class="skeleton-title short"></div>
+            <div class="skeleton-stats">
+              <span class="skeleton-stat"></span>
+              <span class="skeleton-stat"></span>
+              <span class="skeleton-stat"></span>
+            </div>
+            <!-- 푸터 영역 -->
+            <div class="skeleton-footer">
+              <div class="skeleton-creator">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-creator-name"></div>
+              </div>
+              <div class="skeleton-action-hint"></div>
+            </div>
+          </div>
+        </article>
       </div>
-      <p class="empty-text">아직 요거픽이 없어요</p>
-      <button class="create-btn" @click="$emit('create-battle')">
-        + 새 요거픽 만들기
-      </button>
-    </div>
 
-    <!-- 배틀 그리드 -->
-    <div v-else :class="['battles-grid', `view-${viewMode}`]">
-      <TransitionGroup name="card">
-        <BattleCard
-            v-for="battle in battles"
-            :key="battle.id || battle.battleId"
-            :battle="battle"
-            @click="handleBattleClick(battle.id || battle.battleId)"
-        />
-      </TransitionGroup>
-    </div>
+      <!-- 빈 상태 -->
+      <div v-else-if="battles.length === 0" key="empty" class="empty-state">
+        <template v-if="loading">
+          <div class="spinner"></div>
+        </template>
+        <template v-else>
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </div>
+          <p class="empty-text">아직 요거픽이 없어요</p>
+          <button class="create-btn" @click="$emit('create-battle')">
+            + 새 요거픽 만들기
+          </button>
+        </template>
+      </div>
+
+      <!-- 배틀 그리드 -->
+      <div v-else key="content" :class="['battles-grid', `view-${viewMode}`]">
+        <TransitionGroup name="card">
+          <BattleCard
+              v-for="battle in battles"
+              :key="battle.id || battle.battleId"
+              :battle="battle"
+              @click="handleBattleClick(battle.id || battle.battleId)"
+          />
+        </TransitionGroup>
+      </div>
+    </Transition>
 
     <!-- 무한 스크롤 -->
     <div v-if="hasNext && battles.length > 0" ref="observerTarget" class="load-more">
@@ -306,6 +313,12 @@ defineExpose({ observerTarget })
   color: #7e22ce;
 }
 
+.empty-state .spinner {
+  width: 24px;
+  height: 24px;
+  border-width: 2.5px;
+}
+
 /* 로딩 */
 .load-more {
   margin-top: 24px;
@@ -332,6 +345,20 @@ defineExpose({ observerTarget })
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* 상태 전환 페이드 */
+.content-fade-enter-active {
+  transition: opacity 0.2s ease;
+}
+
+.content-fade-leave-active {
+  transition: opacity 0.12s ease;
+}
+
+.content-fade-enter-from,
+.content-fade-leave-to {
+  opacity: 0;
 }
 
 /* 애니메이션 */
@@ -399,7 +426,9 @@ defineExpose({ observerTarget })
 
   .card-enter-active,
   .card-leave-active,
-  .card-move {
+  .card-move,
+  .content-fade-enter-active,
+  .content-fade-leave-active {
     transition: none;
   }
 }
