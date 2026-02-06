@@ -396,6 +396,27 @@ class CategoryService extends BaseApiService {
     return rootCategories.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
   }
 
+  /**
+   * 트리 구조를 평면 구조로 변환 (모든 뎁스 포함)
+   */
+  flattenCategoryTree(categories) {
+    if (!categories || !Array.isArray(categories)) return []
+
+    const result = []
+
+    const traverse = (items) => {
+      items.forEach(item => {
+        result.push(item)
+        if (item.children && item.children.length > 0) {
+          traverse(item.children)
+        }
+      })
+    }
+
+    traverse(categories)
+    return result
+  }
+
   // ==================== 디버깅 ====================
 
   debugCategoryStatus() {
