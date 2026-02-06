@@ -28,11 +28,6 @@ import FeedCreateView from '@/views/feed/FeedCreateView.vue'
 import UserFeedListView from '@/views/UserFeedListView.vue'
 import FollowListView from '@/views/FollowListView.vue'
 
-// Battle Views import
-import BattleListView from '@/views/battle/BattleListView.vue'
-import BattleCreateView from '@/views/battle/BattleCreateView.vue'
-import BattleDetailView from '@/views/battle/BattleDetailView.vue'
-
 // User Views import
 import MyPageView from '@/views/MyPageView.vue'
 
@@ -150,27 +145,6 @@ const routes = [
     component: MyPageView,
     props: true,
     meta: { requiresAuth: false, public: true, title: '프로필' }
-  },
-
-  // ==================== 배틀 관련 라우트 ====================
-  {
-    path: '/battle',
-    name: 'BattleList',
-    component: BattleListView,
-    meta: { requiresAuth: false, public: true, title: '월간 배틀' }
-  },
-  {
-    path: '/battle/create',
-    name: 'BattleCreate',
-    component: BattleCreateView,
-    meta: { requiresAuth: false, title: '배틀 만들기' }
-  },
-  {
-    path: '/battles/:id',
-    name: 'BattleDetail',
-    component: BattleDetailView,
-    props: true,
-    meta: { requiresAuth: false, public: true, title: '배틀 상세' }
   },
 
   // ==================== ⭐ 관리자 페이지 라우트 ====================
@@ -566,24 +540,6 @@ export const feedNavigation = {
   }
 }
 
-// ==================== 배틀 네비게이션 헬퍼 ====================
-export const battleNavigation = {
-  toList(query = {}) { return router.push({ name: 'BattleList', query }) },
-  toDetail(battleId) {
-    if (!battleId) return this.toList()
-    return router.push({ name: 'BattleDetail', params: { id: battleId } })
-  },
-  toCreate() { return router.push({ name: 'BattleCreate' }) },
-  isBattlePage() {
-    const route = router.currentRoute.value
-    return route.name?.startsWith('Battle')
-  },
-  getBattleUrl(battleId) {
-    const route = router.resolve({ name: 'BattleDetail', params: { id: battleId } })
-    return window.location.origin + route.href
-  }
-}
-
 // ==================== 마이페이지 네비게이션 헬퍼 ====================
 export const userNavigation = {
   toMyPage() { return router.push({ name: 'MyPage' }) },
@@ -619,7 +575,6 @@ export const navigation = {
   product: productNavigation,
   salePost: salePostNavigation,
   feed: feedNavigation,
-  battle: battleNavigation,
   user: userNavigation,
   dashboard: dashboardNavigation,
 

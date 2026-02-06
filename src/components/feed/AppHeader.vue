@@ -2,7 +2,7 @@
   <header class="header">
     <div class="header-container">
       <div class="header-left">
-        <h1 class="mobile-logo">HYPE BATTLE</h1>
+        <h1 class="mobile-logo">HOT ITEM</h1>
         <div class="search-box">
           <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8"/>

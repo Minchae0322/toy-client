@@ -17,15 +17,6 @@
           <span class="nav-text">피드</span>
         </router-link>
 
-        <router-link to="/battle" class="nav-item" active-class="active">
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.5 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-5-2a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
-          </svg>
-          <span class="nav-text">요거픽</span>
-          <span class="badge">12</span>
-        </router-link>
-
         <router-link to="/products" class="nav-item" active-class="active">
           <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
@@ -61,15 +52,6 @@
       <button class="btn-subtle btn-purple" @click="handleProtectedRoute('create')">
         <span class="btn-text">인증 올리기</span>
         <div class="btn-icon-circle btn-icon-purple">
-          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-          </svg>
-        </div>
-      </button>
-
-      <button class="btn-subtle btn-dark" @click="handleProtectedRoute('createBattle')">
-        <span class="btn-text">요거픽 등록하기</span>
-        <div class="btn-icon-circle btn-icon-dark">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
@@ -115,9 +97,6 @@ const handleProtectedRoute = async (routeName) => {
         break;
       case 'createProduct':
         router.push({name: 'ProductCreate'});
-        break;
-      case 'createBattle':
-        router.push({name: 'BattleCreate'});
         break;
       case 'collections':
         console.log('컬렉션 페이지로 이동');

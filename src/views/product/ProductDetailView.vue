@@ -40,28 +40,10 @@
       <!-- 콘텐츠 -->
       <template v-else-if="product">
         <div class="content-layout">
-          <!-- 왼쪽: 피드/배틀 메인 -->
+          <!-- 왼쪽: 피드 메인 -->
           <section class="main-content">
-            <!-- 탭 네비게이션 -->
-            <div class="tab-nav">
-              <button
-                  :class="['tab-btn', { active: activeTab === 'feed' }]"
-                  @click="activeTab = 'feed'"
-              >
-                피드
-                <span class="tab-count">{{ feeds.length }}</span>
-              </button>
-              <button
-                  :class="['tab-btn', { active: activeTab === 'battle' }]"
-                  @click="activeTab = 'battle'"
-              >
-                배틀
-                <span class="tab-count">{{ battles.length }}</span>
-              </button>
-            </div>
-
-            <!-- 피드 탭 -->
-            <div v-if="activeTab === 'feed'" class="tab-content">
+            <!-- 피드 -->
+            <div class="tab-content">
               <!-- 피드 작성 -->
               <div class="feed-write-box">
                 <div class="user-avatar">😊</div>
@@ -108,49 +90,6 @@
               </button>
             </div>
 
-            <!-- 배틀 탭 -->
-            <div v-if="activeTab === 'battle'" class="tab-content">
-              <!-- 배틀 생성 -->
-              <button class="battle-create-btn" @click="handleCreateBattle">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                새 배틀 만들기
-              </button>
-
-              <!-- 배틀 목록 -->
-              <BattleCard
-                  v-for="battle in battles"
-                  :key="battle.id"
-                  :battle="battle"
-                  @vote="handleVote"
-                  @view="viewBattle"
-              />
-
-              <!-- 로딩 상태 -->
-              <div v-if="battlesLoading && battles.length === 0" class="tab-loading">
-                <div class="loading-spinner small"></div>
-                <p>배틀을 불러오는 중...</p>
-              </div>
-
-              <!-- 빈 상태 -->
-              <div v-else-if="battles.length === 0 && !battlesLoading" class="empty-state">
-                <div class="empty-icon">🏆</div>
-                <p class="empty-title">참여 중인 배틀이 없어요</p>
-                <p class="empty-desc">새로운 배틀을 시작해보세요!</p>
-              </div>
-
-              <!-- 더보기 버튼 -->
-              <button
-                  v-if="hasMoreBattles && battles.length > 0"
-                  class="load-more-btn"
-                  :disabled="battlesLoading"
-                  @click="fetchBattles(route.params.id, true)"
-              >
-                <span v-if="battlesLoading">불러오는 중...</span>
-                <span v-else>더보기</span>
-              </button>
-            </div>
           </section>
 
           <!-- 오른쪽: 상품 정보 사이드바 -->
@@ -254,11 +193,6 @@
                   <span class="activity-number">{{ feeds.length }}</span>
                   <span class="activity-label">피드</span>
                 </div>
-                <div class="activity-divider"></div>
-                <div class="activity-item">
-                  <span class="activity-number">{{ battles.length }}</span>
-                  <span class="activity-label">배틀</span>
-                </div>
               </div>
             </div>
           </aside>
@@ -284,7 +218,6 @@ import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { productService } from '@/services/ProductService.js'
 
 import FeedCard from '@/components/product/detail/FeedCard.vue'
-import BattleCard from '@/components/product/detail/BattleCard.vue'
 import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 const route = useRoute()
@@ -300,20 +233,14 @@ const actionLoading = ref(false)
 const showLoginModal = ref(false)
 const loginModalTitle = ref('')
 const loginModalMessage = ref('')
-const activeTab = ref('feed')
-
 const product = ref(null)
 const feeds = ref([])
-const battles = ref([])
 const userReaction = ref({ hasLike: false, hasBookmark: false })
 
 // 피드/배틀 페이지네이션 상태
 const feedsLoading = ref(false)
-const battlesLoading = ref(false)
 const feedsCursor = ref(null)
-const battlesCursor = ref(null)
 const hasMoreFeeds = ref(true)
-const hasMoreBattles = ref(true)
 
 const isOwner = computed(() => {
   return isLoggedIn.value && userId.value && product.value?.creatorId === userId.value
@@ -368,7 +295,7 @@ const fetchProductData = async () => {
       if (isLoggedIn.value && response.data.userReaction) {
         userReaction.value = response.data.userReaction
       }
-      await Promise.all([fetchFeeds(productId), fetchBattles(productId)])
+      await fetchFeeds(productId)
     } else {
       error.value = response.error || '상품을 불러올 수 없습니다.'
     }
@@ -402,32 +329,6 @@ const fetchFeeds = async (productId, loadMore = false) => {
     console.error('피드 조회 실패:', err)
   } finally {
     feedsLoading.value = false
-  }
-}
-
-const fetchBattles = async (productId, loadMore = false) => {
-  if (battlesLoading.value) return
-  try {
-    battlesLoading.value = true
-    const options = {
-      size: 20,
-      cursor: loadMore ? battlesCursor.value : null
-    }
-    const response = await productService.getProductBattles(productId, options)
-    if (response.success) {
-      const newBattles = response.data?.content || response.data || []
-      if (loadMore) {
-        battles.value = [...battles.value, ...newBattles]
-      } else {
-        battles.value = newBattles
-      }
-      battlesCursor.value = response.data?.nextCursor || null
-      hasMoreBattles.value = !!battlesCursor.value || newBattles.length >= 20
-    }
-  } catch (err) {
-    console.error('배틀 조회 실패:', err)
-  } finally {
-    battlesLoading.value = false
   }
 }
 
@@ -483,17 +384,6 @@ const handleFeedLike = (feedId) => {
   }
 }
 
-const handleCreateBattle = () => {
-  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '배틀을 만들려면 로그인해주세요.')
-  router.push(`/battle/create?productId=${product.value.id}`)
-}
-
-const handleVote = (battleId) => {
-  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '투표하려면 로그인해주세요.')
-  router.push(`/battles/${battleId}`)
-}
-
-const viewBattle = (battleId) => { router.push(`/battle/${battleId}`) }
 const editProduct = () => { router.push(`/products/${product.value.id}/edit`) }
 
 const deleteProduct = async () => {

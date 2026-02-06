@@ -19,14 +19,6 @@
               </span>
               <span class="menu-text">피드 작성</span>
             </button>
-            <button class="fab-menu-item" @click="handleCreate('battle')">
-              <span class="menu-icon battle">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-              </span>
-              <span class="menu-text">배틀 생성</span>
-            </button>
             <button class="fab-menu-item" @click="handleCreate('product')">
               <span class="menu-icon product">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,17 +43,6 @@
           <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z"/>
         </svg>
         <span class="nav-label">피드</span>
-      </router-link>
-
-      <!-- 배틀 -->
-      <router-link to="/battle" class="nav-item" :class="{ active: isActive('/battle') }">
-        <svg v-if="!isActive('/battle')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-        </svg>
-        <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd"/>
-        </svg>
-        <span class="nav-label">배틀</span>
       </router-link>
 
       <!-- 핫 아이템 -->
@@ -150,7 +131,6 @@ const handleCreate = async (type) => {
 
   const routes = {
     feed: { name: 'FeedCreate', redirect: '/feed/create' },
-    battle: { name: 'BattleCreate', redirect: '/battle/create' },
     product: { name: 'ProductCreate', redirect: '/products/create' }
   };
 
@@ -358,11 +338,6 @@ onBeforeUnmount(() => {
 .menu-icon.feed {
   background: #dbeafe;
   color: #3b82f6;
-}
-
-.menu-icon.battle {
-  background: #fae8ff;
-  color: #9333ea;
 }
 
 .menu-icon.product {

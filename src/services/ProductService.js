@@ -330,63 +330,6 @@ class ProductService extends BaseApiService {
     }
   }
 
-  async getProductBattles(productId, options = {}) {
-    if (!productId) throw new Error('상품 ID가 필요합니다.')
-    const params = this.removeEmptyParams({
-      cursor: options.cursor || null,
-      size: Math.min(100, Math.max(1, options.size || 20))
-    })
-    console.log('📤 [PRODUCT_SERVICE] getProductBattles 요청:', { productId, params })
-    const response = await this.get(`/products/${productId}/battles`, params)
-
-    // 배틀 데이터 정규화
-    if (response.success && response.data) {
-      const battles = response.data.content || response.data || []
-      response.data.content = battles.map(battle => this.normalizeProductBattle(battle))
-    }
-    return response
-  }
-
-  normalizeProductBattle(battle) {
-    if (!battle) return null
-
-    // API 응답을 BattleCard 컴포넌트 형식으로 변환
-    const statusMap = {
-      'NORMAL': 'LIVE',
-      'PENDING': 'UPCOMING',
-      'FINISHED': 'ENDED',
-      'ENDED': 'ENDED'
-    }
-
-    const statusTitle = battle.status?.title || battle.status || 'NORMAL'
-    const mappedStatus = statusMap[statusTitle] || statusTitle
-
-    return {
-      id: battle.battleId || battle.id,
-      title: battle.battleTitle || battle.title || '배틀',
-      status: mappedStatus,
-      endDate: this.formatBattleEndDate(battle.endDate),
-      items: (battle.battleItems || battle.items || []).map(item => ({
-        rank: item.rank,
-        name: item.productName || item.name,
-        isThis: item.isCurrentProduct ?? item.isThis ?? false,
-        votes: item.votePercentage != null
-          ? parseFloat((item.votePercentage * 100).toFixed(1))
-          : (item.votes ?? 0)
-      })),
-      participants: battle.participants || 0,
-      totalVotes: battle.totalVotes || 0
-    }
-  }
-
-  formatBattleEndDate(dateStr) {
-    if (!dateStr) return ''
-    const date = new Date(dateStr)
-    const month = date.getMonth() + 1
-    const day = date.getDate()
-    return `${month}/${day} 마감`
-  }
-
   // ==================== 리뷰 ====================
 
   async createReview(productId, reviewData) {

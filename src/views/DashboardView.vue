@@ -6,7 +6,7 @@
       <!-- 페이지 헤더 -->
       <header class="page-header">
         <h1 class="page-title">트렌드 한눈에</h1>
-        <p class="page-description">인기 피드, 배틀, 제품 랭킹을 모아봤어요</p>
+        <p class="page-description">인기 피드, 제품 랭킹을 모아봤어요</p>
       </header>
 
       <!-- 글래스 배너 -->
@@ -43,22 +43,6 @@
             <span class="stat-value">{{ hotFeeds.length }}</span>
             <span class="stat-label">인기 피드</span>
           </div>
-          <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </div>
-
-        <div class="stat-card" @click="goToBattles">
-          <div class="stat-icon battles">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ hotBattles.length }}</span>
-            <span class="stat-label">진행중 배틀</span>
-          </div>
-          <div v-if="hotBattles.length > 0" class="live-dot"></div>
           <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="m9 18 6-6-6-6" />
           </svg>
@@ -138,43 +122,6 @@
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        <!-- 실시간 배틀 섹션 -->
-        <section class="content-section">
-          <div class="section-header">
-            <div class="title-with-badge">
-              <h2 class="section-title">실시간 배틀</h2>
-              <span v-if="hotBattles.length" class="live-badge">LIVE</span>
-            </div>
-            <button class="view-all-btn" @click="goToBattles">
-              전체보기
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-            </button>
-          </div>
-
-          <div v-if="battlesLoading" class="battle-grid">
-            <div v-for="i in 3" :key="i" class="battle-skeleton">
-              <div class="skeleton"></div>
-            </div>
-          </div>
-          <div v-else-if="hotBattles.length === 0" class="empty-state">
-            <div class="empty-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
-            </div>
-            <p class="empty-text">진행 중인 배틀이 없습니다</p>
-          </div>
-          <div v-else class="battle-grid">
-            <BattleCard
-              v-for="battle in hotBattles"
-              :key="battle.battleId || battle.id"
-              :battle="battle"
-            />
           </div>
         </section>
 
@@ -281,19 +228,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
-import BattleCard from '@/components/battle/BattleCard.vue'
 import { feedService } from '@/services/FeedService'
-import { battleService } from '@/services/BattleService'
 import { productService } from '@/services/ProductService'
 
 const router = useRouter()
 
 const hotFeeds = ref([])
-const hotBattles = ref([])
 const hotProducts = ref([])
 
 const feedsLoading = ref(true)
-const battlesLoading = ref(true)
 const productsLoading = ref(true)
 
 const loadHotFeeds = async () => {
@@ -307,20 +250,6 @@ const loadHotFeeds = async () => {
     console.error('피드 로드 실패:', error)
   } finally {
     feedsLoading.value = false
-  }
-}
-
-const loadHotBattles = async () => {
-  battlesLoading.value = true
-  try {
-    const response = await battleService.getHotBattleList()
-    if (response.success) {
-      hotBattles.value = (response.data || []).slice(0, 3)
-    }
-  } catch (error) {
-    console.error('배틀 로드 실패:', error)
-  } finally {
-    battlesLoading.value = false
   }
 }
 
@@ -397,13 +326,11 @@ const goToTopTrend = () => {
 
 const goToFeeds = () => router.push({ name: 'FeedHome' })
 const goToFeedDetail = (feedId) => router.push({ name: 'FeedDetail', params: { id: feedId } })
-const goToBattles = () => router.push({ name: 'BattleList' })
 const goToProducts = () => router.push({ name: 'ProductRanking' })
 const goToProductDetail = (product) => router.push({ name: 'ProductDetail', params: { id: product.id } })
 
 onMounted(() => {
   loadHotFeeds()
-  loadHotBattles()
   loadHotProducts()
 })
 </script>
@@ -642,7 +569,7 @@ onMounted(() => {
 /* 통계 그리드 */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
