@@ -2,7 +2,9 @@
   <div class="auth-wrapper">
     <div class="auth-container">
       <div class="logo-area">
-        <img src="/images/yogodde02.png" alt="요거뜨" class="logo-image" />
+        <RouterLink to="/dashboard">
+          <img src="/images/yogodde02.png" alt="요거뜨" class="logo-image" />
+        </RouterLink>
       </div>
 
       <div class="tab-header">
@@ -48,7 +50,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { RouterLink, useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import * as authUtils from '@/utils/auth.js'
