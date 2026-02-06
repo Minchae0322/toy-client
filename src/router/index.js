@@ -39,6 +39,9 @@ import MyPageView from '@/views/MyPageView.vue'
 // Dashboard View import
 import DashboardView from '@/views/DashboardView.vue'
 
+// 404 View import
+import NotFoundView from '@/views/NotFoundView.vue'
+
 // ⭐ Admin Views import
 import ProductAdminView from '@/views/product/ProductAdminView.vue'
 
@@ -265,9 +268,14 @@ const routes = [
     }
   },
 
-  // ==================== 리다이렉트 ====================
+  // ==================== 리다이렉트 & 404 ====================
   { path: '/', redirect: '/dashboard' },
-  { path: '/:pathMatch(.*)*', redirect: '/dashboard' }
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFoundView,
+    meta: { requiresAuth: false, public: true, title: '페이지를 찾을 수 없습니다' }
+  }
 ]
 
 const router = createRouter({
