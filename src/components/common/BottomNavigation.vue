@@ -1,38 +1,15 @@
 <template>
   <nav class="safe-area-bottom">
-    <div class="nav-wrapper">
-      <!-- 피드 -->
-      <router-link to="/feed" class="nav-item" :class="{ active: isActive('/feed') }">
-        <svg v-if="!isActive('/feed')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-        </svg>
-        <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clip-rule="evenodd"/>
-          <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z"/>
-        </svg>
-        <span class="nav-label">피드</span>
-      </router-link>
-
-      <!-- 배틀 -->
-      <router-link to="/battle" class="nav-item" :class="{ active: isActive('/battle') }">
-        <svg v-if="!isActive('/battle')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-        </svg>
-        <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd"/>
-        </svg>
-        <span class="nav-label">배틀</span>
-      </router-link>
-
-      <!-- 중앙 FAB -->
-      <div class="fab-container">
+    <!-- 플로팅 추가 버튼 (네비게이션 위 오른쪽) -->
+    <div class="floating-fab-wrapper">
+      <div class="floating-fab-container">
         <button class="fab-btn" :class="{ open: isCreateMenuOpen }" @click="toggleCreateMenu">
           <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
           </svg>
         </button>
 
-        <Transition name="fade-up">
+        <Transition name="fade-up-right">
           <div v-if="isCreateMenuOpen" class="fab-menu">
             <button class="fab-menu-item" @click="handleCreate('feed')">
               <span class="menu-icon feed">
@@ -61,6 +38,31 @@
           </div>
         </Transition>
       </div>
+    </div>
+
+    <div class="nav-wrapper">
+      <!-- 피드 -->
+      <router-link to="/feed" class="nav-item" :class="{ active: isActive('/feed') }">
+        <svg v-if="!isActive('/feed')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clip-rule="evenodd"/>
+          <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z"/>
+        </svg>
+        <span class="nav-label">피드</span>
+      </router-link>
+
+      <!-- 배틀 -->
+      <router-link to="/battle" class="nav-item" :class="{ active: isActive('/battle') }">
+        <svg v-if="!isActive('/battle')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd"/>
+        </svg>
+        <span class="nav-label">배틀</span>
+      </router-link>
 
       <!-- 핫 아이템 -->
       <router-link to="/products" class="nav-item" :class="{ active: isActive('/products') }">
@@ -238,7 +240,7 @@ onBeforeUnmount(() => {
   border: none;
   color: var(--text-dim);
   transition: color 0.15s ease;
-  padding: 8px 12px;
+  padding: 8px 16px;
   cursor: pointer;
 }
 
@@ -258,54 +260,64 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-/* 중앙 FAB Container */
-.fab-container {
-  position: relative;
+/* 플로팅 FAB (네비게이션 위 오른쪽) */
+.floating-fab-wrapper {
+  position: absolute;
+  bottom: 100%;
+  right: 16px;
+  margin-bottom: 12px;
+  z-index: 3;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8px;
+  justify-content: flex-end;
+  pointer-events: none;
+  max-width: 400px;
+  width: 100%;
+}
+
+.floating-fab-container {
+  position: relative;
+  pointer-events: auto;
 }
 
 .fab-btn {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   background: var(--main);
   border: none;
-  border-radius: 14px;
+  border-radius: 50%;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 12px rgba(147, 51, 234, 0.35);
+  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.4);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .fab-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.93);
 }
 
 .fab-btn.open {
   transform: rotate(45deg);
   background: #7c3aed;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5);
 }
 
 .fab-icon {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
-/* FAB Menu */
+/* FAB Menu (오른쪽 정렬) */
 .fab-menu {
   position: absolute;
-  bottom: 54px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 58px;
+  right: 0;
   background: white;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 6px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.14);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -443,17 +455,6 @@ onBeforeUnmount(() => {
 }
 
 /* Transitions */
-.fade-up-enter-active,
-.fade-up-leave-active {
-  transition: all 0.15s ease;
-}
-
-.fade-up-enter-from,
-.fade-up-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(8px);
-}
-
 .fade-up-right-enter-active,
 .fade-up-right-leave-active {
   transition: all 0.15s ease;
