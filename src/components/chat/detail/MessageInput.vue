@@ -6,7 +6,9 @@
         <div class="reply-header">
           <span class="reply-to">{{ replyMessage.senderName }}님에게 답장</span>
           <button @click="clearReply" class="reply-close">
-            <X :size="16" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
           </button>
         </div>
         <div class="reply-text">{{ replyMessage.content }}</div>
@@ -15,9 +17,26 @@
 
     <!-- 툴바 -->
     <div class="input-toolbar">
-      <button class="toolbar-btn" @click="toggleEmojiPicker" :disabled="disabled" title="이모지">😊</button>
-      <button class="toolbar-btn" @click="openFileSelector" :disabled="disabled" title="파일 첨부">📎</button>
-      <button class="toolbar-btn" @click="openImageSelector" :disabled="disabled" title="이미지">🖼️</button>
+      <button class="toolbar-btn" @click="toggleEmojiPicker" :disabled="disabled" title="이모지">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+          <line x1="9" y1="9" x2="9.01" y2="9"/>
+          <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+      </button>
+      <button class="toolbar-btn" @click="openFileSelector" :disabled="disabled" title="파일 첨부">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </button>
+      <button class="toolbar-btn" @click="openImageSelector" :disabled="disabled" title="이미지">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+      </button>
     </div>
 
     <!-- 메시지 입력 영역 -->
@@ -42,7 +61,10 @@
           @click="sendMessage"
           title="메시지 전송 (Enter)"
       >
-        <Send :size="20" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13"/>
+          <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
       </button>
     </div>
 
@@ -60,7 +82,6 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
-import { Send, X } from 'lucide-vue-next'
 
 const props = defineProps({
   placeholder: { type: String, default: '메시지를 입력하세요...' },
@@ -188,7 +209,7 @@ const handleImageSelect = (event) => {
 const handleFileUpload = async (files) => {
   for (const file of files) {
     emit('send-message', {
-      content: `📎 ${file.name}`,
+      content: file.name,
       type: getMessageType(file),
       fileName: file.name,
       fileSize: file.size,
@@ -202,7 +223,7 @@ const handleImageUpload = async (files) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       emit('send-message', {
-        content: `🖼️ ${file.name}`,
+        content: file.name,
         type: 'IMAGE',
         fileName: file.name,
         fileSize: file.size,
@@ -236,42 +257,48 @@ defineExpose({ focus, setText })
 <style scoped>
 .message-input-container {
   background: #FFFFFF;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid #f0f0f0;
   position: relative;
 }
 
 /* 답장 미리보기 */
 .reply-preview {
   margin: 16px 16px 0 16px;
-  padding: 12px;
-  background: #FAF5FF;
-  border-radius: 10px;
-  border-left: 3px solid #9333EA;
+  padding: 12px 14px;
+  background: #faf5ff;
+  border-radius: 14px;
+  border-left: 3px solid #a855f7;
 }
 
 .reply-content { display: flex; flex-direction: column; gap: 4px; }
 .reply-header { display: flex; justify-content: space-between; align-items: center; }
-.reply-to { font-size: 12px; color: #9333EA; font-weight: 600; }
+.reply-to { font-size: 12px; color: #9333ea; font-weight: 600; }
 
 .reply-close {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: none;
-  color: #999;
+  color: #9ca3af;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  transition: all 0.15s;
 }
 
-.reply-close:hover { background: #F3E8FF; color: #9333EA; }
+.reply-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.reply-close:hover { background: #f3e8ff; color: #9333ea; }
 
 .reply-text {
   font-size: 13px;
-  color: #666;
+  color: #64748b;
   max-height: 40px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -283,26 +310,36 @@ defineExpose({ focus, setText })
 /* 툴바 */
 .input-toolbar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   padding: 12px 16px 8px 16px;
 }
 
 .toolbar-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border: none;
-  background: #F5F5F5;
-  border-radius: 50%;
+  background: #f5f5f5;
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  font-size: 16px;
+  color: #64748b;
 }
 
-.toolbar-btn:hover:not(:disabled) { background: #F3E8FF; transform: scale(1.05); }
-.toolbar-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.toolbar-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  background: #f3e8ff;
+  color: #9333ea;
+  transform: translateY(-1px);
+}
+
+.toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* 입력 영역 */
 .input-area {
@@ -310,15 +347,17 @@ defineExpose({ focus, setText })
   align-items: flex-end;
   gap: 12px;
   margin: 0 16px 16px 16px;
-  padding: 12px 16px;
-  background: #F5F5F5;
-  border-radius: 24px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
   transition: all 0.2s;
 }
 
 .input-area:focus-within {
   background: #FFFFFF;
-  box-shadow: 0 0 0 2px #9333EA;
+  border-color: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
 }
 
 .message-textarea {
@@ -332,29 +371,43 @@ defineExpose({ focus, setText })
   min-height: 24px;
   max-height: 120px;
   font-family: inherit;
-  color: #222;
+  color: #1e293b;
 }
 
-.message-textarea::placeholder { color: #999; }
+.message-textarea::placeholder { color: #94a3b8; }
 .message-textarea:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .send-button {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border: none;
-  background: #9333EA;
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
   color: white;
-  border-radius: 50%;
+  border-radius: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.25);
 }
 
-.send-button:hover:not(:disabled) { background: #7C22CE; transform: scale(1.05); }
-.send-button:disabled { background: #E2E8F0; cursor: not-allowed; }
+.send-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.send-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.35);
+}
+
+.send-button:disabled {
+  background: #e2e8f0;
+  box-shadow: none;
+  cursor: not-allowed;
+}
 
 /* 타이핑 표시 */
 .typing-indicator {
@@ -362,7 +415,7 @@ defineExpose({ focus, setText })
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  color: #666;
+  color: #64748b;
   font-size: 12px;
 }
 
@@ -371,7 +424,7 @@ defineExpose({ focus, setText })
 .dot {
   width: 5px;
   height: 5px;
-  background: #9333EA;
+  background: #a855f7;
   border-radius: 50%;
   animation: typing-bounce 1.4s ease-in-out infinite both;
 }
@@ -389,9 +442,11 @@ defineExpose({ focus, setText })
 
 @media (max-width: 768px) {
   .input-toolbar { padding: 10px 12px 6px 12px; }
-  .input-area { margin: 0 12px 12px 12px; padding: 10px 14px; }
-  .toolbar-btn { width: 32px; height: 32px; font-size: 14px; }
-  .send-button { width: 40px; height: 40px; }
+  .input-area { margin: 0 12px 12px 12px; padding: 10px 12px; }
+  .toolbar-btn { width: 34px; height: 34px; border-radius: 10px; }
+  .toolbar-btn svg { width: 18px; height: 18px; }
+  .send-button { width: 38px; height: 38px; border-radius: 12px; }
+  .send-button svg { width: 18px; height: 18px; }
   .message-textarea { font-size: 16px; }
 }
 </style>

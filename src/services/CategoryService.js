@@ -165,6 +165,66 @@ class CategoryService extends BaseApiService {
     return await this.patch(`/categories/${categoryId}/toggle-status`)
   }
 
+  // ==================== 인기 카테고리 API ====================
+
+  /**
+   * 인기 카테고리 목록 조회
+   * GET /categories/popular
+   * @param {Object} params - 조회 조건
+   * @param {string} params.type - 콘텐츠 타입 (BATTLE, FEED, PRODUCT)
+   * @param {string} params.startDate - 조회 시작일 (yyyy-MM-dd)
+   * @param {string} params.endDate - 조회 종료일 (yyyy-MM-dd)
+   * @param {number} params.page - 페이지 번호 (기본값: 0)
+   * @param {number} params.size - 페이지당 항목 수 (기본값: 20)
+   * @param {string} params.sort - 정렬 기준 (기본값: contentCount,desc)
+   */
+  async getPopularCategories(params = {}) {
+    const { type, startDate, endDate, page = 0, size = 20, sort = 'contentCount,desc' } = params
+
+    if (!type) {
+      throw new Error('콘텐츠 타입(type)은 필수입니다.')
+    }
+
+    if (!startDate || !endDate) {
+      throw new Error('조회 기간(startDate, endDate)은 필수입니다.')
+    }
+
+    const queryParams = {
+      type,
+      startDate,
+      endDate,
+      page,
+      size,
+      sort
+    }
+
+    return await this.get('/categories/popular', queryParams)
+  }
+
+  /**
+   * 인기 카테고리 간편 조회 (최근 30일 기준)
+   * @param {string} type - 콘텐츠 타입 (BATTLE, FEED, PRODUCT)
+   * @param {number} size - 조회할 개수 (기본값: 10)
+   */
+  async getTopCategories(type, size = 10) {
+    const endDate = new Date()
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - 30)
+
+    const formatDate = (date) => {
+      return date.toISOString().split('T')[0]
+    }
+
+    return await this.getPopularCategories({
+      type,
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+      page: 0,
+      size,
+      sort: 'contentCount,desc'
+    })
+  }
+
   // ==================== 통계 API ====================
 
   /**
@@ -446,6 +506,8 @@ export function useCategory() {
     deleteCategory: (id) => service.deleteCategory(id),
     toggleStatus: (id) => service.toggleCategoryStatus(id),
     reorderCategory: (id, position) => service.updateCategoryOrder(id, position),
+    getPopularCategories: (params) => service.getPopularCategories(params),
+    getTopCategories: (type, size) => service.getTopCategories(type, size),
     debugStatus: () => service.debugCategoryStatus()
   }
 }

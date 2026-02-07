@@ -9,15 +9,22 @@
         전체
       </button>
 
-      <!-- 인기 카테고리 (4-5개) -->
+      <!-- 인기 카테고리 -->
       <button
-          v-for="category in topCategories"
+          v-for="category in displayCategories"
           :key="category.categoryId"
           @click="handleCategoryClick(category)"
           :class="['category-tab', { active: selectedCategory?.categoryId === category.categoryId }]"
       >
         {{ category.categoryName }}
       </button>
+
+      <!-- 로딩 중 -->
+      <div v-if="loading" class="loading-placeholder">
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+      </div>
 
       <!-- 더보기 버튼 -->
       <button
@@ -34,7 +41,7 @@
       </button>
     </div>
 
-    <!-- 선택된 카테고리가 상위 4개 외일 경우 표시 -->
+    <!-- 선택된 카테고리가 인기 목록에 없을 경우 표시 -->
     <div v-if="showSelectedChip" class="selected-chip-wrapper">
       <button class="selected-chip" @click="goToCategoryPage">
         <span>{{ selectedCategory?.categoryName }}</span>
@@ -51,6 +58,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { categoryService } from '@/services/CategoryService.js';
 
 const router = useRouter();
 
@@ -58,6 +66,10 @@ const props = defineProps({
   categories: {
     type: Array,
     default: () => []
+  },
+  contentType: {
+    type: String,
+    default: 'PRODUCT' // BATTLE, FEED, PRODUCT
   },
   showAllButton: {
     type: Boolean,
@@ -73,23 +85,49 @@ const emit = defineEmits(['category-change']);
 
 const selectedCategory = ref(null);
 const selectedSubCategory = ref(null);
+const popularCategories = ref([]);
+const loading = ref(false);
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
 // 화면 크기에 따른 카테고리 개수
 const maxCategories = computed(() => {
-  if (windowWidth.value >= 1280) return 8;  // 대형 PC
-  if (windowWidth.value >= 1024) return 6;  // PC
-  if (windowWidth.value >= 768) return 5;   // 태블릿
-  return 3;                                  // 모바일
+  if (windowWidth.value >= 1280) return 8;
+  if (windowWidth.value >= 1024) return 6;
+  if (windowWidth.value >= 768) return 5;
+  return 3;
 });
 
-// 상위 카테고리
-const topCategories = computed(() => {
-  return props.categories.slice(0, maxCategories.value);
+// 표시할 카테고리 (인기 카테고리 우선, 없으면 props.categories 사용)
+const displayCategories = computed(() => {
+  const source = popularCategories.value.length > 0
+    ? popularCategories.value
+    : props.categories;
+
+  const visible = source.slice(0, maxCategories.value);
+
+  // 선택된 카테고리가 visible에 없으면 추가
+  if (selectedCategory.value) {
+    const isVisible = visible.some(c => c.categoryId === selectedCategory.value.categoryId);
+    if (!isVisible) {
+      visible.push(selectedCategory.value);
+    }
+  }
+
+  return visible;
 });
 
 const hasMoreCategories = computed(() => {
-  return props.categories.length > maxCategories.value;
+  const total = popularCategories.value.length > 0
+    ? popularCategories.value.length
+    : props.categories.length;
+  return total > maxCategories.value;
+});
+
+// 선택된 카테고리가 표시 목록에 없을 경우 칩으로 표시
+const showSelectedChip = computed(() => {
+  if (!selectedCategory.value) return false;
+  const isInDisplay = displayCategories.value.some(c => c.categoryId === selectedCategory.value.categoryId);
+  return !isInDisplay;
 });
 
 // 윈도우 리사이즈 핸들러
@@ -97,15 +135,41 @@ const handleResize = () => {
   windowWidth.value = window.innerWidth;
 };
 
-// 선택된 카테고리가 상위 목록에 없을 경우 칩으로 표시
-const showSelectedChip = computed(() => {
-  if (!selectedCategory.value) return false;
-  const isInTop = topCategories.value.some(c => c.categoryId === selectedCategory.value.categoryId);
-  return !isInTop;
-});
+// 인기 카테고리 조회
+const fetchPopularCategories = async () => {
+  loading.value = true;
+  try {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    const response = await categoryService.getPopularCategories({
+      type: props.contentType,
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+      page: 0,
+      size: maxCategories.value + 2,
+      sort: 'contentCount,desc'
+    });
+
+    if (response.success && response.data?.content) {
+      popularCategories.value = response.data.content;
+    }
+  } catch (error) {
+    console.warn('[CategoryFilter] 인기 카테고리 조회 실패, 기본 카테고리 사용:', error.message);
+    popularCategories.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
 
 const goToCategoryPage = () => {
-  router.push({ name: 'CategoryList' });
+  router.push({
+    name: 'CategoryList',
+    query: { from: router.currentRoute.value.name }
+  });
 };
 
 const handleAllClick = () => {
@@ -129,6 +193,24 @@ const handleCategoryClick = (category) => {
 };
 
 const findAndSelectCategory = (categoryId) => {
+  // 인기 카테고리에서 먼저 찾기
+  for (const cat of popularCategories.value) {
+    if (cat.categoryId === categoryId) {
+      selectedCategory.value = cat;
+      selectedSubCategory.value = null;
+      return;
+    }
+    if (cat.children) {
+      const sub = cat.children.find(c => c.categoryId === categoryId);
+      if (sub) {
+        selectedCategory.value = cat;
+        selectedSubCategory.value = sub;
+        return;
+      }
+    }
+  }
+
+  // props.categories에서 찾기
   for (const cat of props.categories) {
     if (cat.categoryId === categoryId) {
       selectedCategory.value = cat;
@@ -147,9 +229,12 @@ const findAndSelectCategory = (categoryId) => {
 };
 
 onMounted(() => {
+  fetchPopularCategories();
+
   if (props.initialCategoryId) {
     findAndSelectCategory(props.initialCategoryId);
   }
+
   window.addEventListener('resize', handleResize);
 });
 
@@ -164,6 +249,10 @@ watch(() => props.initialCategoryId, (newVal) => {
   } else {
     findAndSelectCategory(newVal);
   }
+});
+
+watch(() => props.contentType, () => {
+  fetchPopularCategories();
 });
 </script>
 
@@ -222,6 +311,29 @@ watch(() => props.initialCategoryId, (newVal) => {
 .category-tab.more-btn svg {
   width: 20px;
   height: 20px;
+}
+
+/* 로딩 */
+.loading-placeholder {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.loading-dot {
+  width: 6px;
+  height: 6px;
+  background: #ddd;
+  border-radius: 50%;
+  animation: loading-pulse 1.2s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loading-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
 /* 선택된 카테고리 칩 */

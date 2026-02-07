@@ -3,7 +3,9 @@
     <!-- 채팅방 헤더 -->
     <div class="chat-detail-header">
       <button class="back-button" @click="$emit('back-to-list')">
-        <ArrowLeft :size="20" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
         <span>뒤로</span>
       </button>
       <div class="room-info">
@@ -11,22 +13,46 @@
         <p class="room-participants">
           {{ roomInfo.participantCount }}명
           <span v-if="onlineUsers.length > 0" class="online-indicator">
-            • {{ onlineUsers.length }}명 온라인
+            <span class="online-dot"></span>
+            {{ onlineUsers.length }}명 온라인
           </span>
           <!-- 연결 상태 표시 -->
           <span v-if="connectionState.connected" class="connection-status connected">
-            📶 연결됨
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12.55a11 11 0 0114.08 0"/>
+              <path d="M1.42 9a16 16 0 0121.16 0"/>
+              <path d="M8.53 16.11a6 6 0 016.95 0"/>
+              <circle cx="12" cy="20" r="1" fill="currentColor"/>
+            </svg>
+            연결됨
           </span>
           <span v-else-if="connectionState.connecting" class="connection-status connecting">
-            ⏳ 연결 중...
+            <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            연결 중...
           </span>
           <span v-else class="connection-status disconnected">
-            ❌ 연결 끊김
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="1" y1="1" x2="23" y2="23"/>
+              <path d="M16.72 11.06A10.94 10.94 0 0119 12.55"/>
+              <path d="M5 12.55a10.94 10.94 0 015.17-2.39"/>
+              <path d="M10.71 5.05A16 16 0 0122.58 9"/>
+              <path d="M1.42 9a15.91 15.91 0 014.7-2.88"/>
+              <path d="M8.53 16.11a6 6 0 016.95 0"/>
+              <circle cx="12" cy="20" r="1" fill="currentColor"/>
+            </svg>
+            연결 끊김
           </span>
         </p>
       </div>
       <button class="menu-button" @click="$emit('toggle-menu')">
-        <MoreVertical :size="20" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="1"/>
+          <circle cx="12" cy="5" r="1"/>
+          <circle cx="12" cy="19" r="1"/>
+        </svg>
       </button>
     </div>
 
@@ -38,15 +64,15 @@
         <span>{{ deviceInfo.deviceName }}</span>
       </div>
       <button @click="$emit('close-device-info')" class="close-device-info">
-        <X :size="16" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import {ArrowLeft, MoreVertical, X} from 'lucide-vue-next'
-
 defineProps({
   roomInfo: {
     type: Object,
@@ -83,26 +109,37 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
   color: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px rgba(147, 51, 234, 0.2);
 }
 
 .back-button, .menu-button {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.2);
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.15);
   border: none;
   color: white;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.back-button svg, .menu-button svg {
+  width: 20px;
+  height: 20px;
 }
 
 .back-button:hover, .menu-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.menu-button {
+  padding: 10px;
 }
 
 .room-info {
@@ -112,54 +149,87 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
 }
 
 .room-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
 }
 
 .room-participants {
   font-size: 12px;
-  opacity: 0.8;
+  opacity: 0.9;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .online-indicator {
-  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.online-dot {
+  width: 6px;
+  height: 6px;
+  background: #34d399;
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .connection-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 11px;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 10px;
   font-weight: 500;
 }
 
+.connection-status svg {
+  width: 12px;
+  height: 12px;
+}
+
 .connection-status.connected {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
 }
 
 .connection-status.connecting {
   background: rgba(251, 191, 36, 0.2);
-  color: #f59e0b;
+  color: #fbbf24;
+}
+
+.connection-status.connecting .spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .connection-status.disconnected {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
 }
 
 .device-info-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
-  background: #f1f5f9;
+  padding: 10px 16px;
+  background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
   font-size: 12px;
   color: #64748b;
@@ -171,16 +241,28 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
 }
 
 .close-device-info {
+  width: 24px;
+  height: 24px;
   border: none;
   background: none;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
-  padding: 2px;
-  border-radius: 4px;
+  padding: 0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.close-device-info svg {
+  width: 16px;
+  height: 16px;
 }
 
 .close-device-info:hover {
   background: #e2e8f0;
+  color: #64748b;
 }
 
 /* 반응형 디자인 */
@@ -189,8 +271,17 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
     padding: 12px 16px;
   }
 
+  .back-button, .menu-button {
+    padding: 8px 12px;
+    border-radius: 10px;
+  }
+
+  .menu-button {
+    padding: 8px;
+  }
+
   .room-title {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .room-participants {
@@ -203,7 +294,7 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
 
   .device-info-banner {
     font-size: 11px;
-    padding: 6px 12px;
+    padding: 8px 12px;
   }
 
   .device-details {
@@ -213,19 +304,11 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
 }
 
 /* 접근성 개선 */
-.back-button:focus,
-.menu-button:focus {
-  outline: 2px solid #3b82f6;
+.back-button:focus-visible,
+.menu-button:focus-visible {
+  outline: 2px solid white;
   outline-offset: 2px;
-}
-
-/* 다크 모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .device-info-banner {
-    background: #374151;
-    border-color: #4b5563;
-    color: #d1d5db;
-  }
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* 터치 디바이스 최적화 */
@@ -242,26 +325,13 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
   }
 }
 
-/* 키보드 내비게이션 지원 */
-.back-button:focus-visible,
-.menu-button:focus-visible {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* 프린트 스타일 */
-@media print {
-  .chat-detail-header,
-  .device-info-banner {
-    display: none !important;
-  }
-}
-
 /* 애니메이션 감소 설정 지원 */
 @media (prefers-reduced-motion: reduce) {
   .back-button,
-  .menu-button {
+  .menu-button,
+  .online-dot,
+  .spin {
+    animation: none !important;
     transition: none !important;
   }
 }

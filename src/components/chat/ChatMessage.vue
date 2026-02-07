@@ -1,4 +1,3 @@
-<!-- ChatMessage.vue -->
 <template>
   <div class="chat-message" :class="{ 'is-mine': isMine }">
     <div v-if="showSender && !isMine" class="message-sender">
@@ -17,7 +16,10 @@
 
         <template v-else-if="message.type === 'FILE'">
           <div class="message-file">
-            📎 {{ message.metadata?.fileName || '파일' }}
+            <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+            </svg>
+            <span class="file-name">{{ message.metadata?.fileName || '파일' }}</span>
           </div>
         </template>
 
@@ -31,7 +33,25 @@
           {{ formatTime(message.createdAt) }}
         </span>
         <span v-if="message.status" class="message-status">
-          {{ getStatusIcon(message.status) }}
+          <!-- SENDING -->
+          <svg v-if="message.status === 'SENDING'" class="status-icon sending" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          <!-- SENT -->
+          <svg v-else-if="message.status === 'SENT'" class="status-icon sent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          <!-- READ -->
+          <svg v-else-if="message.status === 'READ'" class="status-icon read" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 7l-8 8-4-4"/>
+            <path d="M22 7l-8 8-1-1"/>
+          </svg>
+          <!-- FAILED -->
+          <svg v-else-if="message.status === 'FAILED'" class="status-icon failed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M15 9l-6 6M9 9l6 6"/>
+          </svg>
         </span>
       </div>
     </div>
@@ -65,21 +85,11 @@ const formatTime = (timestamp) => {
     minute: '2-digit'
   })
 }
-
-const getStatusIcon = (status) => {
-  switch (status) {
-    case 'SENDING': return '⏳'
-    case 'SENT': return '✓'
-    case 'READ': return '✓✓'
-    case 'FAILED': return '❌'
-    default: return ''
-  }
-}
 </script>
 
 <style scoped>
 .chat-message {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .chat-message.is-mine {
@@ -90,32 +100,45 @@ const getStatusIcon = (status) => {
 
 .message-sender {
   font-size: 12px;
-  color: #64748b;
+  color: #94a3b8;
   margin-bottom: 4px;
-  margin-left: 12px;
+  margin-left: 14px;
+  font-weight: 500;
 }
 
 .message-bubble {
   max-width: 70%;
   padding: 12px 16px;
-  border-radius: 18px;
-  background: white;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   word-wrap: break-word;
+  transition: all 0.2s ease;
+}
+
+.message-bubble:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .message-bubble.is-mine {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
   color: white;
+  border-bottom-right-radius: 6px;
+}
+
+.message-bubble:not(.is-mine) {
+  border-bottom-left-radius: 6px;
 }
 
 .message-bubble.is-system {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #64748b;
   text-align: center;
-  font-style: italic;
-  max-width: 80%;
-  margin: 0 auto;
+  font-size: 13px;
+  max-width: 85%;
+  margin: 8px auto;
+  padding: 10px 16px;
+  border-radius: 12px;
 }
 
 .message-bubble.is-failed {
@@ -125,46 +148,110 @@ const getStatusIcon = (status) => {
 }
 
 .message-content {
+  font-size: 15px;
+  line-height: 1.5;
   margin-bottom: 4px;
 }
 
 .message-image {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 8px;
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: 12px;
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.message-image:hover {
+  transform: scale(1.02);
 }
 
 .message-file {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
   cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.message-file:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.is-mine .message-file {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.is-mine .message-file:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.file-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .message-meta {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
-  font-size: 11px;
-  opacity: 0.7;
+  gap: 6px;
+  margin-top: 2px;
 }
 
 .message-time {
-  color: inherit;
+  font-size: 11px;
+  opacity: 0.6;
 }
 
 .message-status {
-  color: inherit;
+  display: flex;
+  align-items: center;
+}
+
+.status-icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+.status-icon.sending {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-icon.sent {
+  opacity: 0.6;
+}
+
+.status-icon.read {
+  opacity: 0.9;
+}
+
+.status-icon.failed {
+  color: #dc2626;
+  opacity: 1;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
 }
 
 @media (max-width: 768px) {
   .message-bubble {
     max-width: 85%;
+  }
+
+  .message-content {
+    font-size: 14px;
   }
 }
 </style>
