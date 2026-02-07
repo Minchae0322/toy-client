@@ -1,139 +1,111 @@
 <template>
   <div class="filter-container">
-    <!-- 1depth: 가로 스크롤 탭 -->
-    <div class="controls-section">
-      <div class="category-tabs-wrapper">
-        <div class="scroll-fade-left" :class="{ visible: showLeftFade }"></div>
-        <div
-            class="category-tabs"
-            ref="tabsRef"
-            @scroll="handleScroll"
-        >
-          <button
-              v-if="showAllButton"
-              @click="handleAllClick"
-              :class="['category-tab', { active: selectedCategory === null }]"
-          >
-            전체
-          </button>
+    <div class="category-tabs">
+      <button
+          v-if="showAllButton"
+          @click="handleAllClick"
+          :class="['category-tab', { active: selectedCategory === null }]"
+      >
+        전체
+      </button>
 
-          <button
-              v-for="category in categories"
-              :key="category.categoryId"
-              @click="handleCategoryClick(category)"
-              :class="['category-tab', { active: selectedCategory?.categoryId === category.categoryId }]"
-          >
-            {{ category.categoryName }}
-          </button>
-        </div>
-        <div class="scroll-fade-right" :class="{ visible: showRightFade }"></div>
-      </div>
+      <!-- 인기 카테고리 (4-5개) -->
+      <button
+          v-for="category in topCategories"
+          :key="category.categoryId"
+          @click="handleCategoryClick(category)"
+          :class="['category-tab', { active: selectedCategory?.categoryId === category.categoryId }]"
+      >
+        {{ category.categoryName }}
+      </button>
+
+      <!-- 더보기 버튼 -->
+      <button
+          v-if="hasMoreCategories"
+          @click="goToCategoryPage"
+          class="category-tab more-btn"
+          title="전체 카테고리"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="12" r="2"/>
+          <circle cx="12" cy="12" r="2"/>
+          <circle cx="19" cy="12" r="2"/>
+        </svg>
+      </button>
     </div>
 
-    <!-- 2depth: 서브 카테고리 -->
-    <Transition name="slide-fade">
-      <div v-if="selectedCategory?.children?.length > 0" class="sub-category-section">
-        <div class="sub-indicator">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </div>
-        <div class="sub-tabs">
-          <button
-              @click="handleSubCategoryClick(null)"
-              :class="['sub-tab', { active: selectedSubCategory === null }]"
-          >
-            {{ selectedCategory.categoryName }} 전체
-          </button>
-          <button
-              v-for="sub in selectedCategory.children"
-              :key="sub.categoryId"
-              @click="handleSubCategoryClick(sub)"
-              :class="['sub-tab', { active: selectedSubCategory?.categoryId === sub.categoryId }]"
-          >
-            {{ sub.categoryName }}
-          </button>
-        </div>
-      </div>
-    </Transition>
+    <!-- 선택된 카테고리가 상위 4개 외일 경우 표시 -->
+    <div v-if="showSelectedChip" class="selected-chip-wrapper">
+      <button class="selected-chip" @click="goToCategoryPage">
+        <span>{{ selectedCategory?.categoryName }}</span>
+        <span v-if="selectedSubCategory" class="chip-separator">›</span>
+        <span v-if="selectedSubCategory">{{ selectedSubCategory?.categoryName }}</span>
+        <svg @click.stop="handleAllClick" class="chip-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const props = defineProps({
   categories: {
     type: Array,
     default: () => []
   },
-  viewMode: {
-    type: String,
-    default: 'feed'
-  },
-  showViewToggle: {
-    type: Boolean,
-    default: true
-  },
   showAllButton: {
     type: Boolean,
     default: true
   },
-  initialSelected: {
+  initialCategoryId: {
     type: [Number, String, null],
     default: null
   }
 });
 
-const emit = defineEmits(['update:viewMode', 'category-change']);
+const emit = defineEmits(['category-change']);
 
 const selectedCategory = ref(null);
 const selectedSubCategory = ref(null);
-const tabsRef = ref(null);
-const showLeftFade = ref(false);
-const showRightFade = ref(true);
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
-const handleScroll = () => {
-  if (!tabsRef.value) return;
-  const { scrollLeft, scrollWidth, clientWidth } = tabsRef.value;
-  showLeftFade.value = scrollLeft > 10;
-  showRightFade.value = scrollLeft < scrollWidth - clientWidth - 10;
+// 화면 크기에 따른 카테고리 개수
+const maxCategories = computed(() => {
+  if (windowWidth.value >= 1280) return 8;  // 대형 PC
+  if (windowWidth.value >= 1024) return 6;  // PC
+  if (windowWidth.value >= 768) return 5;   // 태블릿
+  return 3;                                  // 모바일
+});
+
+// 상위 카테고리
+const topCategories = computed(() => {
+  return props.categories.slice(0, maxCategories.value);
+});
+
+const hasMoreCategories = computed(() => {
+  return props.categories.length > maxCategories.value;
+});
+
+// 윈도우 리사이즈 핸들러
+const handleResize = () => {
+  windowWidth.value = window.innerWidth;
 };
 
-onMounted(() => {
-  if (props.initialSelected === null) {
-    handleAllClick();
-  } else {
-    findAndSelectCategory(props.initialSelected);
-  }
-  setTimeout(handleScroll, 100);
+// 선택된 카테고리가 상위 목록에 없을 경우 칩으로 표시
+const showSelectedChip = computed(() => {
+  if (!selectedCategory.value) return false;
+  const isInTop = topCategories.value.some(c => c.categoryId === selectedCategory.value.categoryId);
+  return !isInTop;
 });
 
-watch(() => props.initialSelected, (newVal) => {
-  if (newVal === null) {
-    selectedCategory.value = null;
-    selectedSubCategory.value = null;
-  } else {
-    findAndSelectCategory(newVal);
-  }
-});
-
-const findAndSelectCategory = (categoryId) => {
-  for (const cat of props.categories) {
-    if (cat.categoryId === categoryId) {
-      selectedCategory.value = cat;
-      selectedSubCategory.value = null;
-      return;
-    }
-    if (cat.children) {
-      const sub = cat.children.find(c => c.categoryId === categoryId);
-      if (sub) {
-        selectedCategory.value = cat;
-        selectedSubCategory.value = sub;
-        return;
-      }
-    }
-  }
+const goToCategoryPage = () => {
+  router.push({ name: 'CategoryList' });
 };
 
 const handleAllClick = () => {
@@ -156,96 +128,71 @@ const handleCategoryClick = (category) => {
   });
 };
 
-const handleSubCategoryClick = (subCategory) => {
-  selectedSubCategory.value = subCategory;
-  emit('category-change', {
-    categoryId: subCategory ? subCategory.categoryId : selectedCategory.value.categoryId,
-    category: selectedCategory.value,
-    subCategory: subCategory
-  });
+const findAndSelectCategory = (categoryId) => {
+  for (const cat of props.categories) {
+    if (cat.categoryId === categoryId) {
+      selectedCategory.value = cat;
+      selectedSubCategory.value = null;
+      return;
+    }
+    if (cat.children) {
+      const sub = cat.children.find(c => c.categoryId === categoryId);
+      if (sub) {
+        selectedCategory.value = cat;
+        selectedSubCategory.value = sub;
+        return;
+      }
+    }
+  }
 };
+
+onMounted(() => {
+  if (props.initialCategoryId) {
+    findAndSelectCategory(props.initialCategoryId);
+  }
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
+
+watch(() => props.initialCategoryId, (newVal) => {
+  if (newVal === null) {
+    selectedCategory.value = null;
+    selectedSubCategory.value = null;
+  } else {
+    findAndSelectCategory(newVal);
+  }
+});
 </script>
 
 <style scoped>
 .filter-container {
   background: #ffffff;
   border-bottom: 1px solid #f0f0f0;
-}
-
-/* 메인 컨트롤 섹션 */
-.controls-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
   padding: 12px 20px;
 }
 
 @media (min-width: 1024px) {
-  .controls-section {
-    padding: 16px 24px;
+  .filter-container {
+    padding: 14px 24px;
   }
 }
 
-/* 카테고리 탭 래퍼 */
-.category-tabs-wrapper {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-/* 스크롤 페이드 */
-.scroll-fade-left,
-.scroll-fade-right {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 32px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 1;
-}
-
-.scroll-fade-left {
-  left: 0;
-  background: linear-gradient(to right, #ffffff 20%, transparent 100%);
-}
-
-.scroll-fade-right {
-  right: 0;
-  background: linear-gradient(to left, #ffffff 20%, transparent 100%);
-}
-
-.scroll-fade-left.visible,
-.scroll-fade-right.visible {
-  opacity: 1;
-}
-
-/* 1depth 탭 */
 .category-tabs {
   display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  padding: 2px;
-}
-
-.category-tabs::-webkit-scrollbar {
-  display: none;
+  gap: 8px;
+  align-items: center;
 }
 
 .category-tab {
-  flex-shrink: 0;
-  padding: 7px 14px;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #888888;
-  border: 1px solid #eee;
-  font-size: 13px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
@@ -253,91 +200,63 @@ const handleSubCategoryClick = (subCategory) => {
 }
 
 .category-tab:hover {
-  border-color: #ddd;
-  color: #555555;
+  background: #eee;
 }
 
 .category-tab.active {
   background: #9933EA;
   color: #ffffff;
-  border-color: #9933EA;
-  font-weight: 600;
 }
 
-/* 2depth 서브카테고리 */
-.sub-category-section {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 20px 12px;
-}
-
-@media (min-width: 1024px) {
-  .sub-category-section {
-    padding: 0 24px 16px;
-  }
-}
-
-.sub-indicator {
-  display: flex;
-  align-items: center;
-  color: #d0d0d0;
-  flex-shrink: 0;
-}
-
-.sub-indicator svg {
-  width: 14px;
-  height: 14px;
-}
-
-.sub-tabs {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.sub-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.sub-tab {
-  padding: 5px 12px;
-  border-radius: 5px;
+.category-tab.more-btn {
+  padding: 8px 12px;
   background: transparent;
-  color: #999999;
-  border: 1px solid #eeeeee;
-  font-size: 12px;
+  color: #888;
+}
+
+.category-tab.more-btn:hover {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.category-tab.more-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 선택된 카테고리 칩 */
+.selected-chip-wrapper {
+  margin-top: 10px;
+}
+
+.selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px 6px 14px;
+  background: #9933EA;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 13px;
   font-weight: 500;
-  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
-.sub-tab:hover {
-  border-color: #dddddd;
-  color: #666666;
+.chip-separator {
+  opacity: 0.7;
+  margin: 0 2px;
 }
 
-.sub-tab.active {
-  background: #FAF5FF;
-  color: #9933EA;
-  border-color: #9933EA;
-  font-weight: 600;
+.chip-clear {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  opacity: 0.7;
+  cursor: pointer;
 }
 
-/* Transition */
-.slide-fade-enter-active {
-  transition: all 0.2s ease-out;
-}
-
-.slide-fade-leave-active {
-  transition: all 0.15s ease-in;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
+.chip-clear:hover {
+  opacity: 1;
 }
 </style>
