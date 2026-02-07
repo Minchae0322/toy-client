@@ -58,9 +58,10 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { categoryService } from '@/services/CategoryService.js';
+import { useCategoryCache } from '@/composables/useCategoryCache.js';
 
 const router = useRouter();
+const { loadPopularCategories: loadPopularFromCache } = useCategoryCache();
 
 const props = defineProps({
   categories: {
@@ -135,28 +136,12 @@ const handleResize = () => {
   windowWidth.value = window.innerWidth;
 };
 
-// 인기 카테고리 조회
+// 인기 카테고리 조회 (캐시 사용)
 const fetchPopularCategories = async () => {
   loading.value = true;
   try {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
-
-    const formatDate = (date) => date.toISOString().split('T')[0];
-
-    const response = await categoryService.getPopularCategories({
-      type: props.contentType,
-      startDate: formatDate(startDate),
-      endDate: formatDate(endDate),
-      page: 0,
-      size: maxCategories.value + 2,
-      sort: 'contentCount,desc'
-    });
-
-    if (response.success && response.data?.content) {
-      popularCategories.value = response.data.content;
-    }
+    const data = await loadPopularFromCache(props.contentType, maxCategories.value + 2);
+    popularCategories.value = data;
   } catch (error) {
     console.warn('[CategoryFilter] 인기 카테고리 조회 실패, 기본 카테고리 사용:', error.message);
     popularCategories.value = [];

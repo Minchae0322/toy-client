@@ -9,6 +9,7 @@
       <CommonCategoryFilter
           :categories="categories"
           :initial-selected="selectedCategoryId"
+          content-type="BATTLE"
           @category-change="handleCategoryChange"
       />
 

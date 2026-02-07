@@ -7,6 +7,7 @@
       <CommonCategoryFilter
           :categories="rootCategories"
           :initial-selected="selectedCategoryId"
+          content-type="FEED"
           @category-change="handleCategoryChange"
       />
 
