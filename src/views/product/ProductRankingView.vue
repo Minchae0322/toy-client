@@ -209,7 +209,9 @@ import RankChange from '@/components/product/RankChange.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue';
 import { productService } from '@/services/ProductService.js'
-import { categoryService } from '@/services/CategoryService.js'
+import { useCategoryCache } from '@/composables/useCategoryCache.js'
+
+const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache()
 
 const router = useRouter()
 const route = useRoute()
@@ -340,13 +342,11 @@ const fetchRanking = async (reset = false) => {
   }
 }
 
-// 카테고리 조회
+// 카테고리 조회 (캐시 사용)
 const fetchCategories = async () => {
   try {
-    const response = await categoryService.getCategories({isActive: true})
-    if (response.success && response.data) {
-      categories.value = Array.isArray(response.data) ? response.data : []
-    }
+    await loadAllCategories()
+    categories.value = cachedCategories.value
   } catch (e) {
     console.error('카테고리 로드 실패:', e)
   }

@@ -53,7 +53,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useCategory } from '@/services/CategoryService.js';
+import { useCategoryCache } from '@/composables/useCategoryCache.js';
 import { useFeed } from '@/services/FeedService.js';
 import * as authUtils from '@/utils/auth.js';
 
@@ -70,7 +70,7 @@ const { open } = useConfirmDialog();
 const router = useRouter();
 
 const unreadMessages = ref(3);
-const categoryService = useCategory();
+const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache();
 const feedService = useFeed();
 
 // State
@@ -133,10 +133,8 @@ watch(viewMode, (newMode) => {
 // Methods
 const loadCategories = async () => {
   try {
-    const response = await categoryService.getCategories({isActive: true});
-    if (response.success && response.data) {
-      rootCategories.value = response.data;
-    }
+    await loadAllCategories();
+    rootCategories.value = cachedCategories.value;
   } catch (error) {
     console.error('❌ 카테고리 로드 실패:', error);
   }

@@ -105,7 +105,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { battleService } from '@/services/BattleService.js'
-import { categoryService } from '@/services/CategoryService.js'
+import { useCategoryCache } from '@/composables/useCategoryCache.js'
 import { useAuthStore } from '@/stores/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
@@ -118,6 +118,7 @@ import BottomNavigation from '@/components/common/BottomNavigation.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache()
 const { open } = useConfirmDialog()
 
 // State
@@ -177,10 +178,8 @@ const formatCount = (num) => {
 // API Methods
 const loadCategories = async () => {
   try {
-    const response = await categoryService.getCategories()
-    if (response.success && response.data) {
-      categories.value = response.data
-    }
+    await loadAllCategories()
+    categories.value = cachedCategories.value
   } catch (error) {
     console.error('카테고리 로드 실패:', error)
   }

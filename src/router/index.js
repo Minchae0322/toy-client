@@ -423,9 +423,9 @@ router.beforeEach(async (to, from, next) => {
 })
 
 router.afterEach((to) => {
-  let title = 'ToyChat'
+  let title = '요거뜨'
   if (to.meta.title) {
-    title = `${to.meta.title} | ToyChat`
+    title = `${to.meta.title} | 요거뜨`
   }
   document.title = title
   console.log(`✅ [Router] 라우트 이동 완료: ${to.path}`)
