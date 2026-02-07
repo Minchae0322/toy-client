@@ -193,7 +193,7 @@ export const guestGuard = async (to, from, next) => {
     // 로그인된 사용자는 홈으로 리다이렉트
     if (authUtils.isAuthenticated()) {
         console.log('ℹ️ [GuestGuard] 이미 로그인됨 - 홈으로 리다이렉트')
-        const redirectTo = to.query.redirect || '/home'
+        const redirectTo = to.query.redirect || '/dashboard'
         next(redirectTo)
     } else {
         console.log('✅ [GuestGuard] 미인증 사용자 - 페이지 접근 허용')

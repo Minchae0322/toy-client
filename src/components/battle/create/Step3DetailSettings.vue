@@ -46,8 +46,8 @@
     <div class="form-group">
       <label class="form-label">배틀 설명 (선택)</label>
       <textarea
-          :value="battleForm.description"
-          @input="$emit('update:battleForm', { ...battleForm, description: $event.target.value })"
+          v-model="localDescription"
+          @blur="handleDescriptionBlur"
           class="form-input textarea"
           placeholder="배틀에 대한 설명이나 투표 기준을 알려주세요 (120~500자)"
           maxlength="500"
@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
   battleForm: {
@@ -95,11 +95,26 @@ const props = defineProps({
   }
 });
 
-defineEmits(['update:battleForm']);
+const emit = defineEmits(['update:battleForm']);
 
-// 설명 글자 수
+// 설명은 로컬 상태로 관리 (미리보기 깜빡임 방지)
+const localDescription = ref(props.battleForm.description || '');
+
+// battleForm.description이 외부에서 변경되면 로컬 상태도 업데이트
+watch(() => props.battleForm.description, (newVal) => {
+  if (newVal !== localDescription.value) {
+    localDescription.value = newVal || '';
+  }
+});
+
+// blur 시에만 부모에게 업데이트
+const handleDescriptionBlur = () => {
+  emit('update:battleForm', { ...props.battleForm, description: localDescription.value });
+};
+
+// 설명 글자 수 (로컬 상태 기준)
 const descriptionCharCount = computed(() => {
-  return props.battleForm.description?.length || 0;
+  return localDescription.value?.length || 0;
 });
 </script>
 

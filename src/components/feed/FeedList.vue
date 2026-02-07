@@ -125,14 +125,14 @@
             </div>
           </div>
           <div class="list-content">
+            <p class="list-review">
+              <span class="list-quote">"</span>{{ feed.reviewSummary }}<span class="list-quote">"</span>
+            </p>
+
             <div class="list-product-info-box">
               <span class="list-category-label">{{ feed.categoryName }}</span>
               <span class="list-product-name">{{ feed.productName }}</span>
             </div>
-
-            <p class="list-review">
-              <span class="list-quote">"</span>{{ feed.reviewSummary }}<span class="list-quote">"</span>
-            </p>
 
             <div v-if="feed.hashtags?.length" class="list-hashtags">
               <span v-for="tag in feed.hashtags.slice(0, 2)" :key="tag" class="list-tag">#{{ tag }}</span>

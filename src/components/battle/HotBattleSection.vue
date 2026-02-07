@@ -2,7 +2,7 @@
   <section v-if="battles.length > 0" class="hot-section">
     <!-- 헤더 -->
     <div class="section-header">
-      <h2 class="section-title">🔥 실시간 HOT</h2>
+      <h2 class="section-title">실시간 HOT</h2>
       <button class="view-all-btn" @click="$emit('view-all')">더보기</button>
     </div>
 

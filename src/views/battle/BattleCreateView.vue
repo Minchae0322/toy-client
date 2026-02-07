@@ -17,7 +17,6 @@
               v-show="currentStep === 1"
               :battle-form="battleForm"
               :item-add-permission-types="itemAddPermissionTypes"
-              :categories="categories"
               @update:battle-form="battleForm = $event"
           />
 
@@ -77,8 +76,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBattle } from '@/services/BattleService.js';
-import { useCategory } from '@/services/CategoryService.js';
-import { useFile } from '@/services/FileService.js'; // ⭐ 수정
+import { useFile } from '@/services/FileService.js';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import BattleCreateHeader from '@/components/battle/create/BattleCreateHeader.vue';
 import BattleCreatePreview from '@/components/battle/create/BattleCreatePreview.vue';
@@ -90,8 +88,7 @@ import BattleCreateFooter from '@/components/battle/create/BattleCreateFooter.vu
 
 const router = useRouter();
 const battleService = useBattle();
-const categoryService = useCategory();
-const fileService = useFile(); // ⭐ 추가
+const fileService = useFile();
 const { open } = useConfirmDialog();
 
 // ==================== 스텝 설정 ====================
@@ -136,8 +133,7 @@ const voteTypes = [
   }
 ];
 
-// ==================== 카테고리 (백엔드에서 로드) ====================
-const categories = ref([]);
+// ==================== 상태 ====================
 const loading = ref(false);
 
 // ==================== 배틀 폼 데이터 ====================
@@ -145,6 +141,9 @@ const battleForm = ref({
   title: '',
   categoryId: null,
   subCategoryId: null,
+  categoryName: null,
+  subCategoryName: null,
+  categoryEmoji: null,
   itemAddPermissionType: 'CREATOR_ONLY',
   startDate: '',
   endDate: '',
@@ -166,28 +165,17 @@ const previewPermissionTypeName = computed(() => {
 });
 
 const previewCategoryName = computed(() => {
-  if (!battleForm.value.categoryId || !battleForm.value.subCategoryId) return '';
+  if (!battleForm.value.categoryName) return '';
 
-  const parentCategory = categories.value.find(c => c.categoryId === battleForm.value.categoryId);
-  if (!parentCategory) return '';
+  if (battleForm.value.subCategoryName) {
+    return `${battleForm.value.categoryName} > ${battleForm.value.subCategoryName}`;
+  }
 
-  const subCategory = parentCategory.children?.find(s => s.categoryId === battleForm.value.subCategoryId);
-  if (!subCategory) return '';
-
-  return `${parentCategory.categoryName} > ${subCategory.categoryName}`;
+  return battleForm.value.categoryName;
 });
 
 const previewEmoji = computed(() => {
-  if (!battleForm.value.subCategoryId) return null;
-
-  const parentCategory = categories.value.find(c =>
-      c.children?.some(s => s.categoryId === battleForm.value.subCategoryId)
-  );
-
-  if (!parentCategory) return null;
-
-  const subCategory = parentCategory.children?.find(s => s.categoryId === battleForm.value.subCategoryId);
-  return subCategory?.emoji || parentCategory.emoji || null;
+  return battleForm.value.categoryEmoji || null;
 });
 
 const previewVoteTypeName = computed(() => {
@@ -231,26 +219,6 @@ const canProceed = computed(() => {
 });
 
 // ==================== 메서드 ====================
-
-const loadCategories = async () => {
-  try {
-    loading.value = true;
-
-    const response = await categoryService.getCategories();
-
-    if (response.success && response.data) {
-      categories.value = response.data;
-    } else {
-      categories.value = [];
-    }
-  } catch (error) {
-    console.error('카테고리 로드 실패:', error);
-    categories.value = [];
-    await open({ type: 'alert', title: '오류', message: '카테고리를 불러오는데 실패했습니다.' });
-  } finally {
-    loading.value = false;
-  }
-};
 
 const handleNext = async () => {
   if (currentStep.value < 4) {
@@ -476,7 +444,6 @@ const checkCreationPermission = async () => {
 // ==================== Lifecycle ====================
 onMounted(async () => {
   await checkCreationPermission();
-  await loadCategories();
   await loadDraft();
 
   // 기본 날짜 설정

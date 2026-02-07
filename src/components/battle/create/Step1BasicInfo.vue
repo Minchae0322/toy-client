@@ -52,85 +52,35 @@
       </div>
     </div>
 
-    <!-- ⭐ 2depth 카테고리 선택 -->
+    <!-- ⭐ 카테고리 선택 -->
     <div class="form-group">
       <label class="form-label">
         카테고리 <span class="required">*</span>
       </label>
 
-      <!-- 1단계: 상위 카테고리 선택 -->
-      <div class="category-section">
-        <div class="section-title">상위 카테고리</div>
-        <div class="category-grid parent">
-          <div
-              v-for="category in categories"
-              :key="category.categoryId"
-              class="category-item"
-              :class="{ selected: selectedParentCategory?.categoryId === category.categoryId }"
-              @click="selectParentCategory(category)"
-          >
-            <div class="category-emoji">
-              <span v-if="category.emoji">{{ category.emoji }}</span>
-              <svg v-else class="folder-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </div>
-            <div class="category-name">{{ category.categoryName }}</div>
-            <div class="sub-count">{{ (category.children?.length || 0) }}개</div>
-          </div>
+      <button class="category-select-btn" @click="openCategoryModal" type="button">
+        <div v-if="selectedCategoryInfo" class="selected-category">
+          <span class="category-text">{{ selectedCategoryInfo.label }}</span>
         </div>
-      </div>
-
-      <!-- 2단계: 하위 카테고리 선택 (필수) -->
-      <div v-if="selectedParentCategory" class="category-section">
-        <div class="section-title">
-          하위 카테고리 선택
-          <span class="required-badge">필수</span>
-        </div>
-
-        <div v-if="selectedParentCategory.children && selectedParentCategory.children.length > 0" class="category-grid sub">
-          <div
-              v-for="subCategory in selectedParentCategory.children"
-              :key="subCategory.categoryId"
-              class="category-item sub-item"
-              :class="{ selected: battleForm.subCategoryId === subCategory.categoryId }"
-              @click="selectSubCategory(subCategory)"
-          >
-            <div class="category-emoji">
-              <span v-if="subCategory.emoji">{{ subCategory.emoji }}</span>
-              <svg v-else class="file-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-              </svg>
-            </div>
-            <div class="category-name">{{ subCategory.categoryName }}</div>
-          </div>
-        </div>
-        <div v-else class="no-subcategory">
-          <div class="info-icon"></div>
-          <div class="info-text">하위 카테고리가 없습니다. 관리자에게 문의하세요.</div>
-        </div>
-      </div>
-
-      <!-- 선택된 카테고리 표시 -->
-      <div v-if="selectedCategoryPath" class="selected-path">
-        <span class="path-icon">✓</span>
-        <span class="path-text">{{ selectedCategoryPath }}</span>
-      </div>
-
-      <div v-if="categories.length === 0" class="form-hint">카테고리를 불러오는 중...</div>
-      <div v-else-if="!selectedParentCategory" class="form-hint">
-        먼저 상위 카테고리를 선택해주세요
-      </div>
-      <div v-else-if="!battleForm.subCategoryId" class="form-hint error">
-        <svg class="hint-icon warning" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-          <line x1="12" y1="9" x2="12" y2="13"></line>
-          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        <span v-else class="placeholder">카테고리를 선택하세요</span>
+        <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
         </svg>
-        하위 카테고리를 반드시 선택해야 합니다
+      </button>
+
+      <div v-if="!battleForm.subCategoryId" class="form-hint">
+        배틀에 적합한 카테고리를 선택해주세요
       </div>
     </div>
+
+    <!-- 카테고리 선택 모달 -->
+    <CategorySelectModal
+        v-if="showCategoryModal"
+        content-type="BATTLE"
+        :initial-category-id="battleForm.subCategoryId"
+        @select="handleCategorySelect"
+        @close="closeCategoryModal"
+    />
 
     <!-- ⭐ 배틀 기간 -->
     <div class="form-group">
@@ -223,6 +173,7 @@
 import { ref, computed } from 'vue';
 import { useFile } from '@/services/FileService.js';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
+import CategorySelectModal from '@/components/common/CategorySelectModal.vue';
 
 const props = defineProps({
   battleForm: {
@@ -230,10 +181,6 @@ const props = defineProps({
     required: true
   },
   itemAddPermissionTypes: {
-    type: Array,
-    required: true
-  },
-  categories: {
     type: Array,
     required: true
   }
@@ -246,31 +193,48 @@ const { open } = useConfirmDialog();
 const isUploading = ref(false);
 
 const thumbnailInput = ref(null);
-const selectedParentCategory = ref(null);
+const showCategoryModal = ref(false);
+const selectedCategoryInfo = ref(null);
 
-// 🔍 디버깅: categories prop 확인
-console.log('📦 전달받은 categories:', props.categories);
-console.log('📦 categories 타입:', typeof props.categories);
-console.log('📦 categories 배열 여부:', Array.isArray(props.categories));
-if (Array.isArray(props.categories) && props.categories.length > 0) {
-  console.log('📦 첫 번째 카테고리:', props.categories[0]);
-  console.log('📦 children 존재:', props.categories[0].children);
-}
+// 카테고리 모달
+const openCategoryModal = () => {
+  showCategoryModal.value = true;
+};
 
-// 선택된 카테고리 경로 표시
-const selectedCategoryPath = computed(() => {
-  if (!selectedParentCategory.value || !props.battleForm.subCategoryId) {
-    return null;
+const closeCategoryModal = () => {
+  showCategoryModal.value = false;
+};
+
+const handleCategorySelect = ({ categoryId, category, parent }) => {
+  const categoryName = parent ? parent.categoryName : category.categoryName;
+  const subCategoryName = parent ? category.categoryName : null;
+  const categoryEmoji = category.emoji || (parent && parent.emoji) || null;
+
+  emit('update:battleForm', {
+    ...props.battleForm,
+    categoryId: parent ? parent.categoryId : categoryId,
+    subCategoryId: categoryId,
+    categoryName: categoryName,
+    subCategoryName: subCategoryName,
+    categoryEmoji: categoryEmoji
+  });
+
+  if (parent) {
+    selectedCategoryInfo.value = {
+      label: `${parent.categoryName} > ${category.categoryName}`,
+      category,
+      parent
+    };
+  } else {
+    selectedCategoryInfo.value = {
+      label: category.categoryName,
+      category,
+      parent: null
+    };
   }
 
-  const subCategory = selectedParentCategory.value.children?.find(
-      sub => sub.categoryId === props.battleForm.subCategoryId
-  );
-
-  if (!subCategory) return null;
-
-  return `${selectedParentCategory.value.categoryName} > ${subCategory.categoryName}`;
-});
+  showCategoryModal.value = false;
+};
 
 // 미리보기: 서버 URL 우선, 없으면 로컬 preview
 const previewImage = computed(() => {
@@ -284,29 +248,6 @@ const previewImage = computed(() => {
   }
   return null;
 });
-
-// 상위 카테고리 선택
-const selectParentCategory = (category) => {
-  console.log('🔍 선택된 상위 카테고리:', category);
-  console.log('📁 하위 카테고리 개수:', category.children?.length || 0);
-
-  selectedParentCategory.value = category;
-
-  // 상위 카테고리 변경 시 하위 카테고리 선택 초기화
-  emit('update:battleForm', {
-    ...props.battleForm,
-    categoryId: category.categoryId,
-    subCategoryId: null
-  });
-};
-
-// 하위 카테고리 선택 (최종 선택)
-const selectSubCategory = (subCategory) => {
-  emit('update:battleForm', {
-    ...props.battleForm,
-    subCategoryId: subCategory.categoryId
-  });
-};
 
 const handleImageUpload = async (event) => {
   const file = event.target.files[0];
@@ -544,7 +485,48 @@ const removeImage = () => {
   line-height: 1.4;
 }
 
-/* ⭐ 2depth 카테고리 스타일 */
+/* ⭐ 카테고리 선택 버튼 */
+.category-select-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: white;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-select-btn:hover {
+  border-color: #9333ea;
+  background: #faf5ff;
+}
+
+.selected-category {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-text {
+  font-weight: 500;
+  color: #1A1A1A;
+}
+
+.placeholder {
+  color: #9CA3AF;
+}
+
+.dropdown-icon {
+  width: 20px;
+  height: 20px;
+  color: #9CA3AF;
+}
+
+/* 기존 카테고리 스타일 제거됨 */
 .category-section {
   margin-top: 16px;
 }
@@ -774,11 +756,13 @@ const removeImage = () => {
   overflow: hidden;
   max-width: 400px;
   margin: 0 auto;
+  background: #f8f9fa;
 }
 
 .image-preview img {
   width: 100%;
-  height: auto;
+  max-height: 300px;
+  object-fit: contain;
   display: block;
 }
 

@@ -78,51 +78,15 @@
                       카테고리
                       <span class="required">*</span>
                     </label>
-                    <div class="category-dropdown" ref="categoryDropdownRef">
-                      <button class="category-select-btn" @click.stop="toggleCategoryDropdown" :disabled="categoriesLoading" type="button">
-                        <div v-if="form.subCategoryId" class="selected-category">
-                          <span class="category-text">{{ getSubCategoryLabel(form.subCategoryId) }}</span>
-                        </div>
-                        <span v-else-if="categoriesLoading" class="placeholder">카테고리 로딩 중...</span>
-                        <span v-else class="placeholder">카테고리를 선택하세요</span>
-                        <svg class="dropdown-icon" :class="{ open: showCategoryDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                      </button>
-
-                      <!-- 오버레이 -->
-                      <Transition name="overlay-fade">
-                        <div v-if="showCategoryDropdown && !categoriesLoading" class="category-dropdown-overlay" @click="closeCategoryDropdown"></div>
-                      </Transition>
-
-                      <Transition :name="dropdownDirection === 'up' ? 'dropdown-up' : 'dropdown'">
-                        <div v-if="showCategoryDropdown && !categoriesLoading" class="category-dropdown-menu" :class="{ 'dropdown-up': dropdownDirection === 'up' }">
-                          <div class="dropdown-header">
-                            <span class="dropdown-title">카테고리 선택</span>
-                            <button class="btn-close-dropdown" @click.stop="closeCategoryDropdown" type="button">
-                              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                              </svg>
-                            </button>
-                          </div>
-                          <div class="dropdown-content">
-                            <div v-for="parent in categories" :key="parent.categoryId" class="category-group">
-                              <div class="category-group-header">
-                                <span class="parent-name">{{ parent.categoryName }}</span>
-                              </div>
-                              <div v-if="parent.subCategories?.length" class="sub-categories">
-                                <button v-for="sub in parent.subCategories" :key="sub.categoryId" class="sub-category-item" :class="{ active: form.subCategoryId === sub.categoryId }" @click.stop="selectSubCategory(sub.categoryId)" type="button">
-                                  <span class="sub-name">{{ sub.categoryName }}</span>
-                                  <svg v-if="form.subCategoryId === sub.categoryId" class="check-icon" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                                  </svg>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Transition>
-                    </div>
+                    <button class="category-select-btn" @click="openCategoryModal" type="button">
+                      <div v-if="selectedCategoryInfo" class="selected-category">
+                        <span class="category-text">{{ selectedCategoryInfo.label }}</span>
+                      </div>
+                      <span v-else class="placeholder">카테고리를 선택하세요</span>
+                      <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </button>
                     <span v-if="errors.subCategoryId" class="error-text">{{ errors.subCategoryId }}</span>
                   </div>
 
@@ -396,6 +360,15 @@
         @view-products="navigateToProducts"
         @go-home="navigateToHome"
     />
+
+    <!-- 카테고리 선택 모달 -->
+    <CategorySelectModal
+        v-if="showCategoryModal"
+        content-type="PRODUCT"
+        :initial-category-id="form.subCategoryId"
+        @select="handleCategorySelect"
+        @close="closeCategoryModal"
+    />
   </div>
 </template>
 
@@ -403,7 +376,6 @@
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProduct } from '@/composables/useProduct.js'
-import { useCategory } from '@/services/CategoryService.js'
 import { useFile } from '@/services/FileService.js'
 import { useAuth } from '@/composables/useAuth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
@@ -413,11 +385,11 @@ import AuthError from '@/components/product/create/AuthError.vue'
 import LoginModal from '@/components/product/create/LoginModal.vue'
 import LoadingOverlay from '@/components/product/create/LoadingOverlay.vue'
 import SuccessModal from '@/components/product/create/SuccessModal.vue'
+import CategorySelectModal from '@/components/common/CategorySelectModal.vue'
 
 const router = useRouter()
 const { user, isLoggedIn, loading: authLoading, userId, userNickname, checkAuthStatus, logout } = useAuth()
 const { createProduct, debugStatus } = useProduct()
-const { getCategories } = useCategory()
 const { upload } = useFile()
 const { open } = useConfirmDialog()
 
@@ -425,11 +397,8 @@ const { open } = useConfirmDialog()
 const isLoading = ref(false)
 const showSuccessModal = ref(false)
 const showLoginModal = ref(false)
-const categories = ref([])
-const categoriesLoading = ref(false)
-const showCategoryDropdown = ref(false)
-const dropdownDirection = ref('down')
-const categoryDropdownRef = ref(null)
+const showCategoryModal = ref(false)
+const selectedCategoryInfo = ref(null)
 const thumbnailFile = ref(null)
 const additionalFiles = ref([])
 const selectedFeatures = ref([])
@@ -503,12 +472,10 @@ onMounted(async () => {
   await checkAuthenticationStatus()
   if (isLoggedIn.value) await initializeComponent()
   else showAuthRequiredMessage()
-  document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', beforeUnloadHandler)
-  document.removeEventListener('click', handleClickOutside)
   if (thumbnailFile.value?.preview) URL.revokeObjectURL(thumbnailFile.value.preview)
   additionalFiles.value.forEach(f => f.preview && URL.revokeObjectURL(f.preview))
 })
@@ -559,33 +526,11 @@ const closeLoginModal = () => {
 
 const initializeComponent = async () => {
   try {
-    await loadCategories()
     restoreDraft()
     debugStatus()
     window.addEventListener('beforeunload', beforeUnloadHandler)
   } catch (error) {
     console.error('컴포넌트 초기화 실패:', error)
-  }
-}
-
-const loadCategories = async () => {
-  try {
-    categoriesLoading.value = true
-    const response = await getCategories({ isActive: true })
-    if (response.success && response.data) {
-      categories.value = response.data.map(parent => ({
-        ...parent,
-        subCategories: parent.children || []
-      }))
-    } else {
-      await open({ type: 'alert', title: '오류', message: '카테고리를 불러올 수 없습니다.' })
-      categories.value = []
-    }
-  } catch (error) {
-    await open({ type: 'alert', title: '오류', message: '카테고리를 불러오는 중 오류가 발생했습니다.' })
-    categories.value = []
-  } finally {
-    categoriesLoading.value = false
   }
 }
 
@@ -692,47 +637,33 @@ const addTag = async (tag) => {
 const removeTag = (index) => { selectedTags.value.splice(index, 1) }
 
 // Category Methods
-const toggleCategoryDropdown = () => {
-  if (!showCategoryDropdown.value && categoryDropdownRef.value) {
-    const rect = categoryDropdownRef.value.getBoundingClientRect()
-    const viewportHeight = window.innerHeight
-    const spaceBelow = viewportHeight - rect.bottom - 16 // 16px padding
-    const spaceAbove = rect.top - 80 // 80px for header
-    const minDropdownHeight = 300
-
-    // 아래 공간이 충분하면 아래로, 아니면 위로
-    if (spaceBelow >= minDropdownHeight) {
-      dropdownDirection.value = 'down'
-    } else if (spaceAbove >= minDropdownHeight) {
-      dropdownDirection.value = 'up'
-    } else {
-      // 둘 다 부족하면 더 넓은 쪽 선택
-      dropdownDirection.value = spaceBelow > spaceAbove ? 'down' : 'up'
-    }
-  }
-  showCategoryDropdown.value = !showCategoryDropdown.value
+const openCategoryModal = () => {
+  showCategoryModal.value = true
 }
 
-const closeCategoryDropdown = () => { showCategoryDropdown.value = false }
+const closeCategoryModal = () => {
+  showCategoryModal.value = false
+}
 
-const selectSubCategory = (id) => {
-  form.subCategoryId = id
-  showCategoryDropdown.value = false
+const handleCategorySelect = ({ categoryId, category, parent }) => {
+  form.subCategoryId = categoryId
   errors.subCategoryId = ''
-}
 
-const getSubCategoryLabel = (subCategoryId) => {
-  for (const parent of categories.value) {
-    if (parent.categoryId === subCategoryId) return parent.categoryName
-    for (const sub of (parent.subCategories || [])) {
-      if (sub.categoryId === subCategoryId) return `${parent.categoryName} > ${sub.categoryName}`
+  if (parent) {
+    selectedCategoryInfo.value = {
+      label: `${parent.categoryName} > ${category.categoryName}`,
+      category,
+      parent
+    }
+  } else {
+    selectedCategoryInfo.value = {
+      label: category.categoryName,
+      category,
+      parent: null
     }
   }
-  return ''
-}
 
-const handleClickOutside = (e) => {
-  if (categoryDropdownRef.value && !categoryDropdownRef.value.contains(e.target)) closeCategoryDropdown()
+  showCategoryModal.value = false
 }
 
 // Submit

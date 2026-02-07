@@ -11,7 +11,7 @@
 
     <div class="header-container">
       <div class="logo">
-        <RouterLink to="/home" class="mz-title">
+        <RouterLink to="/dashboard" class="mz-title">
           <img src="/images/logo4.png" alt="한입만" class="logo-image" />
         </RouterLink>
       </div>
@@ -30,7 +30,7 @@
 
         <!-- 로그인한 경우 -->
         <template v-else>
-          <RouterLink to="/home" class="nav-link">홈</RouterLink>
+          <RouterLink to="/dashboard" class="nav-link">홈</RouterLink>
           <RouterLink to="/one-mouth/list" class="nav-link">한입거리</RouterLink>
           <RouterLink to="/sell" class="nav-link">판매하기</RouterLink>
 

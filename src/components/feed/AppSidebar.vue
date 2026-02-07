@@ -23,7 +23,6 @@
             <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.5 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-5-2a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
           </svg>
           <span class="nav-text">요거픽</span>
-          <span class="badge">12</span>
         </router-link>
 
         <router-link to="/products" class="nav-item" active-class="active">
@@ -99,7 +98,7 @@ import {useConfirmDialog} from '@/composables/useConfirmDialog';
 
 const router = useRouter();
 const {isLoggedIn, userId} = useAuth();
-const {openLoginRequired} = useConfirmDialog();
+const {open, openLoginRequired} = useConfirmDialog();
 
 const handleProtectedRoute = async (routeName) => {
   console.log(`=== ${routeName} 클릭 ===`);
@@ -120,7 +119,7 @@ const handleProtectedRoute = async (routeName) => {
         router.push({name: 'BattleCreate'});
         break;
       case 'collections':
-        console.log('컬렉션 페이지로 이동');
+        await open({ type: 'alert', title: '안내', message: '준비중인 메뉴입니다.' });
         break;
     }
     return;

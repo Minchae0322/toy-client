@@ -25,7 +25,7 @@
           class="preview-visual preview-image"
           :style="{ backgroundImage: `url(${previewImageUrl})` }"
       >
-        <div class="preview-type-badge">{{ previewTypeName }}</div>
+        <div class="preview-type-badge">{{ previewVoteTypeName }}</div>
       </div>
 
       <!-- 큐레이션 타입 시각화 -->
@@ -65,7 +65,7 @@
             <line x1="12" y1="22.08" x2="12" y2="12"></line>
           </svg>
         </div>
-        <div class="preview-type-badge">{{ previewTypeName }}</div>
+        <div class="preview-type-badge">{{ previewVoteTypeName }}</div>
       </div>
 
       <div class="preview-content">
@@ -112,11 +112,15 @@ const props = defineProps({
     type: String,
     default: null
   },
-  previewTypeName: {
+  previewPermissionTypeName: {
     type: String,
     default: ''
   },
   previewCategoryName: {
+    type: String,
+    default: ''
+  },
+  previewVoteTypeName: {
     type: String,
     default: ''
   },
@@ -167,9 +171,10 @@ const previewImageUrl = computed(() => {
 
 /* ⭐ 업로드된 이미지 스타일 */
 .preview-image {
-  background-size: cover;
+  background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
+  background-color: #f8f9fa;
 }
 
 .preview-visual-placeholder {

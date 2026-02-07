@@ -20,6 +20,7 @@
             :battles="hotBattles"
             :loading="hotLoading"
             @battle-click="openBattle"
+            @view-all="handleViewAllHot"
         />
 
         <!-- 배틀 리스트 섹션 -->
@@ -316,6 +317,14 @@ const handleCreateBattle = async () => {
   } catch (error) {
     console.error('배틀 생성 권한 체크 실패:', error)
     await open({ type: 'alert', title: '오류', message: error.message || '요거픽을 생성할 수 없습니다.' })
+  }
+}
+
+const handleViewAllHot = () => {
+  // 배틀 리스트 섹션으로 스크롤
+  const battlesSection = document.querySelector('.battles-section')
+  if (battlesSection) {
+    battlesSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
 

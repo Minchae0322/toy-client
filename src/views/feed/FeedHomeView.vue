@@ -233,8 +233,12 @@ const openPost = (feedId) => {
   router.push({name: 'FeedDetail', params: {id: feedId}});
 };
 
-const handleSeeAllHot = async () => {
-  await open({ type: 'alert', title: '안내', message: '핫 피드 전체보기 페이지는 준비중입니다.' });
+const handleSeeAllHot = () => {
+  // 피드 리스트 섹션으로 스크롤
+  const feedSection = document.querySelector('.content-layout')
+  if (feedSection) {
+    feedSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 };
 
 // 사이드바 이벤트 핸들러

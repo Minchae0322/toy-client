@@ -53,7 +53,7 @@
         <span class="nav-label">피드</span>
       </router-link>
 
-      <!-- 배틀 -->
+      <!-- 요거픽 -->
       <router-link to="/battle" class="nav-item" :class="{ active: isActive('/battle') }">
         <svg v-if="!isActive('/battle')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -61,17 +61,16 @@
         <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
           <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd"/>
         </svg>
-        <span class="nav-label">배틀</span>
+        <span class="nav-label">요거픽</span>
       </router-link>
 
       <!-- 핫 아이템 -->
       <router-link to="/products" class="nav-item" :class="{ active: isActive('/products') }">
         <svg v-if="!isActive('/products')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
         </svg>
         <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 011.925-3.545 3.75 3.75 0 013.255 3.717z" clip-rule="evenodd"/>
+          <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
         </svg>
         <span class="nav-label">핫 아이템</span>
       </router-link>
@@ -264,7 +263,8 @@ onBeforeUnmount(() => {
 .floating-fab-wrapper {
   position: absolute;
   bottom: 100%;
-  right: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   margin-bottom: 12px;
   z-index: 3;
   display: flex;
@@ -272,6 +272,8 @@ onBeforeUnmount(() => {
   pointer-events: none;
   max-width: 400px;
   width: 100%;
+  padding-right: 8px;
+  box-sizing: border-box;
 }
 
 .floating-fab-container {

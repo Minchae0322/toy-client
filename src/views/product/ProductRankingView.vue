@@ -3,8 +3,6 @@
     <AppSidebar />
 
     <main class="main-content">
-      <AppHeader />
-
       <!-- 카테고리 필터 (최상단) -->
       <CommonCategoryFilter
           :categories="categories"
@@ -23,6 +21,26 @@
           <p class="header-desc">이번 주 가장 인기 있는 아이템들을 확인해보세요</p>
         </header>
 
+        <!-- 검색 -->
+        <div class="search-box">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+              v-model="searchKeyword"
+              type="text"
+              class="search-input"
+              placeholder="아이템 이름 또는 브랜드로 검색"
+          />
+          <button v-if="searchKeyword" class="search-clear" @click="searchKeyword = ''">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
         <!-- 로딩 -->
         <div v-if="loading && !products.length" class="loading-state">
           <div class="spinner"></div>
@@ -30,8 +48,9 @@
         </div>
 
         <!-- 빈 상태 -->
-        <div v-else-if="!products.length" class="empty-state">
-          <p>등록된 아이템이 없습니다</p>
+        <div v-else-if="!filteredProducts.length" class="empty-state">
+          <p v-if="searchKeyword">검색 결과가 없습니다</p>
+          <p v-else>등록된 아이템이 없습니다</p>
         </div>
 
         <template v-else>
@@ -186,7 +205,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
-import AppHeader from '@/components/feed/AppHeader.vue'
 import RankChange from '@/components/product/RankChange.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue';
@@ -207,6 +225,7 @@ const hasNext = ref(true)
 const currentPage = ref(0)
 const pageSize = 10
 const totalElements = ref(0)
+const searchKeyword = ref('')
 
 // 인기도 점수 계산
 const getPopularityScore = (product) => {
@@ -221,10 +240,20 @@ const getPopularityScore = (product) => {
   return viewCount + (likeCount * 3) + (shareCount * 5) + (reviewCount * 2)
 }
 
+// 클라이언트 검색 필터 (나중에 백엔드 keyword 검색으로 대체 예정)
+const filteredProducts = computed(() => {
+  if (!searchKeyword.value.trim()) return products.value
+  const keyword = searchKeyword.value.toLowerCase().trim()
+  return products.value.filter(product =>
+    product.name?.toLowerCase().includes(keyword) ||
+    product.brand?.toLowerCase().includes(keyword)
+  )
+})
+
 // Computed
-const hero = computed(() => products.value[0] || null)
-const runnerUps = computed(() => products.value.slice(1, 3))
-const restList = computed(() => products.value.slice(3))
+const hero = computed(() => filteredProducts.value[0] || null)
+const runnerUps = computed(() => filteredProducts.value.slice(1, 3))
+const restList = computed(() => filteredProducts.value.slice(3))
 const maxScore = computed(() => getPopularityScore(hero.value) || 1)
 
 // 유틸리티 함수
@@ -423,6 +452,63 @@ onMounted(async () => {
   color: #94a3b8;
   margin: 6px 0 0;
   padding-left: 13px;
+}
+
+/* 검색 박스 */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 40px 12px 44px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #9333ea;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+.search-clear {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 50%;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.search-clear:hover {
+  background: #e5e7eb;
+  color: #374151;
 }
 
 /* 로딩 & 빈 상태 */

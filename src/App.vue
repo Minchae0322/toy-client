@@ -100,7 +100,7 @@ onUnmounted(() => {
   <header v-if="!isAuthPage" class="header">
     <div class="header-content">
       <!-- 로고 -->
-      <RouterLink to="/home" class="logo">
+      <RouterLink to="/dashboard" class="logo">
         <img src="/images/logo5.png" alt="요거뜨" class="logo-image" />
       </RouterLink>
 

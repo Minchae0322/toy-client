@@ -6,7 +6,7 @@
       <!-- 페이지 헤더 -->
       <header class="page-header">
         <h1 class="page-title">트렌드 한눈에</h1>
-        <p class="page-description">인기 피드, 배틀, 제품 랭킹을 모아봤어요</p>
+        <p class="page-description">인기 피드, 요거픽, 제품 랭킹을 모아봤어요</p>
       </header>
 
       <!-- 글래스 배너 -->
@@ -56,7 +56,7 @@
           </div>
           <div class="stat-content">
             <span class="stat-value">{{ hotBattles.length }}</span>
-            <span class="stat-label">진행중 배틀</span>
+            <span class="stat-label">진행중 요거픽</span>
           </div>
           <div v-if="hotBattles.length > 0" class="live-dot"></div>
           <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -145,7 +145,7 @@
         <section class="content-section">
           <div class="section-header">
             <div class="title-with-badge">
-              <h2 class="section-title">실시간 배틀</h2>
+              <h2 class="section-title">실시간 요거픽</h2>
               <span v-if="hotBattles.length" class="live-badge">LIVE</span>
             </div>
             <button class="view-all-btn" @click="goToBattles">
@@ -167,13 +167,14 @@
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
               </svg>
             </div>
-            <p class="empty-text">진행 중인 배틀이 없습니다</p>
+            <p class="empty-text">진행 중인 요거픽이 없습니다</p>
           </div>
           <div v-else class="battle-grid">
             <BattleCard
               v-for="battle in hotBattles"
               :key="battle.battleId || battle.id"
               :battle="battle"
+              :hide-creator="true"
             />
           </div>
         </section>

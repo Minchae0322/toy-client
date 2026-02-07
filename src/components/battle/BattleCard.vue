@@ -46,7 +46,7 @@
         <span v-if="isActive && daysLeftText" class="days-left">{{ daysLeftText }}</span>
       </div>
 
-      <div class="card-footer">
+      <div v-if="!hideCreator" class="card-footer">
         <div class="creator">
           <div v-if="creatorProfileImage" class="creator-avatar">
             <img :src="creatorProfileImage" :alt="creatorNickname" @error="handleAvatarError">
@@ -71,6 +71,10 @@ const props = defineProps({
     type: Object,
     required: true,
     default: () => ({})
+  },
+  hideCreator: {
+    type: Boolean,
+    default: false
   }
 })
 

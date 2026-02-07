@@ -139,46 +139,15 @@
           <!-- Category -->
           <section class="card">
             <label class="form-label required">카테고리</label>
-            <div class="category-dropdown" ref="categoryDropdownRef">
-              <button class="category-select-btn" @click.stop="toggleCategoryDropdown" :disabled="categoriesLoading" type="button">
-                <div v-if="formData.subCategoryId" class="selected-category">
-                  <span class="category-text">{{ getSubCategoryLabel(formData.subCategoryId) }}</span>
-                </div>
-                <span v-else-if="categoriesLoading" class="placeholder">카테고리 로딩 중...</span>
-                <span v-else class="placeholder">카테고리를 선택하세요</span>
-                <svg class="dropdown-icon" :class="{ open: showCategoryDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-              </button>
-
-              <Transition :name="dropdownDirection === 'up' ? 'dropdown-up' : 'dropdown'">
-                <div v-if="showCategoryDropdown && !categoriesLoading" class="category-dropdown-menu" :class="{ 'dropdown-up': dropdownDirection === 'up' }">
-                  <div class="dropdown-header">
-                    <span class="dropdown-title">카테고리 선택</span>
-                    <button class="btn-close-dropdown" @click.stop="closeCategoryDropdown" type="button">
-                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="dropdown-content">
-                    <div v-for="parent in categories" :key="parent.categoryId" class="category-group">
-                      <div class="category-group-header">
-                        <span class="parent-name">{{ parent.categoryName }}</span>
-                      </div>
-                      <div v-if="parent.subCategories?.length" class="sub-categories">
-                        <button v-for="sub in parent.subCategories" :key="sub.categoryId" class="sub-category-item" :class="{ active: formData.subCategoryId === sub.categoryId }" @click.stop="selectSubCategory(sub.categoryId)" type="button">
-                          <span class="sub-name">{{ sub.categoryName }}</span>
-                          <svg v-if="formData.subCategoryId === sub.categoryId" class="check-icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Transition>
-            </div>
+            <button class="category-select-btn" @click="openCategoryModal" type="button">
+              <div v-if="selectedCategoryInfo" class="selected-category">
+                <span class="category-text">{{ selectedCategoryInfo.label }}</span>
+              </div>
+              <span v-else class="placeholder">카테고리를 선택하세요</span>
+              <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
           </section>
         </div>
 
@@ -319,6 +288,15 @@
       @select="handleProductSelect"
       @close="closeProductModal"
     />
+
+    <!-- Category Select Modal -->
+    <CategorySelectModal
+      v-if="showCategoryModal"
+      content-type="FEED"
+      :initial-category-id="formData.subCategoryId"
+      @select="handleCategorySelect"
+      @close="closeCategoryModal"
+    />
   </div>
 </template>
 
@@ -326,14 +304,13 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
-import { useCategory } from '@/services/CategoryService.js'
 import { useFile } from '@/services/FileService.js'
 import { getUserId } from '@/utils/auth.js'
 import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
+import CategorySelectModal from '@/components/common/CategorySelectModal.vue'
 
 const router = useRouter()
 const feedService = useFeed()
-const categoryService = useCategory()
 const fileService = useFile()
 
 const selectedPhotos = ref([])
@@ -344,13 +321,10 @@ const isProcessingImage = ref(false)
 const errorMessage = ref('')
 const hashtagInput = ref('')
 const productSuggestions = ref([])
-const showCategoryDropdown = ref(false)
-const dropdownDirection = ref('down') // 'down' 또는 'up'
-const categories = ref([])
-const categoriesLoading = ref(false)
+const showCategoryModal = ref(false)
+const selectedCategoryInfo = ref(null)
 const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
-const categoryDropdownRef = ref(null)
 const showProductModal = ref(false)
 const selectedProduct = ref(null)
 
@@ -464,55 +438,33 @@ const resizeImage = (file, maxSize = 1920, quality = 0.85) => {
 }
 
 // Category Methods
-const loadCategories = async () => {
-  try {
-    categoriesLoading.value = true
-    const response = await categoryService.getCategories({ isActive: true })
-    if (response.success && response.data) {
-      categories.value = response.data.map(parent => ({
-        ...parent,
-        subCategories: parent.children || []
-      }))
-    }
-  } catch (error) {
-    showError('카테고리를 불러오는데 실패했습니다.')
-  } finally {
-    categoriesLoading.value = false
-  }
+const openCategoryModal = () => {
+  showCategoryModal.value = true
 }
 
-const toggleCategoryDropdown = () => {
-  if (!showCategoryDropdown.value && categoryDropdownRef.value) {
-    // 드롭다운을 열 때 방향 계산
-    const rect = categoryDropdownRef.value.getBoundingClientRect()
-    const dropdownHeight = 400 // 드롭다운 메뉴 최대 높이
-    const spaceBelow = window.innerHeight - rect.bottom
-    const spaceAbove = rect.top
-
-    // 아래 공간이 부족하고 위 공간이 더 많으면 위로 펼치기
-    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
-      dropdownDirection.value = 'up'
-    } else {
-      dropdownDirection.value = 'down'
-    }
-  }
-  showCategoryDropdown.value = !showCategoryDropdown.value
-}
-const closeCategoryDropdown = () => { showCategoryDropdown.value = false }
-const selectSubCategory = (id) => { formData.value.subCategoryId = id; showCategoryDropdown.value = false }
-
-const getSubCategoryLabel = (subCategoryId) => {
-  for (const parent of categories.value) {
-    if (parent.categoryId === subCategoryId) return parent.categoryName
-    for (const sub of (parent.subCategories || [])) {
-      if (sub.categoryId === subCategoryId) return `${parent.categoryName} > ${sub.categoryName}`
-    }
-  }
-  return ''
+const closeCategoryModal = () => {
+  showCategoryModal.value = false
 }
 
-const handleClickOutside = (e) => {
-  if (categoryDropdownRef.value && !categoryDropdownRef.value.contains(e.target)) closeCategoryDropdown()
+const handleCategorySelect = ({ categoryId, category, parent }) => {
+  formData.value.subCategoryId = categoryId
+
+  // 선택된 카테고리 정보 저장
+  if (parent) {
+    selectedCategoryInfo.value = {
+      label: `${parent.categoryName} > ${category.categoryName}`,
+      category,
+      parent
+    }
+  } else {
+    selectedCategoryInfo.value = {
+      label: category.categoryName,
+      category,
+      parent: null
+    }
+  }
+
+  showCategoryModal.value = false
 }
 
 // Photo Methods
@@ -750,14 +702,12 @@ const showError = (msg) => {
   setTimeout(() => { errorMessage.value = '' }, 3000)
 }
 
-onMounted(async () => {
-  await loadCategories()
-  document.addEventListener('click', handleClickOutside)
+onMounted(() => {
+  // 초기화
 })
 
 onBeforeUnmount(() => {
   selectedPhotos.value.forEach(p => URL.revokeObjectURL(p.preview))
-  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -1121,86 +1071,25 @@ onBeforeUnmount(() => {
 }
 .suggestion-item:hover { background: var(--hover); }
 
-/* Category Dropdown */
-.category-dropdown { position: relative; }
+/* Category Select Button */
 .category-select-btn {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px;
-  cursor: pointer;
-}
-.category-select-btn:hover { border-color: var(--accent); }
-.placeholder { color: var(--secondary); }
-.dropdown-icon { width: 20px; height: 20px; color: var(--secondary); transition: transform 0.2s; }
-.dropdown-icon.open { transform: rotate(180deg); }
-
-.category-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
+  padding: 14px 16px;
   background: white;
   border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-  max-height: 400px;
-  overflow: hidden;
-  z-index: 100;
-}
-.category-dropdown-menu.dropdown-up {
-  top: auto;
-  bottom: calc(100% + 8px);
-}
-.dropdown-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.dropdown-title { font-size: 15px; font-weight: 700; }
-.btn-close-dropdown {
-  padding: 4px;
-  background: none;
-  border: none;
+  font-size: 14px;
   cursor: pointer;
+  transition: all 0.2s;
 }
-.btn-close-dropdown svg { width: 20px; height: 20px; }
-
-.dropdown-content { overflow-y: auto; max-height: 340px; padding: 8px; }
-.category-group { margin-bottom: 8px; }
-.category-group-header {
-  padding: 10px 12px;
-  background: var(--hover);
-  border-radius: 8px;
-  margin-bottom: 4px;
-}
-.parent-name { font-size: 13px; font-weight: 700; color: var(--secondary); text-transform: uppercase; }
-
-.sub-categories { padding-left: 8px; }
-.sub-category-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  background: none;
-  border: none;
-  border-radius: 8px;
-  text-align: left;
-  cursor: pointer;
-}
-.sub-category-item:hover { background: var(--hover); }
-.sub-category-item.active { background: #f3e8ff; }
-.sub-name { font-size: 14px; font-weight: 500; }
-.sub-category-item.active .sub-name { color: var(--accent); font-weight: 600; }
-.check-icon { width: 18px; height: 18px; color: var(--accent); }
+.category-select-btn:hover { border-color: var(--accent); background: #faf5ff; }
+.selected-category { display: flex; align-items: center; gap: 8px; }
+.category-text { font-weight: 500; color: var(--primary); }
+.placeholder { color: var(--secondary); }
+.dropdown-icon { width: 20px; height: 20px; color: var(--secondary); }
 
 /* Additional Info */
 .additional-info { display: flex; flex-direction: column; gap: 24px; }
@@ -1417,16 +1306,6 @@ onBeforeUnmount(() => {
 .success-toast { background: var(--primary); color: white; }
 
 /* Transitions */
-.dropdown-enter-active { animation: dropIn 0.2s ease; }
-.dropdown-leave-active { animation: dropOut 0.15s ease; }
-@keyframes dropIn { from { opacity: 0; transform: translateY(-8px); } }
-@keyframes dropOut { to { opacity: 0; transform: translateY(-8px); } }
-
-.dropdown-up-enter-active { animation: dropUpIn 0.2s ease; }
-.dropdown-up-leave-active { animation: dropUpOut 0.15s ease; }
-@keyframes dropUpIn { from { opacity: 0; transform: translateY(8px); } }
-@keyframes dropUpOut { to { opacity: 0; transform: translateY(8px); } }
-
 .modal-enter-active, .modal-leave-active { transition: opacity 0.2s; }
 .modal-enter-from, .modal-leave-to { opacity: 0; }
 
