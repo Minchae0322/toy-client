@@ -24,12 +24,19 @@
     </div>
 
     <div class="post-content">
+      <span class="category-label">카테고리 <span class="category-arrow">›</span> {{ feed.categoryName }}</span>
+
       <p class="primary-review">
         <span class="quote">"</span>{{ feed.reviewSummary }}<span class="quote">"</span>
       </p>
 
       <div class="product-info-box">
-        <span class="category-label">{{ feed.categoryName }}</span>
+        <span class="buy-place">
+          <svg class="place-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+          {{ feed.buyPlace || '미등록' }}
+        </span>
         <h3 class="product-name">{{ feed.productName }}</h3>
       </div>
 
@@ -156,7 +163,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 
 /* 콘텐츠 영역 */
 .post-content {
-  padding: 22px;
+  padding: 8px 22px 22px;
 }
 
 .primary-review {
@@ -176,13 +183,30 @@ const formatDate = (date) => feedUtils.formatDate(date);
   margin-bottom: 16px;
   border: 1px solid #f1f1f5;
 }
+.buy-place {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #9333ea;
+  margin-bottom: 2px;
+}
+.place-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
 .category-label {
   font-size: 10px;
-  font-weight: 800;
-  color: #7c3aed;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  font-weight: 600;
+  color: #9ca3af;
   display: block;
+  margin-bottom: 2px;
+}
+.category-arrow {
+  margin: 0 2px;
+  color: #d1d5db;
 }
 .product-name {
   font-size: 14px;
@@ -255,7 +279,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 
   /* 콘텐츠 영역 */
   .post-content {
-    padding: 14px 16px 4px;
+    padding: 6px 16px 4px;
   }
 
   .primary-review {
@@ -285,6 +309,15 @@ const formatDate = (date) => feedUtils.formatDate(date);
   }
   .category-label {
     font-size: 9px;
+    margin-bottom: 1px;
+  }
+  .buy-place {
+    font-size: 9px;
+    gap: 3px;
+  }
+  .place-icon {
+    width: 10px;
+    height: 10px;
   }
   .product-name {
     font-size: 13px;

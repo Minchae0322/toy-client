@@ -14,6 +14,10 @@
             </svg>
             급상승
           </div>
+          <!-- 카테고리 (우측) -->
+          <span class="category-breadcrumb">
+            카테고리 <span class="breadcrumb-arrow">›</span> {{ getCategoryName }}
+          </span>
         </div>
 
         <div class="quote-wrapper">
@@ -26,7 +30,12 @@
 
       <section class="product-info-banner" @click="$emit('search-store', getProductName)">
         <div class="product-main">
-          <span class="category-tag">{{ getCategoryName }}</span>
+          <span class="buy-place">
+            <svg class="place-icon" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            {{ feed.buyPlace || '미등록' }}
+          </span>
           <h1 class="product-title">{{ getProductName }}</h1>
         </div>
         <div class="price-area">
@@ -73,13 +82,16 @@
     </div>
 
     <div class="info-footer">
+      <!-- 등록일시 · 조회수 (우측) -->
+      <div class="post-meta">
+        {{ formatDate(feed.createdAt) }} · 조회 {{ feed.viewCount?.toLocaleString() }}
+      </div>
       <div class="divider" />
 
       <section class="author-section">
         <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
         <div class="author-meta">
           <span class="author-name">{{ getAuthorNickname }}</span>
-          <span class="post-info">{{ formatDate(feed.createdAt) }} · 조회 {{ feed.viewCount?.toLocaleString() }}</span>
         </div>
         <div class="author-actions">
           <button
@@ -160,19 +172,31 @@ const handleSendMessage = () => {
 
 .badge-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 
+.category-breadcrumb {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9333ea;
+}
+
+.breadcrumb-arrow {
+  margin: 0 4px;
+  color: #c4b5fd;
+}
+
 /* [중요] 파스텔톤 뱃지 스타일 */
 .eval-badge {
-  display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 100px;
-  font-size: 11px; font-weight: 800;
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px;
+  font-size: 13px; font-weight: 800;
   box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
 /* 급상승 뱃지 */
 .trend-badge {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 6px 14px; border-radius: 100px;
+  padding: 7px 16px; border-radius: 100px;
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  font-size: 11px; font-weight: 800; color: white;
+  font-size: 13px; font-weight: 800; color: white;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
   animation: pulse-trend 2s ease-in-out infinite;
 }
@@ -187,9 +211,9 @@ const handleSendMessage = () => {
 
 .eval-dot { width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; opacity: 0.6; }
 
-.quote-wrapper { position: relative; padding-left: 28px; }
-.quote-icon { position: absolute; left: 0; top: 0; width: 18px; height: 18px; color: #9993ea; opacity: 0.4; }
-.review-text { font-size: 16px; line-height: 1.7; color: #1f2937; font-weight: 600; white-space: pre-line; margin: 0; }
+.quote-wrapper { position: relative; padding-left: 32px; }
+.quote-icon { position: absolute; left: 0; top: 2px; width: 20px; height: 20px; color: #9993ea; opacity: 0.4; }
+.review-text { font-size: 18px; line-height: 1.7; color: #1f2937; font-weight: 600; white-space: pre-line; margin: 0; }
 
 /* 3 & 4. Product Banner */
 .product-info-banner {
@@ -198,23 +222,36 @@ const handleSendMessage = () => {
   border: 1px solid #f1f1f5; cursor: pointer; transition: 0.2s;
 }
 .product-info-banner:active { transform: scale(0.98); background: #f1f1f5; }
-.category-tag { font-size: 10px; font-weight: 800; color: #9333ea; text-transform: uppercase; letter-spacing: 0.5px; }
-.product-title { font-size: 15px; font-weight: 700; color: #111827; margin: 2px 0 0; }
+.buy-place {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9333ea;
+  margin-bottom: 4px;
+}
+.place-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.product-title { font-size: 18px; font-weight: 700; color: #111827; margin: 0; }
 .price-area { text-align: right; }
-.price-label { display: block; font-size: 10px; color: #9ca3af; margin-bottom: 2px; font-weight: 600; }
-.price-value { font-size: 17px; font-weight: 800; color: #9333ea; }
+.price-label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 2px; font-weight: 600; }
+.price-value { font-size: 20px; font-weight: 800; color: #9333ea; }
 
 /* 5. Interaction Bar */
 .interaction-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 4px; }
 .stat-group { display: flex; gap: 16px; }
 .stat-btn {
   display: flex; align-items: center; gap: 6px; background: none; border: none;
-  font-size: 14px; font-weight: 700; color: #6b7280; cursor: pointer; transition: 0.2s;
+  font-size: 15px; font-weight: 700; color: #6b7280; cursor: pointer; transition: 0.2s;
 }
-.stat-btn .icon { width: 22px; height: 22px; }
+.stat-btn .icon { width: 24px; height: 24px; }
 .stat-btn.active { color: #f43f5e; }
 .bookmark-btn { background: none; border: none; color: #6b7280; cursor: pointer; }
-.bookmark-btn .icon { width: 22px; height: 22px; }
+.bookmark-btn .icon { width: 24px; height: 24px; }
 .bookmark-btn.active { color: #9333ea; }
 
 /* 6. Hashtags */
@@ -225,24 +262,32 @@ const handleSendMessage = () => {
 }
 .tag-chip:active { background: #e5e7eb; }
 
+/* 등록일시 · 조회수 */
+.post-meta {
+  text-align: right;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
 .divider { height: 1px; background: #f1f5f9; margin-bottom: 20px; }
 
 /* 7. Author Section */
 .author-section { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .author-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #f1f5f9; }
 .author-meta { flex: 1; }
-.author-name { display: block; font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 2px; }
-.post-info { font-size: 12px; color: #9ca3af; font-weight: 500; }
+.author-name { display: block; font-size: 16px; font-weight: 700; color: #111827; }
 .author-actions { display: flex; gap: 8px; }
 .follow-btn {
-  padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none;
+  padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none;
   background: #111827; color: #fff; cursor: pointer; transition: 0.2s;
 }
 .follow-btn:active { transform: scale(0.96); }
 .follow-btn.active { background: #f3f4f6; color: #6b7280; }
 .message-btn {
   display: flex; align-items: center; gap: 5px;
-  padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none;
+  padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none;
   background: #9333ea; color: #fff; cursor: pointer; transition: 0.2s;
 }
 .message-btn:active { transform: scale(0.96); }

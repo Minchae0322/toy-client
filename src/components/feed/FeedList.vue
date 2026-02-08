@@ -130,7 +130,12 @@
             </p>
 
             <div class="list-product-info-box">
-              <span class="list-category-label">{{ feed.categoryName }}</span>
+              <span class="list-buy-place">
+                <svg class="list-place-icon" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+                {{ feed.buyPlace || '미등록' }}
+              </span>
               <span class="list-product-name">{{ feed.productName }}</span>
             </div>
 
@@ -354,7 +359,7 @@ defineExpose({ observerTarget });
 /* 콘텐츠 영역 */
 .list-content {
   flex: 1;
-  padding: 16px 18px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -368,14 +373,19 @@ defineExpose({ observerTarget });
   padding: 6px 10px;
   border: 1px solid #f1f1f5;
 }
-
-.list-category-label {
+.list-buy-place {
+  display: flex;
+  align-items: center;
+  gap: 3px;
   font-size: 9px;
-  font-weight: 800;
-  color: #7c3aed;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  display: block;
+  font-weight: 600;
+  color: #9333ea;
+  margin-bottom: 1px;
+}
+.list-place-icon {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
 }
 
 .list-product-name {
@@ -831,14 +841,15 @@ defineExpose({ observerTarget });
   .list-trend-badge { padding: 3px 6px; font-size: 8px; }
   .list-price-overlay { bottom: 6px; right: 6px; font-size: 10px; padding: 2px 6px; }
 
-  .list-content { padding: 10px 12px; gap: 5px; }
+  .list-content { padding: 10px 12px; gap: 6px; }
   .list-review { font-size: 12px; -webkit-line-clamp: 2; }
   .list-quote { font-size: 13px; }
   .list-hashtags { gap: 5px; }
   .list-tag { font-size: 10px; }
 
   .list-product-info-box { padding: 5px 8px; border-radius: 6px; border: none; }
-  .list-category-label { font-size: 8px; }
+  .list-buy-place { font-size: 8px; gap: 2px; }
+  .list-place-icon { width: 9px; height: 9px; }
   .list-product-name { font-size: 11px; }
   .list-hashtags { gap: 4px; }
   .list-tag { font-size: 9px; }
