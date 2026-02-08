@@ -45,6 +45,7 @@
                   @search-store="searchByStore"
                   @search-hashtag="searchByHashtag"
                   @scroll-to-comments="scrollToComments"
+                  @send-message="handleSendMessage"
               />
             </div>
           </div>
@@ -82,7 +83,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { feedService } from '@/services/FeedService.js'
+import { chatService } from '@/services/ChatService.js'
+import { userService } from '@/services/UserService.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { useAuth } from '@/composables/useAuth'
 
 import FeedDetailHeader from '@/components/feed/detail/FeedDetailHeader.vue'
 import FeedDetailImageGallery from '@/components/feed/detail/FeedDetailImageGallery.vue'
@@ -93,6 +97,7 @@ import ShareModal from '@/components/common/ShareModal.vue'
 const router = useRouter()
 const route = useRoute()
 const { open } = useConfirmDialog()
+const { userId: currentUserId } = useAuth()
 
 const loading = ref(true)
 const error = ref(null)
@@ -315,6 +320,42 @@ const shareImage = computed(() => imageList.value?.[0]?.fileUrl || '')
 const handleReport = () => console.log('Report feed')
 const searchByStore = () => console.log('Search by store:', feed.value?.buyPlace)
 const searchByHashtag = (tag) => router.push({ path: '/feed', query: { hashtag: tag } })
+
+const handleSendMessage = async (feedData) => {
+  if (!feedData?.userInfo?.userId) {
+    await open({ type: 'alert', title: '오류', message: '상대방 정보를 찾을 수 없습니다.' })
+    return
+  }
+
+  if (!currentUserId.value) {
+    await open({ type: 'alert', title: '로그인 필요', message: '메시지를 보내려면 로그인이 필요합니다.' })
+    return
+  }
+
+  // 본인에게 메시지 보내기 방지
+  if (currentUserId.value === feedData.userInfo.userId) {
+    await open({ type: 'alert', title: '알림', message: '본인에게는 메시지를 보낼 수 없습니다.' })
+    return
+  }
+
+  try {
+    const response = await chatService.startChat({
+      chatContext: 'PRODUCT_TRADE',
+      chatContextId: feedData.feedId,
+      creatorId: feedData.userInfo.userId,
+      participantIds: [currentUserId.value, feedData.userInfo.userId]
+    })
+
+    if (response.success && response.data?.roomId) {
+      router.push({ name: 'ChatWithRoom', params: { roomId: response.data.roomId } })
+    } else {
+      throw new Error(response.message || '채팅방 생성에 실패했습니다.')
+    }
+  } catch (err) {
+    console.error('채팅 시작 실패:', err)
+    await open({ type: 'alert', title: '오류', message: err.message || '채팅을 시작할 수 없습니다.' })
+  }
+}
 
 onMounted(() => loadFeedDetail())
 </script>

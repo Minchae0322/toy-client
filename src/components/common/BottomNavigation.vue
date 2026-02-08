@@ -17,7 +17,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
               </span>
-              <span class="menu-text">피드 작성</span>
+              <span class="menu-text">인증 올리기</span>
             </button>
             <button class="fab-menu-item" @click="handleCreate('battle')">
               <span class="menu-icon battle">
@@ -25,7 +25,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
               </span>
-              <span class="menu-text">배틀 생성</span>
+              <span class="menu-text">요거픽 등록</span>
             </button>
             <button class="fab-menu-item" @click="handleCreate('product')">
               <span class="menu-icon product">
@@ -33,7 +33,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
               </span>
-              <span class="menu-text">제품 등록</span>
+              <span class="menu-text">아이템 등록</span>
             </button>
           </div>
         </Transition>

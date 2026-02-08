@@ -81,23 +81,21 @@
           <span class="author-name">{{ getAuthorNickname }}</span>
           <span class="post-info">{{ formatDate(feed.createdAt) }} · 조회 {{ feed.viewCount?.toLocaleString() }}</span>
         </div>
-        <button
-            @click="isFollowing ? $emit('unfollow') : $emit('follow')"
-            :class="['follow-btn', { active: isFollowing }]"
-        >
-          {{ isFollowing ? '팔로잉' : '팔로우' }}
-        </button>
+        <div class="author-actions">
+          <button
+              @click="isFollowing ? $emit('unfollow') : $emit('follow')"
+              :class="['follow-btn', { active: isFollowing }]"
+          >
+            {{ isFollowing ? '팔로잉' : '팔로우' }}
+          </button>
+          <button class="message-btn" @click="handleSendMessage" :disabled="isCreatingChatRoom">
+            <svg v-if="!isCreatingChatRoom" class="message-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            {{ isCreatingChatRoom ? '...' : '메시지' }}
+          </button>
+        </div>
       </section>
-
-      <button class="cta-floating-btn" @click="handleSendMessage" :disabled="isCreatingChatRoom">
-        <template v-if="!isCreatingChatRoom">
-          <svg class="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-          </svg>
-          이 유저에게 문의하기
-        </template>
-        <span v-else class="loader">연결 중...</span>
-      </button>
     </div>
   </div>
 </template>
@@ -235,22 +233,19 @@ const handleSendMessage = () => {
 .author-meta { flex: 1; }
 .author-name { display: block; font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 2px; }
 .post-info { font-size: 12px; color: #9ca3af; font-weight: 500; }
+.author-actions { display: flex; gap: 8px; }
 .follow-btn {
-  padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; border: none;
-  background: #111827; color: #fff; cursor: pointer;
+  padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none;
+  background: #111827; color: #fff; cursor: pointer; transition: 0.2s;
 }
+.follow-btn:active { transform: scale(0.96); }
 .follow-btn.active { background: #f3f4f6; color: #6b7280; }
-
-/* 8. CTA Button */
-.cta-floating-btn {
-  width: 100%; padding: 16px; border-radius: 16px; border: none;
-  background: #9333ea; color: #fff; font-size: 15px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  box-shadow: 0 10px 20px -5px rgba(147, 51, 234, 0.3); cursor: pointer; transition: 0.3s;
-  white-space: nowrap;
+.message-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none;
+  background: #9333ea; color: #fff; cursor: pointer; transition: 0.2s;
 }
-.cta-floating-btn:active { transform: translateY(2px); box-shadow: none; }
-.cta-floating-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-.cta-icon { width: 20px; height: 20px; flex-shrink: 0; }
-.loader { font-size: 14px; letter-spacing: 0.5px; }
+.message-btn:active { transform: scale(0.96); }
+.message-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+.message-icon { width: 16px; height: 16px; flex-shrink: 0; }
 </style>

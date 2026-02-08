@@ -138,7 +138,8 @@ const handleFileChange = async (event) => {
 .image-item img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #f3f4f6;
 }
 
 .btn-remove {

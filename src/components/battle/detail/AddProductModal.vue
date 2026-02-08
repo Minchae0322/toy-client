@@ -15,16 +15,29 @@
         <div class="form-group">
           <label class="form-label">제품 사진 *</label>
           <div class="image-upload">
-            <div v-if="imagePreview" class="image-preview">
+            <div v-if="imagePreview" class="image-preview" :class="{ uploading: imageUploading, 'upload-failed': uploadFailed }">
               <img :src="imagePreview" alt="Preview" />
-              <button @click="$emit('clear-image')" class="btn-remove-image">
+              <!-- 업로드 중 오버레이 -->
+              <div v-if="imageUploading" class="upload-overlay">
+                <svg class="upload-spinner" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+                <span class="upload-status-text">업로드 중...</span>
+              </div>
+              <!-- 업로드 실패 오버레이 -->
+              <div v-if="uploadFailed" class="upload-failed-overlay">
+                <span class="failed-icon">!</span>
+                <span class="failed-text">업로드 실패</span>
+              </div>
+              <button @click="$emit('clear-image')" class="btn-remove-image" :disabled="imageUploading">
                 <span class="icon">×</span>
               </button>
             </div>
             <label v-else class="image-upload-label">
               <span class="icon upload-icon">⬆</span>
               <span class="upload-text">사진 업로드</span>
-              <span class="upload-hint">클릭하여 선택</span>
+              <span class="upload-hint">클릭하여 선택 (최대 5MB)</span>
               <input
                   type="file"
                   accept="image/*"
@@ -48,9 +61,9 @@
           />
         </div>
 
-        <!-- Brand -->
+        <!-- Brand (Optional) -->
         <div class="form-group">
-          <label class="form-label">브랜드 *</label>
+          <label class="form-label">브랜드 <span class="optional">(선택)</span></label>
           <input
               :value="brand"
               @input="$emit('update:brand', $event.target.value)"
@@ -80,6 +93,14 @@ defineProps({
   imagePreview: {
     type: String,
     default: null
+  },
+  imageUploading: {
+    type: Boolean,
+    default: false
+  },
+  uploadFailed: {
+    type: Boolean,
+    default: false
   },
   name: {
     type: String,
@@ -174,6 +195,12 @@ const handleImageChange = (e) => {
   margin-bottom: 8px;
 }
 
+.form-label .optional {
+  font-size: 12px;
+  font-weight: 400;
+  color: #9ca3af;
+}
+
 .form-input {
   padding: 12px 16px;
   border: 1px solid #d1d5db;
@@ -201,10 +228,78 @@ const handleImageChange = (e) => {
   border: 2px solid #e5e7eb;
 }
 
+.image-preview.uploading {
+  opacity: 0.8;
+}
+
+.image-preview.upload-failed {
+  border-color: #ef4444;
+}
+
 .image-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 업로드 중 오버레이 */
+.upload-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.upload-spinner {
+  width: 32px;
+  height: 32px;
+  color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.upload-status-text {
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 업로드 실패 오버레이 */
+.upload-failed-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(239, 68, 68, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.failed-icon {
+  width: 32px;
+  height: 32px;
+  background: white;
+  color: #ef4444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.failed-text {
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .btn-remove-image {

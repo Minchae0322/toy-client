@@ -815,7 +815,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   cursor: move;
 }
-.photo-item img { width: 100%; height: 100%; object-fit: cover; }
+.photo-item img { width: 100%; height: 100%; object-fit: contain; background: #f3f4f6; }
 .photo-item.drag-over { border: 2px dashed var(--accent); opacity: 0.5; }
 .photo-item.uploading { opacity: 0.7; }
 .photo-item.upload-failed { border: 2px solid #ef4444; }
