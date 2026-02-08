@@ -66,9 +66,9 @@
         </div>
       </button>
 
-      <button class="btn-subtle btn-dark" @click="handleProtectedRoute('createBattle')">
+      <button class="btn-subtle btn-orange" @click="handleProtectedRoute('createBattle')">
         <span class="btn-text">요거픽 등록하기</span>
-        <div class="btn-icon-circle btn-icon-dark">
+        <div class="btn-icon-circle btn-icon-orange">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
@@ -79,9 +79,9 @@
       <div class="action-divider"></div>
 
       <!-- 관리자/제품 등록 버튼 -->
-      <button class="btn-subtle btn-orange" @click="handleProtectedRoute('createProduct')">
+      <button class="btn-subtle btn-dark" @click="handleProtectedRoute('createProduct')">
         <span class="btn-text">새로운 아이템 등록하기</span>
-        <div class="btn-icon-circle btn-icon-orange">
+        <div class="btn-icon-circle btn-icon-dark">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>

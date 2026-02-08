@@ -11,7 +11,9 @@
           <!-- 검색 영역 -->
           <div class="search-section">
             <div class="search-input-wrapper">
-              <span class="search-icon">🔍</span>
+              <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
               <input
                   v-model="searchQuery"
                   type="text"
@@ -52,8 +54,8 @@
             <!-- 검색 결과가 있을 때 -->
             <div v-if="filteredProducts.length > 0" class="search-results">
               <div class="section-header">
-                <span class="section-title">검색 결과 ({{ filteredProducts.length }})</span>
-                <span class="section-desc">선택하여 추가하거나 아래에서 직접 만드세요</span>
+                <span class="section-title">기존 아이템으로 등록하기</span>
+                <span class="section-desc">검색 결과 {{ filteredProducts.length }}개 - 선택하여 추가하세요</span>
               </div>
               <div class="product-grid">
                 <div
@@ -73,7 +75,12 @@
                         :alt="product.name"
                         @error="handleImageError"
                     >
-                    <div v-else class="product-placeholder">📦</div>
+                    <div v-else class="product-placeholder">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                      </svg>
+                    </div>
                   </div>
                   <div class="product-name">{{ product.name }}</div>
                   <div class="product-brand">{{ product.brand }}</div>
@@ -85,9 +92,13 @@
 
             <!-- 검색 결과 없음 -->
             <div v-else-if="searchQuery && !loading && filteredProducts.length === 0" class="no-results">
-              <div class="no-results-icon">🔍</div>
+              <div class="no-results-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+              </div>
               <div class="no-results-title">"{{ searchQuery }}" 검색 결과가 없어요</div>
-              <div class="no-results-desc">아래에서 직접 아이템을 만들어보세요</div>
+              <div class="no-results-desc">아래에서 직접 아이템을 등록해보세요</div>
             </div>
 
             <!-- 구분선 -->
@@ -98,8 +109,8 @@
             <!-- 직접 입력 폼 -->
             <div class="create-section">
               <div class="section-header">
-                <span class="section-title">✨ 직접 아이템 만들기</span>
-                <span class="section-desc">새로운 제품을 추가해보세요</span>
+                <span class="section-title">직접 아이템 등록하기</span>
+                <span class="section-desc">새로운 제품을 직접 입력하여 추가하세요</span>
               </div>
 
               <div class="create-form">
@@ -155,7 +166,9 @@
                   <div v-else class="image-input-area">
                     <!-- 파일 업로드 버튼 -->
                     <label for="custom-image-input" class="image-upload-btn">
-                      <span class="upload-icon">📷</span>
+                      <svg class="upload-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                      </svg>
                       <span>이미지 파일 선택</span>
                       <input
                           id="custom-image-input"
@@ -193,8 +206,7 @@
                     @click="createNewItem"
                     type="button"
                 >
-                  <span>➕</span>
-                  {{ uploadingImage ? '업로드 중...' : '커스텀 아이템 추가하기' }}
+                  {{ uploadingImage ? '업로드 중...' : '아이템 추가하기' }}
                 </button>
               </div>
             </div>
@@ -686,10 +698,12 @@ watch(() => props.modelValue, (newVal) => {
   align-items: center;
 }
 
-.search-icon {
+.search-icon-svg {
   position: absolute;
   left: 16px;
-  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #9CA3AF;
   pointer-events: none;
 }
 
@@ -934,7 +948,15 @@ watch(() => props.modelValue, (newVal) => {
 }
 
 .product-placeholder {
-  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-placeholder svg {
+  width: 32px;
+  height: 32px;
+  color: #9CA3AF;
 }
 
 .product-name {
@@ -984,9 +1006,16 @@ watch(() => props.modelValue, (newVal) => {
 }
 
 .no-results-icon {
-  font-size: 48px;
   margin-bottom: 12px;
   opacity: 0.5;
+  display: flex;
+  justify-content: center;
+}
+
+.no-results-icon svg {
+  width: 48px;
+  height: 48px;
+  color: #9CA3AF;
 }
 
 .no-results-title {
@@ -1148,8 +1177,10 @@ watch(() => props.modelValue, (newVal) => {
   background: #F9FAFB;
 }
 
-.upload-icon {
-  font-size: 20px;
+.upload-icon-svg {
+  width: 20px;
+  height: 20px;
+  color: #6B7280;
 }
 
 .divider-small {

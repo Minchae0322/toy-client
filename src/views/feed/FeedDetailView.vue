@@ -327,23 +327,32 @@ const handleSendMessage = async (feedData) => {
     return
   }
 
-  if (!currentUserId.value) {
+  const myUserId = currentUserId.value
+  const targetUserId = feedData.userInfo.userId
+
+  console.log('[FeedDetail] 채팅 시작 - myUserId:', myUserId, 'targetUserId:', targetUserId)
+
+  if (!myUserId) {
     await open({ type: 'alert', title: '로그인 필요', message: '메시지를 보내려면 로그인이 필요합니다.' })
     return
   }
 
   // 본인에게 메시지 보내기 방지
-  if (currentUserId.value === feedData.userInfo.userId) {
+  if (myUserId === targetUserId) {
     await open({ type: 'alert', title: '알림', message: '본인에게는 메시지를 보낼 수 없습니다.' })
     return
   }
+
+  // participantIds에 두 명 포함 (본인 + 상대방)
+  const participantIds = [Number(myUserId), Number(targetUserId)]
+  console.log('[FeedDetail] participantIds:', participantIds)
 
   try {
     const response = await chatService.startChat({
       chatContext: 'PRODUCT_TRADE',
       chatContextId: feedData.feedId,
-      creatorId: feedData.userInfo.userId,
-      participantIds: [currentUserId.value, feedData.userInfo.userId]
+      creatorId: targetUserId,
+      participantIds: participantIds
     })
 
     if (response.success && response.data?.roomId) {

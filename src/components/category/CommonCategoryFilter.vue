@@ -41,6 +41,24 @@
       </button>
     </div>
 
+    <!-- 2뎁스 하위 카테고리 -->
+    <div v-if="selectedCategory && subCategories.length > 0" class="sub-category-tabs">
+      <button
+          @click="handleSubCategoryClick(null)"
+          :class="['sub-category-tab', { active: selectedSubCategory === null }]"
+      >
+        전체
+      </button>
+      <button
+          v-for="subCat in subCategories"
+          :key="subCat.categoryId"
+          @click="handleSubCategoryClick(subCat)"
+          :class="['sub-category-tab', { active: selectedSubCategory?.categoryId === subCat.categoryId }]"
+      >
+        {{ subCat.categoryName }}
+      </button>
+    </div>
+
     <!-- 선택된 카테고리가 인기 목록에 없을 경우 표시 -->
     <div v-if="showSelectedChip" class="selected-chip-wrapper">
       <button class="selected-chip" @click="goToCategoryPage">
@@ -131,6 +149,12 @@ const showSelectedChip = computed(() => {
   return !isInDisplay;
 });
 
+// 선택된 1뎁스 카테고리의 하위 카테고리 목록
+const subCategories = computed(() => {
+  if (!selectedCategory.value) return [];
+  return selectedCategory.value.children || [];
+});
+
 // 윈도우 리사이즈 핸들러
 const handleResize = () => {
   windowWidth.value = window.innerWidth;
@@ -168,12 +192,33 @@ const handleAllClick = () => {
 };
 
 const handleCategoryClick = (category) => {
+  // 같은 카테고리를 다시 클릭하면 선택 해제
+  if (selectedCategory.value?.categoryId === category.categoryId) {
+    selectedCategory.value = null;
+    selectedSubCategory.value = null;
+    emit('category-change', {
+      categoryId: null,
+      category: null,
+      subCategory: null
+    });
+    return;
+  }
+
   selectedCategory.value = category;
   selectedSubCategory.value = null;
   emit('category-change', {
     categoryId: category.categoryId,
     category: category,
     subCategory: null
+  });
+};
+
+const handleSubCategoryClick = (subCategory) => {
+  selectedSubCategory.value = subCategory;
+  emit('category-change', {
+    categoryId: subCategory ? subCategory.categoryId : selectedCategory.value.categoryId,
+    category: selectedCategory.value,
+    subCategory: subCategory
   });
 };
 
@@ -355,5 +400,41 @@ watch(() => props.contentType, () => {
 
 .chip-clear:hover {
   opacity: 1;
+}
+
+/* 2뎁스 하위 카테고리 */
+.sub-category-tabs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+}
+
+.sub-category-tab {
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: #fff;
+  color: #888;
+  border: 1px solid #e5e5e5;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sub-category-tab:hover {
+  background: #faf5ff;
+  border-color: #d8b4fe;
+  color: #9333ea;
+}
+
+.sub-category-tab.active {
+  background: #f3e8ff;
+  border-color: #9333ea;
+  color: #9333ea;
 }
 </style>
