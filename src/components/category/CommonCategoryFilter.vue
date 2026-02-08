@@ -186,9 +186,20 @@ const handleAllClick = () => {
   selectedSubCategory.value = null;
   emit('category-change', {
     categoryId: null,
+    categoryDepth: null,
     category: null,
     subCategory: null
   });
+};
+
+// 카테고리의 depth 계산 (API에서 depth 필드가 없을 경우 대비)
+const getCategoryDepth = (category, isSubCategory = false) => {
+  // depth 필드가 있으면 사용
+  if (category?.depth) return category.depth;
+  // categoryDepth 필드가 있으면 사용
+  if (category?.categoryDepth) return category.categoryDepth;
+  // 하위 카테고리면 2, 아니면 1
+  return isSubCategory ? 2 : 1;
 };
 
 const handleCategoryClick = (category) => {
@@ -198,6 +209,7 @@ const handleCategoryClick = (category) => {
     selectedSubCategory.value = null;
     emit('category-change', {
       categoryId: null,
+      categoryDepth: null,
       category: null,
       subCategory: null
     });
@@ -206,8 +218,12 @@ const handleCategoryClick = (category) => {
 
   selectedCategory.value = category;
   selectedSubCategory.value = null;
+  // 1뎁스 카테고리 (부모 카테고리)
+  const depth = getCategoryDepth(category, false);
+  console.log('[CategoryFilter] 1뎁스 선택:', category.categoryName, 'depth:', depth);
   emit('category-change', {
     categoryId: category.categoryId,
+    categoryDepth: depth,
     category: category,
     subCategory: null
   });
@@ -215,11 +231,27 @@ const handleCategoryClick = (category) => {
 
 const handleSubCategoryClick = (subCategory) => {
   selectedSubCategory.value = subCategory;
-  emit('category-change', {
-    categoryId: subCategory ? subCategory.categoryId : selectedCategory.value.categoryId,
-    category: selectedCategory.value,
-    subCategory: subCategory
-  });
+  if (subCategory) {
+    // 2뎁스 카테고리 (하위 카테고리)
+    const depth = getCategoryDepth(subCategory, true);
+    console.log('[CategoryFilter] 2뎁스 선택:', subCategory.categoryName, 'depth:', depth);
+    emit('category-change', {
+      categoryId: subCategory.categoryId,
+      categoryDepth: depth,
+      category: selectedCategory.value,
+      subCategory: subCategory
+    });
+  } else {
+    // "전체" 선택 시 1뎁스 카테고리 ID 사용
+    const depth = getCategoryDepth(selectedCategory.value, false);
+    console.log('[CategoryFilter] 1뎁스 전체 선택:', selectedCategory.value.categoryName, 'depth:', depth);
+    emit('category-change', {
+      categoryId: selectedCategory.value.categoryId,
+      categoryDepth: depth,
+      category: selectedCategory.value,
+      subCategory: null
+    });
+  }
 };
 
 const findAndSelectCategory = (categoryId) => {

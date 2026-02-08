@@ -121,6 +121,7 @@ const getStoredViewMode = () => {
 const viewMode = ref(getStoredViewMode());
 const feedListRef = ref(null);
 const selectedCategoryId = ref(null);
+const selectedCategoryDepth = ref(null);
 
 watch(viewMode, (newMode) => {
   try {
@@ -147,10 +148,16 @@ const loadFeeds = async () => {
     loading.value = true;
     const searchCondition = {
       categoryId: selectedCategoryId.value,
+      categoryDepth: selectedCategoryDepth.value,
       cursor: cursor.value,
       size: 20,
       isActive: true
     };
+
+    console.log('[FeedHome] 피드 조회 조건:', {
+      categoryId: selectedCategoryId.value,
+      categoryDepth: selectedCategoryDepth.value
+    });
 
     const response = await feedService.getFeedsWithCursor(searchCondition);
 
@@ -209,12 +216,18 @@ const resetAndLoadFeeds = () => {
   loadFeeds();
 };
 
-const handleCategoryChange = ({category, subCategory}) => {
+const handleCategoryChange = ({category, subCategory, categoryDepth}) => {
+  console.log('[FeedHome] 카테고리 변경:', { category: category?.categoryName, subCategory: subCategory?.categoryName, categoryDepth });
   if (!category && !subCategory) {
     selectedCategoryId.value = null;
+    selectedCategoryDepth.value = null;
   } else {
-    selectedCategoryId.value = subCategory?.categoryId || category?.categoryId;
+    const targetCategory = subCategory || category;
+    selectedCategoryId.value = targetCategory?.categoryId;
+    // categoryDepth 우선, 없으면 depth 필드, 그래도 없으면 subCategory면 2, 아니면 1
+    selectedCategoryDepth.value = categoryDepth || targetCategory?.depth || targetCategory?.categoryDepth || (subCategory ? 2 : 1);
   }
+  console.log('[FeedHome] 선택된 값:', { categoryId: selectedCategoryId.value, categoryDepth: selectedCategoryDepth.value });
   resetAndLoadFeeds();
 };
 

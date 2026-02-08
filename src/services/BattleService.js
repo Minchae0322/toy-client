@@ -652,6 +652,18 @@ class BattleService extends BaseApiService {
       validated.subCategoryId = parseInt(validated.subCategoryId)
     }
 
+    if (validated.category && isNaN(parseInt(validated.category))) {
+      delete validated.category
+    } else if (validated.category) {
+      validated.category = parseInt(validated.category)
+    }
+
+    if (validated.categoryDepth && isNaN(parseInt(validated.categoryDepth))) {
+      delete validated.categoryDepth
+    } else if (validated.categoryDepth) {
+      validated.categoryDepth = parseInt(validated.categoryDepth)
+    }
+
     if (validated.status) {
       const validStatuses = ['NORMAL', 'SUSPENDED', 'EARLY_CLOSED']
       if (validStatuses.includes(validated.status.toUpperCase())) {

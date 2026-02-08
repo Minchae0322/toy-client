@@ -25,16 +25,16 @@
 
     <div class="post-content">
       <p class="primary-review">
-        <span class="quote">“</span>{{ feed.reviewSummary }}<span class="quote">”</span>
+        <span class="quote">"</span>{{ feed.reviewSummary }}<span class="quote">"</span>
       </p>
-
-      <div class="hashtag-group">
-        <span v-for="tag in feed.hashtags?.slice(0, 3)" :key="tag" class="tag-item">#{{ tag }}</span>
-      </div>
 
       <div class="product-info-box">
         <span class="category-label">{{ feed.categoryName }}</span>
         <h3 class="product-name">{{ feed.productName }}</h3>
+      </div>
+
+      <div class="hashtag-group">
+        <span v-for="tag in feed.hashtags?.slice(0, 3)" :key="tag" class="tag-item">#{{ tag }}</span>
       </div>
 
       <div class="post-footer">

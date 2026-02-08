@@ -221,6 +221,7 @@ const DEFAULT_THUMBNAIL = 'https://picsum.photos/200'
 // 상태
 const categories = ref([])
 const selectedCategoryId = ref(null)
+const selectedCategoryDepth = ref(null)
 const products = ref([])
 const loading = ref(false)
 const hasNext = ref(true)
@@ -291,8 +292,12 @@ const goToDetail = (product) => {
 }
 
 // 카테고리 변경 핸들러
-const handleCategoryChange = ({ categoryId }) => {
+const handleCategoryChange = ({ categoryId, categoryDepth, category, subCategory }) => {
+  console.log('[ProductRanking] 카테고리 변경:', { categoryId, categoryDepth });
   selectedCategoryId.value = categoryId
+  // categoryDepth 우선, 없으면 subCategory면 2, 아니면 1
+  selectedCategoryDepth.value = categoryDepth || (subCategory ? 2 : 1)
+  console.log('[ProductRanking] 선택된 값:', { categoryId: selectedCategoryId.value, categoryDepth: selectedCategoryDepth.value });
   fetchRanking(true)
 }
 
@@ -311,6 +316,7 @@ const fetchRanking = async (reset = false) => {
     const searchCondition = { status: 'APPROVED' }
     if (selectedCategoryId.value) {
       searchCondition.categoryId = selectedCategoryId.value
+      searchCondition.categoryDepth = selectedCategoryDepth.value
     }
 
     const pageable = {

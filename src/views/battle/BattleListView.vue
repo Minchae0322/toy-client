@@ -149,6 +149,7 @@ const battleListRef = ref(null)
 const selectedCategory = ref(null)
 const selectedSubCategory = ref(null)
 const selectedCategoryId = ref(null)
+const selectedCategoryDepth = ref(null)
 const categories = ref([])
 
 // Computed
@@ -221,8 +222,10 @@ const loadBattles = async (reset = false) => {
 
     if (selectedSubCategory.value) {
       searchCondition.category = selectedSubCategory.value.categoryId
+      searchCondition.categoryDepth = selectedSubCategory.value.depth || 2
     } else if (selectedCategory.value) {
       searchCondition.category = selectedCategory.value.categoryId
+      searchCondition.categoryDepth = selectedCategoryDepth.value || selectedCategory.value.depth || 1
     }
 
     const response = await battleService.getBattles(
@@ -284,16 +287,22 @@ const updateTabCounts = async () => {
 }
 
 // Event Handlers
-const handleCategoryChange = ({ category, subCategory }) => {
+const handleCategoryChange = ({ category, subCategory, categoryDepth }) => {
+  console.log('[BattleList] 카테고리 변경:', { category: category?.categoryName, subCategory: subCategory?.categoryName, categoryDepth });
   if (!category && !subCategory) {
     selectedCategoryId.value = null
+    selectedCategoryDepth.value = null
     selectedCategory.value = null
     selectedSubCategory.value = null
   } else {
     selectedCategory.value = category
     selectedSubCategory.value = subCategory
-    selectedCategoryId.value = subCategory?.categoryId || category?.categoryId
+    const targetCategory = subCategory || category
+    selectedCategoryId.value = targetCategory?.categoryId
+    // categoryDepth 우선, 없으면 depth 필드, 그래도 없으면 subCategory면 2, 아니면 1
+    selectedCategoryDepth.value = categoryDepth || targetCategory?.depth || targetCategory?.categoryDepth || (subCategory ? 2 : 1)
   }
+  console.log('[BattleList] 선택된 값:', { categoryId: selectedCategoryId.value, categoryDepth: selectedCategoryDepth.value });
   resetAndLoadBattles()
 }
 

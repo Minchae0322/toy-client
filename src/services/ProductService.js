@@ -577,6 +577,10 @@ class ProductService extends BaseApiService {
       if (isNaN(parseInt(validated.categoryId))) delete validated.categoryId
       else validated.categoryId = parseInt(validated.categoryId)
     }
+    if (validated.categoryDepth) {
+      if (isNaN(parseInt(validated.categoryDepth))) delete validated.categoryDepth
+      else validated.categoryDepth = parseInt(validated.categoryDepth)
+    }
     return validated
   }
 

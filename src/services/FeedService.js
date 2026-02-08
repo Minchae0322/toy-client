@@ -607,6 +607,11 @@ class FeedService extends BaseApiService {
     } else if (validated.categoryId) {
       validated.categoryId = parseInt(validated.categoryId)
     }
+    if (validated.categoryDepth && isNaN(parseInt(validated.categoryDepth))) {
+      delete validated.categoryDepth
+    } else if (validated.categoryDepth) {
+      validated.categoryDepth = parseInt(validated.categoryDepth)
+    }
     if (validated.hashtags && Array.isArray(validated.hashtags)) {
       validated.hashtags = validated.hashtags.slice(0, 10)
     }
