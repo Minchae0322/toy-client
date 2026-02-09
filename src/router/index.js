@@ -306,29 +306,9 @@ const checkAuthenticationStatus = () => {
   }
 
   if (authUtils.isTokenExpired(accessToken)) {
-    console.log('⏰ [AuthCheck] AccessToken 만료됨')
-    const refreshToken = authUtils.getRefreshToken()
-
-    if (!refreshToken) {
-      console.log('⚠️ [AuthCheck] RefreshToken 없음 - OAuth 로그인으로 추정')
-      const tokenPayload = authUtils.parseJwtToken(accessToken)
-      if (tokenPayload && tokenPayload.iat) {
-        const tokenAge = Date.now() / 1000 - tokenPayload.iat
-        if (tokenAge < 60 * 60) {
-          console.log('✅ [AuthCheck] OAuth AccessToken이 최근 발급됨')
-          return true
-        }
-      }
-      console.log('❌ [AuthCheck] AccessToken도 오래됨 - 재로그인 필요')
-      return false
-    }
-
-    if (authUtils.isTokenExpired(refreshToken)) {
-      console.log('❌ [AuthCheck] RefreshToken도 만료됨')
-      return false
-    }
-
-    console.log('✅ [AuthCheck] RefreshToken 유효')
+    console.log('⏰ [AuthCheck] AccessToken 만료됨 - 인터셉터가 자동 갱신 처리')
+    // RefreshToken은 HttpOnly 쿠키라 JS에서 확인 불가
+    // API 인터셉터가 401 응답 시 자동으로 토큰 갱신을 처리함
     return true
   }
 

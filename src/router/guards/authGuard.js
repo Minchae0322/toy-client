@@ -32,11 +32,10 @@ export const authGuard = async (to, from, next) => {
 
         try {
             const accessToken = authUtils.getAccessToken()
-            const refreshToken = authUtils.getRefreshToken()
             const userInfo = authUtils.getUserInfo()
 
-            // 1️⃣ 기본 인증 정보 확인
-            if (!accessToken || !refreshToken || !userInfo) {
+            // 1️⃣ 기본 인증 정보 확인 (RefreshToken은 HttpOnly 쿠키라 JS에서 확인 불가)
+            if (!accessToken || !userInfo) {
                 console.log('🚫 [AuthGuard] 인증 정보 부족 - Login 페이지로')
                 next({
                     name: 'Login',
@@ -45,24 +44,7 @@ export const authGuard = async (to, from, next) => {
                 return
             }
 
-            // 2️⃣ RefreshToken 만료 확인 (가장 중요!)
-            if (authUtils.isTokenExpired(refreshToken)) {
-                console.log('🚨 [AuthGuard] RefreshToken 만료 - 즉시 로그아웃 후 Login 페이지로')
-
-                // 만료된 인증 정보 정리
-                authUtils.logout()
-
-                next({
-                    name: 'Login',
-                    query: {
-                        redirect: to.fullPath,
-                        reason: 'session_expired'
-                    }
-                })
-                return
-            }
-
-            // 3️⃣ AccessToken 만료 확인 (RefreshToken이 유효하면 인터셉터가 자동 갱신)
+            // 2️⃣ AccessToken 만료 확인 (인터셉터가 자동 갱신 처리)
             if (authUtils.isTokenExpired(accessToken)) {
                 console.log('🔄 [AuthGuard] AccessToken 만료됨 - 인터셉터가 자동 갱신 처리할 예정')
                 // AccessToken 만료는 인터셉터가 자동으로 처리하므로 통과
@@ -139,30 +121,15 @@ export const oneMouthGuard = async (to, from, next) => {
 export const adminGuard = async (to, from, next) => {
     console.log('🛡️ [AdminGuard] 관리자 권한 확인:', to.path)
 
-    // 먼저 기본 인증 확인
+    // 먼저 기본 인증 확인 (RefreshToken은 HttpOnly 쿠키라 JS에서 확인 불가)
     const accessToken = authUtils.getAccessToken()
-    const refreshToken = authUtils.getRefreshToken()
     const userInfo = authUtils.getUserInfo()
 
-    if (!accessToken || !refreshToken || !userInfo) {
+    if (!accessToken || !userInfo) {
         console.log('🚫 [AdminGuard] 인증 정보 없음')
         next({
             name: 'Login',
             query: { redirect: to.fullPath }
-        })
-        return
-    }
-
-    // RefreshToken 만료 확인
-    if (authUtils.isTokenExpired(refreshToken)) {
-        console.log('🚨 [AdminGuard] RefreshToken 만료')
-        authUtils.logout()
-        next({
-            name: 'Login',
-            query: {
-                redirect: to.fullPath,
-                reason: 'session_expired'
-            }
         })
         return
     }
