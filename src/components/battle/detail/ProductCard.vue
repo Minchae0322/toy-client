@@ -198,7 +198,7 @@ const onVote = (rank) => {
 .img-box img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.3s ease;
 }
 
