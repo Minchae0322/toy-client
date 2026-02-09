@@ -320,7 +320,7 @@ const daysLeftText = computed(() => {
 }
 
 .status-badge.suspended {
-  background: #f59e0b;
+  background: #ef4444;
   color: #fff;
 }
 

@@ -11,10 +11,19 @@
         </div>
       </div>
 
-      <div class="selection-names" v-if="hasAllSelections">
-        <span v-for="rank in (isWeightedVote ? [1, 2, 3] : [1])" :key="rank" class="selected-name">
+      <div class="selection-names" v-if="hasAnySelection">
+        <span
+          v-for="rank in selectedRanksList"
+          :key="rank"
+          class="selected-name"
+        >
+          <span class="rank-label">{{ rank }}위</span>
           {{ getSelectedProductName(rank) }}
         </span>
+      </div>
+
+      <div class="vote-count-info" v-if="isWeightedVote">
+        <span class="count">{{ selectedCount }}/3</span>
       </div>
 
       <button @click="$emit('submit')" :disabled="submitting" class="glow-submit-btn">
@@ -52,19 +61,27 @@ const props = defineProps({
 
 defineEmits(['submit'])
 
-const hasAllSelections = computed(() => {
-  if (props.isWeightedVote) {
-    return props.selectedRanks[1] && props.selectedRanks[2] && props.selectedRanks[3]
-  }
-  return props.selectedRanks[1]
+// 선택된 순위 목록 (1, 2, 3 중 선택된 것만)
+const selectedRanksList = computed(() => {
+  const ranks = []
+  if (props.selectedRanks[1]) ranks.push(1)
+  if (props.selectedRanks[2]) ranks.push(2)
+  if (props.selectedRanks[3]) ranks.push(3)
+  return ranks
 })
+
+// 선택된 투표 개수
+const selectedCount = computed(() => selectedRanksList.value.length)
+
+// 최소 1개 이상 선택했는지
+const hasAnySelection = computed(() => selectedCount.value > 0)
 
 const getSelectedProductName = (rank) => {
   const itemId = props.selectedRanks[rank]
   const item = props.sortedItems.find(i => i.id === itemId)
   if (!item) return ''
   const name = props.getItemName(item)
-  return name.length > 10 ? name.slice(0, 10) + '...' : name
+  return name.length > 8 ? name.slice(0, 8) + '...' : name
 }
 </script>
 
@@ -110,15 +127,40 @@ const getSelectedProductName = (rank) => {
 
 .selection-names {
   display: flex;
-  gap: 8px;
-  font-size: 13px;
-  color: #aaa;
+  gap: 6px;
+  font-size: 12px;
+  color: #ccc;
+  flex-wrap: wrap;
+  max-width: 300px;
 }
 
 .selected-name {
   padding: 4px 8px;
   background: #222;
   border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rank-label {
+  color: #4a6cf7;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.vote-count-info {
+  display: flex;
+  align-items: center;
+}
+
+.vote-count-info .count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a6cf7;
+  background: rgba(74, 108, 247, 0.15);
+  padding: 4px 10px;
+  border-radius: 12px;
 }
 
 .glow-submit-btn {
@@ -170,6 +212,15 @@ const getSelectedProductName = (rank) => {
 
   .selection-names {
     display: none;
+  }
+
+  .vote-count-info {
+    display: flex;
+  }
+
+  .vote-count-info .count {
+    font-size: 12px;
+    padding: 3px 8px;
   }
 
   .glow-submit-btn {

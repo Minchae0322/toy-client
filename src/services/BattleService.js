@@ -812,8 +812,10 @@ export const battleUtils = {
   getBattleStatusLabel(status) {
     const labels = {
       'DRAFT': '임시저장',
+      'NORMAL': '정상',
       'ACTIVE': '진행중',
       'CLOSED': '종료',
+      'SUSPENDED': '정지됨',
       'EARLY_CLOSED': '조기종료'
     }
     return labels[status] || ''
@@ -822,8 +824,10 @@ export const battleUtils = {
   getBattleStatusColor(status) {
     const colors = {
       'DRAFT': '#6B7280',
+      'NORMAL': '#10B981',
       'ACTIVE': '#10B981',
       'CLOSED': '#F59E0B',
+      'SUSPENDED': '#EF4444',
       'EARLY_CLOSED': '#64748B'
     }
     return colors[status] || '#64748B'
@@ -850,7 +854,7 @@ export const battleUtils = {
   getVoteTypeLabel(type) {
     const labels = {
       'SINGLE': '1인 1표',
-      'MULTIPLE': '1인 3표'
+      'MULTIPLE': '순위 투표'
     }
     return labels[type] || ''
   },
@@ -912,17 +916,33 @@ export const battleUtils = {
 
   isActive(battle) {
     if (!battle) return false
-    return battle.status === 'ACTIVE'
+    const status = battle.status?.title || battle.status
+    // NORMAL 상태일 때는 endDate로 판단
+    if (status === 'NORMAL') {
+      if (!battle.endDate) return true
+      return new Date(battle.endDate) > new Date()
+    }
+    return status === 'ACTIVE'
   },
 
   isEnded(battle) {
     if (!battle) return false
-    return battle.status === 'CLOSED' || battle.status === 'EARLY_CLOSED'
+    const status = battle.status?.title || battle.status
+    // NORMAL 상태일 때는 endDate로 판단
+    if (status === 'NORMAL') {
+      if (!battle.endDate) return false
+      return new Date(battle.endDate) <= new Date()
+    }
+    return status === 'CLOSED' || status === 'EARLY_CLOSED' || status === 'SUSPENDED'
   },
 
   canAddItem(battle, userId) {
     if (!battle || !userId) return false
-    if (battle.status !== 'ACTIVE') return false
+    const status = battle.status?.title || battle.status
+    // SUSPENDED나 EARLY_CLOSED 상태에서는 아이템 추가 불가
+    if (status === 'SUSPENDED' || status === 'EARLY_CLOSED') return false
+    // NORMAL 또는 ACTIVE 상태에서만 아이템 추가 가능
+    if (status !== 'NORMAL' && status !== 'ACTIVE') return false
     if (battle.itemAddPermissionType === 'CREATOR_ONLY') {
       return battle.creatorUserInfo?.userId === userId
     }
@@ -931,10 +951,14 @@ export const battleUtils = {
 
   canVote(battle) {
     if (!battle) return false
+    const status = battle.status?.title || battle.status
+    // SUSPENDED나 EARLY_CLOSED 상태에서는 투표 불가
+    if (status === 'SUSPENDED' || status === 'EARLY_CLOSED') return false
     const now = new Date()
     const startDate = new Date(battle.participationStartDate)
     const endDate = new Date(battle.endDate)
-    return battle.status === 'ACTIVE' && now >= startDate && now <= endDate
+    // NORMAL 또는 ACTIVE 상태에서 투표 가능
+    return (status === 'NORMAL' || status === 'ACTIVE') && now >= startDate && now <= endDate
   },
 
   getDaysLeft(endDate) {

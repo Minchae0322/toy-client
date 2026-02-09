@@ -74,7 +74,7 @@
         <div class="info-title">투표 방식에 따른 점수 계산</div>
         <div class="info-desc">
           <strong>1인 1표:</strong> 각 투표는 1점으로 계산됩니다<br>
-          <strong>1인 3표 (순위):</strong> 1위 3점, 2위 2점, 3위 1점으로 가중치가 적용됩니다
+          <strong>순위 투표 (최대 3표):</strong> 1~3개 아이템 선택 가능, 1위 3점, 2위 2점, 3위 1점
         </div>
       </div>
     </div>

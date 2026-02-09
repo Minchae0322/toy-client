@@ -259,16 +259,10 @@ export default {
     async submitVote() {
       if (this.submitting) return
 
-      if (this.isWeightedVote) {
-        if (!this.selectedRanks[1] || !this.selectedRanks[2] || !this.selectedRanks[3]) {
-          await this.open({ type: 'alert', title: '투표 선택 필요', message: '1위, 2위, 3위를 모두 선택해주세요' })
-          return
-        }
-      } else {
-        if (!this.selectedRanks[1]) {
-          await this.open({ type: 'alert', title: '투표 선택 필요', message: '제품을 선택해주세요' })
-          return
-        }
+      // MULTIPLE/SINGLE 모두 최소 1개 이상 선택 필요
+      if (!this.hasSelectedItems) {
+        await this.open({ type: 'alert', title: '투표 선택 필요', message: '제품을 선택해주세요' })
+        return
       }
 
       this.submitting = true
@@ -277,11 +271,10 @@ export default {
         const votes = []
 
         if (this.isWeightedVote) {
-          votes.push(
-              { itemId: this.selectedRanks[1], rank: 1 },
-              { itemId: this.selectedRanks[2], rank: 2 },
-              { itemId: this.selectedRanks[3], rank: 3 }
-          )
+          // MULTIPLE: 선택된 순위만 투표에 포함 (1~3개 가능)
+          if (this.selectedRanks[1]) votes.push({ itemId: this.selectedRanks[1], rank: 1 })
+          if (this.selectedRanks[2]) votes.push({ itemId: this.selectedRanks[2], rank: 2 })
+          if (this.selectedRanks[3]) votes.push({ itemId: this.selectedRanks[3], rank: 3 })
         } else {
           votes.push({ itemId: this.selectedRanks[1], rank: 1 })
         }

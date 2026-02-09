@@ -128,8 +128,8 @@ const voteTypes = [
   {
     value: 'MULTIPLE',
     iconType: 'vote-multiple',
-    title: '1인 3표 (순위)',
-    desc: '1위부터 3위까지 순위를 매겨 투표할 수 있어요'
+    title: '순위 투표 (최대 3표)',
+    desc: '1~3개 아이템에 순위를 매겨 투표할 수 있어요'
   }
 ];
 
