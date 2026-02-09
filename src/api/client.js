@@ -4,7 +4,7 @@ import axios from 'axios'
 // 환경에 따른 기본 URL 설정
 const getAuthBaseUrl = () => {
   const envUrl = import.meta.env.VITE_AUTH_BASE_URL
-  if (envUrl) return `${envUrl}/api`
+  if (envUrl) return envUrl  // env에 이미 전체 경로 포함 (e.g. /api/auth)
   // 개발 서버에서는 프록시 사용, 프로덕션에서는 직접 요청
   return import.meta.env.DEV ? '/api' : 'http://54.180.89.70:8081/api'
 }

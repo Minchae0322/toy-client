@@ -283,13 +283,12 @@ export const manualRefreshToken = async () => {
  */
 export const checkTokenStatus = () => {
   const accessToken = authUtils.getAccessToken()
-  const refreshToken = authUtils.getRefreshToken()
 
   return {
     hasAccessToken: !!accessToken,
-    hasRefreshToken: !!refreshToken,
+    hasRefreshToken: true,  // HttpOnly 쿠키로 관리 (JS 접근 불가)
     accessTokenExpired: accessToken ? authUtils.isTokenExpired(accessToken) : true,
-    refreshTokenExpired: refreshToken ? authUtils.isTokenExpired(refreshToken) : true,
+    refreshTokenExpired: false,  // 서버가 검증 (JS에서 확인 불가)
     needsRefresh: accessToken ? authUtils.shouldRefreshToken(accessToken) : true
   }
 }
