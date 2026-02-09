@@ -1,4 +1,6 @@
 // src/stores/auth.js - Pinia 인증 스토어 (중앙 상태 관리)
+// 🔒 보안: Access Token은 메모리(Pinia state)에만 저장
+//         Refresh Token은 HttpOnly 쿠키로 백엔드가 관리
 import { defineStore } from 'pinia'
 import * as authUtils from '@/utils/auth.js'
 import { authService } from '@/services/AuthService.js'
@@ -6,20 +8,17 @@ import { userService } from '@/services/UserService.js'
 
 export const useAuthStore = defineStore('auth', {
     state: () => {
-        // 새로고침 시 localStorage에서 동기적으로 초기 상태 복원
-        // 이렇게 하면 Pinia store 생성 시점부터 올바른 인증 상태를 가짐
-        const accessToken = authUtils.getAccessToken()
-        const savedUser = accessToken ? authUtils.getCurrentUser() : null
-        const isAuth = !!(accessToken && savedUser?.id)
-
-        if (isAuth) {
-            console.log('🔄 [AuthStore] 초기 상태 복원:', savedUser?.nickname || savedUser?.username)
-        }
+        // 🔒 보안: 새로고침 시 메모리 토큰은 사라짐
+        // 앱 초기화 시 initializeAuth()를 호출하여 refresh 쿠키로 토큰 재발급
+        const savedUser = authUtils.getUserInfo()
 
         return {
+            // 🔒 Access Token은 메모리에만 저장 (XSS 방어)
+            accessToken: null,
             user: savedUser,
-            isAuthenticated: isAuth,
+            isAuthenticated: false,
             loading: false,
+            initializing: true, // 앱 초기화 중 여부
             lastActivity: Date.now()
         }
     },
@@ -48,26 +47,111 @@ export const useAuthStore = defineStore('auth', {
         isOAuthUser: (state) => state.user?.provider && state.user.provider !== 'local',
         authProvider: (state) => state.user?.provider || 'local',
 
-        // 토큰 관련 (HttpOnly 쿠키 기반)
-        hasValidToken: () => {
-            const accessToken = authUtils.getAccessToken()
-            if (!accessToken) return false
-            return !authUtils.isTokenExpired(accessToken)
+        // 🔒 토큰 관련 (메모리 기반)
+        hasValidToken: (state) => {
+            if (!state.accessToken) return false
+            return !authUtils.isTokenExpired(state.accessToken)
         },
 
+        // 🔒 Access Token getter (메모리에서 직접 반환)
+        getAccessToken: (state) => state.accessToken,
+
         // 토큰 상태 정보
-        tokenInfo: () => {
-            const accessToken = authUtils.getAccessToken()
+        tokenInfo: (state) => {
             return {
-                hasAccessToken: !!accessToken,
+                hasAccessToken: !!state.accessToken,
                 hasRefreshToken: 'HttpOnly 쿠키로 관리',
-                accessTokenExpired: accessToken ? authUtils.isTokenExpired(accessToken) : true,
-                accessTokenExpiry: accessToken ? authUtils.getTokenExpiryTime(accessToken) : null
+                accessTokenExpired: state.accessToken ? authUtils.isTokenExpired(state.accessToken) : true,
+                accessTokenExpiry: state.accessToken ? authUtils.getTokenExpiryTime(state.accessToken) : null
             }
         }
     },
 
     actions: {
+        /**
+         * 🔒 앱 초기화 시 토큰 재발급 (새로고침 대응)
+         * - Refresh Token은 HttpOnly 쿠키에 있으므로 /reissue API 호출
+         * - 성공하면 메모리에 Access Token 저장
+         */
+        async initializeAuth() {
+            console.log('🔄 [AuthStore] 앱 초기화 - 토큰 재발급 시도...')
+            this.initializing = true
+
+            try {
+                const authBaseURL = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8081'
+
+                const response = await fetch(`${authBaseURL}/reissue`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include' // HttpOnly 쿠키 포함
+                })
+
+                if (!response.ok) {
+                    console.log('ℹ️ [AuthStore] 세션 없음 또는 만료 - 비로그인 상태')
+                    this.clearAuthState()
+                    return false
+                }
+
+                const data = await response.json()
+                if (data.accessToken) {
+                    // 🔒 메모리에만 저장
+                    this.accessToken = data.accessToken
+
+                    // JWT에서 사용자 정보 추출
+                    const user = authUtils.parseJwtToken(data.accessToken)
+                    if (user) {
+                        const userInfo = {
+                            id: user.userId,
+                            email: user.email || user.username,
+                            username: user.username || user.sub,
+                            nickname: user.nickname || user.username,
+                            role: user.role || user.auth || 'USER',
+                            provider: user.provider || 'local'
+                        }
+                        this.user = userInfo
+                        this.isAuthenticated = true
+                        authUtils.setUserInfo(userInfo)
+
+                        console.log('✅ [AuthStore] 토큰 재발급 성공:', userInfo.nickname || userInfo.username)
+
+                        // 프로필 정보 로드 (백그라운드)
+                        this.loadUserProfile(userInfo.id)
+                        return true
+                    }
+                }
+
+                this.clearAuthState()
+                return false
+
+            } catch (error) {
+                console.log('ℹ️ [AuthStore] 토큰 재발급 실패 (비로그인 상태):', error.message)
+                this.clearAuthState()
+                return false
+            } finally {
+                this.initializing = false
+            }
+        },
+
+        /**
+         * 프로필 정보 로드 (백그라운드)
+         */
+        async loadUserProfile(userId) {
+            try {
+                const profileResponse = await userService.getUserProfile(userId)
+                if (profileResponse.success && profileResponse.data) {
+                    this.user = {
+                        ...this.user,
+                        profilePicture: profileResponse.data.profilePicture,
+                        nickname: profileResponse.data.nickname || this.user?.nickname,
+                        description: profileResponse.data.description
+                    }
+                    authUtils.setUserInfo(this.user)
+                }
+            } catch (error) {
+                console.warn('⚠️ [AuthStore] 프로필 로드 실패:', error.message)
+            }
+        },
+
         /**
          * 사용자 정보 로드 및 인증 상태 확인
          */
@@ -75,44 +159,51 @@ export const useAuthStore = defineStore('auth', {
             try {
                 this.loading = true
 
-                const accessToken = authUtils.getAccessToken()
-
-                if (!accessToken) {
+                // 🔒 메모리에서 토큰 확인
+                if (!this.accessToken) {
                     this.clearAuthState()
                     return false
                 }
 
-                // 사용자 기본 정보 로드 (JWT/localStorage)
-                const user = authUtils.getCurrentUser()
+                // JWT에서 사용자 정보 추출
+                const payload = authUtils.parseJwtToken(this.accessToken)
+                if (!payload) {
+                    console.error('❌ [AuthStore] 토큰 파싱 실패')
+                    this.clearAuthState()
+                    return false
+                }
 
-                if (!user?.id) {
+                const user = {
+                    id: payload.userId,
+                    email: payload.email || payload.username,
+                    username: payload.username || payload.sub,
+                    nickname: payload.nickname || payload.username,
+                    role: payload.role || payload.auth || 'USER',
+                    provider: payload.provider || 'local'
+                }
+
+                if (!user.id) {
                     console.error('❌ [AuthStore] 유효한 사용자 정보 없음')
                     this.clearAuthState()
                     return false
                 }
 
-                // 프로필 API에서 최신 정보 가져오기 (프로필 사진 포함)
+                // 프로필 API에서 최신 정보 가져오기
                 try {
                     const profileResponse = await userService.getUserProfile(user.id)
-
                     if (profileResponse.success && profileResponse.data) {
-                        // 프로필 정보를 user 객체에 병합
                         user.profilePicture = profileResponse.data.profilePicture
                         user.nickname = profileResponse.data.nickname || user.nickname
                         user.description = profileResponse.data.description || user.description
-
                         console.log('✅ [AuthStore] 프로필 정보 로드 완료')
                     }
                 } catch (profileError) {
-                    console.warn('⚠️ [AuthStore] 프로필 정보 로드 실패 (기본 정보만 사용):', profileError)
+                    console.warn('⚠️ [AuthStore] 프로필 정보 로드 실패:', profileError)
                 }
 
-                // 상태 업데이트
                 this.user = user
                 this.isAuthenticated = true
                 this.lastActivity = Date.now()
-
-                // localStorage에도 업데이트된 정보 저장
                 authUtils.setUserInfo(user)
 
                 console.log('✅ [AuthStore] 사용자 정보 로드 완료:', user.nickname || user.username)
@@ -128,6 +219,14 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
+         * 🔒 Access Token 설정 (토큰 갱신 시 사용)
+         */
+        setAccessToken(token) {
+            this.accessToken = token
+            console.log('✅ [AuthStore] Access Token 메모리 저장 완료')
+        },
+
+        /**
          * 로그인 처리
          */
         async login(tokens, user = {}) {
@@ -136,15 +235,25 @@ export const useAuthStore = defineStore('auth', {
             try {
                 this.loading = true
 
-                // 토큰 저장
-                authUtils.setTokens(tokens.accessToken, tokens.refreshToken)
+                // 🔒 Access Token은 메모리에만 저장
+                if (tokens.accessToken) {
+                    this.accessToken = tokens.accessToken
+                }
 
                 // 사용자 정보 보완 (토큰에서 추출)
                 let completeUser = { ...user }
                 if (!user.id && tokens.accessToken) {
-                    const tokenUser = authUtils.getCurrentUser()
-                    if (tokenUser) {
-                        completeUser = { ...completeUser, ...tokenUser }
+                    const payload = authUtils.parseJwtToken(tokens.accessToken)
+                    if (payload) {
+                        completeUser = {
+                            ...completeUser,
+                            id: payload.userId,
+                            email: payload.email || payload.username,
+                            username: payload.username || payload.sub,
+                            nickname: payload.nickname || payload.username,
+                            role: payload.role || payload.auth || 'USER',
+                            provider: payload.provider || 'local'
+                        }
                     }
                 }
 
@@ -171,24 +280,24 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
-         * 로그아웃 처리
+         * 🔒 로그아웃 처리
          */
         async logout() {
             console.log('🚪 [AuthStore] 로그아웃 처리 시작...')
 
             try {
-                // 즉시 상태 초기화 (UI 반응성)
+                // 🔒 즉시 메모리 토큰 및 상태 초기화 (UI 반응성)
                 this.clearAuthState()
 
-                // 백엔드 로그아웃 시도
+                // 백엔드 로그아웃 시도 (쿠키 삭제)
                 try {
                     await authService.logout()
-                    console.log('✅ [AuthStore] 백엔드 로그아웃 완료')
+                    console.log('✅ [AuthStore] 백엔드 로그아웃 완료 (쿠키 삭제)')
                 } catch (error) {
                     console.warn('⚠️ [AuthStore] 백엔드 로그아웃 실패:', error)
                 }
 
-                // 로컬 인증 정보 정리
+                // 로컬 인증 정보 정리 (userInfo 삭제)
                 authUtils.logout()
 
                 console.log('✅ [AuthStore] 로그아웃 처리 완료')
@@ -201,9 +310,11 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
-         * 인증 상태 초기화
+         * 🔒 인증 상태 완전 초기화
          */
         clearAuthState() {
+            // 메모리 토큰 삭제
+            this.accessToken = null
             this.user = null
             this.isAuthenticated = false
             this.lastActivity = Date.now()

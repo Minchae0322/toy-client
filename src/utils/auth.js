@@ -1,87 +1,73 @@
-// src/utils/auth.js - 중앙화된 인증 유틸리티 (HttpOnly 쿠키 버전)
+// src/utils/auth.js - 중앙화된 인증 유틸리티
+// 🔒 보안: Access Token은 메모리에만 저장 (XSS 방어)
+//         Refresh Token은 HttpOnly 쿠키로 백엔드가 관리
 
 export const STORAGE_KEYS = {
-    ACCESS_TOKEN: 'access_token',
-    REFRESH_TOKEN: 'refresh_token', // 사용 안 하지만 호환성 유지
     USER_INFO: 'user_info',
     DEVICE_ID: 'device_id'
 }
 
-// ==================== 토큰 관리 ====================
+// ==================== 🔒 메모리 토큰 관리 ====================
+
+// 🔒 Access Token은 모듈 레벨 변수에 저장 (메모리)
+// localStorage 대신 메모리 사용으로 XSS 공격 시 토큰 탈취 방지
+let _accessToken = null
 
 /**
- * AccessToken 가져오기 (localStorage)
+ * 🔒 AccessToken 가져오기 (메모리)
  */
-export const getAccessToken = () => localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+export const getAccessToken = () => _accessToken
+
+/**
+ * 🔒 AccessToken 설정 (메모리)
+ * @param {string} token - Access Token
+ */
+export const setAccessToken = (token) => {
+    _accessToken = token
+    if (token) {
+        console.log('✅ AccessToken 메모리 저장 완료')
+    }
+}
 
 /**
  * RefreshToken 가져오기
  * - HttpOnly 쿠키로 관리되므로 JavaScript에서 직접 접근 불가
- * - 브라우저가 withCredentials: true 요청 시 자동으로 쿠키 전송
- * - 쿠키 존재 여부는 서버 응답(401)으로만 확인 가능
+ * - 브라우저가 credentials: 'include' 요청 시 자동으로 쿠키 전송
  * @returns {null} HttpOnly 쿠키는 JS에서 읽을 수 없음
  */
 export const getRefreshToken = () => {
     // HttpOnly 쿠키는 JavaScript로 접근 불가
-    // 존재 여부 확인이 필요하면 서버에 요청해야 함
     return null
 }
 
 /**
- * 토큰 저장
- * @param {string} accessToken - AccessToken (localStorage에 저장)
+ * 🔒 토큰 저장
+ * @param {string} accessToken - AccessToken (메모리에 저장)
  * @param {string|null} refreshToken - RefreshToken (무시됨, 쿠키로 관리)
  */
 export const setTokens = (accessToken, refreshToken = null) => {
     if (accessToken) {
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
-        console.log('✅ AccessToken 저장 완료')
+        _accessToken = accessToken
+        console.log('✅ AccessToken 메모리 저장 완료')
     }
 
     // refreshToken은 HttpOnly 쿠키로 관리되므로 무시
     if (refreshToken) {
         console.log('ℹ️ RefreshToken은 HttpOnly 쿠키로 관리됩니다')
     }
-
-    // 다른 탭에 토큰 변경 알림
-    window.dispatchEvent(new StorageEvent('storage', {
-        key: STORAGE_KEYS.ACCESS_TOKEN,
-        newValue: accessToken
-    }))
 }
 
 /**
- * AccessToken만 저장 (토큰 갱신 시 사용)
- * @param {string} accessToken - 새로운 AccessToken
- */
-export const setAccessToken = (accessToken) => {
-    if (accessToken) {
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
-        console.log('✅ AccessToken 갱신 저장 완료')
-
-        // 다른 탭에 토큰 변경 알림
-        window.dispatchEvent(new StorageEvent('storage', {
-            key: STORAGE_KEYS.ACCESS_TOKEN,
-            newValue: accessToken
-        }))
-    }
-}
-
-/**
- * 모든 토큰 및 사용자 정보 삭제
+ * 🔒 모든 토큰 및 사용자 정보 삭제
  */
 export const clearTokens = () => {
-    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
-    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN) // 호환성
+    // 메모리 토큰 삭제
+    _accessToken = null
+
+    // localStorage에서 사용자 정보 삭제
     localStorage.removeItem(STORAGE_KEYS.USER_INFO)
 
-    console.log('🗑️ 로컬 인증 정보 삭제 완료')
-
-    // 다른 탭에 로그아웃 알림
-    window.dispatchEvent(new StorageEvent('storage', {
-        key: STORAGE_KEYS.ACCESS_TOKEN,
-        newValue: null
-    }))
+    console.log('🗑️ 인증 정보 삭제 완료 (메모리 토큰 + 사용자 정보)')
 }
 
 // ==================== 사용자 정보 관리 ====================
@@ -187,13 +173,12 @@ export const getTokenTimeRemaining = (token) => {
 // ==================== 인증 상태 확인 ====================
 
 /**
- * 사용자 인증 여부 확인
+ * 🔒 사용자 인증 여부 확인 (메모리 토큰 기반)
  */
 export const isAuthenticated = () => {
     const accessToken = getAccessToken()
 
     if (!accessToken) {
-        console.log('❌ AccessToken이 없습니다')
         return false
     }
 
@@ -202,26 +187,23 @@ export const isAuthenticated = () => {
         return true
     }
 
-    // AccessToken 만료 - RefreshToken은 HttpOnly 쿠키에서 관리
-    console.log('⏰ AccessToken 만료 (RefreshToken은 쿠키로 관리)')
-    // 서버가 쿠키 확인 후 401 응답하면 자동으로 갱신 시도
+    // AccessToken 만료 - API 요청 시 자동 갱신 처리됨
     return true
 }
 
 // ==================== 사용자 정보 추출 ====================
 
 /**
- * 현재 로그인한 사용자 정보 가져오기
+ * 🔒 현재 로그인한 사용자 정보 가져오기
  */
 export const getCurrentUser = () => {
     // 1. 저장된 사용자 정보 우선 확인
     let user = getUserInfo()
     if (user?.id && typeof user.id === 'number' && user.id < 1000000000) {
-        // 유효한 userId인지 확인 (타임스탬프가 아닌지)
         return user
     }
 
-    // 2. AccessToken에서 사용자 정보 추출
+    // 2. 메모리의 AccessToken에서 사용자 정보 추출
     const token = getAccessToken()
     if (!token) {
         return null
@@ -232,9 +214,9 @@ export const getCurrentUser = () => {
         return null
     }
 
-    // 3. 토큰 페이로드에서 사용자 정보 구성 - userId를 명시적으로 사용
+    // 3. 토큰 페이로드에서 사용자 정보 구성
     user = {
-        id: payload.userId,  // 명시적으로 userId만 사용
+        id: payload.userId,
         email: payload.email || payload.username,
         username: payload.username || payload.sub,
         nickname: payload.nickname || payload.username,
@@ -322,22 +304,21 @@ export const clearAllAuthData = () => {
 // ==================== 토큰 검증 ====================
 
 /**
- * 토큰 상태 검증
+ * 🔒 토큰 상태 검증 (메모리 기반)
  */
 export const validateTokens = () => {
     const accessToken = getAccessToken()
 
     const result = {
         hasAccessToken: !!accessToken,
-        hasRefreshToken: true, // 쿠키로 관리되므로 항상 true로 가정
+        hasRefreshToken: 'HttpOnly 쿠키 (확인 불가)',
         accessTokenValid: accessToken ? !isTokenExpired(accessToken) : false,
-        refreshTokenValid: true, // 서버가 검증
+        refreshTokenValid: 'HttpOnly 쿠키 (서버가 검증)',
         needsRefresh: false,
         isAuthenticated: false
     }
 
     if (!accessToken) {
-        result.hasRefreshToken = false
         return result
     }
 
@@ -346,9 +327,9 @@ export const validateTokens = () => {
         return result
     }
 
-    // AccessToken 만료 - RefreshToken은 쿠키에서 관리
+    // AccessToken 만료 - API 요청 시 자동 갱신
     result.needsRefresh = true
-    result.isAuthenticated = true // 서버가 쿠키 검증
+    result.isAuthenticated = true
 
     return result
 }

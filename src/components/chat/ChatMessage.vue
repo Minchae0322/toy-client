@@ -1,30 +1,35 @@
 <template>
+  <!-- 🔒 XSS 방어: 모든 사용자 입력은 sanitize 처리됨 -->
   <div class="chat-message" :class="{ 'is-mine': isMine }">
     <div v-if="showSender && !isMine" class="message-sender">
-      {{ message.senderName }}
+      {{ sanitizedSenderName }}
     </div>
 
     <div class="message-bubble" :class="messageTypeClass">
       <div class="message-content">
+        <!-- 🔒 TEXT: sanitizeText로 HTML 제거 -->
         <template v-if="message.type === 'TEXT'">
-          {{ message.content }}
+          {{ sanitizedContent }}
         </template>
 
+        <!-- 🔒 IMAGE: sanitizeUrl로 위험한 프로토콜 차단 -->
         <template v-else-if="message.type === 'IMAGE'">
-          <img :src="message.content" alt="이미지" class="message-image" />
+          <img v-if="sanitizedImageUrl" :src="sanitizedImageUrl" alt="이미지" class="message-image" />
+          <span v-else class="image-error">이미지를 불러올 수 없습니다</span>
         </template>
 
+        <!-- 🔒 FILE: sanitizeFilename으로 경로 탐색 방지 -->
         <template v-else-if="message.type === 'FILE'">
           <div class="message-file">
             <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
             </svg>
-            <span class="file-name">{{ message.metadata?.fileName || '파일' }}</span>
+            <span class="file-name">{{ sanitizedFileName }}</span>
           </div>
         </template>
 
         <template v-else>
-          {{ message.content }}
+          {{ sanitizedContent }}
         </template>
       </div>
 
@@ -60,6 +65,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { sanitizeText, sanitizeUrl, sanitizeFilename } from '@/utils/sanitize.js'
 
 const props = defineProps({
   message: Object,
@@ -69,6 +75,26 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['message-click', 'retry', 'delete'])
+
+// 🔒 XSS 방어: 메시지 내용 sanitize
+const sanitizedContent = computed(() => {
+    return sanitizeText(props.message?.content || '')
+})
+
+// 🔒 XSS 방어: 발신자 이름 sanitize
+const sanitizedSenderName = computed(() => {
+    return sanitizeText(props.message?.senderName || '')
+})
+
+// 🔒 XSS 방어: 이미지 URL sanitize
+const sanitizedImageUrl = computed(() => {
+    return sanitizeUrl(props.message?.content || '')
+})
+
+// 🔒 XSS 방어: 파일명 sanitize
+const sanitizedFileName = computed(() => {
+    return sanitizeFilename(props.message?.metadata?.fileName || '파일')
+})
 
 const messageTypeClass = computed(() => {
   return {

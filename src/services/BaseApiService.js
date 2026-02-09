@@ -99,10 +99,10 @@ export class BaseApiService {
         throw new Error('새로운 AccessToken을 받지 못했습니다')
       }
 
-      // AccessToken만 저장 (RefreshToken은 쿠키로 갱신됨)
-      authUtils.setTokens(accessToken, null)
+      // 🔒 AccessToken을 메모리에 저장 (XSS 방어)
+      authUtils.setAccessToken(accessToken)
 
-      console.log(`✅ [${this.serviceName}] 토큰 갱신 완료`)
+      console.log(`✅ [${this.serviceName}] 토큰 갱신 완료 (메모리 저장)`)
 
       this.processQueue(null, accessToken)
 
