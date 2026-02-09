@@ -11,7 +11,7 @@
       <img :src="itemImage" :alt="itemName" @error="handleImageError" />
       <div class="score-overlay">
         <span class="score-percent">{{ percentage }}%</span>
-        <span class="score-count">{{ voteCount }}{{ isWeightedVote ? '점' : '표' }}</span>
+        <span class="score-count">{{ voteCount }}명 투표</span>
       </div>
     </div>
 
@@ -102,9 +102,6 @@ const itemImage = computed(() => {
 })
 
 const voteCount = computed(() => {
-  if (props.isWeightedVote) {
-    return props.item.totalScore || 0
-  }
   return props.item.voteCount || 0
 })
 
