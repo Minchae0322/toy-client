@@ -97,25 +97,52 @@ export const useAuthStore = defineStore('auth', {
                     // 🔒 메모리에만 저장
                     this.accessToken = data.accessToken
 
-                    // JWT에서 사용자 정보 추출
-                    const user = authUtils.parseJwtToken(data.accessToken)
-                    if (user) {
-                        const userInfo = {
-                            id: user.userId,
-                            email: user.email || user.username,
-                            username: user.username || user.sub,
-                            nickname: user.nickname || user.username,
-                            role: user.role || user.auth || 'USER',
-                            provider: user.provider || 'local'
+                    // JWT에서 사용자 ID/역할 추출
+                    const jwtPayload = authUtils.parseJwtToken(data.accessToken)
+                    if (jwtPayload) {
+                        const userId = jwtPayload.userId
+
+                        // 캐시된 userInfo가 있으면 nickname 등 유지
+                        const cachedUser = authUtils.getUserInfo()
+
+                        // 기본 정보 (JWT에서)
+                        let userInfo = {
+                            id: userId,
+                            email: jwtPayload.email || jwtPayload.username,
+                            username: jwtPayload.username || jwtPayload.sub,
+                            // 캐시된 nickname 우선 사용
+                            nickname: cachedUser?.nickname || jwtPayload.nickname || jwtPayload.username,
+                            role: jwtPayload.role || jwtPayload.auth || 'USER',
+                            provider: jwtPayload.provider || 'local',
+                            // 캐시된 프로필 정보 유지
+                            profilePicture: cachedUser?.profilePicture || null,
+                            description: cachedUser?.description || null
                         }
+
                         this.user = userInfo
                         this.isAuthenticated = true
+
+                        console.log('✅ [AuthStore] 토큰 재발급 성공:', userInfo.nickname)
+
+                        // 프로필 API에서 최신 정보 가져오기 (await로 기다림)
+                        try {
+                            const profileResponse = await userService.getUserProfile(userId)
+                            if (profileResponse.success && profileResponse.data) {
+                                userInfo = {
+                                    ...userInfo,
+                                    nickname: profileResponse.data.nickname || userInfo.nickname,
+                                    profilePicture: profileResponse.data.profilePicture,
+                                    description: profileResponse.data.description
+                                }
+                                this.user = userInfo
+                                console.log('✅ [AuthStore] 프로필 로드 완료:', userInfo.nickname)
+                            }
+                        } catch (profileError) {
+                            console.warn('⚠️ [AuthStore] 프로필 로드 실패 (캐시 사용):', profileError.message)
+                        }
+
+                        // 최종 정보 캐시에 저장
                         authUtils.setUserInfo(userInfo)
-
-                        console.log('✅ [AuthStore] 토큰 재발급 성공:', userInfo.nickname || userInfo.username)
-
-                        // 프로필 정보 로드 (백그라운드)
-                        this.loadUserProfile(userInfo.id)
                         return true
                     }
                 }
@@ -259,12 +286,28 @@ export const useAuthStore = defineStore('auth', {
 
                 // 사용자 정보 저장 및 상태 업데이트
                 if (completeUser.id) {
-                    authUtils.setUserInfo(completeUser)
                     this.user = completeUser
                     this.isAuthenticated = true
                     this.lastActivity = Date.now()
 
-                    console.log('✅ [AuthStore] 로그인 완료:', completeUser.nickname || completeUser.username)
+                    // 프로필 API에서 실제 nickname 가져오기
+                    try {
+                        const profileResponse = await userService.getUserProfile(completeUser.id)
+                        if (profileResponse.success && profileResponse.data) {
+                            completeUser = {
+                                ...completeUser,
+                                nickname: profileResponse.data.nickname || completeUser.nickname,
+                                profilePicture: profileResponse.data.profilePicture,
+                                description: profileResponse.data.description
+                            }
+                            this.user = completeUser
+                        }
+                    } catch (profileError) {
+                        console.warn('⚠️ [AuthStore] 프로필 로드 실패:', profileError.message)
+                    }
+
+                    authUtils.setUserInfo(completeUser)
+                    console.log('✅ [AuthStore] 로그인 완료:', completeUser.nickname)
                     return true
                 } else {
                     throw new Error('유효한 사용자 정보가 없습니다')

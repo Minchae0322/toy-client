@@ -145,9 +145,9 @@ onUnmounted(() => {
             <div class="user-info" @click="goToProfile">
               <div class="user-avatar">
                 <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
-                <span v-else>{{ user?.username?.charAt(0).toUpperCase() }}</span>
+                <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
               </div>
-              <span class="user-name">{{ user?.username }}</span>
+              <span class="user-name">{{ user?.nickname || user?.username }}</span>
             </div>
             <button @click="handleLogout" class="btn-ghost" :disabled="isLoggingOut">
               {{ isLoggingOut ? '...' : '로그아웃' }}
@@ -167,7 +167,7 @@ onUnmounted(() => {
           <div class="mobile-ws-dot" :class="{ connected: wsConnected }"></div>
           <div class="mobile-avatar" @click="goToProfile">
             <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
-            <span v-else>{{ user?.username?.charAt(0).toUpperCase() }}</span>
+            <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
           </div>
         </template>
         <button class="mobile-menu-btn" @click="showMobileMenu = !showMobileMenu">
@@ -188,10 +188,10 @@ onUnmounted(() => {
         <div v-if="isLoggedIn" class="mobile-user-card" @click="goToProfile">
           <div class="mobile-user-avatar">
             <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
-            <span v-else>{{ user?.username?.charAt(0).toUpperCase() }}</span>
+            <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
           </div>
           <div class="mobile-user-detail">
-            <span class="mobile-user-name">{{ user?.username }}</span>
+            <span class="mobile-user-name">{{ user?.nickname || user?.username }}</span>
             <span class="mobile-user-status" :class="{ connected: wsConnected }">
               <span class="status-dot"></span>
               {{ wsConnected ? '온라인' : '오프라인' }}
