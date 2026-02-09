@@ -93,30 +93,32 @@ export function useAuth() {
     // 토큰 정보 (스토어 getter 사용)
     const getTokenInfo = () => authStore.tokenInfo
 
-    // 🔒 보안: Access Token은 메모리에만 저장되므로
-    // 다른 탭과의 동기화는 불가능 (각 탭이 독립적인 세션)
-    // 로그아웃 시에만 userInfo 변경 감지
+    // 스토리지 변경 감지 (다른 탭에서의 로그인/로그아웃 동기화)
     const handleStorageChange = (e) => {
-        if (e.key === authUtils.STORAGE_KEYS?.USER_INFO || e.key === 'user_info') {
-            const newValue = e.newValue
-            if (!newValue) {
-                // 다른 탭에서 로그아웃됨
-                console.log('📡 [useAuth] 다른 탭에서 로그아웃 감지')
-                authStore.clearAuthState()
-            }
+        if (e.key === authUtils.STORAGE_KEYS?.ACCESS_TOKEN || e.key === 'access_token') {
+            console.log('📡 [useAuth] 다른 탭에서 인증 상태 변경 감지')
+            setTimeout(() => {
+                authStore.loadUserInfo()
+            }, 100)
         }
     }
 
-    // 초기화 함수 (main.js에서 initializeAuth 호출됨)
+    // 초기화 함수
     const initializeAuth = () => {
         if (isInitialized) {
             return
         }
 
-        // 스토리지 이벤트 리스너 등록 (로그아웃 동기화용)
+        console.log('🚀 [useAuth] 인증 시스템 초기화 중...')
+
+        // 기존 인증 정보 로드
+        authStore.loadUserInfo()
+
+        // 스토리지 이벤트 리스너 등록
         window.addEventListener('storage', handleStorageChange)
 
         isInitialized = true
+        console.log('✅ [useAuth] 인증 시스템 초기화 완료')
     }
 
     // 디버깅 함수
