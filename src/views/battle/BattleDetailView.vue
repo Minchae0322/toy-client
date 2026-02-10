@@ -19,8 +19,8 @@
         <BattleInfoCard
             :battle="battle"
             :is-weighted-vote="isWeightedVote"
-            :can-user-add-item="canUserAddItem"
-            @add-product="showAddModal = true"
+            :can-user-add-item="showAddItemButton"
+            @add-product="handleAddProduct"
             @back="goBack"
             @share="shareBattle"
         />
@@ -103,8 +103,8 @@ export default {
     AddProductModal
   },
   setup() {
-    const { open } = useConfirmDialog()
-    return { open }
+    const { open, openLoginRequired } = useConfirmDialog()
+    return { open, openLoginRequired }
   },
   data() {
     return {
@@ -158,6 +158,23 @@ export default {
       }
 
       // PUBLIC_FREE, PUBLIC_APPROVAL: 로그인한 사용자 모두 추가 가능
+      return true
+    },
+    showAddItemButton() {
+      if (!this.battle) return false
+      const status = this.battle.status?.title || this.battle.status
+      const permissionType = this.battle.itemAddPermissionType?.code || this.battle.itemAddPermissionType
+
+      // 배틀이 NORMAL 상태가 아니면 버튼 숨김
+      if (status !== 'NORMAL') return false
+
+      // CREATOR_ONLY: 생성자만 볼 수 있음
+      if (permissionType === 'CREATOR_ONLY') {
+        const userId = getUserId()
+        return userId && this.battle.creatorUserInfo?.userId === userId
+      }
+
+      // PUBLIC_FREE, PUBLIC_APPROVAL: 로그인 여부 관계없이 버튼 표시
       return true
     },
     sortedItems() {
@@ -491,6 +508,18 @@ export default {
         uploadFailed: false,
         uploadedImageUrl: null
       }
+    },
+
+    async handleAddProduct() {
+      const userId = getUserId()
+      if (!userId) {
+        const confirmed = await this.openLoginRequired('제품을 등록하려면 로그인이 필요합니다.')
+        if (confirmed) {
+          this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
+        }
+        return
+      }
+      this.showAddModal = true
     },
 
     goBack() {
