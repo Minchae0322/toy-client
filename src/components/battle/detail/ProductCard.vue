@@ -208,13 +208,12 @@ const onVote = (rank) => {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  background: linear-gradient(transparent 40%, rgba(0, 0, 0, 0.3));
   color: #fff;
   padding: 28px 14px 12px;
   display: flex;
   align-items: baseline;
   gap: 8px;
-  backdrop-filter: blur(2px);
 }
 
 .score-percent {
