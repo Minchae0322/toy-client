@@ -12,7 +12,7 @@
       />
 
       <HotSection
-          :limit="5"
+          :limit="10"
           @feed-click="openPost"
           @see-all="handleSeeAllHot"
       />

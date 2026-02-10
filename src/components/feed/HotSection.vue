@@ -27,48 +27,70 @@
     </div>
 
     <!-- 핫 피드 목록 -->
-    <div v-else class="dashboard-feed-scroll">
-      <div
-        v-for="(feed, index) in hotFeeds"
-        :key="feed.feedId"
-        class="dash-feed-card"
-        @click="$emit('feed-click', feed.feedId)"
+    <div v-else class="scroll-wrapper">
+      <!-- PC 이전 버튼 -->
+      <button
+        v-if="canScrollLeft"
+        class="nav-arrow nav-arrow-left"
+        @click="scrollBy(-1)"
+        aria-label="이전"
       >
-        <div class="card-visual-wrapper">
-          <img
-            :src="feed.hotFeedThumbnailDto?.fileUrl"
-            :alt="feed.productName"
-            @error="handleImageError"
-          />
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
 
-          <div class="card-overlay">
-            <div class="overlay-top">
-              <span class="rank-num">0{{ index + 1 }}</span>
-              <span v-if="feed.isTrending" class="trending-tag">HOT</span>
-            </div>
+      <div ref="scrollContainer" class="dashboard-feed-scroll" @scroll="updateScrollState">
+        <div
+          v-for="(feed, index) in hotFeeds"
+          :key="feed.feedId"
+          class="dash-feed-card"
+          @click="$emit('feed-click', feed.feedId)"
+        >
+          <div class="card-visual-wrapper">
+            <img
+              :src="feed.hotFeedThumbnailDto?.fileUrl"
+              :alt="feed.productName"
+              @error="handleImageError"
+            />
 
-            <div class="overlay-bottom">
-              <span v-if="feed.feedEvaluation?.code" :class="['eval-pill', feed.feedEvaluation.code.toLowerCase()]">
-                {{ feed.feedEvaluation.description }}
-              </span>
-              <p v-if="feed.reviewSummary" class="review-main">"{{ feed.reviewSummary }}"</p>
-              <span class="product-name-sub">{{ feed.productName }}</span>
+            <div class="card-overlay">
+              <div class="overlay-top">
+                <span class="rank-num">{{ String(index + 1).padStart(2, '0') }}</span>
+                <span v-if="feed.isTrending" class="trending-tag">HOT</span>
+              </div>
+
+              <div class="overlay-bottom">
+                <span v-if="feed.feedEvaluation?.code" :class="['eval-pill', feed.feedEvaluation.code.toLowerCase()]">
+                  {{ feed.feedEvaluation.description }}
+                </span>
+                <p v-if="feed.reviewSummary" class="review-main">"{{ feed.reviewSummary }}"</p>
+                <span class="product-name-sub">{{ feed.productName }}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- PC 다음 버튼 -->
+      <button
+        v-if="canScrollRight"
+        class="nav-arrow nav-arrow-right"
+        @click="scrollBy(1)"
+        aria-label="다음"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { useFeed } from '@/services/FeedService';
 
 const props = defineProps({
   limit: {
     type: Number,
-    default: 5
+    default: 10
   }
 });
 
@@ -77,6 +99,30 @@ const emit = defineEmits(['feed-click', 'see-all']);
 const feedService = useFeed();
 const hotFeeds = ref([]);
 const loading = ref(false);
+
+// 스크롤 네비게이션 상태
+const scrollContainer = ref(null);
+const canScrollLeft = ref(false);
+const canScrollRight = ref(false);
+
+const updateScrollState = () => {
+  const el = scrollContainer.value;
+  if (!el) return;
+  canScrollLeft.value = el.scrollLeft > 0;
+  canScrollRight.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+};
+
+const scrollBy = (direction) => {
+  const el = scrollContainer.value;
+  if (!el) return;
+  // 카드 2개 분량만큼 스크롤
+  const cardWidth = el.querySelector('.dash-feed-card')?.offsetWidth || 200;
+  const gap = 16;
+  const scrollAmount = (cardWidth + gap) * 2;
+  el.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+};
+
+let resizeObserver = null;
 
 const loadHotFeeds = async () => {
   try {
@@ -88,6 +134,7 @@ const loadHotFeeds = async () => {
 
     if (response.success && response.data) {
       hotFeeds.value = response.data.content || response.data;
+      nextTick(() => updateScrollState());
     }
   } catch (error) {
     console.error('핫 피드 로드 실패:', error);
@@ -102,7 +149,19 @@ const handleImageError = (event) => {
   event.target.src = 'https://placehold.co/200x280?text=No+Image';
 };
 
-onMounted(() => loadHotFeeds());
+onMounted(() => {
+  loadHotFeeds();
+  resizeObserver = new ResizeObserver(() => updateScrollState());
+  nextTick(() => {
+    if (scrollContainer.value) {
+      resizeObserver.observe(scrollContainer.value);
+    }
+  });
+});
+
+onUnmounted(() => {
+  if (resizeObserver) resizeObserver.disconnect();
+});
 </script>
 
 <style scoped>
@@ -191,6 +250,51 @@ onMounted(() => loadHotFeeds());
 .view-all-link:hover {
   background: #f5f5f5;
   color: #666;
+}
+
+/* 스크롤 래퍼 (PC 네비게이션 버튼 포함) */
+.scroll-wrapper {
+  position: relative;
+}
+
+/* PC 네비게이션 화살표 */
+.nav-arrow {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .nav-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .nav-arrow:hover {
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    color: #111827;
+  }
+
+  .nav-arrow-left {
+    left: -18px;
+  }
+
+  .nav-arrow-right {
+    right: -18px;
+  }
 }
 
 /* 가로 스크롤 영역 */
