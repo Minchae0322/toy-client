@@ -182,19 +182,19 @@ const onVote = (rank) => {
 }
 
 .rank-indicator.rank-pos-1 {
-  background: linear-gradient(135deg, #f6c34c 0%, #e8a830 100%);
+  background: #e8a830;
   color: #fff;
   box-shadow: 0 3px 12px rgba(232, 168, 48, 0.35);
 }
 
 .rank-indicator.rank-pos-2 {
-  background: linear-gradient(135deg, #a8b4c4 0%, #8c9bb0 100%);
+  background: #8c9bb0;
   color: #fff;
   box-shadow: 0 3px 12px rgba(140, 155, 176, 0.35);
 }
 
 .rank-indicator.rank-pos-3 {
-  background: linear-gradient(135deg, #e8945a 0%, #d4784a 100%);
+  background: #d4784a;
   color: #fff;
   box-shadow: 0 3px 12px rgba(212, 120, 74, 0.35);
 }
