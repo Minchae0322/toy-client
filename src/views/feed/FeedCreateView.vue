@@ -92,9 +92,9 @@
             <p class="hint-text">사진을 드래그하여 순서를 변경할 수 있습니다 (최대 1920px로 자동 최적화)</p>
           </section>
 
-          <!-- Product Name -->
+          <!-- Product Info -->
           <section class="card">
-            <label class="form-label required">제품명</label>
+            <label class="form-label required">어떤 제품인가요?</label>
 
             <!-- 선택된 제품 표시 -->
             <div v-if="selectedProduct" class="selected-product-card">
@@ -114,23 +114,59 @@
               </button>
             </div>
 
-            <!-- 제품 선택 버튼 및 직접 입력 -->
+            <!-- 제품 입력 모드 선택 -->
             <div v-else class="product-input-wrapper">
-              <button type="button" class="btn-select-product" @click="openProductModal">
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                <span>제품 검색</span>
-              </button>
-              <div class="input-divider">
-                <span>또는</span>
+              <!-- 카드 선택 (초기 상태) -->
+              <div v-if="productInputMode === 'select'" class="product-mode-cards">
+                <button type="button" class="mode-card" @click="openProductModal">
+                  <div class="mode-card-icon search">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                    </svg>
+                  </div>
+                  <div class="mode-card-content">
+                    <h4 class="mode-card-title">제품 연동</h4>
+                    <p class="mode-card-desc">등록된 제품 정보 연결</p>
+                  </div>
+                </button>
+
+                <button type="button" class="mode-card" @click="productInputMode = 'custom'">
+                  <div class="mode-card-icon custom">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </div>
+                  <div class="mode-card-content">
+                    <h4 class="mode-card-title">직접 작성</h4>
+                    <p class="mode-card-desc">제품명만 간단히 입력</p>
+                  </div>
+                </button>
               </div>
-              <div class="autocomplete-wrapper">
-                <input type="text" class="form-input" placeholder="제품명 직접 입력 (예: 조던 4 레트로 브레드)" v-model="formData.productNameCustom" @input="handleProductNameInput" />
-                <div v-if="productSuggestions.length > 0" class="suggestions">
-                  <button v-for="suggestion in productSuggestions" :key="suggestion" class="suggestion-item" @click="selectSuggestion(suggestion)">
-                    {{ suggestion }}
+
+              <!-- 직접 작성 모드 -->
+              <div v-else class="custom-mode-content">
+                <div class="custom-input-header">
+                  <span class="custom-input-label">직접 작성</span>
+                  <button type="button" class="btn-back-to-select" @click="resetProductInput">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                   </button>
+                </div>
+                <div class="autocomplete-wrapper">
+                  <input
+                    type="text"
+                    class="form-input custom-input"
+                    placeholder="브랜드 + 제품명 (예: 나이키 조던 4 레트로)"
+                    v-model="formData.productNameCustom"
+                    @input="handleProductNameInput"
+                    ref="customInputRef"
+                  />
+                  <div v-if="productSuggestions.length > 0" class="suggestions">
+                    <button v-for="suggestion in productSuggestions" :key="suggestion" class="suggestion-item" @click="selectSuggestion(suggestion)">
+                      {{ suggestion }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -301,7 +337,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useFile } from '@/services/FileService.js'
@@ -327,6 +363,8 @@ const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
 const showProductModal = ref(false)
 const selectedProduct = ref(null)
+const productInputMode = ref('select') // 'select' | 'custom'
+const customInputRef = ref(null)
 
 const formData = ref({
   userId: getUserId(),
@@ -590,6 +628,13 @@ const clearSelectedProduct = () => {
   selectedProduct.value = null
   formData.value.productId = null
   formData.value.productNameCustom = ''
+  productInputMode.value = 'select'
+}
+
+const resetProductInput = () => {
+  formData.value.productNameCustom = ''
+  productSuggestions.value = []
+  productInputMode.value = 'select'
 }
 
 // Hashtags
@@ -701,6 +746,15 @@ const showError = (msg) => {
   errorMessage.value = msg
   setTimeout(() => { errorMessage.value = '' }, 3000)
 }
+
+// 직접 입력 모드 전환 시 자동 포커스
+watch(productInputMode, (newMode) => {
+  if (newMode === 'custom') {
+    nextTick(() => {
+      customInputRef.value?.focus()
+    })
+  }
+})
 
 onMounted(() => {
   // 초기화
@@ -943,46 +997,163 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 
-.btn-select-product {
+/* 카드 선택 모드 */
+.product-mode-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.mode-card:hover {
+  border-color: var(--accent);
+  background: #faf5ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.1);
+}
+
+.mode-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 14px;
-  background: #f3e8ff;
-  border: 2px dashed var(--accent);
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--accent);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-select-product:hover {
-  background: #ede4fc;
-  border-style: solid;
-}
-.btn-select-product .icon {
-  width: 20px;
-  height: 20px;
 }
 
-.input-divider {
+.mode-card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.mode-card-icon.search {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  color: var(--accent);
+}
+
+.mode-card-icon.custom {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #3b82f6;
+}
+
+.mode-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mode-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0;
+}
+
+.mode-card-desc {
+  font-size: 12px;
+  color: var(--secondary);
+  margin: 0;
+}
+
+/* 직접 입력 모드 */
+.custom-mode-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.custom-input-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
 }
-.input-divider::before,
-.input-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-.input-divider span {
+
+.custom-input-label {
   font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.btn-back-to-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--hover);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-back-to-select:hover {
+  background: #fee2e2;
+}
+
+.btn-back-to-select svg {
+  width: 16px;
+  height: 16px;
   color: var(--secondary);
+}
+
+.btn-back-to-select:hover svg {
+  color: #ef4444;
+}
+
+.custom-input {
+  padding: 14px 16px !important;
+  font-size: 15px !important;
+  border-radius: 12px !important;
+}
+
+.custom-input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+}
+
+/* 모바일 카드 */
+@media (max-width: 480px) {
+  .product-mode-cards {
+    gap: 10px;
+  }
+
+  .mode-card {
+    padding: 16px 12px;
+    gap: 10px;
+  }
+
+  .mode-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .mode-card-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .mode-card-title {
+    font-size: 14px;
+  }
+
+  .mode-card-desc {
+    font-size: 11px;
+  }
 }
 
 /* Selected Product Card */
