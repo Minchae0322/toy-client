@@ -73,10 +73,14 @@
             <!-- 프로필 -->
             <div class="profile">
               <img
-                  :src="room.userInfo?.profileImage || getDefaultAvatar(room)"
+                  v-if="room.userInfo?.profileImage"
+                  :src="room.userInfo.profileImage"
                   :alt="room.name"
                   class="profile-img"
               />
+              <div v-else class="profile-img profile-placeholder">
+                <User :size="22" />
+              </div>
               <div v-if="room.userInfo?.isOnline" class="online-dot"></div>
             </div>
 
@@ -92,9 +96,13 @@
             <!-- 피드 썸네일 -->
             <div class="feed-thumb">
               <img
-                  :src="room.feed?.thumbnail || getDefaultFeedImage()"
+                  v-if="room.feed?.thumbnail"
+                  :src="room.feed.thumbnail"
                   :alt="room.feed?.title"
               />
+              <div v-else class="feed-thumb-placeholder">
+                <ImageIcon :size="18" />
+              </div>
               <span v-if="room.unreadCount > 0" class="unread-badge">
                 {{ room.unreadCount > 99 ? '99+' : room.unreadCount }}
               </span>
@@ -105,7 +113,9 @@
 
       <!-- 빈 상태 -->
       <div v-else class="state-container">
-        <div class="empty-icon">{{ getEmptyIcon() }}</div>
+        <div class="empty-icon-wrapper">
+          <component :is="getEmptyIcon()" :size="32" />
+        </div>
         <p class="state-title">{{ getEmptyTitle() }}</p>
         <p class="state-text">{{ getEmptyMessage() }}</p>
       </div>
@@ -125,7 +135,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, X, AlertCircle, Check } from 'lucide-vue-next'
+import { Search, X, AlertCircle, Check, User, ImageIcon, MessageCircle, CheckCircle } from 'lucide-vue-next'
 import { chatService } from '@/services/ChatService.js'
 
 const router = useRouter()
@@ -173,9 +183,8 @@ const toggleSearch = () => {
   if (!showSearch.value) searchQuery.value = ''
 }
 
-// 메서드 수정
 const goToChatDetail = (roomId) => {
-  emit('room-selected', roomId)  // ✅ emit으로 부모에게 알림
+  emit('room-selected', roomId)
 }
 
 const loadChatRooms = async () => {
@@ -183,20 +192,17 @@ const loadChatRooms = async () => {
   error.value = ''
 
   try {
-    console.log('📋 [ChatRoomView] 채팅방 목록 조회 시작...')
-
     const response = await chatService.getChatRooms({ status: 'ACTIVE' })
 
     if (response.success && response.data) {
       const backendRooms = Array.isArray(response.data) ? response.data : []
       allChatRooms.value = backendRooms.map(room => transformRoom(room))
       allChatRooms.value = chatService.sortChatRooms(allChatRooms.value, 'lastMessage')
-      console.log('✅ [ChatRoomView] 채팅방 목록 로드 완료:', allChatRooms.value.length, '개')
     } else {
       throw new Error(response.message || '채팅방 목록을 불러올 수 없습니다')
     }
   } catch (err) {
-    console.error('❌ [ChatRoomView] 채팅방 목록 로드 실패:', err)
+    console.error('[ChatRoomView] 채팅방 목록 로드 실패:', err)
 
     // 샘플 데이터로 폴백
     allChatRooms.value = getSampleChatRooms()
@@ -211,7 +217,7 @@ const loadChatRooms = async () => {
 
 // 유틸리티
 const transformRoom = (room) => ({
-  id: room.chatRoomId || room.roomId || room.id,  // ✅ roomId 추가
+  id: room.chatRoomId || room.roomId || room.id,
   name: room.title || room.participantName || '알 수 없음',
   lastMessage: room.lastMessage?.content || room.lastMessageContent,
   lastMessageAt: room.lastMessage?.createdAt || room.lastMessageAt,
@@ -261,7 +267,7 @@ const getSampleChatRooms = () => [
   {
     id: 4,
     name: '최유진',
-    lastMessage: '착용샷 올려주셔서 도움됐어요 😊',
+    lastMessage: '착용샷 올려주셔서 도움됐어요',
     lastMessageAt: new Date(Date.now() - 7200000).toISOString(),
     unreadCount: 0,
     userInfo: { profileImage: 'https://i.pravatar.cc/150?img=9', isOnline: false },
@@ -278,10 +284,6 @@ const getSampleChatRooms = () => [
   }
 ]
 
-const getDefaultAvatar = (room) => `https://ui-avatars.com/api/?name=${encodeURIComponent(room.name || '?')}&background=9333ea&color=fff`
-
-const getDefaultFeedImage = () => 'https://placehold.co/100x100?text=No+Image'
-
 const formatTime = (date) => {
   if (!date) return ''
   const d = new Date(date)
@@ -295,7 +297,7 @@ const formatTime = (date) => {
   return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
 }
 
-const getEmptyIcon = () => activeTab.value === 'unread' ? '✅' : '💬'
+const getEmptyIcon = () => activeTab.value === 'unread' ? CheckCircle : MessageCircle
 const getEmptyTitle = () => {
   if (searchQuery.value) return '검색 결과 없음'
   return activeTab.value === 'unread' ? '모두 읽었습니다' : '채팅이 없습니다'
@@ -307,36 +309,17 @@ const getEmptyMessage = () => {
 
 // 마운트
 onMounted(() => {
-  console.log('🚀 [ChatRoomView] 컴포넌트 마운트됨')
   loadChatRooms()
 })
 </script>
 
 <style scoped>
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-:root {
-  --primary: #222222;
-  --secondary: #64748B;
-  --tertiary: #999999;
-  --accent: #9333ea;
-  --accent-light: #a855f7;
-  --accent-bg: #f3e8ff;
-  --accent-bg-light: #faf5ff;
-  --border: #E2E8F0;
-  --bg: #FAFAFA;
-  --card: #FFFFFF;
-  --hover: #F8FAFC;
-}
-
-* { box-sizing: border-box; }
-
 .chat-container {
   width: 100%;
   min-height: 100vh;
-  background: var(--bg);
+  background: #ffffff;
   font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
-  color: var(--primary);
+  color: #111827;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -345,68 +328,80 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 32px;
-  border-bottom: 1px solid var(--border);
-  background: var(--card);
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #ffffff;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.header-title { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+@media (min-width: 768px) {
+  .header { padding: 16px 32px; }
+}
+
+.header-title { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.02em; color: #111827; }
 .header-actions { display: flex; gap: 8px; }
 
 .icon-btn {
   width: 40px;
   height: 40px;
-  border: 1px solid var(--border);
-  background: var(--card);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
   border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--secondary);
+  color: #6b7280;
   transition: all 0.2s;
 }
 
-.icon-btn:hover { background: var(--hover); }
-.icon-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.icon-btn:hover { background: #f9fafb; }
+.icon-btn.active { background: #faf5ff; border-color: #9333ea; color: #9333ea; }
 
 /* 검색바 */
 .search-wrapper {
-  padding: 16px 32px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+@media (min-width: 768px) {
+  .search-wrapper { padding: 12px 32px; }
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  background: var(--bg);
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 0 14px;
   height: 44px;
+  transition: border-color 0.2s;
 }
 
-.search-icon { color: var(--tertiary); margin-right: 10px; }
+.search-box:focus-within { border-color: #9333ea; }
+
+.search-icon { color: #9ca3af; margin-right: 10px; }
 
 .search-input {
   flex: 1;
   border: none;
   background: none;
   font-size: 14px;
-  color: var(--primary);
+  color: #111827;
   outline: none;
   font-family: inherit;
 }
 
-.search-input::placeholder { color: var(--tertiary); }
+.search-input::placeholder { color: #9ca3af; }
 
 .clear-btn {
   border: none;
   background: none;
-  color: var(--tertiary);
+  color: #9ca3af;
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -415,9 +410,13 @@ onMounted(() => {
 /* 탭 */
 .tabs {
   display: flex;
-  padding: 0 32px;
-  border-bottom: 1px solid var(--border);
-  background: var(--card);
+  padding: 0 24px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .tabs { padding: 0 32px; }
 }
 
 .tab {
@@ -429,15 +428,15 @@ onMounted(() => {
   background: none;
   font-size: 14px;
   font-weight: 500;
-  color: var(--tertiary);
+  color: #9ca3af;
   cursor: pointer;
   position: relative;
   font-family: inherit;
   transition: color 0.2s;
 }
 
-.tab:hover { color: var(--secondary); }
-.tab.active { color: var(--primary); font-weight: 600; }
+.tab:hover { color: #6b7280; }
+.tab.active { color: #111827; font-weight: 600; }
 
 .tab.active::after {
   content: '';
@@ -446,7 +445,7 @@ onMounted(() => {
   left: 16px;
   right: 16px;
   height: 2px;
-  background: var(--accent);
+  background: #9333ea;
   border-radius: 1px;
 }
 
@@ -454,7 +453,7 @@ onMounted(() => {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  background: var(--accent);
+  background: #9333ea;
   color: #fff;
   font-size: 11px;
   font-weight: 600;
@@ -466,7 +465,7 @@ onMounted(() => {
 
 /* 채팅 리스트 */
 .chat-list {
-  background: var(--card);
+  background: #ffffff;
 }
 
 .room-list { padding: 0; }
@@ -475,14 +474,18 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 32px;
+  padding: 16px 24px;
   cursor: pointer;
   transition: background 0.15s;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.room-item:hover { background: var(--hover); }
-.room-item.unread { background: var(--accent-bg-light); }
+@media (min-width: 768px) {
+  .room-item { padding: 16px 32px; }
+}
+
+.room-item:hover { background: #f9fafb; }
+.room-item.unread { background: #faf5ff; }
 
 /* 프로필 */
 .profile {
@@ -491,21 +494,30 @@ onMounted(() => {
 }
 
 .profile-img {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   object-fit: cover;
-  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
+}
+
+.profile-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #d1d5db;
 }
 
 .online-dot {
   position: absolute;
   bottom: 2px;
   right: 2px;
-  width: 14px;
-  height: 14px;
-  background: #22C55E;
-  border: 2px solid var(--card);
+  width: 12px;
+  height: 12px;
+  background: #22c55e;
+  border: 2px solid #ffffff;
   border-radius: 50%;
 }
 
@@ -525,17 +537,17 @@ onMounted(() => {
 }
 
 .room-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--primary);
+  color: #111827;
   margin: 0;
 }
 
-.room-time { font-size: 13px; color: var(--tertiary); }
+.room-time { font-size: 12px; color: #9ca3af; }
 
 .room-message {
   font-size: 14px;
-  color: var(--secondary);
+  color: #6b7280;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -543,19 +555,19 @@ onMounted(() => {
 }
 
 .room-item.unread .room-message {
-  color: var(--primary);
+  color: #111827;
   font-weight: 500;
 }
 
 /* 피드 썸네일 */
 .feed-thumb {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
-  background: var(--bg);
+  background: #f9fafb;
 }
 
 .feed-thumb img {
@@ -564,21 +576,32 @@ onMounted(() => {
   object-fit: cover;
 }
 
+.feed-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d1d5db;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
 .unread-badge {
   position: absolute;
   top: -6px;
   right: -6px;
-  min-width: 22px;
-  height: 22px;
-  background: var(--accent);
+  min-width: 20px;
+  height: 20px;
+  background: #9333ea;
   color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  border-radius: 11px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 6px;
+  padding: 0 5px;
 }
 
 /* 상태 컨테이너 */
@@ -589,14 +612,14 @@ onMounted(() => {
   justify-content: center;
   padding: 120px 40px;
   text-align: center;
-  background: var(--card);
+  background: #ffffff;
 }
 
 .loader {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--accent-bg);
-  border-top-color: var(--accent);
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3e8ff;
+  border-top-color: #9333ea;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -604,8 +627,8 @@ onMounted(() => {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .error-circle {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: #fef2f2;
   color: #ef4444;
@@ -615,24 +638,35 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
-.empty-icon { font-size: 56px; margin-bottom: 20px; }
-.state-title { font-size: 18px; font-weight: 600; color: var(--primary); margin: 0 0 8px; }
-.state-text { font-size: 14px; color: var(--secondary); margin: 0 0 24px; }
+.empty-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.state-title { font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 8px; }
+.state-text { font-size: 14px; color: #6b7280; margin: 0 0 24px; }
 
 .btn-primary {
-  padding: 12px 28px;
-  background: var(--accent);
+  padding: 10px 24px;
+  background: #9333ea;
   color: #fff;
   border: none;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
 }
 
-.btn-primary:hover { background: #7c22ce; }
+.btn-primary:hover { background: #7c3aed; }
 
 /* 토스트 */
 .toast {
@@ -644,12 +678,12 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 14px 24px;
-  background: #111;
+  background: #111827;
   color: #fff;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   z-index: 1001;
 }
 
