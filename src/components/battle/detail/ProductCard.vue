@@ -5,7 +5,7 @@
       {{ productRank }}위 선택
     </div>
 
-    <div class="rank-indicator">{{ displayRank }}</div>
+    <div :class="['rank-indicator', displayRank <= 3 ? `rank-pos-${displayRank}` : '']">{{ displayRank }}</div>
 
     <div class="img-box">
       <img :src="itemImage" :alt="itemName" @error="handleImageError" />
@@ -168,17 +168,35 @@ const onVote = (rank) => {
   top: 12px;
   left: 12px;
   z-index: 10;
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: #333;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 15px;
+  font-weight: 800;
+  color: #555;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.rank-indicator.rank-pos-1 {
+  background: linear-gradient(135deg, #f6c34c 0%, #e8a830 100%);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(232, 168, 48, 0.35);
+}
+
+.rank-indicator.rank-pos-2 {
+  background: linear-gradient(135deg, #a8b4c4 0%, #8c9bb0 100%);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(140, 155, 176, 0.35);
+}
+
+.rank-indicator.rank-pos-3 {
+  background: linear-gradient(135deg, #e8945a 0%, #d4784a 100%);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(212, 120, 74, 0.35);
 }
 
 .product-card-v1.selected .rank-indicator {
@@ -360,12 +378,12 @@ const onVote = (rank) => {
   }
 
   .rank-indicator {
-    top: 6px;
-    left: 6px;
-    width: 24px;
-    height: 24px;
-    font-size: 11px;
-    border-radius: 6px;
+    top: 8px;
+    left: 8px;
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+    border-radius: 8px;
   }
 
   .product-card-v1.selected .rank-indicator {
