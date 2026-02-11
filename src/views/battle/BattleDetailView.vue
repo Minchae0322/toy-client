@@ -68,6 +68,7 @@
           @update:name="newProduct.name = $event"
           @update:brand="newProduct.brand = $event"
           @submit="submitNewProduct"
+          @select-product="submitSelectedProduct"
       />
 
       <!-- Share Modal -->
@@ -278,7 +279,7 @@ export default {
 
       // MULTIPLE/SINGLE 모두 최소 1개 이상 선택 필요
       if (!this.hasSelectedItems) {
-        await this.open({ type: 'alert', title: '투표 선택 필요', message: '제품을 선택해주세요' })
+        await this.open({ type: 'alert', title: '요거픽 선택 필요', message: '아이템을 선택해주세요' })
         return
       }
 
@@ -299,16 +300,16 @@ export default {
         const response = await battleService.voteBattleItem(this.battleId, { votes })
 
         if (response.success) {
-          await this.open({ type: 'alert', title: '투표 완료', message: '투표가 완료되었습니다!' })
+          await this.open({ type: 'alert', title: '요거픽 완료', message: '요거픽이 완료되었습니다!' })
           this.hasVoted = true
           this.selectedRanks = { 1: null, 2: null, 3: null }
           await this.loadBattle()
         } else {
-          throw new Error(response.message || '투표에 실패했습니다.')
+          throw new Error(response.message || '요거픽에 실패했습니다.')
         }
       } catch (err) {
-        console.error('투표 실패:', err)
-        await this.open({ type: 'alert', title: '오류', message: err.message || '투표에 실패했습니다.' })
+        console.error('픽 실패:', err)
+        await this.open({ type: 'alert', title: '오류', message: err.message || '요거픽에 실패했습니다.' })
       } finally {
         this.submitting = false
       }
@@ -330,7 +331,7 @@ export default {
       }
 
       if (!this.newProduct.name) {
-        await this.open({ type: 'alert', title: '입력 필요', message: '제품명을 입력해주세요' })
+        await this.open({ type: 'alert', title: '입력 필요', message: '아이템명을 입력해주세요' })
         return
       }
 
@@ -349,15 +350,44 @@ export default {
         const response = await battleService.addBattleItems(this.battleId, itemData)
 
         if (response.success) {
-          await this.open({ type: 'alert', title: '등록 완료', message: '제품이 등록되었습니다!' })
+          await this.open({ type: 'alert', title: '등록 완료', message: '아이템이 등록되었습니다!' })
           this.closeAddModal()
           await this.loadBattle()
         } else {
-          throw new Error(response.message || '제품 등록에 실패했습니다.')
+          throw new Error(response.message || '아이템 등록에 실패했습니다.')
         }
       } catch (err) {
-        console.error('제품 등록 실패:', err)
-        await this.open({ type: 'alert', title: '오류', message: err.message || '제품 등록에 실패했습니다.' })
+        console.error('아이템 등록 실패:', err)
+        await this.open({ type: 'alert', title: '오류', message: err.message || '아이템 등록에 실패했습니다.' })
+      } finally {
+        this.submitting = false
+      }
+    },
+
+    async submitSelectedProduct(product) {
+      if (this.submitting) return
+
+      this.submitting = true
+
+      try {
+        const itemData = {
+          items: [{
+            productId: product.productId
+          }]
+        }
+
+        const response = await battleService.addBattleItems(this.battleId, itemData)
+
+        if (response.success) {
+          await this.open({ type: 'alert', title: '등록 완료', message: '아이템이 등록되었습니다!' })
+          this.closeAddModal()
+          await this.loadBattle()
+        } else {
+          throw new Error(response.message || '아이템 등록에 실패했습니다.')
+        }
+      } catch (err) {
+        console.error('아이템 등록 실패:', err)
+        await this.open({ type: 'alert', title: '오류', message: err.message || '아이템 등록에 실패했습니다.' })
       } finally {
         this.submitting = false
       }
@@ -379,7 +409,7 @@ export default {
     },
 
     getItemName(item) {
-      return item.battleItemProduct?.name || item.customName || '제품명 없음'
+      return item.battleItemProduct?.name || item.customName || '아이템명 없음'
     },
 
     // 이미지 리사이징 유틸 함수
@@ -513,7 +543,7 @@ export default {
     async handleAddProduct() {
       const userId = getUserId()
       if (!userId) {
-        const confirmed = await this.openLoginRequired('제품을 등록하려면 로그인이 필요합니다.')
+        const confirmed = await this.openLoginRequired('아이템을 등록하려면 로그인이 필요합니다.')
         if (confirmed) {
           this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
         }

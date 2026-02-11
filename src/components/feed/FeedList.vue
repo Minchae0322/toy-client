@@ -1,15 +1,36 @@
 <template>
   <section class="feed-container">
     <header class="feed-header">
-      <div class="title-group">
-        <h2 class="main-title">최신 피드</h2>
-        <p class="sub-title">사용자들이 올린 솔직한 리뷰</p>
+      <div class="title-with-badge">
+        <h2 class="section-title">최신 피드</h2>
+        <span class="sub-title">사용자들이 올린 솔직한 리뷰</span>
       </div>
 
       <div class="filter-bar">
-        <div class="view-switch">
-          <button @click="$emit('view-mode-change', 'feed')" :class="{ active: viewMode === 'feed' }">그리드</button>
-          <button @click="$emit('view-mode-change', 'list')" :class="{ active: viewMode === 'list' }">리스트</button>
+        <div class="view-switcher">
+          <button
+              class="view-btn"
+              :class="{ active: viewMode === 'feed' }"
+              @click="$emit('view-mode-change', 'feed')"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="1" y="1" width="6" height="6" rx="1"/>
+              <rect x="9" y="1" width="6" height="6" rx="1"/>
+              <rect x="1" y="9" width="6" height="6" rx="1"/>
+              <rect x="9" y="9" width="6" height="6" rx="1"/>
+            </svg>
+          </button>
+          <button
+              class="view-btn"
+              :class="{ active: viewMode === 'list' }"
+              @click="$emit('view-mode-change', 'list')"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="1" y="2" width="14" height="3" rx="0.5"/>
+              <rect x="1" y="7" width="14" height="3" rx="0.5"/>
+              <rect x="1" y="12" width="14" height="3" rx="0.5"/>
+            </svg>
+          </button>
         </div>
       </div>
     </header>
@@ -233,20 +254,79 @@ defineExpose({ observerTarget });
 </script>
 
 <style scoped>
-.feed-container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; width: 100%; }
+.feed-container { max-width: 1200px; margin: 0 auto; padding: 12px 0; width: 100%; }
 
-.feed-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; width: 100%; }
-.main-title { font-size: 1rem; font-weight: 600; color: #18181b; padding-left: 10px; border-left: 3px solid #9333ea; }
-@media (min-width: 768px) { .main-title { font-size: 1.125rem; } }
-@media (min-width: 1280px) { .main-title { font-size: 1.3125rem; } }
-.sub-title { font-size: 14px; color: #71717a; margin-top: 4px; }
-
-.view-switch { background: #f4f4f5; padding: 4px; border-radius: 12px; display: flex; }
-.view-switch button {
-  border: none; background: none; padding: 6px 16px; border-radius: 8px;
-  font-size: 13px; font-weight: 700; color: #71717a; cursor: pointer; transition: all 0.2s;
+.feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  width: 100%;
 }
-.view-switch button.active { background: white; color: #18181b; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+.title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  padding-left: 10px;
+  border-left: 3px solid #9333ea;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .section-title {
+    font-size: 1.3125rem;
+  }
+}
+
+.sub-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 100px;
+}
+
+/* 뷰 모드 스위처 */
+.view-switcher {
+  display: flex;
+  gap: 0.125rem;
+}
+
+.view-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 0.375rem;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-btn:hover {
+  color: #94a3b8;
+}
+
+.view-btn.active {
+  color: #64748b;
+}
 
 /* Grid View */
 .modern-grid {
@@ -758,23 +838,18 @@ defineExpose({ observerTarget });
   margin: 0;
 }
 
-/* Mobile: 인스타/스레드 스타일 (경계선만 있는 형태) */
+/* Mobile */
 @media (max-width: 768px) {
   .feed-container {
-    padding: 0;
+    padding: 12px 0;
     background: white;
   }
 
   .feed-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 0;
-    padding: 16px;
-    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 12px;
   }
-  .main-title { font-size: 0.875rem; }
-  .sub-title { font-size: 12px; }
+
+  .section-title { font-size: 1rem; }
 
   /* 모바일 Empty State */
   .feed-empty-state {

@@ -21,7 +21,7 @@
 
       <!-- 이전 투표 표시 -->
       <div v-if="item.userBattleVote" class="prev-vote-info">
-        <span class="prev-label">이전 투표:</span>
+        <span class="prev-label">이전 픽:</span>
         <span class="prev-rank">{{ item.userBattleVote.rank }}위</span>
       </div>
 
@@ -44,7 +44,7 @@
             :disabled="submitting"
             :class="['vote-btn', { active: productRank !== null }]"
         >
-          {{ productRank !== null ? '선택됨' : '투표하기' }}
+          {{ productRank !== null ? '선택됨' : '요거 픽하기' }}
         </button>
       </div>
     </div>
@@ -272,7 +272,7 @@ const onVote = (rank) => {
   overflow: hidden;
 }
 
-/* 이전 투표 표시 */
+/* 이전 픽 표시 */
 .prev-vote-info {
   margin-top: 10px;
   padding: 6px 10px;
@@ -334,7 +334,7 @@ const onVote = (rank) => {
   cursor: not-allowed;
 }
 
-/* 단순 투표 버튼 */
+/* 요거 픽 버튼 */
 .vote-btn {
   width: 100%;
   padding: 10px;

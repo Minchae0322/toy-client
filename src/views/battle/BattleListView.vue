@@ -543,11 +543,6 @@ onUnmounted(() => {
   gap: 0.125rem;
 }
 
-@media (max-width: 768px) {
-  .view-switcher {
-    display: none;
-  }
-}
 
 .view-btn {
   width: 1.75rem;

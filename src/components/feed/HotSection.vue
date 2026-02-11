@@ -3,6 +3,7 @@
     <div class="section-header">
       <div class="title-with-badge">
         <h2 class="section-title">지금 뜨는 핫-기록</h2>
+        <span class="sub-title">실시간 인기 리뷰</span>
         <span class="live-indicator"><span class="dot"></span> LIVE</span>
       </div>
       <button class="view-all-link" @click="handleSeeAll">
@@ -203,6 +204,15 @@ onUnmounted(() => {
   .section-title {
     font-size: 1.3125rem;
   }
+}
+
+.sub-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 100px;
 }
 
 .live-indicator {

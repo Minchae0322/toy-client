@@ -27,7 +27,7 @@
       </div>
 
       <button @click="$emit('submit')" :disabled="submitting" class="glow-submit-btn">
-        {{ submitting ? '전송 중...' : '투표 확정하기' }}
+        {{ submitting ? '전송 중...' : '요거 픽하기!' }}
       </button>
     </div>
   </transition>
@@ -70,7 +70,7 @@ const selectedRanksList = computed(() => {
   return ranks
 })
 
-// 선택된 투표 개수
+// 선택된 픽 개수
 const selectedCount = computed(() => selectedRanksList.value.length)
 
 // 최소 1개 이상 선택했는지

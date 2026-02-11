@@ -42,7 +42,7 @@
         class="add-product-btn"
     >
       <div class="plus-circle">+</div>
-      <span>내가 아는 좋은 제품 추가하기</span>
+      <span>내가 아는 좋은 아이템 추가하기</span>
     </button>
   </section>
 </template>
@@ -247,7 +247,7 @@ const formattedVotes = computed(() => {
   color: #4a6cf7;
 }
 
-/* 제품 추가 버튼 */
+/* 아이템 추가 버튼 */
 .add-product-btn {
   width: 100%;
   margin-top: 24px;
