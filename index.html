@@ -7,9 +7,9 @@
 
   <link rel="icon" type="image/png" href="/images/yogodde_01.png" />
 
-  <!-- 폰트 프리로드 (crossorigin 제거 - @font-face와 일치) -->
-  <link rel="preload" href="/fonts/SUIT-Regular.woff2" as="font" type="font/woff2">
-  <link rel="preload" href="/fonts/SEBANG_Gothic_Bold.woff" as="font" type="font/woff">
+  <!-- 폰트 프리로드 - crossorigin 필수 (@font-face는 항상 CORS 모드로 fetch) -->
+  <link rel="preload" href="/fonts/SUIT-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/fonts/SEBANG_Gothic_Bold.woff" as="font" type="font/woff" crossorigin="anonymous">
 </head>
 <body>
 <div id="app"></div>
