@@ -279,7 +279,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 
   /* 콘텐츠 영역 */
   .post-content {
-    padding: 6px 16px 4px;
+    padding: 12px 16px 4px;
   }
 
   .primary-review {
@@ -309,7 +309,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   }
   .category-label {
     font-size: 9px;
-    margin-bottom: 1px;
+    margin-bottom: 8px;
   }
   .buy-place {
     font-size: 9px;
