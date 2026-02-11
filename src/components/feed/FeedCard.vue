@@ -123,6 +123,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .post-card {
   background: white; border-radius: 28px; border: 1px solid #f0f0f5;
   overflow: hidden; transition: all 0.3s ease; cursor: pointer;
+  display: flex; flex-direction: column;
 }
 .post-card:hover { transform: translateY(-6px); box-shadow: 0 15px 35px rgba(0,0,0,0.07); }
 
@@ -164,6 +165,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 /* 콘텐츠 영역 */
 .post-content {
   padding: 8px 22px 22px;
+  display: flex; flex-direction: column; flex: 1;
 }
 
 .primary-review {
@@ -223,6 +225,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .post-footer {
   display: flex; justify-content: space-between; align-items: center;
   padding-top: 18px; border-top: 1px solid #f4f4f7;
+  margin-top: auto;
 }
 .user-block { display: flex; align-items: center; gap: 10px; }
 .user-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
