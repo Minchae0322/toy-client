@@ -41,7 +41,31 @@
         <!-- 정보 -->
         <div class="info">
           <h3 class="title">{{ battle.title }}</h3>
-          <p class="votes">{{ formatNumber(battle.totalVotes || 0) }} 투표</p>
+          <div class="stats-row">
+            <span class="stat">
+              <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              {{ formatNumber(battle.totalParticipants || 0) }}
+            </span>
+            <span class="stat">
+              <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              {{ formatNumber(battle.totalVotes || 0) }}
+            </span>
+            <span class="stat">
+              <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/>
+              </svg>
+              {{ formatNumber(battle.totalViews || 0) }}
+            </span>
+          </div>
         </div>
       </article>
     </div>
@@ -264,27 +288,42 @@ const handleImageError = (battleId) => {
 
 /* 정보 */
 .info {
-  padding: 12px;
+  padding: 8px 10px;
 }
 
 .title {
   margin: 0 0 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #1e293b;
-  line-height: 1.5;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 42px;
+  min-height: 36px;
   letter-spacing: -0.01em;
 }
 
-.votes {
-  margin: 0;
-  font-size: 12px;
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 500;
   color: #94a3b8;
+}
+
+.stat-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 
 /* 스켈레톤 */
@@ -370,17 +409,22 @@ const handleImageError = (battleId) => {
   }
 
   .info {
-    padding: 16px;
+    padding: 10px 12px;
   }
 
   .title {
-    font-size: 15px;
+    font-size: 14px;
     margin-bottom: 8px;
-    min-height: 46px;
+    min-height: 40px;
   }
 
-  .votes {
-    font-size: 13px;
+  .stat {
+    font-size: 11px;
+  }
+
+  .stat-icon {
+    width: 13px;
+    height: 13px;
   }
 }
 
@@ -414,17 +458,22 @@ const handleImageError = (battleId) => {
   }
 
   .info {
-    padding: 18px;
+    padding: 12px 14px;
   }
 
   .title {
-    font-size: 16px;
-    margin-bottom: 10px;
-    min-height: 50px;
+    font-size: 15px;
+    margin-bottom: 8px;
+    min-height: 44px;
   }
 
-  .votes {
-    font-size: 14px;
+  .stat {
+    font-size: 12px;
+  }
+
+  .stat-icon {
+    width: 13px;
+    height: 13px;
   }
 }
 
