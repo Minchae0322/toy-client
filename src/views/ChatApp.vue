@@ -55,7 +55,7 @@
           @click="handleToastClick"
       >
         <div class="toast-avatar">
-          {{ pendingNotification?.senderName?.[0] || '💬' }}
+          {{ pendingNotification?.senderName?.[0] || '?' }}
         </div>
         <div class="toast-body">
           <span class="toast-sender">{{ pendingNotification?.senderName || '새 메시지' }}</span>
@@ -241,11 +241,11 @@ const showSystemToast = (notification) => {
 const formatMessageContent = (message) => {
   const types = {
     TEXT: message.content?.length > 50 ? message.content.substring(0, 50) + '...' : message.content,
-    IMAGE: '📷 사진',
-    VIDEO: '🎥 동영상',
-    FILE: '📎 파일',
-    AUDIO: '🎵 음성',
-    LOCATION: '📍 위치',
+    IMAGE: '사진',
+    VIDEO: '동영상',
+    FILE: '파일',
+    AUDIO: '음성',
+    LOCATION: '위치',
   }
   return types[message.type] || '새 메시지'
 }
@@ -321,24 +321,12 @@ onBeforeUnmount(async () => {
 </script>
 
 <style scoped>
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-:root {
-  --primary: #222222;
-  --secondary: #64748B;
-  --accent: #9333ea;
-  --bg: #FFFFFF;
-  --card: #FFFFFF;
-  --border: #E2E8F0;
-  --hover: #F8FAFC;
-}
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 .app-container {
-  background: var(--bg);
+  background: #ffffff;
   min-height: 100vh;
-  color: var(--primary);
+  color: #111827;
   font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
   display: flex;
   max-width: 100vw;
@@ -374,7 +362,13 @@ onBeforeUnmount(async () => {
 
 @media (min-width: 1024px) {
   .main-content {
-    padding-left: 1rem;
+    padding-left: 1.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    padding-left: 0;
   }
 }
 
@@ -394,7 +388,7 @@ onBeforeUnmount(async () => {
 }
 
 .connection-banner.error {
-  background: #fee2e2;
+  background: #fef2f2;
   color: #dc2626;
 }
 
@@ -408,7 +402,7 @@ onBeforeUnmount(async () => {
 
 .banner-btn {
   padding: 4px 12px;
-  background: var(--accent);
+  background: #9333ea;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -417,7 +411,7 @@ onBeforeUnmount(async () => {
   cursor: pointer;
 }
 
-.banner-btn:hover { background: #7c22ce; }
+.banner-btn:hover { background: #7c3aed; }
 
 /* 로더 */
 .loader-small {
@@ -430,10 +424,10 @@ onBeforeUnmount(async () => {
 }
 
 .loader-large {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border: 3px solid #f3e8ff;
-  border-top-color: var(--accent);
+  border-top-color: #9333ea;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -457,7 +451,7 @@ onBeforeUnmount(async () => {
 
 .init-content p {
   font-size: 15px;
-  color: var(--secondary);
+  color: #6b7280;
   font-weight: 500;
 }
 
@@ -470,10 +464,10 @@ onBeforeUnmount(async () => {
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: #fff;
+  background: #ffffff;
   border-radius: 14px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  border: 1px solid var(--border);
+  border: 1px solid #f3f4f6;
   cursor: pointer;
   z-index: 1001;
   max-width: 360px;
@@ -488,12 +482,12 @@ onBeforeUnmount(async () => {
 .toast-avatar {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #9333ea, #c084fc);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #9333ea, #a855f7);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #ffffff;
   font-weight: 600;
   font-size: 16px;
   flex-shrink: 0;
@@ -510,12 +504,12 @@ onBeforeUnmount(async () => {
 .toast-sender {
   font-size: 14px;
   font-weight: 600;
-  color: var(--primary);
+  color: #111827;
 }
 
 .toast-text {
   font-size: 13px;
-  color: var(--secondary);
+  color: #6b7280;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -525,9 +519,9 @@ onBeforeUnmount(async () => {
   width: 28px;
   height: 28px;
   border: none;
-  background: #f5f5f7;
+  background: #f3f4f6;
   border-radius: 8px;
-  color: #999;
+  color: #9ca3af;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -537,8 +531,8 @@ onBeforeUnmount(async () => {
 }
 
 .toast-close:hover {
-  background: #eee;
-  color: #666;
+  background: #e5e7eb;
+  color: #6b7280;
 }
 
 /* 트랜지션 */
