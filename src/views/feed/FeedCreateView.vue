@@ -81,13 +81,14 @@
                 </svg>
                 <span>갤러리</span>
               </label>
-              <button class="btn-photo-action" @click="openCamera" :disabled="selectedPhotos.length >= 5 || isProcessingImage">
+              <label class="btn-photo-action mobile-only" :class="{ disabled: selectedPhotos.length >= 5 || isProcessingImage }">
+                <input type="file" accept="image/*" capture="environment" @change="handleFileSelect" style="display: none;" :disabled="selectedPhotos.length >= 5 || isProcessingImage" />
                 <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 <span>카메라</span>
-              </button>
+              </label>
             </div>
             <p class="hint-text">사진을 드래그하여 순서를 변경할 수 있습니다 (최대 1920px로 자동 최적화)</p>
           </section>
@@ -186,7 +187,7 @@
               </button>
             </div>
 
-            <!-- 인기 카테고리 칩 -->
+            <!-- 1뎁스 카테고리 칩 -->
             <div class="category-chips-section">
               <p class="category-chips-title">인기 카테고리</p>
               <div class="category-chips-list">
@@ -194,8 +195,8 @@
                   v-for="cat in popularCategories"
                   :key="cat.categoryId"
                   type="button"
-                  :class="['category-chip', { active: formData.subCategoryId === cat.categoryId }]"
-                  @click="selectQuickCategory(cat)"
+                  :class="['category-chip', { active: selectedParentCategory?.categoryId === cat.categoryId }]"
+                  @click="handleParentCategoryClick(cat)"
                 >
                   {{ cat.categoryName }}
                 </button>
@@ -204,6 +205,21 @@
                   <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
                   </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2뎁스 하위 카테고리 -->
+            <div v-if="selectedParentCategory && subCategories.length > 0" class="sub-category-section">
+              <div class="sub-category-list">
+                <button
+                  v-for="subCat in subCategories"
+                  :key="subCat.categoryId"
+                  type="button"
+                  :class="['sub-category-chip', { active: formData.subCategoryId === subCat.categoryId }]"
+                  @click="selectSubCategory(subCat)"
+                >
+                  {{ subCat.categoryName }}
                 </button>
               </div>
             </div>
@@ -231,9 +247,36 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 <span class="label-with-required">구매처<span class="required-mark">*</span></span>
-                <button type="button" class="btn-toggle" :class="{ active: formData.storeUnknown }" @click="toggleStoreUnknown">모름</button>
               </label>
-              <input type="text" class="form-input" placeholder="구매처를 입력하세요 (예: 무신사, 쿠팡)" v-model="formData.store" :disabled="formData.storeUnknown" />
+              <div class="quick-store-list">
+                <button
+                  v-for="store in quickStores"
+                  :key="store"
+                  type="button"
+                  :class="['quick-store-btn', { active: formData.store === store }]"
+                  @click="selectStore(store)"
+                  :disabled="formData.storeUnknown"
+                >
+                  {{ store }}
+                </button>
+                <button
+                  type="button"
+                  :class="['quick-store-btn unknown', { active: formData.storeUnknown }]"
+                  @click="toggleStoreUnknown"
+                >
+                  모름
+                </button>
+              </div>
+              <input
+                v-if="!formData.storeUnknown && !quickStores.includes(formData.store)"
+                type="text"
+                class="form-input mt-8"
+                placeholder="직접 입력 (예: 백화점, 해외직구)"
+                v-model="formData.store"
+              />
+              <p v-if="formData.store && !formData.storeUnknown && !quickStores.includes(formData.store)" class="input-hint">
+                또는 위 버튼을 눌러 빠르게 선택하세요
+              </p>
             </div>
 
             <!-- 구매 가격 -->
@@ -243,12 +286,22 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 구매 가격
-                <button type="button" class="btn-toggle" :class="{ active: formData.priceHidden }" @click="formData.priceHidden = !formData.priceHidden">비공개</button>
+                <button type="button" class="btn-toggle" :class="{ active: formData.priceHidden }" @click="togglePriceHidden">비공개</button>
               </label>
-              <div class="price-input-wrapper">
-                <span class="price-prefix">₩</span>
-                <input type="number" class="form-input price-input" placeholder="실제 결제 금액" v-model="formData.buyPrice" :disabled="formData.priceHidden" />
+              <div v-if="!formData.priceHidden" class="price-input-box">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  class="price-input-field"
+                  placeholder="0"
+                  :value="formattedPrice"
+                  @input="handlePriceInput"
+                />
+                <span class="price-suffix">원</span>
               </div>
+              <p v-if="formData.priceHidden" class="price-hidden-notice">
+                💰 가격이 비공개로 설정됩니다
+              </p>
             </div>
 
             <!-- Evaluation -->
@@ -276,24 +329,52 @@
               해시태그
               <span class="count-badge">{{ formData.hashtags.length }}/5</span>
             </label>
-            <div class="hashtag-input-wrapper">
-              <div class="selected-hashtags">
-                <span v-for="(tag, idx) in formData.hashtags" :key="idx" class="hashtag-tag">
-                  {{ tag }}
-                  <button class="remove-tag" @click="removeHashtag(idx)" type="button">
-                    <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
-                    </svg>
-                  </button>
-                </span>
-              </div>
-              <input v-if="formData.hashtags.length < 5" type="text" class="hashtag-input" placeholder="#해시태그 입력" v-model="hashtagInput" @keyup.enter="addHashtag" />
+
+            <!-- 선택된 해시태그 -->
+            <div v-if="formData.hashtags.length > 0" class="selected-hashtags-list">
+              <span v-for="(tag, idx) in formData.hashtags" :key="idx" class="hashtag-chip">
+                <span class="hashtag-symbol">#</span>{{ tag }}
+                <button class="remove-tag" @click="removeHashtag(idx)" type="button">
+                  <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                  </svg>
+                </button>
+              </span>
             </div>
+
+            <!-- 해시태그 입력 -->
+            <div v-if="formData.hashtags.length < 5" class="hashtag-input-box">
+              <span class="input-prefix">#</span>
+              <input
+                type="text"
+                class="hashtag-input-field"
+                placeholder="태그 입력"
+                v-model="hashtagInput"
+                @keydown.enter.prevent="addHashtag"
+                @keydown.space.prevent="addHashtag"
+                @keydown.,.prevent="addHashtag"
+              />
+              <button
+                type="button"
+                class="btn-add-tag"
+                @click="addHashtag"
+                :disabled="!hashtagInput.trim()"
+              >
+                추가
+              </button>
+            </div>
+            <p class="hashtag-hint">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Enter, 스페이스, 쉼표로 태그 추가
+            </p>
+
             <div class="popular-hashtags">
-              <p class="popular-title">인기 해시태그</p>
+              <p class="popular-title">추천 태그 <span class="popular-subtitle">클릭하여 추가</span></p>
               <div class="popular-list">
                 <button v-for="tag in popularHashtags" :key="tag" class="popular-tag" @click="addPopularHashtag(tag)" :disabled="formData.hashtags.includes(tag) || formData.hashtags.length >= 5" type="button">
-                  {{ tag }}
+                  #{{ tag }}
                 </button>
               </div>
             </div>
@@ -364,7 +445,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useFile } from '@/services/FileService.js'
-import { categoryService } from '@/services/CategoryService.js'
+import { useCategoryCache } from '@/composables/useCategoryCache.js'
 import { getUserId } from '@/utils/auth.js'
 import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
 import CategorySelectModal from '@/components/common/CategorySelectModal.vue'
@@ -372,6 +453,7 @@ import CategorySelectModal from '@/components/common/CategorySelectModal.vue'
 const router = useRouter()
 const feedService = useFeed()
 const fileService = useFile()
+const { loadPopularCategories, loadAllCategories, allCategories: cachedAllCategories } = useCategoryCache()
 
 const selectedPhotos = ref([])
 const showCancelDialog = ref(false)
@@ -385,12 +467,19 @@ const showCategoryModal = ref(false)
 const selectedCategoryInfo = ref(null)
 const allCategories = ref([])
 const popularCategories = ref([])
+const selectedParentCategory = ref(null)
 const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
 const showProductModal = ref(false)
 const selectedProduct = ref(null)
 const productInputMode = ref('select') // 'select' | 'custom'
 const customInputRef = ref(null)
+
+// 선택된 1뎁스 카테고리의 하위 카테고리 목록
+const subCategories = computed(() => {
+  if (!selectedParentCategory.value) return []
+  return selectedParentCategory.value.children || []
+})
 
 const formData = ref({
   userId: getUserId(),
@@ -421,6 +510,30 @@ const evaluations = [
   { value: 'OKAY', label: '괜찮음' },
   { value: 'BAD', label: '비추천' }
 ]
+
+const quickStores = ['무신사', '쿠팡', '네이버', '올리브영', '29CM', 'SSG']
+
+const selectStore = (store) => {
+  if (formData.value.storeUnknown) return
+  formData.value.store = formData.value.store === store ? '' : store
+}
+
+const formattedPrice = computed(() => {
+  if (!formData.value.buyPrice) return ''
+  return Number(formData.value.buyPrice).toLocaleString()
+})
+
+const handlePriceInput = (e) => {
+  const value = e.target.value.replace(/[^0-9]/g, '')
+  formData.value.buyPrice = value ? parseInt(value) : null
+}
+
+const togglePriceHidden = () => {
+  formData.value.priceHidden = !formData.value.priceHidden
+  if (formData.value.priceHidden) {
+    formData.value.buyPrice = null
+  }
+}
 
 const popularHashtags = ['조던4', '에어팟맥스', '디올립글로우', '나이키', '스니커즈', '데일리룩', 'OOTD', '커피스타그램', '테크', '뷰티']
 
@@ -504,43 +617,43 @@ const resizeImage = (file, maxSize = 1920, quality = 0.85) => {
 // Category Methods
 const loadCategories = async () => {
   try {
-    const response = await categoryService.getCategoryTree()
-    if (response.success && response.data) {
-      allCategories.value = response.data
+    // 전체 카테고리 로드 (캐시 활용)
+    await loadAllCategories()
+    allCategories.value = cachedAllCategories.value
 
-      // 하위 카테고리를 평면화하여 인기 카테고리로 사용
-      const flatChildren = []
-      for (const root of response.data) {
-        if (root.children && root.children.length > 0) {
-          for (const child of root.children) {
-            flatChildren.push({ ...child, parentName: root.categoryName })
-          }
-        }
-      }
-      popularCategories.value = flatChildren.slice(0, 8)
-    }
+    // 실제 인기 카테고리 API 호출 (최근 30일 기준 콘텐츠 수로 정렬)
+    const popular = await loadPopularCategories('FEED', 8)
+    popularCategories.value = popular
   } catch (error) {
     console.error('카테고리 로드 실패:', error)
   }
 }
 
-const selectQuickCategory = (cat) => {
-  formData.value.subCategoryId = cat.categoryId
+// 1뎁스 카테고리 클릭
+const handleParentCategoryClick = (cat) => {
+  // 같은 카테고리를 다시 클릭하면 선택 해제
+  if (selectedParentCategory.value?.categoryId === cat.categoryId) {
+    selectedParentCategory.value = null
+    return
+  }
+  selectedParentCategory.value = cat
+}
 
-  const parent = allCategories.value.find(root =>
-    root.children?.some(c => c.categoryId === cat.categoryId)
-  )
+// 2뎁스 카테고리 선택
+const selectSubCategory = (subCat) => {
+  formData.value.subCategoryId = subCat.categoryId
 
   selectedCategoryInfo.value = {
-    label: parent ? `${parent.categoryName} > ${cat.categoryName}` : cat.categoryName,
-    category: cat,
-    parent: parent || null
+    label: `${selectedParentCategory.value.categoryName} > ${subCat.categoryName}`,
+    category: subCat,
+    parent: selectedParentCategory.value
   }
 }
 
 const clearCategory = () => {
   formData.value.subCategoryId = null
   selectedCategoryInfo.value = null
+  selectedParentCategory.value = null
 }
 
 const openCategoryModal = () => {
@@ -560,12 +673,15 @@ const handleCategorySelect = ({ categoryId, category, parent }) => {
       category,
       parent
     }
+    // 모달에서 선택한 경우 1뎁스도 활성화
+    selectedParentCategory.value = parent
   } else {
     selectedCategoryInfo.value = {
       label: category.categoryName,
       category,
       parent: null
     }
+    selectedParentCategory.value = null
   }
 
   showCategoryModal.value = false
@@ -668,7 +784,6 @@ const removePhoto = (index) => {
   selectedPhotos.value.splice(index, 1)
 }
 
-const openCamera = () => { showError('카메라 기능은 준비 중입니다.') }
 
 // Product Name
 const handleProductNameInput = () => {
@@ -706,7 +821,8 @@ const resetProductInput = () => {
 // Hashtags
 const addHashtag = () => {
   if (!hashtagInput.value.trim() || formData.value.hashtags.length >= 5) return
-  let tag = hashtagInput.value.trim().replace(/^#/, '')
+  // #, 쉼표, 공백 제거
+  let tag = hashtagInput.value.trim().replace(/^#/, '').replace(/[,\s]/g, '')
   if (tag && !formData.value.hashtags.includes(tag)) formData.value.hashtags.push(tag)
   hashtagInput.value = ''
 }
@@ -1006,7 +1122,13 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
-.photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.photo-actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.btn-photo-action.mobile-only { display: none !important; }
+
+@media (max-width: 768px) {
+  .photo-actions { grid-template-columns: 1fr 1fr; }
+  .btn-photo-action.mobile-only { display: flex !important; }
+}
 .btn-photo-action {
   display: flex;
   flex-direction: column;
@@ -1393,9 +1515,178 @@ onBeforeUnmount(() => {
   border-color: #d8b4fe;
 }
 
+/* 2뎁스 하위 카테고리 */
+.sub-category-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.sub-category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sub-category-chip {
+  padding: 6px 12px;
+  background: white;
+  color: #888;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.sub-category-chip:hover {
+  background: #faf5ff;
+  border-color: #d8b4fe;
+  color: var(--accent);
+}
+.sub-category-chip.active {
+  background: #f3e8ff;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* Additional Info */
-.additional-info { display: flex; flex-direction: column; gap: 24px; }
-.form-group { display: flex; flex-direction: column; gap: 8px; }
+.additional-info { display: flex; flex-direction: column; gap: 28px; }
+.form-group { display: flex; flex-direction: column; gap: 10px; }
+.mt-8 { margin-top: 8px; }
+
+/* Quick Store Selection */
+.quick-store-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-store-btn {
+  padding: 8px 14px;
+  background: white;
+  color: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.quick-store-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.quick-store-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.quick-store-btn.unknown {
+  color: #9ca3af;
+  border-style: dashed;
+}
+
+.quick-store-btn.unknown.active {
+  background: #6b7280;
+  color: white;
+  border-style: solid;
+  border-color: #6b7280;
+}
+
+.quick-store-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.input-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* Price Input */
+.price-input-box {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.price-input-box:focus-within {
+  border-color: var(--accent);
+}
+
+.price-input-field {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: right;
+  outline: none;
+  font-family: inherit;
+}
+
+.price-input-field::placeholder {
+  color: #d1d5db;
+  font-weight: 400;
+}
+
+.price-suffix {
+  padding: 12px 14px 12px 0;
+  font-size: 14px;
+  color: var(--secondary);
+}
+
+.price-hidden-notice {
+  padding: 12px 14px;
+  background: #f9fafb;
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--secondary);
+  text-align: center;
+}
+
+/* Evaluation Buttons */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.status-btn {
+  padding: 12px 8px;
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.status-btn:hover {
+  border-color: var(--secondary);
+}
+
+.status-btn.best { border-color: #f97316; color: #f97316; }
+.status-btn.best.active { background: #f97316; color: white; }
+
+.status-btn.good { border-color: #10b981; color: #10b981; }
+.status-btn.good.active { background: #10b981; color: white; }
+
+.status-btn.okay { border-color: #3b82f6; color: #3b82f6; }
+.status-btn.okay.active { background: #3b82f6; color: white; }
+
+.status-btn.bad { border-color: #ef4444; color: #ef4444; }
+.status-btn.bad.active { background: #ef4444; color: white; }
 
 /* Required Mark */
 .label-with-required {
@@ -1429,89 +1720,152 @@ onBeforeUnmount(() => {
   color: white;
 }
 
-.price-input-wrapper { position: relative; }
-.price-prefix {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--secondary);
-}
-.price-input { padding-left: 32px; }
-
-/* Evaluation Buttons */
-.status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.status-btn {
-  padding: 12px 8px;
-  background: white;
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.status-btn:hover { border-color: var(--secondary); }
-
-.status-btn.best { border-color: #f97316; color: #f97316; }
-.status-btn.best.active { background: #f97316; color: white; }
-
-.status-btn.good { border-color: #10b981; color: #10b981; }
-.status-btn.good.active { background: #10b981; color: white; }
-
-.status-btn.okay { border-color: #3b82f6; color: #3b82f6; }
-.status-btn.okay.active { background: #3b82f6; color: white; }
-
-.status-btn.bad { border-color: #ef4444; color: #ef4444; }
-.status-btn.bad.active { background: #ef4444; color: white; }
 
 /* Hashtags */
 .count-badge { margin-left: auto; font-size: 13px; color: var(--secondary); }
 
-.hashtag-input-wrapper {
-  padding: 10px 12px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+/* 선택된 해시태그 목록 */
+.selected-hashtags-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  min-height: 50px;
+  margin-bottom: 12px;
 }
-.selected-hashtags { display: flex; flex-wrap: wrap; gap: 6px; }
-.hashtag-tag {
+
+.hashtag-chip {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+  gap: 2px;
+  padding: 6px 12px;
   background: #eff6ff;
   color: #1d4ed8;
-  border-radius: 6px;
+  border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
 }
-.remove-tag {
+
+.hashtag-symbol {
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.hashtag-chip .remove-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 2px;
+  margin-left: 4px;
   background: none;
   border: none;
   cursor: pointer;
+  border-radius: 50%;
 }
-.remove-tag .icon { width: 12px; height: 12px; }
 
-.hashtag-input {
+.hashtag-chip .remove-tag:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.hashtag-chip .remove-tag .icon {
+  width: 12px;
+  height: 12px;
+  color: #3b82f6;
+}
+
+/* 해시태그 입력 박스 */
+.hashtag-input-box {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.hashtag-input-box:focus-within {
+  border-color: var(--accent);
+}
+
+.input-prefix {
+  padding: 12px 0 12px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.hashtag-input-field {
   flex: 1;
-  min-width: 100px;
-  padding: 4px;
+  padding: 12px 8px;
   border: none;
   font-size: 14px;
   outline: none;
+  font-family: inherit;
 }
 
-.popular-hashtags { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
-.popular-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-.popular-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.hashtag-input-field::placeholder {
+  color: #9ca3af;
+}
+
+.btn-add-tag {
+  padding: 8px 16px;
+  margin: 6px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-add-tag:hover:not(:disabled) {
+  background: #7c22ce;
+}
+
+.btn-add-tag:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 힌트 텍스트 */
+.hashtag-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* 추천 해시태그 */
+.popular-hashtags {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.popular-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.popular-subtitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.popular-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .popular-tag {
   padding: 6px 12px;
   background: var(--hover);
@@ -1521,9 +1875,18 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  font-family: inherit;
 }
-.popular-tag:hover:not(:disabled) { background: #eff6ff; color: #1d4ed8; }
-.popular-tag:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.popular-tag:hover:not(:disabled) {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.popular-tag:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 /* Fixed Bottom */
 .fixed-bottom-bar {
