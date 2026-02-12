@@ -109,10 +109,10 @@
               <span class="yb-rank-num">{{ ybCurrentPage * 6 + index + 1 }}</span>
               <div class="yb-info">
                 <span class="yb-product">{{ feed.productName }}</span>
-                <span class="yb-author-name">{{ feed.authorNickname || feed.authorName || '익명' }}</span>
+                <span class="yb-author-name">{{ feed.buyPlace || '' }}</span>
               </div>
               <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
-              <span v-else-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
+              <span v-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
             </div>
           </div>
         </div>
