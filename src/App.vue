@@ -214,11 +214,46 @@ onUnmounted(() => {
           </template>
 
           <template v-else>
-            <RouterLink to="/one-mouth/list" class="mobile-menu-item" @click="showMobileMenu = false">
+            <!-- 메인 네비게이션 -->
+            <RouterLink to="/dashboard" class="mobile-menu-item" @click="showMobileMenu = false">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               홈
+            </RouterLink>
+            <RouterLink to="/feed" class="mobile-menu-item" @click="showMobileMenu = false">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              피드
+            </RouterLink>
+            <RouterLink to="/battle" class="mobile-menu-item" @click="showMobileMenu = false">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              요거픽
+            </RouterLink>
+            <RouterLink to="/products" class="mobile-menu-item" @click="showMobileMenu = false">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              핫 아이템
+            </RouterLink>
+
+            <div class="mobile-menu-divider"></div>
+
+            <!-- 유틸리티 -->
+            <RouterLink to="/chat" class="mobile-menu-item" @click="showMobileMenu = false">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              메시지
+            </RouterLink>
+            <RouterLink to="/mypage" class="mobile-menu-item" @click="showMobileMenu = false">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              마이페이지
             </RouterLink>
 
             <!-- 관리자 섹션 -->
@@ -650,8 +685,8 @@ onUnmounted(() => {
   width: 280px;
   max-height: calc(100vh - 57px);
   background: #ffffff;
-  border-left: 1px solid #f0f0f0;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+  border-radius: 0 0 0 16px;
+  box-shadow: -4px 4px 24px rgba(0, 0, 0, 0.1);
   z-index: 999;
   overflow-y: auto;
   display: flex;
@@ -664,7 +699,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.35);
   z-index: 998;
 }
 
@@ -673,10 +708,15 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
-  background: #FAF5FF;
+  padding: 20px 16px;
+  background: linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%);
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mobile-user-card:active {
+  background: linear-gradient(135deg, #F3E8FF 0%, #EDE4FF 100%);
 }
 
 .mobile-user-avatar {
@@ -691,6 +731,7 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 700;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(153, 51, 234, 0.25);
 }
 
 .mobile-user-avatar img {
@@ -703,7 +744,7 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .mobile-user-name {
@@ -734,6 +775,7 @@ onUnmounted(() => {
 
 .mobile-user-status.connected .status-dot {
   background: #00C853;
+  box-shadow: 0 0 4px rgba(0, 200, 83, 0.4);
 }
 
 .mobile-user-arrow {
@@ -749,14 +791,14 @@ onUnmounted(() => {
 .mobile-menu-divider {
   height: 1px;
   background: #f0f0f0;
-  margin: 8px 0;
+  margin: 4px 8px;
 }
 
 .mobile-menu-label {
-  padding: 8px 12px 4px;
+  padding: 10px 12px 4px;
   font-size: 11px;
   font-weight: 700;
-  color: #aaa;
+  color: #bbb;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -765,22 +807,26 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 11px 12px;
   text-decoration: none;
-  color: #444;
+  color: #333;
   font-size: 14px;
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: 10px;
   transition: all 0.15s ease;
 }
 
 .mobile-menu-item svg {
-  color: #888;
+  color: #999;
   flex-shrink: 0;
 }
 
 .mobile-menu-item:hover {
-  background: #f5f5f5;
+  background: #f8f8f8;
+}
+
+.mobile-menu-item:active {
+  background: #f0f0f0;
 }
 
 .mobile-menu-item.router-link-active {
@@ -791,21 +837,6 @@ onUnmounted(() => {
 
 .mobile-menu-item.router-link-active svg {
   color: #9933EA;
-}
-
-.mobile-menu-item.highlight {
-  background: #9933EA;
-  color: #fff;
-  font-weight: 600;
-  margin-top: 4px;
-}
-
-.mobile-menu-item.highlight svg {
-  color: #fff;
-}
-
-.mobile-menu-item.highlight:hover {
-  background: #8529D4;
 }
 
 /* 로그아웃 버튼 */
@@ -821,10 +852,10 @@ onUnmounted(() => {
   gap: 8px;
   width: 100%;
   padding: 12px;
-  background: #f5f5f5;
+  background: #f8f8f8;
   border: none;
-  border-radius: 8px;
-  color: #888;
+  border-radius: 10px;
+  color: #999;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -832,8 +863,12 @@ onUnmounted(() => {
 }
 
 .mobile-logout-btn:hover:not(:disabled) {
-  background: #eee;
-  color: #555;
+  background: #f0f0f0;
+  color: #666;
+}
+
+.mobile-logout-btn:active:not(:disabled) {
+  background: #e8e8e8;
 }
 
 .mobile-logout-btn:disabled {
