@@ -49,6 +49,17 @@
       </div>
     </div>
 
+    <div class="remember-me">
+      <label class="remember-me-label">
+        <input
+            type="checkbox"
+            v-model="form.rememberMe"
+            class="remember-me-checkbox"
+        />
+        <span class="remember-me-text">자동 로그인</span>
+      </label>
+    </div>
+
     <button type="submit" class="submit-btn" :disabled="loading || !canSubmit">
       <div v-if="loading" class="spinner"></div>
       <span>{{ loading ? '진행 중' : '로그인' }}</span>
@@ -82,7 +93,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { getRememberMe } from '@/utils/auth.js'
 
 const props = defineProps({
   sessionExpired: Boolean,
@@ -96,7 +108,13 @@ const form = ref({
   email: '',
   password: '',
   showPassword: false,
-  emailError: false
+  emailError: false,
+  rememberMe: false
+})
+
+onMounted(() => {
+  // 이전에 저장된 자동 로그인 설정 복원
+  form.value.rememberMe = getRememberMe()
 })
 
 const displayError = computed(() => props.errorMessage)
@@ -109,7 +127,11 @@ const validateEmail = () => {
 
 const handleSubmit = () => {
   if (canSubmit.value) {
-    emit('submit', { email: form.value.email, password: form.value.password })
+    emit('submit', {
+      email: form.value.email,
+      password: form.value.password,
+      rememberMe: form.value.rememberMe
+    })
   }
 }
 </script>
@@ -151,6 +173,26 @@ input.error { border-color: #ef4444; }
 .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #a1a1aa; }
 .eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: none; background: none; font-size: 11px; font-weight: 600; color: #71717a; cursor: pointer; }
 .error-msg { color: #ef4444; font-size: 12px; margin-top: 4px; display: block; }
+
+/* 자동 로그인 */
+.remember-me { margin-bottom: 16px; }
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.remember-me-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #18181b;
+  cursor: pointer;
+}
+.remember-me-text {
+  font-size: 13px;
+  color: #3f3f46;
+}
 
 /* 버튼 */
 .submit-btn {

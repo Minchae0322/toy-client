@@ -4,15 +4,46 @@ export const STORAGE_KEYS = {
     ACCESS_TOKEN: 'access_token',
     REFRESH_TOKEN: 'refresh_token', // 사용 안 하지만 호환성 유지
     USER_INFO: 'user_info',
-    DEVICE_ID: 'device_id'
+    DEVICE_ID: 'device_id',
+    REMEMBER_ME: 'remember_me'
+}
+
+// ==================== 자동 로그인 관리 ====================
+
+/**
+ * 자동 로그인 설정 여부 확인
+ * remember_me 값은 항상 localStorage에 저장 (브라우저 닫아도 유지)
+ */
+export const getRememberMe = () => {
+    return localStorage.getItem(STORAGE_KEYS.REMEMBER_ME) === 'true'
+}
+
+/**
+ * 자동 로그인 설정 저장
+ */
+export const setRememberMe = (value) => {
+    localStorage.setItem(STORAGE_KEYS.REMEMBER_ME, String(value))
+}
+
+/**
+ * 현재 자동 로그인 설정에 따른 스토리지 반환
+ * - 자동 로그인 ON: localStorage (브라우저 닫아도 유지)
+ * - 자동 로그인 OFF: sessionStorage (브라우저 닫으면 삭제)
+ */
+const getStorage = () => {
+    return getRememberMe() ? localStorage : sessionStorage
 }
 
 // ==================== 토큰 관리 ====================
 
 /**
- * AccessToken 가져오기 (localStorage)
+ * AccessToken 가져오기 (자동 로그인 설정에 따라 저장소 분기)
  */
-export const getAccessToken = () => localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+export const getAccessToken = () => {
+    // 두 저장소 모두 확인 (자동 로그인 설정 변경 대응)
+    return localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+        || sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
+}
 
 /**
  * RefreshToken 가져오기
@@ -34,8 +65,9 @@ export const getRefreshToken = () => {
  */
 export const setTokens = (accessToken, refreshToken = null) => {
     if (accessToken) {
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
-        console.log('✅ AccessToken 저장 완료')
+        const storage = getStorage()
+        storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
+        console.log(`✅ AccessToken 저장 완료 (${getRememberMe() ? 'localStorage' : 'sessionStorage'})`)
     }
 
     // refreshToken은 HttpOnly 쿠키로 관리되므로 무시
@@ -56,7 +88,8 @@ export const setTokens = (accessToken, refreshToken = null) => {
  */
 export const setAccessToken = (accessToken) => {
     if (accessToken) {
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
+        const storage = getStorage()
+        storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
         console.log('✅ AccessToken 갱신 저장 완료')
 
         // 다른 탭에 토큰 변경 알림
@@ -71,9 +104,12 @@ export const setAccessToken = (accessToken) => {
  * 모든 토큰 및 사용자 정보 삭제
  */
 export const clearTokens = () => {
+    // 두 저장소 모두 정리
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
     localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN) // 호환성
     localStorage.removeItem(STORAGE_KEYS.USER_INFO)
+    sessionStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
+    sessionStorage.removeItem(STORAGE_KEYS.USER_INFO)
 
     console.log('🗑️ 로컬 인증 정보 삭제 완료')
 
@@ -91,7 +127,9 @@ export const clearTokens = () => {
  */
 export const getUserInfo = () => {
     try {
+        // 두 저장소 모두 확인
         const userInfo = localStorage.getItem(STORAGE_KEYS.USER_INFO)
+            || sessionStorage.getItem(STORAGE_KEYS.USER_INFO)
         return userInfo ? JSON.parse(userInfo) : null
     } catch (error) {
         console.error('❌ 사용자 정보 파싱 실패:', error)
@@ -104,7 +142,8 @@ export const getUserInfo = () => {
  */
 export const setUserInfo = (user) => {
     if (user) {
-        localStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user))
+        const storage = getStorage()
+        storage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user))
         console.log('✅ 사용자 정보 저장 완료:', user.email || user.username)
     }
 }
@@ -114,6 +153,7 @@ export const setUserInfo = (user) => {
  */
 export const clearUserInfo = () => {
     localStorage.removeItem(STORAGE_KEYS.USER_INFO)
+    sessionStorage.removeItem(STORAGE_KEYS.USER_INFO)
 }
 
 // ==================== JWT 토큰 유틸리티 ====================
@@ -307,6 +347,7 @@ export const logout = () => {
     console.log('🚪 로컬 인증 정보 정리 중...')
     clearTokens()
     clearUserInfo()
+    // 자동 로그인 설정은 유지 (다음 로그인 시 체크박스 상태 복원용)
     console.log('✅ 로컬 로그아웃 완료')
 }
 

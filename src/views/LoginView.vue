@@ -81,7 +81,13 @@ const handleLogin = async (formData) => {
   loading.value = true
   loginError.value = ''
   try {
-    const response = await authService.login(formData)
+    // 자동 로그인 설정을 토큰 저장 전에 먼저 적용
+    authUtils.setRememberMe(formData.rememberMe || false)
+
+    const response = await authService.login({
+      email: formData.email,
+      password: formData.password
+    })
     const { accessToken, refreshToken, user } = response.data
     await login({ accessToken, refreshToken }, user)
     router.push(redirectPath.value)
