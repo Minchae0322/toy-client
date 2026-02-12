@@ -111,8 +111,8 @@
                 <span class="yb-product">{{ feed.productName }}</span>
                 <span class="yb-author-name">{{ feed.buyPlace || '' }}</span>
               </div>
-              <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
               <span v-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
+              <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
             </div>
           </div>
         </div>
@@ -1076,8 +1076,8 @@ onUnmounted(() => {
 }
 
 .yb-tag.new {
-  background: #ecfdf5;
-  color: #10b981;
+  background: #eff6ff;
+  color: #3b82f6;
 }
 
 /* 요거 봄 스켈레톤 */
