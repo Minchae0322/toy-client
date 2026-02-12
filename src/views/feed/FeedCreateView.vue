@@ -2,15 +2,13 @@
   <div class="create-container">
     <!-- Header -->
     <header class="create-header">
-      <button class="btn-cancel" @click="handleCancel">
-        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      <button class="btn-back" @click="handleCancel">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
       </button>
       <h1 class="header-title">인증 올리기</h1>
-      <button class="btn-submit" :disabled="!canSubmit" @click="handleSubmit">
-        {{ isSubmitting ? '업로드 중...' : '게시' }}
-      </button>
+      <div class="header-spacer"></div>
     </header>
 
     <!-- Main Content -->
@@ -972,37 +970,42 @@ onBeforeUnmount(() => {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
-  padding: 16px 20px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
 }
 
-.btn-cancel {
-  padding: 8px;
+.btn-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   background: transparent;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.btn-cancel .icon { width: 24px; height: 24px; }
-
-.header-title { font-size: 18px; font-weight: 700; }
-
-.btn-submit {
-  padding: 10px 20px;
-  background: var(--accent);
-  color: white;
-  border: none;
   border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
   cursor: pointer;
+  color: var(--primary);
+  transition: background 0.15s;
 }
-.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-back:hover {
+  background: var(--hover);
+}
+
+.header-title {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.header-spacer {
+  width: 40px;
+}
 
 /* Content */
 .create-content { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
