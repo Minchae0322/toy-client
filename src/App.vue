@@ -158,6 +158,18 @@ onUnmounted(() => {
 
       <!-- 모바일 우측 영역 -->
       <div class="nav-mobile">
+        <button class="mobile-msg-btn" @click="handleChatClick" title="메시지">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+          </svg>
+        </button>
+        <template v-if="isLoggedIn">
+          <div class="mobile-ws-dot" :class="{ connected: wsConnected }"></div>
+          <div class="mobile-avatar" @click="goToProfile">
+            <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
+            <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
+          </div>
+        </template>
         <button class="mobile-menu-btn" @click="showMobileMenu = !showMobileMenu">
           <svg v-if="!showMobileMenu" width="22" height="22" viewBox="0 0 24 24" fill="none">
             <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -507,6 +519,24 @@ onUnmounted(() => {
   background: #9933EA;
 }
 
+.mobile-msg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: #FAF5FF;
+  border-radius: 10px;
+  color: #9933EA;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobile-msg-btn:hover {
+  color: #ffffff;
+  background: #9933EA;
+}
 
 /* ===================== 유저 메뉴 (데스크톱) ===================== */
 .user-menu {
@@ -594,6 +624,40 @@ onUnmounted(() => {
 .nav-mobile {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.mobile-ws-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ddd;
+}
+
+.mobile-ws-dot.connected {
+  background: #00C853;
+  box-shadow: 0 0 6px rgba(0, 200, 83, 0.5);
+}
+
+.mobile-avatar {
+  width: 32px;
+  height: 32px;
+  background: #9933EA;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.mobile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .mobile-menu-btn {
