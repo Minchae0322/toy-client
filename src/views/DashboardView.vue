@@ -184,7 +184,7 @@
           <div class="section-header">
             <div class="title-with-badge">
               <h2 class="section-title">실시간 제품 랭킹</h2>
-              <span class="sub-title">조회수 기반 인기 제품</span>
+              <span class="sub-title">요즘 뜨는 인기 아이템</span>
             </div>
             <button class="view-all-btn" @click="goToProducts">
               전체보기
