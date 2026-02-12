@@ -467,12 +467,21 @@ const loadYogurtBomFeeds = async (forceRefresh = false) => {
 
 const isNewFeed = (feed) => {
   if (!feed.createdAt) return false
-  // "2026-02-08 14:00:33" 형식 지원
-  const dateStr = feed.createdAt.replace(' ', 'T')
-  const createdAt = new Date(dateStr)
+  let createdAt
+  if (Array.isArray(feed.createdAt)) {
+    // LocalDateTime 배열 형식: [year, month, day, hour, minute, second]
+    const [y, m, d, h = 0, min = 0, s = 0] = feed.createdAt
+    createdAt = new Date(y, m - 1, d, h, min, s)
+  } else {
+    // "2026-02-08 14:00:33" 또는 "2026-02-08T14:00:33" 형식
+    const dateStr = feed.createdAt.replace(' ', 'T')
+    createdAt = new Date(dateStr)
+  }
+  if (isNaN(createdAt.getTime())) return false
+  // KST 기준 현재시간으로부터 24시간 이내면 NEW
   const now = new Date()
-  const diffDays = (now - createdAt) / (1000 * 60 * 60 * 24)
-  return diffDays < 7 // 7일 이내면 NEW
+  const diffHours = (now - createdAt) / (1000 * 60 * 60)
+  return diffHours < 24
 }
 
 const isHotFeed = (feed) => {

@@ -446,7 +446,9 @@ class FeedService extends BaseApiService {
       likeCount: feed.likeCount || 0,
       hotCount: feed.hotCount || 0,
       viewCount: feed.viewCount || 0,
-      hotScore: feed.hotScore || 0
+      hotScore: feed.hotScore || 0,
+      createdAt: feed.createdAt || null,
+      buyPlace: feed.buyPlace || null
     }))
   }
 
