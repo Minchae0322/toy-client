@@ -553,10 +553,12 @@ const loadYogurtBomFeeds = async (forceRefresh = false) => {
 
 const isNewFeed = (feed) => {
   if (!feed.createdAt) return false
-  const createdAt = new Date(feed.createdAt)
+  // "2026-02-08 14:00:33" 형식 지원
+  const dateStr = feed.createdAt.replace(' ', 'T')
+  const createdAt = new Date(dateStr)
   const now = new Date()
-  const diffHours = (now - createdAt) / (1000 * 60 * 60)
-  return diffHours < 24 // 24시간 이내면 NEW
+  const diffDays = (now - createdAt) / (1000 * 60 * 60 * 24)
+  return diffDays < 7 // 7일 이내면 NEW
 }
 
 const isHotFeed = (feed) => {
@@ -1136,6 +1138,7 @@ onUnmounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 .yb-author-name {
@@ -2754,6 +2757,7 @@ onUnmounted(() => {
   .yb-list {
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(3, auto);
+    grid-auto-flow: column;
     gap: 0.25rem 1rem;
   }
 
@@ -2769,6 +2773,7 @@ onUnmounted(() => {
 
   .yb-product {
     font-size: 0.75rem;
+    max-width: 80px;
   }
 
   .yb-author-name {
