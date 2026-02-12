@@ -1171,8 +1171,8 @@ onUnmounted(() => {
 }
 
 .yb-tag.new {
-  background: #ecfdf5;
-  color: #10b981;
+  background: #eff6ff;
+  color: #3b82f6;
 }
 
 /* 요거 봄 스켈레톤 */
