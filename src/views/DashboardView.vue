@@ -111,8 +111,8 @@
                 <span class="yb-product">{{ feed.productName }}</span>
                 <span class="yb-author-name">{{ feed.buyPlace || '' }}</span>
               </div>
-              <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
               <span v-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
+              <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
             </div>
           </div>
         </div>
