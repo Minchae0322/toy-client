@@ -564,9 +564,10 @@ const isNewFeed = (feed) => {
     createdAt = new Date(dateStr)
   }
   if (isNaN(createdAt.getTime())) return false
+  // KST 기준 현재시간으로부터 24시간 이내면 NEW
   const now = new Date()
-  const diffDays = (now - createdAt) / (1000 * 60 * 60 * 24)
-  return diffDays < 7 // 7일 이내면 NEW
+  const diffHours = (now - createdAt) / (1000 * 60 * 60)
+  return diffHours < 24
 }
 
 const isHotFeed = (feed) => {
