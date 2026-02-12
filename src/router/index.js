@@ -16,7 +16,6 @@ import ChatApp from '@/views/ChatApp.vue'
 
 // Product Views import
 import ProductRankingView from '@/views/product/ProductRankingView.vue'
-import CategoryListView from '@/views/category/CategoryListView.vue'
 import ProductCreateView from '@/views/product/ProductCreateView.vue'
 import ProductDetailView from '@/views/product/ProductDetailView.vue'
 import ProductReviewWrite from '@/views/ReviewWritePageView.vue'
@@ -61,12 +60,6 @@ const routes = [
     name: 'ProductRanking',
     component: ProductRankingView,
     meta: { requiresAuth: false, public: true, title: 'HOT 100' }
-  },
-  {
-    path: '/categories',
-    name: 'CategoryList',
-    component: CategoryListView,
-    meta: { requiresAuth: false, public: true, title: '카테고리' }
   },
   {
     path: '/products/:id/review/write',
