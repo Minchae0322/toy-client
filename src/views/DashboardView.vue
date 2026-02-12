@@ -141,31 +141,18 @@
           </div>
         </section>
 
-        <!-- 실시간 피드 섹션 (조회수순) -->
-        <section class="content-section realtime-section">
-          <div class="section-header">
-            <div class="title-with-badge">
-              <h2 class="section-title">실시간 피드</h2>
-              <span class="live-indicator">
-                <span class="live-indicator-dot"></span>
-                LIVE
-              </span>
+        <!-- 실시간 요거 봄 섹션 -->
+        <section class="content-section yogeo-bom-section">
+          <div class="yogeo-bom-header">
+            <div class="yogeo-bom-title-row">
+              <span class="yogeo-bom-num">03</span>
+              <h2 class="yogeo-bom-title">실시간 요거 봄</h2>
             </div>
-            <button class="view-all-link" @click="goToFeeds">
-              전체보기
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6" /></svg>
-            </button>
+            <p class="yogeo-bom-update">업데이트 {{ formattedUpdateTime }}</p>
           </div>
 
-          <div v-if="realtimeFeedsLoading" class="realtime-list">
-            <div v-for="i in 5" :key="i" class="realtime-item-skeleton">
-              <div class="skeleton rt-sk-rank"></div>
-              <div class="skeleton rt-sk-thumb"></div>
-              <div class="rt-sk-info">
-                <div class="skeleton rt-sk-line"></div>
-                <div class="skeleton rt-sk-line short"></div>
-              </div>
-            </div>
+          <div v-if="realtimeFeedsLoading" class="yogeo-bom-grid">
+            <div v-for="i in 6" :key="i" class="yogeo-bom-item-sk skeleton"></div>
           </div>
 
           <div v-else-if="realtimeFeeds.length === 0" class="empty-state">
@@ -178,36 +165,31 @@
             <p class="empty-text">실시간 피드가 없습니다</p>
           </div>
 
-          <div v-else class="realtime-list">
-            <div
-              v-for="(feed, index) in realtimeFeeds"
-              :key="feed.feedId"
-              class="realtime-item"
-              @click="goToFeedDetail(feed.feedId)"
-            >
-              <div class="rt-rank" :class="'rt-rank-' + (index + 1)">
-                {{ index + 1 }}
-              </div>
-              <div class="rt-thumb">
-                <img :src="feed.hotFeedThumbnailDto?.fileUrl" :alt="feed.productName" @error="handleImageError" />
-              </div>
-              <div class="rt-content">
-                <div class="rt-top-row">
-                  <span class="rt-product-name">{{ feed.productName }}</span>
-                  <span v-if="feed.feedEvaluation?.code" :class="['rt-eval-badge', feed.feedEvaluation.code.toLowerCase()]">
-                    {{ feed.feedEvaluation.description }}
-                  </span>
+          <div v-else class="yogeo-bom-body">
+            <div class="yogeo-bom-grid">
+              <div
+                v-for="(feed, index) in realtimeFeeds.slice(0, 6)"
+                :key="feed.feedId"
+                class="yogeo-bom-item"
+                @click="goToFeedDetail(feed.feedId)"
+              >
+                <span class="yogeo-bom-rank">{{ index + 1 }}</span>
+                <div class="yogeo-bom-thumb">
+                  <img :src="feed.hotFeedThumbnailDto?.fileUrl" :alt="feed.productName" @error="handleImageError" />
                 </div>
-                <p v-if="feed.reviewSummary" class="rt-review">"{{ feed.reviewSummary }}"</p>
-              </div>
-              <div class="rt-view-count">
-                <svg class="rt-eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                <span>{{ formatViewCount(feed.viewCount) }}</span>
+                <div class="yogeo-bom-info">
+                  <span class="yogeo-bom-name">{{ feed.productName }}</span>
+                  <span class="yogeo-bom-brand">{{ getFeedBrandName(feed) }}</span>
+                </div>
+                <span v-if="feed.isTrending || feed.feedEvaluation?.code === 'BEST'" class="yogeo-bom-tag hot">HOT</span>
+                <span v-else-if="feed.feedEvaluation?.code === 'GOOD'" class="yogeo-bom-tag new">new</span>
               </div>
             </div>
+            <button class="yogeo-bom-arrow" @click="goToFeeds" aria-label="더보기">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </button>
           </div>
         </section>
 
@@ -476,6 +458,25 @@ const getProductPopularityScore = (product) => {
   if (!product) return 0
   if (product.popularityScore) return product.popularityScore
   return (product.viewCount || 0) + ((product.likeCount || 0) * 3) + ((product.reviewCount || 0) * 2)
+}
+
+const formattedUpdateTime = computed(() => {
+  const now = new Date()
+  const days = ['일', '월', '화', '수', '목', '금', '토']
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  const day = days[now.getDay()]
+  const h = String(now.getHours()).padStart(2, '0')
+  const min = String(now.getMinutes()).padStart(2, '0')
+  return `${y}.${m}.${d} (${day}) ${h}:${min}`
+})
+
+const getFeedBrandName = (feed) => {
+  if (feed.subCategoryDetail?.subCategoryName) return feed.subCategoryDetail.subCategoryName
+  if (feed.subCategoryDetail?.categoryName) return feed.subCategoryDetail.categoryName
+  if (feed.nickname) return feed.nickname
+  return feed.productName || ''
 }
 
 const topTrendName = computed(() => {
@@ -987,97 +988,96 @@ onUnmounted(() => {
   margin-bottom: 0.75rem !important;
 }
 
-/* ===== 실시간 피드 섹션 ===== */
-.realtime-section {
-  background: linear-gradient(to bottom, #ffffff, #fefbff);
+/* ===== 실시간 요거 봄 섹션 ===== */
+.yogeo-bom-section {
+  background: #fff;
 }
 
-.live-indicator {
+.yogeo-bom-header {
+  margin-bottom: 1rem;
+}
+
+.yogeo-bom-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.yogeo-bom-num {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  background: #fef2f2;
-  color: #dc2626;
-  font-size: 11px;
-  font-weight: 800;
-  border-radius: 100px;
-  letter-spacing: 0.5px;
-  border: 1px solid rgba(220, 38, 38, 0.1);
-}
-
-.live-indicator-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ef4444;
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
-  animation: live-blink 1.5s ease-in-out infinite;
-}
-
-@keyframes live-blink {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15); }
-  50% { opacity: 0.4; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08); }
-}
-
-.realtime-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.realtime-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 8px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-bottom: 1px solid #f5f5f5;
-}
-
-.realtime-item:last-child {
-  border-bottom: none;
-}
-
-.realtime-item:hover {
-  background: #faf5ff;
-  transform: translateX(4px);
-}
-
-.rt-rank {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #9333ea;
+  color: #fff;
   font-size: 13px;
   font-weight: 800;
   flex-shrink: 0;
-  background: #f1f5f9;
-  color: #94a3b8;
 }
 
-.rt-rank-1 {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+.yogeo-bom-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
 }
 
-.rt-rank-2 {
-  background: linear-gradient(135deg, #d1d5db, #9ca3af);
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(156, 163, 175, 0.3);
+.yogeo-bom-update {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0;
+  padding-left: 36px;
 }
 
-.rt-rank-3 {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+.yogeo-bom-body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.rt-thumb {
+.yogeo-bom-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+
+.yogeo-bom-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid #f0f0f0;
+  border-right: 1px solid #f0f0f0;
+}
+
+.yogeo-bom-item:nth-child(3n) {
+  border-right: none;
+}
+
+.yogeo-bom-item:nth-child(n+4) {
+  border-bottom: none;
+}
+
+.yogeo-bom-item:hover {
+  background: #faf5ff;
+}
+
+.yogeo-bom-rank {
+  font-size: 16px;
+  font-weight: 800;
+  color: #9333ea;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.yogeo-bom-thumb {
   width: 48px;
   height: 48px;
   border-radius: 10px;
@@ -1086,32 +1086,26 @@ onUnmounted(() => {
   background: #f1f5f9;
 }
 
-.rt-thumb img {
+.yogeo-bom-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
 
-.realtime-item:hover .rt-thumb img {
+.yogeo-bom-item:hover .yogeo-bom-thumb img {
   transform: scale(1.08);
 }
 
-.rt-content {
+.yogeo-bom-info {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
-.rt-top-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.rt-product-name {
+.yogeo-bom-name {
   font-size: 14px;
   font-weight: 600;
   color: #1f2937;
@@ -1120,140 +1114,128 @@ onUnmounted(() => {
   text-overflow: ellipsis;
 }
 
-.rt-eval-badge {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 5px;
-  flex-shrink: 0;
-  line-height: 1.3;
-}
-
-.rt-eval-badge.best { background: #fef3c7; color: #92400e; }
-.rt-eval-badge.good { background: #dcfce7; color: #166534; }
-.rt-eval-badge.okay { background: #f3e8ff; color: #6b21a8; }
-.rt-eval-badge.bad { background: #fee2e2; color: #991b1b; }
-
-.rt-review {
+.yogeo-bom-brand {
   font-size: 12px;
-  color: #6b7280;
-  margin: 0;
+  color: #9ca3af;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-style: italic;
-  line-height: 1.4;
 }
 
-.rt-view-count {
+.yogeo-bom-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 100px;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
+.yogeo-bom-tag.hot {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.1);
+}
+
+.yogeo-bom-tag.new {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.1);
+}
+
+.yogeo-bom-arrow {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  border: none;
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #7c3aed;
-  background: #f5f3ff;
-  padding: 4px 10px;
-  border-radius: 20px;
+  justify-content: center;
+  color: #9ca3af;
+  cursor: pointer;
   flex-shrink: 0;
-  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
-.rt-eye-icon {
-  width: 14px;
-  height: 14px;
-  stroke: #7c3aed;
+.yogeo-bom-arrow:hover {
+  background: #f3e8ff;
+  color: #9333ea;
 }
 
-/* 실시간 피드 스켈레톤 */
-.realtime-item-skeleton {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 8px;
-  border-bottom: 1px solid #f5f5f5;
-}
-
-.realtime-item-skeleton:last-child {
-  border-bottom: none;
-}
-
-.rt-sk-rank {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.rt-sk-thumb {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-
-.rt-sk-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.rt-sk-line {
-  height: 12px;
-  border-radius: 4px;
-  width: 70%;
-}
-
-.rt-sk-line.short {
-  width: 45%;
-  height: 10px;
+.yogeo-bom-item-sk {
+  height: 72px;
 }
 
 @media (min-width: 1280px) {
-  .realtime-item {
-    gap: 14px;
-    padding: 12px 10px;
-  }
-
-  .rt-rank {
-    width: 30px;
-    height: 30px;
+  .yogeo-bom-num {
+    width: 32px;
+    height: 32px;
     font-size: 14px;
   }
 
-  .rt-thumb {
+  .yogeo-bom-title {
+    font-size: 1.25rem;
+  }
+
+  .yogeo-bom-update {
+    font-size: 0.8125rem;
+    padding-left: 40px;
+  }
+
+  .yogeo-bom-item {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .yogeo-bom-rank {
+    font-size: 18px;
+  }
+
+  .yogeo-bom-thumb {
     width: 56px;
     height: 56px;
   }
 
-  .rt-product-name {
+  .yogeo-bom-name {
     font-size: 15px;
   }
 
-  .rt-eval-badge {
-    font-size: 11px;
-    padding: 2px 8px;
-  }
-
-  .rt-review {
+  .yogeo-bom-brand {
     font-size: 13px;
   }
 
-  .rt-view-count {
-    font-size: 14px;
-    padding: 5px 12px;
+  .yogeo-bom-tag {
+    font-size: 11px;
+    padding: 3px 10px;
   }
 
-  .rt-eye-icon {
-    width: 15px;
-    height: 15px;
+  .yogeo-bom-arrow {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .yogeo-bom-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .live-indicator {
-    font-size: 12px;
-    padding: 3px 12px;
+  .yogeo-bom-item:nth-child(3n) {
+    border-right: 1px solid #f0f0f0;
+  }
+
+  .yogeo-bom-item:nth-child(2n) {
+    border-right: none;
+  }
+
+  .yogeo-bom-item:nth-child(n+4) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .yogeo-bom-item:nth-child(n+5) {
+    border-bottom: none;
   }
 }
 
@@ -2534,68 +2516,75 @@ onUnmounted(() => {
     font-size: 10px;
   }
 
-  /* 실시간 피드 컴팩트 */
-  .live-indicator {
-    font-size: 9px;
-    padding: 2px 7px;
-    gap: 4px;
+  /* 실시간 요거 봄 컴팩트 */
+  .yogeo-bom-grid {
+    grid-template-columns: 1fr;
   }
 
-  .live-indicator-dot {
-    width: 5px;
-    height: 5px;
-  }
-
-  .realtime-item {
+  .yogeo-bom-item {
+    padding: 8px 8px;
     gap: 8px;
-    padding: 8px 4px;
+    border-right: none;
   }
 
-  .rt-rank {
-    width: 22px;
-    height: 22px;
+  .yogeo-bom-item:nth-child(n+4) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .yogeo-bom-item:last-child {
+    border-bottom: none;
+  }
+
+  .yogeo-bom-num {
+    width: 24px;
+    height: 24px;
     font-size: 11px;
-    border-radius: 6px;
   }
 
-  .rt-thumb {
+  .yogeo-bom-title {
+    font-size: 0.9375rem;
+  }
+
+  .yogeo-bom-update {
+    font-size: 0.6875rem;
+    padding-left: 32px;
+  }
+
+  .yogeo-bom-rank {
+    font-size: 14px;
+  }
+
+  .yogeo-bom-thumb {
     width: 40px;
     height: 40px;
     border-radius: 8px;
   }
 
-  .rt-product-name {
+  .yogeo-bom-name {
     font-size: 12px;
   }
 
-  .rt-eval-badge {
-    font-size: 9px;
-    padding: 1px 5px;
-  }
-
-  .rt-review {
+  .yogeo-bom-brand {
     font-size: 10px;
   }
 
-  .rt-view-count {
-    font-size: 11px;
-    padding: 3px 7px;
-    gap: 3px;
+  .yogeo-bom-tag {
+    font-size: 9px;
+    padding: 1px 6px;
   }
 
-  .rt-eye-icon {
-    width: 12px;
-    height: 12px;
+  .yogeo-bom-arrow {
+    width: 32px;
+    height: 32px;
   }
 
-  .rt-sk-rank {
-    width: 22px;
-    height: 22px;
+  .yogeo-bom-arrow svg {
+    width: 16px;
+    height: 16px;
   }
 
-  .rt-sk-thumb {
-    width: 40px;
-    height: 40px;
+  .yogeo-bom-item-sk {
+    height: 56px;
   }
 
   /* 배틀 그리드 컴팩트 */
