@@ -91,7 +91,7 @@
           <div class="section-header">
             <div class="title-with-badge">
               <h2 class="section-title">지금 뜨는 핫-기록</h2>
-              <span class="live-indicator"><span class="dot"></span> LIVE</span>
+              <span class="sub-title">실시간 인기 리뷰</span>
             </div>
             <button class="view-all-link" @click="goToFeeds">
               전체보기
@@ -146,7 +146,7 @@
           <div class="section-header">
             <div class="title-with-badge">
               <h2 class="section-title">실시간 요거픽</h2>
-              <span v-if="hotBattles.length" class="live-badge">LIVE</span>
+              <span class="sub-title">유저들이 직접 고르는 승부</span>
             </div>
             <button class="view-all-btn" @click="goToBattles">
               전체보기
@@ -184,7 +184,7 @@
           <div class="section-header">
             <div class="title-with-badge">
               <h2 class="section-title">실시간 제품 랭킹</h2>
-              <span class="trend-update-tag">LIVE UPDATE</span>
+              <span class="sub-title">요즘 뜨는 인기 아이템</span>
             </div>
             <button class="view-all-btn" @click="goToProducts">
               전체보기
@@ -830,14 +830,13 @@ onMounted(() => {
   }
 }
 
-.live-badge {
-  padding: 0.125rem 0.375rem;
-  background: #fef2f2;
-  border-radius: 4px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: #dc2626;
-  letter-spacing: 0.02em;
+.sub-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 100px;
 }
 
 .view-all-btn {
@@ -870,16 +869,8 @@ onMounted(() => {
     font-size: 0.875rem;
   }
 
-  .live-badge {
-    font-size: 0.75rem;
-  }
-
-  .live-indicator {
-    font-size: 12px;
-  }
-
-  .trend-update-tag {
-    font-size: 12px;
+  .sub-title {
+    font-size: 13px;
   }
 }
 
@@ -888,26 +879,6 @@ onMounted(() => {
   margin-bottom: 0.75rem !important;
 }
 
-.live-indicator {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 3px 8px;
-  border-radius: 100px;
-  letter-spacing: 0.5px;
-}
-
-.live-indicator .dot {
-  width: 6px;
-  height: 6px;
-  background: #22c55e;
-  border-radius: 50%;
-  animation: pulse-dot 2s ease-in-out infinite;
-}
 
 .view-all-link {
   display: flex;
@@ -1567,21 +1538,6 @@ onMounted(() => {
   background: linear-gradient(to bottom, #ffffff, #faf8ff);
 }
 
-.trend-update-tag {
-  font-size: 11px;
-  background: #fdf2f2;
-  color: #ef4444;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  animation: pulse-tag 2s ease-in-out infinite;
-}
-
-@keyframes pulse-tag {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
 
 .product-rank-container {
   display: flex;
@@ -2142,20 +2098,9 @@ onMounted(() => {
     border-left-width: 2.5px;
   }
 
-  .live-indicator {
-    font-size: 9px;
+  .sub-title {
+    font-size: 10px;
     padding: 2px 6px;
-    gap: 4px;
-  }
-
-  .live-indicator .dot {
-    width: 5px;
-    height: 5px;
-  }
-
-  .live-badge {
-    font-size: 0.625rem;
-    padding: 0.0625rem 0.25rem;
   }
 
   .view-all-link,
@@ -2218,10 +2163,6 @@ onMounted(() => {
   }
 
   /* 제품 랭킹 컴팩트 */
-  .trend-update-tag {
-    font-size: 9px;
-    padding: 1px 5px;
-  }
 
   .product-rank-container {
     gap: 0.5rem;

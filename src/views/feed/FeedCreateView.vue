@@ -175,15 +175,38 @@
           <!-- Category -->
           <section class="card">
             <label class="form-label required">카테고리</label>
-            <button class="category-select-btn" @click="openCategoryModal" type="button">
-              <div v-if="selectedCategoryInfo" class="selected-category">
-                <span class="category-text">{{ selectedCategoryInfo.label }}</span>
+
+            <!-- 선택된 카테고리 표시 -->
+            <div v-if="selectedCategoryInfo" class="selected-category-display">
+              <span class="selected-category-label">{{ selectedCategoryInfo.label }}</span>
+              <button type="button" class="selected-category-clear" @click="clearCategory">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- 인기 카테고리 칩 -->
+            <div class="category-chips-section">
+              <p class="category-chips-title">인기 카테고리</p>
+              <div class="category-chips-list">
+                <button
+                  v-for="cat in popularCategories"
+                  :key="cat.categoryId"
+                  type="button"
+                  :class="['category-chip', { active: formData.subCategoryId === cat.categoryId }]"
+                  @click="selectQuickCategory(cat)"
+                >
+                  {{ cat.categoryName }}
+                </button>
+                <button type="button" class="category-chip more-btn" @click="openCategoryModal">
+                  더보기
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
               </div>
-              <span v-else class="placeholder">카테고리를 선택하세요</span>
-              <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
+            </div>
           </section>
         </div>
 
@@ -341,6 +364,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useFile } from '@/services/FileService.js'
+import { categoryService } from '@/services/CategoryService.js'
 import { getUserId } from '@/utils/auth.js'
 import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
 import CategorySelectModal from '@/components/common/CategorySelectModal.vue'
@@ -359,6 +383,8 @@ const hashtagInput = ref('')
 const productSuggestions = ref([])
 const showCategoryModal = ref(false)
 const selectedCategoryInfo = ref(null)
+const allCategories = ref([])
+const popularCategories = ref([])
 const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
 const showProductModal = ref(false)
@@ -476,6 +502,47 @@ const resizeImage = (file, maxSize = 1920, quality = 0.85) => {
 }
 
 // Category Methods
+const loadCategories = async () => {
+  try {
+    const response = await categoryService.getCategoryTree()
+    if (response.success && response.data) {
+      allCategories.value = response.data
+
+      // 하위 카테고리를 평면화하여 인기 카테고리로 사용
+      const flatChildren = []
+      for (const root of response.data) {
+        if (root.children && root.children.length > 0) {
+          for (const child of root.children) {
+            flatChildren.push({ ...child, parentName: root.categoryName })
+          }
+        }
+      }
+      popularCategories.value = flatChildren.slice(0, 8)
+    }
+  } catch (error) {
+    console.error('카테고리 로드 실패:', error)
+  }
+}
+
+const selectQuickCategory = (cat) => {
+  formData.value.subCategoryId = cat.categoryId
+
+  const parent = allCategories.value.find(root =>
+    root.children?.some(c => c.categoryId === cat.categoryId)
+  )
+
+  selectedCategoryInfo.value = {
+    label: parent ? `${parent.categoryName} > ${cat.categoryName}` : cat.categoryName,
+    category: cat,
+    parent: parent || null
+  }
+}
+
+const clearCategory = () => {
+  formData.value.subCategoryId = null
+  selectedCategoryInfo.value = null
+}
+
 const openCategoryModal = () => {
   showCategoryModal.value = true
 }
@@ -487,7 +554,6 @@ const closeCategoryModal = () => {
 const handleCategorySelect = ({ categoryId, category, parent }) => {
   formData.value.subCategoryId = categoryId
 
-  // 선택된 카테고리 정보 저장
   if (parent) {
     selectedCategoryInfo.value = {
       label: `${parent.categoryName} > ${category.categoryName}`,
@@ -757,7 +823,7 @@ watch(productInputMode, (newMode) => {
 })
 
 onMounted(() => {
-  // 초기화
+  loadCategories()
 })
 
 onBeforeUnmount(() => {
@@ -1242,25 +1308,90 @@ onBeforeUnmount(() => {
 }
 .suggestion-item:hover { background: var(--hover); }
 
-/* Category Select Button */
-.category-select-btn {
-  width: 100%;
+/* Category Inline Selection */
+.selected-category-display {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  padding: 10px 14px;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.selected-category-label {
   font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.selected-category-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.selected-category-clear:hover {
+  background: #f3e8ff;
+  color: var(--accent);
+}
+
+.category-chips-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.category-chips-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--secondary);
+}
+.category-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.category-chip {
+  padding: 8px 14px;
+  background: var(--hover);
+  color: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: inherit;
 }
-.category-select-btn:hover { border-color: var(--accent); background: #faf5ff; }
-.selected-category { display: flex; align-items: center; gap: 8px; }
-.category-text { font-weight: 500; color: var(--primary); }
-.placeholder { color: var(--secondary); }
-.dropdown-icon { width: 20px; height: 20px; color: var(--secondary); }
+.category-chip:hover {
+  border-color: #d8b4fe;
+  background: #faf5ff;
+  color: var(--accent);
+}
+.category-chip.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.category-chip.more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent);
+  border-color: #e9d5ff;
+  background: #faf5ff;
+  font-weight: 600;
+}
+.category-chip.more-btn:hover {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
+}
 
 /* Additional Info */
 .additional-info { display: flex; flex-direction: column; gap: 24px; }
