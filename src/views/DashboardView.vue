@@ -2408,6 +2408,8 @@ onUnmounted(() => {
   .yb-item {
     padding: 0.25rem 0;
     gap: 0.375rem;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .yb-rank-num {
@@ -2417,11 +2419,14 @@ onUnmounted(() => {
 
   .yb-product {
     font-size: 0.75rem;
-    max-width: 80px;
+    max-width: 60px;
   }
 
   .yb-author-name {
     font-size: 0.625rem;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .yb-tag {
