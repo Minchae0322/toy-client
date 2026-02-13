@@ -318,7 +318,7 @@ onMounted(() => {
   width: 100%;
   min-height: 100vh;
   background: #ffffff;
-  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: #111827;
   -webkit-font-smoothing: antialiased;
 }

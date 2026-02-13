@@ -150,7 +150,7 @@ const handleProtectedRoute = async (routeName) => {
   display: none;
   flex-direction: column;
   overflow-y: auto;
-  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   position: sticky;
   align-self: flex-start;
   flex-shrink: 0;

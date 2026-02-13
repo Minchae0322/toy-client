@@ -958,7 +958,7 @@ onBeforeUnmount(() => {
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 .create-container {
-  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   background: var(--bg);
   min-height: 100vh;
   color: var(--primary);

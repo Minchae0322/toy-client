@@ -365,7 +365,7 @@ onUnmounted(() => {
 }
 
 .app-container {
-  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   background: #FAFAFA;
   color: #1A1A1A;
   min-height: 100vh;

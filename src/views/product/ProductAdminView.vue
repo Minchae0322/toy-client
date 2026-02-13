@@ -774,7 +774,7 @@ onMounted(() => {
 .admin-container {
   min-height: 100vh;
   background: #f8f9fa;
-  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: #333;
 }
 

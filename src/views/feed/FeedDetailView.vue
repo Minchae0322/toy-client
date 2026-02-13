@@ -371,7 +371,7 @@ onMounted(() => loadFeedDetail())
 
 <style scoped>
 .detail-container {
-  font-family: 'SUIT-Regular', 'Noto Sans KR', sans-serif;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   background: #fff;
   min-height: 100vh;
   color: #262626;
