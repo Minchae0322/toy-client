@@ -1,9 +1,7 @@
-/* 폰트 정의 - 모바일 호환성 개선 */
+/* 폰트 정의 - Vite 에셋 파이프라인 사용 */
 @font-face {
   font-family: 'SUIT-Regular';
-  src: local('SUIT Regular'),
-       local('SUIT-Regular'),
-       url('/fonts/SUIT-Regular.woff2') format('woff2');
+  src: url('./fonts/SUIT-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -11,9 +9,7 @@
 
 @font-face {
   font-family: 'SEBANG_Gothic_Bold';
-  src: local('SEBANG Gothic Bold'),
-       local('SEBANG_Gothic_Bold'),
-       url('/fonts/SEBANG_Gothic_Bold.woff') format('woff');
+  src: url('./fonts/SEBANG_Gothic_Bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
