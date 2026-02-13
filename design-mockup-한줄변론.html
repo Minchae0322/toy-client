@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>배틀 상세 - 한줄 변론 기능 디자인 시안</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: #fdfeff;
+    color: #111827;
+    min-height: 100vh;
+  }
+
+  /* ===================== */
+  /* 시안 네비게이션 탭    */
+  /* ===================== */
+  .mockup-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: #111;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow-x: auto;
+  }
+  .mockup-nav .nav-title {
+    color: #4a6cf7;
+    font-weight: 800;
+    font-size: 14px;
+    white-space: nowrap;
+    margin-right: 8px;
+  }
+  .mockup-nav button {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1.5px solid #333;
+    background: transparent;
+    color: #aaa;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .mockup-nav button.active {
+    background: #4a6cf7;
+    border-color: #4a6cf7;
+    color: #fff;
+  }
+  .mockup-nav button:hover:not(.active) {
+    border-color: #666;
+    color: #fff;
+  }
+
+  .page-container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding-top: 60px;
+    min-height: 100vh;
+  }
+
+  /* 섹션 숨김 */
+  .mockup-section { display: none; }
+  .mockup-section.active { display: block; }
+
+  /* ===================== */
+  /* 공통 컴포넌트         */
+  /* ===================== */
+
+  /* 배틀 히어로 (간략) */
+  .hero-mini {
+    text-align: center;
+    padding: 24px 16px 20px;
+  }
+  .hero-mini .badge-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .hero-mini .pill {
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .pill-category { background: #eff6ff; color: #3b82f6; }
+  .pill-weighted { background: #fff7ed; color: #f97316; display: inline-flex; align-items: center; gap: 5px; }
+  .pulse-dot {
+    width: 6px; height: 6px;
+    background: #f97316;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+  }
+  .hero-mini h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+  .hero-mini .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+  .hero-mini .stats-row .val {
+    font-weight: 800;
+    color: #1f2937;
+    margin-left: 4px;
+  }
+
+  /* ===================== */
+  /* 시안 1: 상품 카드 내   */
+  /* 한줄 변론 영역         */
+  /* ===================== */
+  .product-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1.5px solid #f0f0f0;
+    margin: 0 16px 16px;
+    position: relative;
+    transition: all 0.25s;
+  }
+  .product-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  }
+
+  .card-top {
+    display: flex;
+    gap: 14px;
+    padding: 16px;
+  }
+  .card-img {
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
+    background: #f5f5f5;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .card-img .rank-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .rank-1 { background: #e8a830; box-shadow: 0 2px 8px rgba(232,168,48,0.4); }
+  .rank-2 { background: #8c9bb0; box-shadow: 0 2px 8px rgba(140,155,176,0.35); }
+  .rank-3 { background: #d4784a; box-shadow: 0 2px 8px rgba(212,120,74,0.35); }
+
+  .card-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .card-info .brand {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 2px;
+  }
+  .card-info .name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .card-info .vote-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .vote-bar-track {
+    flex: 1;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .vote-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+  .fill-1 { background: linear-gradient(90deg, #4a6cf7, #6b7df5); }
+  .fill-2 { background: linear-gradient(90deg, #8c9bb0, #a8b4c4); }
+  .fill-3 { background: linear-gradient(90deg, #d4784a, #e8945a); }
+  .fill-default { background: #ddd; }
+  .vote-percent {
+    font-size: 16px;
+    font-weight: 800;
+    color: #222;
+    min-width: 48px;
+    text-align: right;
+  }
+  .vote-count-sm {
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
+  }
+
+  /* ===================== */
+  /* 한줄 변론 섹션 (카드 내) */
+  /* ===================== */
+  .arguments-section {
+    border-top: 1px solid #f3f4f6;
+    padding: 14px 16px;
+  }
+  .arguments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .arguments-header .title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .arguments-header .title .fire {
+    font-size: 14px;
+  }
+  .arguments-header .count {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 600;
+  }
+
+  .argument-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+  }
+  .argument-item + .argument-item {
+    border-top: 1px solid #f9fafb;
+  }
+  .arg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4a6cf7;
+    flex-shrink: 0;
+  }
+  .arg-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .arg-top-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+  .arg-nickname {
+    font-size: 12px;
+    font-weight: 700;
+    color: #374151;
+  }
+  .arg-time {
+    font-size: 10px;
+    color: #bbb;
+  }
+  .best-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: #f59e0b;
+    background: #fffbeb;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #fde68a;
+  }
+  .arg-text {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.5;
+  }
+  .arg-like-btn {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 5px;
+    font-size: 11px;
+    color: #bbb;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .arg-like-btn:hover {
+    background: #f3f4f6;
+    color: #f43f5e;
+  }
+  .arg-like-btn.liked {
+    color: #f43f5e;
+  }
+
+  .more-arguments {
+    text-align: center;
+    padding: 8px 0 2px;
+  }
+  .more-arguments button {
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4a6cf7;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 12px;
+    border-radius: 8px;
+    transition: all 0.15s;
+  }
+  .more-arguments button:hover {
+    background: #eff6ff;
+  }
+
+  /* ===================== */
+  /* 시안 2: 투표 시 변론  */
+  /* 입력 플로우            */
+  /* ===================== */
+  .vote-flow-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 2px solid #4a6cf7;
+    margin: 0 16px 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(74, 108, 247, 0.12);
+  }
+  .vote-flow-card .card-top {
+    background: linear-gradient(135deg, #f8f9ff, #eff2ff);
+  }
+  .vote-flow-card .selected-overlay {
+    background: linear-gradient(135deg, #4a6cf7, #6b7df5);
+    color: #fff;
+    text-align: center;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .argument-input-section {
+    padding: 16px;
+    border-top: 1px solid #e8ecff;
+  }
+  .argument-input-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .argument-input-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .argument-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    color: #333;
+  }
+  .argument-input::placeholder { color: #bbb; }
+  .argument-input:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 3px rgba(74,108,247,0.08);
+  }
+  .argument-input.filled {
+    border-color: #4a6cf7;
+    background: #fafbff;
+  }
+  .char-counter {
+    font-size: 10px;
+    color: #bbb;
+    text-align: right;
+    margin-top: 4px;
+  }
+  .skip-btn {
+    font-size: 11px;
+    color: #aaa;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-top: 6px;
+    font-family: inherit;
+    text-decoration: underline;
+  }
+
+  /* ===================== */
+  /* 시안 3: 변론 탭 뷰    */
+  /* (상품 그리드 아래)     */
+  /* ===================== */
+  .arguments-tab-section {
+    margin: 24px 16px 120px;
+    background: #fff;
+    border-radius: 20px;
+    border: 1.5px solid #f0f0f0;
+    overflow: hidden;
+  }
+  .tab-header {
+    display: flex;
+    border-bottom: 1.5px solid #f0f0f0;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #9ca3af;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    position: relative;
+    transition: color 0.2s;
+  }
+  .tab-btn.active {
+    color: #4a6cf7;
+  }
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1.5px;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background: #4a6cf7;
+    border-radius: 3px;
+  }
+  .tab-btn .tab-count {
+    font-size: 11px;
+    font-weight: 600;
+    background: #f3f4f6;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: 4px;
+  }
+  .tab-btn.active .tab-count {
+    background: #eff2ff;
+    color: #4a6cf7;
+  }
+
+  .tab-content {
+    padding: 16px;
+  }
+
+  /* 변론 카드 (탭 뷰) */
+  .arg-card {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    background: #fafbfc;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    transition: all 0.15s;
+  }
+  .arg-card:hover {
+    background: #f5f7ff;
+  }
+  .arg-card.best {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border: 1px solid #fde68a;
+  }
+  .arg-card .arg-product-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .arg-card .arg-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .arg-card .arg-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .arg-card .arg-product-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #4a6cf7;
+    background: #eff2ff;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .arg-card .arg-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    line-height: 1.5;
+  }
+  .arg-card .arg-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .arg-card .arg-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+  .arg-card .arg-user-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  }
+  .arg-card .arg-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .arg-card .like-btn {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    font-size: 12px;
+    color: #9ca3af;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .arg-card .like-btn:hover {
+    border-color: #f43f5e;
+    color: #f43f5e;
+    background: #fff5f5;
+  }
+  .arg-card .like-btn.liked {
+    border-color: #f43f5e;
+    color: #f43f5e;
+    background: #fff5f5;
+  }
+
+  /* ===================== */
+  /* 시안 4: 투표 바 변론  */
+  /* ===================== */
+  .sticky-vote-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    z-index: 1000;
+    background: #111;
+    border-radius: 24px 24px 0 0;
+    padding: 16px 20px 24px;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+  }
+  .vote-bar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .vote-bar-top .picks {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .pick-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #222;
+    border-radius: 10px;
+  }
+  .pick-chip .pick-rank {
+    font-size: 11px;
+    font-weight: 800;
+    color: #4a6cf7;
+  }
+  .pick-chip .pick-name {
+    font-size: 12px;
+    color: #ddd;
+    font-weight: 500;
+  }
+  .pick-chip .pick-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  .vote-bar-argument {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+  .vote-bar-argument input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid #333;
+    border-radius: 12px;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .vote-bar-argument input::placeholder { color: #555; }
+  .vote-bar-argument input:focus { border-color: #4a6cf7; }
+  .vote-bar-argument .optional-tag {
+    font-size: 10px;
+    color: #666;
+    white-space: nowrap;
+  }
+
+  .submit-btn-full {
+    width: 100%;
+    padding: 14px;
+    background: #4a6cf7;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    letter-spacing: -0.02em;
+  }
+  .submit-btn-full:hover {
+    background: #3a5ce7;
+    box-shadow: 0 0 24px rgba(74,108,247,0.4);
+  }
+
+  /* ===================== */
+  /* 섹션 타이틀          */
+  /* ===================== */
+  .section-title {
+    padding: 20px 16px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #4a6cf7;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .section-desc {
+    padding: 0 16px 16px;
+    font-size: 22px;
+    font-weight: 800;
+    color: #111;
+    line-height: 1.35;
+  }
+  .section-subdesc {
+    padding: 0 16px 20px;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+
+  .divider {
+    height: 8px;
+    background: #f5f6f8;
+    margin: 8px 0;
+  }
+
+  /* ===================== */
+  /* 시안 간 구분          */
+  /* ===================== */
+  .mockup-label {
+    margin: 24px 16px 12px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    border-radius: 14px;
+    color: #fff;
+  }
+  .mockup-label .ml-number {
+    font-size: 12px;
+    font-weight: 800;
+    color: #a5b4fc;
+    margin-bottom: 4px;
+  }
+  .mockup-label .ml-title {
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .mockup-label .ml-desc {
+    font-size: 12px;
+    color: #c7d2fe;
+    line-height: 1.5;
+  }
+
+  /* 빈 공간 */
+  .spacer { height: 100px; }
+
+  /* 스크롤바 */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+  /* 포인트 어노테이션 */
+  .annotation {
+    margin: 0 16px 16px;
+    padding: 12px 16px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    font-size: 12px;
+    color: #166534;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+  .annotation strong {
+    font-weight: 700;
+  }
+
+  /* 플로우 화살표 */
+  .flow-arrow {
+    text-align: center;
+    padding: 12px 0;
+    font-size: 20px;
+    color: #d1d5db;
+  }
+</style>
+</head>
+<body>
+
+<!-- 시안 전환 네비게이션 -->
+<div class="mockup-nav">
+  <span class="nav-title">한줄변론 시안</span>
+  <button class="active" onclick="showSection('overview')">전체 개요</button>
+  <button onclick="showSection('card-inline')">A. 카드 내 변론</button>
+  <button onclick="showSection('vote-flow')">B. 투표 플로우</button>
+  <button onclick="showSection('tab-view')">C. 변론 탭</button>
+  <button onclick="showSection('full-flow')">D. 통합 시안</button>
+</div>
+
+<!-- ============================== -->
+<!-- 섹션 0: 전체 개요               -->
+<!-- ============================== -->
+<div class="page-container">
+<div id="section-overview" class="mockup-section active">
+
+  <div class="section-title">FEATURE OVERVIEW</div>
+  <div class="section-desc">한줄 변론 기능<br>디자인 시안</div>
+  <div class="section-subdesc">
+    투표할 때 "왜 이걸 골랐는지" 한줄 이유를 남기는 기능입니다.
+    투표에 맥락을 더하고, 사용자 체류시간을 늘리며, 커뮤니티 인터랙션을 만듭니다.
+  </div>
+
+  <div class="mockup-label">
+    <div class="ml-number">DESIGN A</div>
+    <div class="ml-title">상품 카드 내 변론 표시</div>
+    <div class="ml-desc">각 상품 카드 하단에 해당 상품을 픽한 유저들의 한줄 변론이 표시됩니다. 베스트 변론이 상단에 고정됩니다.</div>
+  </div>
+
+  <div class="mockup-label">
+    <div class="ml-number">DESIGN B</div>
+    <div class="ml-title">투표 시 변론 입력 플로우</div>
+    <div class="ml-desc">상품 선택 후 하단 투표 바에서 한줄 변론을 입력합니다. 선택사항이지만 자연스럽게 유도합니다.</div>
+  </div>
+
+  <div class="mockup-label">
+    <div class="ml-number">DESIGN C</div>
+    <div class="ml-title">전체 변론 탭 뷰</div>
+    <div class="ml-desc">상품 그리드 아래에 전체 변론을 모아보는 탭 섹션입니다. 최신순/공감순 정렬과 상품별 필터를 지원합니다.</div>
+  </div>
+
+  <div class="mockup-label">
+    <div class="ml-number">DESIGN D</div>
+    <div class="ml-title">통합 시안 (최종 추천)</div>
+    <div class="ml-desc">A+B+C를 결합한 실제 배틀 상세 페이지의 전체 플로우입니다.</div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- ============================== -->
+<!-- 섹션 A: 카드 내 변론            -->
+<!-- ============================== -->
+<div id="section-card-inline" class="mockup-section">
+
+  <div class="section-title">DESIGN A</div>
+  <div class="section-desc">상품 카드 내<br>한줄 변론 표시</div>
+  <div class="section-subdesc">
+    각 상품 카드 하단에 해당 상품을 픽한 유저들의 변론이 보입니다.
+    베스트 변론(공감 최다)은 상단에 하이라이트됩니다.
+  </div>
+
+  <!-- 1위 상품 카드 -->
+  <div class="product-card">
+    <div class="card-top">
+      <div class="card-img">
+        <div class="rank-badge rank-1">1</div>
+        <img src="https://placehold.co/180x180/fff5e6/e8a830?text=A" alt="상품A">
+      </div>
+      <div class="card-info">
+        <div class="brand">스타벅스</div>
+        <div class="name">아이스 카페 아메리카노</div>
+        <div class="vote-bar-wrap">
+          <div class="vote-bar-track">
+            <div class="vote-bar-fill fill-1" style="width: 42%"></div>
+          </div>
+          <div class="vote-percent">42.3%</div>
+        </div>
+        <div class="vote-count-sm">128명 투표</div>
+      </div>
+    </div>
+
+    <!-- 한줄 변론 영역 -->
+    <div class="arguments-section">
+      <div class="arguments-header">
+        <div class="title"><span class="fire">&#128293;</span> 한줄 변론</div>
+        <div class="count">23개</div>
+      </div>
+
+      <!-- 베스트 변론 -->
+      <div class="argument-item">
+        <div class="arg-avatar">J</div>
+        <div class="arg-content">
+          <div class="arg-top-row">
+            <span class="arg-nickname">진성커피러</span>
+            <span class="best-badge">BEST</span>
+            <span class="arg-time">2시간 전</span>
+          </div>
+          <div class="arg-text">가성비로는 스벅 아아를 이길 수가 없음. 어디서든 일관된 맛이 나온다는 게 최고의 장점</div>
+          <button class="arg-like-btn liked">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            47
+          </button>
+        </div>
+      </div>
+
+      <!-- 일반 변론 -->
+      <div class="argument-item">
+        <div class="arg-avatar">M</div>
+        <div class="arg-content">
+          <div class="arg-top-row">
+            <span class="arg-nickname">맛탐험가</span>
+            <span class="arg-time">5시간 전</span>
+          </div>
+          <div class="arg-text">사이렌 오더로 기다릴 필요 없이 바로 픽업, 이게 실전이지</div>
+          <button class="arg-like-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            12
+          </button>
+        </div>
+      </div>
+
+      <div class="more-arguments">
+        <button>변론 21개 더보기 &darr;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>포인트:</strong> 베스트 변론이 상단에 고정되어 "왜 이 상품이 1위인지" 맥락이 자연스럽게 전달됩니다. 다른 사용자의 변론을 읽으며 체류시간이 증가합니다.
+  </div>
+
+  <!-- 2위 상품 카드 -->
+  <div class="product-card">
+    <div class="card-top">
+      <div class="card-img">
+        <div class="rank-badge rank-2">2</div>
+        <img src="https://placehold.co/180x180/f0f0f0/8c9bb0?text=B" alt="상품B">
+      </div>
+      <div class="card-info">
+        <div class="brand">투썸플레이스</div>
+        <div class="name">아이스 아메리카노 R</div>
+        <div class="vote-bar-wrap">
+          <div class="vote-bar-track">
+            <div class="vote-bar-fill fill-2" style="width: 31%"></div>
+          </div>
+          <div class="vote-percent">31.5%</div>
+        </div>
+        <div class="vote-count-sm">96명 투표</div>
+      </div>
+    </div>
+
+    <div class="arguments-section">
+      <div class="arguments-header">
+        <div class="title"><span class="fire">&#128293;</span> 한줄 변론</div>
+        <div class="count">15개</div>
+      </div>
+
+      <div class="argument-item">
+        <div class="arg-avatar">S</div>
+        <div class="arg-content">
+          <div class="arg-top-row">
+            <span class="arg-nickname">단짠단짠</span>
+            <span class="best-badge">BEST</span>
+            <span class="arg-time">1시간 전</span>
+          </div>
+          <div class="arg-text">커피 맛 자체는 투썸이 훨씬 진함. 원두 퀄리티가 다르다</div>
+          <button class="arg-like-btn liked">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            31
+          </button>
+        </div>
+      </div>
+
+      <div class="more-arguments">
+        <button>변론 14개 더보기 &darr;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- ============================== -->
+<!-- 섹션 B: 투표 플로우             -->
+<!-- ============================== -->
+<div id="section-vote-flow" class="mockup-section">
+
+  <div class="section-title">DESIGN B</div>
+  <div class="section-desc">투표할 때<br>변론 입력 플로우</div>
+  <div class="section-subdesc">
+    상품을 선택하면 하단 투표 바에 한줄 변론 입력란이 나타납니다.
+    선택사항이지만 placeholder로 자연스럽게 유도합니다.
+  </div>
+
+  <!-- Step 1: 상품 선택 전 -->
+  <div class="mockup-label">
+    <div class="ml-number">STEP 1</div>
+    <div class="ml-title">상품 선택 전</div>
+    <div class="ml-desc">기존과 동일합니다</div>
+  </div>
+
+  <div class="product-card">
+    <div class="card-top">
+      <div class="card-img">
+        <div class="rank-badge rank-1">1</div>
+        <img src="https://placehold.co/180x180/fff5e6/e8a830?text=A" alt="상품A">
+      </div>
+      <div class="card-info">
+        <div class="brand">스타벅스</div>
+        <div class="name">아이스 카페 아메리카노</div>
+        <div class="vote-bar-wrap">
+          <div class="vote-bar-track">
+            <div class="vote-bar-fill fill-1" style="width: 42%"></div>
+          </div>
+          <div class="vote-percent">42.3%</div>
+        </div>
+        <div class="vote-count-sm">128명 투표</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow">&darr;</div>
+
+  <!-- Step 2: 상품 선택 후 -->
+  <div class="mockup-label">
+    <div class="ml-number">STEP 2</div>
+    <div class="ml-title">상품 선택 후 - 하단 바 확장</div>
+    <div class="ml-desc">선택 완료 시 하단 투표 바에 변론 입력란이 슬라이드 업됩니다</div>
+  </div>
+
+  <!-- 하단 투표 바 (변론 입력 포함) -->
+  <div style="background: #111; border-radius: 24px; margin: 0 16px; padding: 16px 20px;">
+    <div class="vote-bar-top">
+      <div class="picks">
+        <div class="pick-chip">
+          <img class="pick-thumb" src="https://placehold.co/48x48/fff5e6/e8a830?text=A" alt="">
+          <span class="pick-rank">1위</span>
+          <span class="pick-name">아이스 카페 아...</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="vote-bar-argument">
+      <input type="text" placeholder="이 상품을 픽한 이유를 한줄로! (선택)" value="">
+      <span class="optional-tag">선택</span>
+    </div>
+
+    <button class="submit-btn-full">
+      요거 픽하기!
+    </button>
+  </div>
+
+  <div class="annotation" style="margin-top: 16px;">
+    <strong>핵심:</strong> 변론 입력은 <strong>선택사항</strong>입니다. 강제하면 투표 전환율이 떨어지므로, placeholder 텍스트와 "선택" 태그로 가볍게 유도합니다. 입력하면 더 의미있는 투표가 되지만, 안 해도 됩니다.
+  </div>
+
+  <div class="flow-arrow">&darr;</div>
+
+  <!-- Step 3: 가중투표(MULTIPLE) 일 때 -->
+  <div class="mockup-label">
+    <div class="ml-number">STEP 3</div>
+    <div class="ml-title">순위 투표(MULTIPLE) 시</div>
+    <div class="ml-desc">1위 선택에 대한 변론만 입력받아 UX를 단순하게 유지합니다</div>
+  </div>
+
+  <div style="background: #111; border-radius: 24px; margin: 0 16px; padding: 16px 20px;">
+    <div class="vote-bar-top">
+      <div class="picks">
+        <div class="pick-chip">
+          <img class="pick-thumb" src="https://placehold.co/48x48/fff5e6/e8a830?text=A" alt="">
+          <span class="pick-rank">1위</span>
+          <span class="pick-name">아이스 카페...</span>
+        </div>
+        <div class="pick-chip">
+          <img class="pick-thumb" src="https://placehold.co/48x48/f0f0f0/8c9bb0?text=B" alt="">
+          <span class="pick-rank">2위</span>
+          <span class="pick-name">아이스 아메...</span>
+        </div>
+        <div class="pick-chip">
+          <img class="pick-thumb" src="https://placehold.co/48x48/fef0e6/d4784a?text=C" alt="">
+          <span class="pick-rank">3위</span>
+          <span class="pick-name">콜드브루</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="vote-bar-argument">
+      <input type="text" placeholder="1위를 픽한 이유는? (선택)" value="가성비 끝판왕, 어디서든 맛이 같음" style="border-color: #4a6cf7; background: #1a1a2e; color: #fff;">
+      <span class="optional-tag" style="color: #4a6cf7;">20/40</span>
+    </div>
+
+    <button class="submit-btn-full">
+      3개 아이템 요거 픽하기!
+    </button>
+  </div>
+
+  <div class="annotation" style="margin-top: 16px;">
+    <strong>UX 결정:</strong> 순위 투표에서는 1위에 대한 변론만 받습니다. 3개 모두 변론을 쓰게 하면 과도하게 복잡해져서 투표 이탈이 발생합니다.
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- ============================== -->
+<!-- 섹션 C: 변론 탭 뷰             -->
+<!-- ============================== -->
+<div id="section-tab-view" class="mockup-section">
+
+  <div class="section-title">DESIGN C</div>
+  <div class="section-desc">전체 변론<br>모아보기 탭</div>
+  <div class="section-subdesc">
+    상품 그리드 아래에 위치합니다.
+    모든 상품의 변론을 한곳에서 보고, 정렬/필터할 수 있습니다.
+  </div>
+
+  <!-- 탭 뷰 -->
+  <div class="arguments-tab-section">
+    <div class="tab-header">
+      <button class="tab-btn active">
+        공감순 <span class="tab-count">38</span>
+      </button>
+      <button class="tab-btn">
+        최신순 <span class="tab-count">38</span>
+      </button>
+      <button class="tab-btn">
+        내 변론
+      </button>
+    </div>
+
+    <div class="tab-content">
+      <!-- 베스트 변론 -->
+      <div class="arg-card best">
+        <img class="arg-product-img" src="https://placehold.co/80x80/fff5e6/e8a830?text=A" alt="">
+        <div class="arg-body">
+          <div class="arg-meta">
+            <span class="arg-product-name">아이스 카페 아메리카노</span>
+            <span class="best-badge">BEST</span>
+          </div>
+          <div class="arg-text">가성비로는 스벅 아아를 이길 수가 없음. 어디서든 일관된 맛이 나온다는 게 최고의 장점</div>
+          <div class="arg-footer">
+            <div class="arg-user">
+              <div class="arg-user-avatar"></div>
+              <span>진성커피러 &middot; 2시간 전</span>
+            </div>
+            <div class="arg-actions">
+              <button class="like-btn liked">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                47
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 일반 변론들 -->
+      <div class="arg-card">
+        <img class="arg-product-img" src="https://placehold.co/80x80/f0f0f0/8c9bb0?text=B" alt="">
+        <div class="arg-body">
+          <div class="arg-meta">
+            <span class="arg-product-name">아이스 아메리카노 R</span>
+          </div>
+          <div class="arg-text">커피 맛 자체는 투썸이 훨씬 진함. 원두 퀄리티가 다르다</div>
+          <div class="arg-footer">
+            <div class="arg-user">
+              <div class="arg-user-avatar"></div>
+              <span>단짠단짠 &middot; 1시간 전</span>
+            </div>
+            <div class="arg-actions">
+              <button class="like-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                31
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arg-card">
+        <img class="arg-product-img" src="https://placehold.co/80x80/fff5e6/e8a830?text=A" alt="">
+        <div class="arg-body">
+          <div class="arg-meta">
+            <span class="arg-product-name">아이스 카페 아메리카노</span>
+          </div>
+          <div class="arg-text">사이렌 오더로 기다릴 필요 없이 바로 픽업, 이게 실전이지</div>
+          <div class="arg-footer">
+            <div class="arg-user">
+              <div class="arg-user-avatar"></div>
+              <span>맛탐험가 &middot; 5시간 전</span>
+            </div>
+            <div class="arg-actions">
+              <button class="like-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                12
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arg-card">
+        <img class="arg-product-img" src="https://placehold.co/80x80/fef0e6/d4784a?text=C" alt="">
+        <div class="arg-body">
+          <div class="arg-meta">
+            <span class="arg-product-name">나이트로 콜드브루</span>
+          </div>
+          <div class="arg-text">부드러운 크리미함은 나이트로가 원탑. 한번 맛보면 못 돌아감</div>
+          <div class="arg-footer">
+            <div class="arg-user">
+              <div class="arg-user-avatar"></div>
+              <span>커피중독자 &middot; 3시간 전</span>
+            </div>
+            <div class="arg-actions">
+              <button class="like-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                8
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arg-card">
+        <img class="arg-product-img" src="https://placehold.co/80x80/f0f0f0/8c9bb0?text=B" alt="">
+        <div class="arg-body">
+          <div class="arg-meta">
+            <span class="arg-product-name">아이스 아메리카노 R</span>
+          </div>
+          <div class="arg-text">투썸 케이크랑 같이 먹으면 조합이 미쳤음</div>
+          <div class="arg-footer">
+            <div class="arg-user">
+              <div class="arg-user-avatar"></div>
+              <span>디저트왕 &middot; 6시간 전</span>
+            </div>
+            <div class="arg-actions">
+              <button class="like-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                5
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>정렬 기능:</strong> 공감순(기본)은 양질의 변론을 상단에, 최신순은 실시간 반응을 확인할 때, 내 변론 탭은 본인이 작성한 변론을 관리할 때 사용합니다.
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- ============================== -->
+<!-- 섹션 D: 통합 시안 (최종)       -->
+<!-- ============================== -->
+<div id="section-full-flow" class="mockup-section">
+
+  <div class="section-title">DESIGN D - FINAL</div>
+  <div class="section-desc">통합 시안<br>실제 페이지 플로우</div>
+  <div class="section-subdesc">
+    A+B+C를 결합한 실제 배틀 상세 페이지 모습입니다.
+    위에서 아래로 스크롤하면서 전체 흐름을 확인하세요.
+  </div>
+
+  <!-- 배틀 히어로 -->
+  <div class="hero-mini">
+    <div class="badge-row">
+      <span class="pill pill-category">커피</span>
+      <span class="pill pill-weighted"><span class="pulse-dot"></span> 순위 투표</span>
+    </div>
+    <h1>카페 아메리카노 최강자는?</h1>
+    <div class="stats-row">
+      <span>남은 시간 <span class="val" style="color: #4a6cf7;">3일</span></span>
+      <span>참여자 <span class="val">302</span></span>
+      <span>투표 <span class="val">487</span></span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 1위 상품 -->
+  <div class="product-card" style="border-color: #6b7df5; box-shadow: 0 4px 16px rgba(107,125,245,0.1);">
+    <div style="background: linear-gradient(135deg, #f6c34c, #e8a830); color: #fff; text-align: center; padding: 6px; font-size: 12px; font-weight: 700;">1위 선택됨</div>
+    <div class="card-top">
+      <div class="card-img">
+        <div class="rank-badge rank-1">1</div>
+        <img src="https://placehold.co/180x180/fff5e6/e8a830?text=A" alt="">
+      </div>
+      <div class="card-info">
+        <div class="brand">스타벅스</div>
+        <div class="name">아이스 카페 아메리카노</div>
+        <div class="vote-bar-wrap">
+          <div class="vote-bar-track">
+            <div class="vote-bar-fill fill-1" style="width: 42%"></div>
+          </div>
+          <div class="vote-percent">42.3%</div>
+        </div>
+        <div class="vote-count-sm">128명 투표</div>
+      </div>
+    </div>
+    <div class="arguments-section">
+      <div class="arguments-header">
+        <div class="title"><span class="fire">&#128293;</span> 한줄 변론</div>
+        <div class="count">23개</div>
+      </div>
+      <div class="argument-item">
+        <div class="arg-avatar">J</div>
+        <div class="arg-content">
+          <div class="arg-top-row">
+            <span class="arg-nickname">진성커피러</span>
+            <span class="best-badge">BEST</span>
+            <span class="arg-time">2시간 전</span>
+          </div>
+          <div class="arg-text">가성비로는 스벅 아아를 이길 수가 없음</div>
+          <button class="arg-like-btn liked">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            47
+          </button>
+        </div>
+      </div>
+      <div class="more-arguments">
+        <button>변론 22개 더보기 &darr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2위 상품 -->
+  <div class="product-card">
+    <div class="card-top">
+      <div class="card-img">
+        <div class="rank-badge rank-2">2</div>
+        <img src="https://placehold.co/180x180/f0f0f0/8c9bb0?text=B" alt="">
+      </div>
+      <div class="card-info">
+        <div class="brand">투썸플레이스</div>
+        <div class="name">아이스 아메리카노 R</div>
+        <div class="vote-bar-wrap">
+          <div class="vote-bar-track">
+            <div class="vote-bar-fill fill-2" style="width: 31%"></div>
+          </div>
+          <div class="vote-percent">31.5%</div>
+        </div>
+        <div class="vote-count-sm">96명 투표</div>
+      </div>
+    </div>
+    <div class="arguments-section">
+      <div class="arguments-header">
+        <div class="title"><span class="fire">&#128293;</span> 한줄 변론</div>
+        <div class="count">15개</div>
+      </div>
+      <div class="argument-item">
+        <div class="arg-avatar">S</div>
+        <div class="arg-content">
+          <div class="arg-top-row">
+            <span class="arg-nickname">단짠단짠</span>
+            <span class="best-badge">BEST</span>
+          </div>
+          <div class="arg-text">커피 맛 자체는 투썸이 훨씬 진함</div>
+          <button class="arg-like-btn liked">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            31
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3위 상품 -->
+  <div class="product-card">
+    <div class="card-top">
+      <div class="card-img">
+        <div class="rank-badge rank-3">3</div>
+        <img src="https://placehold.co/180x180/fef0e6/d4784a?text=C" alt="">
+      </div>
+      <div class="card-info">
+        <div class="brand">블루보틀</div>
+        <div class="name">나이트로 콜드브루</div>
+        <div class="vote-bar-wrap">
+          <div class="vote-bar-track">
+            <div class="vote-bar-fill fill-3" style="width: 26%"></div>
+          </div>
+          <div class="vote-percent">26.2%</div>
+        </div>
+        <div class="vote-count-sm">80명 투표</div>
+      </div>
+    </div>
+    <div class="arguments-section">
+      <div class="arguments-header">
+        <div class="title"><span class="fire">&#128293;</span> 한줄 변론</div>
+        <div class="count">8개</div>
+      </div>
+      <div class="argument-item">
+        <div class="arg-avatar">K</div>
+        <div class="arg-content">
+          <div class="arg-top-row">
+            <span class="arg-nickname">커피중독자</span>
+            <span class="best-badge">BEST</span>
+          </div>
+          <div class="arg-text">부드러운 크리미함은 나이트로가 원탑</div>
+          <button class="arg-like-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            8
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 전체 변론 탭 -->
+  <div style="padding: 20px 16px 8px;">
+    <div style="font-size: 18px; font-weight: 800; color: #111;">전체 변론</div>
+    <div style="font-size: 13px; color: #9ca3af; margin-top: 4px;">참여자들의 생생한 한줄 변론을 확인하세요</div>
+  </div>
+
+  <div class="arguments-tab-section" style="margin-top: 8px;">
+    <div class="tab-header">
+      <button class="tab-btn active">공감순 <span class="tab-count">46</span></button>
+      <button class="tab-btn">최신순 <span class="tab-count">46</span></button>
+      <button class="tab-btn">내 변론</button>
+    </div>
+    <div class="tab-content">
+      <div class="arg-card best">
+        <img class="arg-product-img" src="https://placehold.co/80x80/fff5e6/e8a830?text=A" alt="">
+        <div class="arg-body">
+          <div class="arg-meta">
+            <span class="arg-product-name">아이스 카페 아메리카노</span>
+            <span class="best-badge">BEST</span>
+          </div>
+          <div class="arg-text">가성비로는 스벅 아아를 이길 수가 없음. 어디서든 일관된 맛이 나온다는 게 최고의 장점</div>
+          <div class="arg-footer">
+            <div class="arg-user">
+              <div class="arg-user-avatar"></div>
+              <span>진성커피러 &middot; 2시간 전</span>
+            </div>
+            <div class="arg-actions">
+              <button class="like-btn liked">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                47
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arg-card">
+        <img class="arg-product-img" src="https://placehold.co/80x80/f0f0f0/8c9bb0?text=B" alt="">
+        <div class="arg-body">
+          <div class="arg-meta">
+            <span class="arg-product-name">아이스 아메리카노 R</span>
+          </div>
+          <div class="arg-text">커피 맛 자체는 투썸이 훨씬 진함. 원두 퀄리티가 다르다</div>
+          <div class="arg-footer">
+            <div class="arg-user">
+              <div class="arg-user-avatar"></div>
+              <span>단짠단짠 &middot; 1시간 전</span>
+            </div>
+            <div class="arg-actions">
+              <button class="like-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                31
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arg-card">
+        <img class="arg-product-img" src="https://placehold.co/80x80/fef0e6/d4784a?text=C" alt="">
+        <div class="arg-body">
+          <div class="arg-meta">
+            <span class="arg-product-name">나이트로 콜드브루</span>
+          </div>
+          <div class="arg-text">부드러운 크리미함은 나이트로가 원탑. 한번 맛보면 못 돌아감</div>
+          <div class="arg-footer">
+            <div class="arg-user">
+              <div class="arg-user-avatar"></div>
+              <span>커피중독자 &middot; 3시간 전</span>
+            </div>
+            <div class="arg-actions">
+              <button class="like-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                8
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 투표 바 (fixed) -->
+  <div class="sticky-vote-bar">
+    <div class="vote-bar-top">
+      <div class="picks">
+        <div class="pick-chip">
+          <img class="pick-thumb" src="https://placehold.co/48x48/fff5e6/e8a830?text=A" alt="">
+          <span class="pick-rank">1위</span>
+          <span class="pick-name">아이스 카페...</span>
+        </div>
+        <div class="pick-chip">
+          <img class="pick-thumb" src="https://placehold.co/48x48/f0f0f0/8c9bb0?text=B" alt="">
+          <span class="pick-rank">2위</span>
+        </div>
+        <div class="pick-chip">
+          <img class="pick-thumb" src="https://placehold.co/48x48/fef0e6/d4784a?text=C" alt="">
+          <span class="pick-rank">3위</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="vote-bar-argument">
+      <input type="text" placeholder="1위를 픽한 이유를 한줄로! (선택)">
+      <span class="optional-tag">선택</span>
+    </div>
+
+    <button class="submit-btn-full">요거 픽하기!</button>
+  </div>
+
+  <div style="height: 200px;"></div>
+</div>
+
+</div><!-- /page-container -->
+
+<script>
+function showSection(id) {
+  document.querySelectorAll('.mockup-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mockup-nav button').forEach(el => el.classList.remove('active'));
+
+  document.getElementById('section-' + id).classList.add('active');
+  event.target.classList.add('active');
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
