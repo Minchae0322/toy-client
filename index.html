@@ -7,13 +7,24 @@
 
   <link rel="icon" type="image/png" href="/images/yogodde_01.png" />
 
-  <!-- 폰트는 Vite 에셋 파이프라인으로 로딩 (빌드 시 해시 URL 생성) -->
+  <!-- 폰트 프리로드 - iOS Safari에서 폰트 로딩 지연 방지 -->
+  <link rel="preload" href="/fonts/SUIT-Regular.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/SEBANG_Gothic_Bold.woff" as="font" type="font/woff" crossorigin />
 </head>
 <body>
 <div id="app"></div>
 <script type="module" src="/src/main.js"></script>
-<!-- TODO: 모바일 디버깅 후 제거 -->
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
+<script>
+// iOS Safari 폰트 로딩 보장 - Font Loading API 사용
+if ('fonts' in document) {
+  document.fonts.ready.then(function() {
+    document.documentElement.classList.add('fonts-loaded');
+  });
+  // 3초 타임아웃 - 폰트 로딩 실패 시에도 앱 정상 표시
+  setTimeout(function() {
+    document.documentElement.classList.add('fonts-loaded');
+  }, 3000);
+}
+</script>
 </body>
 </html>
