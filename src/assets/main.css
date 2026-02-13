@@ -1,19 +1,4 @@
-/* 폰트 정의 - Vite 에셋 파이프라인 (same-origin 번들링으로 CORS 회피) */
-@font-face {
-  font-family: 'SUIT-Regular';
-  src: url('./fonts/SUIT-Regular.woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'SEBANG_Gothic_Bold';
-  src: url('./fonts/SEBANG_Gothic_Bold.woff');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
+/* @font-face는 index.html <style>에서 정의 (JS 의존 없이 즉시 로드) */
 
 body {
   margin: 0;
