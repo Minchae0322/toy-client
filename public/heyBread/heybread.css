@@ -1,18 +1,6 @@
 @charset "UTF-8";
 
-@font-face {
-    font-family: 'SEBANG_Gothic_Bold';
-    src: url('/fonts/SEBANG_Gothic_Bold.woff') format('woff');
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'SUIT-Regular';
-    src: url('/fonts/SUIT-Regular.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
+/* @font-face는 main.css에서 통합 정의 (중복 선언 제거 - iOS Safari 호환) */
 
 * {
     box-sizing: border-box;
