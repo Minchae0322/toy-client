@@ -329,7 +329,8 @@ onBeforeUnmount(async () => {
   color: #111827;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
-  max-width: 100vw;
+  max-width: 100%;
+  overflow-x: hidden;
   padding: 0 1rem;
 }
 

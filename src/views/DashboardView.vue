@@ -587,7 +587,8 @@ onUnmounted(() => {
   color: #1a1a1a;
   font-family: 'SUIT', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
   display: flex;
-  max-width: 100vw;
+  max-width: 100%;
+  overflow-x: hidden;
   padding: 0 1rem;
 }
 
@@ -944,6 +945,7 @@ onUnmounted(() => {
   padding: 1rem 1.25rem;
   margin-bottom: 0.625rem;
   border: 1px solid #f0f0f0;
+  overflow: hidden;
 }
 
 @media (min-width: 768px) {
@@ -1001,14 +1003,14 @@ onUnmounted(() => {
 
 .yb-list {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(3, auto);
   gap: 0.375rem 1.5rem;
 }
 
 @media (min-width: 768px) {
   .yb-list {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: repeat(2, auto);
     gap: 0.5rem 2rem;
   }
@@ -1022,6 +1024,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.15s ease;
   border-radius: 6px;
+  overflow: hidden;
 }
 
 .yb-item:hover {
@@ -2399,7 +2402,7 @@ onUnmounted(() => {
   }
 
   .yb-list {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: repeat(3, auto);
     grid-auto-flow: column;
     gap: 0.25rem 1rem;
@@ -2417,7 +2420,9 @@ onUnmounted(() => {
 
   .yb-product {
     font-size: 0.75rem;
-    max-width: 80px;
+    max-width: none;
+    flex: 1;
+    min-width: 0;
   }
 
   .yb-author-name {
