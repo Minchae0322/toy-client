@@ -405,7 +405,8 @@ onUnmounted(() => {
   color: var(--text-primary);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
-  max-width: 100vw;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .app-container {
