@@ -92,15 +92,22 @@ const formattedVotes = computed(() => {
   padding: 48px 40px 56px;
   width: 100%;
   box-sizing: border-box;
-  max-width: 780px;
-  margin: 0 auto;
+  background: #ffffff;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
 }
 
 .main-title,
 .sub-desc,
-.badge-wrapper {
+.badge-wrapper,
+.stats-dashboard,
+.add-product-btn {
   max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.nav-bar {
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -110,7 +117,7 @@ const formattedVotes = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 48px;
+  margin-bottom: 40px;
 }
 
 .nav-btn {
@@ -209,14 +216,12 @@ const formattedVotes = computed(() => {
 .stats-dashboard {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  background: #f9fafb;
-  border-radius: 24px;
-  padding: 28px;
-  margin-top: 40px;
-  border: 1px solid #f3f4f6;
-  max-width: 560px;
-  margin-left: auto;
-  margin-right: auto;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  margin-top: 36px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .stat-box {
@@ -298,12 +303,11 @@ const formattedVotes = computed(() => {
 /* 반응형 처리 */
 @media (max-width: 768px) {
   .hero-section {
-    padding: 32px 20px 40px;
-    max-width: none;
+    padding: 28px 20px 36px;
   }
 
   .main-title {
-    font-size: 28px;
+    font-size: 26px;
     letter-spacing: -0.025em;
   }
 
@@ -312,32 +316,55 @@ const formattedVotes = computed(() => {
   }
 
   .stats-dashboard {
-    max-width: none;
-    margin-top: 32px;
+    margin-top: 28px;
+    padding: 20px;
   }
 }
 
 @media (max-width: 480px) {
   .hero-section {
-    padding: 24px 16px 32px;
+    padding: 20px 14px 28px;
+  }
+
+  .nav-bar {
+    margin-bottom: 32px;
+  }
+
+  .back-btn {
+    padding: 8px 14px 8px 10px;
+    font-size: 13px;
+  }
+
+  .share-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .badge-wrapper {
+    margin-bottom: 14px;
+  }
+
+  .pill {
+    padding: 5px 12px;
+    font-size: 12px;
   }
 
   .main-title {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .sub-desc {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .stats-dashboard {
-    padding: 20px;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    padding: 16px;
+    border-radius: 16px;
+    margin-top: 24px;
   }
 
   .stat-box .lab {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .stat-box .val {
@@ -345,8 +372,16 @@ const formattedVotes = computed(() => {
   }
 
   .add-product-btn {
-    padding: 16px;
-    font-size: 14px;
+    padding: 14px;
+    font-size: 13px;
+    border-radius: 14px;
+    margin-top: 16px;
+  }
+
+  .plus-circle {
+    width: 24px;
+    height: 24px;
+    font-size: 18px;
   }
 }
 </style>

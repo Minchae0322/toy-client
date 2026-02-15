@@ -16,13 +16,15 @@
     </div>
 
     <div class="info-box">
-      <p v-if="itemBrand" class="brand">{{ itemBrand }}</p>
-      <h3 class="name">{{ itemName }}</h3>
+      <div class="info-content">
+        <p v-if="itemBrand" class="brand">{{ itemBrand }}</p>
+        <h3 class="name">{{ itemName }}</h3>
 
-      <!-- 이전 투표 표시 -->
-      <div v-if="item.userBattleVote" class="prev-vote-info">
-        <span class="prev-label">이전 픽:</span>
-        <span class="prev-rank">{{ item.userBattleVote.rank }}위</span>
+        <!-- 이전 투표 표시 -->
+        <div v-if="item.userBattleVote" class="prev-vote-info">
+          <span class="prev-label">이전 픽:</span>
+          <span class="prev-rank">{{ item.userBattleVote.rank }}위</span>
+        </div>
       </div>
 
       <!-- Vote Actions -->
@@ -54,18 +56,24 @@
       :comment-summary="item.commentSummary"
       :item-id="item.id"
       :item-name="itemName"
+      :submitting="commentSubmitting"
       @open-comments="$emit('open-comments', item)"
+      @submit-comment="handleSubmitComment"
     />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import BattleCommentSummary from './BattleCommentSummary.vue'
 
 const props = defineProps({
   item: {
     type: Object,
+    required: true
+  },
+  battleId: {
+    type: [String, Number],
     required: true
   },
   displayRank: {
@@ -94,7 +102,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['vote', 'open-comments'])
+const emit = defineEmits(['vote', 'open-comments', 'submit-comment'])
+
+const commentSubmitting = ref(false)
 
 const itemName = computed(() => {
   return props.item.battleItemProduct?.name || props.item.customName || '제품명 없음'
@@ -121,12 +131,23 @@ const handleImageError = (e) => {
 const onVote = (rank) => {
   emit('vote', props.item.id, rank)
 }
+
+const handleSubmitComment = (content) => {
+  emit('submit-comment', props.item.id, content)
+}
+
+// 외부에서 submitting 상태 변경
+const setCommentSubmitting = (value) => {
+  commentSubmitting.value = value
+}
+
+defineExpose({ setCommentSubmitting })
 </script>
 
 <style scoped>
 .product-card-v1 {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.25s ease;
@@ -153,9 +174,9 @@ const onVote = (rank) => {
   left: 0;
   right: 0;
   z-index: 20;
-  padding: 8px 0;
+  padding: 6px 0;
   text-align: center;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   color: #fff;
 }
@@ -174,17 +195,17 @@ const onVote = (rank) => {
 
 .rank-indicator {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 10px;
+  left: 10px;
   z-index: 10;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   background: rgba(255, 255, 255, 0.97);
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
   color: #555;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
@@ -209,12 +230,12 @@ const onVote = (rank) => {
 }
 
 .product-card-v1.selected .rank-indicator {
-  top: 50px;
+  top: 38px;
 }
 
 .img-box {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 3;
   background: #fafafa;
   overflow: hidden;
 }
@@ -235,46 +256,49 @@ const onVote = (rank) => {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(transparent 40%, rgba(0, 0, 0, 0.3));
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.15) 40%, rgba(0, 0, 0, 0.6) 100%);
   color: #fff;
-  padding: 28px 14px 12px;
+  padding: 24px 10px 8px;
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
 }
 
 .score-percent {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.5px;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }
 
 .score-count {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  opacity: 0.85;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .info-box {
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  flex: 1;
+}
+
+.info-content {
+  min-height: 80px;
 }
 
 .brand {
-  font-size: 12px;
+  font-size: 11px;
   color: #999;
-  margin: 0 0 4px;
+  margin: 0 0 2px;
 }
 
 .name {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: #222;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -283,14 +307,14 @@ const onVote = (rank) => {
 
 /* 이전 픽 표시 */
 .prev-vote-info {
-  margin-top: 10px;
-  padding: 6px 10px;
+  margin-top: 8px;
+  padding: 4px 8px;
   background: #f5f7ff;
-  border-radius: 6px;
+  border-radius: 5px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 4px;
+  font-size: 10px;
 }
 
 .prev-label {
@@ -303,8 +327,7 @@ const onVote = (rank) => {
 }
 
 .vote-actions {
-  margin-top: auto;
-  padding-top: 14px;
+  padding-top: 8px;
 }
 
 /* 순위 선택 칩 */
@@ -317,24 +340,24 @@ const onVote = (rank) => {
   flex: 1;
   padding: 8px 0;
   border-radius: 8px;
-  border: 1.5px solid #e8e8e8;
-  background: #fafafa;
+  border: 1.5px solid #e9d5ff;
+  background: #faf5ff;
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: #666;
+  font-size: 12px;
+  font-weight: 700;
+  color: #9333ea;
   transition: all 0.2s ease;
 }
 
 .rank-chip:hover:not(:disabled) {
-  border-color: #d0d0d0;
-  background: #f5f5f5;
+  border-color: #d8b4fe;
+  background: #f3e8ff;
 }
 
 .rank-chip.active {
-  background: #6b7df5;
-  border-color: #6b7df5;
+  background: #9333ea;
+  border-color: #9333ea;
   color: #fff;
 }
 
@@ -346,39 +369,39 @@ const onVote = (rank) => {
 /* 요거 픽 버튼 */
 .vote-btn {
   width: 100%;
-  padding: 10px;
+  padding: 10px 12px;
   border-radius: 10px;
-  border: 1.5px solid #e8e8e8;
-  background: #fafafa;
+  border: none;
+  background: #9333ea;
   cursor: pointer;
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  color: #666;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
   transition: all 0.2s ease;
 }
 
 .vote-btn:hover:not(:disabled) {
-  border-color: #6b7df5;
-  color: #6b7df5;
-  background: #f8f9ff;
+  background: #7e22ce;
 }
 
 .vote-btn.active {
-  background: #6b7df5;
-  border-color: #6b7df5;
-  color: #fff;
+  background: #10b981;
+}
+
+.vote-btn.active:hover:not(:disabled) {
+  background: #059669;
 }
 
 .vote-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* 모바일 컴팩트 디자인 */
 @media (max-width: 480px) {
   .product-card-v1 {
-    border-radius: 12px;
+    border-radius: 10px;
     border-width: 1px;
   }
 
@@ -387,60 +410,64 @@ const onVote = (rank) => {
   }
 
   .rank-indicator {
-    top: 8px;
-    left: 8px;
-    width: 30px;
-    height: 30px;
-    font-size: 13px;
-    border-radius: 8px;
+    top: 6px;
+    left: 6px;
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+    border-radius: 6px;
   }
 
   .product-card-v1.selected .rank-indicator {
-    top: 32px;
+    top: 26px;
   }
 
   .selected-rank-overlay {
-    padding: 5px 0;
-    font-size: 11px;
+    padding: 4px 0;
+    font-size: 10px;
   }
 
   .score-overlay {
-    padding: 20px 10px 8px;
-    gap: 6px;
+    padding: 16px 8px 6px;
+    gap: 4px;
   }
 
   .score-percent {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .score-count {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .info-box {
-    padding: 10px;
+    padding: 8px;
+  }
+
+  .info-content {
+    min-height: 65px;
   }
 
   .brand {
-    font-size: 10px;
-    margin: 0 0 2px;
+    font-size: 9px;
+    margin: 0 0 1px;
   }
 
   .name {
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.3;
     -webkit-line-clamp: 2;
   }
 
   .prev-vote-info {
-    margin-top: 6px;
-    padding: 4px 6px;
-    font-size: 10px;
-    gap: 4px;
+    margin-top: 5px;
+    padding: 3px 5px;
+    font-size: 9px;
+    gap: 3px;
   }
 
   .vote-actions {
-    padding-top: 8px;
+    padding-top: 4px;
   }
 
   .rank-selector {
@@ -448,17 +475,16 @@ const onVote = (rank) => {
   }
 
   .rank-chip {
-    padding: 6px 0;
+    padding: 7px 0;
     font-size: 11px;
     border-radius: 6px;
-    border-width: 1px;
+    border-width: 1.5px;
   }
 
   .vote-btn {
-    padding: 8px;
+    padding: 8px 10px;
     font-size: 12px;
     border-radius: 8px;
-    border-width: 1px;
   }
 }
 </style>

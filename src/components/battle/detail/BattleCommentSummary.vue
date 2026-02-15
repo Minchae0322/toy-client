@@ -1,18 +1,43 @@
 <template>
-  <div class="pc-card-arguments" @click="$emit('open-comments')">
+  <div class="pc-card-arguments">
     <!-- 코멘트가 있을 때 -->
     <template v-if="commentSummary">
       <div class="arg-header">
-        <span class="label">
+        <span class="label" @click="$emit('open-comments')">
           <svg class="chat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#4a6cf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           PICK 한마디
+          <span class="cnt">{{ commentCount }}개</span>
         </span>
-        <span class="cnt">{{ commentCount }}개</span>
+        <button class="write-btn" @click.stop="toggleInput">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
 
-      <div class="best-arg">
+      <!-- 인라인 입력창 -->
+      <transition name="slide">
+        <div v-if="showInput" class="inline-input-wrap" @click.stop>
+          <input
+            ref="inputRef"
+            v-model="inputText"
+            type="text"
+            class="inline-input"
+            placeholder="PICK 한마디를 남겨보세요!"
+            maxlength="100"
+            @keyup.enter="handleSubmit"
+          />
+          <button class="submit-btn" :disabled="!inputText.trim() || submitting" @click="handleSubmit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </transition>
+
+      <div class="best-arg" @click="$emit('open-comments')">
         <img
           v-if="commentSummary.creatorProfileImageUrl && !imageLoadFailed"
           class="ba-avatar"
@@ -36,53 +61,109 @@
         </div>
       </div>
 
-      <div v-if="remainingCount > 0" class="view-all">
+      <div v-if="remainingCount > 0" class="view-all" @click="$emit('open-comments')">
         <button>PICK 한마디 {{ remainingCount }}개 더보기</button>
       </div>
     </template>
 
     <!-- 코멘트가 없을 때 -->
     <template v-else>
-      <div class="empty-state">
-        <svg class="empty-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="empty-text">첫 PICK 한마디를 남겨보세요!</span>
+      <div class="empty-header">
+        <div class="empty-state" @click.stop="toggleInput">
+          <svg class="empty-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="empty-text">첫 PICK 한마디를 남겨보세요!</span>
+        </div>
+        <button class="write-btn" @click.stop="toggleInput">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
+
+      <!-- 인라인 입력창 (빈 상태) -->
+      <transition name="slide">
+        <div v-if="showInput" class="inline-input-wrap" @click.stop>
+          <input
+            ref="inputRef"
+            v-model="inputText"
+            type="text"
+            class="inline-input"
+            placeholder="PICK 한마디를 남겨보세요!"
+            maxlength="100"
+            @keyup.enter="handleSubmit"
+          />
+          <button class="submit-btn" :disabled="!inputText.trim() || submitting" @click="handleSubmit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </transition>
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 const props = defineProps({
   commentSummary: { type: Object, default: null },
   itemId: { type: [Number, String], required: true },
-  itemName: { type: String, default: '' }
+  itemName: { type: String, default: '' },
+  submitting: { type: Boolean, default: false }
 })
 
-defineEmits(['open-comments'])
+const emit = defineEmits(['open-comments', 'submit-comment'])
 
 const imageLoadFailed = ref(false)
+const showInput = ref(false)
+const inputText = ref('')
+const inputRef = ref(null)
 
 const commentCount = computed(() => props.commentSummary?.commentCount || 0)
 const remainingCount = computed(() => Math.max(0, (props.commentSummary?.commentCount || 0) - 1))
 const avatarInitial = computed(() => {
   return (props.commentSummary?.creatorNickname || '?').charAt(0).toUpperCase()
 })
+
+const toggleInput = () => {
+  showInput.value = !showInput.value
+  if (showInput.value) {
+    nextTick(() => {
+      inputRef.value?.focus()
+    })
+  }
+}
+
+const handleSubmit = () => {
+  if (!inputText.value.trim() || props.submitting) return
+
+  emit('submit-comment', inputText.value.trim())
+  inputText.value = ''
+  showInput.value = false
+}
+
+// 외부에서 입력창 닫기
+const closeInput = () => {
+  showInput.value = false
+  inputText.value = ''
+}
+
+defineExpose({ closeInput })
 </script>
 
 <style scoped>
 .pc-card-arguments {
   border-top: 1px solid #f3f4f6;
   padding: 12px 16px;
-  cursor: pointer;
   transition: background 0.2s ease;
-}
-
-.pc-card-arguments:hover {
-  background: #fafbff;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
 }
 
 /* 헤더 */
@@ -100,6 +181,12 @@ const avatarInitial = computed(() => {
   display: flex;
   align-items: center;
   gap: 4px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.arg-header .label:hover {
+  color: #4a6cf7;
 }
 
 .arg-header .chat-icon {
@@ -110,6 +197,89 @@ const avatarInitial = computed(() => {
   font-size: 11px;
   color: #9ca3af;
   font-weight: 600;
+  margin-left: 4px;
+}
+
+/* 작성 버튼 */
+.write-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.15s;
+}
+
+.write-btn:hover {
+  background: #4a6cf7;
+  color: #fff;
+}
+
+/* 인라인 입력창 */
+.inline-input-wrap {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.inline-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.inline-input:focus {
+  border-color: #4a6cf7;
+}
+
+.inline-input::placeholder {
+  color: #9ca3af;
+}
+
+.submit-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: #4a6cf7;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #3a5ce7;
+}
+
+.submit-btn:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+}
+
+/* 슬라이드 트랜지션 */
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.2s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 /* BEST 변론 카드 */
@@ -120,6 +290,12 @@ const avatarInitial = computed(() => {
   background: linear-gradient(135deg, #fffbeb, #fef9e7);
   border-radius: 10px;
   border: 1px solid #fde68a;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.best-arg:hover {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
 }
 
 .ba-avatar {
@@ -210,11 +386,18 @@ const avatarInitial = computed(() => {
 }
 
 /* 빈 상태 */
+.empty-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .empty-state {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 4px 0;
+  cursor: pointer;
 }
 
 .empty-icon {
@@ -228,8 +411,8 @@ const avatarInitial = computed(() => {
   color: #9ca3af;
 }
 
-.pc-card-arguments:hover .empty-icon,
-.pc-card-arguments:hover .empty-text {
+.empty-state:hover .empty-icon,
+.empty-state:hover .empty-text {
   color: #4a6cf7;
 }
 
@@ -254,6 +437,38 @@ const avatarInitial = computed(() => {
 
   .arg-header .cnt {
     font-size: 10px;
+  }
+
+  .write-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .write-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .inline-input-wrap {
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  .inline-input {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .submit-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .submit-btn svg {
+    width: 14px;
+    height: 14px;
   }
 
   .best-arg {

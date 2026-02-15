@@ -14,17 +14,17 @@
 
     <!-- Content -->
     <template v-else-if="battle">
-      <main class="content-wrapper">
-        <!-- Battle Info -->
-        <BattleInfoCard
-            :battle="battle"
-            :is-weighted-vote="isWeightedVote"
-            :can-user-add-item="showAddItemButton"
-            @add-product="handleAddProduct"
-            @back="goBack"
-            @share="shareBattle"
-        />
+      <!-- Battle Info (전체 너비) -->
+      <BattleInfoCard
+          :battle="battle"
+          :is-weighted-vote="isWeightedVote"
+          :can-user-add-item="showAddItemButton"
+          @add-product="handleAddProduct"
+          @back="goBack"
+          @share="shareBattle"
+      />
 
+      <main class="content-wrapper">
         <!-- Vote Selection Bar -->
         <VoteSelectionBar
             v-if="canVote && hasSelectedItems"
@@ -41,7 +41,9 @@
           <ProductCard
               v-for="(item, index) in sortedItems"
               :key="item.id"
+              :ref="el => setProductCardRef(item.id, el)"
               :item="item"
+              :battle-id="battleId"
               :display-rank="item.rank || (index + 1)"
               :product-rank="getProductRank(item.id)"
               :is-weighted-vote="isWeightedVote"
@@ -50,6 +52,7 @@
               :percentage="getPercentage(item)"
               @vote="handleVote"
               @open-comments="scrollToComments"
+              @submit-comment="handleInlineComment"
           />
         </div>
 
@@ -58,20 +61,28 @@
 
         <!-- 전체 PICK 한마디 섹션 -->
         <section ref="argumentsSection" class="pc-arguments-section" v-if="hasComments">
+          <!-- 필터 배너 (아이템 필터 적용 시) -->
+          <div v-if="selectedItemFilter" class="filter-banner">
+            <div class="filter-banner-content">
+              <img :src="getItemImageById(selectedItemFilter)" :alt="filteredItemName" class="filter-item-img" />
+              <div class="filter-info">
+                <span class="filter-label">현재 보는 중</span>
+                <span class="filter-name">{{ filteredItemName }}</span>
+              </div>
+            </div>
+            <button class="clear-filter-btn" @click="clearItemFilter">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+              전체 PICK 보기
+            </button>
+          </div>
+
           <div class="section-heading">
             <div>
-              <h2 v-if="selectedItemFilter">
-                <span class="filter-item-name">{{ filteredItemName }}</span>의 PICK 한마디
-              </h2>
-              <h2 v-else>전체 PICK 한마디</h2>
+              <h2>{{ selectedItemFilter ? `${filteredItemName}의 PICK 한마디` : '전체 PICK 한마디' }}</h2>
               <p class="sub">참여자들의 생생한 PICK 한마디를 확인하세요</p>
             </div>
-            <button v-if="selectedItemFilter" class="clear-filter-btn" @click="clearItemFilter">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              전체 보기
-            </button>
           </div>
 
           <div class="pc-tab-container">
@@ -241,7 +252,8 @@ export default {
       selectedCommentItem: null,
       commentSortType: 'likeCount',
       failedProfileImages: {},
-      selectedItemFilter: null
+      selectedItemFilter: null,
+      productCardRefs: {}
     }
   },
   computed: {
@@ -642,6 +654,39 @@ export default {
       this.selectedItemFilter = null
     },
 
+    // ProductCard ref 설정
+    setProductCardRef(itemId, el) {
+      if (el) {
+        this.productCardRefs[itemId] = el
+      }
+    },
+
+    // 인라인 코멘트 작성
+    async handleInlineComment(itemId, content) {
+      const cardRef = this.productCardRefs[itemId]
+      if (cardRef) {
+        cardRef.setCommentSubmitting(true)
+      }
+
+      try {
+        const response = await battleService.createComment(this.battleId, itemId, content)
+
+        if (response.success) {
+          await this.open({ type: 'alert', title: '완료', message: 'PICK 한마디가 등록되었습니다!' })
+          await this.loadBattle()
+        } else {
+          throw new Error(response.message || 'PICK 한마디 작성에 실패했습니다.')
+        }
+      } catch (err) {
+        console.error('인라인 코멘트 작성 실패:', err)
+        await this.open({ type: 'alert', title: '오류', message: err.message || 'PICK 한마디 작성에 실패했습니다.' })
+      } finally {
+        if (cardRef) {
+          cardRef.setCommentSubmitting(false)
+        }
+      }
+    },
+
     // 코멘트 모달 열기 (필요시 사용)
     openCommentModal(item) {
       this.selectedCommentItem = item
@@ -892,8 +937,8 @@ export default {
 .pc-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  padding: 0 24px 40px;
+  gap: 16px;
+  padding: 0 24px 32px;
 }
 
 /* PC 디바이더 */
@@ -907,7 +952,7 @@ export default {
 /* PC 전체 변론 섹션              */
 /* ============================= */
 .pc-arguments-section {
-  padding: 0 24px 120px;
+  padding: 24px 24px 120px;
   transition: background 0.3s ease;
   border-radius: 20px;
   margin: 0 8px;
@@ -919,7 +964,7 @@ export default {
 
 @keyframes highlightPulse {
   0% { background: transparent; }
-  20% { background: rgba(74, 108, 247, 0.08); }
+  20% { background: rgba(147, 51, 234, 0.06); }
   100% { background: transparent; }
 }
 
@@ -943,29 +988,69 @@ export default {
   margin-top: 4px;
 }
 
-.pc-arguments-section .section-heading .filter-item-name {
-  color: #4a6cf7;
+/* 필터 배너 */
+.filter-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border: 2px solid #e9d5ff;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.filter-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-item-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.15);
+}
+
+.filter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9333ea;
+}
+
+.filter-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #581c87;
 }
 
 .clear-filter-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: #f3f4f6;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #9333ea;
   border: none;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #6b7280;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.15s;
+  transition: all 0.2s;
 }
 
 .clear-filter-btn:hover {
-  background: #e5e7eb;
-  color: #374151;
+  background: #7e22ce;
 }
 
 .pc-tab-container {
@@ -1187,8 +1272,8 @@ export default {
 @media (max-width: 768px) {
   .pc-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    padding: 0 16px 40px;
+    gap: 10px;
+    padding: 0 12px 32px;
   }
 
   .pc-divider {
@@ -1209,9 +1294,30 @@ export default {
     font-size: 18px;
   }
 
+  .filter-banner {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .filter-banner-content {
+    width: 100%;
+  }
+
+  .filter-item-img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .filter-name {
+    font-size: 14px;
+  }
+
   .clear-filter-btn {
-    padding: 6px 12px;
-    font-size: 12px;
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 13px;
   }
 
   .pc-tab-header {
@@ -1253,8 +1359,8 @@ export default {
 @media (max-width: 480px) {
   .pc-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    padding: 0 12px 40px;
+    gap: 8px;
+    padding: 0 10px 28px;
   }
 
   .pc-divider {
