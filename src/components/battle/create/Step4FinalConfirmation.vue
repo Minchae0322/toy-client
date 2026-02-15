@@ -54,8 +54,8 @@
         <span class="summary-label">등록된 아이템 수</span>
         <span class="summary-value">
           {{ selectedItemsCount }}개
-          <span v-if="selectedItemsCount >= 2" class="summary-badge success">✓ 충족</span>
-          <span v-else class="summary-badge error">✗ 부족 (최소 2개)</span>
+          <span v-if="selectedItemsCount >= 1" class="summary-badge success">✓ 충족</span>
+          <span v-else class="summary-badge error">✗ 부족 (최소 1개)</span>
         </span>
       </div>
     </div>
@@ -92,9 +92,9 @@
           <span class="checklist-icon">{{ battleForm.subCategoryId ? '✓' : '○' }}</span>
           <span>카테고리를 선택했습니다</span>
         </div>
-        <div class="checklist-item" :class="{ checked: selectedItemsCount >= 2 }">
-          <span class="checklist-icon">{{ selectedItemsCount >= 2 ? '✓' : '○' }}</span>
-          <span>아이템을 2개 이상 등록했습니다</span>
+        <div class="checklist-item" :class="{ checked: selectedItemsCount >= 1 }">
+          <span class="checklist-icon">{{ selectedItemsCount >= 1 ? '✓' : '○' }}</span>
+          <span>아이템을 1개 이상 등록했습니다</span>
         </div>
         <div class="checklist-item" :class="{ checked: battleForm.thumbnailFile }">
           <span class="checklist-icon">{{ battleForm.thumbnailFile ? '✓' : '○' }}</span>

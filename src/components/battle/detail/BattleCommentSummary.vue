@@ -298,7 +298,15 @@ defineExpose({ closeInput })
   background: linear-gradient(135deg, #fef3c7, #fde68a);
 }
 
-.ba-avatar {
+img.ba-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+div.ba-avatar {
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -310,7 +318,6 @@ defineExpose({ closeInput })
   font-weight: 700;
   color: #4a6cf7;
   flex-shrink: 0;
-  object-fit: cover;
 }
 
 .ba-body {
@@ -419,7 +426,8 @@ defineExpose({ closeInput })
 /* 모바일 최적화 */
 @media (max-width: 480px) {
   .pc-card-arguments {
-    padding: 10px 12px;
+    padding: 8px 10px;
+    min-height: 70px;
   }
 
   .arg-header {
@@ -472,56 +480,62 @@ defineExpose({ closeInput })
   }
 
   .best-arg {
-    padding: 6px 8px;
-    gap: 6px;
-    border-radius: 8px;
+    padding: 5px 6px;
+    gap: 5px;
+    border-radius: 6px;
   }
 
-  .ba-avatar {
-    width: 20px;
-    height: 20px;
-    font-size: 9px;
+  img.ba-avatar,
+  div.ba-avatar {
+    width: 18px;
+    height: 18px;
+  }
+
+  div.ba-avatar {
+    font-size: 8px;
   }
 
   .ba-nick {
-    font-size: 10px;
-  }
-
-  .best-badge {
-    font-size: 8px;
-    padding: 1px 4px;
-  }
-
-  .ba-text {
-    font-size: 11px;
-    line-height: 1.35;
-  }
-
-  .ba-likes {
     font-size: 9px;
   }
 
+  .best-badge {
+    font-size: 7px;
+    padding: 1px 3px;
+  }
+
+  .ba-text {
+    font-size: 10px;
+    line-height: 1.3;
+    -webkit-line-clamp: 1;
+  }
+
+  .ba-likes {
+    font-size: 8px;
+    margin-top: 2px;
+  }
+
   .ba-likes svg {
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
   }
 
   .view-all {
-    margin-top: 6px;
+    margin-top: 4px;
   }
 
   .view-all button {
-    font-size: 10px;
-    padding: 3px 8px;
+    font-size: 9px;
+    padding: 2px 6px;
   }
 
   .empty-icon {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
   }
 
   .empty-text {
-    font-size: 11px;
+    font-size: 10px;
   }
 }
 

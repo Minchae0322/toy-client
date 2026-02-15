@@ -604,7 +604,8 @@ watch(() => props.modelValue, (val) => { if (val) resetModal(); });
 }
 
 .mode-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 48px 1fr 20px;
   align-items: center;
   gap: 16px;
   padding: 20px;
@@ -613,7 +614,6 @@ watch(() => props.modelValue, (val) => { if (val) resetModal(); });
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
-  text-align: left;
   width: 100%;
 }
 
@@ -624,53 +624,51 @@ watch(() => props.modelValue, (val) => { if (val) resetModal(); });
 
 .mode-card:hover .arrow-icon {
   color: #9333ea;
-  transform: translateX(4px);
 }
 
 .mode-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
 .mode-icon.search {
-  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  background: #f3e8ff;
 }
 
 .mode-icon.search svg {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   color: #9333ea;
 }
 
 .mode-icon.custom {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: #dbeafe;
 }
 
 .mode-icon.custom svg {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   color: #3b82f6;
 }
 
 .mode-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  text-align: left;
 }
 
 .mode-name {
-  font-size: 16px;
+  display: block;
+  font-size: 15px;
   font-weight: 700;
   color: #111827;
+  margin-bottom: 4px;
 }
 
 .mode-desc {
+  display: block;
   font-size: 13px;
   color: #9ca3af;
 }
@@ -679,8 +677,7 @@ watch(() => props.modelValue, (val) => { if (val) resetModal(); });
   width: 20px;
   height: 20px;
   color: #d1d5db;
-  flex-shrink: 0;
-  transition: all 0.2s;
+  transition: color 0.2s;
 }
 
 /* Selected Preview */

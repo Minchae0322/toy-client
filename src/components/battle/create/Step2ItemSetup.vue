@@ -4,7 +4,7 @@
       <label class="form-label">
         배틀 아이템 선택 <span class="required">*</span>
       </label>
-      <div class="form-hint">최소 2개, 최대 20개까지 선택 가능합니다</div>
+      <div class="form-hint">최소 1개, 최대 20개까지 선택 가능합니다</div>
     </div>
 
     <div class="form-group">

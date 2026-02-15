@@ -35,7 +35,7 @@
               :key="r"
               @click="onVote(r)"
               :disabled="submitting"
-              :class="['rank-chip', { active: productRank === r }]"
+              :class="['rank-chip', `rank-${r}`, { active: productRank === r }]"
           >
             {{ r }}위
           </button>
@@ -165,6 +165,16 @@ defineExpose({ setCommentSubmitting })
 .product-card-v1.selected {
   border-color: #6b7df5;
   box-shadow: 0 8px 24px rgba(107, 125, 245, 0.12);
+}
+
+.product-card-v1.highlight-card {
+  animation: highlightCard 1.5s ease;
+}
+
+@keyframes highlightCard {
+  0% { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); }
+  20% { box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.3); }
+  100% { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); }
 }
 
 /* 선택된 순위 오버레이 */
@@ -340,24 +350,64 @@ defineExpose({ setCommentSubmitting })
   flex: 1;
   padding: 8px 0;
   border-radius: 8px;
-  border: 1.5px solid #e9d5ff;
-  background: #faf5ff;
   cursor: pointer;
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
-  color: #9333ea;
   transition: all 0.2s ease;
 }
 
-.rank-chip:hover:not(:disabled) {
-  border-color: #d8b4fe;
-  background: #f3e8ff;
+/* 1위 - 골드 */
+.rank-chip.rank-1 {
+  border: 1.5px solid #fde68a;
+  background: #fffbeb;
+  color: #b45309;
 }
 
-.rank-chip.active {
-  background: #9333ea;
-  border-color: #9333ea;
+.rank-chip.rank-1:hover:not(:disabled) {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.rank-chip.rank-1.active {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #fff;
+}
+
+/* 2위 - 실버 */
+.rank-chip.rank-2 {
+  border: 1.5px solid #d1d5db;
+  background: #f9fafb;
+  color: #4b5563;
+}
+
+.rank-chip.rank-2:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.rank-chip.rank-2.active {
+  background: #6b7280;
+  border-color: #6b7280;
+  color: #fff;
+}
+
+/* 3위 - 브론즈 */
+.rank-chip.rank-3 {
+  border: 1.5px solid #fed7aa;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.rank-chip.rank-3:hover:not(:disabled) {
+  background: #ffedd5;
+  border-color: #fdba74;
+}
+
+.rank-chip.rank-3.active {
+  background: #ea580c;
+  border-color: #ea580c;
   color: #fff;
 }
 
@@ -398,6 +448,21 @@ defineExpose({ setCommentSubmitting })
   cursor: not-allowed;
 }
 
+/* 모바일/태블릿에서 이전 픽 숨김 */
+@media (max-width: 768px) {
+  .prev-vote-info {
+    display: none;
+  }
+
+  .info-content {
+    min-height: 40px;
+  }
+
+  .vote-actions {
+    padding-top: 6px;
+  }
+}
+
 /* 모바일 컴팩트 디자인 */
 @media (max-width: 480px) {
   .product-card-v1 {
@@ -409,82 +474,79 @@ defineExpose({ setCommentSubmitting })
     transform: none;
   }
 
+  .img-box {
+    aspect-ratio: 1 / 1;
+  }
+
   .rank-indicator {
-    top: 6px;
-    left: 6px;
-    width: 24px;
-    height: 24px;
-    font-size: 11px;
-    border-radius: 6px;
+    top: 5px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    border-radius: 5px;
   }
 
   .product-card-v1.selected .rank-indicator {
-    top: 26px;
+    top: 22px;
   }
 
   .selected-rank-overlay {
-    padding: 4px 0;
-    font-size: 10px;
+    padding: 3px 0;
+    font-size: 9px;
   }
 
   .score-overlay {
-    padding: 16px 8px 6px;
-    gap: 4px;
+    padding: 12px 6px 4px;
+    gap: 3px;
   }
 
   .score-percent {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .score-count {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .info-box {
-    padding: 8px;
+    padding: 6px;
   }
 
   .info-content {
-    min-height: 65px;
+    min-height: 32px;
   }
 
   .brand {
-    font-size: 9px;
+    font-size: 8px;
     margin: 0 0 1px;
   }
 
   .name {
-    font-size: 11px;
-    line-height: 1.3;
+    font-size: 10px;
+    line-height: 1.25;
     -webkit-line-clamp: 2;
   }
 
-  .prev-vote-info {
-    margin-top: 5px;
-    padding: 3px 5px;
-    font-size: 9px;
-    gap: 3px;
-  }
-
   .vote-actions {
-    padding-top: 4px;
+    padding-top: 3px;
   }
 
   .rank-selector {
-    gap: 4px;
+    gap: 3px;
   }
 
   .rank-chip {
-    padding: 7px 0;
-    font-size: 11px;
-    border-radius: 6px;
-    border-width: 1.5px;
+    padding: 6px 0;
+    font-size: 10px;
+    border-radius: 5px;
+    border-width: 1px;
   }
 
   .vote-btn {
-    padding: 8px 10px;
-    font-size: 12px;
-    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 11px;
+    border-radius: 6px;
   }
 }
 </style>

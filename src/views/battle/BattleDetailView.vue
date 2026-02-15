@@ -122,6 +122,7 @@
                   v-for="(comment, index) in sortedComments"
                   :key="comment.itemId + '-' + index"
                   :class="['pc-arg-card', { best: index === 0 && commentSortType === 'likeCount' }]"
+                  @click="scrollToItem(comment.itemId)"
                 >
                   <img
                     class="arg-product-img"
@@ -654,6 +655,28 @@ export default {
       this.selectedItemFilter = null
     },
 
+    // 아이템 카드로 스크롤
+    scrollToItem(itemId) {
+      const cardRef = this.productCardRefs[itemId]
+      if (cardRef && cardRef.$el) {
+        const element = cardRef.$el
+        const headerOffset = 100
+        const elementPosition = element.getBoundingClientRect().top
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        })
+
+        // 하이라이트 효과
+        element.classList.add('highlight-card')
+        setTimeout(() => {
+          element.classList.remove('highlight-card')
+        }, 1500)
+      }
+    },
+
     // ProductCard ref 설정
     setProductCardRef(itemId, el) {
       if (el) {
@@ -1126,6 +1149,7 @@ export default {
   background: #fafbfc;
   border-radius: 16px;
   transition: all 0.15s;
+  cursor: pointer;
 }
 
 .pc-arg-card:hover {
@@ -1202,7 +1226,14 @@ export default {
   color: #9ca3af;
 }
 
-.pc-arg-card .arg-user-avatar {
+.pc-arg-card img.arg-user-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pc-arg-card div.arg-user-avatar {
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -1213,7 +1244,6 @@ export default {
   font-size: 10px;
   font-weight: 700;
   color: #4a6cf7;
-  object-fit: cover;
 }
 
 .pc-arg-card .like-btn {

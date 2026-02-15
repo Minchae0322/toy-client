@@ -204,7 +204,7 @@ const canProceed = computed(() => {
           battleForm.value.participationStartDate;
 
     case 2:
-      return selectedItems.value.length >= 2 &&
+      return selectedItems.value.length >= 1 &&
           selectedItems.value.length <= 20;
 
     case 3:

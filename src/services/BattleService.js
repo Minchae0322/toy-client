@@ -679,8 +679,8 @@ class BattleService extends BaseApiService {
 
     if (!battleData.items || !Array.isArray(battleData.items)) {
       errors.push('아이템 목록이 필요합니다.')
-    } else if (battleData.items.length < 2 || battleData.items.length > 20) {
-      errors.push('아이템은 2~20개 사이여야 합니다.')
+    } else if (battleData.items.length < 1 || battleData.items.length > 20) {
+      errors.push('아이템은 1~20개 사이여야 합니다.')
     }
 
     return {
