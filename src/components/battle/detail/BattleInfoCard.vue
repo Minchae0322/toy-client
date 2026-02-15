@@ -89,9 +89,11 @@ const formattedVotes = computed(() => {
 /* 전체 레이아웃 */
 .hero-section {
   text-align: center;
-  padding: 32px 20px 56px;
+  padding: 48px 40px 56px;
   width: 100%;
   box-sizing: border-box;
+  max-width: 780px;
+  margin: 0 auto;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
 }
 
@@ -187,11 +189,11 @@ const formattedVotes = computed(() => {
 
 /* 타이틀 섹션 */
 .main-title {
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 800;
   color: #111827;
-  letter-spacing: -0.025em;
-  margin: 0 auto 16px;
+  letter-spacing: -0.03em;
+  margin: 0 auto 12px;
   line-height: 1.3;
 }
 
@@ -200,7 +202,7 @@ const formattedVotes = computed(() => {
   color: #6b7280;
   line-height: 1.6;
   max-width: 500px;
-  margin: 0 auto;
+  margin: 0 auto 0;
 }
 
 /* 통계 대시보드 */
@@ -210,8 +212,11 @@ const formattedVotes = computed(() => {
   background: #f9fafb;
   border-radius: 24px;
   padding: 28px;
-  margin-top: 48px;
+  margin-top: 40px;
   border: 1px solid #f3f4f6;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .stat-box {
@@ -238,7 +243,7 @@ const formattedVotes = computed(() => {
 }
 
 .stat-box .val {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 800;
   color: #1f2937;
 }
@@ -291,23 +296,57 @@ const formattedVotes = computed(() => {
 }
 
 /* 반응형 처리 */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .hero-section {
-    padding: 24px 16px 40px;
+    padding: 32px 20px 40px;
+    max-width: none;
   }
 
   .main-title {
-    font-size: 26px;
+    font-size: 28px;
+    letter-spacing: -0.025em;
+  }
+
+  .sub-desc {
+    font-size: 15px;
+  }
+
+  .stats-dashboard {
+    max-width: none;
+    margin-top: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 24px 16px 32px;
+  }
+
+  .main-title {
+    font-size: 24px;
+  }
+
+  .sub-desc {
+    font-size: 14px;
   }
 
   .stats-dashboard {
     padding: 20px;
-    grid-template-columns: 1fr; /* 모바일에서는 세로로 나열하여 가독성 확보 */
-    gap: 20px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
 
-  .stat-box:not(:last-child)::after {
-    display: none;
+  .stat-box .lab {
+    font-size: 11px;
+  }
+
+  .stat-box .val {
+    font-size: 18px;
+  }
+
+  .add-product-btn {
+    padding: 16px;
+    font-size: 14px;
   }
 }
 </style>

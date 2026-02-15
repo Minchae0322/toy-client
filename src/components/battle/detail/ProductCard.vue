@@ -16,7 +16,7 @@
     </div>
 
     <div class="info-box">
-      <p class="brand">{{ itemBrand }}</p>
+      <p v-if="itemBrand" class="brand">{{ itemBrand }}</p>
       <h3 class="name">{{ itemName }}</h3>
 
       <!-- 이전 투표 표시 -->
@@ -48,11 +48,20 @@
         </button>
       </div>
     </div>
+
+    <!-- 한줄 변론 요약 -->
+    <BattleCommentSummary
+      :comment-summary="item.commentSummary"
+      :item-id="item.id"
+      :item-name="itemName"
+      @open-comments="$emit('open-comments', item)"
+    />
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import BattleCommentSummary from './BattleCommentSummary.vue'
 
 const props = defineProps({
   item: {
@@ -85,7 +94,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['vote'])
+const emit = defineEmits(['vote', 'open-comments'])
 
 const itemName = computed(() => {
   return props.item.battleItemProduct?.name || props.item.customName || '제품명 없음'
@@ -235,7 +244,7 @@ const onVote = (rank) => {
 }
 
 .score-percent {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.5px;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);

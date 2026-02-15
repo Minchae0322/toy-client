@@ -292,6 +292,156 @@ class BattleService extends BaseApiService {
     return await this.post(`/battles/${battleId}/items/${itemId}/report`, requestData)
   }
 
+  // ==================== 배틀 코멘트(한줄 변론) 메서드 ====================
+
+  /**
+   * 코멘트 목록 조회
+   * GET /api/battles/{battleId}/items/{itemId}/comments
+   */
+  async getComments(battleId, itemId, { sort = 'likeCount,desc', page = 0, size = 20 } = {}) {
+    if (!battleId || !itemId) {
+      throw new Error('배틀 ID와 아이템 ID가 필요합니다.')
+    }
+
+    const params = { sort, page, size }
+    console.log(`💬 [BATTLE_SERVICE] 코멘트 조회: battleId=${battleId}, itemId=${itemId}`, params)
+
+    const response = await this.get(`/battles/${battleId}/items/${itemId}/comments`, params)
+
+    if (response.success && response.data) {
+      response.data = this.normalizeCommentListResponse(response.data)
+    }
+
+    return response
+  }
+
+  /**
+   * 코멘트 작성
+   * POST /api/battles/{battleId}/items/{itemId}/comments
+   */
+  async createComment(battleId, itemId, content) {
+    if (!battleId || !itemId) {
+      throw new Error('배틀 ID와 아이템 ID가 필요합니다.')
+    }
+
+    if (!content || content.trim().length === 0) {
+      throw new Error('코멘트 내용을 입력해주세요.')
+    }
+
+    if (content.trim().length > 100) {
+      throw new Error('코멘트는 100자 이내로 작성해주세요.')
+    }
+
+    const requestData = { content: content.trim() }
+    console.log(`✍️ [BATTLE_SERVICE] 코멘트 작성: battleId=${battleId}, itemId=${itemId}`)
+
+    return await this.post(`/battles/${battleId}/items/${itemId}/comments`, requestData)
+  }
+
+  /**
+   * 코멘트 수정
+   * PUT /api/battles/{battleId}/items/{itemId}/comments/{commentId}
+   */
+  async updateComment(battleId, itemId, commentId, content) {
+    if (!battleId || !itemId || !commentId) {
+      throw new Error('배틀 ID, 아이템 ID, 코멘트 ID가 필요합니다.')
+    }
+
+    if (!content || content.trim().length === 0) {
+      throw new Error('코멘트 내용을 입력해주세요.')
+    }
+
+    if (content.trim().length > 100) {
+      throw new Error('코멘트는 100자 이내로 작성해주세요.')
+    }
+
+    const requestData = { content: content.trim() }
+    console.log(`📝 [BATTLE_SERVICE] 코멘트 수정: commentId=${commentId}`)
+
+    return await this.put(`/battles/${battleId}/items/${itemId}/comments/${commentId}`, requestData)
+  }
+
+  /**
+   * 코멘트 삭제
+   * DELETE /api/battles/{battleId}/items/{itemId}/comments/{commentId}
+   */
+  async deleteComment(battleId, itemId, commentId) {
+    if (!battleId || !itemId || !commentId) {
+      throw new Error('배틀 ID, 아이템 ID, 코멘트 ID가 필요합니다.')
+    }
+
+    console.log(`🗑️ [BATTLE_SERVICE] 코멘트 삭제: commentId=${commentId}`)
+    return await this.delete(`/battles/${battleId}/items/${itemId}/comments/${commentId}`)
+  }
+
+  /**
+   * 코멘트 공감 토글
+   * POST /api/battles/{battleId}/items/{itemId}/comments/{commentId}/like
+   */
+  async toggleCommentLike(battleId, itemId, commentId) {
+    if (!battleId || !itemId || !commentId) {
+      throw new Error('배틀 ID, 아이템 ID, 코멘트 ID가 필요합니다.')
+    }
+
+    console.log(`❤️ [BATTLE_SERVICE] 코멘트 공감 토글: commentId=${commentId}`)
+    return await this.post(`/battles/${battleId}/items/${itemId}/comments/${commentId}/like`)
+  }
+
+  /**
+   * 코멘트 목록 응답 정규화
+   */
+  normalizeCommentListResponse(data) {
+    if (!data) return { comments: [], page: 0, size: 20, totalElements: 0, hasNext: false }
+
+    const comments = Array.isArray(data.content) ? data.content : (Array.isArray(data.comments) ? data.comments : [])
+
+    return {
+      comments: comments.map(comment => this.normalizeCommentItem(comment)),
+      page: data.page || data.number || 0,
+      size: data.size || 20,
+      totalElements: data.totalElements || comments.length,
+      totalPages: data.totalPages || 1,
+      hasNext: data.hasNext ?? (data.number < data.totalPages - 1) ?? false
+    }
+  }
+
+  /**
+   * 개별 코멘트 정규화
+   */
+  normalizeCommentItem(comment) {
+    if (!comment) return null
+
+    return {
+      commentId: comment.commentId || comment.id,
+      battleItemId: comment.battleItemId,
+      creatorId: comment.creatorId || comment.userId,
+      creatorNickname: comment.creatorNickname || comment.nickname || '익명',
+      creatorProfileUrl: comment.creatorProfileUrl || comment.profileUrl || null,
+      content: comment.content || '',
+      likeCount: comment.likeCount || 0,
+      hasLiked: comment.hasLiked || comment.isLiked || false,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+      isEdited: comment.updatedAt && comment.createdAt !== comment.updatedAt
+    }
+  }
+
+  /**
+   * 코멘트 요약 정규화 (배틀 상세 응답의 item.commentSummary)
+   */
+  normalizeCommentSummary(summary) {
+    if (!summary) return null
+
+    return {
+      battleItemId: summary.battleItemId,
+      commentId: summary.commentId,
+      creatorNickname: summary.creatorNickname || '익명',
+      content: summary.content || '',
+      likeCount: summary.likeCount || 0,
+      commentCount: summary.commentCount || 0
+    }
+  }
+
   // ==================== 검색 및 필터 메서드 ====================
 
   /**
@@ -434,7 +584,8 @@ class BattleService extends BaseApiService {
       rank: item.rank || null,
       reportCount: item.reportCount || 0,
       userBattleVote: item.userBattleVote || null,
-      status: item.status
+      status: item.status,
+      commentSummary: this.normalizeCommentSummary(item.commentSummary)
     }))
   }
 
@@ -756,6 +907,13 @@ export function useBattle() {
     voteBattleItem: (battleId, data) => service.voteBattleItem(battleId, data),
     cancelVote: (battleId) => service.cancelVote(battleId),
     reportBattleItem: (battleId, itemId, data) => service.reportBattleItem(battleId, itemId, data),
+
+    // 코멘트(한줄 변론)
+    getComments: (battleId, itemId, options) => service.getComments(battleId, itemId, options),
+    createComment: (battleId, itemId, content) => service.createComment(battleId, itemId, content),
+    updateComment: (battleId, itemId, commentId, content) => service.updateComment(battleId, itemId, commentId, content),
+    deleteComment: (battleId, itemId, commentId) => service.deleteComment(battleId, itemId, commentId),
+    toggleCommentLike: (battleId, itemId, commentId) => service.toggleCommentLike(battleId, itemId, commentId),
 
     // 유틸리티
     convertToAttachmentInfo: (response) => service.convertToAttachmentInfo(response)

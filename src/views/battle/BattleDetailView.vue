@@ -37,7 +37,7 @@
         />
 
         <!-- Product Grid -->
-        <div class="modern-grid">
+        <div class="pc-grid">
           <ProductCard
               v-for="(item, index) in sortedItems"
               :key="item.id"
@@ -49,8 +49,105 @@
               :submitting="submitting"
               :percentage="getPercentage(item)"
               @vote="handleVote"
+              @open-comments="scrollToComments"
           />
         </div>
+
+        <!-- PC 디바이더 -->
+        <div class="pc-divider"></div>
+
+        <!-- 전체 PICK 한마디 섹션 -->
+        <section ref="argumentsSection" class="pc-arguments-section" v-if="hasComments">
+          <div class="section-heading">
+            <div>
+              <h2 v-if="selectedItemFilter">
+                <span class="filter-item-name">{{ filteredItemName }}</span>의 PICK 한마디
+              </h2>
+              <h2 v-else>전체 PICK 한마디</h2>
+              <p class="sub">참여자들의 생생한 PICK 한마디를 확인하세요</p>
+            </div>
+            <button v-if="selectedItemFilter" class="clear-filter-btn" @click="clearItemFilter">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              전체 보기
+            </button>
+          </div>
+
+          <div class="pc-tab-container">
+            <div class="pc-tab-header">
+              <button
+                :class="['pc-tab-btn', { active: commentSortType === 'likeCount' }]"
+                @click="commentSortType = 'likeCount'"
+              >
+                공감순 <span class="cnt">{{ sortedComments.length }}</span>
+              </button>
+              <button
+                :class="['pc-tab-btn', { active: commentSortType === 'createdAt' }]"
+                @click="commentSortType = 'createdAt'"
+              >
+                최신순 <span class="cnt">{{ sortedComments.length }}</span>
+              </button>
+              <button
+                :class="['pc-tab-btn', { active: commentSortType === 'mine' }]"
+                @click="commentSortType = 'mine'"
+              >
+                내 한마디
+              </button>
+            </div>
+
+            <div class="pc-tab-content">
+              <!-- 빈 상태 -->
+              <div v-if="sortedComments.length === 0" class="empty-comments">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p>아직 PICK 한마디가 없어요</p>
+                <span>첫 번째 PICK 한마디를 남겨보세요!</span>
+              </div>
+
+              <div v-else class="pc-arg-grid">
+                <div
+                  v-for="(comment, index) in sortedComments"
+                  :key="comment.itemId + '-' + index"
+                  :class="['pc-arg-card', { best: index === 0 && commentSortType === 'likeCount' }]"
+                >
+                  <img
+                    class="arg-product-img"
+                    :src="getItemImageById(comment.itemId)"
+                    :alt="getItemNameById(comment.itemId)"
+                  />
+                  <div class="arg-body">
+                    <div class="arg-meta">
+                      <span class="arg-product-name">{{ getItemNameById(comment.itemId) }}</span>
+                      <span v-if="index === 0 && commentSortType === 'likeCount'" class="best-badge">BEST</span>
+                    </div>
+                    <p class="arg-text">{{ comment.content }}</p>
+                    <div class="arg-footer">
+                      <div class="arg-user">
+                        <img
+                          v-if="comment.creatorProfileImageUrl && !failedProfileImages[comment.creatorProfileImageUrl]"
+                          class="arg-user-avatar"
+                          :src="comment.creatorProfileImageUrl"
+                          :alt="comment.creatorNickname"
+                          @error="handleProfileImageError(comment.creatorProfileImageUrl)"
+                        />
+                        <div v-else class="arg-user-avatar">{{ getAvatarInitial(comment.creatorNickname) }}</div>
+                        <span>{{ comment.creatorNickname }} · {{ formatTimeAgo(comment.createdAt) }}</span>
+                      </div>
+                      <button class="like-btn" :class="{ liked: comment.likeCount > 10 }">
+                        <svg width="12" height="12" viewBox="0 0 24 24" :fill="comment.likeCount > 10 ? 'currentColor' : 'none'">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        {{ comment.likeCount }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <!-- Add Product Modal -->
@@ -79,6 +176,17 @@
           :image="getBattleImage()"
           @close="closeShareModal"
       />
+
+      <!-- Comment Modal -->
+      <BattleCommentModal
+          :visible="showCommentModal"
+          :battle-id="battleId"
+          :item-id="selectedCommentItem?.id"
+          :item-name="getItemName(selectedCommentItem)"
+          :item-image="getItemImage(selectedCommentItem)"
+          @close="closeCommentModal"
+          @comment-created="handleCommentCreated"
+      />
     </template>
   </div>
 </template>
@@ -93,6 +201,7 @@ import BattleInfoCard from '@/components/battle/detail/BattleInfoCard.vue'
 import VoteSelectionBar from '@/components/battle/detail/VoteSelectionBar.vue'
 import ProductCard from '@/components/battle/detail/ProductCard.vue'
 import AddProductModal from '@/components/battle/detail/AddProductModal.vue'
+import BattleCommentModal from '@/components/battle/detail/BattleCommentModal.vue'
 
 export default {
   name: 'BattleDetail',
@@ -101,7 +210,8 @@ export default {
     BattleInfoCard,
     VoteSelectionBar,
     ProductCard,
-    AddProductModal
+    AddProductModal,
+    BattleCommentModal
   },
   setup() {
     const { open, openLoginRequired } = useConfirmDialog()
@@ -126,7 +236,12 @@ export default {
         uploadFailed: false,
         uploadedImageUrl: null
       },
-      showShareModal: false
+      showShareModal: false,
+      showCommentModal: false,
+      selectedCommentItem: null,
+      commentSortType: 'likeCount',
+      failedProfileImages: {},
+      selectedItemFilter: null
     }
   },
   computed: {
@@ -204,6 +319,48 @@ export default {
     },
     hasSelectedItems() {
       return Object.values(this.selectedRanks).some(v => v !== null)
+    },
+    // 전체 변론 관련 computed
+    hasComments() {
+      return this.sortedItems.some(item => item.commentSummary)
+    },
+    totalCommentCount() {
+      return this.sortedItems.reduce((sum, item) => {
+        return sum + (item.commentSummary?.commentCount || 0)
+      }, 0)
+    },
+    allComments() {
+      const comments = []
+      this.sortedItems.forEach(item => {
+        if (item.commentSummary) {
+          comments.push({
+            itemId: item.id,
+            content: item.commentSummary.content,
+            creatorNickname: item.commentSummary.creatorNickname,
+            creatorProfileImageUrl: item.commentSummary.creatorProfileImageUrl || null,
+            likeCount: item.commentSummary.likeCount || 0,
+            createdAt: item.commentSummary.createdAt
+          })
+        }
+      })
+      return comments
+    },
+    sortedComments() {
+      let comments = [...this.allComments]
+
+      // 아이템 필터 적용
+      if (this.selectedItemFilter) {
+        comments = comments.filter(c => c.itemId === this.selectedItemFilter)
+      }
+
+      if (this.commentSortType === 'likeCount') {
+        return comments.sort((a, b) => b.likeCount - a.likeCount)
+      }
+      return comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    },
+    filteredItemName() {
+      if (!this.selectedItemFilter) return null
+      return this.getItemNameById(this.selectedItemFilter)
     }
   },
   created() {
@@ -274,7 +431,7 @@ export default {
       this.selectedRanks = newRanks
     },
 
-    async submitVote() {
+    async submitVote(argumentText = '') {
       if (this.submitting) return
 
       // MULTIPLE/SINGLE 모두 최소 1개 이상 선택 필요
@@ -297,7 +454,10 @@ export default {
           votes.push({ itemId: this.selectedRanks[1], rank: 1 })
         }
 
-        const response = await battleService.voteBattleItem(this.battleId, { votes })
+        // 한줄 변론이 있으면 1위 상품에 코멘트 추가
+        const comment = argumentText || null
+
+        const response = await battleService.voteBattleItem(this.battleId, { votes, comment })
 
         if (response.success) {
           await this.open({ type: 'alert', title: '요거픽 완료', message: '요거픽이 완료되었습니다!' })
@@ -409,7 +569,94 @@ export default {
     },
 
     getItemName(item) {
+      if (!item) return '아이템명 없음'
       return item.battleItemProduct?.name || item.customName || '아이템명 없음'
+    },
+
+    getItemImage(item) {
+      if (!item) return 'https://placehold.co/80x80?text=No+Image'
+      return item.battleItemProduct?.thumbnailDto?.fileUrl ||
+          item.customImageUrl ||
+          'https://placehold.co/80x80?text=No+Image'
+    },
+
+    getItemImageById(itemId) {
+      const item = this.sortedItems.find(i => i.id === itemId)
+      return this.getItemImage(item)
+    },
+
+    getItemNameById(itemId) {
+      const item = this.sortedItems.find(i => i.id === itemId)
+      return this.getItemName(item)
+    },
+
+    getAvatarInitial(nickname) {
+      return (nickname || '?').charAt(0).toUpperCase()
+    },
+
+    handleProfileImageError(imageUrl) {
+      this.failedProfileImages = { ...this.failedProfileImages, [imageUrl]: true }
+    },
+
+    formatTimeAgo(dateString) {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      const now = new Date()
+      const diff = now - date
+      const minutes = Math.floor(diff / 60000)
+      const hours = Math.floor(diff / 3600000)
+      const days = Math.floor(diff / 86400000)
+
+      if (minutes < 1) return '방금'
+      if (minutes < 60) return `${minutes}분 전`
+      if (hours < 24) return `${hours}시간 전`
+      if (days < 7) return `${days}일 전`
+      return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+    },
+
+    // PICK 한마디 섹션으로 스크롤
+    scrollToComments(item) {
+      // 해당 아이템으로 필터 설정
+      this.selectedItemFilter = item?.id || null
+
+      if (this.$refs.argumentsSection) {
+        const element = this.$refs.argumentsSection
+        const headerOffset = 80
+        const elementPosition = element.getBoundingClientRect().top
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        })
+
+        // 하이라이트 효과
+        element.classList.add('highlight-section')
+        setTimeout(() => {
+          element.classList.remove('highlight-section')
+        }, 1500)
+      }
+    },
+
+    clearItemFilter() {
+      this.selectedItemFilter = null
+    },
+
+    // 코멘트 모달 열기 (필요시 사용)
+    openCommentModal(item) {
+      this.selectedCommentItem = item
+      this.showCommentModal = true
+    },
+
+    // 코멘트 모달 닫기
+    closeCommentModal() {
+      this.showCommentModal = false
+      this.selectedCommentItem = null
+    },
+
+    // 코멘트 생성/삭제 후 배틀 데이터 새로고침 (commentSummary 갱신)
+    async handleCommentCreated() {
+      await this.loadBattle()
     },
 
     // 이미지 리사이징 유틸 함수
@@ -641,27 +888,381 @@ export default {
   margin: 0 auto;
 }
 
-/* Modern Grid */
-.modern-grid {
+/* PC Grid - 3열 */
+.pc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
-  padding: 0 20px 40px;
+  padding: 0 24px 40px;
+}
+
+/* PC 디바이더 */
+.pc-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 32px 24px;
+}
+
+/* ============================= */
+/* PC 전체 변론 섹션              */
+/* ============================= */
+.pc-arguments-section {
+  padding: 0 24px 120px;
+  transition: background 0.3s ease;
+  border-radius: 20px;
+  margin: 0 8px;
+}
+
+.pc-arguments-section.highlight-section {
+  animation: highlightPulse 1.5s ease;
+}
+
+@keyframes highlightPulse {
+  0% { background: transparent; }
+  20% { background: rgba(74, 108, 247, 0.08); }
+  100% { background: transparent; }
+}
+
+.pc-arguments-section .section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.pc-arguments-section .section-heading h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111;
+  margin: 0;
+}
+
+.pc-arguments-section .section-heading .sub {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.pc-arguments-section .section-heading .filter-item-name {
+  color: #4a6cf7;
+}
+
+.clear-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.clear-filter-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.pc-tab-container {
+  background: #fff;
+  border-radius: 20px;
+  border: 1.5px solid #f0f0f0;
+  overflow: hidden;
+}
+
+.pc-tab-header {
+  display: flex;
+  border-bottom: 1.5px solid #f0f0f0;
+  padding: 0 24px;
+}
+
+.pc-tab-btn {
+  padding: 16px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #9ca3af;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.pc-tab-btn.active {
+  color: #4a6cf7;
+}
+
+.pc-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1.5px;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  background: #4a6cf7;
+  border-radius: 3px;
+}
+
+.pc-tab-btn .cnt {
+  font-size: 12px;
+  font-weight: 600;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 6px;
+}
+
+.pc-tab-btn.active .cnt {
+  background: #eff2ff;
+  color: #4a6cf7;
+}
+
+.pc-tab-content {
+  padding: 20px 24px;
+}
+
+/* PC 변론 카드: 2열 그리드 */
+.pc-arg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.pc-arg-card {
+  display: flex;
+  gap: 14px;
+  padding: 18px;
+  background: #fafbfc;
+  border-radius: 16px;
+  transition: all 0.15s;
+}
+
+.pc-arg-card:hover {
+  background: #f5f7ff;
+  transform: translateY(-1px);
+}
+
+.pc-arg-card.best {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border: 1px solid #fde68a;
+  grid-column: 1 / -1;
+}
+
+.pc-arg-card .arg-product-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.pc-arg-card .arg-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.pc-arg-card .arg-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.pc-arg-card .arg-product-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a6cf7;
+  background: #eff2ff;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.pc-arg-card .best-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f59e0b;
+  background: #fffbeb;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #fde68a;
+}
+
+.pc-arg-card .arg-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.pc-arg-card .arg-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.pc-arg-card .arg-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.pc-arg-card .arg-user-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #4a6cf7;
+  object-fit: cover;
+}
+
+.pc-arg-card .like-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  color: #9ca3af;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.pc-arg-card .like-btn:hover {
+  border-color: #f43f5e;
+  color: #f43f5e;
+  background: #fff5f5;
+}
+
+.pc-arg-card .like-btn.liked {
+  border-color: #f43f5e;
+  color: #f43f5e;
+  background: #fff5f5;
+}
+
+/* 빈 상태 */
+.empty-comments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-comments svg {
+  margin-bottom: 16px;
+}
+
+.empty-comments p {
+  font-size: 16px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 6px;
+}
+
+.empty-comments span {
+  font-size: 14px;
+  color: #9ca3af;
 }
 
 @media (max-width: 768px) {
-  .modern-grid {
+  .pc-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 12px;
     padding: 0 16px 40px;
+  }
+
+  .pc-divider {
+    margin: 24px 16px;
+  }
+
+  .pc-arguments-section {
+    padding: 0 16px 120px;
+  }
+
+  .pc-arguments-section .section-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .pc-arguments-section .section-heading h2 {
+    font-size: 18px;
+  }
+
+  .clear-filter-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .pc-tab-header {
+    padding: 0 16px;
+  }
+
+  .pc-tab-btn {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+
+  .pc-tab-content {
+    padding: 16px;
+  }
+
+  .pc-arg-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .pc-arg-card {
+    padding: 14px;
+  }
+
+  .pc-arg-card.best {
+    grid-column: auto;
+  }
+
+  .pc-arg-card .arg-product-img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pc-arg-card .arg-text {
+    font-size: 13px;
   }
 }
 
 @media (max-width: 480px) {
-  .modern-grid {
+  .pc-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     padding: 0 12px 40px;
+  }
+
+  .pc-divider {
+    margin: 20px 12px;
+  }
+
+  .pc-arguments-section {
+    padding: 0 12px 120px;
   }
 
   .soft-modern-v1 {
