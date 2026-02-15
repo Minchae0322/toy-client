@@ -7,7 +7,7 @@
   color: rgb(255, 255, 255);
   background-color: #242424;
 
-  font-synthesis: weight;
+  font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

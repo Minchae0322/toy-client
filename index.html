@@ -7,19 +7,36 @@
 
   <link rel="icon" type="image/png" href="/images/yogodde_01.png" />
 
-  <!-- 폰트 preload: 모바일에서 볼드체 깨짐 방지 -->
+  <!-- 폰트 preload: iOS에서 볼드체 깨짐 방지 -->
   <link rel="preload" href="/fonts/SUIT-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/SUIT-Medium.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/SUIT-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/SUIT-Bold.woff2" as="font" type="font/woff2" crossorigin>
 
-  <!-- 폰트 정의: JS 의존 없이 HTML에서 직접 로드 (iOS WebKit 호환) -->
+  <!-- 폰트 정의: 각 weight별 실제 폰트 파일 사용 (iOS Safari 호환) -->
   <style>
-    /* SUIT 폰트 패밀리 - font-weight 범위로 매핑 */
-    /* 100-500: Regular 사용, 600-900: Bold 사용 */
+    /* SUIT 폰트 - 각 weight별 실제 폰트 파일 매핑 */
     @font-face {
       font-family: 'SUIT';
       src: url('/fonts/SUIT-Regular.woff2') format('woff2'),
            url('/fonts/SUIT-Regular.woff') format('woff');
-      font-weight: 100 500;
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'SUIT';
+      src: url('/fonts/SUIT-Medium.woff2') format('woff2'),
+           url('/fonts/SUIT-Medium.woff') format('woff');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'SUIT';
+      src: url('/fonts/SUIT-SemiBold.woff2') format('woff2'),
+           url('/fonts/SUIT-SemiBold.woff') format('woff');
+      font-weight: 600;
       font-style: normal;
       font-display: swap;
     }
@@ -27,7 +44,7 @@
       font-family: 'SUIT';
       src: url('/fonts/SUIT-Bold.woff2') format('woff2'),
            url('/fonts/SUIT-Bold.woff') format('woff');
-      font-weight: 600 900;
+      font-weight: 700;
       font-style: normal;
       font-display: swap;
     }
