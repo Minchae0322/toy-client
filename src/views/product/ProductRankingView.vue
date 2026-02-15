@@ -387,7 +387,7 @@ onMounted(async () => {
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   padding: 0 1rem;
 }
 

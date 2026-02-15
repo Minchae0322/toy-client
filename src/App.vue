@@ -680,10 +680,10 @@ onUnmounted(() => {
 /* ===================== 모바일 메뉴 ===================== */
 .mobile-menu {
   position: fixed;
-  top: 57px;
+  top: 66px;
   right: 0;
   width: 280px;
-  max-height: calc(100vh - 57px);
+  max-height: calc(100vh - 66px);
   background: #ffffff;
   border-radius: 0 0 0 16px;
   box-shadow: -4px 4px 24px rgba(0, 0, 0, 0.1);
@@ -695,7 +695,7 @@ onUnmounted(() => {
 
 .mobile-overlay {
   position: fixed;
-  top: 57px;
+  top: 66px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -900,7 +900,7 @@ onUnmounted(() => {
 
 /* ===================== 메인 컨텐츠 ===================== */
 .main {
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 66px);
   background: #ffffff;
 }
 
