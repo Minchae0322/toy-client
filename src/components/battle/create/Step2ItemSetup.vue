@@ -279,8 +279,8 @@ const handleImageError = (event) => {
 .item-badge {
   margin-top: 4px;
   padding: 2px 6px;
-  background: #FEF3C7;
-  color: #92400E;
+  background: #fef3c7;
+  color: #b45309;
   font-size: 9px;
   font-weight: 600;
   border-radius: 4px;

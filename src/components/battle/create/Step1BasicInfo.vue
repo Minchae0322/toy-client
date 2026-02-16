@@ -1,75 +1,277 @@
 <template>
-  <div class="form-section">
-    <div class="form-group">
-      <label class="form-label">
-        배틀 제목 <span class="required">*</span>
-      </label>
-      <input
-          :value="battleForm.title"
-          @input="$emit('update:battleForm', { ...battleForm, title: $event.target.value })"
-          type="text"
-          class="form-input"
-          placeholder="예: 2025년 2월 최고의 스니커즈는?"
-      >
-      <div class="form-hint">배틀을 대표하는 명확하고 흥미로운 제목을 작성해주세요</div>
+  <div class="step-container">
+    <!-- 상단 안내 -->
+    <div class="step-intro">
+      <div class="intro-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </div>
+      <div class="intro-content">
+        <h2 class="intro-title">배틀 기본 정보</h2>
+        <p class="intro-desc">배틀의 핵심 정보를 입력해주세요. 작성한 내용은 언제든 수정할 수 있습니다.</p>
+      </div>
     </div>
 
-
-    <!-- ⭐ 아이템 추가 권한 타입 -->
-    <div class="form-group">
-      <label class="form-label">
-        아이템 추가 권한 <span class="required">*</span>
-      </label>
-      <div class="permission-type-selector">
-        <div
-            v-for="type in itemAddPermissionTypes"
-            :key="type.value"
-            class="type-option"
-            :class="{ selected: battleForm.itemAddPermissionType === type.value }"
-            @click="$emit('update:battleForm', { ...battleForm, itemAddPermissionType: type.value })"
+    <!-- 배틀 제목 -->
+    <div class="form-card">
+      <div class="card-header">
+        <div class="card-number">1</div>
+        <div class="card-title-group">
+          <label class="card-title">배틀 제목</label>
+          <span class="card-subtitle">사람들의 관심을 끌 수 있는 제목을 작성해보세요</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <input
+            :value="battleForm.title"
+            @input="$emit('update:battleForm', { ...battleForm, title: $event.target.value })"
+            type="text"
+            class="form-input title-input"
+            :class="{ filled: battleForm.title.trim().length > 0 }"
+            placeholder="예: 2025년 최고의 무선 이어폰은?"
         >
-          <div class="type-icon" :class="type.iconType">
-            <!-- Lock Icon -->
-            <svg v-if="type.iconType === 'lock'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-            <!-- Globe Icon -->
-            <svg v-else-if="type.iconType === 'globe'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="2" y1="12" x2="22" y2="12"></line>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-            </svg>
-            <!-- Check Circle Icon -->
-            <svg v-else-if="type.iconType === 'check-circle'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-          </div>
-          <div class="type-title">{{ type.title }}</div>
-          <div class="type-desc">{{ type.desc }}</div>
+        <div class="input-footer">
+          <span class="char-count" :class="{ warning: battleForm.title.length > 40 }">
+            {{ battleForm.title.length }}/50
+          </span>
         </div>
       </div>
     </div>
 
-    <!-- ⭐ 카테고리 선택 -->
-    <div class="form-group">
-      <label class="form-label">
-        카테고리 <span class="required">*</span>
-      </label>
-
-      <button class="category-select-btn" @click="openCategoryModal" type="button">
-        <div v-if="selectedCategoryInfo" class="selected-category">
-          <span class="category-text">{{ selectedCategoryInfo.label }}</span>
+    <!-- 카테고리 선택 -->
+    <div class="form-card">
+      <div class="card-header">
+        <div class="card-number">2</div>
+        <div class="card-title-group">
+          <label class="card-title">카테고리</label>
+          <span class="card-subtitle">배틀 주제에 맞는 카테고리를 선택해주세요</span>
         </div>
-        <span v-else class="placeholder">카테고리를 선택하세요</span>
-        <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
+      </div>
+      <div class="card-body">
+        <button class="category-select-btn" :class="{ selected: selectedCategoryInfo }" @click="openCategoryModal" type="button">
+          <div class="category-btn-content">
+            <div class="category-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+            <span v-if="selectedCategoryInfo" class="category-text">{{ selectedCategoryInfo.label }}</span>
+            <span v-else class="category-placeholder">카테고리 선택하기</span>
+          </div>
+          <svg class="chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
 
-      <div v-if="!battleForm.subCategoryId" class="form-hint">
-        배틀에 적합한 카테고리를 선택해주세요
+    <!-- 아이템 추가 권한 -->
+    <div class="form-card">
+      <div class="card-header">
+        <div class="card-number">3</div>
+        <div class="card-title-group">
+          <label class="card-title">아이템 추가 권한</label>
+          <span class="card-subtitle">다른 사람이 배틀에 아이템을 추가할 수 있게 할까요?</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="permission-options">
+          <button
+              v-for="type in itemAddPermissionTypes"
+              :key="type.value"
+              type="button"
+              class="permission-option"
+              :class="{ selected: battleForm.itemAddPermissionType === type.value }"
+              @click="$emit('update:battleForm', { ...battleForm, itemAddPermissionType: type.value })"
+          >
+            <div class="option-radio">
+              <div class="radio-dot"></div>
+            </div>
+            <div class="option-icon" :class="type.iconType">
+              <svg v-if="type.iconType === 'lock'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <svg v-else-if="type.iconType === 'globe'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              <svg v-else-if="type.iconType === 'check-circle'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div class="option-content">
+              <span class="option-title">{{ type.title }}</span>
+              <span class="option-desc">{{ type.desc }}</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 배틀 기간 -->
+    <div class="form-card">
+      <div class="card-header">
+        <div class="card-number">4</div>
+        <div class="card-title-group">
+          <label class="card-title">배틀 기간</label>
+          <span class="card-subtitle">배틀이 진행될 기간을 설정해주세요</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="date-range-picker">
+          <div class="date-field">
+            <label class="date-field-label">시작일</label>
+            <div class="date-input-wrapper">
+              <svg class="date-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <input
+                  :value="battleForm.startDate"
+                  @input="$emit('update:battleForm', { ...battleForm, startDate: $event.target.value })"
+                  type="date"
+                  class="date-input"
+              >
+            </div>
+          </div>
+          <div class="date-separator">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </div>
+          <div class="date-field">
+            <label class="date-field-label">종료일</label>
+            <div class="date-input-wrapper">
+              <svg class="date-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <input
+                  :value="battleForm.endDate"
+                  @input="$emit('update:battleForm', { ...battleForm, endDate: $event.target.value })"
+                  type="date"
+                  class="date-input"
+              >
+            </div>
+          </div>
+        </div>
+        <div v-if="dateDuration" class="duration-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>{{ dateDuration }}일간 진행</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 투표 시작일 -->
+    <div class="form-card">
+      <div class="card-header">
+        <div class="card-number">5</div>
+        <div class="card-title-group">
+          <label class="card-title">투표 시작일</label>
+          <span class="card-subtitle">언제부터 투표를 받을 수 있게 할까요?</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="date-input-wrapper single">
+          <svg class="date-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <input
+              :value="battleForm.participationStartDate"
+              @input="$emit('update:battleForm', { ...battleForm, participationStartDate: $event.target.value })"
+              type="date"
+              class="date-input"
+          >
+        </div>
+        <p class="field-hint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          투표 시작 전까지는 아이템만 등록할 수 있습니다
+        </p>
+      </div>
+    </div>
+
+    <!-- 대표 이미지 (선택) -->
+    <div class="form-card optional">
+      <div class="card-header">
+        <div class="card-number optional">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </div>
+        <div class="card-title-group">
+          <label class="card-title">
+            대표 이미지
+            <span class="optional-badge">선택</span>
+          </label>
+          <span class="card-subtitle">배틀 목록에서 보여질 이미지입니다</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="image-upload-zone">
+          <div
+              v-if="!previewImage"
+              class="upload-dropzone"
+              @click="$refs.thumbnailInput.click()"
+              @dragover.prevent
+              @drop.prevent="handleDrop"
+          >
+            <div class="dropzone-content">
+              <div class="dropzone-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <span class="dropzone-text">클릭하거나 이미지를 여기에 드래그하세요</span>
+              <span class="dropzone-hint">JPG, PNG, GIF / 최대 5MB</span>
+            </div>
+          </div>
+          <div v-else class="image-preview-box">
+            <img :src="previewImage" alt="대표 이미지">
+            <div v-if="isUploading" class="upload-progress">
+              <svg class="spinner" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+              <span>업로드 중...</span>
+            </div>
+            <button class="btn-remove-image" @click="removeImage" :disabled="isUploading" type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <input
+            ref="thumbnailInput"
+            type="file"
+            accept="image/*"
+            style="display: none;"
+            @change="handleImageUpload"
+        >
       </div>
     </div>
 
@@ -81,91 +283,6 @@
         @select="handleCategorySelect"
         @close="closeCategoryModal"
     />
-
-    <!-- ⭐ 배틀 기간 -->
-    <div class="form-group">
-      <label class="form-label">
-        배틀 기간 <span class="required">*</span>
-      </label>
-      <div class="date-selector">
-        <div class="date-input-group">
-          <span class="date-label">시작일</span>
-          <input
-              :value="battleForm.startDate"
-              @input="$emit('update:battleForm', { ...battleForm, startDate: $event.target.value })"
-              type="date"
-              class="form-input"
-          >
-        </div>
-        <div class="date-input-group">
-          <span class="date-label">종료일</span>
-          <input
-              :value="battleForm.endDate"
-              @input="$emit('update:battleForm', { ...battleForm, endDate: $event.target.value })"
-              type="date"
-              class="form-input"
-          >
-        </div>
-      </div>
-      <div class="form-hint">최소 7일, 최대 31일까지 설정 가능합니다</div>
-    </div>
-
-    <!-- ⭐ 참여 시작일 -->
-    <div class="form-group">
-      <label class="form-label">
-        참여 시작일 <span class="required">*</span>
-      </label>
-      <input
-          :value="battleForm.participationStartDate"
-          @input="$emit('update:battleForm', { ...battleForm, participationStartDate: $event.target.value })"
-          type="date"
-          class="form-input"
-      >
-      <div class="form-hint">투표를 시작할 수 있는 날짜를 설정하세요</div>
-    </div>
-
-    <!-- ⭐ 대표 이미지 업로드 (선택) -->
-    <div class="form-group">
-      <label class="form-label">
-        대표 이미지
-      </label>
-      <div class="image-upload-area">
-        <div
-            v-if="!previewImage"
-            class="upload-placeholder"
-            @click="$refs.thumbnailInput.click()"
-        >
-          <div class="upload-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <circle cx="8.5" cy="8.5" r="1.5"></circle>
-              <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
-          </div>
-          <div class="upload-text">클릭하여 이미지 업로드</div>
-          <div class="upload-hint">JPG, PNG, GIF (최대 5MB)</div>
-        </div>
-        <div v-else class="image-preview">
-          <img :src="previewImage" alt="대표 이미지">
-          <!-- 업로드 중 오버레이 -->
-          <div v-if="isUploading" class="upload-overlay">
-            <svg class="upload-spinner" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
-              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <button class="image-remove" @click="removeImage" :disabled="isUploading">×</button>
-        </div>
-      </div>
-      <input
-          ref="thumbnailInput"
-          type="file"
-          accept="image/*"
-          style="display: none;"
-          @change="handleImageUpload"
-      >
-      <div class="form-hint">이미지를 등록하지 않으면 기본 이미지가 사용됩니다</div>
-    </div>
   </div>
 </template>
 
@@ -195,6 +312,15 @@ const isUploading = ref(false);
 const thumbnailInput = ref(null);
 const showCategoryModal = ref(false);
 const selectedCategoryInfo = ref(null);
+
+// 배틀 기간 계산
+const dateDuration = computed(() => {
+  if (!props.battleForm.startDate || !props.battleForm.endDate) return null;
+  const start = new Date(props.battleForm.startDate);
+  const end = new Date(props.battleForm.endDate);
+  const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  return diff > 0 ? diff : null;
+});
 
 // 카테고리 모달
 const openCategoryModal = () => {
@@ -238,21 +364,30 @@ const handleCategorySelect = ({ categoryId, category, parent }) => {
 
 // 미리보기: 서버 URL 우선, 없으면 로컬 preview
 const previewImage = computed(() => {
-  // 서버에서 받은 URL이 있으면 사용
   if (props.battleForm.thumbnailPreviewUrl) {
     return props.battleForm.thumbnailPreviewUrl;
   }
-  // 로컬 파일만 있는 경우 (업로드 중)
   if (props.battleForm.thumbnailFile) {
     return URL.createObjectURL(props.battleForm.thumbnailFile);
   }
   return null;
 });
 
+const handleDrop = (event) => {
+  const file = event.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    processImageFile(file);
+  }
+};
+
 const handleImageUpload = async (event) => {
   const file = event.target.files[0];
-  if (!file) return;
+  if (file) {
+    await processImageFile(file);
+  }
+};
 
+const processImageFile = async (file) => {
   if (file.size > 5 * 1024 * 1024) {
     await open({ type: 'alert', title: '알림', message: '파일 크기는 5MB를 초과할 수 없습니다.' });
     return;
@@ -263,7 +398,6 @@ const handleImageUpload = async (event) => {
     return;
   }
 
-  // 로컬 미리보기와 업로드 상태 먼저 설정
   isUploading.value = true;
   emit('update:battleForm', {
     ...props.battleForm,
@@ -273,7 +407,6 @@ const handleImageUpload = async (event) => {
   });
 
   try {
-    // Presigned URL로 S3 업로드
     const uploadResult = await fileService.upload(file, { fileCode: 'BATTLE' });
 
     if (uploadResult.success && uploadResult.data) {
@@ -283,7 +416,7 @@ const handleImageUpload = async (event) => {
       emit('update:battleForm', {
         ...props.battleForm,
         thumbnailFile: file,
-        thumbnailPreviewUrl: serverUrl, // 서버 URL로 미리보기
+        thumbnailPreviewUrl: serverUrl,
         thumbnailAttachmentInfo: {
           fileId: attachmentData.id,
           storedPath: attachmentData.fileUrl,
@@ -292,14 +425,12 @@ const handleImageUpload = async (event) => {
           contentType: attachmentData.contentType || file.type
         }
       });
-      console.log('✅ [BATTLE] 대표 이미지 업로드 완료');
     } else {
       throw new Error(uploadResult.error || '업로드 실패');
     }
   } catch (error) {
-    console.error('❌ [BATTLE] 대표 이미지 업로드 실패:', error);
-    await open({ type: 'alert', title: '오류', message: '이미지 업로드에 실패했습니다. 다시 시도해주세요.' });
-    // 실패 시 초기화
+    console.error('이미지 업로드 실패:', error);
+    await open({ type: 'alert', title: '오류', message: '이미지 업로드에 실패했습니다.' });
     emit('update:battleForm', {
       ...props.battleForm,
       thumbnailFile: null,
@@ -322,488 +453,506 @@ const removeImage = () => {
 </script>
 
 <style scoped>
-.form-section {
-  flex: 1;
+.step-container {
   width: 100%;
-  background: white;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: transparent;
+}
+
+/* 상단 안내 */
+.step-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #ffffff;
   border-radius: 16px;
-  padding: 32px;
-  border: 1px solid #F0F0F3;
-  box-sizing: border-box;
+  border: 1px solid #e5e7eb;
 }
 
-.form-group {
-  margin-bottom: 32px;
-}
-
-.form-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1A1A1A;
-  margin-bottom: 8px;
-}
-
-.required {
-  color: #DC2626;
-}
-
-.form-hint {
-  font-size: 12px;
-  color: #9CA3AF;
-  margin-top: 4px;
-}
-
-.form-hint.error {
-  color: #DC2626;
-  font-weight: 500;
+.intro-icon {
+  width: 48px;
+  height: 48px;
+  background: #f3f4f6;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 4px;
-}
-
-.hint-icon {
+  justify-content: center;
+  color: #6b7280;
   flex-shrink: 0;
 }
 
-.hint-icon.warning {
-  color: #F59E0B;
+.intro-content {
+  flex: 1;
 }
 
+.intro-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 6px 0;
+}
+
+.intro-desc {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* 폼 카드 */
+.form-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.form-card:hover {
+  border-color: #d1d5db;
+}
+
+.form-card.optional {
+  border-style: dashed;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 24px 0;
+}
+
+.card-number {
+  width: 28px;
+  height: 28px;
+  background: #374151;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.card-number.optional {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.card-title-group {
+  flex: 1;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.card-subtitle {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.optional-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.card-body {
+  padding: 16px 24px 24px;
+}
+
+/* 입력 필드 */
 .form-input {
   width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 14px 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
   transition: all 0.2s;
-  box-sizing: border-box;
+  background: white;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #1A1A1A;
+  border-color: #1a1a1a;
+  box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);
 }
 
-.char-counter {
-  text-align: right;
-  font-size: 12px;
-  color: #9CA3AF;
-  margin-top: 4px;
+.form-input.filled {
+  border-color: #d1fae5;
+  background: #f9fdfb;
 }
 
-.permission-type-selector {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 12px;
+.title-input {
+  font-size: 16px;
+  font-weight: 500;
 }
 
-.type-option {
-  padding: 16px;
-  border: 2px solid #E5E7EB;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.type-option:hover {
-  border-color: #9CA3AF;
-}
-
-.type-option.selected {
-  background: #FAFBFC;
-}
-
-/* 선택 상태 테두리 - 각 타입별 색상 */
-.type-option.selected:has(.type-icon.lock) {
-  border-color: #374151;
-}
-
-.type-option.selected:has(.type-icon.globe) {
-  border-color: #2563EB;
-}
-
-.type-option.selected:has(.type-icon.check-circle) {
-  border-color: #059669;
-}
-
-.type-icon {
-  width: 36px;
-  height: 36px;
-  background: #F3F4F6;
-  border-radius: 8px;
+.input-footer {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-  transition: all 0.2s;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 
-/* 아이콘별 색상 */
-.type-icon.lock {
-  color: #6B7280;
-  background: #F3F4F6;
+.char-count {
+  font-size: 12px;
+  color: #9ca3af;
 }
 
-.type-icon.globe {
-  color: #3B82F6;
-  background: #EFF6FF;
+.char-count.warning {
+  color: #f59e0b;
 }
 
-.type-icon.check-circle {
-  color: #10B981;
-  background: #ECFDF5;
-}
-
-/* 선택 상태 - 각 아이콘별 진한 색상 */
-.type-option.selected .type-icon.lock {
-  background: #374151;
-  color: #fff;
-}
-
-.type-option.selected .type-icon.globe {
-  background: #2563EB;
-  color: #fff;
-}
-
-.type-option.selected .type-icon.check-circle {
-  background: #059669;
-  color: #fff;
-}
-
-.type-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1A1A1A;
-  margin-bottom: 4px;
-}
-
-.type-desc {
-  font-size: 11px;
-  color: #6B7280;
-  line-height: 1.4;
-}
-
-/* ⭐ 카테고리 선택 버튼 */
+/* 카테고리 버튼 */
 .category-select-btn {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  background: white;
-  border: 1.5px solid #E5E7EB;
-  border-radius: 12px;
-  font-size: 14px;
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .category-select-btn:hover {
-  border-color: #9333ea;
-  background: #faf5ff;
-}
-
-.selected-category {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.category-text {
-  font-weight: 500;
-  color: #1A1A1A;
-}
-
-.placeholder {
-  color: #9CA3AF;
-}
-
-.dropdown-icon {
-  width: 20px;
-  height: 20px;
-  color: #9CA3AF;
-}
-
-/* 기존 카테고리 스타일 제거됨 */
-.category-section {
-  margin-top: 16px;
-}
-
-.category-section:first-child {
-  margin-top: 12px;
-}
-
-.section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1A1A1A;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.required-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  background: #FEE2E2;
-  color: #DC2626;
-  font-size: 10px;
-  font-weight: 600;
-  border-radius: 4px;
-}
-
-.category-grid {
-  display: grid;
-  gap: 12px;
-}
-
-.category-grid.parent {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.category-grid.sub {
-  grid-template-columns: repeat(5, 1fr);
-}
-
-.category-item {
-  padding: 12px;
-  border: 1.5px solid #E5E7EB;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
+  border-color: #1a1a1a;
   background: white;
 }
 
-.category-item:hover {
-  border-color: #9CA3AF;
-  background: #FAFBFC;
-  transform: translateY(-1px);
+.category-select-btn.selected {
+  border-color: #d1fae5;
+  background: #f9fdfb;
 }
 
-.category-item.selected {
-  color: white;
+.category-btn-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-/* 상위 카테고리 선택 - 노란/주황 계열 */
-.category-grid.parent .category-item.selected {
-  border-color: #D97706;
-  background: #D97706;
-}
-
-/* 하위 카테고리 선택 - 보라색 계열 */
-.category-grid.sub .category-item.selected {
-  border-color: #4F46E5;
-  background: #4F46E5;
-}
-
-.sub-item {
-  padding: 10px;
-}
-
-.category-emoji {
-  font-size: 24px;
-  margin-bottom: 4px;
+.category-icon {
+  width: 36px;
+  height: 36px;
+  background: #e5e7eb;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #6b7280;
 }
 
-.category-emoji .folder-icon {
-  color: #F59E0B;
+.category-select-btn.selected .category-icon {
+  background: #d1fae5;
+  color: #059669;
 }
 
-.category-emoji .file-icon {
-  color: #6366F1;
-}
-
-.category-item.selected .category-emoji .folder-icon,
-.category-item.selected .category-emoji .file-icon {
-  color: #fff;
-}
-
-.sub-item .category-emoji {
-  font-size: 20px;
-}
-
-.category-name {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.sub-count {
-  font-size: 10px;
-  color: #9CA3AF;
-  margin-top: 2px;
-}
-
-.category-item.selected .sub-count {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* 하위 카테고리 없음 경고 */
-.no-subcategory {
-  margin-top: 12px;
-  padding: 14px 16px;
-  background: #FEF2F2;
-  border: 1px solid #FCA5A5;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.info-icon {
-  font-size: 16px;
-}
-
-.info-text {
-  font-size: 13px;
-  color: #991B1B;
-  font-weight: 500;
-}
-
-/* 선택된 경로 표시 */
-.selected-path {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: #F0FDF4;
-  border: 1px solid #86EFAC;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.path-icon {
-  color: #16A34A;
+.category-text {
   font-size: 14px;
-  font-weight: 700;
-}
-
-.path-text {
-  font-size: 13px;
   font-weight: 600;
-  color: #166534;
+  color: #1a1a1a;
 }
 
-.date-selector {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-top: 12px;
+.category-placeholder {
+  font-size: 14px;
+  color: #9ca3af;
 }
 
-.date-input-group {
+.chevron-icon {
+  color: #9ca3af;
+}
+
+/* 권한 옵션 */
+.permission-options {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
 }
 
-.date-label {
+.permission-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.permission-option:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.permission-option.selected {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.option-radio {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.permission-option.selected .option-radio {
+  border-color: #374151;
+}
+
+.radio-dot {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.permission-option.selected .radio-dot {
+  background: #374151;
+}
+
+.option-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.option-icon.lock {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.option-icon.globe {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.option-icon.check-circle {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.permission-option.selected .option-icon.lock {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.permission-option.selected .option-icon.globe {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.permission-option.selected .option-icon.check-circle {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.option-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.option-desc {
   font-size: 12px;
-  color: #6B7280;
-  font-weight: 500;
+  color: #6b7280;
+}
+
+/* 날짜 선택 */
+.date-range-picker {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.date-field {
+  flex: 1;
+}
+
+.date-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.date-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.date-input-wrapper.single {
+  max-width: 240px;
+}
+
+.date-icon {
+  position: absolute;
+  left: 14px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.date-input {
+  width: 100%;
+  padding: 12px 14px 12px 44px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #1a1a1a;
+}
+
+.date-separator {
+  color: #d1d5db;
+  padding-bottom: 8px;
+}
+
+.duration-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 8px 14px;
+  background: #f0fdf4;
+  color: #059669;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.field-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 /* 이미지 업로드 */
-.image-upload-area {
-  margin-top: 12px;
+.image-upload-zone {
+  width: 100%;
 }
 
-.upload-placeholder {
-  border: 2px dashed #E5E7EB;
+.upload-dropzone {
+  border: 2px dashed #e5e7eb;
   border-radius: 12px;
-  padding: 48px 24px;
+  padding: 40px 24px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.upload-placeholder:hover {
-  border-color: #9CA3AF;
-  background: #FAFBFC;
+.upload-dropzone:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
 }
 
-.upload-icon {
-  margin-bottom: 12px;
-  color: #6366F1;
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
-.upload-icon svg {
-  width: 48px;
-  height: 48px;
-}
-
-.upload-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1A1A1A;
+.dropzone-icon {
+  color: #9ca3af;
   margin-bottom: 4px;
 }
 
-.upload-hint {
-  font-size: 12px;
-  color: #9CA3AF;
+.dropzone-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
 }
 
-.image-preview {
+.dropzone-hint {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.image-preview-box {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  max-width: 400px;
-  margin: 0 auto;
-  background: #f8f9fa;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
 }
 
-.image-preview img {
+.image-preview-box img {
   width: 100%;
-  max-height: 300px;
+  max-height: 280px;
   object-fit: contain;
   display: block;
+  margin: 0 auto;
 }
 
-.image-remove {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.image-remove:hover {
-  background: rgba(0, 0, 0, 0.9);
-  transform: scale(1.1);
-}
-
-/* 업로드 중 오버레이 */
-.upload-overlay {
+.upload-progress {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  gap: 12px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.upload-spinner {
-  width: 48px;
-  height: 48px;
-  color: white;
+.spinner {
+  width: 32px;
+  height: 32px;
   animation: spin 1s linear infinite;
 }
 
@@ -811,133 +960,140 @@ const removeImage = () => {
   to { transform: rotate(360deg); }
 }
 
-@media (max-width: 768px) {
-  .form-section {
-    padding: 24px 20px;
-    border-radius: 12px;
+.btn-remove-image {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-remove-image:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.btn-remove-image:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .step-container {
+    gap: 16px;
   }
 
-  .form-group {
-    margin-bottom: 24px;
+  .step-intro {
+    padding: 16px 20px;
+    gap: 14px;
+  }
+
+  .intro-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .intro-title {
+    font-size: 16px;
+  }
+
+  .intro-desc {
+    font-size: 13px;
+  }
+
+  .card-header {
+    padding: 16px 20px 0;
+    gap: 12px;
+  }
+
+  .card-number {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+
+  .card-title {
+    font-size: 14px;
+  }
+
+  .card-subtitle {
+    font-size: 12px;
+  }
+
+  .card-body {
+    padding: 14px 20px 20px;
   }
 
   .form-input {
-    padding: 14px 16px;
+    padding: 12px 14px;
     font-size: 16px; /* iOS 줌 방지 */
   }
 
-  .permission-type-selector {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .type-option {
-    padding: 14px;
-    display: flex;
-    align-items: center;
+  .date-range-picker {
+    flex-direction: column;
     gap: 12px;
-    flex-direction: row;
+    align-items: stretch;
   }
 
-  .type-icon {
-    margin-bottom: 0;
-    flex-shrink: 0;
+  .date-field {
+    width: 100%;
   }
 
-  .type-option .type-title,
-  .type-option .type-desc {
-    text-align: left;
-  }
-
-  .type-desc {
+  .date-separator {
     display: none;
   }
 
-  .category-grid.parent {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+  .date-input-wrapper {
+    width: 100%;
   }
 
-  .category-grid.sub {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+  .date-input-wrapper.single {
+    max-width: 100%;
   }
 
-  .category-item {
-    padding: 10px 8px;
+  .date-input {
+    width: 100%;
   }
 
-  .category-emoji {
-    font-size: 20px;
+  .duration-badge {
+    margin-top: 12px;
   }
 
-  .sub-item .category-emoji {
-    font-size: 18px;
-  }
-
-  .category-name {
-    font-size: 11px;
-  }
-
-  .date-selector {
-    grid-template-columns: 1fr;
+  .permission-option {
+    padding: 14px;
     gap: 12px;
   }
 
-  .upload-placeholder {
-    padding: 32px 16px;
+  .option-icon {
+    width: 32px;
+    height: 32px;
   }
 
-  .upload-icon svg {
-    width: 40px;
-    height: 40px;
+  .option-desc {
+    display: none;
   }
 
-  .upload-icon {
-    margin-bottom: 8px;
+  .upload-dropzone {
+    padding: 32px 20px;
   }
 
-  .upload-text {
+  .dropzone-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .dropzone-text {
     font-size: 13px;
-  }
-}
-
-@media (max-width: 480px) {
-  .form-section {
-    padding: 20px 16px;
-  }
-
-  .category-grid.parent {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .category-grid.sub {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .category-item {
-    padding: 10px 6px;
-  }
-
-  .category-emoji {
-    font-size: 18px;
-    margin-bottom: 2px;
-  }
-
-  .category-name {
-    font-size: 10px;
-  }
-
-  .sub-count {
-    font-size: 9px;
-  }
-
-  .selected-path {
-    padding: 8px 12px;
-  }
-
-  .path-text {
-    font-size: 12px;
   }
 }
 </style>

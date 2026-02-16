@@ -141,8 +141,9 @@ const previewImageUrl = computed(() => {
 .preview-section {
   width: 400px;
   position: sticky;
-  top: 140px;
+  top: 100px;
   height: fit-content;
+  flex-shrink: 0;
 }
 
 .preview-label {
@@ -155,9 +156,9 @@ const previewImageUrl = computed(() => {
 .preview-card {
   background: white;
   border-radius: 16px;
-  border: 1px solid #F0F0F3;
+  border: 1px solid #e5e7eb;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .preview-visual {
@@ -171,10 +172,10 @@ const previewImageUrl = computed(() => {
 
 /* ⭐ 업로드된 이미지 스타일 */
 .preview-image {
-  background-size: contain;
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #f8f9fa;
+  background-color: #f3f4f6;
 }
 
 .preview-visual-placeholder {
@@ -258,124 +259,15 @@ const previewImageUrl = computed(() => {
   color: #9CA3AF;
 }
 
-/* 모바일 토글 버튼 - 데스크톱에서는 숨김 */
+/* 모바일 토글 버튼 - 사용 안함 */
 .preview-toggle {
   display: none;
 }
 
-/* ===== 모바일 반응형 ===== */
+/* ===== 모바일 반응형 - 미리보기 숨김 ===== */
 @media (max-width: 1024px) {
   .preview-section {
-    width: 100%;
-    position: fixed;
-    bottom: 80px;
-    right: 16px;
-    left: 16px;
-    top: auto;
-    z-index: 50;
-    max-width: calc(100% - 32px);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-  }
-
-  .preview-section.collapsed {
-    transform: translateY(calc(100% + 100px));
-    pointer-events: none;
-  }
-
-  .preview-section.collapsed .preview-toggle {
-    pointer-events: auto;
-    transform: translateY(calc(-100% - 100px));
-  }
-
-  .preview-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    position: absolute;
-    top: -48px;
-    right: 0;
-    padding: 10px 16px;
-    background: #1A1A1A;
-    color: white;
-    border: none;
-    border-radius: 24px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 51;
-  }
-
-  .preview-toggle:active {
-    transform: scale(0.95);
-  }
-
-  .toggle-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .preview-card {
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .preview-visual {
-    height: 140px;
-  }
-
-  .preview-content {
-    padding: 16px;
-  }
-
-  .preview-title {
-    font-size: 16px;
-    min-height: auto;
-    margin-bottom: 12px;
-  }
-
-  .preview-stats {
-    padding: 12px 0;
-    gap: 12px;
-  }
-
-  .preview-stat-value {
-    font-size: 18px;
-  }
-
-  .preview-footer {
-    padding-top: 12px;
-  }
-}
-
-@media (max-width: 640px) {
-  .preview-section {
-    right: 12px;
-    left: 12px;
-    bottom: 72px;
-    max-width: calc(100% - 24px);
-  }
-
-  .preview-toggle {
-    padding: 8px 14px;
-    font-size: 12px;
-    top: -44px;
-  }
-
-  .preview-visual {
-    height: 120px;
-  }
-
-  .preview-content {
-    padding: 14px;
-  }
-
-  .preview-title {
-    font-size: 15px;
-  }
-
-  .preview-stat-value {
-    font-size: 16px;
+    display: none;
   }
 }
 </style>

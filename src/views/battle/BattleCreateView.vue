@@ -5,10 +5,12 @@
       <BattleCreateHeader
           :steps="steps"
           :current-step="currentStep"
+          :max-step-reached="maxStepReached"
           :last-saved-at="lastSavedAt"
           :is-saving="isSaving"
           @back="handleHeaderBack"
           @save-draft="saveDraft"
+          @go-to-step="handleGoToStep"
       />
 
       <!-- 컨텐츠 영역 -->
@@ -49,6 +51,7 @@
               :preview-vote-type-name="previewVoteTypeName"
               :date-diff="dateDiff"
               @update:battle-form="battleForm = $event"
+              @go-to-step="handleGoToStep"
           />
           <!-- 우측 미리보기 -->
           <BattleCreatePreview
@@ -108,6 +111,7 @@ const {
 // ==================== 스텝 설정 ====================
 const steps = ['기본 정보', '아이템 설정', '상세 설정', '최종 확인'];
 const currentStep = ref(1);
+const maxStepReached = ref(1); // 최고 도달 스텝 추적
 
 // ==================== 아이템 추가 권한 타입 (백엔드 Enum) ====================
 const itemAddPermissionTypes = [
@@ -237,6 +241,10 @@ const canProceed = computed(() => {
 const handleNext = async () => {
   if (currentStep.value < 4) {
     currentStep.value++;
+    // 최고 도달 스텝 업데이트
+    if (currentStep.value > maxStepReached.value) {
+      maxStepReached.value = currentStep.value;
+    }
   } else {
     await createBattle();
   }
@@ -286,6 +294,13 @@ const handlePrevious = async () => {
 
 const handleBack = () => {
   router.push({ name: 'BattleList' });
+};
+
+// 스텝 직접 이동
+const handleGoToStep = (stepNumber) => {
+  if (stepNumber >= 1 && stepNumber <= steps.length) {
+    currentStep.value = stepNumber;
+  }
 };
 
 // 헤더 뒤로가기 버튼 (임시저장 확인)
@@ -585,7 +600,7 @@ onUnmounted(() => {
 .app-container {
   min-height: 100vh;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
-  background: #FAFBFC;
+  background: #ffffff;
   color: #1A1A1A;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -593,19 +608,21 @@ onUnmounted(() => {
 
 .main-content {
   width: 100%;
-  background: #FAFBFC;
+  background: #ffffff;
 }
 
 .content-area {
   max-width: 1400px;
   margin: 0 auto;
   padding: 32px 60px 80px;
+  background: #ffffff;
 }
 
 .create-container {
   display: flex;
-  gap: 32px;
+  gap: 40px;
   align-items: flex-start;
+  justify-content: center;
 }
 
 @media (max-width: 1024px) {

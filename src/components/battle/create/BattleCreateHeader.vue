@@ -20,12 +20,13 @@
                 class="step-item"
                 :class="{
                   active: currentStep === index + 1,
-                  completed: currentStep > index + 1
+                  completed: maxStepReached > index + 1 && currentStep !== index + 1
                 }"
+                @click="handleStepClick(index + 1)"
             >
               <div class="step-circle">
                 <svg
-                    v-if="currentStep > index + 1"
+                    v-if="maxStepReached > index + 1 && currentStep !== index + 1"
                     width="12"
                     height="12"
                     viewBox="0 0 24 24"
@@ -44,7 +45,7 @@
             <div
                 v-if="index < steps.length - 1"
                 class="step-line"
-                :class="{ completed: currentStep > index + 1 }"
+                :class="{ completed: maxStepReached > index + 1 }"
             ></div>
           </template>
         </div>
@@ -101,7 +102,7 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   steps: {
     type: Array,
     required: true
@@ -109,6 +110,10 @@ defineProps({
   currentStep: {
     type: Number,
     required: true
+  },
+  maxStepReached: {
+    type: Number,
+    default: 1
   },
   lastSavedAt: {
     type: Date,
@@ -120,7 +125,14 @@ defineProps({
   }
 });
 
-defineEmits(['back', 'save-draft']);
+const emit = defineEmits(['back', 'save-draft', 'go-to-step']);
+
+/**
+ * 스텝 클릭 핸들러 - 모든 스텝으로 이동 가능
+ */
+const handleStepClick = (stepNumber) => {
+  emit('go-to-step', stepNumber);
+};
 
 /**
  * 저장 시간 포맷
@@ -243,6 +255,16 @@ const formatSavedTime = (date) => {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.step-item:hover .step-circle {
+  transform: scale(1.1);
+}
+
+.step-item:hover .step-label {
+  color: #1A1A1A;
 }
 
 .step-circle {
