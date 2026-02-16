@@ -91,25 +91,25 @@
                 :class="['pc-tab-btn', { active: commentSortType === 'likeCount' }]"
                 @click="commentSortType = 'likeCount'"
               >
-                공감순 <span class="cnt">{{ sortedComments.length }}</span>
+                공감순 <span class="cnt">{{ filteredCommentsCount }}</span>
               </button>
               <button
                 :class="['pc-tab-btn', { active: commentSortType === 'createdAt' }]"
                 @click="commentSortType = 'createdAt'"
               >
-                최신순 <span class="cnt">{{ sortedComments.length }}</span>
-              </button>
-              <button
-                :class="['pc-tab-btn', { active: commentSortType === 'mine' }]"
-                @click="commentSortType = 'mine'"
-              >
-                내 한마디
+                최신순 <span class="cnt">{{ filteredCommentsCount }}</span>
               </button>
             </div>
 
             <div class="pc-tab-content">
+              <!-- 로딩 -->
+              <div v-if="commentsLoading" class="loading-comments">
+                <div class="spinner-small"></div>
+                <span>코멘트 불러오는 중...</span>
+              </div>
+
               <!-- 빈 상태 -->
-              <div v-if="sortedComments.length === 0" class="empty-comments">
+              <div v-else-if="sortedComments.length === 0" class="empty-comments">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -120,7 +120,7 @@
               <div v-else class="pc-arg-grid">
                 <div
                   v-for="(comment, index) in sortedComments"
-                  :key="comment.itemId + '-' + index"
+                  :key="comment.commentId"
                   :class="['pc-arg-card', { best: index === 0 && commentSortType === 'likeCount' }]"
                   @click="scrollToItem(comment.itemId)"
                 >
@@ -147,8 +147,12 @@
                         <div v-else class="arg-user-avatar">{{ getAvatarInitial(comment.creatorNickname) }}</div>
                         <span>{{ comment.creatorNickname }} · {{ formatTimeAgo(comment.createdAt) }}</span>
                       </div>
-                      <button class="like-btn" :class="{ liked: comment.likeCount > 10 }">
-                        <svg width="12" height="12" viewBox="0 0 24 24" :fill="comment.likeCount > 10 ? 'currentColor' : 'none'">
+                      <button
+                        class="like-btn"
+                        :class="{ liked: comment.hasLiked }"
+                        @click.stop="handleCommentLike(comment)"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" :fill="comment.hasLiked ? 'currentColor' : 'none'">
                           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="2"/>
                         </svg>
                         {{ comment.likeCount }}
@@ -254,7 +258,10 @@ export default {
       commentSortType: 'likeCount',
       failedProfileImages: {},
       selectedItemFilter: null,
-      productCardRefs: {}
+      productCardRefs: {},
+      // 전체 코멘트 (API 로드)
+      allLoadedComments: [],
+      commentsLoading: false
     }
   },
   computed: {
@@ -335,37 +342,27 @@ export default {
     },
     // 전체 변론 관련 computed
     hasComments() {
-      return this.sortedItems.some(item => item.commentSummary)
+      return this.allLoadedComments.length > 0 || this.sortedItems.some(item => item.commentSummary?.commentCount > 0)
     },
     totalCommentCount() {
-      return this.sortedItems.reduce((sum, item) => {
-        return sum + (item.commentSummary?.commentCount || 0)
-      }, 0)
+      return this.allLoadedComments.length
     },
-    allComments() {
-      const comments = []
-      this.sortedItems.forEach(item => {
-        if (item.commentSummary) {
-          comments.push({
-            itemId: item.id,
-            content: item.commentSummary.content,
-            creatorNickname: item.commentSummary.creatorNickname,
-            creatorProfileImageUrl: item.commentSummary.creatorProfileImageUrl || null,
-            likeCount: item.commentSummary.likeCount || 0,
-            createdAt: item.commentSummary.createdAt
-          })
-        }
-      })
-      return comments
+    // 필터된 전체 코멘트 수 (아이템 필터만 적용)
+    filteredCommentsCount() {
+      if (this.selectedItemFilter) {
+        return this.allLoadedComments.filter(c => c.itemId === this.selectedItemFilter).length
+      }
+      return this.allLoadedComments.length
     },
     sortedComments() {
-      let comments = [...this.allComments]
+      let comments = [...this.allLoadedComments]
 
       // 아이템 필터 적용
       if (this.selectedItemFilter) {
         comments = comments.filter(c => c.itemId === this.selectedItemFilter)
       }
 
+      // 정렬
       if (this.commentSortType === 'likeCount') {
         return comments.sort((a, b) => b.likeCount - a.likeCount)
       }
@@ -396,6 +393,8 @@ export default {
         if (response.success && response.data) {
           this.battle = response.data
           this.checkUserVote()
+          // 코멘트 로드
+          await this.loadAllComments()
         } else {
           throw new Error(response.message || '배틀 정보를 불러올 수 없습니다.')
         }
@@ -404,6 +403,57 @@ export default {
         this.error = err.message || '배틀 정보를 불러오는데 실패했습니다.'
       } finally {
         this.loading = false
+      }
+    },
+
+    // 전체 아이템의 코멘트 로드
+    async loadAllComments() {
+      if (!this.sortedItems.length) return
+
+      this.commentsLoading = true
+      const allComments = []
+
+      try {
+        // 각 아이템의 코멘트를 병렬로 가져오기
+        const promises = this.sortedItems.map(async (item) => {
+          try {
+            const response = await battleService.getComments(this.battleId, item.id, {
+              sort: 'likeCount,desc',
+              page: 0,
+              size: 50 // 충분히 가져오기
+            })
+
+            if (response.success && response.data?.comments) {
+              return response.data.comments.map(comment => ({
+                itemId: item.id,
+                commentId: comment.commentId,
+                creatorId: comment.creatorId,
+                creatorNickname: comment.creatorNickname || '익명',
+                creatorProfileImageUrl: comment.creatorProfileImageUrl || comment.creatorProfileUrl || null,
+                content: comment.content || '',
+                likeCount: comment.likeCount || 0,
+                hasLiked: comment.isLiked || comment.hasLiked || false,
+                isMine: comment.isMine || false,
+                createdAt: comment.createdAt
+              }))
+            }
+            return []
+          } catch (err) {
+            console.error(`아이템 ${item.id} 코멘트 로드 실패:`, err)
+            return []
+          }
+        })
+
+        const results = await Promise.all(promises)
+        results.forEach(comments => {
+          allComments.push(...comments)
+        })
+
+        this.allLoadedComments = allComments
+      } catch (err) {
+        console.error('전체 코멘트 로드 실패:', err)
+      } finally {
+        this.commentsLoading = false
       }
     },
 
@@ -725,6 +775,48 @@ export default {
     // 코멘트 생성/삭제 후 배틀 데이터 새로고침 (commentSummary 갱신)
     async handleCommentCreated() {
       await this.loadBattle()
+    },
+
+    // 코멘트 공감 토글
+    async handleCommentLike(comment) {
+      if (!comment.commentId) {
+        console.warn('commentId가 없습니다.')
+        return
+      }
+
+      // allLoadedComments에서 코멘트 찾기
+      const targetComment = this.allLoadedComments.find(c => c.commentId === comment.commentId)
+      if (!targetComment) return
+
+      // Optimistic update
+      const prevLiked = targetComment.hasLiked
+      const prevCount = targetComment.likeCount
+
+      targetComment.hasLiked = !prevLiked
+      targetComment.likeCount += targetComment.hasLiked ? 1 : -1
+
+      try {
+        const response = await battleService.toggleCommentLike(this.battleId, comment.itemId, comment.commentId)
+
+        if (!response.success) {
+          throw new Error('공감 처리에 실패했습니다.')
+        }
+
+        // 서버 응답으로 정확한 값 업데이트
+        if (response.data) {
+          if (response.data.likeCount !== undefined) {
+            targetComment.likeCount = response.data.likeCount
+          }
+          if (response.data.isLiked !== undefined) {
+            targetComment.hasLiked = response.data.isLiked
+          }
+        }
+      } catch (err) {
+        // Rollback on error
+        targetComment.hasLiked = prevLiked
+        targetComment.likeCount = prevCount
+        console.error('공감 처리 실패:', err)
+      }
     },
 
     // 이미지 리사이징 유틸 함수
@@ -1271,6 +1363,31 @@ export default {
   border-color: #f43f5e;
   color: #f43f5e;
   background: #fff5f5;
+}
+
+/* 로딩 상태 */
+.loading-comments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 12px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.spinner-small {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #9333ea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* 빈 상태 */

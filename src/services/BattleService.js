@@ -416,10 +416,11 @@ class BattleService extends BaseApiService {
       battleItemId: comment.battleItemId,
       creatorId: comment.creatorId || comment.userId,
       creatorNickname: comment.creatorNickname || comment.nickname || '익명',
-      creatorProfileUrl: comment.creatorProfileUrl || comment.profileUrl || null,
+      creatorProfileUrl: comment.creatorProfileImageUrl || comment.creatorProfileUrl || comment.profileUrl || null,
       content: comment.content || '',
       likeCount: comment.likeCount || 0,
       hasLiked: comment.hasLiked || comment.isLiked || false,
+      isMine: comment.isMine || false,
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
       isEdited: comment.updatedAt && comment.createdAt !== comment.updatedAt
@@ -436,8 +437,10 @@ class BattleService extends BaseApiService {
       battleItemId: summary.battleItemId,
       commentId: summary.commentId,
       creatorNickname: summary.creatorNickname || '익명',
+      creatorProfileImageUrl: summary.creatorProfileImageUrl || summary.creatorProfileUrl || null,
       content: summary.content || '',
       likeCount: summary.likeCount || 0,
+      hasLiked: summary.hasLiked || summary.isLiked || false,
       commentCount: summary.commentCount || 0
     }
   }

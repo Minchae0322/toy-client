@@ -14,9 +14,12 @@
     <!-- Content -->
     <template v-else-if="feed">
       <FeedDetailHeader
+          :is-owner="isOwner"
           @back="goBack"
           @share="handleShare"
           @copy-link="handleCopyLink"
+          @edit="handleEdit"
+          @delete="handleDelete"
           @report="handleReport"
       />
 
@@ -75,6 +78,15 @@
           :image="shareImage"
           @close="closeShareModal"
       />
+
+      <!-- Edit Modal -->
+      <FeedEditModal
+          v-if="feed"
+          :visible="showEditModal"
+          :feed="feed"
+          @close="showEditModal = false"
+          @updated="handleFeedUpdated"
+      />
     </template>
   </div>
 </template>
@@ -93,6 +105,7 @@ import FeedDetailImageGallery from '@/components/feed/detail/FeedDetailImageGall
 import FeedDetailInfo from '@/components/feed/detail/FeedDetailInfo.vue'
 import FeedCommentSection from '@/components/feed/detail/FeedCommentSection.vue'
 import ShareModal from '@/components/common/ShareModal.vue'
+import FeedEditModal from '@/components/feed/detail/FeedEditModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -106,6 +119,7 @@ const isSaved = ref(false)
 const isFollowing = ref(false)
 const commentSectionRef = ref(null)
 const showShareModal = ref(false)
+const showEditModal = ref(false)
 
 const comments = ref([])
 const commentLoading = ref(false)
@@ -119,6 +133,10 @@ const commentPagination = ref({
 
 const imageList = computed(() => feed.value?.attachmentFiles || [])
 const getProductName = computed(() => feed.value?.product?.name || feed.value?.productNameCustom || feed.value?.productName || '상품명 없음')
+const isOwner = computed(() => {
+  if (!feed.value?.userInfo?.userId || !currentUserId.value) return false
+  return feed.value.userInfo.userId === currentUserId.value
+})
 const currentUserProfile = computed(() => {
   try {
     const token = localStorage.getItem('access_token')
@@ -318,6 +336,36 @@ const closeShareModal = () => {
 const shareImage = computed(() => imageList.value?.[0]?.fileUrl || '')
 
 const handleReport = () => console.log('Report feed')
+
+const handleEdit = () => {
+  showEditModal.value = true
+}
+
+const handleFeedUpdated = async () => {
+  await loadFeedDetail()
+}
+
+const handleDelete = async () => {
+  const confirmed = await open({
+    type: 'danger',
+    title: '피드 삭제',
+    message: '이 피드를 삭제하시겠습니까?\n삭제된 피드는 복구할 수 없습니다.'
+  })
+  if (!confirmed) return
+
+  try {
+    const response = await feedService.deleteFeed(feed.value.feedId)
+    if (response.success) {
+      await open({ type: 'alert', title: '완료', message: '피드가 삭제되었습니다.' })
+      router.push('/feed')
+    } else {
+      throw new Error(response.message || '피드 삭제에 실패했습니다.')
+    }
+  } catch (err) {
+    console.error('피드 삭제 실패:', err)
+    await open({ type: 'alert', title: '오류', message: err.message || '피드 삭제에 실패했습니다.' })
+  }
+}
 const searchByStore = () => console.log('Search by store:', feed.value?.buyPlace)
 const searchByHashtag = (tag) => router.push({ path: '/feed', query: { hashtag: tag } })
 

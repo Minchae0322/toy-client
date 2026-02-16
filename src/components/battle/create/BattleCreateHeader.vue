@@ -51,14 +51,51 @@
       </div>
 
       <!-- 우측: 액션 버튼 -->
-      <button class="save-draft-btn" @click="$emit('save-draft')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-          <polyline points="17 21 17 13 7 13 7 21"/>
-          <polyline points="7 3 7 8 15 8"/>
-        </svg>
-        <span>임시저장</span>
-      </button>
+      <div class="header-right">
+        <!-- 저장 상태 표시 -->
+        <span v-if="lastSavedAt" class="save-status">
+          {{ formatSavedTime(lastSavedAt) }}
+        </span>
+
+        <button
+            class="save-draft-btn"
+            :class="{ saving: isSaving }"
+            :disabled="isSaving"
+            @click="$emit('save-draft')"
+        >
+          <!-- 저장 중 스피너 -->
+          <svg
+              v-if="isSaving"
+              class="spinner"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+          </svg>
+          <!-- 저장 아이콘 -->
+          <svg
+              v-else
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+          >
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          <span>{{ isSaving ? '저장 중...' : '임시저장' }}</span>
+        </button>
+      </div>
     </div>
   </header>
 </template>
@@ -72,10 +109,53 @@ defineProps({
   currentStep: {
     type: Number,
     required: true
+  },
+  lastSavedAt: {
+    type: Date,
+    default: null
+  },
+  isSaving: {
+    type: Boolean,
+    default: false
   }
 });
 
 defineEmits(['back', 'save-draft']);
+
+/**
+ * 저장 시간 포맷
+ */
+const formatSavedTime = (date) => {
+  if (!date) return ''
+
+  const now = new Date()
+  const diff = now - date
+
+  // 1분 이내
+  if (diff < 60000) {
+    return '방금 전 저장됨'
+  }
+
+  // 1시간 이내
+  if (diff < 3600000) {
+    const minutes = Math.floor(diff / 60000)
+    return `${minutes}분 전 저장됨`
+  }
+
+  // 오늘
+  if (date.toDateString() === now.toDateString()) {
+    const hours = date.getHours()
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    const period = hours >= 12 ? '오후' : '오전'
+    const hour12 = hours % 12 || 12
+    return `오늘 ${period} ${hour12}:${minutes}`
+  }
+
+  // 그 외
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  return `${month}/${day} 저장됨`
+}
 </script>
 
 <style scoped>
@@ -228,6 +308,19 @@ defineEmits(['back', 'save-draft']);
 }
 
 /* ===== 우측: 액션 버튼 ===== */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.save-status {
+  font-size: 12px;
+  color: #9CA3AF;
+  white-space: nowrap;
+}
+
 .save-draft-btn {
   display: flex;
   align-items: center;
@@ -245,17 +338,35 @@ defineEmits(['back', 'save-draft']);
   white-space: nowrap;
 }
 
-.save-draft-btn:hover {
+.save-draft-btn:hover:not(:disabled) {
   border-color: #D1D5DB;
   background: #F9FAFB;
 }
 
-.save-draft-btn:active {
+.save-draft-btn:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.save-draft-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.save-draft-btn.saving {
+  color: #6B7280;
 }
 
 .save-draft-btn svg {
   flex-shrink: 0;
+}
+
+.save-draft-btn .spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ===== 반응형 ===== */
@@ -313,6 +424,10 @@ defineEmits(['back', 'save-draft']);
   .back-btn {
     width: 36px;
     height: 36px;
+  }
+
+  .save-status {
+    display: none;
   }
 
   .save-draft-btn span {

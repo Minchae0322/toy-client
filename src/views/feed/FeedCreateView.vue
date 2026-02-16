@@ -444,14 +444,18 @@ import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useFile } from '@/services/FileService.js'
 import { useCategoryCache } from '@/composables/useCategoryCache.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { getUserId } from '@/utils/auth.js'
 import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
 import CategorySelectModal from '@/components/common/CategorySelectModal.vue'
+
+const FEED_DRAFT_KEY = 'feed_draft'
 
 const router = useRouter()
 const feedService = useFeed()
 const fileService = useFile()
 const { loadPopularCategories, loadAllCategories, allCategories: cachedAllCategories } = useCategoryCache()
+const { open } = useConfirmDialog()
 
 const selectedPhotos = ref([])
 const showCancelDialog = ref(false)
@@ -829,13 +833,158 @@ const addPopularHashtag = (tag) => {
   if (formData.value.hashtags.length < 5 && !formData.value.hashtags.includes(tag)) formData.value.hashtags.push(tag)
 }
 
+// Draft Functions
+const saveDraft = () => {
+  try {
+    const draftData = {
+      formData: {
+        ...formData.value,
+        // File 객체는 저장 불가, productId와 텍스트 데이터만
+      },
+      selectedProduct: selectedProduct.value,
+      selectedCategoryInfo: selectedCategoryInfo.value,
+      selectedParentCategory: selectedParentCategory.value ? {
+        categoryId: selectedParentCategory.value.categoryId,
+        categoryName: selectedParentCategory.value.categoryName
+      } : null,
+      productInputMode: productInputMode.value,
+      savedAt: new Date().toISOString()
+    }
+    localStorage.setItem(FEED_DRAFT_KEY, JSON.stringify(draftData))
+    return true
+  } catch (error) {
+    console.error('임시저장 실패:', error)
+    return false
+  }
+}
+
+const loadDraft = async () => {
+  try {
+    const draft = localStorage.getItem(FEED_DRAFT_KEY)
+    if (!draft) return false
+
+    const draftData = JSON.parse(draft)
+    const savedTime = formatSavedTime(new Date(draftData.savedAt))
+
+    const confirmed = await open({
+      type: 'confirm',
+      title: '임시저장 불러오기',
+      message: `임시저장된 데이터가 있습니다.\n(${savedTime})\n\n불러오시겠습니까?`
+    })
+
+    if (confirmed) {
+      // 폼 데이터 복원
+      formData.value = { ...formData.value, ...draftData.formData }
+      selectedProduct.value = draftData.selectedProduct
+      selectedCategoryInfo.value = draftData.selectedCategoryInfo
+      productInputMode.value = draftData.productInputMode || 'select'
+
+      // 부모 카테고리 복원
+      if (draftData.selectedParentCategory) {
+        const parent = cachedAllCategories.value.find(
+          c => c.categoryId === draftData.selectedParentCategory.categoryId
+        )
+        if (parent) {
+          selectedParentCategory.value = parent
+        }
+      }
+
+      return true
+    } else {
+      // 불러오지 않으면 삭제 여부
+      const shouldDelete = await open({
+        type: 'confirm',
+        title: '임시저장 삭제',
+        message: '임시저장된 데이터를 삭제하시겠습니까?'
+      })
+      if (shouldDelete) {
+        localStorage.removeItem(FEED_DRAFT_KEY)
+      }
+    }
+    return false
+  } catch (error) {
+    console.error('임시저장 로드 실패:', error)
+    return false
+  }
+}
+
+const clearDraft = () => {
+  localStorage.removeItem(FEED_DRAFT_KEY)
+}
+
+const formatSavedTime = (date) => {
+  if (!date) return ''
+  const now = new Date()
+  const diff = now - date
+
+  if (diff < 60000) return '방금 전'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}분 전`
+
+  if (date.toDateString() === now.toDateString()) {
+    const hours = date.getHours()
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    const period = hours >= 12 ? '오후' : '오전'
+    const hour12 = hours % 12 || 12
+    return `오늘 ${period} ${hour12}:${minutes}`
+  }
+
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  return `${month}/${day}`
+}
+
 // Submit
-const handleCancel = () => {
-  if (selectedPhotos.value.length > 0 || formData.value.productNameCustom || formData.value.review) {
-    showCancelDialog.value = true
+const handleCancel = async () => {
+  const hasContent = selectedPhotos.value.length > 0 ||
+      formData.value.productNameCustom ||
+      formData.value.review
+
+  console.log('handleCancel called', {
+    hasContent,
+    photos: selectedPhotos.value.length,
+    productName: formData.value.productNameCustom,
+    review: formData.value.review
+  })
+
+  if (hasContent) {
+    // 임시저장 여부 먼저 묻기
+    const shouldSave = await open({
+      type: 'confirm',
+      title: '임시저장',
+      message: '작성 중인 내용을 임시저장하시겠습니까?\n(사진은 저장되지 않습니다)',
+      confirmText: '임시저장',
+      cancelText: '저장 안 함'
+    })
+
+    if (shouldSave) {
+      saveDraft()
+      cleanupAndGoBack()
+    } else {
+      // 저장 안 함 선택 시 정말 나갈지 확인
+      const confirmLeave = await open({
+        type: 'danger',
+        title: '작성 취소',
+        message: '저장하지 않고 나가시겠습니까?\n작성 중인 내용이 삭제됩니다.',
+        confirmText: '나가기',
+        cancelText: '취소'
+      })
+
+      if (confirmLeave) {
+        cleanupAndGoBack()
+      }
+    }
   } else {
     router.back()
   }
+}
+
+const cleanupAndGoBack = () => {
+  selectedPhotos.value.forEach(p => {
+    if (p.preview && p.preview.startsWith('blob:')) {
+      URL.revokeObjectURL(p.preview)
+    }
+  })
+  router.back()
 }
 
 const confirmCancel = () => {
@@ -904,6 +1053,8 @@ const handleSubmit = async () => {
     const result = await feedService.createFeed(feedData)
 
     if (result.success) {
+      // 임시저장 삭제
+      clearDraft()
       // 로컬 preview URL만 해제 (서버 URL은 해제 불필요)
       selectedPhotos.value.forEach(p => {
         if (p.preview && p.preview.startsWith('blob:')) {
@@ -936,8 +1087,9 @@ watch(productInputMode, (newMode) => {
   }
 })
 
-onMounted(() => {
-  loadCategories()
+onMounted(async () => {
+  await loadCategories()
+  await loadDraft()
 })
 
 onBeforeUnmount(() => {

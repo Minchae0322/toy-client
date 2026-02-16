@@ -5,7 +5,9 @@
       <BattleCreateHeader
           :steps="steps"
           :current-step="currentStep"
-          @back="handleBack"
+          :last-saved-at="lastSavedAt"
+          :is-saving="isSaving"
+          @back="handleHeaderBack"
           @save-draft="saveDraft"
       />
 
@@ -73,11 +75,12 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBattle } from '@/services/BattleService.js';
 import { useFile } from '@/services/FileService.js';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
+import { useBattleDraft } from '@/composables/useBattleDraft';
 import BattleCreateHeader from '@/components/battle/create/BattleCreateHeader.vue';
 import BattleCreatePreview from '@/components/battle/create/BattleCreatePreview.vue';
 import Step1BasicInfo from '@/components/battle/create/Step1BasicInfo.vue';
@@ -90,6 +93,17 @@ const router = useRouter();
 const battleService = useBattle();
 const fileService = useFile();
 const { open } = useConfirmDialog();
+const {
+  hasDraft,
+  lastSavedAt,
+  isSaving,
+  saveDraft: saveDraftToStorage,
+  loadDraft: loadDraftFromStorage,
+  clearDraft,
+  startAutoSave,
+  stopAutoSave,
+  formatSavedTime
+} = useBattleDraft();
 
 // ==================== 스텝 설정 ====================
 const steps = ['기본 정보', '아이템 설정', '상세 설정', '최종 확인'];
@@ -232,8 +246,39 @@ const handlePrevious = async () => {
   if (currentStep.value > 1) {
     currentStep.value--;
   } else {
-    const confirmed = await open({ type: 'confirm', title: '배틀 생성 취소', message: '배틀 생성을 취소하시겠습니까?\n작성 중인 내용이 저장되지 않습니다.' });
-    if (confirmed) {
+    // 작성 중인 내용이 있는지 확인
+    const hasContent = battleForm.value.title.trim().length > 0 ||
+        selectedItems.value.length > 0 ||
+        battleForm.value.description?.trim().length > 0;
+
+    if (hasContent) {
+      // 임시저장 여부 먼저 묻기
+      const shouldSave = await open({
+        type: 'confirm',
+        title: '임시저장',
+        message: '작성 중인 내용을 임시저장하시겠습니까?',
+        confirmText: '임시저장',
+        cancelText: '저장 안 함'
+      });
+
+      if (shouldSave) {
+        await saveDraft(false);
+        handleBack();
+      } else {
+        // 저장 안 함 선택 시 정말 나갈지 확인
+        const confirmLeave = await open({
+          type: 'danger',
+          title: '배틀 생성 취소',
+          message: '저장하지 않고 나가시겠습니까?\n작성 중인 내용이 삭제됩니다.',
+          confirmText: '나가기',
+          cancelText: '취소'
+        });
+
+        if (confirmLeave) {
+          handleBack();
+        }
+      }
+    } else {
       handleBack();
     }
   }
@@ -243,30 +288,97 @@ const handleBack = () => {
   router.push({ name: 'BattleList' });
 };
 
-const saveDraft = async () => {
-  const draftData = {
-    ...battleForm.value,
-    selectedItems: selectedItems.value,
-    savedAt: new Date().toISOString()
-  };
+// 헤더 뒤로가기 버튼 (임시저장 확인)
+const handleHeaderBack = async () => {
+  const hasContent = battleForm.value.title.trim().length > 0 ||
+      selectedItems.value.length > 0 ||
+      battleForm.value.description?.trim().length > 0;
 
-  localStorage.setItem('battleDraft', JSON.stringify(draftData));
-  await open({ type: 'alert', title: '임시저장 완료', message: '임시저장되었습니다' });
+  if (hasContent) {
+    const shouldSave = await open({
+      type: 'confirm',
+      title: '임시저장',
+      message: '작성 중인 내용을 임시저장하시겠습니까?',
+      confirmText: '임시저장',
+      cancelText: '저장 안 함'
+    });
+
+    if (shouldSave) {
+      await saveDraft(false);
+      handleBack();
+    } else {
+      const confirmLeave = await open({
+        type: 'danger',
+        title: '배틀 생성 취소',
+        message: '저장하지 않고 나가시겠습니까?\n작성 중인 내용이 삭제됩니다.',
+        confirmText: '나가기',
+        cancelText: '취소'
+      });
+
+      if (confirmLeave) {
+        handleBack();
+      }
+    }
+  } else {
+    handleBack();
+  }
+};
+
+const saveDraft = async (showAlert = true) => {
+  const success = saveDraftToStorage(battleForm.value, selectedItems.value);
+
+  if (showAlert && success) {
+    await open({ type: 'alert', title: '임시저장 완료', message: '임시저장되었습니다.' });
+  }
+
+  return success;
 };
 
 const loadDraft = async () => {
   try {
-    const draft = localStorage.getItem('battleDraft');
-    if (draft) {
-      const draftData = JSON.parse(draft);
-      const confirmed = await open({ type: 'confirm', title: '임시저장 불러오기', message: '임시저장된 데이터가 있습니다. 불러오시겠습니까?' });
+    const draftData = loadDraftFromStorage();
+
+    if (draftData) {
+      const savedTime = formatSavedTime(new Date(draftData.savedAt));
+      const confirmed = await open({
+        type: 'confirm',
+        title: '임시저장 불러오기',
+        message: `임시저장된 데이터가 있습니다.\n(${savedTime})\n\n불러오시겠습니까?`
+      });
+
       if (confirmed) {
-        battleForm.value = { ...battleForm.value, ...draftData };
-        selectedItems.value = draftData.selectedItems || [];
+        // battleForm 복원
+        const restoredForm = { ...battleForm.value, ...draftData.battleForm };
+        // File 객체는 복원 불가하므로 null 처리
+        restoredForm.thumbnailFile = null;
+        battleForm.value = restoredForm;
+
+        // selectedItems 복원
+        const restoredItems = (draftData.selectedItems || []).map(item => ({
+          ...item,
+          customImageFile: null // File 객체는 복원 불가
+        }));
+        selectedItems.value = restoredItems;
+
+        return true;
+      } else {
+        // 불러오지 않으면 삭제할지 물어보기
+        const shouldDelete = await open({
+          type: 'confirm',
+          title: '임시저장 삭제',
+          message: '임시저장된 데이터를 삭제하시겠습니까?'
+        });
+
+        if (shouldDelete) {
+          clearDraft();
+        }
       }
     }
+
+    return false;
   } catch (error) {
     console.error('임시저장 데이터 로드 실패:', error);
+    return false;
   }
 };
 
@@ -410,7 +522,7 @@ const createBattle = async () => {
     const response = await battleService.createBattle(battleData);
 
     if (response.success) {
-      localStorage.removeItem('battleDraft');
+      clearDraft(); // 임시저장 삭제
       await open({ type: 'alert', title: '배틀 생성 완료', message: '배틀이 성공적으로 생성되었습니다!' });
       router.push({
         name: 'BattleDetail',
@@ -444,9 +556,8 @@ const checkCreationPermission = async () => {
 // ==================== Lifecycle ====================
 onMounted(async () => {
   await checkCreationPermission();
-  await loadDraft();
 
-  // 기본 날짜 설정
+  // 기본 날짜 설정 (임시저장 로드 전에 설정)
   if (!battleForm.value.startDate) {
     const today = new Date();
     const nextMonth = new Date(today);
@@ -456,6 +567,17 @@ onMounted(async () => {
     battleForm.value.endDate = nextMonth.toISOString().split('T')[0];
     battleForm.value.participationStartDate = today.toISOString().split('T')[0];
   }
+
+  // 임시저장 불러오기
+  await loadDraft();
+
+  // 자동저장 시작
+  startAutoSave(battleForm, selectedItems);
+});
+
+onUnmounted(() => {
+  // 자동저장 중지
+  stopAutoSave();
 });
 </script>
 
