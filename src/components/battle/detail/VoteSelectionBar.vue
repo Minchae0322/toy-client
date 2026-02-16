@@ -24,7 +24,7 @@
         </span>
       </div>
 
-      <!-- 한줄 변론 입력란 (PC) -->
+      <!-- 한줄 변론 입력란 -->
       <div class="argument-input-wrap">
         <input
           v-model="argumentText"
@@ -270,12 +270,13 @@ const handleSubmit = () => {
   .sticky-vote-pill {
     bottom: 20px;
     padding: 12px 16px;
-    gap: 12px;
+    gap: 10px;
     left: 16px;
     right: 16px;
     transform: none;
     border-radius: 20px;
     max-width: none;
+    flex-wrap: wrap;
   }
 
   .selection-names {
@@ -283,7 +284,15 @@ const handleSubmit = () => {
   }
 
   .argument-input-wrap {
-    display: none;
+    order: 10;
+    width: 100%;
+    min-width: 0;
+    flex: unset;
+  }
+
+  .arg-input {
+    font-size: 13px;
+    padding: 9px 12px;
   }
 
   .vote-count-info {
