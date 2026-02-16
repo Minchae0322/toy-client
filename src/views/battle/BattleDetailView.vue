@@ -80,7 +80,10 @@
 
           <div class="section-heading">
             <div>
-              <h2>{{ selectedItemFilter ? `${filteredItemName}의 PICK 한마디` : '전체 PICK 한마디' }}</h2>
+              <h2>
+                {{ selectedItemFilter ? `${filteredItemName}의 PICK 한마디` : '전체 PICK 한마디' }}
+                <span class="comment-total-count">{{ totalCommentCount }}</span>
+              </h2>
               <p class="sub">참여자들의 생생한 PICK 한마디를 확인하세요</p>
             </div>
           </div>
@@ -91,19 +94,19 @@
                 :class="['pc-tab-btn', { active: commentSortType === 'likeCount' }]"
                 @click="commentSortType = 'likeCount'"
               >
-                공감순 <span class="cnt">{{ filteredCommentsCount }}</span>
+                공감순
               </button>
               <button
                 :class="['pc-tab-btn', { active: commentSortType === 'createdAt' }]"
                 @click="commentSortType = 'createdAt'"
               >
-                최신순 <span class="cnt">{{ filteredCommentsCount }}</span>
+                최신순
               </button>
             </div>
 
             <div class="pc-tab-content">
               <!-- 로딩 -->
-              <div v-if="commentsLoading" class="loading-comments">
+              <div v-if="commentsLoading && allLoadedComments.length === 0" class="loading-comments">
                 <div class="spinner-small"></div>
                 <span>코멘트 불러오는 중...</span>
               </div>
@@ -160,6 +163,26 @@
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- 더보기 버튼 -->
+              <div v-if="commentsHasNext && !commentsLoading" class="load-more-comments">
+                <button
+                  class="load-more-btn"
+                  :disabled="commentsLoading"
+                  @click="loadMoreComments"
+                >
+                  <template v-if="commentsLoading">
+                    <div class="spinner-small"></div>
+                    불러오는 중...
+                  </template>
+                  <template v-else>
+                    더보기
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <polyline points="6 9 12 15 18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </template>
+                </button>
               </div>
             </div>
           </div>
@@ -259,9 +282,12 @@ export default {
       failedProfileImages: {},
       selectedItemFilter: null,
       productCardRefs: {},
-      // 전체 코멘트 (API 로드)
+      // 전체 코멘트 (API 로드 - lazy loading)
       allLoadedComments: [],
-      commentsLoading: false
+      commentsLoading: false,
+      commentsPage: 0,
+      commentsHasNext: false,
+      commentsLoaded: false
     }
   },
   computed: {
@@ -342,12 +368,14 @@ export default {
     },
     // 전체 변론 관련 computed
     hasComments() {
-      return this.allLoadedComments.length > 0 || this.sortedItems.some(item => item.commentSummary?.commentCount > 0)
+      // commentSummary로 체크 (lazy loading이므로 초기에는 allLoadedComments가 비어있음)
+      return this.sortedItems.some(item => item.commentSummary?.commentCount > 0)
     },
     totalCommentCount() {
-      return this.allLoadedComments.length
+      // 전체 코멘트 수는 각 아이템의 commentCount 합산
+      return this.sortedItems.reduce((sum, item) => sum + (item.commentSummary?.commentCount || 0), 0)
     },
-    // 필터된 전체 코멘트 수 (아이템 필터만 적용)
+    // 필터된 전체 코멘트 수 (로드된 데이터 기준)
     filteredCommentsCount() {
       if (this.selectedItemFilter) {
         return this.allLoadedComments.filter(c => c.itemId === this.selectedItemFilter).length
@@ -362,15 +390,20 @@ export default {
         comments = comments.filter(c => c.itemId === this.selectedItemFilter)
       }
 
-      // 정렬
-      if (this.commentSortType === 'likeCount') {
-        return comments.sort((a, b) => b.likeCount - a.likeCount)
-      }
-      return comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      // 정렬은 API에서 이미 적용되어 옴 (클라이언트 사이드 재정렬 필요 없음)
+      return comments
     },
     filteredItemName() {
       if (!this.selectedItemFilter) return null
       return this.getItemNameById(this.selectedItemFilter)
+    }
+  },
+  watch: {
+    // 정렬 타입 변경 시 코멘트 다시 로드
+    commentSortType() {
+      if (this.commentsLoaded) {
+        this.loadAllComments(true)
+      }
     }
   },
   created() {
@@ -393,8 +426,8 @@ export default {
         if (response.success && response.data) {
           this.battle = response.data
           this.checkUserVote()
-          // 코멘트 로드
-          await this.loadAllComments()
+          // 전체 PICK 한마디 로드 (getAllComments API 사용)
+          this.loadAllComments(true)
         } else {
           throw new Error(response.message || '배틀 정보를 불러올 수 없습니다.')
         }
@@ -406,55 +439,60 @@ export default {
       }
     },
 
-    // 전체 아이템의 코멘트 로드
-    async loadAllComments() {
-      if (!this.sortedItems.length) return
+    // 전체 코멘트 로드 (lazy loading - 더보기 클릭 시)
+    async loadAllComments(reset = false) {
+      if (this.commentsLoading) return
 
       this.commentsLoading = true
-      const allComments = []
 
       try {
-        // 각 아이템의 코멘트를 병렬로 가져오기
-        const promises = this.sortedItems.map(async (item) => {
-          try {
-            const response = await battleService.getComments(this.battleId, item.id, {
-              sort: 'likeCount,desc',
-              page: 0,
-              size: 50 // 충분히 가져오기
-            })
+        if (reset) {
+          this.commentsPage = 0
+          this.allLoadedComments = []
+        }
 
-            if (response.success && response.data?.comments) {
-              return response.data.comments.map(comment => ({
-                itemId: item.id,
-                commentId: comment.commentId,
-                creatorId: comment.creatorId,
-                creatorNickname: comment.creatorNickname || '익명',
-                creatorProfileImageUrl: comment.creatorProfileImageUrl || comment.creatorProfileUrl || null,
-                content: comment.content || '',
-                likeCount: comment.likeCount || 0,
-                hasLiked: comment.isLiked || comment.hasLiked || false,
-                isMine: comment.isMine || false,
-                createdAt: comment.createdAt
-              }))
-            }
-            return []
-          } catch (err) {
-            console.error(`아이템 ${item.id} 코멘트 로드 실패:`, err)
-            return []
+        const sortParam = this.commentSortType === 'likeCount' ? 'likeCount,desc' : 'createdAt,desc'
+        const response = await battleService.getAllComments(this.battleId, {
+          sort: sortParam,
+          page: this.commentsPage,
+          size: 10
+        })
+
+        if (response.success && response.data?.comments) {
+          const newComments = response.data.comments.map(comment => ({
+            itemId: comment.battleItemId,
+            commentId: comment.commentId,
+            creatorId: comment.creatorId,
+            creatorNickname: comment.creatorNickname || '익명',
+            creatorProfileImageUrl: comment.creatorProfileImageUrl || comment.creatorProfileUrl || null,
+            content: comment.content || '',
+            likeCount: comment.likeCount || 0,
+            hasLiked: comment.isLiked || comment.hasLiked || false,
+            isMine: comment.isMine || false,
+            createdAt: comment.createdAt
+          }))
+
+          if (reset) {
+            this.allLoadedComments = newComments
+          } else {
+            this.allLoadedComments = [...this.allLoadedComments, ...newComments]
           }
-        })
 
-        const results = await Promise.all(promises)
-        results.forEach(comments => {
-          allComments.push(...comments)
-        })
-
-        this.allLoadedComments = allComments
+          this.commentsHasNext = response.data.hasNext
+          this.commentsLoaded = true
+        }
       } catch (err) {
         console.error('전체 코멘트 로드 실패:', err)
       } finally {
         this.commentsLoading = false
       }
+    },
+
+    // 코멘트 더보기
+    loadMoreComments() {
+      if (!this.commentsHasNext || this.commentsLoading) return
+      this.commentsPage++
+      this.loadAllComments(false)
     },
 
     checkUserVote() {
@@ -747,6 +785,10 @@ export default {
         if (response.success) {
           await this.open({ type: 'alert', title: '완료', message: 'PICK 한마디가 등록되었습니다!' })
           await this.loadBattle()
+          // 코멘트가 이미 로드되어 있으면 새로고침
+          if (this.commentsLoaded) {
+            await this.loadAllComments(true)
+          }
         } else {
           throw new Error(response.message || 'PICK 한마디 작성에 실패했습니다.')
         }
@@ -775,6 +817,10 @@ export default {
     // 코멘트 생성/삭제 후 배틀 데이터 새로고침 (commentSummary 갱신)
     async handleCommentCreated() {
       await this.loadBattle()
+      // 코멘트가 이미 로드되어 있으면 새로고침
+      if (this.commentsLoaded) {
+        await this.loadAllComments(true)
+      }
     },
 
     // 코멘트 공감 토글
@@ -1095,6 +1141,18 @@ export default {
   font-weight: 800;
   color: #111;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pc-arguments-section .section-heading h2 .comment-total-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: #9333ea;
+  background: #f3e8ff;
+  padding: 4px 10px;
+  border-radius: 12px;
 }
 
 .pc-arguments-section .section-heading .sub {
@@ -1227,38 +1285,37 @@ export default {
   padding: 20px 24px;
 }
 
-/* PC 변론 카드: 2열 그리드 */
+/* PC 변론 카드: 1열 리스트 */
 .pc-arg-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .pc-arg-card {
   display: flex;
-  gap: 14px;
-  padding: 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
   background: #fafbfc;
-  border-radius: 16px;
+  border-radius: 10px;
   transition: all 0.15s;
   cursor: pointer;
 }
 
 .pc-arg-card:hover {
   background: #f5f7ff;
-  transform: translateY(-1px);
 }
 
 .pc-arg-card.best {
   background: linear-gradient(135deg, #fffbeb, #fef3c7);
   border: 1px solid #fde68a;
-  grid-column: 1 / -1;
 }
 
 .pc-arg-card .arg-product-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -1272,68 +1329,71 @@ export default {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   flex-wrap: wrap;
 }
 
 .pc-arg-card .arg-product-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #4a6cf7;
   background: #eff2ff;
-  padding: 3px 10px;
-  border-radius: 6px;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 .pc-arg-card .best-badge {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: #f59e0b;
   background: #fffbeb;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 2px 5px;
+  border-radius: 3px;
   border: 1px solid #fde68a;
 }
 
 .pc-arg-card .arg-text {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #374151;
-  line-height: 1.55;
+  line-height: 1.4;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pc-arg-card .arg-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 10px;
+  margin-top: 6px;
 }
 
 .pc-arg-card .arg-user {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 11px;
   color: #9ca3af;
 }
 
 .pc-arg-card img.arg-user-avatar {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .pc-arg-card div.arg-user-avatar {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: #4a6cf7;
 }
@@ -1341,12 +1401,12 @@ export default {
 .pc-arg-card .like-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
-  border-radius: 20px;
+  gap: 3px;
+  padding: 4px 10px;
+  border-radius: 16px;
   background: #fff;
   border: 1px solid #e5e7eb;
-  font-size: 12px;
+  font-size: 11px;
   color: #9ca3af;
   cursor: pointer;
   font-family: inherit;
@@ -1363,6 +1423,75 @@ export default {
   border-color: #f43f5e;
   color: #f43f5e;
   background: #fff5f5;
+}
+
+/* PICK 한마디 보기 버튼 */
+.load-comments-prompt {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.load-comments-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.25);
+}
+
+.load-comments-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.35);
+}
+
+.load-comments-btn:active {
+  transform: translateY(0);
+}
+
+/* 더보기 버튼 */
+.load-more-comments {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 8px;
+}
+
+.load-more-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 24px;
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.load-more-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.load-more-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.load-more-btn .spinner-small {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
 }
 
 /* 로딩 상태 */

@@ -304,8 +304,8 @@ defineExpose({ setCommentSubmitting })
 }
 
 .name {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: #222;
   margin: 0;
   line-height: 1.35;

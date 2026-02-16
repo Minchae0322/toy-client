@@ -295,7 +295,28 @@ class BattleService extends BaseApiService {
   // ==================== 배틀 코멘트(한줄 변론) 메서드 ====================
 
   /**
-   * 코멘트 목록 조회
+   * 배틀 전체 코멘트 조회 (모든 아이템의 코멘트)
+   * GET /api/battles/{battleId}/comments
+   */
+  async getAllComments(battleId, { sort = 'likeCount,desc', page = 0, size = 20 } = {}) {
+    if (!battleId) {
+      throw new Error('배틀 ID가 필요합니다.')
+    }
+
+    const params = { sort, page, size }
+    console.log(`💬 [BATTLE_SERVICE] 배틀 전체 코멘트 조회: battleId=${battleId}`, params)
+
+    const response = await this.get(`/battles/${battleId}/comments`, params)
+
+    if (response.success && response.data) {
+      response.data = this.normalizeCommentListResponse(response.data)
+    }
+
+    return response
+  }
+
+  /**
+   * 코멘트 목록 조회 (아이템별)
    * GET /api/battles/{battleId}/items/{itemId}/comments
    */
   async getComments(battleId, itemId, { sort = 'likeCount,desc', page = 0, size = 20 } = {}) {
@@ -397,11 +418,11 @@ class BattleService extends BaseApiService {
 
     return {
       comments: comments.map(comment => this.normalizeCommentItem(comment)),
-      page: data.page || data.number || 0,
+      page: data.page ?? data.number ?? 0,
       size: data.size || 20,
       totalElements: data.totalElements || comments.length,
       totalPages: data.totalPages || 1,
-      hasNext: data.hasNext ?? (data.number < data.totalPages - 1) ?? false
+      hasNext: data.hasNext ?? (data.last === false) ?? false
     }
   }
 
