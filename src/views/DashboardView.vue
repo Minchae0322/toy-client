@@ -99,20 +99,24 @@
             <p class="empty-text">실시간 데이터가 없습니다</p>
           </div>
 
-          <div v-else class="yb-list">
-            <div
-              v-for="(feed, index) in currentYogurtBomFeeds"
-              :key="feed.feedId"
-              class="yb-item"
-              @click="goToFeedDetail(feed.feedId)"
-            >
-              <span class="yb-rank-num">{{ ybCurrentPage * 6 + index + 1 }}</span>
-              <div class="yb-info">
-                <span class="yb-product">{{ feed.productName }}</span>
-                <span class="yb-author-name">{{ feed.buyPlace || '' }}</span>
+          <div v-else ref="ybSwipeRef" class="yb-swipe-container" @scroll="onYbSwipe">
+            <div v-for="(page, pageIdx) in ybPages" :key="pageIdx" class="yb-swipe-page">
+              <div class="yb-list">
+                <div
+                  v-for="(feed, index) in page"
+                  :key="feed.feedId"
+                  class="yb-item"
+                  @click="goToFeedDetail(feed.feedId)"
+                >
+                  <span class="yb-rank-num">{{ pageIdx * 6 + index + 1 }}</span>
+                  <div class="yb-info">
+                    <span class="yb-product">{{ feed.productName }}</span>
+                    <span class="yb-author-name">{{ feed.buyPlace || '' }}</span>
+                  </div>
+                  <span v-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
+                  <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
+                </div>
               </div>
-              <span v-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
-              <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
             </div>
           </div>
         </div>
@@ -342,6 +346,7 @@ const hotProducts = ref([])
 const yogurtBomFeeds = ref([])
 const lastUpdateTime = ref('')
 const ybCurrentPage = ref(0)
+const ybSwipeRef = ref(null)
 let ybAutoSlideTimer = null
 
 // 캐시 관리 (5분 유효)
@@ -357,9 +362,37 @@ const currentYogurtBomFeeds = computed(() => {
   return yogurtBomFeeds.value.slice(start, start + 6)
 })
 
+const ybPages = computed(() => {
+  const pages = []
+  for (let i = 0; i < yogurtBomFeeds.value.length; i += 6) {
+    pages.push(yogurtBomFeeds.value.slice(i, i + 6))
+  }
+  return pages
+})
+
 const setYbPage = (page) => {
   ybCurrentPage.value = page
+  if (ybSwipeRef.value) {
+    const pageWidth = ybSwipeRef.value.offsetWidth
+    ybSwipeRef.value.scrollTo({ left: page * pageWidth, behavior: 'smooth' })
+  }
   resetYbAutoSlide()
+}
+
+let ybSwipeTimeout = null
+const onYbSwipe = () => {
+  if (!ybSwipeRef.value) return
+  if (ybSwipeTimeout) clearTimeout(ybSwipeTimeout)
+  ybSwipeTimeout = setTimeout(() => {
+    const container = ybSwipeRef.value
+    if (!container) return
+    const pageWidth = container.offsetWidth
+    const page = Math.round(container.scrollLeft / pageWidth)
+    if (page !== ybCurrentPage.value) {
+      ybCurrentPage.value = page
+      resetYbAutoSlide()
+    }
+  }, 50)
 }
 
 const resetYbAutoSlide = () => {
@@ -367,7 +400,12 @@ const resetYbAutoSlide = () => {
     clearInterval(ybAutoSlideTimer)
   }
   ybAutoSlideTimer = setInterval(() => {
-    ybCurrentPage.value = ybCurrentPage.value === 0 ? 1 : 0
+    const nextPage = ybCurrentPage.value === 0 ? 1 : 0
+    ybCurrentPage.value = nextPage
+    if (ybSwipeRef.value) {
+      const pageWidth = ybSwipeRef.value.offsetWidth
+      ybSwipeRef.value.scrollTo({ left: nextPage * pageWidth, behavior: 'smooth' })
+    }
   }, 5000)
 }
 
@@ -570,6 +608,10 @@ onUnmounted(() => {
   if (ybAutoSlideTimer) {
     clearInterval(ybAutoSlideTimer)
     ybAutoSlideTimer = null
+  }
+  if (ybSwipeTimeout) {
+    clearTimeout(ybSwipeTimeout)
+    ybSwipeTimeout = null
   }
 })
 </script>
@@ -999,6 +1041,26 @@ onUnmounted(() => {
 .yb-right {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+}
+
+.yb-swipe-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.yb-swipe-container::-webkit-scrollbar {
+  display: none;
+}
+
+.yb-swipe-page {
+  flex: 0 0 100%;
+  min-width: 0;
+  scroll-snap-align: start;
 }
 
 .yb-list {
