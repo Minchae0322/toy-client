@@ -7,8 +7,17 @@
 
     <div :class="['rank-indicator', displayRank <= 3 ? `rank-pos-${displayRank}` : '']">{{ displayRank }}</div>
 
-    <div class="img-box">
+    <div class="img-box" :class="{ 'is-youtube': isYoutube }" @click="handleImageClick">
       <img :src="itemImage" :alt="itemName" @error="handleImageError" />
+      <!-- YouTube 재생 버튼 오버레이 -->
+      <div v-if="isYoutube" class="youtube-play-overlay">
+        <div class="youtube-play-btn">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </div>
+        <span class="youtube-label">YouTube</span>
+      </div>
       <div class="score-overlay">
         <span class="score-percent">{{ percentage }}%</span>
         <span class="score-count">{{ voteCount }}명 투표</span>
@@ -102,9 +111,14 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['vote', 'open-comments', 'submit-comment'])
+const emit = defineEmits(['vote', 'open-comments', 'submit-comment', 'play-youtube'])
 
 const commentSubmitting = ref(false)
+
+const isYoutube = computed(() => {
+  const itemType = props.item.battleItemType?.title || props.item.battleItemType
+  return itemType === 'YOUTUBE'
+})
 
 const itemName = computed(() => {
   return props.item.battleItemProduct?.name || props.item.customName || '제품명 없음'
@@ -126,6 +140,12 @@ const voteCount = computed(() => {
 
 const handleImageError = (e) => {
   e.target.src = 'https://placehold.co/400x400?text=No+Image'
+}
+
+const handleImageClick = () => {
+  if (isYoutube.value && props.item.embedUrl) {
+    emit('play-youtube', props.item)
+  }
 }
 
 const onVote = (rank) => {
@@ -250,6 +270,10 @@ defineExpose({ setCommentSubmitting })
   overflow: hidden;
 }
 
+.img-box.is-youtube {
+  cursor: pointer;
+}
+
 .img-box img {
   width: 100%;
   height: 100%;
@@ -259,6 +283,47 @@ defineExpose({ setCommentSubmitting })
 
 .product-card-v1:hover .img-box img {
   transform: scale(1.03);
+}
+
+/* YouTube 재생 오버레이 */
+.youtube-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.img-box.is-youtube:hover .youtube-play-overlay {
+  opacity: 1;
+}
+
+.youtube-play-btn {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 0, 0, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.img-box.is-youtube:hover .youtube-play-btn {
+  transform: scale(1.1);
+  background: #ff0000;
+}
+
+.youtube-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .score-overlay {
@@ -294,7 +359,7 @@ defineExpose({ setCommentSubmitting })
 }
 
 .info-content {
-  min-height: 80px;
+  /* 컨텐츠 높이에 맞춤 */
 }
 
 .brand {
@@ -454,10 +519,6 @@ defineExpose({ setCommentSubmitting })
     display: none;
   }
 
-  .info-content {
-    min-height: 40px;
-  }
-
   .vote-actions {
     padding-top: 6px;
   }
@@ -476,6 +537,26 @@ defineExpose({ setCommentSubmitting })
 
   .img-box {
     aspect-ratio: 1 / 1;
+  }
+
+  /* 모바일에서 YouTube 오버레이 항상 표시 */
+  .img-box.is-youtube .youtube-play-overlay {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  .youtube-play-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .youtube-play-btn svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .youtube-label {
+    font-size: 10px;
   }
 
   .rank-indicator {
@@ -511,10 +592,6 @@ defineExpose({ setCommentSubmitting })
 
   .info-box {
     padding: 6px;
-  }
-
-  .info-content {
-    min-height: 32px;
   }
 
   .brand {

@@ -474,10 +474,22 @@ const createBattle = async () => {
       console.log(`✅ [BATTLE] ${itemImageUrlMap.size}개 아이템 이미지 업로드 완료`);
     }
 
-    // ⭐ 4. 아이템 데이터 처리
+    // ⭐ 4. 아이템 데이터 처리 - itemType에 따라 분기
     const processedItems = selectedItems.value.map((item, index) => {
-      if (item.customName) {
-        // 커스텀 아이템
+      const itemType = item.itemType || (item.productId ? 'PRODUCT' : 'CUSTOM');
+
+      // YOUTUBE 아이템
+      if (itemType === 'YOUTUBE') {
+        return {
+          itemType: 'YOUTUBE',
+          customName: item.customName,
+          customBrand: item.customBrand || null,
+          contentUrl: item.contentUrl // YouTube URL
+        };
+      }
+
+      // CUSTOM 아이템 (이미지 업로드)
+      if (itemType === 'CUSTOM') {
         let customImageUrl = null;
 
         // 우선순위: 이미 업로드된 URL > 새로 업로드한 URL > URL 직접 입력
@@ -493,20 +505,18 @@ const createBattle = async () => {
         }
 
         return {
-          productId: null,
+          itemType: 'CUSTOM',
           customName: item.customName,
-          customBrand: item.customBrand,
+          customBrand: item.customBrand || null,
           customImageUrl: customImageUrl
         };
-      } else {
-        // 기존 제품
-        return {
-          productId: item.productId,
-          customName: null,
-          customBrand: null,
-          customImageUrl: null
-        };
       }
+
+      // PRODUCT 아이템 (기존 제품)
+      return {
+        itemType: 'PRODUCT',
+        productId: item.productId
+      };
     });
 
     // ⭐ 5. 배틀 생성 DTO

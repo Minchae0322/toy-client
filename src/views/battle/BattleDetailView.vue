@@ -53,6 +53,7 @@
               @vote="handleVote"
               @open-comments="scrollToComments"
               @submit-comment="handleInlineComment"
+              @play-youtube="playYoutube"
           />
         </div>
 
@@ -226,6 +227,41 @@
           @close="closeCommentModal"
           @comment-created="handleCommentCreated"
       />
+
+      <!-- YouTube Player Modal -->
+      <Teleport to="body">
+        <Transition name="modal">
+          <div v-if="showYoutubePlayer" class="youtube-modal-overlay" @click.self="closeYoutubePlayer">
+            <div class="youtube-modal">
+              <button class="youtube-modal-close" @click="closeYoutubePlayer">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+              <div class="youtube-player-wrapper">
+                <iframe
+                    v-if="currentYoutubeEmbedUrl"
+                    :src="currentYoutubeEmbedUrl + '?autoplay=1'"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                ></iframe>
+              </div>
+              <div v-if="currentYoutubeItem" class="youtube-modal-info">
+                <h3>{{ getItemName(currentYoutubeItem) }}</h3>
+                <a v-if="currentYoutubeItem.contentUrl" :href="currentYoutubeItem.contentUrl" target="_blank" class="youtube-original-link">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                  YouTube에서 보기
+                </a>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
     </template>
   </div>
 </template>
@@ -287,7 +323,11 @@ export default {
       commentsLoading: false,
       commentsPage: 0,
       commentsHasNext: false,
-      commentsLoaded: false
+      commentsLoaded: false,
+      // YouTube 플레이어
+      showYoutubePlayer: false,
+      currentYoutubeItem: null,
+      currentYoutubeEmbedUrl: null
     }
   },
   computed: {
@@ -1023,6 +1063,21 @@ export default {
       return firstItem.battleItemProduct?.thumbnailDto?.storedPath ||
           firstItem.customImageUrl ||
           ''
+    },
+
+    // YouTube 재생
+    playYoutube(item) {
+      if (item.embedUrl) {
+        this.currentYoutubeItem = item
+        this.currentYoutubeEmbedUrl = item.embedUrl
+        this.showYoutubePlayer = true
+      }
+    },
+
+    closeYoutubePlayer() {
+      this.showYoutubePlayer = false
+      this.currentYoutubeItem = null
+      this.currentYoutubeEmbedUrl = null
     }
   },
   beforeUnmount() {
@@ -1649,6 +1704,131 @@ export default {
 
   .soft-modern-v1 {
     padding-bottom: 120px;
+  }
+}
+
+/* ===== YouTube 플레이어 모달 ===== */
+.youtube-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.youtube-modal {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+}
+
+.youtube-modal-close {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.youtube-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.youtube-player-wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #000;
+}
+
+.youtube-player-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.youtube-modal-info {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.youtube-modal-info h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  flex: 1;
+}
+
+.youtube-original-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.youtube-original-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 모달 트랜지션 */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 640px) {
+  .youtube-modal-close {
+    top: -44px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .youtube-modal-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .youtube-modal-info h3 {
+    font-size: 15px;
+  }
+
+  .youtube-original-link {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
