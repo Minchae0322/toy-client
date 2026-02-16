@@ -2,7 +2,7 @@
   <div class="form-section">
     <div class="form-group">
       <label class="form-label">
-        배틀 아이템 선택 <span class="required">*</span>
+        요거픽 아이템 선택 <span class="required">*</span>
       </label>
       <div class="form-hint">최소 1개, 최대 20개까지 선택 가능합니다</div>
     </div>

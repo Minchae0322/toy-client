@@ -9,7 +9,7 @@
           </svg>
         </button>
         <div class="divider"></div>
-        <h1 class="page-title">배틀 만들기</h1>
+        <h1 class="page-title">요거픽 만들기</h1>
       </div>
 
       <!-- 중앙: 스텝 인디케이터 -->
@@ -433,10 +433,17 @@ const formatSavedTime = (date) => {
 @media (max-width: 640px) {
   .header-content {
     padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-left {
+    flex-shrink: 0;
   }
 
   .page-title {
-    font-size: 15px;
+    display: none;
   }
 
   .divider {
@@ -448,6 +455,39 @@ const formatSavedTime = (date) => {
     height: 36px;
   }
 
+  .steps-wrapper {
+    flex: 1;
+    justify-content: center;
+    grid-column: unset;
+    order: unset;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .steps {
+    justify-content: center;
+  }
+
+  .step-circle {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .step-label {
+    display: none;
+  }
+
+  .step-line {
+    width: 20px;
+  }
+
+  .header-right {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
   .save-status {
     display: none;
   }
@@ -457,49 +497,27 @@ const formatSavedTime = (date) => {
   }
 
   .save-draft-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     padding: 0;
     justify-content: center;
-  }
-
-  .steps-wrapper {
-    padding-top: 8px;
-    margin-top: 4px;
-  }
-
-  .step-circle {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-  }
-
-  .step-label {
-    display: none;
-  }
-
-  .step-line {
-    width: 24px;
-  }
-
-  .step-item.active .step-label {
-    display: block;
-    font-size: 11px;
   }
 }
 
 @media (max-width: 480px) {
   .header-content {
     padding: 10px 12px;
+    gap: 8px;
   }
 
-  .page-title {
-    font-size: 14px;
+  .back-btn {
+    width: 32px;
+    height: 32px;
   }
 
   .step-circle {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     font-size: 11px;
   }
 
@@ -507,8 +525,9 @@ const formatSavedTime = (date) => {
     width: 16px;
   }
 
-  .step-item.active .step-label {
-    font-size: 10px;
+  .save-draft-btn {
+    width: 32px;
+    height: 32px;
   }
 }
 </style>

@@ -8,17 +8,17 @@
         </svg>
       </div>
       <div class="intro-content">
-        <h2 class="intro-title">배틀 기본 정보</h2>
-        <p class="intro-desc">배틀의 핵심 정보를 입력해주세요. 작성한 내용은 언제든 수정할 수 있습니다.</p>
+        <h2 class="intro-title">요거픽 기본 정보</h2>
+        <p class="intro-desc">제목, 카테고리, 진행 기간 등 요거픽의 핵심 정보를 설정하세요.</p>
       </div>
     </div>
 
-    <!-- 배틀 제목 -->
+    <!-- 요거픽 제목 -->
     <div class="form-card">
       <div class="card-header">
         <div class="card-number">1</div>
         <div class="card-title-group">
-          <label class="card-title">배틀 제목</label>
+          <label class="card-title">요거픽 제목</label>
           <span class="card-subtitle">사람들의 관심을 끌 수 있는 제목을 작성해보세요</span>
         </div>
       </div>
@@ -45,7 +45,7 @@
         <div class="card-number">2</div>
         <div class="card-title-group">
           <label class="card-title">카테고리</label>
-          <span class="card-subtitle">배틀 주제에 맞는 카테고리를 선택해주세요</span>
+          <span class="card-subtitle">요거픽 주제에 맞는 카테고리를 선택해주세요</span>
         </div>
       </div>
       <div class="card-body">
@@ -72,7 +72,7 @@
         <div class="card-number">3</div>
         <div class="card-title-group">
           <label class="card-title">아이템 추가 권한</label>
-          <span class="card-subtitle">다른 사람이 배틀에 아이템을 추가할 수 있게 할까요?</span>
+          <span class="card-subtitle">다른 사람이 요거픽에 아이템을 추가할 수 있게 할까요?</span>
         </div>
       </div>
       <div class="card-body">
@@ -112,13 +112,13 @@
       </div>
     </div>
 
-    <!-- 배틀 기간 -->
+    <!-- 요거픽 기간 -->
     <div class="form-card">
       <div class="card-header">
         <div class="card-number">4</div>
         <div class="card-title-group">
-          <label class="card-title">배틀 기간</label>
-          <span class="card-subtitle">배틀이 진행될 기간을 설정해주세요</span>
+          <label class="card-title">요거픽 기간</label>
+          <span class="card-subtitle">요거픽이 진행될 기간을 설정해주세요</span>
         </div>
       </div>
       <div class="card-body">
@@ -224,7 +224,7 @@
             대표 이미지
             <span class="optional-badge">선택</span>
           </label>
-          <span class="card-subtitle">배틀 목록에서 보여질 이미지입니다</span>
+          <span class="card-subtitle">요거픽 목록에서 보여질 이미지입니다</span>
         </div>
       </div>
       <div class="card-body">
@@ -313,7 +313,7 @@ const thumbnailInput = ref(null);
 const showCategoryModal = ref(false);
 const selectedCategoryInfo = ref(null);
 
-// 배틀 기간 계산
+// 요거픽 기간 계산
 const dateDuration = computed(() => {
   if (!props.battleForm.startDate || !props.battleForm.endDate) return null;
   const start = new Date(props.battleForm.startDate);

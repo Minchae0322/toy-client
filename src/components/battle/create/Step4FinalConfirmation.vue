@@ -14,8 +14,8 @@
         </svg>
       </div>
       <div class="status-content">
-        <h2 class="status-title">{{ isAllCompleted ? '배틀 생성 준비 완료' : '필수 항목을 완료해주세요' }}</h2>
-        <p class="status-desc">{{ isAllCompleted ? '모든 필수 항목이 완료되었습니다. 최종 확인 후 배틀을 생성하세요.' : `아직 ${incompleteCount}개의 필수 항목이 남아있습니다.` }}</p>
+        <h2 class="status-title">{{ isAllCompleted ? '요거픽 생성 준비 완료' : '필수 항목을 완료해주세요' }}</h2>
+        <p class="status-desc">{{ isAllCompleted ? '모든 필수 항목이 완료되었습니다. 최종 확인 후 요거픽을 생성하세요.' : `아직 ${incompleteCount}개의 필수 항목이 남아있습니다.` }}</p>
       </div>
     </div>
 
@@ -81,11 +81,11 @@
             <line x1="16" y1="17" x2="8" y2="17"></line>
           </svg>
         </div>
-        <h3 class="card-title">배틀 요약</h3>
+        <h3 class="card-title">요거픽 요약</h3>
       </div>
       <div class="summary-grid">
         <div class="summary-row">
-          <span class="summary-label">배틀 제목</span>
+          <span class="summary-label">요거픽 제목</span>
           <span class="summary-value" :class="{ empty: !battleForm.title }">
             {{ battleForm.title || '미입력' }}
           </span>
@@ -97,7 +97,7 @@
           </span>
         </div>
         <div class="summary-row">
-          <span class="summary-label">배틀 기간</span>
+          <span class="summary-label">요거픽 기간</span>
           <span class="summary-value" :class="{ empty: !battleForm.startDate }">
             <template v-if="battleForm.startDate && battleForm.endDate">
               {{ formatDate(battleForm.startDate) }} ~ {{ formatDate(battleForm.endDate) }}
@@ -133,10 +133,10 @@
         </svg>
       </div>
       <div class="notice-content">
-        <div class="notice-title">배틀 생성 후 주의사항</div>
+        <div class="notice-title">요거픽 생성 후 주의사항</div>
         <ul class="notice-list">
-          <li>배틀 시작 후에는 <strong>제목, 카테고리, 기간, 투표 방식</strong>을 수정할 수 없습니다.</li>
-          <li>배틀 설명과 아이템은 진행 중에도 수정 가능합니다.</li>
+          <li>요거픽 시작 후에는 <strong>제목, 카테고리, 기간, 투표 방식</strong>을 수정할 수 없습니다.</li>
+          <li>요거픽 설명과 아이템은 진행 중에도 수정 가능합니다.</li>
         </ul>
       </div>
     </div>
@@ -158,8 +158,8 @@
           </div>
         </div>
         <div class="agreement-content">
-          <span class="agreement-text">배틀 생성 규칙과 가이드라인을 확인했으며, 이에 동의합니다</span>
-          <span class="agreement-hint">배틀 생성 후 발생하는 모든 책임은 생성자에게 있습니다</span>
+          <span class="agreement-text">요거픽 생성 규칙과 가이드라인을 확인했으며, 이에 동의합니다</span>
+          <span class="agreement-hint">요거픽 생성 후 발생하는 모든 책임은 생성자에게 있습니다</span>
         </div>
       </label>
     </div>
@@ -203,7 +203,7 @@ const checklistItems = computed(() => [
   {
     key: 'title',
     step: 1,
-    label: '배틀 제목',
+    label: '요거픽 제목',
     value: props.battleForm.title,
     placeholder: '제목을 입력해주세요',
     completed: props.battleForm.title?.trim().length > 0,
@@ -223,7 +223,7 @@ const checklistItems = computed(() => [
   {
     key: 'period',
     step: 1,
-    label: '배틀 기간',
+    label: '요거픽 기간',
     value: props.battleForm.startDate && props.battleForm.endDate ? `${props.dateDiff}일간` : '',
     placeholder: '기간을 설정해주세요',
     completed: !!props.battleForm.startDate && !!props.battleForm.endDate,

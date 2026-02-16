@@ -10,7 +10,7 @@
       </div>
       <div class="intro-content">
         <h2 class="intro-title">상세 설정</h2>
-        <p class="intro-desc">투표 방식을 선택하고 배틀에 대한 설명을 추가하세요.</p>
+        <p class="intro-desc">투표 방식과 요거픽에 대한 설명을 설정하세요.</p>
       </div>
     </div>
 
@@ -103,7 +103,7 @@
       </div>
     </div>
 
-    <!-- 배틀 설명 -->
+    <!-- 요거픽 설명 -->
     <div class="form-card optional">
       <div class="card-header">
         <div class="card-number optional">
@@ -116,10 +116,10 @@
         </div>
         <div class="card-title-group">
           <label class="card-title">
-            배틀 설명
+            요거픽 설명
             <span class="optional-badge">선택</span>
           </label>
-          <span class="card-subtitle">배틀에 대한 설명이나 투표 기준을 알려주세요</span>
+          <span class="card-subtitle">요거픽에 대한 설명이나 투표 기준을 알려주세요</span>
         </div>
       </div>
       <div class="card-body">
@@ -129,7 +129,7 @@
             @focus="isTextareaFocused = true"
             @blur="handleDescriptionBlur"
             class="description-textarea"
-            placeholder="예: 이 배틀은 2024년에 출시된 무선 이어폰 중 가성비가 좋은 제품을 선정하기 위한 투표입니다. 가격 대비 음질, 착용감, 배터리 등을 종합적으로 고려해주세요."
+            placeholder="예: 이 요거픽은 2024년에 출시된 무선 이어폰 중 가성비가 좋은 제품을 선정하기 위한 투표입니다. 가격 대비 음질, 착용감, 배터리 등을 종합적으로 고려해주세요."
             maxlength="500"
           ></textarea>
           <div class="textarea-footer">

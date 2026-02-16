@@ -377,16 +377,8 @@ const loadDraft = async () => {
 
         return true;
       } else {
-        // 불러오지 않으면 삭제할지 물어보기
-        const shouldDelete = await open({
-          type: 'confirm',
-          title: '임시저장 삭제',
-          message: '임시저장된 데이터를 삭제하시겠습니까?'
-        });
-
-        if (shouldDelete) {
-          clearDraft();
-        }
+        // 취소 시 바로 삭제
+        clearDraft();
       }
     }
 
