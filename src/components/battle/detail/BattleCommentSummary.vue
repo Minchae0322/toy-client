@@ -229,6 +229,7 @@ defineExpose({ closeInput })
 
 .inline-input {
   flex: 1;
+  min-width: 0;
   padding: 10px 14px;
   border: 1.5px solid #e5e7eb;
   border-radius: 12px;
@@ -236,6 +237,7 @@ defineExpose({ closeInput })
   font-family: inherit;
   outline: none;
   transition: border-color 0.15s;
+  box-sizing: border-box;
 }
 
 .inline-input:focus {
