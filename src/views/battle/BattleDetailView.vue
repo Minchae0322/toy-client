@@ -34,6 +34,7 @@
             :submitting="submitting"
             :get-item-name="getItemName"
             @submit="submitVote"
+            @remove="handleRemoveRank"
         />
 
         <!-- Product Grid -->
@@ -573,6 +574,13 @@ export default {
       this.selectedRanks = newRanks
     },
 
+    handleRemoveRank(rank) {
+      if (this.submitting) return
+      const newRanks = { ...this.selectedRanks }
+      newRanks[rank] = null
+      this.selectedRanks = newRanks
+    },
+
     async submitVote(argumentText = '') {
       if (this.submitting) return
 
@@ -643,6 +651,7 @@ export default {
         // 이미 업로드된 URL 사용
         const itemData = {
           items: [{
+            itemType: 'CUSTOM',
             customName: this.newProduct.name,
             customBrand: this.newProduct.brand || null,
             customImageUrl: this.newProduct.uploadedImageUrl
@@ -674,6 +683,7 @@ export default {
       try {
         const itemData = {
           items: [{
+            itemType: 'PRODUCT',
             productId: product.productId
           }]
         }
@@ -703,9 +713,11 @@ export default {
       try {
         const itemData = {
           items: [{
+            itemType: 'YOUTUBE',
             customName: youtubeData.customName,
             customBrand: youtubeData.customBrand || null,
-            customImageUrl: youtubeData.customImageUrl
+            customImageUrl: youtubeData.customImageUrl,
+            contentUrl: youtubeData.contentUrl || null
           }]
         }
 
@@ -1400,9 +1412,9 @@ export default {
 }
 
 .pc-arg-card .arg-product-img {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -1710,8 +1722,8 @@ export default {
   }
 
   .pc-arg-card .arg-product-img {
-    width: 40px;
-    height: 40px;
+    width: 80px;
+    height: 80px;
   }
 
   .pc-arg-card .arg-text {

@@ -1,55 +1,60 @@
 <template>
   <transition name="slide-up">
-    <div class="sticky-vote-pill">
-      <!-- 순위 dots -->
-      <div class="selection-dots">
+    <div class="vote-bar">
+      <!-- 선택된 아이템들 -->
+      <div class="selected-items">
         <div
-            v-for="rank in (isWeightedVote ? [1, 2, 3] : [1])"
-            :key="rank"
-            :class="['dot', { filled: selectedRanks[rank] }]"
+          v-for="rank in displayRanks"
+          :key="rank"
+          :class="['item-slot', { filled: selectedRanks[rank], empty: !selectedRanks[rank] }]"
         >
-          {{ rank }}
+          <template v-if="selectedRanks[rank]">
+            <img
+              :src="getSelectedItemImage(rank)"
+              :alt="getSelectedProductName(rank)"
+              class="item-thumb"
+            />
+            <div class="item-info">
+              <span v-if="isWeightedVote" class="rank-badge">{{ rank }}위</span>
+              <span class="item-name">{{ getSelectedProductName(rank) }}</span>
+            </div>
+            <button class="remove-btn" @click.stop="handleRemove(rank)" :disabled="submitting">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </template>
+          <template v-else>
+            <div class="empty-slot">
+              <span v-if="isWeightedVote" class="rank-num">{{ rank }}위</span>
+              <span v-else class="pick-hint">선택해주세요</span>
+            </div>
+          </template>
         </div>
       </div>
 
-      <!-- 선택된 상품명 (PC만) -->
-      <div class="selection-names" v-if="hasAnySelection">
-        <span
-          v-for="rank in selectedRanksList"
-          :key="rank"
-          class="selected-name"
-        >
-          <span class="rank-label">{{ rank }}위</span>
-          {{ getSelectedProductName(rank) }}
-        </span>
-      </div>
-
-      <!-- 한줄 변론 입력란 (PC) -->
-      <div class="argument-input-wrap">
-        <input
-          v-model="argumentText"
-          type="text"
-          class="arg-input"
-          :placeholder="argumentPlaceholder"
-          maxlength="100"
-        />
-        <span class="opt-tag">선택</span>
-      </div>
-
-      <!-- 선택 개수 (모바일) -->
-      <div class="vote-count-info" v-if="isWeightedVote">
-        <span class="count">{{ selectedCount }}/3</span>
-      </div>
-
-      <button @click="handleSubmit" :disabled="submitting" class="glow-submit-btn">
-        {{ submitting ? '전송 중...' : '요거 픽하기!' }}
+      <!-- 제출 버튼 -->
+      <button
+        @click="handleSubmit"
+        :disabled="submitting || !hasAnySelection"
+        class="submit-btn"
+      >
+        <template v-if="submitting">
+          <span class="spinner"></span>
+        </template>
+        <template v-else>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>픽 완료</span>
+        </template>
       </button>
     </div>
   </transition>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   selectedRanks: {
@@ -74,11 +79,14 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['submit'])
+const emit = defineEmits(['submit', 'remove'])
 
-const argumentText = ref('')
+// 표시할 순위들
+const displayRanks = computed(() => {
+  return props.isWeightedVote ? [1, 2, 3] : [1]
+})
 
-// 선택된 순위 목록 (1, 2, 3 중 선택된 것만)
+// 선택된 순위 목록
 const selectedRanksList = computed(() => {
   const ranks = []
   if (props.selectedRanks[1]) ranks.push(1)
@@ -87,170 +95,208 @@ const selectedRanksList = computed(() => {
   return ranks
 })
 
-// 선택된 픽 개수
-const selectedCount = computed(() => selectedRanksList.value.length)
-
 // 최소 1개 이상 선택했는지
-const hasAnySelection = computed(() => selectedCount.value > 0)
+const hasAnySelection = computed(() => selectedRanksList.value.length > 0)
 
-// PICK 한마디 입력 placeholder
-const argumentPlaceholder = computed(() => {
-  if (props.selectedRanks[1]) {
-    return '1위를 픽한 이유는? (선택)'
-  }
-  return 'PICK 한마디를 남겨보세요! (선택)'
-})
-
-const getSelectedProductName = (rank) => {
+// 선택된 아이템 찾기
+const getSelectedItem = (rank) => {
   const itemId = props.selectedRanks[rank]
-  const item = props.sortedItems.find(i => i.id === itemId)
-  if (!item) return ''
-  const name = props.getItemName(item)
-  return name.length > 8 ? name.slice(0, 8) + '...' : name
+  return props.sortedItems.find(i => i.id === itemId)
 }
 
+// 선택된 상품명
+const getSelectedProductName = (rank) => {
+  const item = getSelectedItem(rank)
+  if (!item) return ''
+  const name = props.getItemName(item)
+  return name.length > 12 ? name.slice(0, 12) + '...' : name
+}
+
+// 선택된 아이템 이미지
+const getSelectedItemImage = (rank) => {
+  const item = getSelectedItem(rank)
+  if (!item) return ''
+  return item.battleItemProduct?.thumbnailDto?.fileUrl ||
+         item.customImageUrl ||
+         'https://placehold.co/40x40?text=?'
+}
+
+// 제출
 const handleSubmit = () => {
-  emit('submit', argumentText.value.trim())
-  argumentText.value = ''
+  emit('submit', '')
+}
+
+// 선택 취소
+const handleRemove = (rank) => {
+  emit('remove', rank)
 }
 </script>
 
 <style scoped>
-.sticky-vote-pill {
+.vote-bar {
   position: fixed;
-  bottom: 30px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   background: #111;
-  color: #fff;
-  padding: 14px 20px;
-  border-radius: 40px;
+  padding: 12px 16px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.05);
   z-index: 1000;
-  max-width: 820px;
+  max-width: 600px;
 }
 
-.selection-dots {
+/* 선택된 아이템들 */
+.selected-items {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
-.dot {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  transition: all 0.2s;
-}
-
-.dot.filled {
-  background: #4a6cf7;
-  box-shadow: 0 0 12px rgba(74, 108, 247, 0.5);
-}
-
-.selection-names {
-  display: flex;
-  gap: 6px;
-  font-size: 12px;
-  color: #ccc;
-  flex-wrap: wrap;
-  max-width: 200px;
-}
-
-.selected-name {
-  padding: 5px 10px;
-  background: #222;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.rank-label {
-  color: #4a6cf7;
-  font-weight: 700;
-  font-size: 11px;
-}
-
-/* 한줄 변론 입력란 */
-.argument-input-wrap {
+.item-slot {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  min-width: 200px;
-}
-
-.arg-input {
-  flex: 1;
-  padding: 9px 14px;
-  border: 1.5px solid #333;
+  padding: 6px 10px;
   border-radius: 12px;
-  background: #1a1a1a;
-  color: #fff;
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  min-width: 120px;
 }
 
-.arg-input::placeholder {
+.item-slot.filled {
+  background: #1e1e1e;
+  border: 1.5px solid #333;
+}
+
+.item-slot.empty {
+  background: transparent;
+  border: 1.5px dashed #444;
+}
+
+.item-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rank-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #4a6cf7;
+  text-transform: uppercase;
+}
+
+.item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remove-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #333;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.remove-btn:hover:not(:disabled) {
+  background: #ef4444;
+  color: #fff;
+}
+
+.remove-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 빈 슬롯 */
+.empty-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 100%;
+}
+
+.rank-num {
+  font-size: 13px;
+  font-weight: 600;
   color: #555;
 }
 
-.arg-input:focus {
-  border-color: #4a6cf7;
+.pick-hint {
+  font-size: 12px;
+  color: #555;
 }
 
-.opt-tag {
-  font-size: 10px;
-  color: #666;
-  white-space: nowrap;
-}
-
-.vote-count-info {
-  display: none;
-}
-
-.vote-count-info .count {
-  font-size: 13px;
-  font-weight: 600;
-  color: #4a6cf7;
-  background: rgba(74, 108, 247, 0.15);
-  padding: 4px 10px;
-  border-radius: 12px;
-}
-
-.glow-submit-btn {
-  background: #4a6cf7;
+/* 제출 버튼 */
+.submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #4a6cf7 0%, #6366f1 100%);
   color: #fff;
   border: none;
-  padding: 10px 28px;
-  border-radius: 20px;
+  padding: 12px 24px;
+  border-radius: 14px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
   white-space: nowrap;
+  min-width: 110px;
 }
 
-.glow-submit-btn:hover:not(:disabled) {
-  background: #3a5ce7;
-  box-shadow: 0 0 20px rgba(74, 108, 247, 0.4);
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(74, 108, 247, 0.4);
 }
 
-.glow-submit-btn:disabled {
-  opacity: 0.6;
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+  background: #333;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Transition */
@@ -267,39 +313,103 @@ const handleSubmit = () => {
 
 /* 모바일 */
 @media (max-width: 768px) {
-  .sticky-vote-pill {
-    bottom: 20px;
-    padding: 12px 16px;
-    gap: 12px;
-    left: 16px;
-    right: 16px;
+  .vote-bar {
+    bottom: 16px;
+    left: 12px;
+    right: 12px;
     transform: none;
-    border-radius: 20px;
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 16px;
     max-width: none;
   }
 
-  .selection-names {
+  .selected-items {
+    flex: 1;
+    overflow-x: auto;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .selected-items::-webkit-scrollbar {
     display: none;
   }
 
-  .argument-input-wrap {
+  .item-slot {
+    min-width: auto;
+    padding: 5px 8px;
+  }
+
+  .item-slot.empty {
+    min-width: 70px;
+  }
+
+  .item-thumb {
+    width: 32px;
+    height: 32px;
+  }
+
+  .item-info {
     display: none;
   }
 
-  .vote-count-info {
+  .item-slot.filled {
+    position: relative;
+  }
+
+  /* 모바일에서 순위 뱃지를 이미지 위에 표시 */
+  .item-slot.filled .rank-badge {
+    display: none;
+  }
+
+  .item-slot.filled::before {
+    content: attr(data-rank);
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 18px;
+    height: 18px;
+    background: #4a6cf7;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
     display: flex;
     align-items: center;
+    justify-content: center;
   }
 
-  .vote-count-info .count {
+  .remove-btn {
+    width: 20px;
+    height: 20px;
+  }
+
+  .remove-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .empty-slot {
+    height: 32px;
+  }
+
+  .rank-num {
     font-size: 12px;
-    padding: 3px 8px;
   }
 
-  .glow-submit-btn {
-    flex: 1;
-    text-align: center;
+  .submit-btn {
     padding: 10px 16px;
+    font-size: 14px;
+    min-width: 90px;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vote-bar {
+    bottom: 12px;
+    left: 8px;
+    right: 8px;
   }
 }
 </style>

@@ -1,14 +1,24 @@
 <template>
   <div :class="['product-card-v1', { selected: productRank !== null }]">
-    <!-- 선택된 순위 오버레이 배지 -->
-    <div v-if="productRank" :class="['selected-rank-overlay', `rank-${productRank}`]">
-      {{ productRank }}위 선택
+    <!-- 선택된 표시 -->
+    <div v-if="productRank" :class="['selected-rank-badge', isWeightedVote ? `rank-${productRank}` : 'single-pick']">
+      <template v-if="isWeightedVote">
+        <span class="rank-number">{{ productRank }}</span>
+        <span class="rank-text">위</span>
+      </template>
+      <template v-else>
+        <span class="pick-text">PICK</span>
+      </template>
     </div>
 
     <div :class="['rank-indicator', displayRank <= 3 ? `rank-pos-${displayRank}` : '']">{{ displayRank }}</div>
 
     <div class="img-box" :class="{ 'is-youtube': isYoutube }" @click="handleImageClick">
       <img :src="itemImage" :alt="itemName" @error="handleImageError" />
+      <!-- 이전 픽 뱃지 -->
+      <div v-if="item.userBattleVote" class="my-pick-badge">
+        {{ isWeightedVote && item.userBattleVote.rank ? `MY ${item.userBattleVote.rank}위` : 'MY PICK' }}
+      </div>
       <!-- YouTube 재생 버튼 오버레이 -->
       <div v-if="isYoutube" class="youtube-play-overlay">
         <div class="youtube-play-btn">
@@ -28,12 +38,6 @@
       <div class="info-content">
         <p v-if="itemBrand" class="brand">{{ itemBrand }}</p>
         <h3 class="name">{{ itemName }}</h3>
-
-        <!-- 이전 투표 표시 -->
-        <div v-if="item.userBattleVote" class="prev-vote-info">
-          <span class="prev-label">이전 픽:</span>
-          <span class="prev-rank">{{ item.userBattleVote.rank }}위</span>
-        </div>
       </div>
 
       <!-- Vote Actions -->
@@ -65,6 +69,7 @@
       :comment-summary="item.commentSummary"
       :item-id="item.id"
       :item-name="itemName"
+      :item-image="itemImage"
       :submitting="commentSubmitting"
       @open-comments="$emit('open-comments', item)"
       @submit-comment="handleSubmitComment"
@@ -175,6 +180,8 @@ defineExpose({ setCommentSubmitting })
   border: 1.5px solid #f0f0f0;
   display: flex;
   flex-direction: column;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .product-card-v1:hover {
@@ -182,10 +189,6 @@ defineExpose({ setCommentSubmitting })
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
-.product-card-v1.selected {
-  border-color: #6b7df5;
-  box-shadow: 0 8px 24px rgba(107, 125, 245, 0.12);
-}
 
 .product-card-v1.highlight-card {
   animation: highlightCard 1.5s ease;
@@ -197,30 +200,84 @@ defineExpose({ setCommentSubmitting })
   100% { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); }
 }
 
-/* 선택된 순위 오버레이 */
-.selected-rank-overlay {
+/* 선택된 순위 뱃지 */
+.selected-rank-badge {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 20;
-  padding: 6px 0;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 700;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   color: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: popIn 0.25s ease;
 }
 
-.selected-rank-overlay.rank-1 {
-  background: linear-gradient(135deg, #f6c34c 0%, #e8a830 100%);
+@keyframes popIn {
+  0% { transform: translate(-50%, -50%) scale(0); }
+  70% { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
 
-.selected-rank-overlay.rank-2 {
-  background: linear-gradient(135deg, #a8b4c4 0%, #8c9bb0 100%);
+.selected-rank-badge .rank-number {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
 }
 
-.selected-rank-overlay.rank-3 {
-  background: linear-gradient(135deg, #e8945a 0%, #d4784a 100%);
+.selected-rank-badge .rank-text {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.selected-rank-badge.rank-1 {
+  background: #f59e0b;
+}
+
+.selected-rank-badge.rank-2 {
+  background: #6b7280;
+}
+
+.selected-rank-badge.rank-3 {
+  background: #ea580c;
+}
+
+.selected-rank-badge.single-pick {
+  background: #9333ea;
+}
+
+.selected-rank-badge .pick-text {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+/* 선택된 카드 테두리 */
+.product-card-v1.selected {
+  border-width: 3px;
+}
+
+.product-card-v1.selected:has(.rank-1) {
+  border-color: #f59e0b;
+}
+
+.product-card-v1.selected:has(.rank-2) {
+  border-color: #6b7280;
+}
+
+.product-card-v1.selected:has(.rank-3) {
+  border-color: #ea580c;
+}
+
+.product-card-v1.selected:has(.single-pick) {
+  border-color: #9333ea;
 }
 
 .rank-indicator {
@@ -259,9 +316,6 @@ defineExpose({ setCommentSubmitting })
   box-shadow: 0 3px 12px rgba(212, 120, 74, 0.35);
 }
 
-.product-card-v1.selected .rank-indicator {
-  top: 38px;
-}
 
 .img-box {
   position: relative;
@@ -283,6 +337,21 @@ defineExpose({ setCommentSubmitting })
 
 .product-card-v1:hover .img-box img {
   transform: scale(1.03);
+}
+
+/* MY PICK 뱃지 */
+.my-pick-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 15;
+  padding: 4px 8px;
+  background: #9333ea;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.3);
 }
 
 /* YouTube 재생 오버레이 */
@@ -380,27 +449,6 @@ defineExpose({ setCommentSubmitting })
   overflow: hidden;
 }
 
-/* 이전 픽 표시 */
-.prev-vote-info {
-  margin-top: 8px;
-  padding: 4px 8px;
-  background: #f5f7ff;
-  border-radius: 5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-}
-
-.prev-label {
-  color: #888;
-}
-
-.prev-rank {
-  font-weight: 600;
-  color: #6b7df5;
-}
-
 .vote-actions {
   padding-top: 8px;
 }
@@ -486,26 +534,30 @@ defineExpose({ setCommentSubmitting })
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
-  border: none;
-  background: #9333ea;
+  border: 1.5px solid #e9d5ff;
+  background: #faf5ff;
   cursor: pointer;
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  color: #fff;
+  color: #9333ea;
   transition: all 0.2s ease;
 }
 
 .vote-btn:hover:not(:disabled) {
-  background: #7e22ce;
+  background: #f3e8ff;
+  border-color: #d8b4fe;
 }
 
 .vote-btn.active {
-  background: #10b981;
+  background: #9333ea;
+  border-color: #9333ea;
+  color: #fff;
 }
 
 .vote-btn.active:hover:not(:disabled) {
-  background: #059669;
+  background: #7e22ce;
+  border-color: #7e22ce;
 }
 
 .vote-btn:disabled {
@@ -513,12 +565,7 @@ defineExpose({ setCommentSubmitting })
   cursor: not-allowed;
 }
 
-/* 모바일/태블릿에서 이전 픽 숨김 */
 @media (max-width: 768px) {
-  .prev-vote-info {
-    display: none;
-  }
-
   .vote-actions {
     padding-top: 6px;
   }
@@ -569,12 +616,28 @@ defineExpose({ setCommentSubmitting })
   }
 
   .product-card-v1.selected .rank-indicator {
-    top: 22px;
+    top: 5px;
   }
 
-  .selected-rank-overlay {
-    padding: 3px 0;
-    font-size: 9px;
+  .selected-rank-badge {
+    width: 48px;
+    height: 48px;
+  }
+
+  .selected-rank-badge .rank-number {
+    font-size: 22px;
+  }
+
+  .selected-rank-badge .rank-text {
+    font-size: 10px;
+  }
+
+  .my-pick-badge {
+    top: 6px;
+    right: 6px;
+    padding: 3px 6px;
+    font-size: 8px;
+    border-radius: 4px;
   }
 
   .score-overlay {

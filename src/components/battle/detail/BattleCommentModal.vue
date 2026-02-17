@@ -414,9 +414,9 @@ watch(
 }
 
 .item-thumb {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
   object-fit: cover;
   background: #f5f5f5;
 }

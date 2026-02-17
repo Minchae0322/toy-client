@@ -195,10 +195,12 @@ class BattleService extends BaseApiService {
 
     const requestData = {
       items: itemsData.items.map(item => ({
+        itemType: item.itemType,
         productId: item.productId || null,
         customName: item.customName?.trim() || null,
         customBrand: item.customBrand?.trim() || null,
-        customImageUrl: item.customImageUrl?.trim() || null
+        customImageUrl: item.customImageUrl?.trim() || null,
+        contentUrl: item.contentUrl?.trim() || null
       }))
     }
 
