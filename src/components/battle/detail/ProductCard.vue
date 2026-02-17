@@ -600,7 +600,7 @@ defineExpose({ setCommentSubmitting })
   }
 
   .name {
-    font-size: 10px;
+    font-size: 13px;
     line-height: 1.25;
     -webkit-line-clamp: 2;
   }
