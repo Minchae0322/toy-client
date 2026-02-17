@@ -206,6 +206,7 @@
           @update:brand="newProduct.brand = $event"
           @submit="submitNewProduct"
           @select-product="submitSelectedProduct"
+          @submit-youtube="submitYoutubeProduct"
       />
 
       <!-- Share Modal -->
@@ -688,6 +689,37 @@ export default {
         }
       } catch (err) {
         console.error('아이템 등록 실패:', err)
+        await this.open({ type: 'alert', title: '오류', message: err.message || '아이템 등록에 실패했습니다.' })
+      } finally {
+        this.submitting = false
+      }
+    },
+
+    async submitYoutubeProduct(youtubeData) {
+      if (this.submitting) return
+
+      this.submitting = true
+
+      try {
+        const itemData = {
+          items: [{
+            customName: youtubeData.customName,
+            customBrand: youtubeData.customBrand || null,
+            customImageUrl: youtubeData.customImageUrl
+          }]
+        }
+
+        const response = await battleService.addBattleItems(this.battleId, itemData)
+
+        if (response.success) {
+          await this.open({ type: 'alert', title: '등록 완료', message: '아이템이 등록되었습니다!' })
+          this.closeAddModal()
+          await this.loadBattle()
+        } else {
+          throw new Error(response.message || '아이템 등록에 실패했습니다.')
+        }
+      } catch (err) {
+        console.error('YouTube 아이템 등록 실패:', err)
         await this.open({ type: 'alert', title: '오류', message: err.message || '아이템 등록에 실패했습니다.' })
       } finally {
         this.submitting = false

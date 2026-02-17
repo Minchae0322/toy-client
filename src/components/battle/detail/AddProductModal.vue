@@ -13,161 +13,93 @@
             </button>
           </div>
 
+          <!-- Tab Navigation -->
+          <div class="tab-nav">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              class="tab-btn"
+              :class="{ active: activeTab === tab.id }"
+              @click="activeTab = tab.id"
+              type="button"
+            >
+              <span class="tab-icon" v-html="tab.icon"></span>
+              <span class="tab-label">{{ tab.label }}</span>
+            </button>
+          </div>
+
           <!-- Modal Body -->
           <div class="modal-body">
-            <!-- 모드 선택이 안됐을 때: 초기 화면 -->
-            <div v-if="!selectedMode" class="mode-selection">
-              <p class="mode-title">어떤 방식으로 아이템을 추가할까요?</p>
 
-              <button type="button" class="mode-card" @click="selectedMode = 'search'">
-                <div class="mode-icon search">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.35-4.35"/>
-                  </svg>
-                </div>
-                <div class="mode-info">
-                  <span class="mode-name">아이템 검색하기</span>
-                  <span class="mode-desc">등록된 아이템 중에서 선택해요</span>
-                </div>
-                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </button>
-
-              <button type="button" class="mode-card" @click="selectedMode = 'custom'">
-                <div class="mode-icon custom">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                  </svg>
-                </div>
-                <div class="mode-info">
-                  <span class="mode-name">직접 입력하기</span>
-                  <span class="mode-desc">새로운 아이템을 등록해요</span>
-                </div>
-                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </button>
-            </div>
-
-            <!-- 검색 모드 -->
-            <div v-else-if="selectedMode === 'search'" class="search-mode">
-              <!-- 뒤로가기 -->
-              <button type="button" class="back-to-mode" @click="goBackToMode">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
-                다른 방식 선택
-              </button>
-
-              <!-- Search Input -->
-              <div class="search-section">
-                <div class="search-wrapper">
-                  <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.35-4.35"/>
-                  </svg>
+            <!-- YouTube Tab -->
+            <div v-if="activeTab === 'youtube'" class="tab-panel">
+              <div class="youtube-input-section">
+                <div class="input-row">
                   <input
-                    ref="searchInput"
-                    v-model="searchKeyword"
+                    v-model="youtubeUrl"
                     type="text"
-                    placeholder="아이템명, 브랜드로 검색..."
-                    class="search-input"
-                    @keyup.enter="handleSearch"
-                    @input="handleSearchInput"
+                    placeholder="YouTube 링크를 붙여넣으세요"
+                    class="youtube-url-input"
+                    @input="handleYoutubeInput"
+                    @keyup.enter="submitYoutubeItem"
                   />
-                  <button
-                    v-if="searchKeyword"
-                    type="button"
-                    class="search-clear"
-                    @click="clearSearch"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Search Results -->
-              <div class="search-results">
-                <!-- Loading -->
-                <div v-if="searching" class="results-loading">
-                  <div class="spinner-medium"></div>
-                  <span>검색 중...</span>
                 </div>
 
-                <!-- Empty State (initial) -->
-                <div v-else-if="!searchKeyword && products.length === 0" class="results-empty">
-                  <div class="empty-illustration">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <circle cx="11" cy="11" r="8"/>
-                      <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                  </div>
-                  <p class="empty-title">아이템을 검색해보세요</p>
-                  <p class="empty-desc">아이템명이나 브랜드로 검색할 수 있어요</p>
-                </div>
-
-                <!-- No Results -->
-                <div v-else-if="searchKeyword && products.length === 0 && !searching" class="results-empty">
-                  <div class="empty-illustration warning">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <circle cx="12" cy="12" r="10"/>
-                      <line x1="12" y1="8" x2="12" y2="12"/>
-                      <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                  </div>
-                  <p class="empty-title">"{{ searchKeyword }}" 검색 결과가 없어요</p>
-                  <p class="empty-desc">직접 입력으로 새 아이템을 추가해보세요</p>
-                  <button type="button" class="btn-switch-mode" @click="selectedMode = 'custom'">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                    직접 입력하기
-                  </button>
-                </div>
-
-                <!-- Product List -->
-                <div v-else class="product-list">
-                  <p class="results-count">검색 결과 {{ products.length }}개</p>
-                  <button
-                    v-for="product in products"
-                    :key="product.productId || product.id"
-                    type="button"
-                    class="product-item"
-                    @click="selectProduct(product)"
-                  >
-                    <img
-                      :src="getProductImage(product)"
-                      :alt="product.name"
-                      class="product-image"
-                      @error="handleImageError"
-                    />
-                    <div class="product-info">
-                      <p class="product-name">{{ product.name }}</p>
-                      <p class="product-brand">{{ product.brand }}</p>
+                <!-- YouTube Preview -->
+                <div v-if="youtubePreview" class="youtube-preview">
+                  <div class="preview-thumbnail">
+                    <img :src="youtubePreview.thumbnail" alt="YouTube 영상" />
+                    <div class="play-overlay">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
                     </div>
-                    <div class="select-badge">선택</div>
-                  </button>
+                  </div>
+                  <div class="preview-inputs">
+                    <input
+                      v-model="youtubePreview.customName"
+                      type="text"
+                      placeholder="아이템 이름 (필수)"
+                      class="preview-input"
+                      maxlength="30"
+                    />
+                    <div class="char-count-inline">{{ (youtubePreview.customName || '').length }}/30</div>
+                    <input
+                      v-model="youtubePreview.customBrand"
+                      type="text"
+                      placeholder="브랜드/채널 (선택)"
+                      class="preview-input small"
+                      maxlength="20"
+                    />
+                  </div>
                 </div>
+
+                <div v-else class="youtube-empty">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+                    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+                  </svg>
+                  <p>YouTube 링크를 입력하면<br/>썸네일과 함께 아이템으로 추가됩니다</p>
+                </div>
+
+                <!-- Submit -->
+                <button
+                  @click="submitYoutubeItem"
+                  :disabled="!isYoutubeValid || submitting"
+                  class="btn-submit"
+                  type="button"
+                >
+                  <span v-if="submitting" class="btn-loading">
+                    <span class="spinner-tiny"></span>
+                    등록 중...
+                  </span>
+                  <span v-else>아이템 등록하기</span>
+                </button>
               </div>
             </div>
 
-            <!-- 직접 입력 모드 -->
-            <div v-else-if="selectedMode === 'custom'" class="custom-mode">
-              <!-- 뒤로가기 -->
-              <button type="button" class="back-to-mode" @click="goBackToMode">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
-                다른 방식 선택
-              </button>
-
+            <!-- Image Upload Tab -->
+            <div v-if="activeTab === 'image'" class="tab-panel">
               <!-- Image Upload Section -->
               <div class="form-section">
                 <label class="form-label">
@@ -176,17 +108,17 @@
                 </label>
 
                 <div class="image-upload-area">
-                  <!-- 이미지 미리보기 -->
+                  <!-- Image Preview -->
                   <div v-if="imagePreview" class="image-preview-wrapper" :class="{ uploading: imageUploading, 'upload-failed': uploadFailed }">
                     <img :src="imagePreview" alt="Preview" class="preview-image" />
 
-                    <!-- 업로드 중 오버레이 -->
+                    <!-- Uploading Overlay -->
                     <div v-if="imageUploading" class="upload-overlay">
                       <div class="spinner-small"></div>
                       <span class="overlay-text">업로드 중...</span>
                     </div>
 
-                    <!-- 업로드 실패 오버레이 -->
+                    <!-- Upload Failed Overlay -->
                     <div v-if="uploadFailed" class="upload-failed-overlay">
                       <svg class="failed-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
@@ -196,7 +128,7 @@
                       <span class="overlay-text">업로드 실패</span>
                     </div>
 
-                    <!-- 삭제 버튼 -->
+                    <!-- Remove Button -->
                     <button
                       @click="$emit('clear-image')"
                       class="btn-remove-image"
@@ -210,7 +142,7 @@
                     </button>
                   </div>
 
-                  <!-- 업로드 영역 -->
+                  <!-- Upload Area -->
                   <label v-else class="image-upload-label">
                     <div class="upload-icon-wrapper">
                       <svg class="upload-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -275,7 +207,7 @@
               <button
                 @click="$emit('submit')"
                 :disabled="submitting || !isCustomValid"
-                class="btn-submit-custom"
+                class="btn-submit"
                 type="button"
               >
                 <span v-if="submitting" class="btn-loading">
@@ -285,13 +217,106 @@
                 <span v-else>아이템 등록하기</span>
               </button>
             </div>
-          </div>
 
-          <!-- Modal Footer (초기 화면에서만) -->
-          <div v-if="!selectedMode" class="modal-footer">
-            <button @click="$emit('close')" class="btn-cancel-full" type="button">
-              취소
-            </button>
+            <!-- Product Search Tab -->
+            <div v-if="activeTab === 'search'" class="tab-panel">
+              <!-- Search Input -->
+              <div class="search-section">
+                <div class="search-wrapper">
+                  <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                  </svg>
+                  <input
+                    ref="searchInput"
+                    v-model="searchKeyword"
+                    type="text"
+                    placeholder="아이템명, 브랜드로 검색..."
+                    class="search-input"
+                    @keyup.enter="handleSearch"
+                    @input="handleSearchInput"
+                  />
+                  <button
+                    v-if="searchKeyword"
+                    type="button"
+                    class="search-clear"
+                    @click="clearSearch"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Search Results -->
+              <div class="search-results">
+                <!-- Loading -->
+                <div v-if="searching" class="results-loading">
+                  <div class="spinner-medium"></div>
+                  <span>검색 중...</span>
+                </div>
+
+                <!-- Empty State (initial) -->
+                <div v-else-if="!searchKeyword && products.length === 0" class="results-empty">
+                  <div class="empty-illustration">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <circle cx="11" cy="11" r="8"/>
+                      <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                  </div>
+                  <p class="empty-title">아이템을 검색해보세요</p>
+                  <p class="empty-desc">아이템명이나 브랜드로 검색할 수 있어요</p>
+                </div>
+
+                <!-- No Results -->
+                <div v-else-if="searchKeyword && products.length === 0 && !searching" class="results-empty">
+                  <div class="empty-illustration warning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                  </div>
+                  <p class="empty-title">"{{ searchKeyword }}" 검색 결과가 없어요</p>
+                  <p class="empty-desc">이미지 업로드 탭에서 직접 추가해보세요</p>
+                  <button type="button" class="btn-switch-mode" @click="activeTab = 'image'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    이미지로 직접 추가
+                  </button>
+                </div>
+
+                <!-- Product List -->
+                <div v-else class="product-list">
+                  <p class="results-count">검색 결과 {{ products.length }}개</p>
+                  <button
+                    v-for="product in products"
+                    :key="product.productId || product.id"
+                    type="button"
+                    class="product-item"
+                    @click="selectProduct(product)"
+                  >
+                    <img
+                      :src="getProductImage(product)"
+                      :alt="product.name"
+                      class="product-image"
+                      @error="handleImageError"
+                    />
+                    <div class="product-info">
+                      <p class="product-name">{{ product.name }}</p>
+                      <p class="product-brand">{{ product.brand }}</p>
+                    </div>
+                    <div class="select-badge">선택</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -300,7 +325,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { productService } from '@/services/ProductService.js'
 
 const props = defineProps({
@@ -330,10 +355,32 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'update:image', 'clear-image', 'update:name', 'update:brand', 'submit', 'select-product'])
+const emit = defineEmits(['close', 'update:image', 'clear-image', 'update:name', 'update:brand', 'submit', 'select-product', 'submit-youtube'])
 
-// Mode state
-const selectedMode = ref(null) // null, 'search', 'custom'
+// Tab definitions
+const tabs = [
+  {
+    id: 'youtube',
+    label: 'YouTube',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>'
+  },
+  {
+    id: 'image',
+    label: '사진',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+  },
+  {
+    id: 'search',
+    label: '제품검색',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'
+  }
+]
+
+const activeTab = ref('youtube')
+
+// YouTube state
+const youtubeUrl = ref('')
+const youtubePreview = ref(null)
 
 // Search state
 const searchInput = ref(null)
@@ -347,17 +394,61 @@ const isCustomValid = computed(() => {
   return props.imagePreview && props.name.trim().length > 0 && !props.imageUploading && !props.uploadFailed
 })
 
-// Methods
-const goBackToMode = () => {
-  selectedMode.value = null
-  searchKeyword.value = ''
-  products.value = []
+const isYoutubeValid = computed(() => {
+  return youtubePreview.value && youtubePreview.value.customName?.trim().length > 0
+})
+
+// YouTube methods
+const extractYoutubeId = (url) => {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/shorts\/([^&\n?#]+)/
+  ]
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match) return match[1]
+  }
+  return null
 }
 
+const getYoutubeThumbnail = (videoId) => {
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+}
+
+const handleYoutubeInput = () => {
+  const videoId = extractYoutubeId(youtubeUrl.value)
+  if (videoId) {
+    youtubePreview.value = {
+      videoId,
+      thumbnail: getYoutubeThumbnail(videoId),
+      customName: '',
+      customBrand: ''
+    }
+  } else {
+    youtubePreview.value = null
+  }
+}
+
+const submitYoutubeItem = () => {
+  if (!isYoutubeValid.value) return
+  emit('submit-youtube', {
+    customName: youtubePreview.value.customName.trim(),
+    customBrand: youtubePreview.value.customBrand?.trim() || '',
+    customImageUrl: youtubePreview.value.thumbnail,
+    youtubeVideoId: youtubePreview.value.videoId,
+    contentUrl: `https://www.youtube.com/watch?v=${youtubePreview.value.videoId}`
+  })
+  // Reset
+  youtubeUrl.value = ''
+  youtubePreview.value = null
+}
+
+// Image methods
 const handleImageChange = (e) => {
   emit('update:image', e)
 }
 
+// Search methods
 const handleSearchInput = () => {
   if (searchTimeout) clearTimeout(searchTimeout)
 
@@ -428,13 +519,15 @@ const handleImageError = (e) => {
   e.target.src = '/default-product.png'
 }
 
-// Watch for mode change to focus search input
-const focusSearchInput = async () => {
-  await nextTick()
-  if (searchInput.value) {
-    searchInput.value.focus()
+// Focus search input when switching to search tab
+watch(activeTab, async (newTab) => {
+  if (newTab === 'search') {
+    await nextTick()
+    if (searchInput.value) {
+      searchInput.value.focus()
+    }
   }
-}
+})
 </script>
 
 <style scoped>
@@ -478,7 +571,7 @@ const focusSearchInput = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 24px 20px;
+  padding: 24px 24px 16px;
   flex-shrink: 0;
 }
 
@@ -511,6 +604,51 @@ const focusSearchInput = async () => {
   color: #6b7280;
 }
 
+/* Tab Navigation */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px 16px;
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #f3f4f6;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #374151;
+  background: #e5e7eb;
+}
+
+.tab-btn.active {
+  background: #faf5ff;
+  color: #9333ea;
+  border-color: #9333ea;
+}
+
+.tab-icon {
+  display: flex;
+  align-items: center;
+}
+
+.tab-label {
+  white-space: nowrap;
+}
+
 /* Body */
 .modal-body {
   flex: 1;
@@ -518,132 +656,353 @@ const focusSearchInput = async () => {
   padding: 0 24px 24px;
 }
 
-/* Mode Selection */
-.mode-selection {
+/* Tab Panel */
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===== YouTube Tab ===== */
+.youtube-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.youtube-url-input {
+  flex: 1;
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.youtube-url-input:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.youtube-url-input::placeholder {
+  color: #9ca3af;
+}
+
+.youtube-preview {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 14px;
+  background: #f9fafb;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
 }
 
-.mode-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #6b7280;
-  text-align: center;
-  margin-bottom: 8px;
+.preview-thumbnail {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.mode-card {
-  display: grid;
-  grid-template-columns: 48px 1fr 20px;
+.preview-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
-  background: white;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.preview-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.preview-input {
+  width: 100%;
+  padding: 12px 14px;
   border: 2px solid #e5e7eb;
-  border-radius: 16px;
-  cursor: pointer;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
   transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.preview-input:focus {
+  outline: none;
+  border-color: #9333ea;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+}
+
+.preview-input.small {
+  font-size: 13px;
+  padding: 10px 14px;
+}
+
+.char-count-inline {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  font-size: 11px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.youtube-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.youtube-empty svg {
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.youtube-empty p {
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ===== Image Upload Tab (from original custom mode) ===== */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.optional {
+  font-size: 12px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.image-upload-area {
   width: 100%;
 }
 
-.mode-card:hover {
+.image-preview-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.image-preview-wrapper.uploading {
+  border-color: #9333ea;
+}
+
+.image-preview-wrapper.upload-failed {
+  border-color: #ef4444;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-overlay,
+.upload-failed-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.upload-overlay {
+  background: rgba(147, 51, 234, 0.85);
+}
+
+.upload-failed-overlay {
+  background: rgba(239, 68, 68, 0.85);
+}
+
+.overlay-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+}
+
+.failed-icon-svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.btn-remove-image {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-remove-image:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.btn-remove-image:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-remove-image svg {
+  width: 14px;
+  height: 14px;
+  color: white;
+}
+
+.image-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 2px dashed #d1d5db;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafafa;
+}
+
+.image-upload-label:hover {
   border-color: #9333ea;
   background: #faf5ff;
 }
 
-.mode-card:hover .arrow-icon {
-  color: #9333ea;
-}
-
-.mode-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+.upload-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  background: #f3e8ff;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
 }
 
-.mode-icon.search {
-  background: #f3e8ff;
+.image-upload-label:hover .upload-icon-wrapper {
+  background: #e9d5ff;
 }
 
-.mode-icon.search svg {
-  width: 24px;
-  height: 24px;
+.upload-icon-svg {
+  width: 28px;
+  height: 28px;
   color: #9333ea;
+  transition: all 0.2s;
 }
 
-.mode-icon.custom {
-  background: #dbeafe;
+.upload-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.mode-icon.custom svg {
-  width: 24px;
-  height: 24px;
-  color: #3b82f6;
-}
-
-.mode-info {
-  text-align: left;
-}
-
-.mode-name {
-  display: block;
+.upload-text-main {
   font-size: 15px;
   font-weight: 700;
-  color: #111827;
-  margin-bottom: 4px;
+  color: #374151;
 }
 
-.mode-desc {
-  display: block;
+.upload-text-hint {
   font-size: 13px;
   color: #9ca3af;
 }
 
-.arrow-icon {
-  width: 20px;
-  height: 20px;
-  color: #d1d5db;
-  transition: color 0.2s;
+.hidden-input {
+  display: none;
 }
 
-/* Back Button */
-.back-to-mode {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #6b7280;
-  cursor: pointer;
+/* Input */
+.input-wrapper {
+  position: relative;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  padding-right: 60px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: inherit;
   transition: all 0.2s;
-  margin-bottom: 20px;
-  width: fit-content;
+  background: white;
+  box-sizing: border-box;
 }
 
-.back-to-mode svg {
-  width: 16px;
-  height: 16px;
+.form-input:focus {
+  outline: none;
+  border-color: #9333ea;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
 }
 
-.back-to-mode:hover {
-  background: #f3f4f6;
-  color: #374151;
+.form-input::placeholder {
+  color: #9ca3af;
 }
 
-/* Search Mode */
-.search-mode {
-  display: flex;
-  flex-direction: column;
+.char-count {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #9ca3af;
+  pointer-events: none;
 }
 
+/* ===== Search Tab ===== */
 .search-section {
   margin-bottom: 16px;
 }
@@ -671,6 +1030,7 @@ const focusSearchInput = async () => {
   font-size: 15px;
   font-family: inherit;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .search-input:focus {
@@ -711,7 +1071,7 @@ const focusSearchInput = async () => {
 /* Search Results */
 .search-results {
   flex: 1;
-  min-height: 240px;
+  min-height: 200px;
 }
 
 .results-loading {
@@ -730,24 +1090,24 @@ const focusSearchInput = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 20px;
+  padding: 40px 20px;
   text-align: center;
 }
 
 .empty-illustration {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .empty-illustration svg {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   color: #9333ea;
 }
 
@@ -760,27 +1120,27 @@ const focusSearchInput = async () => {
 }
 
 .empty-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #111827;
   margin: 0 0 6px 0;
 }
 
 .empty-desc {
-  font-size: 14px;
+  font-size: 13px;
   color: #9ca3af;
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
 }
 
 .btn-switch-mode {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 10px 20px;
   background: #9333ea;
   border: none;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: white;
   cursor: pointer;
@@ -788,13 +1148,13 @@ const focusSearchInput = async () => {
 }
 
 .btn-switch-mode svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .btn-switch-mode:hover {
   background: #7c3aed;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 /* Product List */
@@ -876,101 +1236,42 @@ const focusSearchInput = async () => {
   transition: all 0.2s;
 }
 
-/* Custom Mode */
-.custom-mode {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Form Section */
-.form-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.form-label {
-  font-size: 14px;
+/* ===== Submit Button (shared) ===== */
+.btn-submit {
+  width: 100%;
+  padding: 16px 24px;
+  background: #9333ea;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
   font-weight: 700;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.required {
-  color: #ef4444;
-}
-
-.optional {
-  font-size: 12px;
-  font-weight: 500;
-  color: #9ca3af;
-}
-
-/* Image Upload Area */
-.image-upload-area {
-  width: 100%;
-}
-
-.image-preview-wrapper {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 2px solid #e5e7eb;
+  color: white;
+  cursor: pointer;
   transition: all 0.2s;
+  font-family: inherit;
+  margin-top: 4px;
 }
 
-.image-preview-wrapper.uploading {
-  border-color: #9333ea;
+.btn-submit:hover:not(:disabled) {
+  background: #7c3aed;
+  transform: translateY(-2px);
 }
 
-.image-preview-wrapper.upload-failed {
-  border-color: #ef4444;
+.btn-submit:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Upload Overlay */
-.upload-overlay,
-.upload-failed-overlay {
-  position: absolute;
-  inset: 0;
+.btn-loading {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 
-.upload-overlay {
-  background: rgba(147, 51, 234, 0.85);
-}
-
-.upload-failed-overlay {
-  background: rgba(239, 68, 68, 0.85);
-}
-
-.overlay-text {
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
-}
-
-.failed-icon-svg {
-  width: 24px;
-  height: 24px;
-  color: white;
-}
-
-/* Spinner */
+/* Spinners */
 .spinner-tiny {
   width: 16px;
   height: 16px;
@@ -1000,196 +1301,6 @@ const focusSearchInput = async () => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-/* Remove Image Button */
-.btn-remove-image {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 28px;
-  height: 28px;
-  background: rgba(0, 0, 0, 0.6);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.btn-remove-image:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.8);
-}
-
-.btn-remove-image:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-remove-image svg {
-  width: 14px;
-  height: 14px;
-  color: white;
-}
-
-/* Upload Label */
-.image-upload-label {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-  border: 2px dashed #d1d5db;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: #fafafa;
-}
-
-.image-upload-label:hover {
-  border-color: #9333ea;
-  background: #faf5ff;
-}
-
-.upload-icon-wrapper {
-  width: 56px;
-  height: 56px;
-  background: #f3e8ff;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-
-.image-upload-label:hover .upload-icon-wrapper {
-  background: #e9d5ff;
-}
-
-.upload-icon-svg {
-  width: 28px;
-  height: 28px;
-  color: #9333ea;
-  transition: all 0.2s;
-}
-
-.upload-text-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.upload-text-main {
-  font-size: 15px;
-  font-weight: 700;
-  color: #374151;
-}
-
-.upload-text-hint {
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-.hidden-input {
-  display: none;
-}
-
-/* Input */
-.input-wrapper {
-  position: relative;
-}
-
-.form-input {
-  width: 100%;
-  padding: 14px 16px;
-  padding-right: 60px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 15px;
-  font-family: inherit;
-  transition: all 0.2s;
-  background: white;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #9333ea;
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
-}
-
-.form-input::placeholder {
-  color: #9ca3af;
-}
-
-.char-count {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  color: #9ca3af;
-  pointer-events: none;
-}
-
-/* Submit Button */
-.btn-submit-custom {
-  width: 100%;
-  padding: 16px 24px;
-  background: #9333ea;
-  border: none;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: 700;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-  margin-top: 8px;
-}
-
-.btn-submit-custom:hover:not(:disabled) {
-  background: #7c3aed;
-  transform: translateY(-2px);
-}
-
-.btn-submit-custom:disabled {
-  background: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-/* Footer */
-.modal-footer {
-  padding: 16px 24px 24px;
-  flex-shrink: 0;
-}
-
-.btn-cancel-full {
-  width: 100%;
-  padding: 14px 24px;
-  background: #f3f4f6;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.btn-cancel-full:hover {
-  background: #e5e7eb;
 }
 
 /* Transition */
@@ -1231,36 +1342,21 @@ const focusSearchInput = async () => {
 /* Mobile optimizations */
 @media (max-width: 480px) {
   .modal-header {
-    padding: 20px 20px 16px;
+    padding: 20px 20px 12px;
+  }
+
+  .tab-nav {
+    padding: 0 20px 12px;
+  }
+
+  .tab-btn {
+    padding: 8px 8px;
+    font-size: 12px;
+    gap: 4px;
   }
 
   .modal-body {
     padding: 0 20px 20px;
-  }
-
-  .modal-footer {
-    padding: 12px 20px 20px;
-  }
-
-  .mode-card {
-    grid-template-columns: 44px 1fr 18px;
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .mode-icon {
-    width: 44px;
-    height: 44px;
-  }
-
-  .mode-icon svg {
-    width: 22px;
-    height: 22px;
-  }
-
-  .arrow-icon {
-    width: 18px;
-    height: 18px;
   }
 
   .image-preview-wrapper {
