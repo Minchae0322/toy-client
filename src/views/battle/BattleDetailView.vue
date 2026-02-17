@@ -1090,7 +1090,7 @@ export default {
     },
 
     goBack() {
-      this.$router.back()
+      this.$router.push({ name: 'BattleList' })
     },
 
     shareBattle() {

@@ -62,7 +62,13 @@
       </div>
 
       <div v-if="remainingCount > 0" class="view-all" @click="$emit('open-comments')">
-        <button>PICK 한마디 {{ remainingCount }}개 더보기</button>
+        <button>
+          {{ remainingCount }}개 더보기
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M6 9l6 6 6-6"/>
+            <path d="M6 4l6 6 6-6"/>
+          </svg>
+        </button>
       </div>
     </template>
 
@@ -480,6 +486,9 @@ div.ba-avatar {
 }
 
 .view-all button {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   background: none;
   border: none;
   font-size: 11px;

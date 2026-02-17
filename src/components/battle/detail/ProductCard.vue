@@ -320,7 +320,7 @@ defineExpose({ setCommentSubmitting })
 .img-box {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: #fafafa;
+  background: #111;
   overflow: hidden;
 }
 
