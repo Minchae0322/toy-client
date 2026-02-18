@@ -30,7 +30,6 @@
               <FeedDetailImageGallery
                   :images="imageList"
                   :product-name="getProductName"
-                  @like="handleLike"
               />
             </div>
 

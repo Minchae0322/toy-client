@@ -2,25 +2,19 @@
   <div class="image-gallery">
     <div
         class="image-container"
-        @dblclick="handleDoubleTap"
         @mouseenter="isHovered = true"
         @mouseleave="isHovered = false"
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
     >
       <img
           :src="getCurrentImage"
           :alt="productName"
           class="main-image"
           loading="lazy"
+          draggable="false"
       />
-
-      <!-- Like Animation -->
-      <transition name="like-scale">
-        <div v-if="showLikeAnimation" class="like-animation">
-          <svg class="heart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14a5 5 0 1 0 0 8 5 5 0 1 0 0-8M10 14l7-7M19 4a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/>
-          </svg>
-        </div>
-      </transition>
 
       <!-- Navigation Arrows -->
       <transition name="fade">
@@ -38,17 +32,6 @@
           </svg>
         </button>
       </transition>
-
-      <!-- Quick Like Button -->
-      <button
-          class="quick-like-btn"
-          :class="{ active: isLiked }"
-          @click.stop="handleLike"
-      >
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14a5 5 0 1 0 0 8 5 5 0 1 0 0-8M10 14l7-7M19 4a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/>
-        </svg>
-      </button>
 
       <!-- Image Indicators -->
       <div v-if="images.length > 1" class="image-indicators">
@@ -77,12 +60,13 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['like'])
-
 const currentIndex = ref(0)
-const showLikeAnimation = ref(false)
 const isHovered = ref(false)
-const isLiked = ref(false)
+
+// Touch swipe state
+const touchStartX = ref(0)
+const touchStartY = ref(0)
+const isSwiping = ref(false)
 
 const getCurrentImage = computed(() => {
   if (props.images.length === 0) return ''
@@ -97,18 +81,42 @@ const nextImage = () => {
   if (currentIndex.value < props.images.length - 1) currentIndex.value++
 }
 
-const handleDoubleTap = () => {
-  isLiked.value = true
-  emit('like')
-  showLikeAnimation.value = true
-  setTimeout(() => {
-    showLikeAnimation.value = false
-  }, 600)
+// Touch swipe handlers for mobile
+const onTouchStart = (e) => {
+  touchStartX.value = e.touches[0].clientX
+  touchStartY.value = e.touches[0].clientY
+  isSwiping.value = false
 }
 
-const handleLike = () => {
-  isLiked.value = !isLiked.value
-  emit('like')
+const onTouchMove = (e) => {
+  if (!touchStartX.value) return
+
+  const diffX = Math.abs(e.touches[0].clientX - touchStartX.value)
+  const diffY = Math.abs(e.touches[0].clientY - touchStartY.value)
+
+  // If horizontal swipe is dominant, prevent vertical scroll
+  if (diffX > diffY && diffX > 10) {
+    isSwiping.value = true
+    e.preventDefault()
+  }
+}
+
+const onTouchEnd = (e) => {
+  if (!isSwiping.value) return
+
+  const touchEndX = e.changedTouches[0].clientX
+  const diff = touchStartX.value - touchEndX
+  const threshold = 50
+
+  if (diff > threshold) {
+    nextImage()
+  } else if (diff < -threshold) {
+    prevImage()
+  }
+
+  touchStartX.value = 0
+  touchStartY.value = 0
+  isSwiping.value = false
 }
 </script>
 
@@ -125,6 +133,7 @@ const handleLike = () => {
   overflow: hidden;
   background: #1a1a1a;
   cursor: pointer;
+  touch-action: pan-y pinch-zoom;
 }
 
 .main-image {
@@ -133,42 +142,7 @@ const handleLike = () => {
   object-fit: cover;
   display: block;
   user-select: none;
-}
-
-/* Like Animation */
-.like-animation {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 10;
-}
-
-.heart-icon {
-  width: 80px;
-  height: 80px;
-  color: #9333ea;
-  filter: drop-shadow(0 4px 20px rgba(147, 51, 234, 0.4));
-}
-
-.like-scale-enter-active {
-  animation: likeScale 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes likeScale {
-  0% {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0;
-  }
+  -webkit-user-drag: none;
 }
 
 /* Navigation Buttons */
@@ -211,44 +185,6 @@ const handleLike = () => {
   width: 20px;
   height: 20px;
   color: #111827;
-}
-
-/* Quick Like Button */
-.quick-like-btn {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  width: 44px;
-  height: 44px;
-  background: rgba(255, 255, 255, 0.95);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s;
-  z-index: 5;
-}
-
-.quick-like-btn svg {
-  width: 22px;
-  height: 22px;
-  color: #d1d5db;
-  transition: all 0.2s;
-}
-
-.quick-like-btn:hover {
-  transform: scale(1.08);
-}
-
-.quick-like-btn:hover svg {
-  color: #9333ea;
-}
-
-.quick-like-btn.active svg {
-  color: #9333ea;
 }
 
 /* Image Indicators */
