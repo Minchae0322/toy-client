@@ -323,7 +323,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
     height: 10px;
   }
   .product-name {
-    font-size: 13px;
+    font-size: 15px;
   }
 
   /* 푸터 - 경계 제거 */
