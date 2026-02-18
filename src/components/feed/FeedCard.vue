@@ -169,7 +169,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 }
 
 .primary-review {
-  font-size: 19.5px; font-weight: 600; color: #1a1a1b; line-height: 1.55; margin-bottom: 14px;
+  font-size: 17.5px; font-weight: 600; color: #1a1a1b; line-height: 1.55; margin-bottom: 14px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .quote { color: #9993ea; font-size: 18px; font-family: serif; margin-right: 2px; }
@@ -286,7 +286,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   }
 
   .primary-review {
-    font-size: 17px;
+    font-size: 16px;
     margin-bottom: 10px;
     line-height: 1.5;
   }

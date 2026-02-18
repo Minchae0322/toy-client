@@ -519,6 +519,7 @@ const permissionType = computed(() => {
 
   .permission-info {
     margin-top: 14px;
+    position: relative;
   }
 
   .permission-badge {
@@ -538,12 +539,28 @@ const permissionType = computed(() => {
     font-size: 11px;
   }
 
+  .tooltip-wrapper {
+    position: static;
+  }
+
   .tooltip {
+    position: absolute;
     font-size: 12px;
     padding: 8px 12px;
     white-space: normal;
-    max-width: 200px;
+    width: max-content;
+    max-width: calc(100vw - 40px);
     text-align: center;
+    left: 50%;
+    right: auto;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+  }
+
+  .tooltip::after {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
   }
 }
 </style>
