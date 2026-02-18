@@ -73,20 +73,16 @@
                     <span v-if="errors.brand" class="error-text">{{ errors.brand }}</span>
                   </div>
 
-                  <div class="form-group">
+                  <div class="form-group category-form-group">
                     <label class="form-label">
                       카테고리
                       <span class="required">*</span>
                     </label>
-                    <button class="category-select-btn" @click="openCategoryModal" type="button">
-                      <div v-if="selectedCategoryInfo" class="selected-category">
-                        <span class="category-text">{{ selectedCategoryInfo.label }}</span>
-                      </div>
-                      <span v-else class="placeholder">카테고리를 선택하세요</span>
-                      <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                      </svg>
-                    </button>
+                    <CategoryChipSelector
+                      v-model="form.subCategoryId"
+                      content-type="PRODUCT"
+                      @select="handleCategorySelect"
+                    />
                     <span v-if="errors.subCategoryId" class="error-text">{{ errors.subCategoryId }}</span>
                   </div>
 
@@ -361,14 +357,6 @@
         @go-home="navigateToHome"
     />
 
-    <!-- 카테고리 선택 모달 -->
-    <CategorySelectModal
-        v-if="showCategoryModal"
-        content-type="PRODUCT"
-        :initial-category-id="form.subCategoryId"
-        @select="handleCategorySelect"
-        @close="closeCategoryModal"
-    />
   </div>
 </template>
 
@@ -385,7 +373,7 @@ import AuthError from '@/components/product/create/AuthError.vue'
 import LoginModal from '@/components/product/create/LoginModal.vue'
 import LoadingOverlay from '@/components/product/create/LoadingOverlay.vue'
 import SuccessModal from '@/components/product/create/SuccessModal.vue'
-import CategorySelectModal from '@/components/common/CategorySelectModal.vue'
+import CategoryChipSelector from '@/components/common/CategoryChipSelector.vue'
 
 const router = useRouter()
 const { user, isLoggedIn, loading: authLoading, userId, userNickname, checkAuthStatus, logout } = useAuth()
@@ -397,8 +385,6 @@ const { open } = useConfirmDialog()
 const isLoading = ref(false)
 const showSuccessModal = ref(false)
 const showLoginModal = ref(false)
-const showCategoryModal = ref(false)
-const selectedCategoryInfo = ref(null)
 const thumbnailFile = ref(null)
 const additionalFiles = ref([])
 const selectedFeatures = ref([])
@@ -637,33 +623,9 @@ const addTag = async (tag) => {
 const removeTag = (index) => { selectedTags.value.splice(index, 1) }
 
 // Category Methods
-const openCategoryModal = () => {
-  showCategoryModal.value = true
-}
-
-const closeCategoryModal = () => {
-  showCategoryModal.value = false
-}
-
-const handleCategorySelect = ({ categoryId, category, parent }) => {
-  form.subCategoryId = categoryId
+const handleCategorySelect = ({ subCategoryId }) => {
+  form.subCategoryId = subCategoryId
   errors.subCategoryId = ''
-
-  if (parent) {
-    selectedCategoryInfo.value = {
-      label: `${parent.categoryName} > ${category.categoryName}`,
-      category,
-      parent
-    }
-  } else {
-    selectedCategoryInfo.value = {
-      label: category.categoryName,
-      category,
-      parent: null
-    }
-  }
-
-  showCategoryModal.value = false
 }
 
 // Submit
@@ -1553,6 +1515,129 @@ const beforeUnloadHandler = (event) => {
 .sub-name { font-size: 14px; font-weight: 500; color: #333; }
 .sub-category-item.active .sub-name { color: #7c3aed; font-weight: 600; }
 .check-icon { width: 18px; height: 18px; color: #7c3aed; }
+
+/* Category Inline Selection */
+.category-form-group {
+  grid-column: 1 / -1;
+}
+
+.selected-category-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.selected-category-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #7c3aed;
+}
+.selected-category-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.selected-category-clear:hover {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.category-chips-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.category-chips-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+.category-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.category-chip {
+  padding: 8px 14px;
+  background: #f9fafb;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.category-chip:hover {
+  border-color: #d8b4fe;
+  background: #faf5ff;
+  color: #7c3aed;
+}
+.category-chip.active {
+  background: #7c3aed;
+  color: white;
+  border-color: #7c3aed;
+}
+.category-chip.more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #7c3aed;
+  border-color: #e9d5ff;
+  background: #faf5ff;
+  font-weight: 600;
+}
+.category-chip.more-btn:hover {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
+}
+
+/* 2뎁스 하위 카테고리 */
+.sub-category-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+.sub-category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sub-category-chip {
+  padding: 6px 12px;
+  background: white;
+  color: #888;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.sub-category-chip:hover {
+  background: #faf5ff;
+  border-color: #d8b4fe;
+  color: #7c3aed;
+}
+.sub-category-chip.active {
+  background: #f3e8ff;
+  border-color: #7c3aed;
+  color: #7c3aed;
+}
 
 /* Dropdown Transitions */
 .dropdown-enter-active { animation: dropIn 0.2s ease; }

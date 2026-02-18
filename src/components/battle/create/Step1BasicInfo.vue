@@ -49,20 +49,11 @@
         </div>
       </div>
       <div class="card-body">
-        <button class="category-select-btn" :class="{ selected: selectedCategoryInfo }" @click="openCategoryModal" type="button">
-          <div class="category-btn-content">
-            <div class="category-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </div>
-            <span v-if="selectedCategoryInfo" class="category-text">{{ selectedCategoryInfo.label }}</span>
-            <span v-else class="category-placeholder">카테고리 선택하기</span>
-          </div>
-          <svg class="chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
+        <CategoryChipSelector
+          v-model="battleForm.subCategoryId"
+          content-type="BATTLE"
+          @select="handleCategorySelect"
+        />
       </div>
     </div>
 
@@ -275,14 +266,6 @@
       </div>
     </div>
 
-    <!-- 카테고리 선택 모달 -->
-    <CategorySelectModal
-        v-if="showCategoryModal"
-        content-type="BATTLE"
-        :initial-category-id="battleForm.subCategoryId"
-        @select="handleCategorySelect"
-        @close="closeCategoryModal"
-    />
   </div>
 </template>
 
@@ -290,7 +273,7 @@
 import { ref, computed } from 'vue';
 import { useFile } from '@/services/FileService.js';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
-import CategorySelectModal from '@/components/common/CategorySelectModal.vue';
+import CategoryChipSelector from '@/components/common/CategoryChipSelector.vue';
 
 const props = defineProps({
   battleForm: {
@@ -310,8 +293,6 @@ const { open } = useConfirmDialog();
 const isUploading = ref(false);
 
 const thumbnailInput = ref(null);
-const showCategoryModal = ref(false);
-const selectedCategoryInfo = ref(null);
 
 // 요거픽 기간 계산
 const dateDuration = computed(() => {
@@ -322,44 +303,16 @@ const dateDuration = computed(() => {
   return diff > 0 ? diff : null;
 });
 
-// 카테고리 모달
-const openCategoryModal = () => {
-  showCategoryModal.value = true;
-};
-
-const closeCategoryModal = () => {
-  showCategoryModal.value = false;
-};
-
-const handleCategorySelect = ({ categoryId, category, parent }) => {
-  const categoryName = parent ? parent.categoryName : category.categoryName;
-  const subCategoryName = parent ? category.categoryName : null;
-  const categoryEmoji = category.emoji || (parent && parent.emoji) || null;
-
+// 카테고리 선택 처리
+const handleCategorySelect = ({ categoryId, subCategoryId, categoryName, subCategoryName, categoryEmoji }) => {
   emit('update:battleForm', {
     ...props.battleForm,
-    categoryId: parent ? parent.categoryId : categoryId,
-    subCategoryId: categoryId,
-    categoryName: categoryName,
-    subCategoryName: subCategoryName,
-    categoryEmoji: categoryEmoji
+    categoryId,
+    subCategoryId,
+    categoryName,
+    subCategoryName,
+    categoryEmoji
   });
-
-  if (parent) {
-    selectedCategoryInfo.value = {
-      label: `${parent.categoryName} > ${category.categoryName}`,
-      category,
-      parent
-    };
-  } else {
-    selectedCategoryInfo.value = {
-      label: category.categoryName,
-      category,
-      parent: null
-    };
-  }
-
-  showCategoryModal.value = false;
 };
 
 // 미리보기: 서버 URL 우선, 없으면 로컬 preview
@@ -679,6 +632,126 @@ const removeImage = () => {
 
 .chevron-icon {
   color: #9ca3af;
+}
+
+/* Category Inline Selection */
+.selected-category-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.selected-category-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #7c3aed;
+}
+.selected-category-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.selected-category-clear:hover {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.category-chips-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.category-chips-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0;
+}
+.category-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.category-chip {
+  padding: 8px 14px;
+  background: #f9fafb;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.category-chip:hover {
+  border-color: #d8b4fe;
+  background: #faf5ff;
+  color: #7c3aed;
+}
+.category-chip.active {
+  background: #7c3aed;
+  color: white;
+  border-color: #7c3aed;
+}
+.category-chip.more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #7c3aed;
+  border-color: #e9d5ff;
+  background: #faf5ff;
+  font-weight: 600;
+}
+.category-chip.more-btn:hover {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
+}
+
+/* 2뎁스 하위 카테고리 */
+.sub-category-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+.sub-category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sub-category-chip {
+  padding: 6px 12px;
+  background: white;
+  color: #888;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.sub-category-chip:hover {
+  background: #faf5ff;
+  border-color: #d8b4fe;
+  color: #7c3aed;
+}
+.sub-category-chip.active {
+  background: #f3e8ff;
+  border-color: #7c3aed;
+  color: #7c3aed;
 }
 
 /* 권한 옵션 */

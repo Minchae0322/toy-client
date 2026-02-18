@@ -67,8 +67,11 @@
           <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="G" />
           Google
         </button>
-        <button type="button" class="social-btn kakao" @click="$emit('social-login', 'kakao')">
-          Kakao
+        <button type="button" class="social-btn naver" @click="$emit('social-login', 'naver')">
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.5 10.5L6.3 0H0v20h6.5V9.5L13.7 20H20V0h-6.5z"/>
+          </svg>
+          Naver
         </button>
         <button type="button" class="social-btn github" @click="$emit('social-login', 'github')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -193,7 +196,7 @@ input.error { border-color: #ef4444; }
   cursor: pointer;
 }
 .social-btn img { width: 16px; }
-.social-btn.kakao { background: #fee500; border-color: #fee500; }
+.social-btn.naver { background: #03C75A; border-color: #03C75A; color: white; }
 .social-btn.github { background: #24292e; border-color: #24292e; color: white; }
 
 .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }

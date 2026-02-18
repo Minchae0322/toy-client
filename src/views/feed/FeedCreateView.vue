@@ -174,53 +174,11 @@
           <!-- Category -->
           <section class="card">
             <label class="form-label required">카테고리</label>
-
-            <!-- 선택된 카테고리 표시 -->
-            <div v-if="selectedCategoryInfo" class="selected-category-display">
-              <span class="selected-category-label">{{ selectedCategoryInfo.label }}</span>
-              <button type="button" class="selected-category-clear" @click="clearCategory">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
-
-            <!-- 1뎁스 카테고리 칩 -->
-            <div class="category-chips-section">
-              <p class="category-chips-title">인기 카테고리</p>
-              <div class="category-chips-list">
-                <button
-                  v-for="cat in popularCategories"
-                  :key="cat.categoryId"
-                  type="button"
-                  :class="['category-chip', { active: selectedParentCategory?.categoryId === cat.categoryId }]"
-                  @click="handleParentCategoryClick(cat)"
-                >
-                  {{ cat.categoryName }}
-                </button>
-                <button type="button" class="category-chip more-btn" @click="openCategoryModal">
-                  더보기
-                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <!-- 2뎁스 하위 카테고리 -->
-            <div v-if="selectedParentCategory && subCategories.length > 0" class="sub-category-section">
-              <div class="sub-category-list">
-                <button
-                  v-for="subCat in subCategories"
-                  :key="subCat.categoryId"
-                  type="button"
-                  :class="['sub-category-chip', { active: formData.subCategoryId === subCat.categoryId }]"
-                  @click="selectSubCategory(subCat)"
-                >
-                  {{ subCat.categoryName }}
-                </button>
-              </div>
-            </div>
+            <CategoryChipSelector
+              v-model="formData.subCategoryId"
+              content-type="FEED"
+              @select="handleCategorySelect"
+            />
           </section>
         </div>
 
@@ -427,14 +385,6 @@
       @close="closeProductModal"
     />
 
-    <!-- Category Select Modal -->
-    <CategorySelectModal
-      v-if="showCategoryModal"
-      content-type="FEED"
-      :initial-category-id="formData.subCategoryId"
-      @select="handleCategorySelect"
-      @close="closeCategoryModal"
-    />
   </div>
 </template>
 
@@ -443,18 +393,16 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useFile } from '@/services/FileService.js'
-import { useCategoryCache } from '@/composables/useCategoryCache.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { getUserId } from '@/utils/auth.js'
 import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
-import CategorySelectModal from '@/components/common/CategorySelectModal.vue'
+import CategoryChipSelector from '@/components/common/CategoryChipSelector.vue'
 
 const FEED_DRAFT_KEY = 'feed_draft'
 
 const router = useRouter()
 const feedService = useFeed()
 const fileService = useFile()
-const { loadPopularCategories, loadAllCategories, allCategories: cachedAllCategories } = useCategoryCache()
 const { open } = useConfirmDialog()
 
 const selectedPhotos = ref([])
@@ -465,23 +413,12 @@ const isProcessingImage = ref(false)
 const errorMessage = ref('')
 const hashtagInput = ref('')
 const productSuggestions = ref([])
-const showCategoryModal = ref(false)
-const selectedCategoryInfo = ref(null)
-const allCategories = ref([])
-const popularCategories = ref([])
-const selectedParentCategory = ref(null)
 const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
 const showProductModal = ref(false)
 const selectedProduct = ref(null)
 const productInputMode = ref('select') // 'select' | 'custom'
 const customInputRef = ref(null)
-
-// 선택된 1뎁스 카테고리의 하위 카테고리 목록
-const subCategories = computed(() => {
-  if (!selectedParentCategory.value) return []
-  return selectedParentCategory.value.children || []
-})
 
 const formData = ref({
   userId: getUserId(),
@@ -617,76 +554,8 @@ const resizeImage = (file, maxSize = 1920, quality = 0.85) => {
 }
 
 // Category Methods
-const loadCategories = async () => {
-  try {
-    // 전체 카테고리 로드 (캐시 활용)
-    await loadAllCategories()
-    allCategories.value = cachedAllCategories.value
-
-    // 실제 인기 카테고리 API 호출 (최근 30일 기준 콘텐츠 수로 정렬)
-    const popular = await loadPopularCategories('FEED', 8)
-    popularCategories.value = popular
-  } catch (error) {
-    console.error('카테고리 로드 실패:', error)
-  }
-}
-
-// 1뎁스 카테고리 클릭
-const handleParentCategoryClick = (cat) => {
-  // 같은 카테고리를 다시 클릭하면 선택 해제
-  if (selectedParentCategory.value?.categoryId === cat.categoryId) {
-    selectedParentCategory.value = null
-    return
-  }
-  selectedParentCategory.value = cat
-}
-
-// 2뎁스 카테고리 선택
-const selectSubCategory = (subCat) => {
-  formData.value.subCategoryId = subCat.categoryId
-
-  selectedCategoryInfo.value = {
-    label: `${selectedParentCategory.value.categoryName} > ${subCat.categoryName}`,
-    category: subCat,
-    parent: selectedParentCategory.value
-  }
-}
-
-const clearCategory = () => {
-  formData.value.subCategoryId = null
-  selectedCategoryInfo.value = null
-  selectedParentCategory.value = null
-}
-
-const openCategoryModal = () => {
-  showCategoryModal.value = true
-}
-
-const closeCategoryModal = () => {
-  showCategoryModal.value = false
-}
-
-const handleCategorySelect = ({ categoryId, category, parent }) => {
-  formData.value.subCategoryId = categoryId
-
-  if (parent) {
-    selectedCategoryInfo.value = {
-      label: `${parent.categoryName} > ${category.categoryName}`,
-      category,
-      parent
-    }
-    // 모달에서 선택한 경우 1뎁스도 활성화
-    selectedParentCategory.value = parent
-  } else {
-    selectedCategoryInfo.value = {
-      label: category.categoryName,
-      category,
-      parent: null
-    }
-    selectedParentCategory.value = null
-  }
-
-  showCategoryModal.value = false
+const handleCategorySelect = ({ subCategoryId }) => {
+  formData.value.subCategoryId = subCategoryId
 }
 
 // Photo Methods
@@ -1088,7 +957,6 @@ watch(productInputMode, (newMode) => {
 })
 
 onMounted(async () => {
-  await loadCategories()
   await loadDraft()
 })
 

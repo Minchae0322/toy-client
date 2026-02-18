@@ -169,7 +169,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 }
 
 .primary-review {
-  font-size: 16.5px; font-weight: 600; color: #1a1a1b; line-height: 1.55; margin-bottom: 14px;
+  font-size: 19.5px; font-weight: 600; color: #1a1a1b; line-height: 1.55; margin-bottom: 14px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .quote { color: #9993ea; font-size: 18px; font-family: serif; margin-right: 2px; }
@@ -211,7 +211,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   color: #d1d5db;
 }
 .product-name {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #3f3f46;
   margin: 2px 0 0;
@@ -286,7 +286,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   }
 
   .primary-review {
-    font-size: 14px;
+    font-size: 17px;
     margin-bottom: 10px;
     line-height: 1.5;
   }
@@ -323,7 +323,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
     height: 10px;
   }
   .product-name {
-    font-size: 15px;
+    font-size: 13px;
   }
 
   /* 푸터 - 경계 제거 */

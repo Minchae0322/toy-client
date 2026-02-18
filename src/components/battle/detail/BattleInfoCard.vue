@@ -36,13 +36,30 @@
       </div>
     </div>
 
+    <!-- 참여 권한 안내 -->
+    <div v-if="permissionType" class="permission-info">
+      <span class="permission-badge">
+        <svg class="permission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        {{ permissionType.title }}
+      </span>
+      <div class="tooltip-wrapper">
+        <button class="help-btn" type="button" aria-label="참여 권한 설명">?</button>
+        <div class="tooltip">{{ permissionType.description }}</div>
+      </div>
+    </div>
+
     <button
         v-if="canUserAddItem"
         @click="$emit('add-product')"
         class="add-product-btn"
     >
       <div class="plus-circle">+</div>
-      <span>내가 아는 좋은 아이템 추가하기</span>
+      <span>나도 참여하기</span>
     </button>
   </section>
 </template>
@@ -82,6 +99,10 @@ const formattedParticipants = computed(() => {
 
 const formattedVotes = computed(() => {
   return battleUtils.formatCount(props.battle.totalVotes)
+})
+
+const permissionType = computed(() => {
+  return props.battle.itemAddPermissionType || null
 })
 </script>
 
@@ -263,41 +284,153 @@ const formattedVotes = computed(() => {
   margin-top: 24px;
   padding: 20px;
   background: #ffffff;
-  border: 2px dashed #e5e7eb;
+  border: 2px solid #f3e8ff;
   border-radius: 20px;
   font-size: 16px;
   font-weight: 700;
-  color: #6b7280;
+  color: #9333ea;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: btn-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes btn-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0);
+    border-color: #f3e8ff;
+  }
+  50% {
+    box-shadow: 0 0 20px 3px rgba(147, 51, 234, 0.15);
+    border-color: #c084fc;
+  }
 }
 
 .plus-circle {
   width: 28px;
   height: 28px;
-  background: #f3f4f6;
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
+  color: #ffffff;
   transition: all 0.2s;
+  animation: plus-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes plus-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .add-product-btn:hover {
-  border-color: #4a6cf7;
-  background: #f8faff;
-  color: #4a6cf7;
+  border-color: #c084fc;
+  background: #faf5ff;
+  color: #7c3aed;
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(147, 51, 234, 0.12);
+  animation: none;
 }
 
 .add-product-btn:hover .plus-circle {
-  background: #4a6cf7;
+  transform: scale(1.1);
+  animation: none;
+}
+
+/* 참여 권한 안내 */
+.permission-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.permission-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.permission-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.help-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  background: #ffffff;
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.help-btn:hover {
+  border-color: #9333ea;
+  color: #9333ea;
+  background: #faf5ff;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  background: #1f2937;
   color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  border-radius: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1f2937;
+}
+
+.tooltip-wrapper:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* 반응형 처리 */
@@ -382,6 +515,35 @@ const formattedVotes = computed(() => {
     width: 24px;
     height: 24px;
     font-size: 18px;
+  }
+
+  .permission-info {
+    margin-top: 14px;
+  }
+
+  .permission-badge {
+    padding: 6px 12px;
+    font-size: 11px;
+    gap: 5px;
+  }
+
+  .permission-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .help-btn {
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+  }
+
+  .tooltip {
+    font-size: 12px;
+    padding: 8px 12px;
+    white-space: normal;
+    max-width: 200px;
+    text-align: center;
   }
 }
 </style>
