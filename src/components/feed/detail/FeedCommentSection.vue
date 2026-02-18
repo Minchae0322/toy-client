@@ -217,6 +217,8 @@ const handleDelete = (commentId) => {
   color: #fff;
   cursor: pointer;
   transition: background 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .btn-post:hover:not(:disabled) {
