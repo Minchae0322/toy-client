@@ -5,6 +5,8 @@ import {webSocketService} from '@/services/webSocketService.js'
 import {useAuth} from '@/composables/useAuth'
 import GlobalConfirmDialog from '@/components/common/GlobalConfirmDialog.vue'
 import {useConfirmDialog} from '@/composables/useConfirmDialog'
+import NotificationDropdown from '@/components/notification/NotificationDropdown.vue'
+import NotificationToast from '@/components/notification/NotificationToast.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -106,6 +108,9 @@ onUnmounted(() => {
 
       <!-- 데스크톱 네비게이션 -->
       <nav class="nav-desktop">
+        <!-- 알림 버튼 (로그인 시에만 표시) -->
+        <NotificationDropdown v-if="isLoggedIn" />
+
         <!-- 메시지 버튼 (항상 표시) -->
         <button class="msg-btn" @click="handleChatClick" title="메시지">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -158,6 +163,9 @@ onUnmounted(() => {
 
       <!-- 모바일 우측 영역 -->
       <div class="nav-mobile">
+        <!-- 알림 버튼 (로그인 시에만 표시) -->
+        <NotificationDropdown v-if="isLoggedIn" />
+
         <button class="mobile-msg-btn" @click="handleChatClick" title="메시지">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
@@ -316,6 +324,9 @@ onUnmounted(() => {
 
   <!-- 글로벌 확인 다이얼로그 -->
   <GlobalConfirmDialog />
+
+  <!-- 알림 토스트 -->
+  <NotificationToast v-if="isLoggedIn" />
 </template>
 
 <style scoped>

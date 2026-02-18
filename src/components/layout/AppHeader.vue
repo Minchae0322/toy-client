@@ -41,6 +41,9 @@
             </RouterLink>
           </div>
 
+          <!-- 알림 드롭다운 -->
+          <NotificationDropdown />
+
           <!-- 메시지 아이콘 -->
           <button class="message-btn" @click="goToChat" title="메시지">
             <svg class="message-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -92,6 +95,7 @@ import { useAuth } from '@/composables/useAuth'
 import { webSocketService } from '@/services/webSocketService.js'
 import * as authUtils from '@/utils/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import NotificationDropdown from '@/components/notification/NotificationDropdown.vue'
 
 const { open } = useConfirmDialog()
 const router = useRouter()
