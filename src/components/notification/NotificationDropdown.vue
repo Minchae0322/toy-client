@@ -47,6 +47,16 @@
                 </svg>
                 <span class="action-text">전체 삭제</span>
               </button>
+              <button
+                @click="closeDropdown"
+                class="action-btn close"
+                title="닫기"
+              >
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
             </div>
           </div>
           <!-- 읽지 않은 알림 수 안내 -->
@@ -106,9 +116,6 @@
               :class="{ unread: !notification.isRead }"
               @click="handleItemClick(notification)"
             >
-              <!-- 읽지 않음 왼쪽 강조선 -->
-              <div v-if="!notification.isRead" class="unread-accent"></div>
-
               <!-- 타입 아이콘 -->
               <div class="notification-icon-wrapper" :class="getTypeClass(notification.type)">
                 <component :is="getTypeIcon(notification.type)" class="type-icon" />
@@ -116,7 +123,7 @@
 
               <!-- 알림 내용 -->
               <div class="notification-content">
-                <p class="notification-title">{{ notification.title }}</p>
+                <p class="notification-title" v-html="formatTitle(notification)"></p>
                 <p class="notification-body">{{ notification.content }}</p>
                 <div class="notification-meta">
                   <span class="notification-type-label">{{ getTypeLabel(notification.type) }}</span>
@@ -379,6 +386,29 @@ const formatTime = (dateString) => {
   return notificationService.formatRelativeTime(dateString)
 }
 
+const formatTitle = (notification) => {
+  const title = notification.title || ''
+  const actorName = notification.actor?.nickname
+
+  if (actorName && title.includes(actorName)) {
+    // actorName을 bold 처리 (XSS 방지를 위해 escape 처리)
+    const escapedTitle = escapeHtml(title)
+    const escapedActorName = escapeHtml(actorName)
+    return escapedTitle.replace(
+      escapedActorName,
+      `<strong class="actor-name">${escapedActorName}</strong>`
+    )
+  }
+
+  return escapeHtml(title)
+}
+
+const escapeHtml = (text) => {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
 // ==================== 라이프사이클 ====================
 
 onMounted(() => {
@@ -403,29 +433,28 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid #e5e5e5;
-  background: #ffffff;
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: #FAF5FF;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .notification-trigger:hover {
-  background: #f5f5f5;
-  border-color: #d4d4d4;
+  background: #9933EA;
 }
 
 .notification-icon {
   width: 20px;
   height: 20px;
-  color: #525252;
+  color: #9933EA;
   transition: color 0.15s ease;
 }
 
 .notification-trigger:hover .notification-icon {
-  color: #262626;
+  color: #ffffff;
 }
 
 /* 배지 */
@@ -521,6 +550,17 @@ onUnmounted(() => {
   background: #fef2f2;
   border-color: #fecaca;
   color: #dc2626;
+}
+
+.action-btn.close {
+  padding: 6px;
+  border: none;
+  background: #f5f5f5;
+}
+
+.action-btn.close:hover {
+  background: #e5e5e5;
+  color: #171717;
 }
 
 .action-icon {
@@ -626,22 +666,11 @@ onUnmounted(() => {
 }
 
 .notification-item.unread {
-  background: #fafafa;
+  background: #FAF5FF;
 }
 
 .notification-item.unread:hover {
-  background: #f5f5f5;
-}
-
-/* 읽지 않음 왼쪽 강조선 */
-.unread-accent {
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  background: #9333EA;
-  border-radius: 0 2px 2px 0;
+  background: #F3E8FF;
 }
 
 /* 타입 아이콘 */
@@ -704,7 +733,7 @@ onUnmounted(() => {
 
 .notification-title {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: #171717;
   margin: 0 0 3px 0;
   line-height: 1.4;
@@ -714,8 +743,17 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.notification-item.unread .notification-title {
+.notification-title :deep(.actor-name) {
   font-weight: 700;
+  color: #171717;
+}
+
+.notification-item.unread .notification-title {
+  font-weight: 600;
+}
+
+.notification-item.unread .notification-title :deep(.actor-name) {
+  font-weight: 800;
 }
 
 .notification-body {
@@ -739,8 +777,16 @@ onUnmounted(() => {
 }
 
 .notification-type-label {
-  color: #737373;
-  font-weight: 500;
+  color: #9333EA;
+  font-weight: 600;
+}
+
+.notification-type-label::before {
+  content: '[';
+}
+
+.notification-type-label::after {
+  content: ']';
 }
 
 .meta-separator {

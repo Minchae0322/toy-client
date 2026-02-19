@@ -1,7 +1,7 @@
 // composables/useNotification.js
 // 알림 상태 및 로직 관리 Composable
 
-import { ref, computed, readonly, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import webSocketService from '@/services/webSocketService.js'
 import { notificationService } from '@/services/NotificationService.js'
@@ -168,10 +168,13 @@ export function useNotification() {
     try {
       const response = await notificationService.markAsRead(notificationId)
       if (response.success) {
-        // 로컬 상태 업데이트
-        const notification = notifications.value.find(n => n.id === notificationId)
-        if (notification && !notification.isRead) {
-          notification.isRead = true
+        // 로컬 상태 업데이트 - 배열을 새로 할당하여 반응성 보장
+        const index = notifications.value.findIndex(n => n.id === notificationId)
+        if (index !== -1 && !notifications.value[index].isRead) {
+          notifications.value[index] = {
+            ...notifications.value[index],
+            isRead: true
+          }
           unreadCount.value = Math.max(0, unreadCount.value - 1)
         }
         console.log(`✅ [useNotification] 알림 읽음 처리: ${notificationId}`)
@@ -190,8 +193,11 @@ export function useNotification() {
     try {
       const response = await notificationService.markAllAsRead()
       if (response.success) {
-        // 로컬 상태 업데이트
-        notifications.value.forEach(n => n.isRead = true)
+        // 로컬 상태 업데이트 - 배열을 새로 할당하여 반응성 보장
+        notifications.value = notifications.value.map(n => ({
+          ...n,
+          isRead: true
+        }))
         unreadCount.value = 0
         console.log(`✅ [useNotification] 전체 알림 읽음 처리 완료`)
       }
@@ -259,7 +265,14 @@ export function useNotification() {
     const route = notificationService.getNotificationRoute(notification)
 
     if (route) {
-      router.push(route)
+      const currentPath = router.currentRoute.value.fullPath
+
+      // 같은 경로인 경우 페이지 리로드
+      if (currentPath === route) {
+        window.location.href = route
+      } else {
+        await router.push(route)
+      }
       return true
     }
 
@@ -455,12 +468,12 @@ export function useNotification() {
   // ==================== 반환 ====================
 
   return {
-    // 상태 (readonly)
-    notifications: readonly(notifications),
-    unreadCount: readonly(unreadCount),
-    isLoading: readonly(isLoading),
-    error: readonly(error),
-    hasMore: readonly(hasMore),
+    // 상태
+    notifications,
+    unreadCount,
+    isLoading,
+    error,
+    hasMore,
 
     // Computed
     unreadNotifications,
