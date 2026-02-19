@@ -7,6 +7,9 @@
         class="toast-item"
         @click="handleClick(toast)"
       >
+        <!-- 타입 강조선 -->
+        <div class="toast-accent" :class="getAccentClass(toast.type)"></div>
+
         <!-- 타입 아이콘 -->
         <div class="toast-icon" :class="getTypeClass(toast.type)">
           <component :is="getTypeIcon(toast.type)" class="icon" />
@@ -14,6 +17,10 @@
 
         <!-- 내용 -->
         <div class="toast-content">
+          <div class="toast-header">
+            <span class="toast-type-label">{{ getTypeLabel(toast.type) }}</span>
+            <span class="toast-time">방금 전</span>
+          </div>
           <p class="toast-title">{{ toast.title }}</p>
           <p class="toast-body">{{ toast.content }}</p>
         </div>
@@ -26,7 +33,7 @@
           </svg>
         </button>
 
-        <!-- 프로그레스 바 -->
+        <!-- 프로그레스 바 (단색) -->
         <div class="toast-progress" :style="{ animationDuration: `${duration}ms` }"></div>
       </div>
     </TransitionGroup>
@@ -131,6 +138,36 @@ const getTypeClass = (type) => {
   return classMap[type] || 'type-default'
 }
 
+const getAccentClass = (type) => {
+  const classMap = {
+    'COMMENT': 'accent-comment',
+    'FEED_COMMENT': 'accent-comment',
+    'LIKE': 'accent-like',
+    'FEED_LIKE': 'accent-like',
+    'FOLLOW': 'accent-follow',
+    'CHAT': 'accent-chat',
+    'SYSTEM': 'accent-system',
+    'BATTLE': 'accent-battle',
+    'BATTLE_VOTE': 'accent-battle'
+  }
+  return classMap[type] || 'accent-system'
+}
+
+const getTypeLabel = (type) => {
+  const labelMap = {
+    'COMMENT': '댓글',
+    'FEED_COMMENT': '피드 댓글',
+    'LIKE': '좋아요',
+    'FEED_LIKE': '피드 좋아요',
+    'FOLLOW': '팔로우',
+    'CHAT': '채팅',
+    'SYSTEM': '시스템',
+    'BATTLE': '배틀',
+    'BATTLE_VOTE': '배틀 투표'
+  }
+  return labelMap[type] || '알림'
+}
+
 // ==================== 토스트 관리 ====================
 
 const addToast = (notification) => {
@@ -163,7 +200,7 @@ const handleClick = (toast) => {
 }
 
 const handleNewNotification = (data) => {
-  console.log('🔔 [NotificationToast] 새 알림 수신:', data)
+  console.log('[NotificationToast] New notification received:', data)
   const notification = notificationService.transformNotification(data)
   addToast(notification)
 }
@@ -204,12 +241,13 @@ defineExpose({ addToast })
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  width: 360px;
+  width: 380px;
   padding: 16px 18px;
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f0f0f0;
+  padding-left: 22px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e5e5;
   cursor: pointer;
   pointer-events: auto;
   position: relative;
@@ -219,14 +257,30 @@ defineExpose({ addToast })
 
 .toast-item:hover {
   transform: translateX(-4px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
 }
+
+/* 타입 강조선 (좌측) */
+.toast-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.accent-comment { background: #2563EB; }
+.accent-like { background: #DC2626; }
+.accent-follow { background: #16A34A; }
+.accent-chat { background: #9333EA; }
+.accent-system { background: #525252; }
+.accent-battle { background: #D97706; }
 
 /* 타입 아이콘 */
 .toast-icon {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -240,17 +294,17 @@ defineExpose({ addToast })
 
 .type-comment {
   background: #EFF6FF;
-  color: #3B82F6;
+  color: #2563EB;
 }
 
 .type-like {
   background: #FEF2F2;
-  color: #EF4444;
+  color: #DC2626;
 }
 
 .type-follow {
   background: #F0FDF4;
-  color: #22C55E;
+  color: #16A34A;
 }
 
 .type-chat {
@@ -260,17 +314,17 @@ defineExpose({ addToast })
 
 .type-system {
   background: #F5F5F5;
-  color: #6B7280;
+  color: #525252;
 }
 
 .type-battle {
   background: #FFFBEB;
-  color: #F59E0B;
+  color: #D97706;
 }
 
 .type-default {
   background: #F5F5F5;
-  color: #6B7280;
+  color: #525252;
 }
 
 /* 내용 */
@@ -280,11 +334,31 @@ defineExpose({ addToast })
   padding-right: 24px;
 }
 
+.toast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.toast-type-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #737373;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.toast-time {
+  font-size: 11px;
+  color: #a3a3a3;
+}
+
 .toast-title {
   font-size: 14px;
   font-weight: 600;
-  color: #222;
-  margin: 0 0 4px 0;
+  color: #171717;
+  margin: 0 0 3px 0;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -294,7 +368,7 @@ defineExpose({ addToast })
 
 .toast-body {
   font-size: 13px;
-  color: #666;
+  color: #525252;
   margin: 0;
   line-height: 1.5;
   display: -webkit-box;
@@ -311,10 +385,10 @@ defineExpose({ addToast })
   width: 26px;
   height: 26px;
   border: none;
-  background: #f5f5f5;
-  color: #999;
+  background: transparent;
+  color: #d4d4d4;
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -327,19 +401,19 @@ defineExpose({ addToast })
 }
 
 .toast-close:hover {
-  background: #eee;
-  color: #666;
+  background: #f5f5f5;
+  color: #737373;
 }
 
-/* 프로그레스 바 */
+/* 프로그레스 바 (단색) */
 .toast-progress {
   position: absolute;
   bottom: 0;
   left: 0;
   height: 3px;
-  background: linear-gradient(90deg, #9333EA, #C084FC);
+  background: #9333EA;
   animation: progress linear forwards;
-  border-radius: 0 0 0 14px;
+  border-radius: 0 0 0 12px;
 }
 
 @keyframes progress {
@@ -381,13 +455,14 @@ defineExpose({ addToast })
   .toast-item {
     width: auto;
     padding: 14px 16px;
+    padding-left: 20px;
     gap: 12px;
   }
 
   .toast-icon {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .toast-icon .icon {
@@ -401,6 +476,11 @@ defineExpose({ addToast })
 
   .toast-body {
     font-size: 12px;
+  }
+
+  .toast-type-label,
+  .toast-time {
+    font-size: 10px;
   }
 }
 </style>
