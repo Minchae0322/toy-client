@@ -163,29 +163,37 @@ onUnmounted(() => {
 
       <!-- 모바일 우측 영역 -->
       <div class="nav-mobile">
-        <!-- 알림 버튼 (로그인 시에만 표시) -->
-        <NotificationDropdown v-if="isLoggedIn" />
+        <!-- 알림 + 메시지 액션 그룹 -->
+        <div v-if="isLoggedIn" class="mobile-action-group">
+          <NotificationDropdown />
+          <button class="mobile-msg-btn" @click="handleChatClick" title="메시지">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+            </svg>
+          </button>
+        </div>
 
-        <button class="mobile-msg-btn" @click="handleChatClick" title="메시지">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
-          </svg>
-        </button>
-        <template v-if="isLoggedIn">
-          <div class="mobile-ws-dot" :class="{ connected: wsConnected }"></div>
-          <div class="mobile-avatar" @click="goToProfile">
-            <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
-            <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
-          </div>
-        </template>
-        <button class="mobile-menu-btn" @click="showMobileMenu = !showMobileMenu">
-          <svg v-if="!showMobileMenu" width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
+        <!-- 구분선 -->
+        <div v-if="isLoggedIn" class="mobile-header-divider"></div>
+
+        <!-- 사용자 정보 그룹 -->
+        <div class="mobile-user-group">
+          <template v-if="isLoggedIn">
+            <div class="mobile-ws-dot" :class="{ connected: wsConnected }"></div>
+            <div class="mobile-avatar" @click="goToProfile">
+              <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
+              <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
+            </div>
+          </template>
+          <button class="mobile-menu-btn" @click="showMobileMenu = !showMobileMenu">
+            <svg v-if="!showMobileMenu" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -534,19 +542,19 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border: none;
-  background: #FAF5FF;
-  border-radius: 10px;
-  color: #9933EA;
+  background: transparent;
+  border-radius: 8px;
+  color: #737373;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .mobile-msg-btn:hover {
-  color: #ffffff;
-  background: #9933EA;
+  color: #525252;
+  background: #f0f0f0;
 }
 
 /* ===================== 유저 메뉴 (데스크톱) ===================== */
@@ -635,34 +643,62 @@ onUnmounted(() => {
 .nav-mobile {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+}
+
+/* 알림 + 메시지 액션 그룹 */
+.mobile-action-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 3px;
+}
+
+/* 모바일 헤더 구분선 */
+.mobile-header-divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e5e5;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+/* 사용자 정보 그룹 */
+.mobile-user-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .mobile-ws-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #ddd;
+  flex-shrink: 0;
 }
 
 .mobile-ws-dot.connected {
   background: #00C853;
-  box-shadow: 0 0 6px rgba(0, 200, 83, 0.5);
+  box-shadow: 0 0 5px rgba(0, 200, 83, 0.4);
 }
 
 .mobile-avatar {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background: #9933EA;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   overflow: hidden;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .mobile-avatar img {
@@ -677,11 +713,12 @@ onUnmounted(() => {
   justify-content: center;
   background: transparent;
   border: none;
-  color: #333;
-  padding: 8px;
+  color: #525252;
+  padding: 6px;
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .mobile-menu-btn:hover {

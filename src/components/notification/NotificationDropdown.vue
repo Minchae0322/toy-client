@@ -877,6 +877,42 @@ onUnmounted(() => {
 }
 
 /* 모바일 반응형 */
+/* 모바일: 768px 이하 - 트리거 버튼 컴팩트화 */
+@media (max-width: 768px) {
+  .notification-trigger {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+  }
+
+  .notification-trigger:hover {
+    background: #f0f0f0;
+  }
+
+  .notification-icon {
+    width: 18px;
+    height: 18px;
+    color: #737373;
+  }
+
+  .notification-trigger:hover .notification-icon {
+    color: #525252;
+  }
+
+  .notification-badge {
+    top: -2px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+    border-radius: 8px;
+    border-width: 1.5px;
+  }
+}
+
 @media (max-width: 480px) {
   .dropdown-panel {
     position: fixed;
