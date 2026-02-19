@@ -58,7 +58,10 @@
     <div class="action-buttons">
       <!-- 사용자 활동 버튼 -->
       <button class="btn-subtle btn-purple" @click="handleProtectedRoute('create')">
-        <span class="btn-text">인증 올리기</span>
+        <div class="btn-content">
+          <span class="btn-text">인증 올리기</span>
+          <span class="btn-desc">자랑하고 싶은 아이템이 있나요?</span>
+        </div>
         <div class="btn-icon-circle btn-icon-purple">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -67,7 +70,10 @@
       </button>
 
       <button class="btn-subtle btn-orange" @click="handleProtectedRoute('createBattle')">
-        <span class="btn-text">요거픽 등록하기</span>
+        <div class="btn-content">
+          <span class="btn-text">요거픽 등록하기</span>
+          <span class="btn-desc">최고의 아이템, 투표로 정해봐요</span>
+        </div>
         <div class="btn-icon-circle btn-icon-orange">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -80,7 +86,10 @@
 
       <!-- 관리자/제품 등록 버튼 -->
       <button class="btn-subtle btn-dark" @click="handleProtectedRoute('createProduct')">
-        <span class="btn-text">새로운 아이템 등록하기</span>
+        <div class="btn-content">
+          <span class="btn-text">새로운 아이템 등록하기</span>
+          <span class="btn-desc">없는 아이템을 직접 추가해요</span>
+        </div>
         <div class="btn-icon-circle btn-icon-dark">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -337,11 +346,43 @@ const handleProtectedRoute = async (routeName) => {
   color: rgb(30, 41, 59);
 }
 
+/* 버튼 콘텐츠 */
+.btn-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
 /* 버튼 텍스트 */
 .btn-text {
   font-size: 14px;
   font-weight: 600;
   transition: color 0.2s;
+}
+
+/* 버튼 설명 */
+.btn-desc {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.btn-subtle:hover .btn-desc {
+  opacity: 0.8;
+}
+
+.btn-purple .btn-desc {
+  color: rgba(88, 28, 135, 0.8);
+}
+
+.btn-orange .btn-desc {
+  color: rgba(154, 52, 18, 0.8);
+}
+
+.btn-dark .btn-desc {
+  color: rgba(51, 65, 85, 0.8);
 }
 
 /* 아이콘 원형 */

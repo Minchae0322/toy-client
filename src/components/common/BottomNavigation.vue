@@ -1,7 +1,7 @@
 <template>
   <nav class="safe-area-bottom">
     <!-- 플로팅 추가 버튼 (네비게이션 위 오른쪽) -->
-    <div class="floating-fab-wrapper">
+    <div v-if="!isMoreMenuOpen" class="floating-fab-wrapper">
       <div class="floating-fab-container">
         <button class="fab-btn" :class="{ open: isCreateMenuOpen }" @click="toggleCreateMenu">
           <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,7 +17,10 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
               </span>
-              <span class="menu-text">인증 올리기</span>
+              <div class="menu-content">
+                <span class="menu-text">인증 올리기</span>
+                <span class="menu-desc">자랑하고 싶은 아이템이 있나요?</span>
+              </div>
             </button>
             <button class="fab-menu-item" @click="handleCreate('battle')">
               <span class="menu-icon battle">
@@ -25,15 +28,22 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
               </span>
-              <span class="menu-text">요거픽 등록</span>
+              <div class="menu-content">
+                <span class="menu-text">요거픽 등록</span>
+                <span class="menu-desc">최고의 아이템, 투표로 정해봐요</span>
+              </div>
             </button>
+            <div class="fab-menu-divider"></div>
             <button class="fab-menu-item" @click="handleCreate('product')">
               <span class="menu-icon product">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
               </span>
-              <span class="menu-text">아이템 등록</span>
+              <div class="menu-content">
+                <span class="menu-text">아이템 등록</span>
+                <span class="menu-desc">없는 아이템을 직접 추가해요</span>
+              </div>
             </button>
           </div>
         </Transition>
@@ -92,7 +102,10 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                 </svg>
               </span>
-              <span class="more-text">메시지</span>
+              <div class="more-content">
+                <span class="more-text">메시지</span>
+                <span class="more-desc">다른 사용자와 대화해요</span>
+              </div>
             </button>
             <button class="more-menu-item" @click="handleMoreNav('mypage')">
               <span class="more-icon mypage">
@@ -100,7 +113,10 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
               </span>
-              <span class="more-text">마이페이지</span>
+              <div class="more-content">
+                <span class="more-text">마이페이지</span>
+                <span class="more-desc">내 정보와 활동을 관리해요</span>
+              </div>
             </button>
           </div>
         </Transition>
@@ -317,35 +333,43 @@ onBeforeUnmount(() => {
   bottom: 58px;
   right: 0;
   background: white;
-  border-radius: 14px;
-  padding: 6px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.14);
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   z-index: 1002;
+  min-width: 220px;
+}
+
+.fab-menu-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 4px 8px;
 }
 
 .fab-menu-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px;
   border: none;
   background: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   white-space: nowrap;
+  transition: background 0.15s ease;
 }
 
 .fab-menu-item:active {
-  background: #f4f4f5;
+  background: #f5f5f5;
 }
 
 .menu-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -353,29 +377,43 @@ onBeforeUnmount(() => {
 }
 
 .menu-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .menu-icon.feed {
-  background: #dbeafe;
+  background: #EFF6FF;
   color: #3b82f6;
 }
 
 .menu-icon.battle {
-  background: #fae8ff;
-  color: #9333ea;
+  background: #FEF3C7;
+  color: #f97316;
 }
 
 .menu-icon.product {
-  background: #d1fae5;
+  background: #F0FDF4;
   color: #10b981;
+}
+
+.menu-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .menu-text {
   font-size: 14px;
-  font-weight: 500;
-  color: #262626;
+  font-weight: 600;
+  color: #171717;
+  white-space: nowrap;
+}
+
+.menu-desc {
+  font-size: 11px;
+  font-weight: 400;
+  color: #737373;
   white-space: nowrap;
 }
 
@@ -392,35 +430,37 @@ onBeforeUnmount(() => {
   bottom: 54px;
   right: -8px;
   background: white;
-  border-radius: 12px;
-  padding: 6px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   z-index: 1002;
+  min-width: 200px;
 }
 
 .more-menu-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px;
   border: none;
   background: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   white-space: nowrap;
+  transition: background 0.15s ease;
 }
 
 .more-menu-item:active {
-  background: #f4f4f5;
+  background: #f5f5f5;
 }
 
 .more-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -428,8 +468,8 @@ onBeforeUnmount(() => {
 }
 
 .more-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .more-icon.chat {
@@ -442,10 +482,24 @@ onBeforeUnmount(() => {
   color: #4f46e5;
 }
 
+.more-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
 .more-text {
   font-size: 14px;
-  font-weight: 500;
-  color: #262626;
+  font-weight: 600;
+  color: #171717;
+  white-space: nowrap;
+}
+
+.more-desc {
+  font-size: 11px;
+  font-weight: 400;
+  color: #737373;
   white-space: nowrap;
 }
 
