@@ -20,30 +20,55 @@
       <div v-if="isOpen" class="dropdown-panel">
         <!-- 헤더 -->
         <div class="dropdown-header">
-          <h3 class="dropdown-title">알림</h3>
-          <div class="dropdown-actions">
+          <div class="header-top">
+            <h3 class="dropdown-title">알림</h3>
+            <div class="dropdown-actions">
+              <button
+                v-if="hasUnread"
+                @click="handleMarkAllAsRead"
+                class="action-btn"
+                title="전체 읽음"
+                :disabled="isMarkingAllRead"
+              >
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span class="action-text">모두 읽음</span>
+              </button>
+              <button
+                v-if="notifications.length > 0"
+                @click="handleDeleteAll"
+                class="action-btn danger"
+                title="전체 삭제"
+              >
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                <span class="action-text">전체 삭제</span>
+              </button>
+            </div>
+          </div>
+          <!-- 읽지 않은 알림 수 안내 -->
+          <p v-if="hasUnread" class="unread-summary">
+            읽지 않은 알림 {{ unreadCountDisplay }}개
+          </p>
+          <!-- 필터 탭 -->
+          <div class="filter-tabs">
             <button
-              v-if="hasUnread"
-              @click="handleMarkAllAsRead"
-              class="action-btn"
-              title="전체 읽음"
-              :disabled="isMarkingAllRead"
+              class="filter-tab"
+              :class="{ active: activeFilter === 'all' }"
+              @click="activeFilter = 'all'"
             >
-              <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              <span class="action-text">모두 읽음</span>
+              전체
             </button>
             <button
-              v-if="notifications.length > 0"
-              @click="handleDeleteAll"
-              class="action-btn danger"
-              title="전체 삭제"
+              class="filter-tab"
+              :class="{ active: activeFilter === 'unread' }"
+              @click="activeFilter = 'unread'"
             >
-              <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-              </svg>
+              읽지 않음
+              <span v-if="hasUnread" class="tab-count">{{ unreadCountDisplay }}</span>
             </button>
           </div>
         </div>
@@ -53,30 +78,37 @@
           <!-- 로딩 상태 (초기) -->
           <div v-if="isLoading && notifications.length === 0" class="loading-state">
             <div class="loading-spinner"></div>
-            <span>알림을 불러오는 중...</span>
+            <span class="loading-text">알림을 불러오는 중...</span>
           </div>
 
           <!-- 빈 상태 -->
-          <div v-else-if="notifications.length === 0" class="empty-state">
-            <div class="empty-icon">
+          <div v-else-if="filteredNotifications.length === 0" class="empty-state">
+            <div class="empty-icon-wrapper">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
             </div>
-            <p class="empty-title">알림이 없습니다</p>
-            <p class="empty-desc">새로운 소식이 있으면 알려드릴게요</p>
+            <p class="empty-title">
+              {{ activeFilter === 'unread' ? '읽지 않은 알림이 없습니다' : '알림이 없습니다' }}
+            </p>
+            <p class="empty-desc">
+              {{ activeFilter === 'unread' ? '모든 알림을 확인했습니다' : '새로운 소식이 있으면 여기에 표시됩니다' }}
+            </p>
           </div>
 
           <!-- 알림 아이템 목록 -->
           <template v-else>
             <div
-              v-for="notification in sortedNotifications"
+              v-for="notification in filteredNotifications"
               :key="notification.id"
               class="notification-item"
               :class="{ unread: !notification.isRead }"
               @click="handleItemClick(notification)"
             >
+              <!-- 읽지 않음 왼쪽 강조선 -->
+              <div v-if="!notification.isRead" class="unread-accent"></div>
+
               <!-- 타입 아이콘 -->
               <div class="notification-icon-wrapper" :class="getTypeClass(notification.type)">
                 <component :is="getTypeIcon(notification.type)" class="type-icon" />
@@ -86,11 +118,12 @@
               <div class="notification-content">
                 <p class="notification-title">{{ notification.title }}</p>
                 <p class="notification-body">{{ notification.content }}</p>
-                <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
+                <div class="notification-meta">
+                  <span class="notification-type-label">{{ getTypeLabel(notification.type) }}</span>
+                  <span class="meta-separator"></span>
+                  <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
+                </div>
               </div>
-
-              <!-- 읽지 않음 표시 -->
-              <div v-if="!notification.isRead" class="unread-dot"></div>
 
               <!-- 삭제 버튼 -->
               <button
@@ -122,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted, h } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, h } from 'vue'
 import { useNotification } from '@/composables/useNotification'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { notificationService } from '@/services/NotificationService'
@@ -151,6 +184,16 @@ const isOpen = ref(false)
 const dropdownRef = ref(null)
 const listRef = ref(null)
 const isMarkingAllRead = ref(false)
+const activeFilter = ref('all')
+
+// ==================== 필터링된 알림 목록 ====================
+
+const filteredNotifications = computed(() => {
+  if (activeFilter.value === 'unread') {
+    return sortedNotifications.value.filter(n => !n.isRead)
+  }
+  return sortedNotifications.value
+})
 
 // ==================== 타입별 아이콘 ====================
 
@@ -233,6 +276,21 @@ const getTypeClass = (type) => {
     'BATTLE_VOTE': 'type-battle'
   }
   return classMap[type] || 'type-default'
+}
+
+const getTypeLabel = (type) => {
+  const labelMap = {
+    'COMMENT': '댓글',
+    'FEED_COMMENT': '피드 댓글',
+    'LIKE': '좋아요',
+    'FEED_LIKE': '피드 좋아요',
+    'FOLLOW': '팔로우',
+    'CHAT': '채팅',
+    'SYSTEM': '시스템',
+    'BATTLE': '배틀',
+    'BATTLE_VOTE': '배틀 투표'
+  }
+  return labelMap[type] || '알림'
 }
 
 // ==================== 드롭다운 토글 ====================
@@ -345,48 +403,49 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border: none;
-  background: #FAF5FF;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e5e5e5;
+  background: #ffffff;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .notification-trigger:hover {
-  background: #9933EA;
-}
-
-.notification-trigger:hover .notification-icon {
-  color: #ffffff;
+  background: #f5f5f5;
+  border-color: #d4d4d4;
 }
 
 .notification-icon {
   width: 20px;
   height: 20px;
-  color: #9933EA;
+  color: #525252;
   transition: color 0.15s ease;
+}
+
+.notification-trigger:hover .notification-icon {
+  color: #262626;
 }
 
 /* 배지 */
 .notification-badge {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  background: #ef4444;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: #dc2626;
   color: white;
   font-size: 11px;
   font-weight: 700;
-  border-radius: 9px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  border: 2px solid #ffffff;
 }
 
 /* 드롭다운 패널 */
@@ -394,12 +453,12 @@ onUnmounted(() => {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 380px;
-  max-height: 520px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
-  border: 1px solid #f0f0f0;
+  width: 400px;
+  max-height: 560px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e5e5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -408,18 +467,23 @@ onUnmounted(() => {
 
 /* 헤더 */
 .dropdown-header {
+  padding: 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
-  border-bottom: 1px solid #f5f5f5;
+  padding: 16px 20px 0 20px;
 }
 
 .dropdown-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  color: #111;
+  color: #171717;
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .dropdown-actions {
@@ -431,33 +495,31 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 7px 12px;
-  border: none;
-  background: #f5f5f5;
-  color: #666;
+  padding: 6px 12px;
+  border: 1px solid #e5e5e5;
+  background: #ffffff;
+  color: #525252;
   font-size: 12px;
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .action-btn:hover {
-  background: #eee;
-  color: #333;
+  background: #f5f5f5;
+  border-color: #d4d4d4;
+  color: #262626;
 }
 
 .action-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-}
-
-.action-btn.danger {
-  padding: 7px 10px;
 }
 
 .action-btn.danger:hover {
   background: #fef2f2;
+  border-color: #fecaca;
   color: #dc2626;
 }
 
@@ -468,6 +530,72 @@ onUnmounted(() => {
 
 .action-text {
   display: inline;
+}
+
+/* 읽지 않은 알림 수 안내 */
+.unread-summary {
+  margin: 8px 20px 0 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #9333EA;
+}
+
+/* 필터 탭 */
+.filter-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  margin-top: 12px;
+}
+
+.filter-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: #737373;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.filter-tab:hover {
+  color: #262626;
+}
+
+.filter-tab.active {
+  color: #171717;
+  font-weight: 600;
+}
+
+.filter-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: #171717;
+  border-radius: 1px;
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #9333EA;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 9px;
+  line-height: 1;
 }
 
 /* 알림 목록 */
@@ -482,11 +610,11 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 16px 20px;
+  padding: 14px 20px;
   cursor: pointer;
   transition: background 0.15s ease;
   position: relative;
-  border-bottom: 1px solid #fafafa;
+  border-bottom: 1px solid #f5f5f5;
 }
 
 .notification-item:last-child {
@@ -498,18 +626,29 @@ onUnmounted(() => {
 }
 
 .notification-item.unread {
-  background: #FDFBFF;
+  background: #fafafa;
 }
 
 .notification-item.unread:hover {
-  background: #FAF5FF;
+  background: #f5f5f5;
+}
+
+/* 읽지 않음 왼쪽 강조선 */
+.unread-accent {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: #9333EA;
+  border-radius: 0 2px 2px 0;
 }
 
 /* 타입 아이콘 */
 .notification-icon-wrapper {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -523,17 +662,17 @@ onUnmounted(() => {
 
 .type-comment {
   background: #EFF6FF;
-  color: #3B82F6;
+  color: #2563EB;
 }
 
 .type-like {
   background: #FEF2F2;
-  color: #EF4444;
+  color: #DC2626;
 }
 
 .type-follow {
   background: #F0FDF4;
-  color: #22C55E;
+  color: #16A34A;
 }
 
 .type-chat {
@@ -543,31 +682,31 @@ onUnmounted(() => {
 
 .type-system {
   background: #F5F5F5;
-  color: #6B7280;
+  color: #525252;
 }
 
 .type-battle {
   background: #FFFBEB;
-  color: #F59E0B;
+  color: #D97706;
 }
 
 .type-default {
   background: #F5F5F5;
-  color: #6B7280;
+  color: #525252;
 }
 
 /* 알림 내용 */
 .notification-content {
   flex: 1;
   min-width: 0;
-  padding-right: 20px;
+  padding-right: 28px;
 }
 
 .notification-title {
   font-size: 14px;
   font-weight: 600;
-  color: #222;
-  margin: 0 0 4px 0;
+  color: #171717;
+  margin: 0 0 3px 0;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -575,9 +714,13 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+.notification-item.unread .notification-title {
+  font-weight: 700;
+}
+
 .notification-body {
   font-size: 13px;
-  color: #666;
+  color: #525252;
   margin: 0 0 6px 0;
   line-height: 1.5;
   display: -webkit-box;
@@ -586,21 +729,31 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.notification-time {
+/* 알림 메타 정보 (타입 라벨 + 시간) */
+.notification-meta {
+  display: flex;
+  align-items: center;
+  gap: 0;
   font-size: 12px;
-  color: #aaa;
+  line-height: 1;
 }
 
-/* 읽지 않음 표시 */
-.unread-dot {
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
-  background: #9333EA;
+.notification-type-label {
+  color: #737373;
+  font-weight: 500;
+}
+
+.meta-separator {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  background: #d4d4d4;
   border-radius: 50%;
+  margin: 0 8px;
+}
+
+.notification-time {
+  color: #a3a3a3;
 }
 
 /* 삭제 버튼 */
@@ -608,11 +761,11 @@ onUnmounted(() => {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border: none;
   background: transparent;
-  color: #ccc;
+  color: #d4d4d4;
   cursor: pointer;
   border-radius: 6px;
   display: flex;
@@ -631,13 +784,9 @@ onUnmounted(() => {
   opacity: 1;
 }
 
-.notification-item:hover .unread-dot {
-  opacity: 0;
-}
-
 .delete-btn:hover {
   background: #fef2f2;
-  color: #ef4444;
+  color: #dc2626;
 }
 
 /* 빈 상태 */
@@ -648,31 +797,30 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 48px 24px;
-  color: #999;
 }
 
-.empty-icon {
-  width: 56px;
-  height: 56px;
+.empty-icon-wrapper {
+  width: 48px;
+  height: 48px;
   margin-bottom: 16px;
-  color: #ddd;
+  color: #d4d4d4;
 }
 
-.empty-icon svg {
+.empty-icon-wrapper svg {
   width: 100%;
   height: 100%;
 }
 
 .empty-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: #666;
-  margin: 0 0 6px 0;
+  color: #525252;
+  margin: 0 0 4px 0;
 }
 
 .empty-desc {
   font-size: 13px;
-  color: #aaa;
+  color: #a3a3a3;
   margin: 0;
 }
 
@@ -680,7 +828,7 @@ onUnmounted(() => {
 .loading-spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid #f0f0f0;
+  border: 3px solid #e5e5e5;
   border-top-color: #9333EA;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -694,6 +842,11 @@ onUnmounted(() => {
   margin-bottom: 0;
 }
 
+.loading-text {
+  font-size: 13px;
+  color: #a3a3a3;
+}
+
 .loading-more {
   display: flex;
   justify-content: center;
@@ -704,7 +857,7 @@ onUnmounted(() => {
   text-align: center;
   padding: 16px;
   font-size: 12px;
-  color: #bbb;
+  color: #a3a3a3;
 }
 
 @keyframes spin {
@@ -731,24 +884,43 @@ onUnmounted(() => {
     left: auto;
     right: 8px;
     width: calc(100vw - 16px);
-    max-width: 360px;
+    max-width: 380px;
     max-height: calc(100vh - 80px);
-    border-radius: 14px;
+    border-radius: 12px;
   }
 
-  .dropdown-header {
-    padding: 16px;
+  .header-top {
+    padding: 14px 16px 0 16px;
+  }
+
+  .dropdown-title {
+    font-size: 16px;
+  }
+
+  .unread-summary {
+    margin: 6px 16px 0 16px;
+    font-size: 12px;
+  }
+
+  .filter-tabs {
+    padding: 0 16px;
+    margin-top: 10px;
+  }
+
+  .filter-tab {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 
   .notification-item {
-    padding: 14px 16px;
+    padding: 12px 16px;
     gap: 12px;
   }
 
   .notification-icon-wrapper {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .notification-icon-wrapper .type-icon {
@@ -764,12 +936,21 @@ onUnmounted(() => {
     font-size: 12px;
   }
 
+  .notification-meta {
+    font-size: 11px;
+  }
+
   .action-text {
     display: none;
   }
 
   .action-btn {
-    padding: 8px 10px;
+    padding: 6px 8px;
+  }
+
+  /* 모바일에서는 삭제 버튼 항상 표시 */
+  .delete-btn {
+    opacity: 0.6;
   }
 }
 </style>
