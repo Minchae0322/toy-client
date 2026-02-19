@@ -7,9 +7,6 @@
         class="toast-item"
         @click="handleClick(toast)"
       >
-        <!-- 타입 강조선 -->
-        <div class="toast-accent" :class="getAccentClass(toast.type)"></div>
-
         <!-- 타입 아이콘 -->
         <div class="toast-icon" :class="getTypeClass(toast.type)">
           <component :is="getTypeIcon(toast.type)" class="icon" />
@@ -138,21 +135,6 @@ const getTypeClass = (type) => {
   return classMap[type] || 'type-default'
 }
 
-const getAccentClass = (type) => {
-  const classMap = {
-    'COMMENT': 'accent-comment',
-    'FEED_COMMENT': 'accent-comment',
-    'LIKE': 'accent-like',
-    'FEED_LIKE': 'accent-like',
-    'FOLLOW': 'accent-follow',
-    'CHAT': 'accent-chat',
-    'SYSTEM': 'accent-system',
-    'BATTLE': 'accent-battle',
-    'BATTLE_VOTE': 'accent-battle'
-  }
-  return classMap[type] || 'accent-system'
-}
-
 const getTypeLabel = (type) => {
   const labelMap = {
     'COMMENT': '댓글',
@@ -243,7 +225,6 @@ defineExpose({ addToast })
   gap: 14px;
   width: 380px;
   padding: 16px 18px;
-  padding-left: 22px;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -259,22 +240,6 @@ defineExpose({ addToast })
   transform: translateX(-4px);
   box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
 }
-
-/* 타입 강조선 (좌측) */
-.toast-accent {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-}
-
-.accent-comment { background: #2563EB; }
-.accent-like { background: #DC2626; }
-.accent-follow { background: #16A34A; }
-.accent-chat { background: #9333EA; }
-.accent-system { background: #525252; }
-.accent-battle { background: #D97706; }
 
 /* 타입 아이콘 */
 .toast-icon {
@@ -455,7 +420,6 @@ defineExpose({ addToast })
   .toast-item {
     width: auto;
     padding: 14px 16px;
-    padding-left: 20px;
     gap: 12px;
   }
 

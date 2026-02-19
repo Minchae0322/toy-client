@@ -132,7 +132,8 @@ class NotificationService extends BaseApiService {
       referenceId: backendNotification.referenceId,
       referenceType: backendNotification.referenceType,
       actionUrl: backendNotification.actionUrl,
-      isRead: backendNotification.isRead || false,
+      // API 응답이 'read' 또는 'isRead' 둘 다 지원
+      isRead: backendNotification.read ?? backendNotification.isRead ?? false,
       createdAt: backendNotification.createdAt,
       actor: backendNotification.actor ? {
         userId: backendNotification.actor.userId,
