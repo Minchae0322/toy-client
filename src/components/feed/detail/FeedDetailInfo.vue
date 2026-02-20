@@ -237,10 +237,10 @@ const handleSendMessage = () => {
   flex-shrink: 0;
 }
 .product-main { min-width: 0; flex: 1; }
-.product-title { font-size: 18px; font-weight: 700; color: #111827; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.product-title { font-size: 17px; font-weight: 700; color: #111827; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .price-area { text-align: right; flex-shrink: 0; margin-left: 12px; }
 .price-label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 2px; font-weight: 600; }
-.price-value { font-size: 20px; font-weight: 800; color: #9333ea; white-space: nowrap; }
+.price-value { font-size: 18px; font-weight: 800; color: #9333ea; white-space: nowrap; }
 
 /* 5. Interaction Bar */
 .interaction-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 4px; }
