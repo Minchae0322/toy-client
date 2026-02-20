@@ -84,18 +84,7 @@ const hotPosts = ref(new Set());
 const savedPosts = ref(new Set());
 
 // 사이드바 데이터
-const popularHashtags = ref([
-  {name: '가성비', count: 1523},
-  {name: '다이소', count: 1204},
-  {name: '편의점신상', count: 987},
-  {name: '무신사', count: 856},
-  {name: '올리브영', count: 743},
-  {name: '꿀템', count: 621},
-  {name: '일상템', count: 534},
-  {name: '뷰티', count: 489},
-  {name: '추천템', count: 412},
-  {name: '데일리', count: 389}
-]);
+const popularHashtags = ref([]);
 
 const trendingCategories = ref([
   {id: 1, name: '뷰티/코스메틱', emoji: '💄', description: '오늘 +128건', isHot: true},
@@ -138,6 +127,21 @@ const loadCategories = async () => {
     rootCategories.value = cachedCategories.value;
   } catch (error) {
     console.error('❌ 카테고리 로드 실패:', error);
+  }
+};
+
+const loadPopularHashtags = async () => {
+  try {
+    const response = await feedService.getHotHashtags({}, { size: 10, sort: 'usageCount,DESC' });
+    if (response.success && response.data) {
+      const hashtags = response.data.content || response.data;
+      popularHashtags.value = hashtags.map(tag => ({
+        name: tag.name,
+        count: tag.usageCount || 0
+      }));
+    }
+  } catch (error) {
+    console.error('❌ 인기 해시태그 로드 실패:', error);
   }
 };
 
@@ -277,6 +281,7 @@ let observer = null;
 onMounted(() => {
   loadCategories();
   loadFeeds();
+  loadPopularHashtags();
 
   observer = new IntersectionObserver(
       (entries) => {

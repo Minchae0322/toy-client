@@ -155,7 +155,7 @@ const handleSendMessage = () => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 24px;
+  padding: 16px 24px 24px;
   background: #fff;
 }
 
@@ -168,14 +168,14 @@ const handleSendMessage = () => {
 }
 
 /* 2. Review Section */
-.review-section { margin-bottom: 28px; }
+.review-section { margin-bottom: 20px; }
 
 .badge-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 
 .category-breadcrumb {
   margin-left: auto;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: #9333ea;
 }
 
@@ -218,7 +218,7 @@ const handleSendMessage = () => {
 /* 3 & 4. Product Banner */
 .product-info-banner {
   display: flex; justify-content: space-between; align-items: center;
-  background: #f8f8fa; padding: 18px 22px; border-radius: 20px; margin-bottom: 28px;
+  background: #f8f8fa; padding: 18px 22px; border-radius: 20px; margin-bottom: 16px;
   border: 1px solid #f1f1f5; cursor: pointer; transition: 0.2s;
 }
 .product-info-banner:active { transform: scale(0.98); background: #f1f1f5; }
@@ -227,7 +227,7 @@ const handleSendMessage = () => {
   align-items: center;
   gap: 5px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: #9333ea;
   margin-bottom: 4px;
 }
@@ -246,10 +246,10 @@ const handleSendMessage = () => {
 .interaction-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 4px; }
 .stat-group { display: flex; gap: 16px; }
 .stat-btn {
-  display: flex; align-items: center; gap: 6px; background: none; border: none;
-  font-size: 15px; font-weight: 700; color: #6b7280; cursor: pointer; transition: 0.2s;
+  display: flex; align-items: center; gap: 5px; background: none; border: none;
+  font-size: 14px; font-weight: 600; color: #6b7280; cursor: pointer; transition: 0.2s;
 }
-.stat-btn .icon { width: 24px; height: 24px; }
+.stat-btn .icon { width: 20px; height: 20px; }
 .stat-btn.active { color: #f43f5e; }
 .bookmark-btn { background: none; border: none; color: #6b7280; cursor: pointer; }
 .bookmark-btn .icon { width: 24px; height: 24px; }
