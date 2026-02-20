@@ -983,6 +983,30 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   color: var(--primary);
   padding-bottom: 100px;
+  overflow-x: hidden;
+}
+
+/* Smooth scroll & custom scrollbar */
+.create-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.create-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.create-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.create-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.create-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
 /* Header */
@@ -1028,14 +1052,15 @@ onBeforeUnmount(() => {
 }
 
 /* Content */
-.create-content { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
-.content-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+.create-content { max-width: 1200px; margin: 0 auto; padding: 24px 20px; width: 100%; }
+.content-grid { display: grid; grid-template-columns: 1fr; gap: 24px; min-width: 0; }
 @media (min-width: 1024px) { .content-grid { grid-template-columns: 1fr 1fr; } }
 
 .left-column, .right-column {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
 .card {
@@ -1043,6 +1068,8 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 20px;
   border: 1px solid var(--border);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
@@ -1430,7 +1457,7 @@ onBeforeUnmount(() => {
 }
 
 /* Autocomplete */
-.autocomplete-wrapper { position: relative; }
+.autocomplete-wrapper { position: relative; max-width: 100%; }
 .suggestions {
   position: absolute;
   top: 100%;
@@ -1639,6 +1666,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
+  max-width: 100%;
 }
 
 .price-input-box:focus-within {
@@ -1753,6 +1781,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 12px;
+  max-width: 100%;
 }
 
 .hashtag-chip {
@@ -1802,6 +1831,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
+  max-width: 100%;
 }
 
 .hashtag-input-box:focus-within {
@@ -1887,6 +1917,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  max-width: 100%;
 }
 
 .popular-tag {
