@@ -1847,6 +1847,7 @@ onBeforeUnmount(() => {
 
 .hashtag-input-field {
   flex: 1;
+  min-width: 0;
   padding: 12px 8px;
   border: none;
   font-size: 14px;
@@ -1859,6 +1860,8 @@ onBeforeUnmount(() => {
 }
 
 .btn-add-tag {
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 8px 16px;
   margin: 6px;
   background: var(--accent);
