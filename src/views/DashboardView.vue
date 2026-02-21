@@ -11,7 +11,7 @@
 
       <!-- 통계 카드 -->
       <div class="stats-grid">
-        <div class="stat-card" @click="goToFeeds">
+        <router-link :to="{ name: 'FeedHome' }" class="stat-card">
           <div class="stat-icon feeds">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
@@ -24,9 +24,9 @@
           <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="m9 18 6-6-6-6" />
           </svg>
-        </div>
+        </router-link>
 
-        <div class="stat-card" @click="goToBattles">
+        <router-link :to="{ name: 'BattleList' }" class="stat-card">
           <div class="stat-icon battles">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
@@ -40,9 +40,9 @@
           <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="m9 18 6-6-6-6" />
           </svg>
-        </div>
+        </router-link>
 
-        <div class="stat-card" @click="goToProducts">
+        <router-link :to="{ name: 'ProductRanking' }" class="stat-card">
           <div class="stat-icon products">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
@@ -60,7 +60,7 @@
           <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="m9 18 6-6-6-6" />
           </svg>
-        </div>
+        </router-link>
       </div>
 
       <!-- 실시간 요거 봄 섹션 -->
@@ -102,11 +102,11 @@
           <div v-else ref="ybSwipeRef" class="yb-swipe-container" @scroll="onYbSwipe">
             <div v-for="(page, pageIdx) in ybPages" :key="pageIdx" class="yb-swipe-page">
               <div class="yb-list">
-                <div
+                <router-link
                   v-for="(feed, index) in page"
                   :key="feed.feedId"
+                  :to="{ name: 'FeedDetail', params: { id: feed.feedId } }"
                   class="yb-item"
-                  @click="goToFeedDetail(feed.feedId)"
                 >
                   <span class="yb-rank-num">{{ pageIdx * 6 + index + 1 }}</span>
                   <div class="yb-info">
@@ -115,7 +115,7 @@
                   </div>
                   <span v-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
                   <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
-                </div>
+                </router-link>
               </div>
             </div>
           </div>
@@ -143,10 +143,10 @@
               <h2 class="section-title">지금 뜨는 핫-기록</h2>
               <span class="sub-title">실시간 인기 리뷰</span>
             </div>
-            <button class="view-all-link" @click="goToFeeds">
+            <router-link :to="{ name: 'FeedHome' }" class="view-all-link">
               전체보기
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6" /></svg>
-            </button>
+            </router-link>
           </div>
 
           <div v-if="feedsLoading" class="dashboard-feed-scroll">
@@ -163,11 +163,11 @@
           </div>
 
           <div v-else class="dashboard-feed-scroll">
-            <div
+            <router-link
               v-for="(feed, index) in hotFeeds"
               :key="feed.feedId"
+              :to="{ name: 'FeedDetail', params: { id: feed.feedId } }"
               class="dash-feed-card"
-              @click="goToFeedDetail(feed.feedId)"
             >
               <div class="card-visual-wrapper">
                 <img :src="feed.hotFeedThumbnailDto?.fileUrl" :alt="feed.productName" @error="handleImageError" />
@@ -187,7 +187,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </router-link>
           </div>
         </section>
 
@@ -198,12 +198,12 @@
               <h2 class="section-title">실시간 요거픽</h2>
               <span class="sub-title">유저들이 직접 고르는 승부</span>
             </div>
-            <button class="view-all-btn" @click="goToBattles">
+            <router-link :to="{ name: 'BattleList' }" class="view-all-btn">
               전체보기
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="m9 18 6-6-6-6" />
               </svg>
-            </button>
+            </router-link>
           </div>
 
           <div v-if="battlesLoading" class="battle-grid">
@@ -236,12 +236,12 @@
               <h2 class="section-title">실시간 제품 랭킹</h2>
               <span class="sub-title">요즘 뜨는 인기 아이템</span>
             </div>
-            <button class="view-all-btn" @click="goToProducts">
+            <router-link :to="{ name: 'ProductRanking' }" class="view-all-btn">
               전체보기
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="m9 18 6-6-6-6" />
               </svg>
-            </button>
+            </router-link>
           </div>
 
           <div v-if="productsLoading" class="product-rank-container">
@@ -264,7 +264,7 @@
 
           <div v-else class="product-rank-container">
             <!-- 1위 히어로 카드 -->
-            <div class="rank-hero-card" @click="goToProductDetail(hotProducts[0])">
+            <router-link :to="{ name: 'ProductDetail', params: { id: hotProducts[0].id } }" class="rank-hero-card">
               <div class="hero-badge">BEST 1</div>
               <img :src="getProductThumbnail(hotProducts[0])" class="hero-image" />
               <div class="hero-overlay">
@@ -285,15 +285,15 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </router-link>
 
             <!-- 2-5위 리스트 -->
             <div v-if="hotProducts.length > 1" class="rank-sub-list">
-              <div
+              <router-link
                 v-for="(product, index) in hotProducts.slice(1)"
                 :key="product.id"
+                :to="{ name: 'ProductDetail', params: { id: product.id } }"
                 class="rank-sub-item"
-                @click="goToProductDetail(product)"
               >
                 <div class="sub-rank-number">{{ index + 2 }}</div>
                 <img :src="getProductThumbnail(product)" class="sub-image" @error="handleImageError" />
@@ -316,7 +316,7 @@
                 <svg class="sub-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M9 18l6-6-6-6" />
                 </svg>
-              </div>
+              </router-link>
             </div>
           </div>
         </section>
@@ -329,15 +329,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import BattleCard from '@/components/battle/BattleCard.vue'
 import { feedService } from '@/services/FeedService'
 import { battleService } from '@/services/BattleService'
 import { productService } from '@/services/ProductService'
-
-const router = useRouter()
 
 const hotFeeds = ref([])
 const hotBattles = ref([])
@@ -417,7 +414,7 @@ const productsLoading = ref(true)
 const loadHotFeeds = async () => {
   feedsLoading.value = true
   try {
-    const response = await feedService.getHotFeeds({ size: 5 })
+    const response = await feedService.getHotFeeds({ size: 5, sort: 'hotScore,desc' })
     if (response.success) {
       hotFeeds.value = response.data?.content || response.data || []
     }
@@ -572,19 +569,6 @@ const topTrendName = computed(() => {
   return '트렌드'
 })
 
-const goToTopTrend = () => {
-  if (hotFeeds.value.length > 0) {
-    router.push({ name: 'FeedDetail', params: { id: hotFeeds.value[0].feedId } })
-  } else {
-    router.push({ name: 'FeedHome' })
-  }
-}
-
-const goToFeeds = () => router.push({ name: 'FeedHome' })
-const goToFeedDetail = (feedId) => router.push({ name: 'FeedDetail', params: { id: feedId } })
-const goToBattles = () => router.push({ name: 'BattleList' })
-const goToProducts = () => router.push({ name: 'ProductRanking' })
-const goToProductDetail = (product) => router.push({ name: 'ProductDetail', params: { id: product.id } })
 
 onMounted(() => {
   loadHotFeeds()

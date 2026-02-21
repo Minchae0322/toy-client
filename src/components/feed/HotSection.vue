@@ -130,7 +130,8 @@ const loadHotFeeds = async () => {
     loading.value = true;
     const response = await feedService.getHotFeeds({
       page: 0,
-      size: props.limit
+      size: props.limit,
+      sort: 'hotScore,desc'
     });
 
     if (response.success && response.data) {

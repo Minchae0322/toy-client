@@ -1,6 +1,6 @@
 <template>
-  <article class="post-card" @click="handleCardClick">
-    <div class="post-image-container" @dblclick="handleDoubleTapLike">
+  <router-link :to="{ name: 'FeedDetail', params: { id: feed.feedId } }" class="post-card">
+    <div class="post-image-container" @dblclick.prevent="handleDoubleTapLike">
       <img
           :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'"
           :alt="feed.productName"
@@ -61,7 +61,7 @@
             </svg>
             {{ formatCount(feed.viewCount || 0) }}
           </div>
-          <div class="stat-pill" :class="{ active: localIsLiked }" @click.stop="handleLike">
+          <div class="stat-pill" :class="{ active: localIsLiked }" @click.stop.prevent="handleLike">
             <svg class="icon" viewBox="0 0 24 24" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
@@ -76,7 +76,7 @@
         </div>
       </div>
     </div>
-  </article>
+  </router-link>
 </template>
 
 <script setup>
@@ -84,7 +84,7 @@ import { ref, computed } from 'vue';
 import { feedService, feedUtils } from '@/services/FeedService';
 
 const props = defineProps({ feed: { type: Object, required: true } });
-const emit = defineEmits(['update', 'click']);
+const emit = defineEmits(['update']);
 
 const localIsLiked = ref(props.feed.userReactions?.hasLike === true);
 const localLikeCount = ref(props.feed.likeCount || 0);
@@ -107,8 +107,6 @@ const handleDoubleTapLike = () => {
     handleLike();
   }
 };
-
-const handleCardClick = () => emit('click', props.feed.feedId);
 
 const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation);
 const getEvaluationClass = (evaluation) => {

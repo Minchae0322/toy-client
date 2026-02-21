@@ -8,11 +8,11 @@
 
     <!-- 배틀 리스트 -->
     <div class="hot-scroll">
-      <article
+      <router-link
           v-for="(battle, index) in battles.slice(0, 5)"
           :key="battle.id || battle.battleId"
+          :to="{ name: 'BattleDetail', params: { id: battle.id || battle.battleId } }"
           class="hot-card"
-          @click="handleBattleClick(battle.id || battle.battleId)"
       >
         <!-- 썸네일 -->
         <div class="thumb">
@@ -67,16 +67,13 @@
             </span>
           </div>
         </div>
-      </article>
+      </router-link>
     </div>
   </section>
 </template>
 
 <script setup>
 import { reactive } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
 
 defineProps({
   battles: { type: Array, default: () => [] },
@@ -106,11 +103,6 @@ const getRankClass = (index) => {
   if (index === 1) return 'second'
   if (index === 2) return 'third'
   return ''
-}
-
-const handleBattleClick = (battleId) => {
-  router.push({ name: 'BattleDetail', params: { id: battleId } })
-  emit('battle-click', battleId)
 }
 
 const handleImageError = (battleId) => {

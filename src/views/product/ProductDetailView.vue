@@ -485,7 +485,7 @@ const handleFeedLike = (feedId) => {
 
 const handleCreateBattle = () => {
   if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '배틀을 만들려면 로그인해주세요.')
-  router.push(`/battle/create?productId=${product.value.id}`)
+  router.push(`/battles/create?productId=${product.value.id}`)
 }
 
 const handleVote = (battleId) => {
@@ -493,7 +493,7 @@ const handleVote = (battleId) => {
   router.push(`/battles/${battleId}`)
 }
 
-const viewBattle = (battleId) => { router.push(`/battle/${battleId}`) }
+const viewBattle = (battleId) => { router.push(`/battles/${battleId}`) }
 const editProduct = () => { router.push(`/products/${product.value.id}/edit`) }
 
 const deleteProduct = async () => {

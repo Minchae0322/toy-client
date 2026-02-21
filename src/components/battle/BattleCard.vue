@@ -1,11 +1,8 @@
 <template>
-  <article
+  <router-link
       v-if="battle && battle.title"
+      :to="{ name: 'BattleDetail', params: { id: battle.id || battle.battleId } }"
       class="battle-card"
-      @click="handleClick"
-      role="button"
-      tabindex="0"
-      @keydown.enter="handleClick"
   >
     <!-- 썸네일 영역 -->
     <div class="card-thumbnail">
@@ -57,14 +54,11 @@
         <span class="action-hint">참여하기 →</span>
       </div>
     </div>
-  </article>
+  </router-link>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
 
 const props = defineProps({
   battle: {
@@ -78,16 +72,8 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['click'])
-
 const imageError = ref(false)
 const avatarError = ref(false)
-
-const handleClick = () => {
-  const battleId = props.battle.id || props.battle.battleId
-  router.push({name: 'BattleDetail', params: {id: battleId}})
-  emit('click', battleId)
-}
 
 const handleImageError = () => imageError.value = true
 const handleAvatarError = () => avatarError.value = true

@@ -213,7 +213,7 @@ class NotificationService extends BaseApiService {
     const routeMap = {
       [NOTIFICATION_REFERENCE_TYPES.POST]: `/feed/${notification.referenceId}`,
       [NOTIFICATION_REFERENCE_TYPES.FEED]: `/feed/${notification.referenceId}`,
-      [NOTIFICATION_REFERENCE_TYPES.BATTLE]: `/battle/${notification.referenceId}`,
+      [NOTIFICATION_REFERENCE_TYPES.BATTLE]: `/battles/${notification.referenceId}`,
       [NOTIFICATION_REFERENCE_TYPES.CHAT_ROOM]: `/chat/${notification.referenceId}`,
       [NOTIFICATION_REFERENCE_TYPES.USER]: `/profile/${notification.referenceId}`,
       [NOTIFICATION_REFERENCE_TYPES.PRODUCT]: `/product/${notification.referenceId}`

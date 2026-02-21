@@ -165,7 +165,7 @@ const handleCreate = async (type) => {
 
   const routes = {
     feed: { name: 'FeedCreate', redirect: '/feed/create' },
-    battle: { name: 'BattleCreate', redirect: '/battle/create' },
+    battle: { name: 'BattleCreate', redirect: '/battles/create' },
     product: { name: 'ProductCreate', redirect: '/products/create' }
   };
 

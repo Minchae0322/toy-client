@@ -160,7 +160,7 @@ const routes = [
     meta: { requiresAuth: false, public: true, title: '월간 배틀' }
   },
   {
-    path: '/battle/create',
+    path: '/battles/create',
     name: 'BattleCreate',
     component: BattleCreateView,
     meta: { requiresAuth: false, title: '배틀 만들기' }

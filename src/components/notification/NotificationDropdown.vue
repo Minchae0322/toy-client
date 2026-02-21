@@ -295,7 +295,8 @@ const getTypeLabel = (type) => {
     'CHAT': '채팅',
     'SYSTEM': '시스템',
     'BATTLE': '배틀',
-    'BATTLE_VOTE': '배틀 투표'
+    'BATTLE_VOTE': '배틀 투표',
+    'BATTLE_ITEM_COMMENT': '요거픽 댓글'
   }
   return labelMap[type] || '알림'
 }
