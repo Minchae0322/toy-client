@@ -387,18 +387,6 @@ watch(() => props.visible, async (visible) => {
 
     // 카테고리 정보 초기화
     const subCategoryDetail = props.feed.subCategoryDetail
-    if (subCategoryDetail) {
-      selectedCategoryInfo.value = {
-        label: `${subCategoryDetail.categoryName} > ${subCategoryDetail.subCategoryName}`,
-        category: { categoryId: subCategoryDetail.subCategoryId, categoryName: subCategoryDetail.subCategoryName },
-        parent: { categoryId: subCategoryDetail.categoryId, categoryName: subCategoryDetail.categoryName }
-      }
-      // 부모 카테고리 찾기
-      const parent = cachedAllCategories.value.find(c => c.categoryId === subCategoryDetail.categoryId)
-      if (parent) {
-        selectedParentCategory.value = parent
-      }
-    }
 
     editData.value = {
       productId: props.feed.product?.id || null,

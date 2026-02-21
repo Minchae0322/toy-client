@@ -81,7 +81,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'select'])
 
-const { loadPopularCategories, loadAllCategories } = useCategoryCache()
+const { loadPopularCategories, loadAllCategories, findCategoryById } = useCategoryCache()
 
 const popularCategories = ref([])
 const selectedParentCategory = ref(null)
@@ -100,8 +100,35 @@ const loadCategories = async () => {
     await loadAllCategories()
     const popular = await loadPopularCategories(props.contentType, props.maxPopular)
     popularCategories.value = popular
+
+    // 초기 modelValue가 있으면 선택 상태 복원
+    if (props.modelValue) {
+      restoreSelectionFromModelValue(props.modelValue)
+    }
   } catch (error) {
     console.error('카테고리 로드 실패:', error)
+  }
+}
+
+// modelValue로부터 선택 상태 복원
+const restoreSelectionFromModelValue = (categoryId) => {
+  const found = findCategoryById(categoryId)
+  if (found) {
+    if (found.parent) {
+      selectedParentCategory.value = found.parent
+      selectedCategoryInfo.value = {
+        label: `${found.parent.categoryName} > ${found.category.categoryName}`,
+        category: found.category,
+        parent: found.parent
+      }
+    } else {
+      selectedParentCategory.value = null
+      selectedCategoryInfo.value = {
+        label: found.category.categoryName,
+        category: found.category,
+        parent: null
+      }
+    }
   }
 }
 
