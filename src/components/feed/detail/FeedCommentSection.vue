@@ -188,6 +188,7 @@ const handleDelete = (commentId) => {
 
 .input {
   flex: 1;
+  min-width: 0;
   padding: 12px 16px;
   border: 1px solid #e7e5e4;
   border-radius: 10px;
@@ -196,6 +197,7 @@ const handleDelete = (commentId) => {
   background: #fafaf9;
   outline: none;
   transition: border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
 }
 
 .input::placeholder {
@@ -352,6 +354,7 @@ const handleDelete = (commentId) => {
   outline: none;
   font-family: inherit;
   background: #fafaf9;
+  box-sizing: border-box;
 }
 
 .edit-input:focus {
