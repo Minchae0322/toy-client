@@ -663,10 +663,11 @@ class FeedService extends BaseApiService {
       return { page: 0, size: 20, sort: 'createdAt,DESC' }
     }
     const validSorts = [
-      'createdAt,DESC', 'createdAt,ASC',
-      'viewCount,DESC', 'viewCount,ASC',
-      'likeCount,DESC', 'hotCount,DESC',
-      'usageCount,DESC', 'usageCount,ASC'
+      'createdAt,DESC', 'createdAt,ASC', 'createdAt,desc', 'createdAt,asc',
+      'viewCount,DESC', 'viewCount,ASC', 'viewCount,desc', 'viewCount,asc',
+      'likeCount,DESC', 'likeCount,desc', 'hotCount,DESC', 'hotCount,desc',
+      'hotScore,DESC', 'hotScore,desc',
+      'usageCount,DESC', 'usageCount,ASC', 'usageCount,desc', 'usageCount,asc'
     ]
     const validated = {
       page: Math.max(0, pageable.page || 0),

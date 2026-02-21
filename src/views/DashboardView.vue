@@ -206,9 +206,14 @@
             </router-link>
           </div>
 
-          <div v-if="battlesLoading" class="battle-grid">
-            <div v-for="i in 3" :key="i" class="battle-skeleton">
-              <div class="skeleton"></div>
+          <div v-if="battlesLoading" class="battle-hot-grid">
+            <div v-for="i in 3" :key="i" class="battle-hot-card skeleton-card">
+              <div class="battle-hot-thumb"><div class="skeleton"></div></div>
+              <div class="battle-hot-body">
+                <div class="skeleton" style="height: 12px; width: 60px; margin-bottom: 8px;"></div>
+                <div class="skeleton" style="height: 16px; width: 80%; margin-bottom: 6px;"></div>
+                <div class="skeleton" style="height: 12px; width: 50%;"></div>
+              </div>
             </div>
           </div>
           <div v-else-if="hotBattles.length === 0" class="empty-state">
@@ -219,13 +224,83 @@
             </div>
             <p class="empty-text">진행 중인 요거픽이 없습니다</p>
           </div>
-          <div v-else class="battle-grid">
-            <BattleCard
-              v-for="battle in hotBattles"
-              :key="battle.battleId || battle.id"
-              :battle="battle"
-              :hide-creator="true"
-            />
+          <div v-else class="battle-hot-grid">
+            <router-link
+              v-for="battle in hotBattles.slice(0, 3)"
+              :key="battle.id"
+              :to="{ name: 'BattleDetail', params: { id: battle.id } }"
+              class="battle-hot-card"
+            >
+              <!-- 썸네일 -->
+              <div class="battle-hot-thumb">
+                <img
+                  v-if="battle.thumbnailDto?.fileUrl"
+                  :src="battle.thumbnailDto.fileUrl"
+                  :alt="battle.title"
+                  @error="handleImageError"
+                />
+                <div v-else class="thumb-placeholder">{{ battle.title }}</div>
+                <div class="thumb-line"></div>
+                <div class="thumb-vs"><span class="thumb-vs-pill">VS</span></div>
+                <span class="badge-dday"><span class="dday-dot"></span>진행중</span>
+              </div>
+              <!-- 바디 -->
+              <div class="battle-hot-body">
+                <div class="battle-hot-category-row">
+                  <span class="battle-hot-category">{{ battle.status?.description || '진행중' }}</span>
+                  <div class="battle-hot-stats">
+                    <span class="battle-hot-stat">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      {{ formatNumber(battle.totalViews || 0) }}
+                    </span>
+                    <span class="battle-hot-stat">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      {{ battle.totalCommentCount || 0 }}
+                    </span>
+                  </div>
+                </div>
+                <h3 class="battle-hot-title">{{ battle.title }}</h3>
+                <p class="battle-hot-meta">{{ battle.totalParticipants || 0 }}개 참여 · {{ battle.totalVotes || 0 }} 투표</p>
+
+                <div class="battle-divider"><span class="battle-label">Pick Rank</span></div>
+
+                <!-- 순위 -->
+                <template v-if="battle.topItems?.length > 0">
+                  <div class="rank-item r1-item">
+                    <div class="rank-row">
+                      <div class="rank-left">
+                        <div class="rank-badge r1">1</div>
+                        <span class="rank-name">{{ battle.topItems[0]?.displayName || '-' }}</span>
+                      </div>
+                      <span class="rank-pct p1">{{ getScorePercent(battle.topItems[0], battle.totalVotes) }}%</span>
+                    </div>
+                  </div>
+                  <div v-if="battle.topItems[1]" class="rank-item">
+                    <div class="rank-row">
+                      <div class="rank-left">
+                        <div class="rank-badge r2">2</div>
+                        <span class="rank-name">{{ battle.topItems[1]?.displayName || '-' }}</span>
+                      </div>
+                      <span class="rank-pct p2">{{ getScorePercent(battle.topItems[1], battle.totalVotes) }}%</span>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- 게이지 바 -->
+                <div v-if="battle.topItems?.length > 0" class="battle-gauge-wrap">
+                  <div class="battle-gauge-track">
+                    <div class="gauge-seg s1" :style="{ width: getScorePercent(battle.topItems[0], battle.totalVotes) + '%' }"></div>
+                    <div v-if="battle.topItems[1]" class="gauge-seg s2" :style="{ width: getScorePercent(battle.topItems[1], battle.totalVotes) + '%' }"></div>
+                    <div v-if="battle.topItems[2]" class="gauge-seg s3" :style="{ width: getScorePercent(battle.topItems[2], battle.totalVotes) + '%' }"></div>
+                  </div>
+                  <div class="gauge-labels">
+                    <span class="gauge-label gl1"><span class="dot"></span>{{ truncateName(battle.topItems[0]?.displayName) }}</span>
+                    <span v-if="battle.topItems[1]" class="gauge-label gl2"><span class="dot"></span>{{ truncateName(battle.topItems[1]?.displayName) }}</span>
+                    <span v-if="battle.topItems[2]" class="gauge-label gl3"><span class="dot"></span>etc</span>
+                  </div>
+                </div>
+              </div>
+            </router-link>
           </div>
         </section>
 
@@ -331,7 +406,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
-import BattleCard from '@/components/battle/BattleCard.vue'
 import { feedService } from '@/services/FeedService'
 import { battleService } from '@/services/BattleService'
 import { productService } from '@/services/ProductService'
@@ -430,7 +504,7 @@ const loadHotBattles = async () => {
   try {
     const response = await battleService.getHotBattleList()
     if (response.success) {
-      hotBattles.value = (response.data || []).slice(0, 3)
+      hotBattles.value = response.data || []
     }
   } catch (error) {
     console.error('배틀 로드 실패:', error)
@@ -530,6 +604,16 @@ const formatNumber = (num) => {
   if (num >= 10000) return Math.floor(num / 10000) + '만'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
   return num.toString()
+}
+
+const getScorePercent = (item, totalVotes) => {
+  if (!item || !totalVotes || totalVotes === 0) return 0
+  return Math.round((item.totalScore / totalVotes) * 100)
+}
+
+const truncateName = (name, maxLength = 10) => {
+  if (!name) return '-'
+  return name.length > maxLength ? name.slice(0, maxLength) + '...' : name
 }
 
 const formatPrice = (price) => {
@@ -1957,6 +2041,301 @@ onUnmounted(() => {
   .battle-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* ===== 배틀 핫 카드 ===== */
+.battle-hot-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 640px) {
+  .battle-hot-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .battle-hot-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.battle-hot-card {
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid #e8eaf4;
+  box-shadow: 0 2px 16px rgba(100, 100, 180, 0.07);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  text-decoration: none;
+  display: block;
+}
+.battle-hot-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 36px rgba(124, 110, 245, 0.13), 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* 썸네일 */
+.battle-hot-thumb {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #c9b8f5 0%, #a78bfa 45%, #818cf8 100%);
+}
+.battle-hot-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.battle-hot-thumb .thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 500;
+}
+.thumb-line {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.thumb-line::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent 5%, rgba(255,255,255,0.25) 40%, rgba(255,255,255,0.25) 60%, transparent 95%);
+  transform: translateX(-50%);
+}
+.thumb-vs {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.thumb-vs-pill {
+  background: rgba(255,255,255,0.22);
+  border: 1.5px solid rgba(255,255,255,0.45);
+  border-radius: 50px;
+  padding: 6px 16px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 3px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.18);
+}
+.badge-dday {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  color: #6d5dfc;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dday-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f87171;
+  animation: pulse 1.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.65); }
+}
+
+/* 바디 */
+.battle-hot-body {
+  padding: 14px 18px 20px;
+}
+.battle-hot-category-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.battle-hot-category {
+  font-size: 10.5px;
+  color: #c0c4d8;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.battle-hot-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.battle-hot-stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #c8cce0;
+}
+.battle-hot-stat svg { stroke: #c8cce0; }
+.battle-hot-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #1a1d2e;
+  margin-bottom: 5px;
+  line-height: 1.45;
+}
+.battle-hot-meta {
+  font-size: 11px;
+  color: #d0d4e8;
+  margin-bottom: 15px;
+}
+
+/* 디바이더 */
+.battle-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 13px;
+}
+.battle-divider::before,
+.battle-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #eff0f8;
+}
+.battle-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #b8bdd6;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* 순위 */
+.rank-item { margin-bottom: 8px; }
+.rank-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rank-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.rank-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.rank-badge.r1 {
+  background: linear-gradient(135deg, #fde68a, #fbbf24);
+  color: #92400e;
+  box-shadow: 0 2px 8px rgba(251,191,36,0.3);
+}
+.rank-badge.r2 {
+  background: #f3f4f8;
+  color: #9098b8;
+}
+.rank-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9098b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 115px;
+}
+.rank-item.r1-item .rank-name {
+  color: #3d4270;
+  font-weight: 700;
+}
+.rank-pct {
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+.rank-pct.p1 { color: #7c6ef5; }
+.rank-pct.p2 { color: #c8cce0; }
+
+/* 게이지 바 */
+.battle-gauge-wrap { margin-top: 13px; }
+.battle-gauge-track {
+  display: flex;
+  width: 100%;
+  height: 7px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: #f3f4f8;
+  gap: 2px;
+}
+.gauge-seg {
+  height: 100%;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  flex-shrink: 0;
+}
+.gauge-seg.s1 {
+  background: #a78bfa;
+  border-radius: 99px 0 0 99px;
+}
+.gauge-seg.s2 { background: #fb7185; }
+.gauge-seg.s3 {
+  background: #e2e5f0;
+  border-radius: 0 99px 99px 0;
+}
+.gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  gap: 4px;
+}
+.gauge-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #c8cce0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.gauge-label .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.gauge-label.gl1 { flex: 1; }
+.gauge-label.gl1 .dot { background: #a78bfa; }
+.gauge-label.gl2 { flex: 1; justify-content: center; }
+.gauge-label.gl2 .dot { background: #fb7185; }
+.gauge-label.gl3 { flex: 1; justify-content: flex-end; }
+.gauge-label.gl3 .dot { background: #d0d4e8; }
+
+/* 스켈레톤 */
+.battle-hot-card.skeleton-card .battle-hot-thumb {
+  background: #e5e7eb;
 }
 
 /* 제품 랭킹 섹션 커스텀 스타일 */

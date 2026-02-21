@@ -100,7 +100,6 @@
           :key="feed.feedId"
           :feed="feed"
           @update="(data) => $emit('update', data)"
-          @click="(id) => $emit('post-click', id)"
       />
     </div>
 
@@ -135,7 +134,7 @@
       </template>
       <!-- 실제 리스트 아이템 -->
       <template v-else>
-        <article v-for="feed in feeds" :key="feed.feedId" class="list-item" @click="$emit('post-click', feed.feedId)">
+        <router-link v-for="feed in feeds" :key="feed.feedId" :to="{ name: 'FeedDetail', params: { id: feed.feedId } }" class="list-item">
           <div class="list-image">
             <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
             <div v-if="feed.feedEvaluation" class="list-badges-top">
@@ -178,7 +177,7 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/></svg>
                   {{ formatCount(feed.viewCount || 0) }}
                 </span>
-                <span :class="['stat', 'like-btn', { active: feed.userReactions?.hasLike }]" @click.stop="handleLike(feed)">
+                <span :class="['stat', 'like-btn', { active: feed.userReactions?.hasLike }]" @click.stop.prevent="handleLike(feed)">
                   <svg viewBox="0 0 24 24" :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
                   {{ formatCount(feed.likeCount || 0) }}
                 </span>
@@ -189,7 +188,7 @@
               </div>
             </div>
           </div>
-        </article>
+        </router-link>
       </template>
     </div>
 

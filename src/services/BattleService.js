@@ -147,13 +147,15 @@ class BattleService extends BaseApiService {
    * HOT 배틀 목록 조회
    * GET /api/battles/hot
    */
-  async getHotBattleList() {
+  async getHotBattleList({ page = 0, size = 3, sort = 'hotScore,desc' } = {}) {
     console.log('🔥 [BATTLE_SERVICE] HOT 배틀 목록 조회')
 
-    const response = await this.get('/battles/hot')
+    const response = await this.get('/battles/hot', { page, size, sort })
 
     if (response.success && response.data) {
-      response.data = this.normalizeHotBattleListResponse(response.data)
+      // Page 응답 처리
+      const content = response.data.content || response.data
+      response.data = this.normalizeHotBattleListResponse(content)
     }
 
     return response
