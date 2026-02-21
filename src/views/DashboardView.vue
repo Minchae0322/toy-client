@@ -242,7 +242,7 @@
                 <div v-else class="thumb-placeholder">{{ battle.title }}</div>
                 <div class="thumb-line"></div>
                 <div class="thumb-vs"><span class="thumb-vs-pill">VS</span></div>
-                <span class="badge-dday"><span class="dday-dot"></span>진행중</span>
+                <span class="badge-dday"><span class="dday-dot"></span>{{ getDdayText(battle.endDate) }}</span>
               </div>
               <!-- 바디 -->
               <div class="battle-hot-body">
@@ -272,7 +272,7 @@
                         <div class="rank-badge r1">1</div>
                         <span class="rank-name">{{ battle.topItems[0]?.displayName || '-' }}</span>
                       </div>
-                      <span class="rank-pct p1">{{ getScorePercent(battle.topItems[0], battle.totalVotes) }}%</span>
+                      <span class="rank-pct p1">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
                     </div>
                   </div>
                   <div v-if="battle.topItems[1]" class="rank-item">
@@ -281,7 +281,7 @@
                         <div class="rank-badge r2">2</div>
                         <span class="rank-name">{{ battle.topItems[1]?.displayName || '-' }}</span>
                       </div>
-                      <span class="rank-pct p2">{{ getScorePercent(battle.topItems[1], battle.totalVotes) }}%</span>
+                      <span class="rank-pct p2">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
                     </div>
                   </div>
                 </template>
@@ -289,14 +289,14 @@
                 <!-- 게이지 바 -->
                 <div v-if="battle.topItems?.length > 0" class="battle-gauge-wrap">
                   <div class="battle-gauge-track">
-                    <div class="gauge-seg s1" :style="{ width: getScorePercent(battle.topItems[0], battle.totalVotes) + '%' }"></div>
-                    <div v-if="battle.topItems[1]" class="gauge-seg s2" :style="{ width: getScorePercent(battle.topItems[1], battle.totalVotes) + '%' }"></div>
-                    <div v-if="battle.topItems[2]" class="gauge-seg s3" :style="{ width: getScorePercent(battle.topItems[2], battle.totalVotes) + '%' }"></div>
+                    <div class="gauge-seg s1" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
+                    <div v-if="battle.topItems[1]" class="gauge-seg s2" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
+                    <div class="gauge-seg s3" :style="{ width: getEtcPercent(battle.topItems) + '%' }"></div>
                   </div>
                   <div class="gauge-labels">
                     <span class="gauge-label gl1"><span class="dot"></span>{{ truncateName(battle.topItems[0]?.displayName) }}</span>
                     <span v-if="battle.topItems[1]" class="gauge-label gl2"><span class="dot"></span>{{ truncateName(battle.topItems[1]?.displayName) }}</span>
-                    <span v-if="battle.topItems[2]" class="gauge-label gl3"><span class="dot"></span>etc</span>
+                    <span class="gauge-label gl3"><span class="dot"></span>etc</span>
                   </div>
                 </div>
               </div>
@@ -606,9 +606,27 @@ const formatNumber = (num) => {
   return num.toString()
 }
 
-const getScorePercent = (item, totalVotes) => {
-  if (!item || !totalVotes || totalVotes === 0) return 0
-  return Math.round((item.totalScore / totalVotes) * 100)
+const formatPercent = (votePercentage) => {
+  if (!votePercentage) return 0
+  return Math.round(votePercentage * 100)
+}
+
+const getEtcPercent = (topItems) => {
+  if (!topItems || topItems.length === 0) return 0
+  const first = topItems[0]?.votePercentage || 0
+  const second = topItems[1]?.votePercentage || 0
+  return Math.max(0, Math.round((1 - first - second) * 100))
+}
+
+const getDdayText = (endDate) => {
+  if (!endDate) return '진행중'
+  const end = new Date(endDate)
+  const now = new Date()
+  const diffTime = end - now
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  if (diffDays < 0) return '종료'
+  if (diffDays === 0) return 'D-Day'
+  return `D-${diffDays}`
 }
 
 const truncateName = (name, maxLength = 10) => {
