@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HOT 100 Bubble Ranking</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: #fafafa; }
+  ::-webkit-scrollbar { display: none; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+  @keyframes bagBounce { 0%,100% { transform: scale(1); } 30% { transform: scale(1.18) rotate(-4deg); } 60% { transform: scale(0.94) rotate(2deg); } }
+  @keyframes chipIn { from { opacity: 0; transform: translateY(8px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const MOCK_PRODUCTS = [
+  { id: 1,  name: "두쫀쿠",        brand: "Apple",       rating: 4.8, reviewCount: 12400, popularityScore: 9720, image: "", rankChange: 2,  tags: "음향기기" },
+  { id: 2,  name: "갤럭시 S25 울트라",    brand: "Samsung",     rating: 4.7, reviewCount: 8900,  popularityScore: 8130, image: "", rankChange: -1, tags: "스마트폰" },
+  { id: 3,  name: "다이슨 에어랩",        brand: "Dyson",       rating: 4.6, reviewCount: 6700,  popularityScore: 5840, image: "", rankChange: 0,  tags: "뷰티" },
+  { id: 4,  name: "스탠리 텀블러",        brand: "Stanley",     rating: 4.5, reviewCount: 15200, popularityScore: 4210, image: "", rankChange: 3,  tags: "리빙" },
+  { id: 5,  name: "나이키 에어포스 1",    brand: "Nike",        rating: 4.4, reviewCount: 9800,  popularityScore: 3650, image: "", rankChange: -2, tags: "패션" },
+  { id: 6,  name: "맥북 프로 M4",         brand: "Apple",       rating: 4.9, reviewCount: 5400,  popularityScore: 2980, image: "", rankChange: 1,  tags: "전자기기" },
+  { id: 7,  name: "올리브영 레티놀",      brand: "올리브영",   rating: 4.3, reviewCount: 18300, popularityScore: 2150, image: "", rankChange: 5,  tags: "스킨케어" },
+  { id: 8,  name: "무지 아로마 디퓨저",  brand: "MUJI",        rating: 4.2, reviewCount: 3200,  popularityScore: 1480, image: "", rankChange: -1, tags: "리빙" },
+  { id: 9,  name: "소니 WH-1000XM5",     brand: "Sony",        rating: 4.7, reviewCount: 7100,  popularityScore: 1120, image: "", rankChange: 0,  tags: "음향기기" },
+  { id: 10, name: "이케아 말름 서랍장",  brand: "IKEA",        rating: 4.1, reviewCount: 4500,  popularityScore: 780,  image: "", rankChange: -3, tags: "가구" },
+  { id: 11, name: "뉴발란스 530",         brand: "New Balance", rating: 4.3, reviewCount: 6200,  popularityScore: 620,  image: "", rankChange: 2,  tags: "패션" },
+  { id: 12, name: "삼성 비스포크 냉장고", brand: "Samsung",    rating: 4.6, reviewCount: 2800,  popularityScore: 430,  image: "", rankChange: -1, tags: "가전" },
+  { id: 13, name: "스타벅스 리저브 원두", brand: "Starbucks",  rating: 4.0, reviewCount: 11000, popularityScore: 290,  image: "", rankChange: 4,  tags: "식품" },
+  { id: 14, name: "로지텍 MX Master 3S", brand: "Logitech",   rating: 4.8, reviewCount: 3900,  popularityScore: 185,  image: "", rankChange: 0,  tags: "전자기기" },
+  { id: 15, name: "아디다스 삼바",        brand: "Adidas",      rating: 4.2, reviewCount: 5100,  popularityScore: 95,   image: "", rankChange: -2, tags: "패션" },
+];
+
+const CATEGORIES = ["전체","전자기기","패션","뷰티","리빙","식품","음향기기","가구","스킨케어","가전","스마트폰"];
+const MIN_RADIUS = 28, MAX_RADIUS = 110;
+
+function getRadius(score, maxScore) {
+  return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(score / maxScore);
+}
+function getRankColor(rank) {
+  if (rank === 1) return { bg: "linear-gradient(135deg,#7c3aed,#a78bfa)", border: "#7c3aed", glow: "rgba(124,58,237,0.3)" };
+  if (rank === 2) return { bg: "linear-gradient(135deg,#6366f1,#818cf8)", border: "#6366f1", glow: "rgba(99,102,241,0.2)" };
+  if (rank === 3) return { bg: "linear-gradient(135deg,#8b5cf6,#c4b5fd)", border: "#8b5cf6", glow: "rgba(139,92,246,0.2)" };
+  return { bg: "#fff", border: "#e5e7eb", glow: "transparent" };
+}
+
+function computeLayout(nodes, W, H) {
+  if (!nodes.length || !W || !H) return [];
+  const cx = W / 2, cy = H / 2;
+  const pos = nodes.map((n, i) => {
+    const angle = (i / nodes.length) * Math.PI * 2;
+    const dist = 50 + Math.min(cx, cy) * 0.4 * (i / nodes.length);
+    return { x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist, vx: 0, vy: 0, r: n.r };
+  });
+  for (let tick = 0; tick < 300; tick++) {
+    const alpha = Math.max(0.001, 1 - tick / 300);
+    for (let i = 0; i < pos.length; i++) {
+      const dx = cx - pos[i].x, dy = cy - pos[i].y;
+      const pull = 0.01 * alpha * (i < 3 ? 1.8 : 0.3);
+      pos[i].vx += dx * pull; pos[i].vy += dy * pull;
+      for (let j = i + 1; j < pos.length; j++) {
+        const ddx = pos[i].x - pos[j].x, ddy = pos[i].y - pos[j].y;
+        const d = Math.sqrt(ddx*ddx + ddy*ddy) || 1;
+        const minD = pos[i].r + pos[j].r + 6;
+        if (d < minD) {
+          const f = (minD - d) / d * 0.3;
+          pos[i].vx += ddx*f; pos[i].vy += ddy*f;
+          pos[j].vx -= ddx*f; pos[j].vy -= ddy*f;
+        }
+      }
+      pos[i].vx *= 0.7; pos[i].vy *= 0.7;
+      pos[i].x += pos[i].vx; pos[i].y += pos[i].vy;
+      const pad = pos[i].r + 2;
+      pos[i].x = Math.max(pad, Math.min(W - pad, pos[i].x));
+      pos[i].y = Math.max(pad, Math.min(H - pad, pos[i].y));
+    }
+  }
+  return pos.map(p => ({ x: p.x, y: p.y }));
+}
+
+function useLayout(nodes, w, h) {
+  const [positions, setPositions] = useState([]);
+  useEffect(() => { setPositions(computeLayout(nodes, w, h)); }, [nodes, w, h]);
+  return positions;
+}
+
+function CarrierSVG({ size = 52, active = false }) {
+  const c = active ? "#7c3aed" : "#9ca3af";
+  const bg = active ? "#ede9fe" : "#f5f3ff";
+  return (
+    <svg width={size} height={size} viewBox="0 0 56 60" fill="none">
+      <rect x="19" y="3" width="18" height="8" rx="4" stroke={c} strokeWidth="2.5" fill="none"/>
+      <rect x="6" y="11" width="44" height="38" rx="7" fill={bg} stroke={c} strokeWidth="2.5"/>
+      <line x1="6" y1="22" x2="50" y2="22" stroke={c} strokeWidth="1.8"/>
+      <line x1="6" y1="37" x2="50" y2="37" stroke={c} strokeWidth="1.8"/>
+      <line x1="28" y1="11" x2="28" y2="49" stroke={c} strokeWidth="1.2" strokeDasharray="3 3"/>
+      <rect x="23" y="27" width="10" height="7" rx="2.5" fill={c} opacity="0.75"/>
+      <circle cx="15" cy="53" r="4" fill={c}/>
+      <circle cx="41" cy="53" r="4" fill={c}/>
+    </svg>
+  );
+}
+
+function BubbleRanking() {
+  const [category, setCategory] = useState("전체");
+  const [search, setSearch] = useState("");
+  const [hovered, setHovered] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef(null);
+  const [dims, setDims] = useState({ w: 0, h: 0 });
+  const [dragging, setDragging] = useState(null);
+  const [isOverBag, setIsOverBag] = useState(false);
+  const [isOverPanel, setIsOverPanel] = useState(false);
+  const bagRef = useRef(null);
+  const [bounceKey, setBounceKey] = useState(0);
+  const [bagged, setBagged] = useState([]);
+  const [bagOpen, setBagOpen] = useState(false);
+  const carrierPanelRef = useRef(null);
+  const bubbleContainerRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const bubbleWrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (isDraggingRef.current) return;
+      if (carrierPanelRef.current && carrierPanelRef.current.contains(e.target)) return;
+      if (bagRef.current && bagRef.current.contains(e.target)) return;
+      setBagOpen(false);
+    };
+    document.addEventListener("click", handleOutside);
+    return () => document.removeEventListener("click", handleOutside);
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(entries => {
+      const { width } = entries[0].contentRect;
+      setDims({ w: width, h: Math.max(500, Math.min(700, width * 0.75)) });
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e) => {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      setDragging(d => ({ ...d, x: clientX, y: clientY }));
+      const bagEl = bagRef.current;
+      const panelEl = carrierPanelRef.current;
+      let overIcon = false;
+      let overPanel = false;
+      if (bagEl) {
+        const r = bagEl.getBoundingClientRect();
+        if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) overIcon = true;
+      }
+      if (bagOpen && panelEl) {
+        const r = panelEl.getBoundingClientRect();
+        if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) overPanel = true;
+      }
+      setIsOverBag(overIcon);
+      setIsOverPanel(overPanel);
+    };
+    const onUp = () => {
+      if ((isOverBag || isOverPanel) && dragging) {
+        const product = MOCK_PRODUCTS.find(p => p.id === dragging.id);
+        if (product && !bagged.find(b => b.id === product.id)) {
+          setBagged(prev => [...prev, product]);
+          setBagOpen(true);
+          setBounceKey(k => k + 1);
+        }
+      }
+      setDragging(null);
+      setIsOverBag(false);
+      setIsOverPanel(false);
+      setTimeout(() => { isDraggingRef.current = false; }, 100);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, [dragging, isOverBag, isOverPanel, bagged, bagOpen]);
+
+  const filtered = MOCK_PRODUCTS
+    .filter(p => category === "전체" || p.tags === category)
+    .filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.brand.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => b.popularityScore - a.popularityScore);
+
+  const maxScore = filtered[0]?.popularityScore || 1;
+  const nodes = filtered.map(p => ({ id: p.id, r: getRadius(p.popularityScore, maxScore) }));
+  const positions = useLayout(nodes, dims.w, dims.h);
+
+  const handleMouseMove = useCallback((e) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, []);
+
+  const startDrag = (e, product) => {
+    e.preventDefault();
+    setHovered(null);
+    isDraggingRef.current = true;
+    setDragging({ id: product.id, image: product.image, x: e.clientX, y: e.clientY });
+  };
+
+  return (
+    <div style={{ fontFamily: "'Noto Sans KR',sans-serif", background: "#fafafa", minHeight: "100vh", padding: "0 0 40px", userSelect: dragging ? "none" : "auto" }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "20px 24px 0" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", color: "#7c3aed" }}>WEEKLY CHART</span>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: "#111", margin: "4px 0", borderLeft: "3px solid #9333ea", paddingLeft: 10 }}>HOT 100</h1>
+          <p style={{ fontSize: 13, color: "#94a3b8", margin: "0 0 16px" }}>버블이 클수록 이번 주 인기가 높아요</p>
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 16, scrollbarWidth: "none" }}>
+            {CATEGORIES.map(c => (
+              <button key={c} onClick={() => setCategory(c)} style={{
+                padding: "7px 16px", borderRadius: 6, border: "none", fontSize: 13, fontWeight: 500,
+                background: category === c ? "#7c3aed" : "#f3f4f6",
+                color: category === c ? "#fff" : "#666",
+                cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s",
+                boxShadow: category === c ? "0 2px 8px rgba(124,58,237,0.3)" : "none"
+              }}>{c}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "16px 24px" }}>
+        <div style={{ position: "relative", marginBottom: 16 }}>
+          <input
+            value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="아이템 이름 또는 브랜드로 검색"
+            style={{ width: "100%", padding: "12px 40px 12px 40px", border: "1px solid #e5e7eb", borderRadius: 12, fontSize: 14, background: "#fff", outline: "none" }}
+            onFocus={e => { e.target.style.borderColor = "#9333ea"; e.target.style.boxShadow = "0 0 0 3px rgba(147,51,234,0.1)"; }}
+            onBlur={e => { e.target.style.borderColor = "#e5e7eb"; e.target.style.boxShadow = "none"; }}
+          />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          {search && <button onClick={() => setSearch("")} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", width: 24, height: 24, borderRadius: "50%", border: "none", background: "#f3f4f6", cursor: "pointer", color: "#6b7280", fontSize: 12 }}>✕</button>}
+        </div>
+
+        {/* 버블 영역 + 캐리어를 감싸는 relative wrapper */}
+        <div ref={bubbleWrapperRef} style={{ position: "relative" }}>
+          <div
+            ref={el => { containerRef.current = el; bubbleContainerRef.current = el; }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => { if (!dragging) setHovered(null); }}
+            style={{
+              position: "relative", width: "100%", height: dims.h || 500,
+              background: "#fff", borderRadius: 6, border: "1px solid #e5e7eb",
+              overflow: "hidden", cursor: dragging ? "grabbing" : "default",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
+            }}
+          >
+            <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.3 }}>
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" strokeWidth="1"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)"/>
+            </svg>
+
+            {filtered.length === 0 && (
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#aaa", fontSize: 15 }}>검색 결과가 없습니다</div>
+            )}
+
+            {positions.map((pos, i) => {
+              if (!filtered[i]) return null;
+              const product = filtered[i];
+              const rank = i + 1;
+              const r = nodes[i].r;
+              const colors = getRankColor(rank);
+              const isHov = hovered === product.id && !dragging;
+              const isDrag = dragging?.id === product.id;
+              const isBagged = !!bagged.find(b => b.id === product.id);
+              return (
+                <div
+                  key={product.id}
+                  onMouseEnter={() => { if (!dragging) setHovered(product.id); }}
+                  onMouseLeave={() => { if (!dragging) setHovered(null); }}
+                  onMouseDown={(e) => startDrag(e, product)}
+                  style={{
+                    position: "absolute", left: pos.x - r, top: pos.y - r,
+                    width: r * 2, height: r * 2, borderRadius: "50%",
+                    background: rank <= 3 ? colors.bg : "#fff",
+                    border: `${isBagged ? "2.5px" : "2px"} solid ${isHov ? "#7c3aed" : isBagged ? "#7c3aed" : colors.border}`,
+                    boxShadow: isDrag ? "none"
+                      : isHov ? `0 8px 32px ${colors.glow}, 0 0 0 4px rgba(124,58,237,0.1)`
+                      : rank <= 3 ? `0 4px 16px ${colors.glow}` : "0 2px 8px rgba(0,0,0,0.06)",
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    cursor: "grab", opacity: isDrag ? 0.25 : 1,
+                    filter: isDrag ? "none" : (hovered && !isHov) ? "brightness(0.55) saturate(0.3)" : "none",
+                    transition: "opacity 0.15s, box-shadow 0.2s, border-color 0.2s, filter 0.2s",
+                    zIndex: isHov ? 50 : rank <= 3 ? 10 : 1,
+                    userSelect: "none"
+                  }}
+                >
+                  {r > 45 && <span style={{ fontSize: Math.max(9, r * 0.13), fontWeight: 700, marginTop: 3, color: rank <= 3 ? "#fff" : "#333", maxWidth: r * 1.4, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "0 4px" }}>{product.name}</span>}
+                  {r > 55 && <span style={{ fontSize: Math.max(8, r * 0.1), color: rank <= 3 ? "rgba(255,255,255,0.8)" : "#999", marginTop: 1 }}>{product.brand}</span>}
+                  {rank <= 3 ? (
+                    <div style={{
+                      position: "absolute", top: 6, left: "50%", transform: "translateX(-50%)",
+                      background: rank === 1 ? "#FFD700" : rank === 2 ? "#C0C0C0" : "#CD7F32",
+                      color: rank === 1 ? "#7a5a00" : rank === 2 ? "#444" : "#5a2d00",
+                      fontSize: Math.max(8, r * 0.11), fontWeight: 900,
+                      padding: "2px 8px", borderRadius: 4,
+                      letterSpacing: "0.06em", whiteSpace: "nowrap",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 5
+                    }}>{rank}</div>
+                  ) : (
+                    <div style={{
+                      position: "absolute", top: -4, right: -4,
+                      width: Math.max(16, r * 0.24), height: Math.max(16, r * 0.24), borderRadius: "50%",
+                      background: "#f3f4f6",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: Math.max(8, r * 0.12), fontWeight: 700, color: "#888",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.1)", border: "1.5px solid #fff"
+                    }}>{rank}</div>
+                  )}
+                  {isBagged && (
+                    <div style={{
+                      position: "absolute", top: -4, left: -4,
+                      width: Math.max(16, r * 0.26), height: Math.max(16, r * 0.26),
+                      borderRadius: "50%", background: "#7c3aed",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      border: "2px solid #fff", boxShadow: "0 1px 4px rgba(124,58,237,0.4)",
+                      fontSize: Math.max(8, r * 0.12), color: "#fff", fontWeight: 700
+                    }}>✓</div>
+                  )}
+                </div>
+              );
+            })}
+
+            <div style={{ position: "absolute", bottom: 14, left: 16, display: "flex", alignItems: "center", gap: 8, pointerEvents: "none" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#a78bfa)", flexShrink: 0 }}/>
+                <span style={{ fontSize: 11, color: "#888" }}>인기 높음</span>
+              </div>
+              <svg width="28" height="10" viewBox="0 0 28 10" fill="none">
+                <line x1="0" y1="5" x2="24" y2="5" stroke="#ccc" strokeWidth="1.5"/>
+                <path d="M20 1L27 5L20 9" stroke="#ccc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 13, height: 13, borderRadius: "50%", border: "1.5px solid #e5e7eb", background: "#fff", flexShrink: 0 }}/>
+                <span style={{ fontSize: 11, color: "#888" }}>인기 낮음</span>
+              </div>
+            </div>
+
+            {hovered && !dragging && (() => {
+              const idx = filtered.findIndex(p => p.id === hovered);
+              if (idx < 0) return null;
+              const product = filtered[idx];
+              const tooltipW = 220;
+              let left = mousePos.x - tooltipW / 2;
+              let top = mousePos.y - 155;
+              if (top < 0) top = mousePos.y + 10;
+              if (left < 0) left = 4;
+              if (left + tooltipW > dims.w) left = dims.w - tooltipW - 4;
+              return (
+                <div style={{ position: "absolute", left, top, width: tooltipW, zIndex: 100, background: "#fff", borderRadius: 14, padding: "14px 16px", boxShadow: "0 8px 32px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", pointerEvents: "none", animation: "fadeIn 0.15s ease" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: "#111" }}>{product.name}</span>
+                    <span style={{ fontSize: 11, color: "#7c3aed", fontWeight: 700 }}>#{idx+1}</span>
+                  </div>
+                  <span style={{ fontSize: 12, color: "#888" }}>{product.brand}</span>
+                  <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
+                    <div><div style={{ fontSize: 10, color: "#aaa" }}>평점</div><div style={{ fontWeight: 700, fontSize: 14, color: "#333" }}>⭐ {product.rating}</div></div>
+                    <div><div style={{ fontSize: 10, color: "#aaa" }}>피드</div><div style={{ fontWeight: 700, fontSize: 14, color: "#333" }}>{product.reviewCount.toLocaleString()}</div></div>
+                    <div><div style={{ fontSize: 10, color: "#aaa" }}>관심도</div><div style={{ fontWeight: 700, fontSize: 14, color: "#7c3aed" }}>{product.popularityScore}</div></div>
+                  </div>
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}><span style={{ fontSize: 10, color: "#aaa" }}>드래그해서 캐리어에 담기</span><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 2L9 9M9 9H3M9 9V3" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* 캐리어 - 버블 영역 우측 하단에 겹쳐서 배치 */}
+          <div ref={carrierPanelRef} style={{ position: "absolute", bottom: 12, right: 12, zIndex: 200, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
+            {bagOpen && (
+              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", padding: "14px 14px 10px", minWidth: 230, maxWidth: 280, animation: "fadeIn 0.2s ease" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#7c3aed", letterSpacing: "0.03em" }}>내 캐리어 ({bagged.length}개)</span>
+                  {bagged.length > 0 && <button onClick={() => setBagged([])} style={{ fontSize: 10, color: "#c084fc", border: "none", background: "none", cursor: "pointer" }}>전체 삭제</button>}
+                </div>
+                {bagged.length === 0 ? (
+                  <div style={{ fontSize: 12, color: "#bbb", textAlign: "center", padding: "10px 0" }}>아직 담긴 아이템이 없어요</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 265, overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "#c4b5fd #f5f3ff" }}>
+                    {bagged.map(p => (
+                      <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 10, background: "#faf5ff", animation: "chipIn 0.2s ease" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
+                          <div style={{ fontSize: 10, color: "#999" }}>{p.brand}</div>
+                        </div>
+                        <button onClick={() => setBagged(prev => prev.filter(b => b.id !== p.id))} style={{ border: "none", background: "none", cursor: "pointer", color: "#c084fc", fontSize: 14, lineHeight: 1, padding: "2px 4px" }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button style={{ width: "100%", marginTop: 10, padding: "9px 0", borderRadius: 8, border: "none", background: "#7c3aed", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", letterSpacing: "0.02em" }}>내 캐리어 보러가기</button>
+              </div>
+            )}
+
+            {isOverBag && (
+              <div style={{ background: "#ede9fe", border: "2px dashed #7c3aed", borderRadius: 12, padding: "6px 14px", fontSize: 12, color: "#7c3aed", fontWeight: 600, animation: "fadeIn 0.1s ease", whiteSpace: "nowrap" }}>
+                놓아서 담기!
+              </div>
+            )}
+
+            <div
+              ref={bagRef}
+              onClick={() => setBagOpen(o => !o)}
+              key={bounceKey}
+              style={{
+                width: 72, height: 72, borderRadius: 22,
+                background: isOverBag ? "#ede9fe" : "#fff",
+                border: isOverBag ? "2.5px dashed #7c3aed" : "2px solid #e5e7eb",
+                boxShadow: isOverBag ? "0 0 0 5px rgba(124,58,237,0.15), 0 8px 24px rgba(124,58,237,0.2)" : "0 4px 16px rgba(0,0,0,0.1)",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", transition: "border 0.2s, box-shadow 0.2s, background 0.2s",
+                position: "relative",
+                animation: bounceKey > 0 ? "bagBounce 0.5s ease" : "none"
+              }}
+            >
+              <CarrierSVG size={50} active={isOverBag || bagged.length > 0} />
+              {bagged.length > 0 && (
+                <div style={{ position: "absolute", top: -7, right: -7, width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#a78bfa)", color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(124,58,237,0.4)", border: "2px solid #fff", animation: "popIn 0.25s ease" }}>
+                  {bagged.length}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {(() => {
+          const [rankExpanded, setRankExpanded] = useState(false);
+          const visible = rankExpanded ? filtered : filtered.slice(0, 3);
+          const hasMore = filtered.length > 3;
+          return (
+            <div style={{ marginTop: 16, background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+              <div style={{ padding: "12px 20px", borderBottom: "1px solid #f3f4f6", fontSize: 13, fontWeight: 600, color: "#666" }}>전체 순위</div>
+              {visible.map((p, i) => {
+                const isBagged = !!bagged.find(b => b.id === p.id);
+                return (
+                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 20px", borderBottom: "1px solid #f8f8f8", background: "transparent", transition: "background 0.15s" }}
+                    onMouseEnter={e => { if (!isBagged) e.currentTarget.style.background = "#fafafa"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <span style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: i === 0 ? "linear-gradient(135deg,#FFD700,#FFA500)" : i === 1 ? "linear-gradient(135deg,#E8E8E8,#B8B8B8)" : i === 2 ? "linear-gradient(135deg,#CD7F32,#8B4513)" : "#f3f4f6", color: i === 0 ? "#000" : i <= 2 ? "#fff" : "#888" }}>{i + 1}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
+                      <div style={{ fontSize: 11, color: "#999" }}>{p.brand}</div>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#333" }}>⭐ {p.rating}</div>
+                      <div style={{ fontSize: 10, color: "#aaa" }}>{p.reviewCount.toLocaleString()}개</div>
+                    </div>
+                    <div style={{ width: 50, height: 4, background: "#f3f4f6", borderRadius: 2, overflow: "hidden", flexShrink: 0 }}>
+                      <div style={{ height: "100%", borderRadius: 2, width: `${(p.popularityScore / maxScore) * 100}%`, background: "linear-gradient(90deg,#8B5CF6,#A78BFA)" }}/>
+                    </div>
+                  </div>
+                );
+              })}
+              {hasMore && (
+                <button onClick={() => setRankExpanded(v => !v)} style={{ width: "100%", padding: "12px 0", border: "none", background: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, transition: "background 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#faf5ff"}
+                  onMouseLeave={e => e.currentTarget.style.background = "none"}
+                >
+                  {rankExpanded ? "접기" : `4위부터 보기 (${filtered.length - 3}개)`}
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: rankExpanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
+                    <path d="M3 4.5L6 7.5L9 4.5" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+          );
+        })()}
+      </div>
+
+      {dragging && (
+        <div style={{ position: "fixed", left: dragging.x, top: dragging.y, transform: "translate(-50%,-50%)", pointerEvents: "none", zIndex: 9999 }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, boxShadow: "0 8px 28px rgba(124,58,237,0.5)", border: "3px solid #fff", opacity: 0.93 }}>
+            {dragging.image}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<BubbleRanking />);
+</script>
+</body>
+</html>

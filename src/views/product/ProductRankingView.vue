@@ -1,43 +1,31 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" :class="{ 'no-select': !!dragging }">
     <AppSidebar />
 
     <main class="main-content">
-      <!-- 카테고리 필터 (최상단) -->
       <CommonCategoryFilter
-          :categories="categories"
-          :show-view-toggle="false"
-          :initial-category-id="selectedCategoryId"
-          @category-change="handleCategoryChange"
+        :categories="categories"
+        :show-view-toggle="false"
+        :initial-category-id="selectedCategoryId"
+        @category-change="handleCategoryChange"
       />
 
       <div class="ranking-view">
-        <!-- 페이지 헤더 -->
+        <!-- 헤더 -->
         <header class="page-header">
-          <div class="header-title">
-            <span class="header-label">WEEKLY CHART</span>
-            <h1>HOT 100</h1>
-          </div>
-          <p class="header-desc">이번 주 가장 인기 있는 아이템들을 확인해보세요</p>
+          <span class="header-label">WEEKLY CHART</span>
+          <h1>HOT 100</h1>
+          <p class="header-desc">버블이 클수록 이번 주 인기가 높아요</p>
         </header>
 
         <!-- 검색 -->
         <div class="search-box">
-          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35"/>
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input
-              v-model="searchKeyword"
-              type="text"
-              class="search-input"
-              placeholder="아이템 이름 또는 브랜드로 검색"
-          />
+          <input v-model="searchKeyword" class="search-input" placeholder="아이템 이름 또는 브랜드로 검색" />
           <button v-if="searchKeyword" class="search-clear" @click="searchKeyword = ''">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
@@ -48,149 +36,183 @@
         </div>
 
         <!-- 빈 상태 -->
-        <div v-else-if="!filteredProducts.length" class="empty-state">
-          <p v-if="searchKeyword">검색 결과가 없습니다</p>
-          <p v-else>등록된 아이템이 없습니다</p>
+        <div v-else-if="!filtered.length && !loading" class="empty-state">
+          <p>{{ searchKeyword ? '검색 결과가 없습니다' : '등록된 아이템이 없습니다' }}</p>
         </div>
 
-        <template v-else>
-          <!-- Top 3 섹션 -->
-          <section class="top-section">
-            <div class="top-grid">
-              <!-- 1위 카드 -->
-              <div v-if="hero" class="hero-card" @click="goToDetail(hero)">
-                <div class="rank-badge gold">
-                  <span>1</span>
-                </div>
-                <div class="hero-image-wrap">
-                  <img :src="getThumbnailUrl(hero)" :alt="hero.name" class="hero-image" />
-                </div>
-                <div class="hero-info">
-                  <span class="brand">{{ hero.brand }}</span>
-                  <h2 class="name">{{ hero.name }}</h2>
-                  <div class="meta-row">
-                    <div class="rating">
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="#FBBF24">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
-                      <span class="rating-value">{{ formatRating(hero.averageRating) }}</span>
-                      <span class="review-count">리뷰 {{ formatCount(hero.reviewCount) }}</span>
-                    </div>
-                    <RankChange :change="hero.rankChange" :isNew="hero.isNew" />
-                  </div>
-                  <div class="popularity-section">
-                    <div class="popularity-header">
-                      <span class="popularity-label">이번 주 관심도</span>
-                      <span class="popularity-value">{{ getScorePercent(getPopularityScore(hero)) }}%</span>
-                    </div>
-                    <div class="popularity-bar">
-                      <div class="popularity-fill" style="width: 100%"></div>
-                    </div>
-                  </div>
-                </div>
+        <template v-else-if="filtered.length">
+          <!-- 버블 차트 -->
+          <div class="bubble-wrapper">
+            <div
+              ref="containerRef"
+              class="bubble-area"
+              :style="{ height: dims.h + 'px' }"
+              @mousemove="handleMouseMove"
+              @mouseleave="onAreaLeave"
+            >
+              <!-- 그리드 배경 -->
+              <svg class="grid-bg">
+                <defs>
+                  <pattern id="bgGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#bgGrid)"/>
+              </svg>
+
+              <!-- 버블 -->
+              <div
+                v-for="(product, i) in bubbleProducts"
+                :key="product.id"
+                class="bubble"
+                :class="{
+                  'is-hovered': hovered === product.id && !dragging,
+                  'is-dragging': dragging?.id === product.id,
+                  'is-dimmed': hovered && hovered !== product.id && !dragging,
+                  'is-bagged': isBagged(product.id),
+                  'has-image': !!getThumbnailUrl(product)
+                }"
+                :style="getBubbleStyle(i)"
+                @mouseenter="!dragging && (hovered = product.id)"
+                @mouseleave="!dragging && (hovered = null)"
+                @mousedown.prevent="startDrag($event, product)"
+                @touchstart.prevent="startDrag($event, product)"
+              >
+                <!-- 배경 이미지 -->
+                <img v-if="getThumbnailUrl(product)" :src="getThumbnailUrl(product)" alt="" class="bubble-bg-image" />
+                <!-- 이미지 위 오버레이 (텍스트 가독성) -->
+                <div v-if="getThumbnailUrl(product)" class="bubble-overlay"></div>
+
+                <span v-if="nodes[i]?.r > 45" class="bubble-name" :style="{ fontSize: Math.max(9, nodes[i].r * 0.13) + 'px', color: getThumbnailUrl(product) || i < 3 ? '#fff' : '#333', maxWidth: nodes[i].r * 1.4 + 'px' }">{{ product.name }}</span>
+                <span v-if="nodes[i]?.r > 55" class="bubble-brand" :style="{ fontSize: Math.max(8, nodes[i].r * 0.1) + 'px', color: getThumbnailUrl(product) || i < 3 ? 'rgba(255,255,255,0.85)' : '#999' }">{{ product.brand }}</span>
+
+                <!-- Top 3 뱃지 -->
+                <div v-if="i < 3" class="rank-badge-top" :class="'rank-' + (i + 1)" :style="{ fontSize: Math.max(8, nodes[i].r * 0.11) + 'px' }">{{ i + 1 }}</div>
+                <!-- 4위 이하 뱃지 -->
+                <div v-else class="rank-badge-sm" :style="{ width: Math.max(16, nodes[i].r * 0.24) + 'px', height: Math.max(16, nodes[i].r * 0.24) + 'px', fontSize: Math.max(8, nodes[i].r * 0.12) + 'px' }">{{ i + 1 }}</div>
+
+                <!-- 담김 표시 -->
+                <div v-if="isBagged(product.id)" class="bagged-check" :style="{ width: Math.max(16, nodes[i].r * 0.26) + 'px', height: Math.max(16, nodes[i].r * 0.26) + 'px', fontSize: Math.max(8, nodes[i].r * 0.12) + 'px' }">✓</div>
               </div>
 
-              <!-- 2, 3위 카드 -->
-              <div
-                  v-for="(product, index) in runnerUps"
-                  :key="product.id"
-                  class="runner-card"
-                  @click="goToDetail(product)"
-              >
-                <div class="rank-badge" :class="index === 0 ? 'silver' : 'bronze'">
-                  <span>{{ index + 2 }}</span>
+              <!-- 범례 -->
+              <div class="bubble-legend">
+                <div class="legend-item">
+                  <div class="legend-dot big"></div>
+                  <span>인기 높음</span>
                 </div>
-                <div class="runner-image-wrap">
-                  <img :src="getThumbnailUrl(product)" :alt="product.name" class="runner-image" />
-                </div>
-                <div class="runner-info">
-                  <span class="brand">{{ product.brand }}</span>
-                  <h3 class="name">{{ product.name }}</h3>
-                  <div class="meta-row">
-                    <div class="rating">
-                      <svg width="12" height="12" viewBox="0 0 20 20" fill="#FBBF24">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
-                      <span class="rating-value">{{ formatRating(product.averageRating) }}</span>
-                      <span class="review-count">{{ formatCount(product.reviewCount) }}</span>
-                    </div>
-                    <RankChange :change="product.rankChange" :isNew="product.isNew" />
-                  </div>
-                  <div class="popularity-section">
-                    <div class="popularity-header">
-                      <span class="popularity-label">이번 주 관심도</span>
-                      <span class="popularity-value">{{ getScorePercent(getPopularityScore(product)) }}%</span>
-                    </div>
-                    <div class="popularity-bar">
-                      <div class="popularity-fill" :style="{ width: getScorePercent(getPopularityScore(product)) + '%' }"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- 4위 이하 리스트 -->
-          <section class="chart-section">
-            <div class="chart-list">
-              <div
-                  v-for="(product, index) in restList"
-                  :key="product.id"
-                  class="chart-item"
-                  @click="goToDetail(product)"
-              >
-                <!-- 순위 + 변동 -->
-                <div class="chart-rank">
-                  <span class="rank-number">{{ index + 4 }}</span>
-                  <RankChange :change="product.rankChange" :isNew="product.isNew" size="small" />
-                </div>
-
-                <!-- 썸네일 -->
-                <img :src="getThumbnailUrl(product)" :alt="product.name" class="chart-image" />
-
-                <!-- 정보 -->
-                <div class="chart-info">
-                  <div class="info-top">
-                    <h3 class="name">{{ product.name }}</h3>
-                    <span v-if="getFirstTag(product)" class="tag">{{ getFirstTag(product) }}</span>
-                  </div>
-                  <div class="info-bottom">
-                    <span class="brand">{{ product.brand }}</span>
-                    <span v-if="product.price" class="price">{{ product.price }}</span>
-                  </div>
-                </div>
-
-                <!-- 핵심 지표 -->
-                <div class="chart-metrics">
-                  <div class="rating-block">
-                    <div class="rating">
-                      <svg width="12" height="12" viewBox="0 0 20 20" fill="#FBBF24">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
-                      <span class="rating-value">{{ formatRating(product.averageRating) }}</span>
-                    </div>
-                    <span class="review-count">{{ formatCount(product.reviewCount) }}개</span>
-                  </div>
-                  <div class="popularity-mini">
-                    <div class="popularity-bar small">
-                      <div class="popularity-fill" :style="{ width: getScorePercent(getPopularityScore(product)) + '%' }"></div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 화살표 -->
-                <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 18l6-6-6-6" />
+                <svg width="28" height="10" viewBox="0 0 28 10" fill="none">
+                  <line x1="0" y1="5" x2="24" y2="5" stroke="#ccc" stroke-width="1.5"/>
+                  <path d="M20 1L27 5L20 9" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
+                <div class="legend-item">
+                  <div class="legend-dot small"></div>
+                  <span>인기 낮음</span>
+                </div>
+              </div>
+
+              <!-- 툴팁 -->
+              <div v-if="tooltipProduct && !dragging" class="bubble-tooltip" :style="tooltipStyle">
+                <div class="tooltip-header">
+                  <span class="tooltip-name">{{ tooltipProduct.name }}</span>
+                  <span class="tooltip-rank">#{{ filtered.indexOf(tooltipProduct) + 1 }}</span>
+                </div>
+                <span class="tooltip-brand">{{ tooltipProduct.brand }}</span>
+                <div class="tooltip-metrics">
+                  <div><div class="metric-label">평점</div><div class="metric-value">⭐ {{ formatRating(tooltipProduct.averageRating) }}</div></div>
+                  <div><div class="metric-label">피드</div><div class="metric-value">{{ formatCount(tooltipProduct.reviewCount) }}</div></div>
+                  <div><div class="metric-label">관심도</div><div class="metric-value purple">{{ getPopularityScore(tooltipProduct) }}</div></div>
+                </div>
+                <div class="tooltip-hint">
+                  <span>드래그해서 캐리어에 담기</span>
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 2L9 9M9 9H3M9 9V3" stroke="#aaa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
               </div>
             </div>
-          </section>
+
+            <!-- 캐리어 패널 -->
+            <div ref="carrierPanelRef" class="carrier-panel">
+              <!-- 담긴 목록 -->
+              <Transition name="panel-fade">
+                <div v-if="bagOpen" class="carrier-items">
+                  <div class="carrier-items-header">
+                    <span>내 캐리어 ({{ bagged.length }}개)</span>
+                    <button v-if="bagged.length" class="carrier-clear-all" @click="bagged = []">전체 삭제</button>
+                  </div>
+                  <div v-if="!bagged.length" class="carrier-empty">아직 담긴 아이템이 없어요</div>
+                  <div v-else class="carrier-list">
+                    <div v-for="item in bagged" :key="item.id" class="carrier-chip">
+                      <div class="carrier-chip-info">
+                        <div class="carrier-chip-name">{{ item.name }}</div>
+                        <div class="carrier-chip-brand">{{ item.brand }}</div>
+                      </div>
+                      <button class="carrier-chip-remove" @click="removeBagged(item.id)">✕</button>
+                    </div>
+                  </div>
+                  <button class="carrier-go-btn" @click="goToCarrier">내 캐리어 보러가기</button>
+                </div>
+              </Transition>
+
+              <!-- 드롭 힌트 -->
+              <div v-if="isOverBag && dragging" class="carrier-drop-hint">놓아서 담기!</div>
+
+              <!-- 캐리어 아이콘 -->
+              <div
+                ref="bagRef"
+                class="carrier-icon"
+                :class="{ active: isOverBag, 'has-items': bagged.length > 0 }"
+                :key="bounceKey"
+                @click="toggleBag"
+              >
+                <svg width="50" height="50" viewBox="0 0 56 60" fill="none">
+                  <rect x="19" y="3" width="18" height="8" rx="4" :stroke="carrierColor" stroke-width="2.5" fill="none"/>
+                  <rect x="6" y="11" width="44" height="38" rx="7" :fill="carrierBg" :stroke="carrierColor" stroke-width="2.5"/>
+                  <line x1="6" y1="22" x2="50" y2="22" :stroke="carrierColor" stroke-width="1.8"/>
+                  <line x1="6" y1="37" x2="50" y2="37" :stroke="carrierColor" stroke-width="1.8"/>
+                  <line x1="28" y1="11" x2="28" y2="49" :stroke="carrierColor" stroke-width="1.2" stroke-dasharray="3 3"/>
+                  <rect x="23" y="27" width="10" height="7" rx="2.5" :fill="carrierColor" opacity="0.75"/>
+                  <circle cx="15" cy="53" r="4" :fill="carrierColor"/>
+                  <circle cx="41" cy="53" r="4" :fill="carrierColor"/>
+                </svg>
+                <div v-if="bagged.length" class="carrier-badge">{{ bagged.length }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 전체 순위 리스트 -->
+          <div class="rank-list">
+            <div class="rank-list-header">전체 순위</div>
+            <div
+              v-for="(product, i) in rankListVisible"
+              :key="product.id"
+              class="rank-item"
+              @click="goToDetail(product)"
+            >
+              <span class="rank-num" :class="{ gold: i === 0, silver: i === 1, bronze: i === 2 }">{{ i + 1 }}</span>
+              <div class="rank-info">
+                <div class="rank-name">{{ product.name }}</div>
+                <div class="rank-brand">{{ product.brand }}</div>
+              </div>
+              <div class="rank-stats">
+                <div class="rank-rating">⭐ {{ formatRating(product.averageRating) }}</div>
+                <div class="rank-review">{{ formatCount(product.reviewCount) }}개</div>
+              </div>
+              <div class="rank-bar">
+                <div class="rank-bar-fill" :style="{ width: getScorePercent(product) + '%' }"></div>
+              </div>
+            </div>
+            <button v-if="filtered.length > 3" class="rank-toggle-btn" @click="rankExpanded = !rankExpanded">
+              {{ rankExpanded ? '접기' : `4위부터 보기 (${filtered.length - 3}개)` }}
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" :style="{ transform: rankExpanded ? 'rotate(180deg)' : 'none' }">
+                <path d="M3 4.5L6 7.5L9 4.5" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
 
           <!-- 더보기 -->
           <div v-if="hasNext" class="load-more">
             <button class="load-more-btn" :disabled="loading" @click="loadMore">
-              <template v-if="loading">불러오는 중...</template>
-              <template v-else>더 보기</template>
+              {{ loading ? '불러오는 중...' : '더 보기' }}
             </button>
           </div>
         </template>
@@ -198,120 +220,296 @@
     </main>
 
     <BottomNavigation />
+
+    <!-- 드래그 고스트 -->
+    <Teleport to="body">
+      <div v-if="dragging" class="drag-ghost" :style="{ left: dragging.x + 'px', top: dragging.y + 'px' }">
+        <div class="drag-ghost-circle">
+          <img v-if="dragging.image" :src="dragging.image" alt="" />
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
-import RankChange from '@/components/product/RankChange.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
-import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue';
+import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'
 import { productService } from '@/services/ProductService.js'
 import { useCategoryCache } from '@/composables/useCategoryCache.js'
 
-const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache()
-
 const router = useRouter()
 const route = useRoute()
+const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache()
 
-const DEFAULT_THUMBNAIL = 'https://picsum.photos/200'
+// ==================== 상수 ====================
+const MIN_RADIUS = 28
+const MAX_RADIUS = 110
+const BUBBLE_LIMIT = 30
+const PAGE_SIZE = 20
 
-// 상태
-const categories = ref([])
-const selectedCategoryId = ref(null)
-const selectedCategoryDepth = ref(null)
+// ==================== 유틸 함수 ====================
+function getRadius(score, maxScore) {
+  if (!maxScore) return MIN_RADIUS
+  return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(score / maxScore)
+}
+
+function getRankColor(rank) {
+  if (rank === 1) return { bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)', border: '#7c3aed', glow: 'rgba(124,58,237,0.3)' }
+  if (rank === 2) return { bg: 'linear-gradient(135deg,#6366f1,#818cf8)', border: '#6366f1', glow: 'rgba(99,102,241,0.2)' }
+  if (rank === 3) return { bg: 'linear-gradient(135deg,#8b5cf6,#c4b5fd)', border: '#8b5cf6', glow: 'rgba(139,92,246,0.2)' }
+  return { bg: '#fff', border: '#e5e7eb', glow: 'transparent' }
+}
+
+function computeLayout(nodeList, W, H) {
+  if (!nodeList.length || !W || !H) return []
+  const cx = W / 2, cy = H / 2
+  const pos = nodeList.map((n, i) => {
+    const angle = (i / nodeList.length) * Math.PI * 2
+    const dist = 50 + Math.min(cx, cy) * 0.4 * (i / nodeList.length)
+    return { x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist, vx: 0, vy: 0, r: n.r }
+  })
+  for (let tick = 0; tick < 300; tick++) {
+    const alpha = Math.max(0.001, 1 - tick / 300)
+    for (let i = 0; i < pos.length; i++) {
+      const dx = cx - pos[i].x, dy = cy - pos[i].y
+      const pull = 0.01 * alpha * (i < 3 ? 1.8 : 0.3)
+      pos[i].vx += dx * pull; pos[i].vy += dy * pull
+      for (let j = i + 1; j < pos.length; j++) {
+        const ddx = pos[i].x - pos[j].x, ddy = pos[i].y - pos[j].y
+        const d = Math.sqrt(ddx * ddx + ddy * ddy) || 1
+        const minD = pos[i].r + pos[j].r + 6
+        if (d < minD) {
+          const f = (minD - d) / d * 0.3
+          pos[i].vx += ddx * f; pos[i].vy += ddy * f
+          pos[j].vx -= ddx * f; pos[j].vy -= ddy * f
+        }
+      }
+      pos[i].vx *= 0.7; pos[i].vy *= 0.7
+      pos[i].x += pos[i].vx; pos[i].y += pos[i].vy
+      const pad = pos[i].r + 2
+      pos[i].x = Math.max(pad, Math.min(W - pad, pos[i].x))
+      pos[i].y = Math.max(pad, Math.min(H - pad, pos[i].y))
+    }
+  }
+  return pos.map(p => ({ x: p.x, y: p.y }))
+}
+
+// ==================== Refs ====================
+const containerRef = ref(null)
+const bagRef = ref(null)
+const carrierPanelRef = ref(null)
+
+// ==================== 상태 ====================
 const products = ref([])
 const loading = ref(false)
 const hasNext = ref(true)
 const currentPage = ref(0)
-const pageSize = 10
-const totalElements = ref(0)
 const searchKeyword = ref('')
+const selectedCategoryId = ref(null)
+const selectedCategoryDepth = ref(null)
+const categories = ref([])
 
-// 인기도 점수 계산
+const dims = ref({ w: 0, h: 0 })
+const hovered = ref(null)
+const mousePos = ref({ x: 0, y: 0 })
+const dragging = ref(null)
+const isOverBag = ref(false)
+const isOverPanel = ref(false)
+const bagged = ref([])
+const bagOpen = ref(false)
+const bounceKey = ref(0)
+const rankExpanded = ref(false)
+
+let resizeObserver = null
+let isDraggingFlag = false
+
+// ==================== Computed ====================
 const getPopularityScore = (product) => {
   if (!product) return 0
-  if (product.popularityScore !== undefined && product.popularityScore !== null) {
-    return product.popularityScore
-  }
-  const viewCount = product.viewCount || 0
-  const likeCount = product.likeCount || 0
-  const shareCount = product.shareCount || 0
-  const reviewCount = product.reviewCount || 0
-  return viewCount + (likeCount * 3) + (shareCount * 5) + (reviewCount * 2)
+  if (product.popularityScore != null) return product.popularityScore
+  return (product.viewCount || 0) + ((product.likeCount || 0) * 3) + ((product.shareCount || 0) * 5) + ((product.reviewCount || 0) * 2)
 }
 
-// 클라이언트 검색 필터 (나중에 백엔드 keyword 검색으로 대체 예정)
-const filteredProducts = computed(() => {
-  if (!searchKeyword.value.trim()) return products.value
-  const keyword = searchKeyword.value.toLowerCase().trim()
-  return products.value.filter(product =>
-    product.name?.toLowerCase().includes(keyword) ||
-    product.brand?.toLowerCase().includes(keyword)
-  )
+const filtered = computed(() => {
+  let list = products.value
+  if (searchKeyword.value.trim()) {
+    const kw = searchKeyword.value.toLowerCase().trim()
+    list = list.filter(p => p.name?.toLowerCase().includes(kw) || p.brand?.toLowerCase().includes(kw))
+  }
+  return list.sort((a, b) => getPopularityScore(b) - getPopularityScore(a))
 })
 
-// Computed
-const hero = computed(() => filteredProducts.value[0] || null)
-const runnerUps = computed(() => filteredProducts.value.slice(1, 3))
-const restList = computed(() => filteredProducts.value.slice(3))
-const maxScore = computed(() => getPopularityScore(hero.value) || 1)
+const bubbleProducts = computed(() => filtered.value.slice(0, BUBBLE_LIMIT))
+const maxScore = computed(() => getPopularityScore(filtered.value[0]) || 1)
 
-// 유틸리티 함수
-const getThumbnailUrl = (product) => {
-  return product.thumbnailDto?.fileUrl || product.thumbnailDto?.filePath || DEFAULT_THUMBNAIL
+const nodes = computed(() =>
+  bubbleProducts.value.map(p => ({ id: p.id, r: getRadius(getPopularityScore(p), maxScore.value) }))
+)
+
+const positions = computed(() => computeLayout(nodes.value, dims.value.w, dims.value.h))
+
+const tooltipProduct = computed(() => {
+  if (!hovered.value) return null
+  return filtered.value.find(p => p.id === hovered.value) || null
+})
+
+const tooltipStyle = computed(() => {
+  if (!tooltipProduct.value) return {}
+  const W = 220
+  let left = mousePos.value.x - W / 2
+  let top = mousePos.value.y - 160
+  if (top < 0) top = mousePos.value.y + 10
+  if (left < 0) left = 4
+  if (left + W > dims.value.w) left = dims.value.w - W - 4
+  return { left: left + 'px', top: top + 'px', width: W + 'px' }
+})
+
+const rankListVisible = computed(() => rankExpanded.value ? filtered.value : filtered.value.slice(0, 3))
+
+const carrierColor = computed(() => (isOverBag.value || bagged.value.length > 0) ? '#7c3aed' : '#9ca3af')
+const carrierBg = computed(() => (isOverBag.value || bagged.value.length > 0) ? '#ede9fe' : '#f5f3ff')
+
+// ==================== 메서드 ====================
+function getBubbleStyle(i) {
+  if (!positions.value[i] || !nodes.value[i]) return { display: 'none' }
+  const pos = positions.value[i]
+  const r = nodes.value[i].r
+  const rank = i + 1
+  const colors = getRankColor(rank)
+  const product = bubbleProducts.value[i]
+  const isHov = hovered.value === product?.id && !dragging.value
+  const isDrag = dragging.value?.id === product?.id
+  const inBag = isBagged(product?.id)
+  const hasImage = !!getThumbnailUrl(product)
+
+  return {
+    left: (pos.x - r) + 'px',
+    top: (pos.y - r) + 'px',
+    width: (r * 2) + 'px',
+    height: (r * 2) + 'px',
+    background: hasImage ? '#000' : (rank <= 3 ? colors.bg : '#fff'),
+    borderColor: isHov ? '#7c3aed' : inBag ? '#7c3aed' : colors.border,
+    borderWidth: inBag ? '2.5px' : '2px',
+    boxShadow: isDrag ? 'none'
+      : isHov ? `0 8px 32px ${colors.glow}, 0 0 0 4px rgba(124,58,237,0.1)`
+      : rank <= 3 ? `0 4px 16px ${colors.glow}` : '0 2px 8px rgba(0,0,0,0.06)',
+    opacity: isDrag ? 0.25 : 1,
+    zIndex: isHov ? 50 : rank <= 3 ? 10 : 1
+  }
 }
 
-const formatCount = (count) => {
+function isBagged(id) { return bagged.value.some(b => b.id === id) }
+
+function getScorePercent(product) {
+  const score = getPopularityScore(product)
+  if (!score || !maxScore.value) return 0
+  return Math.round((score / maxScore.value) * 100)
+}
+
+function formatCount(count) {
   if (!count) return '0'
   if (count >= 10000) return (count / 10000).toFixed(1) + '만'
   if (count >= 1000) return (count / 1000).toFixed(1) + 'k'
   return count.toLocaleString()
 }
 
-const formatRating = (rating) => {
+function formatRating(rating) {
   if (!rating) return '0.0'
   return typeof rating === 'number' ? rating.toFixed(1) : rating
 }
 
-const getScorePercent = (score) => {
-  if (!score || !maxScore.value) return 0
-  return Math.round((score / maxScore.value) * 100)
+function getThumbnailUrl(product) {
+  return product.thumbnailDto?.fileUrl || product.thumbnailDto?.filePath || product.thumbnailUrl || null
 }
 
-const getFirstTag = (product) => {
-  if (!product.tags) return null
-  const tagList = product.tags.split(';').filter(t => t.trim())
-  return tagList[0] || null
-}
-
-const goToDetail = (product) => {
+function goToDetail(product) {
   router.push({ name: 'ProductDetail', params: { id: product.id } })
 }
 
-// 카테고리 변경 핸들러
-const handleCategoryChange = ({ categoryId, categoryDepth, category, subCategory }) => {
-  console.log('[ProductRanking] 카테고리 변경:', { categoryId, categoryDepth });
-  selectedCategoryId.value = categoryId
-  // categoryDepth 우선, 없으면 subCategory면 2, 아니면 1
-  selectedCategoryDepth.value = categoryDepth || (subCategory ? 2 : 1)
-  console.log('[ProductRanking] 선택된 값:', { categoryId: selectedCategoryId.value, categoryDepth: selectedCategoryDepth.value });
-  fetchRanking(true)
+function goToCarrier() {
+  router.push({ name: 'MyPage' })
 }
 
-// API 호출
-const fetchRanking = async (reset = false) => {
+function removeBagged(id) { bagged.value = bagged.value.filter(b => b.id !== id) }
+
+function toggleBag() {
+  if (isDraggingFlag) return
+  bagOpen.value = !bagOpen.value
+}
+
+// ==================== 마우스/터치 ====================
+function handleMouseMove(e) {
+  const rect = containerRef.value?.getBoundingClientRect()
+  if (rect) mousePos.value = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+}
+
+function onAreaLeave() {
+  if (!dragging.value) hovered.value = null
+}
+
+function startDrag(e, product) {
+  hovered.value = null
+  isDraggingFlag = true
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY
+  const thumb = product.thumbnailDto?.fileUrl || product.thumbnailDto?.filePath || null
+  dragging.value = { id: product.id, image: thumb, x: clientX, y: clientY }
+}
+
+function onGlobalMove(e) {
+  if (!dragging.value) return
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY
+  dragging.value = { ...dragging.value, x: clientX, y: clientY }
+
+  let overIcon = false, overPanel = false
+  const bagEl = bagRef.value
+  const panelEl = carrierPanelRef.value
+  if (bagEl) {
+    const r = bagEl.getBoundingClientRect()
+    if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) overIcon = true
+  }
+  if (bagOpen.value && panelEl) {
+    const r = panelEl.getBoundingClientRect()
+    if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) overPanel = true
+  }
+  isOverBag.value = overIcon
+  isOverPanel.value = overPanel
+}
+
+function onGlobalUp() {
+  if (!dragging.value) return
+  if (isOverBag.value || isOverPanel.value) {
+    const product = products.value.find(p => p.id === dragging.value.id)
+    if (product && !isBagged(product.id)) {
+      bagged.value = [...bagged.value, product]
+      bagOpen.value = true
+      bounceKey.value++
+    }
+  }
+  dragging.value = null
+  isOverBag.value = false
+  isOverPanel.value = false
+  setTimeout(() => { isDraggingFlag = false }, 100)
+}
+
+function onClickOutside(e) {
+  if (isDraggingFlag) return
+  if (carrierPanelRef.value?.contains(e.target)) return
+  if (bagRef.value?.contains(e.target)) return
+  bagOpen.value = false
+}
+
+// ==================== API ====================
+async function fetchRanking(reset = false) {
   if (loading.value) return
   loading.value = true
-
   try {
-    if (reset) {
-      products.value = []
-      currentPage.value = 0
-      hasNext.value = true
-    }
+    if (reset) { products.value = []; currentPage.value = 0; hasNext.value = true }
 
     const searchCondition = { status: 'APPROVED' }
     if (selectedCategoryId.value) {
@@ -319,23 +517,20 @@ const fetchRanking = async (reset = false) => {
       searchCondition.categoryDepth = selectedCategoryDepth.value
     }
 
-    const pageable = {
+    const response = await productService.getProducts(searchCondition, {
       page: currentPage.value,
-      size: pageSize,
+      size: PAGE_SIZE,
       sort: 'popularityScore,DESC'
-    }
-
-    const response = await productService.getProducts(searchCondition, pageable)
+    })
 
     if (response.success && response.data) {
       const pageData = response.data
       if (pageData.content) {
         products.value = reset ? pageData.content : [...products.value, ...pageData.content]
         hasNext.value = !pageData.last
-        totalElements.value = pageData.totalElements || 0
       } else if (Array.isArray(pageData)) {
         products.value = reset ? pageData : [...products.value, ...pageData]
-        hasNext.value = pageData.length >= pageSize
+        hasNext.value = pageData.length >= PAGE_SIZE
       }
     } else {
       hasNext.value = false
@@ -348,8 +543,7 @@ const fetchRanking = async (reset = false) => {
   }
 }
 
-// 카테고리 조회 (캐시 사용)
-const fetchCategories = async () => {
+async function fetchCategories() {
   try {
     await loadAllCategories()
     categories.value = cachedCategories.value
@@ -358,609 +552,327 @@ const fetchCategories = async () => {
   }
 }
 
-const loadMore = () => {
+function handleCategoryChange({ categoryId, categoryDepth, subCategory }) {
+  selectedCategoryId.value = categoryId
+  selectedCategoryDepth.value = categoryDepth || (subCategory ? 2 : 1)
+  fetchRanking(true)
+}
+
+function loadMore() {
   currentPage.value++
   fetchRanking(false)
 }
 
+// ==================== 라이프사이클 ====================
 watch(() => route.query, (query) => {
   if (query.categoryId) {
     selectedCategoryId.value = Number(query.categoryId)
   }
-}, {immediate: true})
+}, { immediate: true })
+
+// containerRef가 조건부 렌더링 안에 있으므로, DOM에 나타날 때 ResizeObserver 연결
+watch(containerRef, (el, oldEl) => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
+  if (el) {
+    resizeObserver = new ResizeObserver(entries => {
+      const { width } = entries[0].contentRect
+      dims.value = { w: width, h: Math.max(500, Math.min(700, width * 0.75)) }
+    })
+    resizeObserver.observe(el)
+  }
+})
 
 onMounted(async () => {
+  // 글로벌 이벤트
+  window.addEventListener('mousemove', onGlobalMove)
+  window.addEventListener('mouseup', onGlobalUp)
+  window.addEventListener('touchmove', onGlobalMove, { passive: false })
+  window.addEventListener('touchend', onGlobalUp)
+  document.addEventListener('click', onClickOutside)
+
   await fetchCategories()
   fetchRanking(true)
+})
+
+onUnmounted(() => {
+  resizeObserver?.disconnect()
+  window.removeEventListener('mousemove', onGlobalMove)
+  window.removeEventListener('mouseup', onGlobalUp)
+  window.removeEventListener('touchmove', onGlobalMove)
+  window.removeEventListener('touchend', onGlobalUp)
+  document.removeEventListener('click', onClickOutside)
 })
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+
+.no-select { user-select: none; }
 
 .app-container {
   background: #fff;
   min-height: 100vh;
-  color: #222;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
   max-width: 100%;
   overflow-x: clip;
   padding: 0 1rem;
+  color: #222;
 }
+@media (min-width: 768px) { .app-container { padding: 0 2rem; } }
+@media (min-width: 1280px) { .app-container { padding: 0 3rem; max-width: 1920px; margin: 0 auto; } }
 
-@media (min-width: 768px) {
-  .app-container { padding: 0 2rem; }
-}
+.main-content { flex: 1; min-width: 0; padding-bottom: 80px; padding-left: 1.5rem; }
+@media (max-width: 767px) { .main-content { padding-left: 0; } }
+@media (min-width: 768px) { .main-content { padding-bottom: 0; } }
 
-@media (min-width: 1280px) {
-  .app-container {
-    padding: 0 3rem;
-    max-width: 1920px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-}
+.ranking-view { max-width: 1000px; margin: 0; }
 
-@media (min-width: 1920px) {
-  .app-container {
-    padding: 0 4rem;
-  }
-}
+/* 헤더 */
+.page-header { padding: 20px 0 16px; }
+.header-label { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; color: #7c3aed; display: block; margin-bottom: 4px; padding-left: 13px; }
+.page-header h1 { font-size: 26px; font-weight: 800; color: #111; margin: 4px 0; border-left: 3px solid #9333ea; padding-left: 10px; }
+.header-desc { font-size: 13px; color: #94a3b8; margin: 0; padding-left: 13px; }
 
-.main-content {
-  flex: 1;
-  min-width: 0;
-  padding-bottom: 80px;
-  padding-left: 1.5rem;
-}
-
-@media (max-width: 767px) {
-  .main-content { padding-left: 0; }
-}
-
-@media (min-width: 768px) {
-  .main-content { padding-bottom: 0; }
-}
-
-.ranking-view {
-  max-width: 900px;
-  margin: 0;
-}
-
-/* 페이지 헤더 */
-.page-header {
-  padding: 20px 0 16px;
-}
-
-.header-label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: #7c3aed;
-  display: block;
-  margin-bottom: 4px;
-  padding-left: 13px;
-}
-
-.page-header h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #111;
-  margin: 0;
-  padding-left: 10px;
-  border-left: 3px solid #9333ea;
-}
-
-.header-desc {
-  font-size: 13px;
-  color: #94a3b8;
-  margin: 6px 0 0;
-  padding-left: 13px;
-}
-
-/* 검색 박스 */
-.search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 14px;
-  color: #9ca3af;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  padding: 12px 40px 12px 44px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 14px;
-  font-family: inherit;
-  background: #fff;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #9333ea;
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
-}
-
-.search-input::placeholder {
-  color: #9ca3af;
-}
-
-.search-clear {
-  position: absolute;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: #f3f4f6;
-  border: none;
-  border-radius: 50%;
-  color: #6b7280;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.search-clear:hover {
-  background: #e5e7eb;
-  color: #374151;
-}
+/* 검색 */
+.search-box { position: relative; margin-bottom: 16px; }
+.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.search-input { width: 100%; padding: 12px 40px; border: 1px solid #e5e7eb; border-radius: 12px; font-size: 14px; font-family: inherit; background: #fff; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.search-input:focus { border-color: #9333ea; box-shadow: 0 0 0 3px rgba(147,51,234,0.1); }
+.search-input::placeholder { color: #9ca3af; }
+.search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; background: #f3f4f6; border: none; border-radius: 50%; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.search-clear:hover { background: #e5e7eb; }
 
 /* 로딩 & 빈 상태 */
-.loading-state, .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 0;
-  color: #888;
+.loading-state, .empty-state { display: flex; flex-direction: column; align-items: center; padding: 80px 0; color: #888; }
+.spinner { width: 32px; height: 32px; border: 2px solid #f0f0f0; border-top-color: #7c3aed; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==================== 버블 차트 ==================== */
+.bubble-wrapper { position: relative; margin-bottom: 16px; }
+
+.bubble-area {
+  position: relative; width: 100%; min-height: 500px;
+  background: #fff; border-radius: 6px; border: 1px solid #e5e7eb;
+  overflow: hidden; cursor: default;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 2px solid #f0f0f0;
-  border-top-color: #7c3aed;
+.grid-bg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.3; }
+
+/* 버블 */
+.bubble {
+  position: absolute; border-radius: 50%; border: 2px solid;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: grab; transition: opacity 0.15s, box-shadow 0.2s, border-color 0.2s, filter 0.2s;
+  user-select: none;
+}
+.bubble.is-dimmed { filter: brightness(0.55) saturate(0.3); }
+.bubble.is-dragging { opacity: 0.25 !important; }
+
+/* 버블 배경 이미지 */
+.bubble-bg-image {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 50%;
+  z-index: 0;
+}
+.bubble-overlay {
+  position: absolute; inset: 0;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Top 3 섹션 */
-.top-section {
-  padding: 16px 0;
-}
-
-.top-grid {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr;
-  gap: 16px;
-}
-
-/* 순위 배지 */
-.rank-badge {
-  position: absolute;
-  top: -10px;
-  left: 16px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  background: rgba(0, 0, 0, 0.35);
   z-index: 1;
 }
+.bubble.has-image .bubble-name,
+.bubble.has-image .bubble-brand { position: relative; z-index: 2; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+.bubble.has-image .rank-badge-top,
+.bubble.has-image .rank-badge-sm,
+.bubble.has-image .bagged-check { z-index: 3; }
 
-.rank-badge.gold {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #000;
+.bubble-name { font-weight: 700; margin-top: 3px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
+.bubble-brand { margin-top: 1px; }
+
+/* Top 3 뱃지 */
+.rank-badge-top {
+  position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+  font-weight: 900; padding: 2px 8px; border-radius: 4px;
+  letter-spacing: 0.06em; white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18); z-index: 5;
+}
+.rank-badge-top.rank-1 { background: #FFD700; color: #7a5a00; }
+.rank-badge-top.rank-2 { background: #C0C0C0; color: #444; }
+.rank-badge-top.rank-3 { background: #CD7F32; color: #5a2d00; }
+
+/* 4위+ 뱃지 */
+.rank-badge-sm {
+  position: absolute; top: -4px; right: -4px; border-radius: 50%;
+  background: #f3f4f6; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: #888;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1.5px solid #fff;
 }
 
-.rank-badge.silver {
-  background: linear-gradient(135deg, #E8E8E8, #B8B8B8);
-  color: #fff;
+/* 담김 표시 */
+.bagged-check {
+  position: absolute; top: -4px; left: -4px; border-radius: 50%;
+  background: #7c3aed; display: flex; align-items: center; justify-content: center;
+  border: 2px solid #fff; box-shadow: 0 1px 4px rgba(124,58,237,0.4);
+  color: #fff; font-weight: 700;
 }
 
-.rank-badge.bronze {
-  background: linear-gradient(135deg, #CD7F32, #8B4513);
-  color: #fff;
+/* 범례 */
+.bubble-legend {
+  position: absolute; bottom: 14px; left: 16px;
+  display: flex; align-items: center; gap: 8px; pointer-events: none;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-item span { font-size: 11px; color: #888; }
+.legend-dot.big { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg,#7c3aed,#a78bfa); }
+.legend-dot.small { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid #e5e7eb; background: #fff; }
+
+/* 툴팁 */
+.bubble-tooltip {
+  position: absolute; z-index: 100;
+  background: #fff; border-radius: 14px; padding: 14px 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid #e5e7eb;
+  pointer-events: none; animation: fadeIn 0.15s ease;
+}
+.tooltip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.tooltip-name { font-weight: 700; font-size: 14px; color: #111; }
+.tooltip-rank { font-size: 11px; color: #7c3aed; font-weight: 700; }
+.tooltip-brand { font-size: 12px; color: #888; }
+.tooltip-metrics { display: flex; gap: 12px; margin-top: 10px; }
+.metric-label { font-size: 10px; color: #aaa; }
+.metric-value { font-weight: 700; font-size: 14px; color: #333; }
+.metric-value.purple { color: #7c3aed; }
+.tooltip-hint { margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 10px; color: #aaa; }
+
+/* ==================== 캐리어 패널 ==================== */
+.carrier-panel {
+  position: absolute; bottom: 12px; right: 12px; z-index: 200;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
 }
 
-/* 1위 히어로 카드 */
-.hero-card {
+.carrier-items {
+  background: #fff; border-radius: 16px; border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 14px 14px 10px;
+  min-width: 230px; max-width: 280px;
+}
+.carrier-items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; font-weight: 700; color: #7c3aed; letter-spacing: 0.03em; }
+.carrier-clear-all { font-size: 10px; color: #c084fc; border: none; background: none; cursor: pointer; }
+.carrier-empty { font-size: 12px; color: #bbb; text-align: center; padding: 10px 0; }
+.carrier-list { display: flex; flex-direction: column; gap: 6px; max-height: 265px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #c4b5fd #f5f3ff; }
+
+.carrier-chip { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; background: #faf5ff; animation: chipIn 0.2s ease; }
+.carrier-chip-info { flex: 1; min-width: 0; }
+.carrier-chip-name { font-size: 12px; font-weight: 600; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.carrier-chip-brand { font-size: 10px; color: #999; }
+.carrier-chip-remove { border: none; background: none; cursor: pointer; color: #c084fc; font-size: 14px; line-height: 1; padding: 2px 4px; }
+
+.carrier-go-btn { width: 100%; margin-top: 10px; padding: 9px 0; border-radius: 8px; border: none; background: #7c3aed; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 0.02em; font-family: inherit; }
+.carrier-go-btn:hover { background: #6d28d9; }
+
+.carrier-drop-hint { background: #ede9fe; border: 2px dashed #7c3aed; border-radius: 12px; padding: 6px 14px; font-size: 12px; color: #7c3aed; font-weight: 600; animation: fadeIn 0.1s ease; white-space: nowrap; }
+
+.carrier-icon {
+  width: 72px; height: 72px; border-radius: 22px;
+  background: #fff; border: 2px solid #e5e7eb;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: border 0.2s, box-shadow 0.2s, background 0.2s;
   position: relative;
-  background: #fff;
-  border: 2px solid #7c3aed;
-  border-radius: 16px;
-  padding: 20px;
-  cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.2s;
-  grid-row: span 1;
+}
+.carrier-icon.active { background: #ede9fe; border: 2.5px dashed #7c3aed; box-shadow: 0 0 0 5px rgba(124,58,237,0.15), 0 8px 24px rgba(124,58,237,0.2); animation: bagBounce 0.5s ease; }
+.carrier-icon.has-items { border-color: #c4b5fd; }
+
+.carrier-badge {
+  position: absolute; top: -7px; right: -7px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(135deg,#7c3aed,#a78bfa); color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(124,58,237,0.4); border: 2px solid #fff;
+  animation: popIn 0.25s ease;
 }
 
-.hero-card:hover {
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15);
-  transform: translateY(-2px);
-}
+/* ==================== 순위 리스트 ==================== */
+.rank-list { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 16px; }
+.rank-list-header { padding: 12px 20px; border-bottom: 1px solid #f3f4f6; font-size: 13px; font-weight: 600; color: #666; }
 
-.hero-image-wrap {
-  margin-top: 8px;
-  margin-bottom: 16px;
+.rank-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 20px;
+  border-bottom: 1px solid #f8f8f8; cursor: pointer; transition: background 0.15s;
 }
+.rank-item:last-of-type { border-bottom: none; }
+.rank-item:hover { background: #fafafa; }
 
-.hero-image {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-  border-radius: 12px;
-  background: #f5f5f5;
+.rank-num {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; background: #f3f4f6; color: #888;
 }
+.rank-num.gold { background: linear-gradient(135deg,#FFD700,#FFA500); color: #000; }
+.rank-num.silver { background: linear-gradient(135deg,#E8E8E8,#B8B8B8); color: #fff; }
+.rank-num.bronze { background: linear-gradient(135deg,#CD7F32,#8B4513); color: #fff; }
 
-.hero-info .brand {
-  font-size: 13px;
-  color: #888;
-  display: block;
-  margin-bottom: 4px;
-}
+.rank-info { flex: 1; min-width: 0; }
+.rank-name { font-size: 14px; font-weight: 600; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-brand { font-size: 11px; color: #999; }
 
-.hero-info .name {
-  font-size: 18px;
-  font-weight: 700;
-  color: #111;
-  margin: 0 0 12px;
-  line-height: 1.3;
-}
+.rank-stats { text-align: right; flex-shrink: 0; }
+.rank-rating { font-size: 12px; font-weight: 600; color: #333; }
+.rank-review { font-size: 10px; color: #aaa; }
 
-/* 2, 3위 카드 */
-.runner-card {
-  position: relative;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 20px;
-  cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
+.rank-bar { width: 50px; height: 4px; background: #f3f4f6; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+.rank-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg,#8B5CF6,#A78BFA); transition: width 0.3s; }
 
-.runner-card:hover {
-  border-color: #d1d5db;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+.rank-toggle-btn {
+  width: 100%; padding: 12px 0; border: none; background: none; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: #7c3aed; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s;
 }
-
-.runner-image-wrap {
-  margin-top: 8px;
-  margin-bottom: 12px;
-}
-
-.runner-image {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-radius: 10px;
-  background: #f5f5f5;
-}
-
-.runner-info .brand {
-  font-size: 12px;
-  color: #888;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.runner-info .name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #111;
-  margin: 0 0 10px;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* 공통: 메타 정보 행 */
-.meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.rating-value {
-  font-weight: 600;
-  font-size: 13px;
-  color: #333;
-}
-
-.review-count {
-  font-size: 12px;
-  color: #888;
-  margin-left: 4px;
-}
-
-/* 인기도 섹션 */
-.popularity-section {
-  margin-top: auto;
-}
-
-.popularity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.popularity-label {
-  font-size: 11px;
-  color: #888;
-}
-
-.popularity-value {
-  font-size: 11px;
-  font-weight: 600;
-  color: #7c3aed;
-}
-
-.popularity-bar {
-  height: 6px;
-  background: #f3f4f6;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.popularity-bar.small {
-  height: 4px;
-}
-
-.popularity-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #8B5CF6, #A78BFA);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-/* 4위 이하 리스트 */
-.chart-section {
-  padding: 0 0 24px;
-}
-
-.chart-list {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.chart-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  cursor: pointer;
-  border-bottom: 1px solid #f3f4f6;
-  transition: background 0.15s;
-}
-
-.chart-item:last-child {
-  border-bottom: none;
-}
-
-.chart-item:hover {
-  background: #fafafa;
-}
-
-.chart-rank {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  width: 40px;
-  flex-shrink: 0;
-}
-
-.chart-rank .rank-number {
-  font-size: 18px;
-  font-weight: 700;
-  color: #888;
-}
-
-.chart-image {
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: #f5f5f5;
-}
-
-.chart-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.info-top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.chart-info .name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #111;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tag {
-  font-size: 10px;
-  background: #f3f4f6;
-  color: #666;
-  padding: 2px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.info-bottom {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #888;
-}
-
-.price {
-  color: #666;
-}
-
-.chart-metrics {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-shrink: 0;
-}
-
-.rating-block {
-  text-align: center;
-}
-
-.rating-block .review-count {
-  display: block;
-  margin-left: 0;
-  margin-top: 2px;
-  font-size: 10px;
-}
-
-.popularity-mini {
-  width: 60px;
-}
-
-.arrow-icon {
-  color: #ccc;
-  flex-shrink: 0;
-  transition: color 0.15s, transform 0.15s;
-}
-
-.chart-item:hover .arrow-icon {
-  color: #7c3aed;
-  transform: translateX(2px);
-}
+.rank-toggle-btn:hover { background: #faf5ff; }
+.rank-toggle-btn svg { transition: transform 0.2s; }
 
 /* 더보기 */
-.load-more {
-  text-align: center;
-  padding: 8px 24px 32px;
-}
+.load-more { text-align: center; padding: 8px 0 32px; }
+.load-more-btn { padding: 12px 32px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; font-weight: 500; color: #666; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.load-more-btn:hover:not(:disabled) { border-color: #7c3aed; color: #7c3aed; }
+.load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.load-more-btn {
-  padding: 12px 32px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.15s;
-}
+/* ==================== 애니메이션 ==================== */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+@keyframes bagBounce { 0%,100% { transform: scale(1); } 30% { transform: scale(1.18) rotate(-4deg); } 60% { transform: scale(0.94) rotate(2deg); } }
+@keyframes chipIn { from { opacity: 0; transform: translateY(8px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-.load-more-btn:hover:not(:disabled) {
-  border-color: #7c3aed;
-  color: #7c3aed;
-}
+.panel-fade-enter-active { animation: fadeIn 0.2s ease; }
+.panel-fade-leave-active { transition: opacity 0.15s; }
+.panel-fade-leave-to { opacity: 0; }
 
-.load-more-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* 반응형: 태블릿 */
-@media (max-width: 900px) {
-  .top-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .hero-card {
-    grid-column: span 2;
-  }
-}
-
-/* 반응형: 모바일 */
+/* 모바일 */
 @media (max-width: 640px) {
-  .page-header {
-    padding: 16px 0;
-  }
-
-  .page-header h1 {
-    font-size: 20px;
-  }
-
-  .top-section {
-    padding: 12px 0;
-  }
-
-  .top-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .hero-card {
-    grid-column: span 1;
-  }
-
-  .hero-image {
-    aspect-ratio: 4 / 3;
-  }
-
-  .chart-section {
-    padding: 0 0 16px;
-  }
-
-  .chart-item {
-    padding: 12px 16px;
-    gap: 12px;
-  }
-
-  .chart-metrics {
-    display: none;
-  }
-
-  .chart-info .name {
-    font-size: 14px;
-  }
-
-  .arrow-icon {
-    display: none;
-  }
+  .page-header h1 { font-size: 22px; }
+  .carrier-icon { width: 60px; height: 60px; border-radius: 18px; }
+  .carrier-icon svg { width: 40px; height: 40px; }
+  .rank-bar { display: none; }
 }
+</style>
+
+<!-- 드래그 고스트 (Teleport → body이므로 non-scoped) -->
+<style>
+.drag-ghost {
+  position: fixed; transform: translate(-50%, -50%);
+  pointer-events: none; z-index: 9999;
+}
+.drag-ghost-circle {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 28px rgba(124,58,237,0.5);
+  border: 3px solid #fff; opacity: 0.93; overflow: hidden;
+}
+.drag-ghost-circle img { width: 100%; height: 100%; object-fit: cover; }
 </style>

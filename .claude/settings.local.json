@@ -7,7 +7,8 @@
       "Bash(git reset:*)",
       "Bash(curl:*)",
       "Bash(find:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(grep -r \"carrier\" /Users/minchae/sources/toy-client/src --include=\"*.js\" --include=\"*.ts\" --include=\"*.vue\" -i 2>/dev/null | head -5)"
     ]
   }
 }

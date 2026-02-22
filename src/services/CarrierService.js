@@ -1,0 +1,207 @@
+// services/CarrierService.js
+
+import { BaseApiService } from './BaseApiService.js'
+import { ENV, getServiceUrl } from '@/config/env.js'
+
+class CarrierService extends BaseApiService {
+  constructor() {
+    const baseURL = getServiceUrl('CONTENT')
+    super(baseURL, 'CARRIER')
+  }
+
+  // ==================== 캐리어 CRUD ====================
+
+  async getMyCarriers() {
+    const response = await this.get('/carriers/me')
+    if (response.success && Array.isArray(response.data)) {
+      response.data = response.data.map(c => this.normalizeCarrierSummary(c))
+    }
+    return response
+  }
+
+  async getCarrier(carrierId) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    const response = await this.get(`/carriers/${carrierId}`)
+    if (response.success && response.data) {
+      response.data = this.normalizeCarrierDetail(response.data)
+    }
+    return response
+  }
+
+  async createCarrier(data) {
+    const validation = this.validateCreateCarrier(data)
+    if (!validation.isValid) throw new Error(validation.errors.join(', '))
+
+    return await this.post('/carriers', {
+      name: data.name.trim(),
+      skinType: data.skinType || 'DEFAULT',
+      skinColor: data.skinColor || null
+    })
+  }
+
+  async updateCarrierSkin(carrierId, data) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!data.skinType) throw new Error('스킨 타입은 필수입니다.')
+
+    return await this.patch(`/carriers/${carrierId}/skin`, {
+      skinType: data.skinType,
+      skinColor: data.skinColor || null
+    })
+  }
+
+  async deleteCarrier(carrierId) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    return await this.delete(`/carriers/${carrierId}`)
+  }
+
+  // ==================== 캐리어 아이템 ====================
+
+  async addItem(carrierId, data) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!data.productId) throw new Error('상품 ID가 필요합니다.')
+
+    return await this.post(`/carriers/${carrierId}/items`, {
+      productId: data.productId,
+      positionX: data.positionX ?? 0.5,
+      positionY: data.positionY ?? 0.5,
+      zIndex: data.zIndex ?? 0
+    })
+  }
+
+  async updateItemPosition(carrierId, itemId, data) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!itemId) throw new Error('아이템 ID가 필요합니다.')
+
+    return await this.patch(`/carriers/${carrierId}/items/${itemId}/position`, {
+      positionX: data.positionX,
+      positionY: data.positionY,
+      zIndex: data.zIndex ?? null
+    })
+  }
+
+  async updateItemPositions(carrierId, items) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!Array.isArray(items) || items.length === 0) throw new Error('아이템 목록이 필요합니다.')
+
+    return await this.put(`/carriers/${carrierId}/items/positions`, items)
+  }
+
+  async removeItem(carrierId, itemId) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!itemId) throw new Error('아이템 ID가 필요합니다.')
+
+    return await this.delete(`/carriers/${carrierId}/items/${itemId}`)
+  }
+
+  // ==================== 캐리어 스티커 ====================
+
+  async addSticker(carrierId, data) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!data.stickerType) throw new Error('스티커 타입이 필요합니다.')
+
+    return await this.post(`/carriers/${carrierId}/stickers`, {
+      stickerType: data.stickerType,
+      positionX: data.positionX ?? 0.5,
+      positionY: data.positionY ?? 0.5,
+      zIndex: data.zIndex ?? 0,
+      rotation: data.rotation ?? 0,
+      scaleRatio: data.scaleRatio ?? 1.0
+    })
+  }
+
+  async updateSticker(carrierId, stickerId, data) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!stickerId) throw new Error('스티커 ID가 필요합니다.')
+
+    return await this.patch(`/carriers/${carrierId}/stickers/${stickerId}`, {
+      positionX: data.positionX,
+      positionY: data.positionY,
+      zIndex: data.zIndex ?? null,
+      rotation: data.rotation ?? null,
+      scaleRatio: data.scaleRatio ?? null
+    })
+  }
+
+  async updateStickerPositions(carrierId, stickers) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!Array.isArray(stickers) || stickers.length === 0) throw new Error('스티커 목록이 필요합니다.')
+
+    return await this.put(`/carriers/${carrierId}/stickers/positions`, stickers)
+  }
+
+  async removeSticker(carrierId, stickerId) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!stickerId) throw new Error('스티커 ID가 필요합니다.')
+
+    return await this.delete(`/carriers/${carrierId}/stickers/${stickerId}`)
+  }
+
+  // ==================== 정규화 ====================
+
+  normalizeCarrierSummary(carrier) {
+    if (!carrier) return null
+    return {
+      id: carrier.id,
+      skinType: carrier.skinType?.code || carrier.skinType || 'DEFAULT',
+      skinColor: carrier.skinColor || '#FFFFFF',
+      isDefault: carrier.isDefault ?? false,
+      itemCount: carrier.itemCount ?? 0,
+      stickerCount: carrier.stickerCount ?? 0
+    }
+  }
+
+  normalizeCarrierDetail(carrier) {
+    if (!carrier) return null
+    return {
+      id: carrier.id,
+      name: carrier.name || '',
+      skinType: carrier.skinType?.code || carrier.skinType || 'DEFAULT',
+      skinColor: carrier.skinColor || '#FFFFFF',
+      isDefault: carrier.isDefault ?? false,
+      items: (carrier.items || []).map(item => this.normalizeItem(item)),
+      stickers: (carrier.stickers || []).map(sticker => this.normalizeSticker(sticker))
+    }
+  }
+
+  normalizeItem(item) {
+    if (!item) return null
+    return {
+      id: item.id,
+      productId: item.productId,
+      productName: item.productName || '',
+      brandName: item.brandName || '',
+      productImageUrl: item.productImageUrl || null,
+      positionX: item.positionX ?? 0,
+      positionY: item.positionY ?? 0,
+      zIndex: item.zIndex ?? 0
+    }
+  }
+
+  normalizeSticker(sticker) {
+    if (!sticker) return null
+    return {
+      id: sticker.id,
+      stickerType: sticker.stickerType || '',
+      positionX: sticker.positionX ?? 0,
+      positionY: sticker.positionY ?? 0,
+      zIndex: sticker.zIndex ?? 0,
+      rotation: sticker.rotation ?? 0,
+      scaleRatio: sticker.scaleRatio ?? 1.0
+    }
+  }
+
+  // ==================== 검증 ====================
+
+  validateCreateCarrier(data) {
+    const errors = []
+    if (!data.name?.trim()) errors.push('캐리어 이름은 필수입니다.')
+    if (data.name?.length > 50) errors.push('캐리어 이름은 50자 이하여야 합니다.')
+    if (data.skinColor && !/^#[0-9A-Fa-f]{6}$/.test(data.skinColor)) {
+      errors.push('스킨 색상은 #HEX 형식이어야 합니다.')
+    }
+    return { isValid: errors.length === 0, errors }
+  }
+}
+
+export const carrierService = new CarrierService()
+export default carrierService
