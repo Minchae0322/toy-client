@@ -513,18 +513,15 @@ watch(productInputMode, (newMode) => {
 </script>
 
 <style scoped>
-/* Variables */
-:root {
+/* Modal Base */
+.modal-overlay {
   --primary: #111827;
   --secondary: #6b7280;
   --accent: #9333ea;
   --border: #e5e7eb;
   --bg: #ffffff;
   --hover: #f9fafb;
-}
 
-/* Modal Base */
-.modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
