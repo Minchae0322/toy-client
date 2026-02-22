@@ -2211,10 +2211,6 @@ onUnmounted(() => {
   color: #1a1d2e;
   margin-bottom: 5px;
   line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 .battle-hot-meta {
   font-size: 11px;
@@ -2285,7 +2281,8 @@ onUnmounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 115px;
+  flex: 1;
+  min-width: 0;
 }
 .rank-item.r1-item .rank-name {
   color: #3d4270;
