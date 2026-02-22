@@ -33,6 +33,9 @@ import BattleListView from '@/views/battle/BattleListView.vue'
 import BattleCreateView from '@/views/battle/BattleCreateView.vue'
 import BattleDetailView from '@/views/battle/BattleDetailView.vue'
 
+// Carrier Views import
+import CarrierView from '@/views/carrier/CarrierView.vue'
+
 // User Views import
 import MyPageView from '@/views/MyPageView.vue'
 
@@ -135,6 +138,14 @@ const routes = [
     component: FollowListView,
     props: true,
     meta: { title: '팔로우 목록' }
+  },
+
+  // ==================== 캐리어 관련 라우트 ====================
+  {
+    path: '/carrier',
+    name: 'Carrier',
+    component: CarrierView,
+    meta: { requiresAuth: true, title: '내 캐리어' }
   },
 
   // ==================== 마이페이지 관련 라우트 ====================
@@ -546,6 +557,15 @@ export const feedNavigation = {
   }
 }
 
+// ==================== 캐리어 네비게이션 헬퍼 ====================
+export const carrierNavigation = {
+  toCarrier() { return router.push({ name: 'Carrier' }) },
+  isCarrierPage() {
+    const route = router.currentRoute.value
+    return route.name === 'Carrier'
+  }
+}
+
 // ==================== 배틀 네비게이션 헬퍼 ====================
 export const battleNavigation = {
   toList(query = {}) { return router.push({ name: 'BattleList', query }) },
@@ -597,6 +617,7 @@ export const navigation = {
   admin: adminNavigation,  // ⭐ 추가
   chat: chatNavigation,
   product: productNavigation,
+  carrier: carrierNavigation,
   salePost: salePostNavigation,
   feed: feedNavigation,
   battle: battleNavigation,

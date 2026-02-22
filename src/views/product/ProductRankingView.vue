@@ -137,7 +137,7 @@
                 <div v-if="bagOpen" class="carrier-items">
                   <div class="carrier-items-header">
                     <span>내 캐리어 ({{ bagged.length }}개)</span>
-                    <button v-if="bagged.length" class="carrier-clear-all" @click="bagged = []">전체 삭제</button>
+                    <button v-if="bagged.length" class="carrier-clear-all" @click="clearAllBagged">전체 삭제</button>
                   </div>
                   <div v-if="!bagged.length" class="carrier-empty">아직 담긴 아이템이 없어요</div>
                   <div v-else class="carrier-list">
@@ -239,11 +239,14 @@ import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'
 import { productService } from '@/services/ProductService.js'
+import { carrierService } from '@/services/CarrierService.js'
 import { useCategoryCache } from '@/composables/useCategoryCache.js'
+import { useAuth } from '@/composables/useAuth.js'
 
 const router = useRouter()
 const route = useRoute()
 const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache()
+const { isLoggedIn } = useAuth()
 
 // ==================== 상수 ====================
 const MIN_RADIUS = 28
@@ -323,6 +326,8 @@ const bagged = ref([])
 const bagOpen = ref(false)
 const bounceKey = ref(0)
 const rankExpanded = ref(false)
+const defaultCarrierId = ref(null)
+const carrierItemMap = ref({}) // productId → carrierItemId
 
 let resizeObserver = null
 let isDraggingFlag = false
@@ -431,10 +436,38 @@ function goToDetail(product) {
 }
 
 function goToCarrier() {
-  router.push({ name: 'MyPage' })
+  router.push('/carrier')
 }
 
-function removeBagged(id) { bagged.value = bagged.value.filter(b => b.id !== id) }
+async function removeBagged(id) {
+  bagged.value = bagged.value.filter(b => b.id !== id)
+  if (isLoggedIn.value && defaultCarrierId.value && carrierItemMap.value[id]) {
+    try {
+      await carrierService.removeItem(defaultCarrierId.value, carrierItemMap.value[id])
+      delete carrierItemMap.value[id]
+    } catch (e) {
+      console.error('캐리어 아이템 제거 실패:', e)
+    }
+  }
+}
+
+async function clearAllBagged() {
+  const itemsToRemove = [...bagged.value]
+  bagged.value = []
+  if (isLoggedIn.value && defaultCarrierId.value) {
+    for (const item of itemsToRemove) {
+      const carrierItemId = carrierItemMap.value[item.id]
+      if (carrierItemId) {
+        try {
+          await carrierService.removeItem(defaultCarrierId.value, carrierItemId)
+        } catch (e) {
+          console.error('캐리어 아이템 제거 실패:', e)
+        }
+        delete carrierItemMap.value[item.id]
+      }
+    }
+  }
+}
 
 function toggleBag() {
   if (isDraggingFlag) return
@@ -481,7 +514,7 @@ function onGlobalMove(e) {
   isOverPanel.value = overPanel
 }
 
-function onGlobalUp() {
+async function onGlobalUp() {
   if (!dragging.value) return
   if (isOverBag.value || isOverPanel.value) {
     const product = products.value.find(p => p.id === dragging.value.id)
@@ -489,6 +522,22 @@ function onGlobalUp() {
       bagged.value = [...bagged.value, product]
       bagOpen.value = true
       bounceKey.value++
+      // API 연동: 캐리어에 아이템 추가
+      if (isLoggedIn.value && defaultCarrierId.value) {
+        try {
+          const res = await carrierService.addItem(defaultCarrierId.value, {
+            productId: product.id,
+            positionX: 0.5,
+            positionY: 0.5,
+            zIndex: 0
+          })
+          if (res.success && res.data?.id) {
+            carrierItemMap.value[product.id] = res.data.id
+          }
+        } catch (e) {
+          console.error('캐리어 아이템 추가 실패:', e)
+        }
+      }
     }
   }
   dragging.value = null
@@ -502,6 +551,29 @@ function onClickOutside(e) {
   if (carrierPanelRef.value?.contains(e.target)) return
   if (bagRef.value?.contains(e.target)) return
   bagOpen.value = false
+}
+
+// ==================== 캐리어 ====================
+async function loadDefaultCarrier() {
+  if (!isLoggedIn.value) return
+  try {
+    const res = await carrierService.getMyCarriers()
+    if (res.success && res.data?.length) {
+      const carrier = res.data.find(c => c.isDefault) || res.data[0]
+      defaultCarrierId.value = carrier.id
+      const detail = await carrierService.getCarrier(carrier.id)
+      if (detail.success && detail.data?.items) {
+        for (const item of detail.data.items) {
+          carrierItemMap.value[item.productId] = item.id
+          if (!bagged.value.some(b => b.id === item.productId)) {
+            bagged.value.push({ id: item.productId, name: item.productName, brand: item.brandName })
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('캐리어 로드 실패:', e)
+  }
 }
 
 // ==================== API ====================
@@ -595,6 +667,7 @@ onMounted(async () => {
 
   await fetchCategories()
   fetchRanking(true)
+  loadDefaultCarrier()
 })
 
 onUnmounted(() => {

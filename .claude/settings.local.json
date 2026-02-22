@@ -8,7 +8,22 @@
       "Bash(curl:*)",
       "Bash(find:*)",
       "Bash(git checkout:*)",
-      "Bash(grep -r \"carrier\" /Users/minchae/sources/toy-client/src --include=\"*.js\" --include=\"*.ts\" --include=\"*.vue\" -i 2>/dev/null | head -5)"
+      "Bash(grep -r \"carrier\" /Users/minchae/sources/toy-client/src --include=\"*.js\" --include=\"*.ts\" --include=\"*.vue\" -i 2>/dev/null | head -5)",
+      "Bash(python3 -c \"\nimport json\nwith open\\('/Users/minchae/.claude/projects/-Users-minchae-sources-toy-client/abfb643f-b766-40e8-95ee-4ec5ad070821.jsonl', 'r'\\) as f:\n    for line in f:\n        obj = json.loads\\(line\\)\n        if obj.get\\('type'\\) == 'human' and '내 캐리어' in str\\(obj.get\\('message', {}\\).get\\('content', ''\\)\\):\n            content = obj['message']['content']\n            if isinstance\\(content, list\\):\n                for block in content:\n                    if isinstance\\(block, dict\\) and block.get\\('type'\\) == 'text':\n                        text = block['text']\n                        if len\\(text\\) > 5000:\n                            print\\(text[:200]\\)\n                            print\\('...[TRUNCATED]...'\\)\n                            print\\(f'TOTAL LENGTH: {len\\(text\\)}'\\)\n                            break\n            elif isinstance\\(content, str\\) and len\\(content\\) > 5000:\n                print\\(content[:200]\\)\n                print\\('...[TRUNCATED]...'\\)\n                print\\(f'TOTAL LENGTH: {len\\(content\\)}'\\)\n            break\n\" 2>&1 | head -20)",
+      "Bash(python3 -c \"\nimport json\nwith open\\('/Users/minchae/.claude/projects/-Users-minchae-sources-toy-client/abfb643f-b766-40e8-95ee-4ec5ad070821.jsonl', 'r'\\) as f:\n    for line in f:\n        obj = json.loads\\(line\\)\n        if obj.get\\('type'\\) == 'human':\n            content = obj['message']['content']\n            text = ''\n            if isinstance\\(content, list\\):\n                for block in content:\n                    if isinstance\\(block, dict\\) and block.get\\('type'\\) == 'text':\n                        text += block['text']\n            elif isinstance\\(content, str\\):\n                text = content\n            if 'skinShop' in text or 'SkinShop' in text or 'skin-shop' in text:\n                print\\(f'FOUND MESSAGE LENGTH: {len\\(text\\)}'\\)\n                print\\(text[:300]\\)\n                print\\('---'\\)\n                break\n\" 2>&1)",
+      "Bash(python3 -c \"\nimport json\nmessages = []\nwith open\\('/Users/minchae/.claude/projects/-Users-minchae-sources-toy-client/abfb643f-b766-40e8-95ee-4ec5ad070821.jsonl', 'r'\\) as f:\n    for line in f:\n        obj = json.loads\\(line\\)\n        if obj.get\\('type'\\) == 'human':\n            content = obj['message']['content']\n            text = ''\n            if isinstance\\(content, list\\):\n                for block in content:\n                    if isinstance\\(block, dict\\) and block.get\\('type'\\) == 'text':\n                        text += block['text']\n            elif isinstance\\(content, str\\):\n                text = content\n            if len\\(text\\) > 10000:\n                messages.append\\(\\(len\\(text\\), text[:200]\\)\\)\n\nfor length, preview in messages:\n    print\\(f'LENGTH: {length}'\\)\n    print\\(f'PREVIEW: {preview}'\\)\n    print\\('---'\\)\n\" 2>&1222)",
+      "Bash(npx vue-tsc --noEmit 2>&1 | head -30 || true)",
+      "Bash(npx vite build 2>&1 | tail -20)",
+      "Bash(npx vite build 2>&1 | tail -15)",
+      "Bash(npx vite build 2>&1 | tail -202)",
+      "Bash(npx vite build 2>&1 | tail -10)",
+      "Bash(npx vite build 2>&1 | tail -)",
+      "Bash(npx vite build 2>&1 | tail -5)",
+      "Bash(npx vite build 2>&1 | tail -52)",
+      "Bash(git -C /Users/minchae/sources/toy-client log --oneline -5)",
+      "Bash(git -C /Users/minchae/sources/toy-client diff --name-only)",
+      "Bash(git -C /Users/minchae/sources/toy-client status -u)",
+      "Bash(git -C /Users/minchae/sources/toy-client diff --staged -- src/composables/useCarrier.js src/views/carrier/CarrierView.vue --stat)"
     ]
   }
 }

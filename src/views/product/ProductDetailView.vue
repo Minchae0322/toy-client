@@ -213,6 +213,16 @@
                   </svg>
                   공유
                 </button>
+                <button :class="['action-btn', { active: isInCarrier }]" :disabled="carrierLoading" @click="handleAddToCarrier">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="7" width="18" height="14" rx="2"/>
+                    <path d="M8 7V5a4 4 0 0 1 8 0v2"/>
+                    <line v-if="!isInCarrier" x1="12" y1="12" x2="12" y2="18"/>
+                    <line v-if="!isInCarrier" x1="9" y1="15" x2="15" y2="15"/>
+                    <path v-if="isInCarrier" d="M9 15l2 2 4-4"/>
+                  </svg>
+                  {{ isInCarrier ? '담김' : '캐리어' }}
+                </button>
               </div>
 
               <!-- 상세 정보 (조건부 렌더링) -->
@@ -282,6 +292,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { productService } from '@/services/ProductService.js'
+import { carrierService } from '@/services/CarrierService.js'
 
 import FeedCard from '@/components/product/detail/FeedCard.vue'
 import BattleCard from '@/components/product/detail/BattleCard.vue'
@@ -301,6 +312,8 @@ const showLoginModal = ref(false)
 const loginModalTitle = ref('')
 const loginModalMessage = ref('')
 const activeTab = ref('feed')
+const isInCarrier = ref(false)
+const carrierLoading = ref(false)
 
 const product = ref(null)
 const feeds = ref([])
@@ -369,6 +382,7 @@ const fetchProductData = async () => {
         userReaction.value = response.data.userReaction
       }
       await Promise.all([fetchFeeds(productId), fetchBattles(productId)])
+      checkCarrierStatus()
     } else {
       error.value = response.error || '상품을 불러올 수 없습니다.'
     }
@@ -456,6 +470,56 @@ const handleBookmarkAction = async () => {
     if (response.success) userReaction.value.hasBookmark = !userReaction.value.hasBookmark
   } catch (err) { console.error('북마크 실패:', err) }
   finally { actionLoading.value = false }
+}
+
+const handleAddToCarrier = async () => {
+  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '캐리어에 담으려면 로그인해주세요.')
+  if (isInCarrier.value || carrierLoading.value) return
+  carrierLoading.value = true
+  try {
+    // 기본 캐리어 가져오기 (없으면 생성)
+    let carrierId = null
+    const carriersRes = await carrierService.getMyCarriers()
+    if (carriersRes.success && carriersRes.data?.length) {
+      const carrier = carriersRes.data.find(c => c.isDefault) || carriersRes.data[0]
+      carrierId = carrier.id
+    } else {
+      const createRes = await carrierService.createCarrier({ name: '내 캐리어', skinType: 'DEFAULT', skinColor: '#7c3aed' })
+      if (createRes.success) carrierId = createRes.data?.id
+    }
+    if (!carrierId) throw new Error('캐리어를 찾을 수 없습니다.')
+    const res = await carrierService.addItem(carrierId, {
+      productId: product.value.id,
+      positionX: 0.5,
+      positionY: 0.5,
+      zIndex: 0
+    })
+    if (res.success) {
+      isInCarrier.value = true
+      await open({ type: 'alert', title: '캐리어에 담았어요!', message: `${product.value.name}이(가) 캐리어에 추가되었습니다.` })
+    }
+  } catch (err) {
+    console.error('캐리어 담기 실패:', err)
+    await open({ type: 'alert', title: '오류', message: '캐리어에 담는데 실패했습니다.' })
+  } finally {
+    carrierLoading.value = false
+  }
+}
+
+const checkCarrierStatus = async () => {
+  if (!isLoggedIn.value || !product.value) return
+  try {
+    const res = await carrierService.getMyCarriers()
+    if (res.success && res.data?.length) {
+      const carrier = res.data.find(c => c.isDefault) || res.data[0]
+      const detail = await carrierService.getCarrier(carrier.id)
+      if (detail.success && detail.data?.items) {
+        isInCarrier.value = detail.data.items.some(item => item.productId === product.value.id)
+      }
+    }
+  } catch (e) {
+    // 캐리어 상태 확인 실패는 무시
+  }
 }
 
 const handleShareAction = async () => {
