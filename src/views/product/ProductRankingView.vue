@@ -331,6 +331,7 @@ const carrierItemMap = ref({}) // productId → carrierItemId
 
 let resizeObserver = null
 let isDraggingFlag = false
+let dragStartPos = null
 
 // ==================== Computed ====================
 const getPopularityScore = (product) => {
@@ -489,6 +490,7 @@ function startDrag(e, product) {
   isDraggingFlag = true
   const clientX = e.touches ? e.touches[0].clientX : e.clientX
   const clientY = e.touches ? e.touches[0].clientY : e.clientY
+  dragStartPos = { x: clientX, y: clientY, id: product.id }
   const thumb = product.thumbnailDto?.fileUrl || product.thumbnailDto?.filePath || null
   dragging.value = { id: product.id, image: thumb, x: clientX, y: clientY }
 }
@@ -514,8 +516,26 @@ function onGlobalMove(e) {
   isOverPanel.value = overPanel
 }
 
-async function onGlobalUp() {
+async function onGlobalUp(e) {
   if (!dragging.value) return
+  const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX
+  const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY
+  const dx = dragStartPos ? clientX - dragStartPos.x : 0
+  const dy = dragStartPos ? clientY - dragStartPos.y : 0
+  const dist = Math.sqrt(dx * dx + dy * dy)
+
+  if (dist < 5 && dragStartPos) {
+    // 클릭으로 간주 → 상세 페이지 이동
+    const product = products.value.find(p => p.id === dragStartPos.id)
+    dragging.value = null
+    isOverBag.value = false
+    isOverPanel.value = false
+    dragStartPos = null
+    setTimeout(() => { isDraggingFlag = false }, 100)
+    if (product) goToDetail(product)
+    return
+  }
+
   if (isOverBag.value || isOverPanel.value) {
     const product = products.value.find(p => p.id === dragging.value.id)
     if (product && !isBagged(product.id)) {
@@ -543,6 +563,7 @@ async function onGlobalUp() {
   dragging.value = null
   isOverBag.value = false
   isOverPanel.value = false
+  dragStartPos = null
   setTimeout(() => { isDraggingFlag = false }, 100)
 }
 
@@ -740,7 +761,7 @@ onUnmounted(() => {
 .bubble {
   position: absolute; border-radius: 50%; border: 2px solid;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  cursor: grab; transition: opacity 0.15s, box-shadow 0.2s, border-color 0.2s, filter 0.2s;
+  cursor: pointer; transition: opacity 0.15s, box-shadow 0.2s, border-color 0.2s, filter 0.2s;
   user-select: none;
 }
 .bubble.is-dimmed { filter: brightness(0.55) saturate(0.3); }
