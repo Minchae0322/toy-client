@@ -2211,6 +2211,10 @@ onUnmounted(() => {
   color: #1a1d2e;
   margin-bottom: 5px;
   line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .battle-hot-meta {
   font-size: 11px;
