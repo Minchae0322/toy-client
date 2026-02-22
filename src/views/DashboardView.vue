@@ -2281,7 +2281,8 @@ onUnmounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 115px;
+  flex: 1;
+  min-width: 0;
 }
 .rank-item.r1-item .rank-name {
   color: #3d4270;
