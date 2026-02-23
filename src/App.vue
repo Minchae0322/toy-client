@@ -623,6 +623,42 @@ onUnmounted(() => {
 }
 
 /* ===================== 반응형 ===================== */
+@media (max-width: 380px) {
+  .header-content {
+    padding: 0 8px;
+    height: 56px;
+  }
+  .logo-image {
+    height: 30px;
+    margin-left: 4px;
+  }
+  .nav-mobile {
+    gap: 4px;
+  }
+  .mobile-carrier-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    gap: 2px;
+  }
+  .mobile-carrier-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+  .mobile-msg-btn {
+    width: 28px;
+    height: 28px;
+  }
+  .mobile-msg-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+  .mobile-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+}
+
 @media (min-width: 768px) {
   .header-content {
     padding: 0 2rem;
