@@ -15,7 +15,6 @@ const {open, openLoginRequired} = useConfirmDialog()
 
 const isLoggingOut = ref(false)
 const wsConnected = ref(false)
-const showMobileMenu = ref(false)
 let unsubscribeWsStatus = null
 
 const isAuthPage = computed(() =>
@@ -37,7 +36,6 @@ const monitorWebSocketStatus = () => {
 }
 
 const handleLogout = async () => {
-  showMobileMenu.value = false
   isLoggingOut.value = true
   try {
     webSocketService.disconnect()
@@ -58,7 +56,6 @@ const handleChatClick = async () => {
 }
 
 const goToProfile = async () => {
-  showMobileMenu.value = false
   if (!userId.value) {
     console.error('❌ userId가 없습니다')
     return
@@ -108,6 +105,16 @@ onUnmounted(() => {
 
       <!-- 데스크톱 네비게이션 -->
       <nav class="nav-desktop">
+        <!-- 캐리어 꾸미기 버튼 (로그인 시에만, 가장 왼쪽) -->
+        <RouterLink v-if="isLoggedIn" to="/carrier" class="carrier-btn" title="캐리어 꾸미기">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
+            <circle cx="12" cy="15" r="2"/>
+          </svg>
+          <span>캐리어 꾸미기</span>
+        </RouterLink>
+
         <!-- 알림 버튼 (로그인 시에만 표시) -->
         <NotificationDropdown v-if="isLoggedIn" />
 
@@ -143,12 +150,8 @@ onUnmounted(() => {
           <div class="nav-divider"></div>
 
           <div class="user-menu">
-            <div class="ws-status" :class="{ connected: wsConnected }">
-              <span class="ws-dot"></span>
-              <span class="ws-label">{{ wsConnected ? '연결됨' : '끊김' }}</span>
-            </div>
             <div class="user-info" @click="goToProfile">
-              <div class="user-avatar">
+              <div class="user-avatar" :class="{ connected: wsConnected }">
                 <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
                 <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
               </div>
@@ -163,6 +166,15 @@ onUnmounted(() => {
 
       <!-- 모바일 우측 영역 -->
       <div class="nav-mobile">
+        <RouterLink v-if="isLoggedIn" to="/carrier" class="mobile-carrier-btn" title="캐리어 꾸미기">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
+            <circle cx="12" cy="15" r="2"/>
+          </svg>
+          <span>캐리어 꾸미기</span>
+        </RouterLink>
+
         <!-- 알림 버튼 (로그인 시에만 표시) -->
         <NotificationDropdown v-if="isLoggedIn" />
 
@@ -171,156 +183,19 @@ onUnmounted(() => {
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
           </svg>
         </button>
-        <template v-if="isLoggedIn">
-          <div class="mobile-ws-dot" :class="{ connected: wsConnected }"></div>
-          <div class="mobile-avatar" @click="goToProfile">
-            <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
-            <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
-          </div>
-        </template>
-        <button class="mobile-menu-btn" @click="showMobileMenu = !showMobileMenu">
-          <svg v-if="!showMobileMenu" width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
+        <div v-if="isLoggedIn" class="mobile-avatar" :class="{ connected: wsConnected }" @click="goToProfile">
+          <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
+          <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
+        </div>
       </div>
     </div>
 
-    <!-- 모바일 메뉴 -->
-    <Transition name="mobile-menu">
-      <div v-if="showMobileMenu" class="mobile-menu">
-        <!-- 로그인 상태: 유저 카드 -->
-        <div v-if="isLoggedIn" class="mobile-user-card" @click="goToProfile">
-          <div class="mobile-user-avatar">
-            <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
-            <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
-          </div>
-          <div class="mobile-user-detail">
-            <span class="mobile-user-name">{{ user?.nickname || user?.username }}</span>
-            <span class="mobile-user-status" :class="{ connected: wsConnected }">
-              <span class="status-dot"></span>
-              {{ wsConnected ? '온라인' : '오프라인' }}
-            </span>
-          </div>
-          <svg class="mobile-user-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-
-        <!-- 메뉴 리스트 -->
-        <div class="mobile-menu-list">
-          <template v-if="!isLoggedIn">
-            <RouterLink to="/login" class="mobile-menu-item" @click="showMobileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              로그인
-            </RouterLink>
-          </template>
-
-          <template v-else>
-            <!-- 메인 네비게이션 -->
-            <RouterLink to="/dashboard" class="mobile-menu-item" @click="showMobileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              홈
-            </RouterLink>
-            <RouterLink to="/feed" class="mobile-menu-item" @click="showMobileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              피드
-            </RouterLink>
-            <RouterLink to="/battle" class="mobile-menu-item" @click="showMobileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              요거픽
-            </RouterLink>
-            <RouterLink to="/products" class="mobile-menu-item" @click="showMobileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              핫 아이템
-            </RouterLink>
-
-            <div class="mobile-menu-divider"></div>
-
-            <!-- 유틸리티 -->
-            <RouterLink to="/chat" class="mobile-menu-item" @click="showMobileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              메시지
-            </RouterLink>
-            <RouterLink to="/mypage" class="mobile-menu-item" @click="showMobileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              마이페이지
-            </RouterLink>
-
-            <!-- 관리자 섹션 -->
-            <template v-if="isAdmin">
-              <div class="mobile-menu-divider"></div>
-              <div class="mobile-menu-label">관리자</div>
-              <RouterLink to="/admin" class="mobile-menu-item" @click="showMobileMenu = false">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
-                  <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
-                  <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                대시보드
-              </RouterLink>
-              <RouterLink to="/admin/users" class="mobile-menu-item" @click="showMobileMenu = false">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M12 7a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                사용자
-              </RouterLink>
-              <RouterLink to="/admin/products" class="mobile-menu-item" @click="showMobileMenu = false">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                상품 관리
-              </RouterLink>
-              <RouterLink to="/admin/category" class="mobile-menu-item" @click="showMobileMenu = false">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                카테고리
-              </RouterLink>
-            </template>
-          </template>
-        </div>
-
-        <!-- 로그아웃 버튼 -->
-        <div v-if="isLoggedIn" class="mobile-menu-footer">
-          <button @click="handleLogout" class="mobile-logout-btn" :disabled="isLoggingOut">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            {{ isLoggingOut ? '로그아웃 중...' : '로그아웃' }}
-          </button>
-        </div>
-      </div>
-    </Transition>
   </header>
 
   <!-- 메인 컨텐츠 -->
   <main :class="['main', { 'auth-page': isAuthPage }]">
     <RouterView/>
   </main>
-
-  <!-- 모바일 메뉴 오버레이 -->
-  <Transition name="fade">
-    <div v-if="showMobileMenu" class="mobile-overlay" @click="showMobileMenu = false"></div>
-  </Transition>
 
   <!-- 글로벌 확인 다이얼로그 -->
   <GlobalConfirmDialog />
@@ -374,7 +249,7 @@ onUnmounted(() => {
 .nav-desktop {
   display: none;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
 .nav-item {
@@ -510,19 +385,101 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
+/* ===================== 알림 버튼 크기 축소 ===================== */
+:deep(.notification-trigger) {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+}
+
+:deep(.notification-icon) {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+:deep(.notification-badge) {
+  min-width: 16px !important;
+  height: 16px !important;
+  font-size: 9px !important;
+  top: -3px !important;
+  right: -3px !important;
+}
+
+/* ===================== 캐리어 버튼 ===================== */
+.carrier-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  margin-right: auto;
+  border: 1.5px solid #9933EA;
+  background: #FAF5FF;
+  border-radius: 20px;
+  color: #9933EA;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.carrier-btn:hover {
+  color: #ffffff;
+  background: #9933EA;
+}
+
+.carrier-btn.router-link-active {
+  color: #ffffff;
+  background: #9933EA;
+}
+
+.mobile-carrier-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  margin-right: auto;
+  border: 1.5px solid #9933EA;
+  background: #FAF5FF;
+  border-radius: 18px;
+  color: #9933EA;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.mobile-carrier-btn:hover {
+  color: #ffffff;
+  background: #9933EA;
+}
+
+.mobile-carrier-btn.router-link-active {
+  color: #ffffff;
+  background: #9933EA;
+}
+
 /* ===================== 메시지 버튼 ===================== */
 .msg-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border: none;
   background: #FAF5FF;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #9933EA;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.msg-btn svg {
+  width: 17px;
+  height: 17px;
 }
 
 .msg-btn:hover {
@@ -534,14 +491,19 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border: none;
   background: #FAF5FF;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #9933EA;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.mobile-msg-btn svg {
+  width: 17px;
+  height: 17px;
 }
 
 .mobile-msg-btn:hover {
@@ -556,40 +518,6 @@ onUnmounted(() => {
   gap: 8px;
 }
 
-.ws-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 20px;
-  background: #f5f5f5;
-}
-
-.ws-status.connected {
-  background: rgba(0, 200, 83, 0.08);
-}
-
-.ws-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #cccccc;
-}
-
-.ws-status.connected .ws-dot {
-  background: #00C853;
-}
-
-.ws-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: #aaaaaa;
-}
-
-.ws-status.connected .ws-label {
-  color: #00C853;
-  font-weight: 600;
-}
 
 .user-info {
   display: flex;
@@ -606,8 +534,8 @@ onUnmounted(() => {
 }
 
 .user-avatar {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   background: #9933EA;
   color: #ffffff;
   display: flex;
@@ -617,6 +545,13 @@ onUnmounted(() => {
   font-size: 12px;
   font-weight: 600;
   overflow: hidden;
+  border: 2.5px solid #ddd;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.user-avatar.connected {
+  border-color: #00C853;
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.2);
 }
 
 .user-avatar img {
@@ -635,24 +570,12 @@ onUnmounted(() => {
 .nav-mobile {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.mobile-ws-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ddd;
-}
-
-.mobile-ws-dot.connected {
-  background: #00C853;
-  box-shadow: 0 0 6px rgba(0, 200, 83, 0.5);
+  gap: 6px;
 }
 
 .mobile-avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   background: #9933EA;
   color: #fff;
   display: flex;
@@ -663,6 +586,13 @@ onUnmounted(() => {
   font-weight: 600;
   overflow: hidden;
   cursor: pointer;
+  border: 2.5px solid #ddd;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mobile-avatar.connected {
+  border-color: #00C853;
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.2);
 }
 
 .mobile-avatar img {
@@ -671,235 +601,8 @@ onUnmounted(() => {
   object-fit: cover;
 }
 
-.mobile-menu-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  color: #333;
-  padding: 8px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.15s ease;
-}
-
-.mobile-menu-btn:hover {
-  background: #f5f5f5;
-}
-
-/* ===================== 모바일 메뉴 ===================== */
-.mobile-menu {
-  position: fixed;
-  top: 66px;
-  right: 0;
-  width: 280px;
-  max-height: calc(100vh - 66px);
-  background: #ffffff;
-  border-radius: 0 0 0 16px;
-  box-shadow: -4px 4px 24px rgba(0, 0, 0, 0.1);
-  z-index: 999;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.mobile-overlay {
-  position: fixed;
-  top: 66px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 998;
-}
-
-/* 유저 카드 */
-.mobile-user-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 20px 16px;
-  background: linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%);
-  border-bottom: 1px solid #f0f0f0;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.mobile-user-card:active {
-  background: linear-gradient(135deg, #F3E8FF 0%, #EDE4FF 100%);
-}
-
-.mobile-user-avatar {
-  width: 44px;
-  height: 44px;
-  background: #9933EA;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-size: 16px;
-  font-weight: 700;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(153, 51, 234, 0.25);
-}
-
-.mobile-user-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.mobile-user-detail {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.mobile-user-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #111;
-}
-
-.mobile-user-status {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #aaa;
-}
-
-.mobile-user-status.connected {
-  color: #00C853;
-}
-
-.mobile-user-status .status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ddd;
-}
-
-.mobile-user-status.connected .status-dot {
-  background: #00C853;
-  box-shadow: 0 0 4px rgba(0, 200, 83, 0.4);
-}
-
-.mobile-user-arrow {
-  color: #ccc;
-}
-
-/* 메뉴 리스트 */
-.mobile-menu-list {
-  padding: 8px;
-  flex: 1;
-}
-
-.mobile-menu-divider {
-  height: 1px;
-  background: #f0f0f0;
-  margin: 4px 8px;
-}
-
-.mobile-menu-label {
-  padding: 10px 12px 4px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #bbb;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.mobile-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 12px;
-  text-decoration: none;
-  color: #333;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 10px;
-  transition: all 0.15s ease;
-}
-
-.mobile-menu-item svg {
-  color: #999;
-  flex-shrink: 0;
-}
-
-.mobile-menu-item:hover {
-  background: #f8f8f8;
-}
-
-.mobile-menu-item:active {
-  background: #f0f0f0;
-}
-
-.mobile-menu-item.router-link-active {
-  background: #FAF5FF;
-  color: #9933EA;
-  font-weight: 600;
-}
-
-.mobile-menu-item.router-link-active svg {
-  color: #9933EA;
-}
-
-/* 로그아웃 버튼 */
-.mobile-menu-footer {
-  padding: 8px;
-  border-top: 1px solid #f0f0f0;
-}
-
-.mobile-logout-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px;
-  background: #f8f8f8;
-  border: none;
-  border-radius: 10px;
-  color: #999;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.mobile-logout-btn:hover:not(:disabled) {
-  background: #f0f0f0;
-  color: #666;
-}
-
-.mobile-logout-btn:active:not(:disabled) {
-  background: #e8e8e8;
-}
-
-.mobile-logout-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
 /* ===================== 애니메이션 ===================== */
-.mobile-menu-enter-active {
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-.mobile-menu-leave-active {
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-.mobile-menu-enter-from,
-.mobile-menu-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
-}
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.25s ease;

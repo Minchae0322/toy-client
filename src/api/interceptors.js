@@ -251,11 +251,17 @@ console.log('✅ [Interceptor] 토큰 자동 갱신 인터셉터 등록 완료 (
 
 /**
  * 수동 토큰 갱신 (컴포넌트에서 직접 호출용)
+ * - 이미 갱신 중이면 진행 중인 갱신 완료를 대기 (false 즉시 반환하지 않음)
  */
 export const manualRefreshToken = async () => {
   if (isRefreshing) {
-    console.log('⏳ [Manual] 이미 토큰 갱신 중...')
-    return false
+    console.log('⏳ [Manual] 이미 토큰 갱신 중 - 완료 대기')
+    return new Promise((resolve) => {
+      failedRequestsQueue.push({
+        resolve: () => resolve(true),
+        reject: () => resolve(false)
+      })
+    })
   }
 
   try {
@@ -266,12 +272,15 @@ export const manualRefreshToken = async () => {
 
     if (newToken) {
       console.log('✅ [Manual] 수동 토큰 갱신 성공')
+      processQueue(null, newToken)
       return true
     }
 
+    processQueue(new Error('Token refresh returned null'), null)
     return false
   } catch (error) {
     console.error('❌ [Manual] 수동 토큰 갱신 실패:', error)
+    processQueue(error, null)
     return false
   } finally {
     isRefreshing = false

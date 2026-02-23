@@ -12,12 +12,6 @@
               <h1 class="header-page-title">내 캐리어</h1>
               <span class="header-item-count">{{ items.length }}개 아이템</span>
             </div>
-            <button class="header-share-btn" @click.stop="showShareModal = true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
-            </button>
           </div>
         </header>
 
@@ -162,10 +156,10 @@
                 </div>
               </div>
 
-              <!-- 스티커 팔레트 -->
+              <!-- 스티커팩 -->
               <div class="shop-card">
                 <div class="shop-card-header">
-                  <span class="shop-card-title">스티커</span>
+                  <span class="shop-card-title">스티커팩</span>
                   <div class="deco-page-nav">
                     <span class="page-info">{{ decoPage + 1 }}/{{ decoPages.length }}</span>
                     <button class="page-btn" :disabled="decoPage <= 0" @click="decoPage--">
@@ -176,10 +170,21 @@
                     </button>
                   </div>
                 </div>
+                <div class="sticker-pack-tabs">
+                  <button
+                    v-for="[key, label] in PACK_LABELS"
+                    :key="key"
+                    class="pack-tab"
+                    :class="{ active: stickerPack === key }"
+                    @click="stickerPack = key; decoPage = 0"
+                  >{{ label }}</button>
+                </div>
                 <div class="deco-grid-viewport">
                   <div class="deco-track" :style="{ transform: `translateX(-${decoPage * (100 / decoPages.length)}%)`, width: decoPages.length * 100 + '%' }">
                     <div v-for="(pg, pi) in decoPages" :key="pi" class="deco-page" :style="{ width: (100 / decoPages.length) + '%' }">
-                      <div v-for="d in pg" :key="d.id" class="deco-item" @click="placeDeco(d)">
+                      <div v-for="d in pg" :key="d.id"
+                        class="deco-item" :class="{ 'deco-empty': d.empty }"
+                        @click="!d.empty && placeDeco(d)">
                         {{ d.emoji }}
                       </div>
                     </div>
@@ -217,7 +222,7 @@
 
                   <!-- 토글 스위치 -->
                   <div class="view-toggle">
-                    <span class="toggle-label">{{ isOpen ? '내부 보기' : '외관 보기' }}</span>
+                    <span class="toggle-label">내부 보기</span>
                     <div class="toggle-switch" :class="{ on: isOpen }" @click="toggle">
                       <div class="toggle-knob" :style="{ left: isOpen ? '27px' : '3px' }"></div>
                     </div>
@@ -302,18 +307,18 @@
 
                     <!-- 내부 보기 (물리 버블) -->
                     <div class="carrier-layer" :class="{ visible: isOpen }">
-                      <!-- 캐리어 프레임 -->
+                      <!-- 캐리어 프레임 (스킨 색상 적용) -->
                       <svg class="carrier-frame-svg" viewBox="0 0 300 400" fill="none" preserveAspectRatio="xMidYMid meet">
-                        <rect x="122" y="18" width="8" height="35" rx="3" fill="#d8d2ea" stroke="#7c3aed" stroke-width="1.5"/>
-                        <rect x="170" y="18" width="8" height="35" rx="3" fill="#d8d2ea" stroke="#7c3aed" stroke-width="1.5"/>
-                        <rect x="116" y="6" width="68" height="18" rx="9" fill="#ece9f5" stroke="#7c3aed" stroke-width="2.5"/>
-                        <rect x="30" y="50" width="240" height="320" rx="20" stroke="#c4b5fd" stroke-width="2" stroke-dasharray="8 4" fill="none"/>
-                        <line x1="30" y1="140" x2="270" y2="140" stroke="#c4b5fd" stroke-width="1.5" stroke-dasharray="6 4" opacity=".5"/>
-                        <line x1="30" y1="260" x2="270" y2="260" stroke="#c4b5fd" stroke-width="1.5" stroke-dasharray="6 4" opacity=".5"/>
-                        <rect x="62" y="365" width="16" height="8" rx="3" fill="#d8d2ea" stroke="#7c3aed" stroke-width="1.5"/>
-                        <circle cx="70" cy="382" r="10" fill="#d8d2ea" stroke="#7c3aed" stroke-width="2"/><circle cx="70" cy="382" r="2" fill="#7c3aed"/>
-                        <rect x="222" y="365" width="16" height="8" rx="3" fill="#d8d2ea" stroke="#7c3aed" stroke-width="1.5"/>
-                        <circle cx="230" cy="382" r="10" fill="#d8d2ea" stroke="#7c3aed" stroke-width="2"/><circle cx="230" cy="382" r="2" fill="#7c3aed"/>
+                        <rect x="122" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
+                        <rect x="170" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
+                        <rect x="116" y="6" width="68" height="18" rx="9" :fill="currentSkin.handle.grip" :stroke="currentSkin.handle.stroke" stroke-width="2.5"/>
+                        <rect x="30" y="50" width="240" height="320" rx="20" :stroke="currentSkin.body.stroke" stroke-width="2" stroke-dasharray="8 4" fill="none" opacity=".5"/>
+                        <line x1="30" y1="140" x2="270" y2="140" :stroke="currentSkin.body.stroke" stroke-width="1.5" stroke-dasharray="6 4" opacity=".3"/>
+                        <line x1="30" y1="260" x2="270" y2="260" :stroke="currentSkin.body.stroke" stroke-width="1.5" stroke-dasharray="6 4" opacity=".3"/>
+                        <rect x="62" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
+                        <circle cx="70" cy="382" r="10" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="2"/><circle cx="70" cy="382" r="2" :fill="currentSkin.wheel.hub"/>
+                        <rect x="222" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
+                        <circle cx="230" cy="382" r="10" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="2"/><circle cx="230" cy="382" r="2" :fill="currentSkin.wheel.hub"/>
                       </svg>
                       <!-- 물리 버블 영역 -->
                       <div ref="innerRef" class="physics-area">
@@ -349,12 +354,23 @@
                           <div
                             v-if="selected === sortedItems[i]?.id && dragId !== sortedItems[i]?.id"
                             class="bubble-remove"
+                            @mousedown.stop.prevent
                             @click.stop="removeItemFromCarrier(sortedItems[i]?.id)"
+                            @touchstart.stop.prevent
+                            @touchend.stop.prevent="removeItemFromCarrier(sortedItems[i]?.id)"
                           >✕</div>
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  <!-- 공유하기 버튼 -->
+                  <button class="share-btn" @click.stop="showShareModal = true">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                  </button>
 
                 </div>
 
@@ -536,13 +552,15 @@
         <Teleport to="body">
           <div v-if="showShareModal" class="share-modal-overlay" @click="showShareModal = false">
             <div class="share-modal" @click.stop>
-              <div class="share-modal-header">
-                <span>내 캐리어 공유</span>
-                <button class="modal-close" @click="showShareModal = false">✕</button>
-              </div>
-              <div class="share-preview">
+              <button class="modal-close" @click="showShareModal = false">✕</button>
+              <!-- 프리뷰 이미지 영역 -->
+              <div class="share-preview" :style="{ background: shareBg }">
                 <div class="share-svg-wrap">
-                  <svg width="100%" height="100%" viewBox="0 0 300 400" fill="none" preserveAspectRatio="xMidYMid meet" data-share-svg>
+                  <svg width="100%" height="100%" viewBox="-40 -60 380 500" fill="none" preserveAspectRatio="xMidYMid meet" data-share-svg>
+                    <!-- 배경 -->
+                    <rect x="-40" y="-60" width="380" height="500" :fill="shareBg"/>
+                    <!-- 닉네임 -->
+                    <text v-if="shareNickname" x="150" y="-30" text-anchor="middle" font-size="22" font-weight="700" fill="#363636" font-family="'HancomMalangMalang','SUIT',sans-serif">{{ shareNickname }}의 캐리어</text>
                     <defs>
                       <filter id="bI2" x="-10%" y="-10%" width="120%" height="120%">
                         <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="b1"/><feOffset dx="6" dy="6" result="o1"/>
@@ -558,28 +576,99 @@
                         <stop offset="100%" :stop-color="currentSkin.body.grad2"/>
                       </linearGradient>
                     </defs>
-                    <rect x="30" y="50" width="240" height="320" rx="20" fill="url(#sG2)" :stroke="currentSkin.body.stroke" stroke-width="3" filter="url(#bI2)"/>
-                    <line x1="52" y1="122" x2="52" y2="289" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".3"/>
-                    <rect x="122" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
-                    <rect x="170" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
-                    <rect x="116" y="6" width="68" height="18" rx="9" :fill="currentSkin.handle.grip" :stroke="currentSkin.handle.stroke" stroke-width="2.5"/>
-                    <rect x="98" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2"/>
-                    <rect x="139" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2"/>
-                    <rect x="180" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2"/>
-                    <rect x="62" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
-                    <circle cx="70" cy="382" r="10" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="2"/>
-                    <circle cx="70" cy="382" r="2" :fill="currentSkin.wheel.hub"/>
-                    <rect x="222" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
-                    <circle cx="230" cy="382" r="10" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="2"/>
-                    <circle cx="230" cy="382" r="2" :fill="currentSkin.wheel.hub"/>
+
+                    <!-- 외관 보기 -->
+                    <template v-if="!isOpen">
+                      <rect x="30" y="50" width="240" height="320" rx="20" fill="url(#sG2)" :stroke="currentSkin.body.stroke" stroke-width="3" filter="url(#bI2)"/>
+                      <line x1="52" y1="122" x2="52" y2="289" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".3"/>
+                      <rect x="122" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
+                      <rect x="170" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
+                      <rect x="116" y="6" width="68" height="18" rx="9" :fill="currentSkin.handle.grip" :stroke="currentSkin.handle.stroke" stroke-width="2.5"/>
+                      <rect x="98" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2"/>
+                      <rect x="139" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2"/>
+                      <rect x="180" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2"/>
+                      <!-- 스킨 내장 스티커 -->
+                      <template v-for="(st, i) in currentSkin.stickers" :key="'share-sk-' + i">
+                        <g v-if="st.type === 'smallheart'" :transform="`translate(${st.x},${st.y})`">
+                          <path d="M0 7C-2 5-9 1-9-4C-9-8-5-10 0-6C5-10 9-8 9-4C9 1 2 5 0 7Z" fill="#fca5a5" stroke="#f87171" stroke-width="1"/>
+                        </g>
+                        <g v-else-if="st.type === 'bigbow'" :transform="`translate(${st.x},${st.y})`">
+                          <path d="M-20 0C-20-15-4-15 0 0C4-15 20-15 20 0C20 15 4 15 0 0C-4 15-20 15-20 0Z" fill="#dc2626" stroke="#222" stroke-width="1.5"/>
+                          <circle r="5" fill="#dc2626" stroke="#222" stroke-width="1.2"/>
+                        </g>
+                        <g v-else-if="st.type === 'stamp'" :transform="`translate(${st.x},${st.y})`">
+                          <rect x="-28" y="-16" width="56" height="32" rx="4" fill="none" :stroke="st.color" stroke-width="2.5" stroke-dasharray="3 2" opacity="0.7"/>
+                          <text x="0" y="5" text-anchor="middle" font-size="11" font-weight="900" :fill="st.color" opacity="0.75" font-family="monospace">{{ st.label }}</text>
+                        </g>
+                        <circle v-else-if="st.type === 'star'" :cx="st.x" :cy="st.y" :r="st.size || 4" fill="#e0e7ff" opacity="0.6"/>
+                        <g v-else-if="st.type === 'planet'" :transform="`translate(${st.x},${st.y})`">
+                          <circle r="12" fill="#818cf8" opacity="0.6"/>
+                          <ellipse rx="20" ry="5" fill="none" stroke="#c7d2fe" stroke-width="1.5" opacity="0.5" transform="rotate(-20)"/>
+                        </g>
+                      </template>
+                      <!-- 사용자 배치 스티커 -->
+                      <template v-for="d in decos" :key="'share-deco-' + d.uid">
+                        <text
+                          :x="30 + (d.x / 100) * 240"
+                          :y="50 + (d.y / 100) * 320"
+                          text-anchor="middle"
+                          dominant-baseline="central"
+                          :font-size="24 * d.scale"
+                          fill="#000"
+                          :transform="d.flipped ? `translate(${(30 + (d.x / 100) * 240) * 2},0) scale(-1,1)` : ''"
+                        >{{ d.emoji }}</text>
+                      </template>
+                      <!-- 바퀴 -->
+                      <rect x="62" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
+                      <circle cx="70" cy="382" r="10" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="2"/>
+                      <circle cx="70" cy="382" r="2" :fill="currentSkin.wheel.hub"/>
+                      <rect x="222" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
+                      <circle cx="230" cy="382" r="10" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="2"/>
+                      <circle cx="230" cy="382" r="2" :fill="currentSkin.wheel.hub"/>
+                    </template>
+
+                    <!-- 내부 보기 -->
+                    <template v-else>
+                      <!-- 캐리어 프레임 -->
+                      <rect x="122" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
+                      <rect x="170" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
+                      <rect x="116" y="6" width="68" height="18" rx="9" :fill="currentSkin.handle.grip" :stroke="currentSkin.handle.stroke" stroke-width="2.5"/>
+                      <rect x="30" y="50" width="240" height="320" rx="20" :stroke="currentSkin.body.stroke" stroke-width="2" stroke-dasharray="8 4" fill="#fff" opacity=".5"/>
+                      <line x1="30" y1="140" x2="270" y2="140" :stroke="currentSkin.body.stroke" stroke-width="1.5" stroke-dasharray="6 4" opacity=".3"/>
+                      <line x1="30" y1="260" x2="270" y2="260" :stroke="currentSkin.body.stroke" stroke-width="1.5" stroke-dasharray="6 4" opacity=".3"/>
+                      <rect x="62" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
+                      <circle cx="70" cy="382" r="10" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="2"/><circle cx="70" cy="382" r="2" :fill="currentSkin.wheel.hub"/>
+                      <rect x="222" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
+                      <circle cx="230" cy="382" r="10" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="2"/><circle cx="230" cy="382" r="2" :fill="currentSkin.wheel.hub"/>
+                      <!-- 버블 아이템 -->
+                      <template v-for="(b, i) in shareBubbles" :key="'sb-' + i">
+                        <circle :cx="b.cx" :cy="b.cy" :r="b.r" :fill="b.bg" :stroke="b.border" stroke-width="2"/>
+                        <text v-if="b.r > 18" :x="b.cx" :y="b.cy - (b.r > 30 ? 3 : 0)" text-anchor="middle" dominant-baseline="central" :font-size="Math.max(8, b.r * 0.22)" font-weight="600" :fill="b.tc">{{ b.name }}</text>
+                        <text v-if="b.r > 30" :x="b.cx" :y="b.cy + b.r * 0.25" text-anchor="middle" dominant-baseline="central" :font-size="Math.max(6, b.r * 0.14)" :fill="b.sc">{{ b.brand }}</text>
+                      </template>
+                      <text v-if="sortedItems.length === 0" x="150" y="210" text-anchor="middle" font-size="14" fill="#aaa">캐리어가 비어있어요</text>
+                    </template>
                   </svg>
                 </div>
               </div>
-              <button class="download-btn" @click="downloadCarrierImage">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <!-- 닉네임 입력 -->
+              <div class="share-nickname-row">
+                <svg class="nickname-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+                <input
+                  v-model="shareNickname"
+                  class="share-nickname-input"
+                  placeholder="닉네임을 입력하세요"
+                  maxlength="10"
+                />
+              </div>
+              <!-- 저장 버튼 -->
+              <button class="share-save-btn" @click="downloadCarrierImage">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                이미지 저장하기
+                이미지로 저장하기
               </button>
             </div>
           </div>
@@ -618,12 +707,34 @@ const BASE_SKINS = [
   { id: 'kitty', name: '헬로키티', desc: '리본과 하트', special: true, body: { grad1: '#fff', grad2: '#fff8f9', stroke: '#dc2626' }, groove: { fill: '#fee2e2', stroke: '#fca5a5' }, handle: { fill: '#fca5a5', stroke: '#dc2626', grip: '#fee2e2' }, wheel: { fill: '#fca5a5', stroke: '#dc2626', hub: '#dc2626', inner: '#fee2e2' }, stickers: [{ type: 'bigbow', x: 220, y: 90 }, { type: 'smallheart', x: 75, y: 120 }, { type: 'smallheart', x: 180, y: 160 }, { type: 'smallheart', x: 95, y: 210 }, { type: 'smallheart', x: 220, y: 230 }, { type: 'smallheart', x: 140, y: 270 }] }
 ]
 
-const DECOS = [
-  { id: 'd1', emoji: '✈️' }, { id: 'd2', emoji: '🌴' }, { id: 'd3', emoji: '⭐' }, { id: 'd4', emoji: '🎀' },
-  { id: 'd5', emoji: '🧸' }, { id: 'd6', emoji: '🌈' }, { id: 'd7', emoji: '🦋' }, { id: 'd8', emoji: '🍀' },
-  { id: 'd9', emoji: '🍒' }, { id: 'd10', emoji: '🫧' }, { id: 'd11', emoji: '❤️' }, { id: 'd12', emoji: '💭' },
-  { id: 'd13', emoji: '🤍' }, { id: 'd14', emoji: '〰️' }, { id: 'd15', emoji: '➰' }, { id: 'd16', emoji: '🔥' }
-]
+const STICKER_PACKS = {
+  basic: [
+    { id: 'b1', emoji: '💟' }, { id: 'b2', emoji: '🤍' }, { id: 'b3', emoji: '🫧' }, { id: 'b4', emoji: '⚪' },
+    { id: 'b5', emoji: '➰' }, { id: 'b6', emoji: '〰️' }, { id: 'b7', emoji: '➿' }, { id: 'b8', emoji: '💭' },
+    { id: 'b9', emoji: '🍒' }, { id: 'b10', emoji: '🎀' }, { id: 'b11', emoji: '✨' }, { id: 'b12', emoji: '🧸' },
+    { id: 'b13', emoji: '🎄' }, { id: 'b14', emoji: '💐' }, { id: 'b15', emoji: '🐧' }, { id: 'b16', emoji: '☑️' }
+  ],
+  travel: [
+    { id: 't1', emoji: '🕶️' }, { id: 't2', emoji: '👙' }, { id: 't3', emoji: '🧢' }, { id: 't4', emoji: '🎧' },
+    { id: 't5', emoji: '📷' }, { id: 't6', emoji: '🪞' }, { id: 't7', emoji: '🏝️' }, { id: 't8', emoji: '🏖️' },
+    { id: 't9', emoji: '🗼' }, { id: 't10', emoji: '🗽' }, { id: 't11', emoji: '🏜️' }, { id: 't12', emoji: '🌉' }
+  ],
+  food: [
+    { id: 'f1', emoji: '🍳' }, { id: 'f2', emoji: '🍕' }, { id: 'f3', emoji: '🍔' }, { id: 'f4', emoji: '🥐' },
+    { id: 'f5', emoji: '🥖' }, { id: 'f6', emoji: '🥫' }, { id: 'f7', emoji: '🍜' }, { id: 'f8', emoji: '🍣' },
+    { id: 'f9', emoji: '🍰' }, { id: 'f10', emoji: '🍫' }, { id: 'f11', emoji: '☕' }, { id: 'f12', emoji: '🍵' },
+    { id: 'f13', emoji: '🍸' }, { id: 'f14', emoji: '🍺' }, { id: 'f15', emoji: '🧋' }, { id: 'f16', emoji: '🍇' },
+    { id: 'f17', emoji: '🍉' }, { id: 'f18', emoji: '🍒' }, { id: 'f19', emoji: '🥭' }, { id: 'f20', emoji: '🍓' }
+  ],
+  weather: [
+    { id: 'w1', emoji: '☁️' }, { id: 'w2', emoji: '⛅' }, { id: 'w3', emoji: '🌤️' }, { id: 'w4', emoji: '🌥️' },
+    { id: 'w5', emoji: '🌦️' }, { id: 'w6', emoji: '🌧️' }, { id: 'w7', emoji: '🌨️' }, { id: 'w8', emoji: '🌫️' },
+    { id: 'w9', emoji: '🌠' }, { id: 'w10', emoji: '🌂' }, { id: 'w11', emoji: '☂️' }, { id: 'w12', emoji: '☔' },
+    { id: 'w13', emoji: '🌀' }, { id: 'w14', emoji: '⭐' }, { id: 'w15', emoji: '🌟' }, { id: 'w16', emoji: '☀️' },
+    { id: 'w17', emoji: '🔥' }, { id: 'w18', emoji: '❄️' }, { id: 'w19', emoji: '☃️' }, { id: 'w20', emoji: '⛄' }
+  ]
+}
+const PACK_LABELS = [['basic', '기본'], ['travel', '여행'], ['food', '푸드'], ['weather', '날씨']]
 
 const CVB = { x1: 30, y1: 50, x2: 270, y2: 370, vw: 300, vh: 400 }
 
@@ -655,11 +766,13 @@ const defaultColor = ref('violet')
 const showColorPicker = ref(false)
 const activeSkin = ref('default')
 const skinScroll = ref(0)
+const stickerPack = ref('basic')
 const decoPage = ref(0)
 const decos = ref([])
 const selDeco = ref(null)
 const savedDecos = ref(Array(MY_SLOT_COUNT).fill(null))
 const showShareModal = ref(false)
+const shareNickname = ref('')
 const itemsExpanded = ref(false)
 const mobileTab = ref('carrier')
 const dragId = ref(null)
@@ -739,10 +852,15 @@ const editingMyDecos = computed(() => isEditingMy.value ? savedDecos.value[activ
 const slotFull = computed(() => savedDecos.value.every(s => s !== null))
 
 // ==================== 스티커 페이징 ====================
+const curStickers = computed(() => STICKER_PACKS[stickerPack.value] || [])
 const decoPages = computed(() => {
   const PP = 8
   const pages = []
-  for (let i = 0; i < DECOS.length; i += PP) pages.push(DECOS.slice(i, i + PP))
+  for (let i = 0; i < curStickers.value.length; i += PP) {
+    const page = curStickers.value.slice(i, i + PP)
+    while (page.length < PP) page.push({ id: `_empty_${i + page.length}`, emoji: '', empty: true })
+    pages.push(page)
+  }
   return pages
 })
 
@@ -1059,6 +1177,39 @@ watch(activeSkin, async (newSkin, oldSkin) => {
 watch(defaultColor, async (newColor) => {
   if (!carrierId.value || activeSkin.value !== 'default') return
   await updateSkin(carrierId.value, { skinType: 'DEFAULT', skinColor: colorIdToSkinColor(newColor) })
+})
+
+// ==================== 공유 배경색 (스킨별) ====================
+const SHARE_BG = { '#7c3aed': '#e5e1f7', '#ec4899': '#f9ecf1', '#0ea5e9': '#f1f8fe', '#eab308': '#fef8e1', '#b45309': '#fef3e1', '#6366f1': '#e0dff7', '#dc2626': '#fce5e5' }
+const shareBg = computed(() => SHARE_BG[currentSkin.value.body.stroke] || '#e5e1f7')
+
+// ==================== 공유 프리뷰용 버블 (px → SVG viewBox 변환) ====================
+const shareBubbles = computed(() => {
+  if (!dims.w || !dims.h || !rendered.value.length) return []
+  const b = getBounds(dims.w, dims.h)
+  const bw = b.right - b.left, bh = b.bottom - b.top
+  // SVG viewBox 내부 영역 (CVB: x1=30, y1=50, x2=270, y2=370)
+  const svgW = CVB.x2 - CVB.x1, svgH = CVB.y2 - CVB.y1
+  return rendered.value.map((pos, i) => {
+    if (!pos || !sortedItems.value[i] || !nodes.value[i]) return null
+    const n = nodes.value[i]
+    const rs = getRankStyle(i + 1, sortedItems.value.length)
+    // 픽셀 좌표 → 0~1 비율 → SVG viewBox 좌표
+    const rx = (pos.x - b.left) / bw
+    const ry = (pos.y - b.top) / bh
+    const rr = n.r / bw
+    return {
+      cx: CVB.x1 + rx * svgW,
+      cy: CVB.y1 + ry * svgH,
+      r: rr * svgW,
+      bg: typeof rs.bg === 'string' && rs.bg.includes('gradient') ? (i === 0 ? '#7c3aed' : i === 1 ? '#8b5cf6' : i === 2 ? '#a78bfa' : '#f0edf9') : rs.bg,
+      border: rs.border,
+      tc: rs.tc,
+      sc: rs.sc,
+      name: sortedItems.value[i].name,
+      brand: sortedItems.value[i].brand
+    }
+  }).filter(Boolean)
 })
 
 // ==================== 아이템 관련 ====================
@@ -1418,15 +1569,15 @@ function downloadCarrierImage() {
   const svgEl = document.querySelector('[data-share-svg]')
   if (!svgEl) return
   const canvas = document.createElement('canvas')
-  canvas.width = 600; canvas.height = 800
+  canvas.width = 760; canvas.height = 1000
   const ctx = canvas.getContext('2d')
   const svgData = new XMLSerializer().serializeToString(svgEl)
   const img = new Image()
   img.onload = () => {
-    ctx.fillStyle = '#faf8ff'; ctx.fillRect(0, 0, 600, 800)
-    ctx.drawImage(img, 0, 0, 600, 800)
+    ctx.fillStyle = shareBg.value; ctx.fillRect(0, 0, 760, 1000)
+    ctx.drawImage(img, 0, 0, 760, 1000)
     const a = document.createElement('a')
-    a.download = 'my-carrier.png'
+    a.download = shareNickname.value ? `${shareNickname.value}-carrier.png` : 'my-carrier.png'
     a.href = canvas.toDataURL('image/png')
     a.click()
   }
@@ -1495,21 +1646,6 @@ function downloadCarrierImage() {
   font-weight: 500;
   white-space: nowrap;
 }
-.header-share-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: none;
-  background: #f5f3ff;
-  color: #7c3aed;
-  cursor: pointer;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-.header-share-btn:hover { background: #ede9fe; }
 
 /* ==================== 모바일 탭 바 ==================== */
 .mobile-tab-bar {
@@ -1547,6 +1683,7 @@ function downloadCarrierImage() {
 .shop-card-header {
   padding: 14px 14px;
   border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1684,7 +1821,28 @@ function downloadCarrierImage() {
 .page-btn:not(:disabled) { background: #f5f3ff; }
 .page-btn:disabled { opacity: 0.25; cursor: default; }
 
-.deco-grid-viewport { padding: 10px 10px 12px; overflow: hidden; }
+.sticker-pack-tabs {
+  display: flex;
+  gap: 5px;
+  padding: 0 12px 4px;
+}
+.pack-tab {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #f3f0ff;
+  color: #7c3aed;
+  transition: all .2s;
+}
+.pack-tab.active {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.deco-grid-viewport { padding: 6px 0 8px; overflow: hidden; }
 .deco-track {
   display: flex;
   transition: transform .35s cubic-bezier(.4,0,.2,1);
@@ -1692,22 +1850,33 @@ function downloadCarrierImage() {
 .deco-page {
   flex-shrink: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 6px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  height: 120px;
 }
 .deco-item {
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1.5px solid #e0d8f5;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
   transition: all .2s;
   background: #faf8ff;
-  aspect-ratio: 1/1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 20px;
+  min-width: 0;
+  min-height: 0;
+}
+.deco-item.deco-empty {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+  pointer-events: none;
 }
 .deco-item:hover { border-color: #c4b5fd; transform: translateY(-2px); }
 
@@ -1749,6 +1918,27 @@ function downloadCarrierImage() {
   border: 1px solid #e0d8f5;
   box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
+
+.share-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.85);
+  color: #7c3aed;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: background 0.15s, transform 0.15s;
+}
+.share-btn:hover { background: #f5f3ff; transform: scale(1.08); }
 
 .color-picker {
   position: absolute;
@@ -2131,61 +2321,92 @@ function downloadCarrierImage() {
 }
 .share-modal {
   background: #fff;
-  border-radius: 24px;
-  padding: 32px 28px 24px;
-  max-width: 360px;
+  border-radius: 20px;
+  padding: 0;
+  max-width: 420px;
   width: 100%;
   box-shadow: 0 24px 64px rgba(0,0,0,0.2);
   animation: modalIn .25s ease;
+  overflow: hidden;
+  position: relative;
 }
-.share-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-.share-modal-header span { font-size: 16px; font-weight: 700; color: #111; }
 .modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
   border: none;
-  background: #f3f4f6;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(4px);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: #888;
+  color: #666;
   font-weight: 700;
+  transition: background .15s;
 }
+.modal-close:hover { background: rgba(255,255,255,0.95); }
+
 .share-preview {
-  background: #faf8ff;
-  border-radius: 16px;
-  padding: 20px;
+  padding: 28px 24px 20px;
   display: flex;
   justify-content: center;
-  border: 1px solid #e0d8f5;
+  transition: background .3s;
 }
-.share-svg-wrap { width: 220px; height: 293px; }
-.download-btn {
-  width: 100%;
+.share-svg-wrap { width: 320px; height: 420px; }
+
+.share-nickname-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
   margin-top: 16px;
-  padding: 12px;
+}
+.nickname-icon { flex-shrink: 0; }
+.share-nickname-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid #e8e0f5;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  background: #faf8ff;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+  font-family: 'HancomMalangMalang', 'SUIT', sans-serif;
+}
+.share-nickname-input::placeholder { color: #bbb; font-family: 'SUIT', sans-serif; font-weight: 400; }
+.share-nickname-input:focus {
+  border-color: #9333EA;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+}
+
+.share-save-btn {
+  width: calc(100% - 40px);
+  margin: 14px 20px 20px;
+  padding: 14px;
   border: none;
   border-radius: 12px;
-  background: #6b7280;
+  background: #9333EA;
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all .15s;
+  transition: background .15s;
 }
-.download-btn:hover { background: #4b5563; }
+.share-save-btn:hover { background: #7e22ce; }
+.share-save-btn:active { transform: scale(0.98); }
 
 /* ==================== 로딩 ==================== */
 .loading-state {
@@ -2438,19 +2659,24 @@ function downloadCarrierImage() {
 
   /* 공유 모달 모바일 */
   .share-modal {
-    max-width: 100%;
-    border-radius: 20px 20px 0 0;
-    padding: 24px 20px 20px;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    animation: slideUpModal .3s ease;
+    max-width: calc(100% - 32px);
+    border-radius: 20px;
+    max-height: 88vh;
+    overflow-y: auto;
   }
   .share-modal-overlay {
-    align-items: flex-end;
-    padding: 0;
+    align-items: center;
+    padding: 16px;
   }
+  .share-preview { padding: 20px 16px 14px; }
+  .share-svg-wrap {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    aspect-ratio: 380 / 500;
+  }
+  .share-nickname-row { padding: 0 16px; margin-top: 14px; }
+  .share-save-btn { width: calc(100% - 32px); margin: 12px 16px 16px; }
 }
 
 /* ==================== 작은 모바일 (480px 이하) ==================== */

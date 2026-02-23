@@ -13,6 +13,7 @@
   <meta property="og:image" content="https://yogurtte.com/images/yogodde_01.png" />
   <link rel="canonical" href="https://yogurtte.com" />
   <title>요거뜨</title>
+  <link rel="preload" href="/fonts/HancomMalangMalang-Bold.woff2" as="font" type="font/woff2" crossorigin />
 
   <link rel="icon" type="image/png" href="/images/yogodde_01.png" />
 
@@ -62,6 +63,13 @@
       src: url('/fonts/SEBANG_Gothic_Bold.woff2') format('woff2'),
            url('/fonts/SEBANG_Gothic_Bold.woff') format('woff');
       font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'HancomMalangMalang';
+      src: url('/fonts/HancomMalangMalang-Bold.woff2') format('woff2');
+      font-weight: 400 700;
       font-style: normal;
       font-display: swap;
     }

@@ -96,6 +96,31 @@
 
         <Transition name="fade-up-right">
           <div v-if="isMoreMenuOpen" class="more-menu">
+            <button class="more-menu-item" @click="handleMoreNav('home')">
+              <span class="more-icon home">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                </svg>
+              </span>
+              <div class="more-content">
+                <span class="more-text">홈</span>
+                <span class="more-desc">대시보드로 이동해요</span>
+              </div>
+            </button>
+            <button class="more-menu-item" @click="handleMoreNav('carrier')">
+              <span class="more-icon carrier">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="2" y="7" width="20" height="14" rx="2" stroke-width="1.8"/>
+                  <path stroke-linecap="round" stroke-width="1.8" d="M16 7V5a4 4 0 00-8 0v2"/>
+                  <circle cx="12" cy="15" r="2" stroke-width="1.8"/>
+                </svg>
+              </span>
+              <div class="more-content">
+                <span class="more-text">캐리어 꾸미기</span>
+                <span class="more-desc">나만의 캐리어를 꾸며봐요</span>
+              </div>
+            </button>
+            <div class="more-menu-divider"></div>
             <button class="more-menu-item" @click="handleMoreNav('chat')">
               <span class="more-icon chat">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,6 +143,34 @@
                 <span class="more-desc">내 정보와 활동을 관리해요</span>
               </div>
             </button>
+            <template v-if="isAdmin">
+              <div class="more-menu-divider"></div>
+              <button class="more-menu-item" @click="handleMoreNav('admin')">
+                <span class="more-icon admin">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.8"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.8"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.8"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.8"/>
+                  </svg>
+                </span>
+                <div class="more-content">
+                  <span class="more-text">관리자</span>
+                  <span class="more-desc">관리자 대시보드</span>
+                </div>
+              </button>
+            </template>
+            <div class="more-menu-divider"></div>
+            <button v-if="isLoggedIn" class="more-menu-item logout" @click="handleLogout">
+              <span class="more-icon logout-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+                </svg>
+              </span>
+              <div class="more-content">
+                <span class="more-text">로그아웃</span>
+              </div>
+            </button>
           </div>
         </Transition>
       </div>
@@ -136,8 +189,8 @@ import { useConfirmDialog } from '@/composables/useConfirmDialog';
 
 const router = useRouter();
 const route = useRoute();
-const { isLoggedIn } = useAuth();
-const { openLoginRequired } = useConfirmDialog();
+const { isLoggedIn, isAdmin, logout } = useAuth();
+const { openLoginRequired, open } = useConfirmDialog();
 const isCreateMenuOpen = ref(false);
 const isMoreMenuOpen = ref(false);
 
@@ -182,17 +235,40 @@ const handleCreate = async (type) => {
   }
 };
 
-const handleMoreNav = async (name) => {
+const moreNavMap = {
+  home: { name: 'Dashboard', path: '/dashboard' },
+  carrier: { name: 'Carrier', path: '/carrier' },
+  chat: { name: 'Chat', path: '/chat' },
+  mypage: { name: 'MyPage', path: '/mypage' },
+  admin: { name: 'AdminDashboard', path: '/admin' },
+};
+
+const handleMoreNav = async (key) => {
   closeAllMenus();
+  const target = moreNavMap[key];
+  if (!target) return;
+
+  if (key === 'home') {
+    router.push(target.path);
+    return;
+  }
 
   if (isLoggedIn.value) {
-    router.push({ name: name === 'chat' ? 'Chat' : 'MyPage' });
+    router.push(target.path);
     return;
   }
 
   const confirmed = await openLoginRequired();
   if (confirmed) {
-    await router.push({ name: 'Login', query: { redirect: route.fullPath } });
+    await router.push({ name: 'Login', query: { redirect: target.path } });
+  }
+};
+
+const handleLogout = async () => {
+  closeAllMenus();
+  const confirmed = await open({ type: 'confirm', title: '확인', message: '정말 로그아웃하시겠습니까?' });
+  if (confirmed) {
+    await logout();
   }
 };
 
@@ -428,7 +504,7 @@ onBeforeUnmount(() => {
 .more-menu {
   position: absolute;
   bottom: 54px;
-  right: -8px;
+  right: -66px;
   background: white;
   border-radius: 16px;
   padding: 8px;
@@ -437,7 +513,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 4px;
   z-index: 1002;
-  min-width: 200px;
+  min-width: 220px;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .more-menu-item {
@@ -472,6 +550,16 @@ onBeforeUnmount(() => {
   height: 20px;
 }
 
+.more-icon.home {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.more-icon.carrier {
+  background: #faf5ff;
+  color: #9333ea;
+}
+
 .more-icon.chat {
   background: #fef3c7;
   color: #d97706;
@@ -480,6 +568,26 @@ onBeforeUnmount(() => {
 .more-icon.mypage {
   background: #e0e7ff;
   color: #4f46e5;
+}
+
+.more-icon.admin {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.more-icon.logout-icon {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.more-menu-item.logout .more-text {
+  color: #dc2626;
+}
+
+.more-menu-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 4px 8px;
 }
 
 .more-content {

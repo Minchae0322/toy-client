@@ -30,17 +30,18 @@
         </div>
 
         <!-- 로딩 -->
-        <div v-if="loading && !products.length" class="loading-state">
+        <Transition name="view-fade" mode="out-in">
+        <div v-if="loading && !products.length" key="loading" class="loading-state">
           <div class="spinner"></div>
           <p>랭킹을 불러오는 중...</p>
         </div>
 
         <!-- 빈 상태 -->
-        <div v-else-if="!filtered.length && !loading" class="empty-state">
+        <div v-else-if="!filtered.length && !loading" key="empty" class="empty-state">
           <p>{{ searchKeyword ? '검색 결과가 없습니다' : '등록된 아이템이 없습니다' }}</p>
         </div>
 
-        <template v-else-if="filtered.length">
+        <div v-else-if="filtered.length" key="content">
           <!-- 버블 차트 -->
           <div class="bubble-wrapper">
             <div
@@ -215,7 +216,8 @@
               {{ loading ? '불러오는 중...' : '더 보기' }}
             </button>
           </div>
-        </template>
+        </div>
+        </Transition>
       </div>
     </main>
 
@@ -308,7 +310,7 @@ const carrierPanelRef = ref(null)
 
 // ==================== 상태 ====================
 const products = ref([])
-const loading = ref(false)
+const loading = ref(true)
 const hasNext = ref(true)
 const currentPage = ref(0)
 const searchKeyword = ref('')
@@ -590,8 +592,10 @@ async function loadDefaultCarrier() {
 }
 
 // ==================== API ====================
+let fetchingRanking = false
 async function fetchRanking(reset = false) {
-  if (loading.value) return
+  if (fetchingRanking) return
+  fetchingRanking = true
   loading.value = true
   try {
     if (reset) { products.value = []; currentPage.value = 0; hasNext.value = true }
@@ -625,6 +629,7 @@ async function fetchRanking(reset = false) {
     hasNext.value = false
   } finally {
     loading.value = false
+    fetchingRanking = false
   }
 }
 
@@ -937,6 +942,12 @@ onUnmounted(() => {
 .panel-fade-enter-active { animation: fadeIn 0.2s ease; }
 .panel-fade-leave-active { transition: opacity 0.15s; }
 .panel-fade-leave-to { opacity: 0; }
+
+/* 로딩/빈/콘텐츠 상태 전환 */
+.view-fade-enter-active { transition: opacity 0.25s ease, transform 0.25s ease; }
+.view-fade-leave-active { transition: opacity 0.15s ease; }
+.view-fade-enter-from { opacity: 0; transform: translateY(8px); }
+.view-fade-leave-to { opacity: 0; }
 
 /* 모바일 */
 @media (max-width: 640px) {
