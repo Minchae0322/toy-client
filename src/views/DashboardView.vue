@@ -2404,7 +2404,7 @@ onUnmounted(() => {
 .rank-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
   flex: 1;
   overflow: hidden;
