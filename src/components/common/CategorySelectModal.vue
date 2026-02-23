@@ -559,7 +559,7 @@ onMounted(async () => {
   background: #f5f5f5;
   border: none;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 16px;
   outline: none;
   transition: all 0.2s;
 }
