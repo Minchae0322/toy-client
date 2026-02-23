@@ -337,10 +337,10 @@
                           @touchstart.prevent="onBubbleDown($event, sortedItems[i]?.id)"
                           @click="!dragId && toggleSelect(sortedItems[i]?.id)"
                         >
-                          <span v-if="nodes[i]?.r > 24" class="bubble-name" :style="{ fontSize: Math.max(11, nodes[i].r * 0.22) + 'px', color: getRankStyle(i + 1, sortedItems.length).tc }">
+                          <span v-if="nodes[i]?.r > (isMobile ? 20 : 24)" class="bubble-name" :style="{ fontSize: Math.max(isMobile ? 9 : 11, nodes[i].r * (isMobile ? 0.26 : 0.22)) + 'px', color: getRankStyle(i + 1, sortedItems.length).tc }">
                             {{ sortedItems[i]?.name }}
                           </span>
-                          <span v-if="nodes[i]?.r > 40" class="bubble-brand" :style="{ fontSize: Math.max(9, nodes[i].r * 0.14) + 'px', color: getRankStyle(i + 1, sortedItems.length).sc }">
+                          <span v-if="nodes[i]?.r > (isMobile ? 32 : 40)" class="bubble-brand" :style="{ fontSize: Math.max(isMobile ? 8 : 9, nodes[i].r * 0.14) + 'px', color: getRankStyle(i + 1, sortedItems.length).sc }">
                             {{ sortedItems[i]?.brand }}
                           </span>
                           <!-- 랭킹 뱃지 -->
@@ -689,8 +689,9 @@ const DMAX = 2.5
 const DSTEP = 0.2
 const IW = 110
 const G = 8
-const MIN_R = 28
-const MAX_R = 80
+const isMobile = ref(window.innerWidth <= 768)
+const MIN_R = computed(() => isMobile.value ? 18 : 28)
+const MAX_R = computed(() => isMobile.value ? 42 : 80)
 const MY_SLOT_COUNT = 2
 
 const DEFAULT_COLORS = [
@@ -872,7 +873,7 @@ const nodes = computed(() => {
   // 균등 크기 + 약간의 변화 (첫 번째 아이템이 가장 큼)
   return sortedItems.value.map((p, i) => {
     const ratio = count <= 1 ? 1 : 1 - (i / count) * 0.4
-    return { id: p.id, r: MIN_R + (MAX_R - MIN_R) * ratio }
+    return { id: p.id, r: MIN_R.value + (MAX_R.value - MIN_R.value) * ratio }
   })
 })
 
@@ -1094,6 +1095,7 @@ onBeforeUnmount(async () => {
   }
   if (frameRef) cancelAnimationFrame(frameRef)
   if (resizeObserver) resizeObserver.disconnect()
+  window.removeEventListener('resize', onWindowResize)
 })
 
 // ==================== API 데이터 로드 ====================
@@ -1158,8 +1160,13 @@ function applyCarrierData(carrier) {
   }
 }
 
+function onWindowResize() {
+  isMobile.value = window.innerWidth <= 768
+}
+
 onMounted(() => {
   loadCarrierData()
+  window.addEventListener('resize', onWindowResize)
 })
 
 // 스킨 변경 시 API 호출
