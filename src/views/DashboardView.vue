@@ -304,12 +304,12 @@
           </div>
         </section>
 
-        <!-- 실시간 제품 랭킹 섹션 -->
+        <!-- 실시간 제품 랭킹 섹션 (버블 차트) -->
         <section class="content-section ranking-section">
           <div class="section-header">
             <div class="title-with-badge">
               <h2 class="section-title">실시간 제품 랭킹</h2>
-              <span class="sub-title">요즘 뜨는 인기 아이템</span>
+              <span class="sub-title">버블이 클수록 인기가 높아요</span>
             </div>
             <router-link :to="{ name: 'ProductRanking' }" class="view-all-btn">
               전체보기
@@ -319,8 +319,8 @@
             </router-link>
           </div>
 
-          <div v-if="productsLoading" class="product-rank-container">
-            <div class="skeleton hero-skeleton"></div>
+          <div v-if="productsLoading" class="dash-bubble-wrapper">
+            <div class="skeleton" style="width:100%;height:320px;border-radius:12px;"></div>
           </div>
 
           <div v-else-if="hotProducts.length === 0" class="empty-state">
@@ -337,61 +337,81 @@
             <p class="empty-text">등록된 제품이 없습니다</p>
           </div>
 
-          <div v-else class="product-rank-container">
-            <!-- 1위 히어로 카드 -->
-            <router-link :to="{ name: 'ProductDetail', params: { id: hotProducts[0].id } }" class="rank-hero-card">
-              <div class="hero-badge">BEST 1</div>
-              <img :src="getProductThumbnail(hotProducts[0])" class="hero-image" />
-              <div class="hero-overlay">
-                <div class="hero-info">
-                  <span class="hero-brand">{{ hotProducts[0].brand }}</span>
-                  <h3 class="hero-name">{{ hotProducts[0].name }}</h3>
-                  <div class="hero-stats">
-                    <div class="trend-score">
-                      <span class="score-dot"></span>
-                      인기지수 {{ formatNumber(getProductPopularityScore(hotProducts[0])) }}
-                    </div>
-                    <div v-if="hotProducts[0].averageRating" class="hero-rating">
-                      <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
-                      {{ Number(hotProducts[0].averageRating).toFixed(1) }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </router-link>
+          <div v-else class="dash-bubble-wrapper">
+            <div
+              ref="bubbleContainerRef"
+              class="dash-bubble-area"
+              :style="{ height: bubbleDims.h + 'px' }"
+              @mousemove="handleBubbleMouseMove"
+              @mouseleave="bubbleHovered = null"
+            >
+              <!-- 그리드 배경 -->
+              <svg class="dash-grid-bg">
+                <defs>
+                  <pattern id="dashBgGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#dashBgGrid)"/>
+              </svg>
 
-            <!-- 2-5위 리스트 -->
-            <div v-if="hotProducts.length > 1" class="rank-sub-list">
+              <!-- 버블 -->
               <router-link
-                v-for="(product, index) in hotProducts.slice(1)"
+                v-for="(product, i) in dashBubbleProducts"
                 :key="product.id"
                 :to="{ name: 'ProductDetail', params: { id: product.id } }"
-                class="rank-sub-item"
+                class="dash-bubble"
+                :class="{
+                  'is-hovered': bubbleHovered === product.id,
+                  'is-dimmed': bubbleHovered && bubbleHovered !== product.id,
+                  'has-image': !!getProductThumbnail(product)
+                }"
+                :style="getDashBubbleStyle(i)"
+                @mouseenter="bubbleHovered = product.id"
+                @mouseleave="bubbleHovered = null"
               >
-                <div class="sub-rank-number">{{ index + 2 }}</div>
-                <img :src="getProductThumbnail(product)" class="sub-image" @error="handleImageError" />
-                <div class="sub-info">
-                  <span class="sub-brand">{{ product.brand }}</span>
-                  <h4 class="sub-name">{{ product.name }}</h4>
-                  <div class="sub-meta">
-                    <div v-if="product.averageRating" class="sub-rating">
-                      <svg width="10" height="10" viewBox="0 0 20 20" fill="#FBBF24">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
-                      {{ Number(product.averageRating).toFixed(1) }}
-                    </div>
-                    <span v-if="product.reviewCount" class="sub-reviews">리뷰 {{ formatNumber(product.reviewCount) }}</span>
-                  </div>
-                </div>
-                <div class="sub-score">
-                  <span class="sub-score-value">{{ getProductScorePercent(product, index + 1) }}%</span>
-                </div>
-                <svg class="sub-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
+                <!-- 배경 이미지 -->
+                <img v-if="getProductThumbnail(product)" :src="getProductThumbnail(product)" alt="" class="dash-bubble-bg-image" @error="handleImageError" />
+                <div v-if="getProductThumbnail(product)" class="dash-bubble-overlay"></div>
+
+                <span v-if="dashBubbleNodes[i]?.r > 35" class="dash-bubble-name" :style="{ fontSize: Math.max(9, dashBubbleNodes[i].r * 0.14) + 'px', color: getProductThumbnail(product) || i < 3 ? '#fff' : '#333', maxWidth: dashBubbleNodes[i].r * 1.4 + 'px' }">{{ product.name }}</span>
+                <span v-if="dashBubbleNodes[i]?.r > 45" class="dash-bubble-brand" :style="{ fontSize: Math.max(8, dashBubbleNodes[i].r * 0.11) + 'px', color: getProductThumbnail(product) || i < 3 ? 'rgba(255,255,255,0.85)' : '#999' }">{{ product.brand }}</span>
+
+                <!-- Top 3 뱃지 -->
+                <div v-if="i < 3" class="dash-rank-badge-top" :class="'rank-' + (i + 1)" :style="{ fontSize: Math.max(8, dashBubbleNodes[i].r * 0.12) + 'px' }">{{ i + 1 }}</div>
+                <!-- 4위 이하 뱃지 -->
+                <div v-else class="dash-rank-badge-sm" :style="{ width: Math.max(14, dashBubbleNodes[i].r * 0.24) + 'px', height: Math.max(14, dashBubbleNodes[i].r * 0.24) + 'px', fontSize: Math.max(7, dashBubbleNodes[i].r * 0.12) + 'px' }">{{ i + 1 }}</div>
               </router-link>
+
+              <!-- 범례 -->
+              <div class="dash-bubble-legend">
+                <div class="dash-legend-item">
+                  <div class="dash-legend-dot big"></div>
+                  <span>인기 높음</span>
+                </div>
+                <svg width="24" height="10" viewBox="0 0 28 10" fill="none">
+                  <line x1="0" y1="5" x2="20" y2="5" stroke="#ccc" stroke-width="1.5"/>
+                  <path d="M17 1L24 5L17 9" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="dash-legend-item">
+                  <div class="dash-legend-dot small"></div>
+                  <span>인기 낮음</span>
+                </div>
+              </div>
+
+              <!-- 툴팁 -->
+              <div v-if="bubbleTooltipProduct" class="dash-bubble-tooltip" :style="bubbleTooltipStyle">
+                <div class="dash-tooltip-header">
+                  <span class="dash-tooltip-name">{{ bubbleTooltipProduct.name }}</span>
+                  <span class="dash-tooltip-rank">#{{ hotProducts.indexOf(bubbleTooltipProduct) + 1 }}</span>
+                </div>
+                <span class="dash-tooltip-brand">{{ bubbleTooltipProduct.brand }}</span>
+                <div class="dash-tooltip-metrics">
+                  <div><div class="dash-metric-label">인기</div><div class="dash-metric-value purple">{{ formatNumber(getProductPopularityScore(bubbleTooltipProduct)) }}</div></div>
+                  <div v-if="bubbleTooltipProduct.averageRating"><div class="dash-metric-label">평점</div><div class="dash-metric-value">⭐ {{ Number(bubbleTooltipProduct.averageRating).toFixed(1) }}</div></div>
+                  <div v-if="bubbleTooltipProduct.reviewCount"><div class="dash-metric-label">리뷰</div><div class="dash-metric-value">{{ formatNumber(bubbleTooltipProduct.reviewCount) }}</div></div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -403,7 +423,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { feedService } from '@/services/FeedService'
@@ -413,6 +433,143 @@ import { productService } from '@/services/ProductService'
 const hotFeeds = ref([])
 const hotBattles = ref([])
 const hotProducts = ref([])
+
+// ==================== 버블 차트 관련 ====================
+const DASH_MIN_RADIUS = 22
+const DASH_MAX_RADIUS = 80
+const DASH_BUBBLE_LIMIT = 20
+
+const bubbleContainerRef = ref(null)
+const bubbleDims = ref({ w: 0, h: 0 })
+const bubbleHovered = ref(null)
+const bubbleMousePos = ref({ x: 0, y: 0 })
+let bubbleResizeObserver = null
+
+function getDashRadius(score, maxScore) {
+  if (!maxScore) return DASH_MIN_RADIUS
+  return DASH_MIN_RADIUS + (DASH_MAX_RADIUS - DASH_MIN_RADIUS) * Math.sqrt(score / maxScore)
+}
+
+function getDashRankColor(rank) {
+  if (rank === 1) return { bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)', border: '#7c3aed', glow: 'rgba(124,58,237,0.3)' }
+  if (rank === 2) return { bg: 'linear-gradient(135deg,#6366f1,#818cf8)', border: '#6366f1', glow: 'rgba(99,102,241,0.2)' }
+  if (rank === 3) return { bg: 'linear-gradient(135deg,#8b5cf6,#c4b5fd)', border: '#8b5cf6', glow: 'rgba(139,92,246,0.2)' }
+  return { bg: '#fff', border: '#e5e7eb', glow: 'transparent' }
+}
+
+function computeBubbleLayout(nodeList, W, H) {
+  if (!nodeList.length || !W || !H) return []
+  const cx = W / 2, cy = H / 2
+  const pos = nodeList.map((n, i) => {
+    const angle = (i / nodeList.length) * Math.PI * 2
+    const dist = 40 + Math.min(cx, cy) * 0.35 * (i / nodeList.length)
+    return { x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist, vx: 0, vy: 0, r: n.r }
+  })
+  for (let tick = 0; tick < 300; tick++) {
+    const alpha = Math.max(0.001, 1 - tick / 300)
+    for (let i = 0; i < pos.length; i++) {
+      const dx = cx - pos[i].x, dy = cy - pos[i].y
+      const pull = 0.01 * alpha * (i < 3 ? 1.8 : 0.3)
+      pos[i].vx += dx * pull; pos[i].vy += dy * pull
+      for (let j = i + 1; j < pos.length; j++) {
+        const ddx = pos[i].x - pos[j].x, ddy = pos[i].y - pos[j].y
+        const d = Math.sqrt(ddx * ddx + ddy * ddy) || 1
+        const minD = pos[i].r + pos[j].r + 4
+        if (d < minD) {
+          const f = (minD - d) / d * 0.3
+          pos[i].vx += ddx * f; pos[i].vy += ddy * f
+          pos[j].vx -= ddx * f; pos[j].vy -= ddy * f
+        }
+      }
+      pos[i].vx *= 0.7; pos[i].vy *= 0.7
+      pos[i].x += pos[i].vx; pos[i].y += pos[i].vy
+      const pad = pos[i].r + 2
+      pos[i].x = Math.max(pad, Math.min(W - pad, pos[i].x))
+      pos[i].y = Math.max(pad, Math.min(H - pad, pos[i].y))
+    }
+  }
+  return pos.map(p => ({ x: p.x, y: p.y }))
+}
+
+const dashBubbleProducts = computed(() => {
+  const sorted = [...hotProducts.value].sort((a, b) => getProductPopularityScore(b) - getProductPopularityScore(a))
+  return sorted.slice(0, DASH_BUBBLE_LIMIT)
+})
+
+const dashMaxScore = computed(() => getProductPopularityScore(dashBubbleProducts.value[0]) || 1)
+
+const dashBubbleNodes = computed(() =>
+  dashBubbleProducts.value.map(p => ({ id: p.id, r: getDashRadius(getProductPopularityScore(p), dashMaxScore.value) }))
+)
+
+const dashBubblePositions = computed(() => computeBubbleLayout(dashBubbleNodes.value, bubbleDims.value.w, bubbleDims.value.h))
+
+const bubbleTooltipProduct = computed(() => {
+  if (!bubbleHovered.value) return null
+  return hotProducts.value.find(p => p.id === bubbleHovered.value) || null
+})
+
+const bubbleTooltipStyle = computed(() => {
+  if (!bubbleTooltipProduct.value) return {}
+  const W = 200
+  let left = bubbleMousePos.value.x - W / 2
+  let top = bubbleMousePos.value.y - 130
+  if (top < 0) top = bubbleMousePos.value.y + 10
+  if (left < 0) left = 4
+  if (left + W > bubbleDims.value.w) left = bubbleDims.value.w - W - 4
+  return { left: left + 'px', top: top + 'px', width: W + 'px' }
+})
+
+function getDashBubbleStyle(i) {
+  if (!dashBubblePositions.value[i] || !dashBubbleNodes.value[i]) return { display: 'none' }
+  const pos = dashBubblePositions.value[i]
+  const r = dashBubbleNodes.value[i].r
+  const rank = i + 1
+  const colors = getDashRankColor(rank)
+  const product = dashBubbleProducts.value[i]
+  const isHov = bubbleHovered.value === product?.id
+  const hasImage = !!getProductThumbnail(product)
+
+  return {
+    left: (pos.x - r) + 'px',
+    top: (pos.y - r) + 'px',
+    width: (r * 2) + 'px',
+    height: (r * 2) + 'px',
+    background: hasImage ? '#000' : (rank <= 3 ? colors.bg : '#fff'),
+    borderColor: isHov ? '#7c3aed' : colors.border,
+    boxShadow: isHov ? `0 8px 32px ${colors.glow}, 0 0 0 4px rgba(124,58,237,0.1)`
+      : rank <= 3 ? `0 4px 16px ${colors.glow}` : '0 2px 8px rgba(0,0,0,0.06)',
+    zIndex: isHov ? 50 : rank <= 3 ? 10 : 1,
+    textDecoration: 'none'
+  }
+}
+
+function handleBubbleMouseMove(e) {
+  if (!bubbleContainerRef.value) return
+  const rect = bubbleContainerRef.value.getBoundingClientRect()
+  bubbleMousePos.value = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+}
+
+function initBubbleContainer() {
+  if (!bubbleContainerRef.value) return
+  const rect = bubbleContainerRef.value.getBoundingClientRect()
+  bubbleDims.value = { w: rect.width, h: Math.max(320, rect.width * 0.55) }
+
+  bubbleResizeObserver = new ResizeObserver(entries => {
+    const entry = entries[0]
+    if (entry) {
+      const w = entry.contentRect.width
+      bubbleDims.value = { w, h: Math.max(320, w * 0.55) }
+    }
+  })
+  bubbleResizeObserver.observe(bubbleContainerRef.value)
+}
+
+watch(() => hotProducts.value.length, (len) => {
+  if (len > 0) {
+    nextTick(() => initBubbleContainer())
+  }
+})
 
 const yogurtBomFeeds = ref([])
 const lastUpdateTime = ref('')
@@ -517,7 +674,7 @@ const loadHotProducts = async () => {
   productsLoading.value = true
   try {
     console.log('📦 [DASHBOARD] 제품 조회 시작')
-    const response = await productService.getProducts({}, { size: 5, sort: 'viewCount,DESC' })
+    const response = await productService.getProducts({}, { size: 20, sort: 'viewCount,DESC' })
     console.log('📦 [DASHBOARD] 제품 응답:', response)
     if (response.success) {
       hotProducts.value = response.data?.content || response.data || []
@@ -651,14 +808,6 @@ const getProductThumbnail = (product) => {
   return product.thumbnailUrl || product.thumbnailDto?.fileUrl || 'https://placehold.co/56x56?text=No+Image'
 }
 
-const getProductScorePercent = (product, index) => {
-  if (index === 0) return 100
-  const firstScore = getProductPopularityScore(hotProducts.value[0])
-  const score = getProductPopularityScore(product)
-  if (!firstScore) return 0
-  return Math.round((score / firstScore) * 100)
-}
-
 const getProductPopularityScore = (product) => {
   if (!product) return 0
   if (product.popularityScore) return product.popularityScore
@@ -698,6 +847,10 @@ onUnmounted(() => {
   if (ybSwipeTimeout) {
     clearTimeout(ybSwipeTimeout)
     ybSwipeTimeout = null
+  }
+  if (bubbleResizeObserver) {
+    bubbleResizeObserver.disconnect()
+    bubbleResizeObserver = null
   }
 })
 </script>
@@ -2357,293 +2510,217 @@ onUnmounted(() => {
   background: #e5e7eb;
 }
 
-/* 제품 랭킹 섹션 커스텀 스타일 */
+/* 제품 랭킹 섹션 - 버블 차트 */
 .ranking-section {
   background: linear-gradient(to bottom, #ffffff, #faf8ff);
 }
 
+.dash-bubble-wrapper {
+  position: relative;
+}
 
-.product-rank-container {
+.dash-bubble-area {
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  cursor: default;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.dash-grid-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+}
+
+/* 버블 */
+.dash-bubble {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid;
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
-}
-
-/* 1위 히어로 카드 디자인 */
-.rank-hero-card {
-  position: relative;
-  height: 200px;
-  border-radius: 16px;
-  overflow: hidden;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: opacity 0.15s, box-shadow 0.2s, border-color 0.2s, filter 0.2s, transform 0.15s;
+  user-select: none;
+  text-decoration: none;
+}
+.dash-bubble:hover {
+  transform: scale(1.05);
+}
+.dash-bubble.is-dimmed {
+  filter: brightness(0.55) saturate(0.3);
 }
 
-.rank-hero-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-}
-
-@media (min-width: 1280px) {
-  .rank-hero-card {
-    height: 260px;
-  }
-}
-
-.hero-image {
+/* 버블 배경 이미지 */
+.dash-bubble-bg-image {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  border-radius: 50%;
+  z-index: 0;
 }
-
-.rank-hero-card:hover .hero-image {
-  transform: scale(1.05);
-}
-
-.hero-overlay {
+.dash-bubble-overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60%;
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-  display: flex;
-  align-items: flex-end;
-  padding: 1.25rem;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1;
 }
-
-.hero-badge {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  background: linear-gradient(135deg, #a855f7, #7c3aed);
-  color: #fff;
-  font-weight: 800;
-  font-size: 13px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+.dash-bubble.has-image .dash-bubble-name,
+.dash-bubble.has-image .dash-bubble-brand {
+  position: relative;
   z-index: 2;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.dash-bubble.has-image .dash-rank-badge-top,
+.dash-bubble.has-image .dash-rank-badge-sm {
+  z-index: 3;
 }
 
-.hero-info {
-  color: white;
-  width: 100%;
-}
-
-.hero-brand {
-  font-size: 12px;
-  opacity: 0.8;
-  font-weight: 500;
-}
-
-.hero-name {
-  font-size: 1.125rem;
+.dash-bubble-name {
   font-weight: 700;
-  margin: 2px 0 8px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  white-space: nowrap;
+  margin-top: 3px;
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+}
+.dash-bubble-brand {
+  margin-top: 1px;
 }
 
-@media (min-width: 1280px) {
-  .hero-brand {
-    font-size: 13px;
-  }
-
-  .hero-name {
-    font-size: 1.375rem;
-  }
+/* Top 3 뱃지 */
+.dash-rank-badge-top {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  z-index: 5;
 }
+.dash-rank-badge-top.rank-1 { background: #FFD700; color: #7a5a00; }
+.dash-rank-badge-top.rank-2 { background: #C0C0C0; color: #444; }
+.dash-rank-badge-top.rank-3 { background: #CD7F32; color: #5a2d00; }
 
-.hero-stats {
+/* 4위+ 뱃지 */
+.dash-rank-badge-sm {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  border-radius: 50%;
+  background: #f3f4f6;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #888;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1.5px solid #fff;
 }
 
-.trend-score {
+/* 범례 */
+.dash-bubble-legend {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
-  background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(4px);
-  padding: 4px 10px;
-  border-radius: 20px;
+  pointer-events: none;
 }
-
-.score-dot {
-  width: 6px;
-  height: 6px;
-  background: #c084fc;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #c084fc;
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-.hero-rating {
+.dash-legend-item {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #facc15;
+}
+.dash-legend-item span {
+  font-size: 10px;
+  color: #888;
+}
+.dash-legend-dot.big {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+}
+.dash-legend-dot.small {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
 }
 
-/* 2-5위 리스트 디자인 */
-.rank-sub-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.rank-sub-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+/* 툴팁 */
+.dash-bubble-tooltip {
+  position: absolute;
+  z-index: 100;
+  background: #fff;
   border-radius: 12px;
-  background: #f8fafc;
-  transition: all 0.2s ease;
-  cursor: pointer;
+  padding: 12px 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  border: 1px solid #e5e7eb;
+  pointer-events: none;
+  animation: fadeIn 0.15s ease;
 }
-
-.rank-sub-item:hover {
-  background: #faf5ff;
-  transform: translateX(4px);
-}
-
-.sub-rank-number {
-  font-size: 15px;
-  font-weight: 800;
-  color: #6b7280;
-  width: 24px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.rank-sub-item:nth-child(1) .sub-rank-number {
-  color: #9ca3af;
-}
-
-.rank-sub-item:nth-child(2) .sub-rank-number {
-  color: #d97706;
-}
-
-.sub-image {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: #e5e7eb;
-}
-
-.sub-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.sub-brand {
-  font-size: 11px;
-  color: #9ca3af;
-  display: block;
-  margin-bottom: 1px;
-}
-
-.sub-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sub-meta {
+.dash-tooltip-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  margin-bottom: 4px;
 }
-
-.sub-rating {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.sub-reviews {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-.sub-score {
-  flex-shrink: 0;
-}
-
-.sub-score-value {
-  font-size: 13px;
+.dash-tooltip-name {
   font-weight: 700;
+  font-size: 13px;
+  color: #111;
+}
+.dash-tooltip-rank {
+  font-size: 11px;
   color: #7c3aed;
-  background: #f3e8ff;
-  padding: 3px 8px;
-  border-radius: 12px;
+  font-weight: 700;
 }
-
-.sub-arrow {
-  color: #d1d5db;
-  flex-shrink: 0;
-  transition: color 0.15s, transform 0.15s;
+.dash-tooltip-brand {
+  font-size: 11px;
+  color: #888;
 }
-
-.rank-sub-item:hover .sub-arrow {
+.dash-tooltip-metrics {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.dash-metric-label {
+  font-size: 9px;
+  color: #aaa;
+}
+.dash-metric-value {
+  font-weight: 700;
+  font-size: 13px;
+  color: #333;
+}
+.dash-metric-value.purple {
   color: #7c3aed;
-  transform: translateX(2px);
 }
 
-@media (min-width: 1280px) {
-  .sub-rank-number {
-    font-size: 16px;
-  }
-
-  .sub-brand {
-    font-size: 12px;
-  }
-
-  .sub-name {
-    font-size: 15px;
-  }
-
-  .sub-rating {
-    font-size: 13px;
-  }
-
-  .sub-reviews {
-    font-size: 12px;
-  }
-
-  .sub-score-value {
-    font-size: 14px;
-  }
-
-  .sub-image {
-    width: 56px;
-    height: 56px;
-  }
-}
-
-/* 히어로 스켈레톤 */
-.hero-skeleton {
-  height: 200px;
-  border-radius: 16px;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* 글래스 배너 모바일 대응 */
@@ -2671,37 +2748,10 @@ onUnmounted(() => {
   }
 }
 
-/* 모바일 대응 */
+/* 버블 차트 모바일 대응 */
 @media (max-width: 640px) {
-  .rank-hero-card {
-    height: 180px;
-  }
-
-  .hero-name {
-    font-size: 1rem;
-  }
-
-  .rank-sub-item {
-    padding: 8px 10px;
-    gap: 10px;
-  }
-
-  .sub-image {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-  }
-
-  .sub-name {
-    font-size: 12px;
-  }
-
-  .sub-score {
-    display: none;
-  }
-
-  .sub-arrow {
-    display: none;
+  .dash-bubble-area {
+    min-height: 260px;
   }
 }
 
@@ -3077,84 +3127,6 @@ onUnmounted(() => {
   /* 배틀 그리드 컴팩트 */
   .battle-grid {
     gap: 0.5rem;
-  }
-
-  /* 제품 랭킹 컴팩트 */
-
-  .product-rank-container {
-    gap: 0.5rem;
-  }
-
-  .rank-hero-card {
-    height: 150px;
-    border-radius: 14px;
-  }
-
-  .hero-badge {
-    top: 0.75rem;
-    left: 0.75rem;
-    font-size: 11px;
-    padding: 3px 8px;
-  }
-
-  .hero-overlay {
-    padding: 0.875rem;
-  }
-
-  .hero-brand {
-    font-size: 10px;
-  }
-
-  .hero-name {
-    font-size: 0.875rem;
-    margin: 1px 0 5px;
-  }
-
-  .trend-score {
-    font-size: 11px;
-    padding: 3px 8px;
-  }
-
-  .hero-rating {
-    font-size: 11px;
-  }
-
-  .rank-sub-list {
-    gap: 0.375rem;
-  }
-
-  .rank-sub-item {
-    padding: 6px 8px;
-    gap: 8px;
-    border-radius: 10px;
-  }
-
-  .sub-rank-number {
-    font-size: 13px;
-    width: 20px;
-  }
-
-  .sub-image {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-  }
-
-  .sub-brand {
-    font-size: 9px;
-  }
-
-  .sub-name {
-    font-size: 11px;
-    margin-bottom: 2px;
-  }
-
-  .sub-rating {
-    font-size: 10px;
-  }
-
-  .sub-reviews {
-    font-size: 9px;
   }
 
   /* 빈 상태 컴팩트 */
