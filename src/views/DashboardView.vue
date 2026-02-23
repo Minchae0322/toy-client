@@ -2331,6 +2331,7 @@ onUnmounted(() => {
 /* 바디 */
 .battle-hot-body {
   padding: 14px 18px 20px;
+  overflow: hidden;
 }
 .battle-hot-category-row {
   display: flex;
@@ -2400,6 +2401,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-width: 0;
+  gap: 8px;
 }
 .rank-left {
   display: flex;
