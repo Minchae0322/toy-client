@@ -1841,32 +1841,6 @@ onUnmounted(() => {
   z-index: 3;
 }
 
-/* 순위 뱃지 */
-.rank-badge {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: white;
-  background: #999;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-.rank-badge.rank-1 {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-
-.rank-badge.rank-2 {
-  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-}
-
-.rank-badge.rank-3 {
-  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-}
 
 /* 급상승 뱃지 */
 .trend-badge {
@@ -2413,6 +2387,7 @@ onUnmounted(() => {
 }
 .rank-badge {
   width: 22px;
+  min-width: 22px;
   height: 22px;
   border-radius: 7px;
   display: inline-flex;
@@ -2421,6 +2396,7 @@ onUnmounted(() => {
   font-size: 11px;
   font-weight: 800;
   flex-shrink: 0;
+  position: relative;
 }
 .rank-badge.r1 {
   background: linear-gradient(135deg, #fde68a, #fbbf24);
@@ -2440,6 +2416,7 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   flex: 1;
   min-width: 0;
+  margin-left: 4px;
 }
 .rank-item.r1-item .rank-name {
   color: #3d4270;

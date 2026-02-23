@@ -23,7 +23,9 @@
       "Bash(git -C /Users/minchae/sources/toy-client log --oneline -5)",
       "Bash(git -C /Users/minchae/sources/toy-client diff --name-only)",
       "Bash(git -C /Users/minchae/sources/toy-client status -u)",
-      "Bash(git -C /Users/minchae/sources/toy-client diff --staged -- src/composables/useCarrier.js src/views/carrier/CarrierView.vue --stat)"
+      "Bash(git -C /Users/minchae/sources/toy-client diff --staged -- src/composables/useCarrier.js src/views/carrier/CarrierView.vue --stat)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: SEO 최적화 및 버블 클릭 네비게이션 수정\n\n- index.html: meta description, OG 태그, canonical URL, noscript 크롤러용 콘텐츠 추가\n- robots.txt: 네이버봇\\(Yeti\\) 전용 규칙, 인증 페이지 Disallow 추가\n- sitemap.xml: 공개 라우트 확장 \\(8개\\), lastmod 날짜 추가\n- router: 각 라우트별 description 추가, afterEach에서 동적 메타태그 업데이트\n- ProductRankingView: 버블 클릭 시 제품 디테일 페이지로 이동하도록 수정\n- deploy.sh: S3 배포 시 올바른 Content-Type 지정 스크립트 추가\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
