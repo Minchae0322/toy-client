@@ -490,7 +490,7 @@ function startDrag(e, product) {
   const clientX = e.touches ? e.touches[0].clientX : e.clientX
   const clientY = e.touches ? e.touches[0].clientY : e.clientY
   const thumb = product.thumbnailDto?.fileUrl || product.thumbnailDto?.filePath || null
-  dragging.value = { id: product.id, image: thumb, x: clientX, y: clientY }
+  dragging.value = { id: product.id, image: thumb, x: clientX, y: clientY, startX: clientX, startY: clientY }
 }
 
 function onGlobalMove(e) {
@@ -516,6 +516,19 @@ function onGlobalMove(e) {
 
 async function onGlobalUp() {
   if (!dragging.value) return
+  const dx = dragging.value.x - dragging.value.startX
+  const dy = dragging.value.y - dragging.value.startY
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  // 드래그 거리가 짧으면 클릭으로 간주 → 디테일 이동
+  if (dist < 5 && !isOverBag.value && !isOverPanel.value) {
+    const product = products.value.find(p => p.id === dragging.value.id)
+    dragging.value = null
+    isOverBag.value = false
+    isOverPanel.value = false
+    isDraggingFlag = false
+    if (product) goToDetail(product)
+    return
+  }
   if (isOverBag.value || isOverPanel.value) {
     const product = products.value.find(p => p.id === dragging.value.id)
     if (product && !isBagged(product.id)) {

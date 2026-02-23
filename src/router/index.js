@@ -54,7 +54,7 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { requiresAuth: false, public: true, title: '홈' }
+    meta: { requiresAuth: false, public: true, title: '홈', description: '요거뜨 대시보드 - 실시간 인기 제품 랭킹, 최신 피드, 배틀 소식을 한눈에 확인하세요.' }
   },
 
   // ==================== 상품 관련 라우트 ====================
@@ -62,7 +62,7 @@ const routes = [
     path: '/products',
     name: 'ProductRanking',
     component: ProductRankingView,
-    meta: { requiresAuth: false, public: true, title: 'HOT 100' }
+    meta: { requiresAuth: false, public: true, title: 'HOT 100', description: 'HOT 100 제품 랭킹 - 가장 인기 있는 제품을 버블 차트로 확인하고 캐리어에 담아보세요.' }
   },
   {
     path: '/products/:id/review/write',
@@ -81,7 +81,7 @@ const routes = [
     name: 'ProductDetail',
     component: ProductDetailView,
     props: true,
-    meta: { requiresAuth: false, public: true, title: '상품 상세' }
+    meta: { requiresAuth: false, public: true, title: '상품 상세', description: '제품 상세 정보, 리뷰, 평점을 확인하세요.' }
   },
   {
     path: '/my-products',
@@ -95,14 +95,14 @@ const routes = [
     path: '/one-mouth',
     name: 'OneMouthList',
     component: OneMouthListView,
-    meta: { requiresAuth: false, public: true, title: '한입만 거래' }
+    meta: { requiresAuth: false, public: true, title: '한입만 거래', description: '한입만 거래 - 소량 나눔과 거래를 통해 다양한 제품을 경험해보세요.' }
   },
   {
     path: '/one-mouth/:id',
     name: 'OneMouthDetail',
     component: OneMouthDetailView,
     props: true,
-    meta: { requiresAuth: false, public: true, title: '게시글 상세' }
+    meta: { requiresAuth: false, public: true, title: '게시글 상세', description: '한입만 거래 게시글 상세 정보를 확인하세요.' }
   },
 
   // ==================== 피드(인증) 관련 라우트 ====================
@@ -110,7 +110,7 @@ const routes = [
     path: '/feed',
     name: 'FeedHome',
     component: FeedHomeView,
-    meta: { requiresAuth: false, public: true, title: '피드' }
+    meta: { requiresAuth: false, public: true, title: '피드', description: '요거뜨 피드 - 사용자들의 제품 인증과 리뷰를 실시간으로 확인하세요.' }
   },
   {
     path: '/feed/create',
@@ -123,14 +123,14 @@ const routes = [
     name: 'FeedDetail',
     component: FeedDetailView,
     props: true,
-    meta: { requiresAuth: false, public: true, title: '인증 상세' }
+    meta: { requiresAuth: false, public: true, title: '인증 상세', description: '제품 인증 피드 상세 내용을 확인하세요.' }
   },
   {
     path: '/user/:userId/feeds',
     name: 'UserFeedList',
     component: UserFeedListView,
     props: true,
-    meta: { requiresAuth: false, public: true, title: '사용자 피드' }
+    meta: { requiresAuth: false, public: true, title: '사용자 피드', description: '사용자의 피드 목록을 확인하세요.' }
   },
   {
     path: '/user/:userId/follows',
@@ -160,7 +160,7 @@ const routes = [
     name: 'UserProfile',
     component: MyPageView,
     props: true,
-    meta: { requiresAuth: false, public: true, title: '프로필' }
+    meta: { requiresAuth: false, public: true, title: '프로필', description: '사용자 프로필과 활동 내역을 확인하세요.' }
   },
 
   // ==================== 배틀 관련 라우트 ====================
@@ -168,7 +168,7 @@ const routes = [
     path: '/battle',
     name: 'BattleList',
     component: BattleListView,
-    meta: { requiresAuth: false, public: true, title: '월간 배틀' }
+    meta: { requiresAuth: false, public: true, title: '월간 배틀', description: '월간 배틀 - 제품 대결에 투표하고 결과를 확인하세요.' }
   },
   {
     path: '/battles/create',
@@ -181,7 +181,7 @@ const routes = [
     name: 'BattleDetail',
     component: BattleDetailView,
     props: true,
-    meta: { requiresAuth: false, public: true, title: '배틀 상세' }
+    meta: { requiresAuth: false, public: true, title: '배틀 상세', description: '배틀 상세 정보와 투표 현황을 확인하세요.' }
   },
 
   // ==================== ⭐ 관리자 페이지 라우트 ====================
@@ -406,12 +406,50 @@ router.beforeEach(async (to, from, next) => {
   }
 })
 
+function updateMetaTag(attr, key, content) {
+  let el = document.querySelector(`meta[${attr}="${key}"]`)
+  if (content) {
+    if (!el) {
+      el = document.createElement('meta')
+      el.setAttribute(attr, key)
+      document.head.appendChild(el)
+    }
+    el.setAttribute('content', content)
+  } else if (el) {
+    el.remove()
+  }
+}
+
 router.afterEach((to) => {
-  let title = '요거뜨'
+  const siteName = '요거뜨'
+  const defaultDesc = '요거뜨 - 인기 제품 랭킹, 리뷰, 피드를 한눈에. 좋아하는 제품을 발견하고 공유하세요.'
+  const baseUrl = 'https://yogurtte.com'
+
+  // 타이틀
+  let title = siteName
   if (to.meta.title) {
-    title = `${to.meta.title} | 요거뜨`
+    title = `${to.meta.title} | ${siteName}`
   }
   document.title = title
+
+  // description
+  const desc = to.meta.description || defaultDesc
+  updateMetaTag('name', 'description', desc)
+
+  // OG 태그
+  updateMetaTag('property', 'og:title', title)
+  updateMetaTag('property', 'og:description', desc)
+  updateMetaTag('property', 'og:url', baseUrl + to.fullPath)
+
+  // canonical URL
+  let canonical = document.querySelector('link[rel="canonical"]')
+  if (!canonical) {
+    canonical = document.createElement('link')
+    canonical.setAttribute('rel', 'canonical')
+    document.head.appendChild(canonical)
+  }
+  canonical.setAttribute('href', baseUrl + to.fullPath)
+
   console.log(`✅ [Router] 라우트 이동 완료: ${to.path}`)
 })
 

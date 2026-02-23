@@ -1,4 +1,17 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /chat
+Disallow: /mypage
+Disallow: /carrier
+Disallow: /oauth
+Disallow: /my-products
+
+User-agent: Yeti
+Allow: /
+Crawl-delay: 1
+
+User-agent: Googlebot
+Allow: /
 
 Sitemap: https://yogurtte.com/sitemap.xml

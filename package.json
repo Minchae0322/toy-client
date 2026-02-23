@@ -10,7 +10,8 @@
     "build:dev": "vite build --mode development",
     "build:prod": "vite build --mode production",
     "preview": "vite preview",
-    "preview:dev": "vite preview --mode development"
+    "preview:dev": "vite preview --mode development",
+    "deploy": "bash deploy.sh"
   },
   "dependencies": {
     "@stomp/stompjs": "^7.1.1",
