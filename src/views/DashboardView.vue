@@ -2407,21 +2407,20 @@ onUnmounted(() => {
 .rank-left {
   display: flex;
   align-items: center;
-  gap: 12px;
   min-width: 0;
   flex: 1;
-  overflow: hidden;
 }
 .rank-badge {
   width: 22px;
   height: 22px;
   border-radius: 7px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 800;
   flex-shrink: 0;
+  margin-right: 10px;
 }
 .rank-badge.r1 {
   background: linear-gradient(135deg, #fde68a, #fbbf24);
