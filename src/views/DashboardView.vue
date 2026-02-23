@@ -2409,6 +2409,7 @@ onUnmounted(() => {
   align-items: center;
   min-width: 0;
   flex: 1;
+  gap: 8px;
 }
 .rank-badge {
   width: 22px;
@@ -2420,7 +2421,6 @@ onUnmounted(() => {
   font-size: 11px;
   font-weight: 800;
   flex-shrink: 0;
-  margin-right: 10px;
 }
 .rank-badge.r1 {
   background: linear-gradient(135deg, #fde68a, #fbbf24);
