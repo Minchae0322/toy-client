@@ -2406,6 +2406,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 .rank-badge {
   width: 22px;
