@@ -2395,7 +2395,7 @@ onUnmounted(() => {
 }
 
 /* 순위 */
-.rank-item { margin-bottom: 8px; }
+.rank-item { margin-bottom: 14px; }
 .rank-row {
   display: flex;
   align-items: center;
