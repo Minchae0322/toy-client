@@ -1250,6 +1250,7 @@ function getBubbleStyle(i, pos) {
   const rs = getRankStyle(rk, sortedItems.value.length)
   const isSel = selected.value === sortedItems.value[i]?.id
   const isD = dragId.value === sortedItems.value[i]?.id
+  const imgUrl = sortedItems.value[i]?.imageUrl
   return {
     position: 'absolute',
     left: (pos.x - r) + 'px',
@@ -1257,7 +1258,7 @@ function getBubbleStyle(i, pos) {
     width: r * 2 + 'px',
     height: r * 2 + 'px',
     borderRadius: '50%',
-    background: rs.bg,
+    background: imgUrl ? `url(${imgUrl}) center/cover no-repeat` : rs.bg,
     border: `${isSel ? '2.5px' : '2px'} solid ${isSel ? '#7c3aed' : rs.border}`,
     boxShadow: isD ? '0 12px 40px rgba(124,58,237,.35)' : `0 4px 16px ${rs.glow}`,
     zIndex: isD ? 100 : isSel ? 50 : rk <= 3 ? 10 : 1,
@@ -1529,6 +1530,39 @@ function onDecoDown(e, uid) {
   decoDragActive = false
   const box = boxRef.value?.getBoundingClientRect()
   if (!box) return
+
+  // 핀치 줌: 두 손가락 감지
+  if (e.touches && e.touches.length >= 2) {
+    selDeco.value = uid
+    const deco = decos.value.find(d => d.uid === uid)
+    if (!deco) return
+    const initDist = Math.hypot(
+      e.touches[1].clientX - e.touches[0].clientX,
+      e.touches[1].clientY - e.touches[0].clientY
+    )
+    const initScale = deco.scale
+
+    const onPinchMove = (ev) => {
+      if (!ev.touches || ev.touches.length < 2) return
+      ev.preventDefault()
+      const dist = Math.hypot(
+        ev.touches[1].clientX - ev.touches[0].clientX,
+        ev.touches[1].clientY - ev.touches[0].clientY
+      )
+      const newScale = Math.max(DMIN, Math.min(DMAX, initScale * (dist / initDist)))
+      decos.value = decos.value.map(d => d.uid === uid ? { ...d, scale: newScale } : d)
+    }
+    const onPinchEnd = () => {
+      markDecoDirty(uid)
+      window.removeEventListener('touchmove', onPinchMove)
+      window.removeEventListener('touchend', onPinchEnd)
+    }
+    window.addEventListener('touchmove', onPinchMove, { passive: false })
+    window.addEventListener('touchend', onPinchEnd)
+    return
+  }
+
+  // 단일 터치/마우스: 드래그
   const clientX = e.touches ? e.touches[0].clientX : e.clientX
   const clientY = e.touches ? e.touches[0].clientY : e.clientY
   const cx = clientX - box.left, cy = clientY - box.top
@@ -1541,6 +1575,8 @@ function onDecoDown(e, uid) {
   const ox = dpx - cx, oy = dpy - cy
 
   const onMove = (ev) => {
+    // 도중에 두 번째 손가락이 추가되면 무시
+    if (ev.touches && ev.touches.length >= 2) return
     decoDragActive = true
     const mx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - box.left
     const my = (ev.touches ? ev.touches[0].clientY : ev.clientY) - box.top
