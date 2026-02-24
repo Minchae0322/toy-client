@@ -54,7 +54,7 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { requiresAuth: false, public: true, title: '홈', description: '요거뜨 대시보드 - 실시간 인기 제품 랭킹, 최신 피드, 배틀 소식을 한눈에 확인하세요.' }
+    meta: { requiresAuth: false, public: true, description: '요거뜨 - 인기 제품 랭킹, 리뷰, 피드를 한눈에. 좋아하는 제품을 발견하고 공유하세요.' }
   },
 
   // ==================== 상품 관련 라우트 ====================
