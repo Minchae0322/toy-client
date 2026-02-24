@@ -114,6 +114,7 @@ const handleRegister = async (formData) => {
 }
 
 const handleSocialLogin = (provider) => {
+  sessionStorage.setItem('oauth_provider', provider)
   const authBaseUrl = import.meta.env.VITE_AUTH_BASE_URL
   window.location.href = `${authBaseUrl}/oauth2/authorization/${provider}`
 }

@@ -1,29 +1,78 @@
 <template>
   <div class="callback-wrapper">
     <div class="callback-container">
+      <!-- 로딩: 어떤 서비스로 로그인 중인지 + 단계별 진행 -->
       <div v-if="loading" class="loading-state">
-        <div class="loading-spinner"></div>
-        <h2>OAuth 로그인 처리 중...</h2>
-        <p>잠시만 기다려주세요.</p>
+        <div class="provider-badge" :class="provider">
+          <img v-if="provider === 'google'" src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" class="provider-img" />
+          <svg v-else-if="provider === 'naver'" width="18" height="18" viewBox="0 0 20 20" fill="white"><path d="M13.5 10.5L6.3 0H0v20h6.5V9.5L13.7 20H20V0h-6.5z"/></svg>
+          <svg v-else-if="provider === 'github'" width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+          <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        </div>
+
+        <h2>{{ providerLabel }}로 로그인하고 있어요</h2>
+        <p class="loading-sub">안전하게 계정을 확인하는 중입니다</p>
+
+        <div class="steps">
+          <div v-for="(step, i) in steps" :key="i" class="step" :class="{ active: currentStep === i, done: currentStep > i }">
+            <div class="step-dot">
+              <svg v-if="currentStep > i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <div v-else-if="currentStep === i" class="dot-spinner"></div>
+              <span v-else class="dot-num">{{ i + 1 }}</span>
+            </div>
+            <span class="step-text">{{ step }}</span>
+          </div>
+        </div>
       </div>
 
+      <!-- 에러: 기술 용어 없이 사용자가 이해할 수 있는 안내 -->
       <div v-else-if="error" class="error-state">
-        <div class="error-icon">!</div>
-        <h2>로그인 실패</h2>
-        <p class="error-message">{{ errorMessage }}</p>
-        <button @click="goToLogin" class="retry-btn">다시 로그인</button>
+        <div class="error-badge">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
 
-        <!-- 개발용 디버그 정보 -->
+        <h2>로그인에 실패했어요</h2>
+        <p class="error-desc">{{ friendlyMessage }}</p>
+
+        <div class="help-box">
+          <p class="help-title">이렇게 해보세요</p>
+          <ul class="help-list">
+            <li v-for="(tip, i) in helpTips" :key="i">{{ tip }}</li>
+          </ul>
+        </div>
+
+        <div class="error-btns">
+          <button @click="retryLogin" class="btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            다시 시도
+          </button>
+          <button @click="goToLogin" class="btn-ghost">다른 방법으로 로그인</button>
+        </div>
+
         <details v-if="isDev && debugInfo" class="debug-details">
-          <summary>디버그 정보</summary>
+          <summary>개발자 정보</summary>
           <pre>{{ debugInfo }}</pre>
         </details>
       </div>
 
+      <!-- 성공: 누구로 로그인했는지 + 이동 안내 -->
       <div v-else class="success-state">
-        <div class="success-icon">OK</div>
-        <h2>로그인 성공!</h2>
-        <p>홈 페이지로 이동 중...</p>
+        <div class="success-badge">
+          <svg class="success-svg" width="48" height="48" viewBox="0 0 48 48">
+            <circle class="circle-draw" cx="24" cy="24" r="21" fill="none" stroke="#1DCD9F" stroke-width="2.5"/>
+            <polyline class="tick-draw" points="15 24 21 30 33 18" fill="none" stroke="#1DCD9F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>반갑습니다!</h2>
+        <p v-if="welcomeName" class="welcome-name">{{ welcomeName }}님, 로그인되었어요</p>
+        <div class="redirect-pill">
+          <span class="pulse-dot"></span>
+          {{ redirectLabel }}(으)로 이동하고 있어요
+        </div>
       </div>
     </div>
   </div>
@@ -42,9 +91,66 @@ const loading = ref(true)
 const error = ref(false)
 const errorMessage = ref('')
 const debugInfo = ref('')
+const currentStep = ref(0)
+const welcomeName = ref('')
+const redirectTarget = ref('/feed')
+const provider = ref('oauth')
 
-// 개발 환경 확인
 const isDev = computed(() => import.meta.env.DEV)
+
+const steps = ['서비스 연결 중', '계정 확인 중', '프로필 불러오는 중', '로그인 완료']
+
+// 어떤 소셜 서비스를 선택했는지 감지
+const detectProvider = () => {
+  const saved = sessionStorage.getItem('oauth_provider')
+  if (saved) return saved
+
+  const url = window.location.href.toLowerCase()
+  const ref = document.referrer.toLowerCase()
+  if (url.includes('google') || ref.includes('google')) return 'google'
+  if (url.includes('naver') || ref.includes('naver')) return 'naver'
+  if (url.includes('github') || ref.includes('github')) return 'github'
+  return 'oauth'
+}
+
+const providerLabel = computed(() => {
+  const map = { google: 'Google', naver: 'Naver', github: 'GitHub', oauth: '소셜 계정' }
+  return map[provider.value] || '소셜 계정'
+})
+
+const redirectLabel = computed(() => {
+  const map = { '/feed': '피드', '/dashboard': '홈', '/mypage': '마이페이지', '/products': '상품 목록', '/carrier': '캐리어' }
+  return map[redirectTarget.value] || '홈'
+})
+
+// 기술 용어를 사용자 언어로 변환
+const friendlyMessage = computed(() => {
+  const m = errorMessage.value
+  if (m.includes('Access Token') || m.includes('URL에 없습니다'))
+    return '로그인 정보를 받아오지 못했어요. 인터넷 연결을 확인해주세요.'
+  if (m.includes('JWT') || m.includes('디코딩'))
+    return '받은 로그인 정보에 문제가 있어요. 잠시 후 다시 시도해주세요.'
+  if (m.includes('인증 상태 저장 실패'))
+    return '로그인 정보를 저장하지 못했어요. 브라우저 설정을 확인해주세요.'
+  if (m.includes('인증 실패'))
+    return `${providerLabel.value} 계정 인증에 실패했어요. 계정 상태를 확인해주세요.`
+  return '로그인 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.'
+})
+
+const helpTips = computed(() => {
+  const m = errorMessage.value
+  if (m.includes('인증 상태 저장 실패'))
+    return [
+      '브라우저의 쿠키가 허용되어 있는지 확인해주세요',
+      '시크릿(프라이빗) 모드에서는 로그인이 제한될 수 있어요',
+      '브라우저 캐시를 지우고 다시 시도해보세요'
+    ]
+  return [
+    '인터넷 연결이 안정적인지 확인해주세요',
+    '잠시 후 다시 시도해주세요',
+    '문제가 반복되면 이메일로 로그인해주세요'
+  ]
+})
 
 const decodeJWTPayload = (token) => {
   try {
@@ -60,71 +166,59 @@ const decodeJWTPayload = (token) => {
   }
 }
 
-// 강제 상태 동기화 함수
 const forceStateSync = () => {
-  console.log('[OAuth] 강제 상태 동기화 실행')
-
-  // Storage 이벤트 강제 발생
   const token = authUtils.getAccessToken()
   const userInfo = authUtils.getUserInfo()
 
   if (token && userInfo) {
-    // 커스텀 이벤트로 모든 컴포넌트에 알림
     window.dispatchEvent(new CustomEvent('auth-state-changed', {
       detail: { user: userInfo, loggedIn: true }
     }))
-
-    // Storage 이벤트도 발생
     window.dispatchEvent(new StorageEvent('storage', {
-      key: 'access_token',
-      newValue: token,
-      storageArea: localStorage
+      key: 'access_token', newValue: token, storageArea: localStorage
     }))
-
     window.dispatchEvent(new StorageEvent('storage', {
-      key: 'user_info',
-      newValue: JSON.stringify(userInfo),
-      storageArea: localStorage
+      key: 'user_info', newValue: JSON.stringify(userInfo), storageArea: localStorage
     }))
-
-    console.log('[OAuth] 강제 상태 동기화 완료')
   }
 }
 
 const handleOAuthCallback = async () => {
   try {
-    console.log('[OAuth] OAuth2 콜백 처리 시작')
+    provider.value = detectProvider()
+
+    // Step 1: 서비스 연결
+    currentStep.value = 0
 
     const urlParams = new URLSearchParams(window.location.search)
     const accessToken = urlParams.get('token')
     const refreshToken = urlParams.get('refreshToken')
     const errorParam = urlParams.get('error')
 
-    // URL 파라미터 디버깅
-    console.log('[OAuth] URL 파라미터:', {
-      accessToken: !!accessToken,
-      refreshToken: !!refreshToken,
-      error: errorParam,
-      fullURL: window.location.href
-    })
-
     if (errorParam) {
       throw new Error(`OAuth 인증 실패: ${errorParam}`)
     }
-
     if (!accessToken) {
       throw new Error('Access Token이 URL에 없습니다.')
     }
 
-    // JWT 페이로드 디코딩
+    // Step 2: 계정 확인
+    await new Promise(r => setTimeout(r, 400))
+    currentStep.value = 1
+
     const payload = decodeJWTPayload(accessToken)
     if (!payload) {
       throw new Error('JWT 디코딩 실패')
     }
 
-    console.log('[OAuth] JWT 페이로드:', payload)
+    if (payload.provider) {
+      provider.value = payload.provider.toLowerCase()
+    }
 
-    // 사용자 정보 구성
+    // Step 3: 프로필 불러오기
+    await new Promise(r => setTimeout(r, 400))
+    currentStep.value = 2
+
     const userInfo = {
       id: payload.userId || payload.sub,
       username: payload.username || payload.sub,
@@ -135,33 +229,16 @@ const handleOAuthCallback = async () => {
       profileImage: payload.picture || payload.avatar_url || null,
     }
 
-    console.log('[OAuth] 사용자 정보 구성:', userInfo)
+    welcomeName.value = userInfo.nickname || userInfo.username
 
-    // RefreshToken 처리 (AccessToken을 RefreshToken으로도 사용)
     const finalRefreshToken = refreshToken || accessToken
+    const tokens = { accessToken, refreshToken: finalRefreshToken }
 
-    const tokens = {
-      accessToken: accessToken,
-      refreshToken: finalRefreshToken
-    }
-
-    console.log('[OAuth] 토큰 저장 시작:', {
-      hasAccessToken: !!tokens.accessToken,
-      hasRefreshToken: !!tokens.refreshToken,
-      tokensEqual: tokens.accessToken === tokens.refreshToken
-    })
-
-    // useAuth를 통한 로그인 처리
     const loginResult = await login(tokens, userInfo)
-    console.log('[OAuth] useAuth.login 결과:', loginResult)
+    console.log('[OAuth] login 결과:', loginResult)
 
-    // 추가 상태 동기화 (모든 컴포넌트 강제 업데이트)
-    setTimeout(() => {
-      forceStateSync()
-    }, 100)
-
-    // 저장 상태 최종 검증
-    await new Promise(resolve => setTimeout(resolve, 200))
+    setTimeout(() => forceStateSync(), 100)
+    await new Promise(r => setTimeout(r, 200))
 
     const finalCheck = {
       savedAccessToken: !!authUtils.getAccessToken(),
@@ -170,53 +247,57 @@ const handleOAuthCallback = async () => {
       isAuthenticated: authUtils.isAuthenticated()
     }
 
-    console.log('[OAuth] 최종 저장 상태:', finalCheck)
-
     if (!finalCheck.isAuthenticated) {
       throw new Error('인증 상태 저장 실패')
     }
 
-    // 리다이렉트 경로 결정
+    // Step 4: 완료
+    currentStep.value = 3
+
     const redirectPath = sessionStorage.getItem('oauth_redirect') || '/feed'
     sessionStorage.removeItem('oauth_redirect')
+    sessionStorage.removeItem('oauth_provider')
+    redirectTarget.value = redirectPath
 
-    console.log('[OAuth] 리다이렉트 준비:', redirectPath)
+    // 성공 화면 표시 후 이동
+    loading.value = false
+    await new Promise(r => setTimeout(r, 1200))
 
-    // 상태 안정화를 위한 추가 딜레이
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    // 홈으로 이동
     try {
-      console.log('[OAuth] 홈 페이지로 이동 시작...')
       await router.push(redirectPath)
-      console.log('[OAuth] 홈 페이지 이동 완료!')
     } catch (routerError) {
-      console.warn('[OAuth] 라우터 실패, 강제 이동:', routerError)
       window.location.href = redirectPath
     }
 
   } catch (err) {
     console.error('[OAuth] 콜백 처리 실패:', err)
-
     error.value = true
     errorMessage.value = err.message
     debugInfo.value = {
       error: err.message,
       stack: err.stack,
       url: window.location.href,
+      provider: provider.value,
       tokens: {
         hasAccessToken: !!authUtils.getAccessToken(),
         hasRefreshToken: !!authUtils.getRefreshToken(),
         hasUserInfo: !!authUtils.getUserInfo()
       }
     }
-  } finally {
     loading.value = false
   }
 }
 
+const retryLogin = () => {
+  const authBaseUrl = import.meta.env.VITE_AUTH_BASE_URL
+  if (provider.value && provider.value !== 'oauth') {
+    window.location.href = `${authBaseUrl}/oauth2/authorization/${provider.value}`
+  } else {
+    goToLogin()
+  }
+}
+
 const goToLogin = () => {
-  // 실패한 인증 정보 정리
   authUtils.clearAllAuthData()
   router.push({ name: 'Login' })
 }
@@ -230,100 +311,306 @@ onMounted(handleOAuthCallback)
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #ffffff;
+  background-color: #fafafa;
+  padding: 20px;
 }
 
 .callback-container {
-  max-width: 400px;
-  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  padding: 48px 36px;
   text-align: center;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  animation: fadeUp 0.35s ease-out;
 }
 
-.loading-state h2,
-.error-state h2,
-.success-state h2 {
-  margin: 16px 0 8px;
-  font-size: 20px;
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== 제공자 배지 ===== */
+.provider-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  background: #71717a;
+}
+.provider-badge.google { background: #fff; border: 1px solid #e4e4e7; }
+.provider-badge.naver { background: #03C75A; }
+.provider-badge.github { background: #24292e; }
+.provider-img { width: 28px; height: 28px; }
+
+/* ===== 로딩 ===== */
+.loading-state h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
   font-weight: 600;
+  color: #18181b;
 }
 
-.loading-state p,
-.error-state p,
-.success-state p {
-  margin: 0 0 16px;
-  color: #666;
+.loading-sub {
+  margin: 0 0 28px;
+  font-size: 13px;
+  color: #a1a1aa;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #1DCD9F;
+.steps {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  transition: background 0.25s;
+}
+.step.active { background: #f4f4f5; }
+
+.step-dot {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #f4f4f5;
+  transition: all 0.25s;
+}
+.step.active .step-dot { background: #18181b; }
+.step.done .step-dot { background: #ecfdf5; }
+
+.dot-num { font-size: 11px; font-weight: 600; color: #a1a1aa; }
+
+.dot-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+.step-text {
+  font-size: 14px;
+  color: #a1a1aa;
+  transition: color 0.25s;
+}
+.step.active .step-text { color: #18181b; font-weight: 500; }
+.step.done .step-text { color: #1DCD9F; }
+.step.done .step-dot svg { color: #1DCD9F; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 에러 ===== */
+.error-state { animation: fadeUp 0.35s ease-out; }
+
+.error-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #fef2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0 auto 16px;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.error-state h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #18181b;
 }
 
-.error-icon,
-.success-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+.error-desc {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: #71717a;
+  line-height: 1.6;
 }
 
-.error-icon {
-  color: #dc2626;
+.help-box {
+  background: #fafafa;
+  border: 1px solid #f4f4f5;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  text-align: left;
 }
 
-.success-icon {
-  color: #1DCD9F;
+.help-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3f3f46;
 }
 
-.error-message {
-  color: #dc2626;
-  font-weight: 500;
+.help-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.help-list li {
+  position: relative;
+  padding-left: 14px;
+  margin-bottom: 5px;
+  font-size: 13px;
+  color: #71717a;
+  line-height: 1.5;
+}
+.help-list li:last-child { margin-bottom: 0; }
+.help-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #d4d4d8;
 }
 
-.retry-btn {
-  padding: 10px 20px;
-  background-color: #1DCD9F;
+.error-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  background: #18181b;
   color: white;
   border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 500;
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn-primary:hover { background: #3f3f46; }
+
+.btn-ghost {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  color: #71717a;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-ghost:hover { background: #fafafa; color: #18181b; }
+
+/* ===== 성공 ===== */
+.success-state { animation: fadeUp 0.35s ease-out; }
+
+.success-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
 }
 
-.retry-btn:hover {
-  background-color: #169976;
+.circle-draw {
+  stroke-dasharray: 132;
+  stroke-dashoffset: 132;
+  animation: draw .5s ease forwards;
+}
+.tick-draw {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: draw .3s .35s ease forwards;
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+.success-state h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #18181b;
 }
 
+.welcome-name {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: #71717a;
+}
+
+.redirect-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: #f4f4f5;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #71717a;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1DCD9F;
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
+/* ===== 디버그 (dev only) ===== */
 .debug-details {
   margin-top: 20px;
   text-align: left;
-  background-color: #f8f9fa;
+  background: #fafafa;
   padding: 12px;
-  border-radius: 6px;
-  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
 }
-
 .debug-details summary {
   cursor: pointer;
+  font-size: 12px;
   font-weight: 500;
+  color: #a1a1aa;
   margin-bottom: 8px;
 }
-
 .debug-details pre {
   font-size: 11px;
-  color: #495057;
+  color: #71717a;
   margin: 0;
   overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ===== 모바일 ===== */
+@media (max-width: 480px) {
+  .callback-wrapper { background: white; padding: 0; align-items: flex-start; padding-top: 60px; }
+  .callback-container { border: none; box-shadow: none; border-radius: 0; padding: 32px 24px; }
 }
 </style>
