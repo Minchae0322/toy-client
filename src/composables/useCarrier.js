@@ -175,6 +175,26 @@ export function useCarrier() {
     }
   }
 
+  const bulkDeleteStickers = async (carrierId, stickerIds) => {
+    try {
+      const response = await carrierService.bulkDeleteStickers(carrierId, stickerIds)
+      if (response.success) {
+        if (currentCarrier.value?.id === carrierId) {
+          const deletedSet = new Set(stickerIds)
+          currentCarrier.value = {
+            ...currentCarrier.value,
+            stickers: currentCarrier.value.stickers.filter(s => !deletedSet.has(s.id))
+          }
+        }
+        return true
+      }
+      throw new Error(response.error || '스티커 일괄 삭제에 실패했습니다.')
+    } catch (err) {
+      handleError(err, '스티커 일괄 삭제')
+      return false
+    }
+  }
+
   const updatePositions = async (carrierId, items, stickers) => {
     try {
       const promises = []
@@ -211,6 +231,7 @@ export function useCarrier() {
     addSticker,
     updateSticker,
     removeSticker,
+    bulkDeleteStickers,
     updatePositions,
     clearError,
     reset
