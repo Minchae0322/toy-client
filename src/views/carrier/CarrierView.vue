@@ -171,21 +171,33 @@
                   </div>
                 </div>
                 <div class="sticker-pack-tabs">
+                  <div class="pack-tabs-left">
+                    <button
+                      v-for="[key, label] in PACK_LABELS"
+                      :key="key"
+                      class="pack-tab"
+                      :class="{ active: stickerPack === key }"
+                      @click="stickerPack = key; decoPage = 0"
+                    >{{ label }}</button>
+                  </div>
                   <button
-                    v-for="[key, label] in PACK_LABELS"
-                    :key="key"
-                    class="pack-tab"
-                    :class="{ active: stickerPack === key }"
-                    @click="stickerPack = key; decoPage = 0"
-                  >{{ label }}</button>
+                    class="pack-tab pack-tab-special"
+                    :class="{ active: stickerPack === SPECIAL_PACK[0] }"
+                    @click="stickerPack = SPECIAL_PACK[0]; decoPage = 0"
+                  >{{ SPECIAL_PACK[1] }}</button>
                 </div>
                 <div class="deco-grid-viewport">
                   <div class="deco-track" :style="{ transform: `translateX(-${decoPage * (100 / decoPages.length)}%)`, width: decoPages.length * 100 + '%' }">
                     <div v-for="(pg, pi) in decoPages" :key="pi" class="deco-page" :style="{ width: (100 / decoPages.length) + '%' }">
                       <div v-for="d in pg" :key="d.id"
-                        class="deco-item" :class="{ 'deco-empty': d.empty }"
+                        class="deco-item"
+                        :class="{ 'deco-empty': d.empty, 'deco-special': d.type === 'phototag', 'deco-active': d.type === 'phototag' && hasPhototag }"
                         @click="!d.empty && placeDeco(d)">
-                        {{ d.emoji }}
+                        <template v-if="d.type === 'phototag'">
+                          <span class="special-icon">📷</span>
+                          <span class="special-label">{{ d.label }}</span>
+                        </template>
+                        <template v-else>{{ d.emoji }}</template>
                       </div>
                     </div>
                   </div>
@@ -295,6 +307,31 @@
                             </g>
                           </template>
                         </template>
+                        <!-- 포토택 (고정 위치) -->
+                        <g v-if="hasPhototag" transform="rotate(-4,126,53)" class="phototag-fixed"
+                           @mouseenter="onPhototagHover($event, true)"
+                           @mouseleave="onPhototagHover($event, false)">
+                          <line x1="126" y1="53" x2="126" y2="78" :stroke="currentSkin.body.stroke" stroke-width="1.5" opacity=".4" stroke-linecap="round"/>
+                          <rect x="97" y="78" width="58" height="76" rx="4" fill="#fff" fill-opacity=".92" :stroke="currentSkin.body.stroke" stroke-width="1.2" opacity=".6"/>
+                          <circle cx="126" cy="86" r="3" fill="none" :stroke="currentSkin.body.stroke" stroke-width=".8" opacity=".3"/>
+                          <line x1="98" y1="96" x2="154" y2="96" :stroke="currentSkin.body.stroke" stroke-width=".5" opacity=".15"/>
+                          <template v-if="nameTagImg">
+                            <defs><clipPath id="ntC"><rect x="97.6" y="96.5" width="56.8" height="57.4" rx="3"/></clipPath></defs>
+                            <image :href="nameTagImg" x="97.6" y="96.5" width="56.8" height="57.4" preserveAspectRatio="xMidYMid slice" clip-path="url(#ntC)"/>
+                          </template>
+                          <text v-else-if="phototagUploading" text-anchor="middle" font-size="10" :fill="currentSkin.body.stroke" opacity=".6">
+                            <tspan x="126" y="125">업로드 중...</tspan>
+                          </text>
+                          <text v-else text-anchor="middle" font-size="11" font-weight="800" :fill="currentSkin.body.stroke" opacity=".5" font-family="monospace" letter-spacing="1">
+                            <tspan x="126" y="120">PHOTO</tspan>
+                            <tspan x="126" dy="14">TAG</tspan>
+                          </text>
+                          <rect x="98" y="97" width="56" height="56" rx="3" fill="transparent" style="cursor: pointer" @click.stop="!phototagUploading && nameTagInputRef?.click()"/>
+                          <g v-if="nameTagImg && !phototagUploading" class="nt-del" @click.stop="clearPhototagImage()" style="cursor: pointer">
+                            <circle cx="154" cy="98" r="7" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
+                            <text x="154" y="101.5" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">✕</text>
+                          </g>
+                        </g>
                         <!-- 바퀴 -->
                         <rect x="62" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
                         <circle cx="70" cy="382" r="10" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="2"/>
@@ -403,10 +440,10 @@
                   </div>
                 </template>
 
-                <!-- 배치 중인 스티커 오버레이 -->
+                <!-- 배치 중인 스티커 오버레이 (포토택 제외 - 고정 위치) -->
                 <template v-if="!isOpen">
                   <div
-                    v-for="d in decos"
+                    v-for="d in emojiDecos"
                     :key="d.uid"
                     class="deco-overlay"
                     :style="getDecoOverlayStyle(d)"
@@ -607,7 +644,23 @@
                         </g>
                       </template>
                       <!-- 사용자 배치 스티커 -->
-                      <template v-for="d in decos" :key="'share-deco-' + d.uid">
+                      <!-- 포토택 (고정 위치) -->
+                      <g v-if="hasPhototag" transform="rotate(-4,126,53)">
+                        <line x1="126" y1="53" x2="126" y2="78" :stroke="currentSkin.body.stroke" stroke-width="1.5" opacity=".4" stroke-linecap="round"/>
+                        <rect x="97" y="78" width="58" height="76" rx="4" fill="#fff" fill-opacity=".92" :stroke="currentSkin.body.stroke" stroke-width="1.2" opacity=".6"/>
+                        <circle cx="126" cy="86" r="3" fill="none" :stroke="currentSkin.body.stroke" stroke-width=".8" opacity=".3"/>
+                        <line x1="98" y1="96" x2="154" y2="96" :stroke="currentSkin.body.stroke" stroke-width=".5" opacity=".15"/>
+                        <template v-if="nameTagImg">
+                          <defs><clipPath id="ntC2"><rect x="97.6" y="96.5" width="56.8" height="57.4" rx="3"/></clipPath></defs>
+                          <image :href="nameTagImg" x="97.6" y="96.5" width="56.8" height="57.4" preserveAspectRatio="xMidYMid slice" clip-path="url(#ntC2)"/>
+                        </template>
+                        <text v-else text-anchor="middle" font-size="11" font-weight="800" :fill="currentSkin.body.stroke" opacity=".5" font-family="monospace" letter-spacing="1">
+                          <tspan x="126" y="120">PHOTO</tspan>
+                          <tspan x="126" dy="14">TAG</tspan>
+                        </text>
+                      </g>
+                      <!-- 이모지 스티커 -->
+                      <template v-for="d in emojiDecos" :key="'share-deco-' + d.uid">
                         <text
                           :x="30 + (d.x / 100) * 240"
                           :y="50 + (d.y / 100) * 320"
@@ -673,6 +726,8 @@
             </div>
           </div>
         </Teleport>
+        <!-- 네임택 사진 업로드용 hidden input -->
+        <input ref="nameTagInputRef" type="file" accept="image/*" style="display: none" @change="onNameTagImgChange"/>
   </div>
 </template>
 
@@ -681,6 +736,7 @@ import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCarrier } from '@/composables/useCarrier.js'
 import { CARRIER_TYPE } from '@/services/CarrierService.js'
+import { fileService } from '@/services/FileService.js'
 
 const router = useRouter()
 
@@ -733,9 +789,13 @@ const STICKER_PACKS = {
     { id: 'w9', emoji: '🌠' }, { id: 'w10', emoji: '🌂' }, { id: 'w11', emoji: '☂️' }, { id: 'w12', emoji: '☔' },
     { id: 'w13', emoji: '🌀' }, { id: 'w14', emoji: '⭐' }, { id: 'w15', emoji: '🌟' }, { id: 'w16', emoji: '☀️' },
     { id: 'w17', emoji: '🔥' }, { id: 'w18', emoji: '❄️' }, { id: 'w19', emoji: '☃️' }, { id: 'w20', emoji: '⛄' }
+  ],
+  special: [
+    { id: 'sp-phototag', emoji: '📷', type: 'phototag', label: '포토택' }
   ]
 }
 const PACK_LABELS = [['basic', '기본'], ['travel', '여행'], ['food', '푸드'], ['weather', '날씨']]
+const SPECIAL_PACK = ['special', '스페셜']
 
 const CVB = { x1: 30, y1: 50, x2: 270, y2: 370, vw: 300, vh: 400 }
 
@@ -784,6 +844,10 @@ const dragId = ref(null)
 const dirtyDecos = ref(new Set())  // 변경된 스티커 uid 추적
 const dirtyBubbles = ref(false)    // 버블 위치 변경 추적
 const saving = ref(false)
+
+const nameTagImg = ref(null)
+const nameTagInputRef = ref(null)
+const phototagUploading = ref(false)
 
 const hasUnsavedChanges = computed(() => dirtyDecos.value.size > 0 || dirtyBubbles.value)
 const dims = reactive({ w: 0, h: 0 })
@@ -855,6 +919,8 @@ const activeMyIdx = computed(() => activeSkin.value.startsWith('my-') ? parseInt
 const isEditingMy = computed(() => activeMyIdx.value >= 0 && savedDecos.value[activeMyIdx.value] !== null && !isOpen.value)
 const editingMyDecos = computed(() => isEditingMy.value ? savedDecos.value[activeMyIdx.value].items : null)
 const slotFull = computed(() => savedDecos.value.every(s => s !== null))
+const hasPhototag = computed(() => decos.value.some(d => d.type === 'phototag'))
+const emojiDecos = computed(() => decos.value.filter(d => d.type !== 'phototag'))
 
 // ==================== 스티커 페이징 ====================
 const curStickers = computed(() => STICKER_PACKS[stickerPack.value] || [])
@@ -1073,12 +1139,16 @@ async function saveAllChanges() {
     for (const uid of dirtyDecos.value) {
       const deco = decos.value.find(v => v.uid === uid)
       if (deco?.apiId) {
-        promises.push(apiUpdateSticker(carrierId.value, deco.apiId, {
+        const updateData = {
           positionX: deco.x / 100,
           positionY: deco.y / 100,
           scaleRatio: deco.scale,
           rotation: deco.rotation ?? 0
-        }))
+        }
+        if (deco.type === 'phototag' && deco.imageUrl !== undefined) {
+          updateData.imageUrl = deco.imageUrl
+        }
+        promises.push(apiUpdateSticker(carrierId.value, deco.apiId, updateData))
       }
     }
 
@@ -1154,6 +1224,7 @@ function applyCarrierData(carrier) {
       apiId: s.id,
       id: s.stickerType,
       emoji: s.content || s.stickerType,
+      type: s.stickerType === 'PHOTO_TAG' ? 'phototag' : 'emoji',
       content: s.content || null,
       imageUrl: s.imageUrl || null,
       stickerType: s.stickerType,
@@ -1163,6 +1234,12 @@ function applyCarrierData(carrier) {
       flipped: false,
       rotation: s.rotation ?? 0
     }))
+
+    // 포토택 이미지 URL 복원
+    const phototag = decos.value.find(d => d.type === 'phototag')
+    if (phototag?.imageUrl) {
+      nameTagImg.value = phototag.imageUrl
+    }
   }
 }
 
@@ -1409,16 +1486,76 @@ function decoToSvg(arr) {
   }))
 }
 
+// ==================== 네임택 ====================
+async function onNameTagImgChange(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  e.target.value = ''
+
+  // 로컬 미리보기 즉시 표시
+  const reader = new FileReader()
+  reader.onload = ev => { nameTagImg.value = ev.target.result }
+  reader.readAsDataURL(file)
+
+  // S3 presigned URL로 업로드
+  phototagUploading.value = true
+  try {
+    const result = await fileService.uploadFiles(file, { fileCode: 'CARRIER' })
+    if (result.success && result.data) {
+      const fileUrl = result.data.fileUrl || result.data.storedPath
+      if (fileUrl) {
+        // 포토택 deco의 imageUrl 업데이트
+        const phototag = decos.value.find(d => d.type === 'phototag')
+        if (phototag) {
+          phototag.imageUrl = fileUrl
+          nameTagImg.value = fileUrl
+          markDecoDirty(phototag.uid)
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[CARRIER] 포토택 이미지 업로드 실패:', err)
+  } finally {
+    phototagUploading.value = false
+  }
+}
+
+function onPhototagHover(e, enter) {
+  const del = e.currentTarget.querySelector('.nt-del')
+  if (del) del.style.opacity = enter ? '1' : '0'
+}
+
+function clearPhototagImage() {
+  nameTagImg.value = null
+  const phototag = decos.value.find(d => d.type === 'phototag')
+  if (phototag) {
+    phototag.imageUrl = null
+    markDecoDirty(phototag.uid)
+  }
+}
+
 async function placeDeco(d) {
+  // 포토택 토글 (있으면 제거, 없으면 추가)
+  if (d.type === 'phototag') {
+    const existing = decos.value.find(v => v.type === 'phototag')
+    if (existing) {
+      if (existing.apiId && carrierId.value) await apiRemoveSticker(carrierId.value, existing.apiId)
+      decos.value = decos.value.filter(v => v.type !== 'phototag')
+      nameTagImg.value = null
+      return
+    }
+  }
+
   const newDeco = {
     uid: d.id + '_' + Date.now(), id: d.id, emoji: d.emoji,
+    type: d.type || 'emoji',
     x: 30 + Math.random() * 40, y: 30 + Math.random() * 40, scale: 1, flipped: false
   }
 
   // API 호출
   if (carrierId.value) {
     const result = await apiAddSticker(carrierId.value, {
-      stickerType: 'EMOJI',
+      stickerType: d.type === 'phototag' ? 'PHOTO_TAG' : 'EMOJI',
       content: d.emoji,
       imageUrl: null,
       positionX: newDeco.x / 100,
@@ -1466,7 +1603,7 @@ function saveAsMyDeco() {
   if (!decos.value.length || slotFull.value) return
   const snap = {
     colorId: defaultColor.value,
-    items: decos.value.map(d => ({ emoji: d.emoji, x: d.x, y: d.y, scale: d.scale, flipped: d.flipped || false }))
+    items: decos.value.map(d => ({ emoji: d.emoji, type: d.type || 'emoji', x: d.x, y: d.y, scale: d.scale, flipped: d.flipped || false }))
   }
   const idx = savedDecos.value.findIndex(s => s === null)
   if (idx < 0) return
@@ -1486,11 +1623,12 @@ function getDecoOverlayStyle(d) {
   const bw = b.right - b.left, bh = b.bottom - b.top
   const px = b.left + (d.x / 100) * bw
   const py = b.top + (d.y / 100) * bh
-  const sz = 36 * d.scale
+  const sw = 36 * d.scale
+  const sh = 36 * d.scale
   return {
     position: 'absolute',
-    left: (px - sz / 2) + 'px',
-    top: (py - sz / 2) + 'px',
+    left: (px - sw / 2) + 'px',
+    top: (py - sh / 2) + 'px',
     zIndex: selDeco.value === d.uid || selDeco.value === `my-${activeMyIdx.value}-${d.idx}` ? 20 : 5
   }
 }
@@ -1869,8 +2007,13 @@ function downloadCarrierImage() {
 
 .sticker-pack-tabs {
   display: flex;
-  gap: 5px;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 12px 4px;
+}
+.pack-tabs-left {
+  display: flex;
+  gap: 5px;
 }
 .pack-tab {
   padding: 4px 12px;
@@ -2148,6 +2291,21 @@ function downloadCarrierImage() {
   transition: outline .15s, background .15s;
 }
 .deco-emoji.selected { outline: 2.5px solid #7c3aed; outline-offset: 3px; background: rgba(124,58,237,.06); }
+
+/* 포토택 (고정 SVG) */
+.phototag-fixed .nt-del { opacity: 0; transition: opacity .15s; }
+
+/* 스페셜 스티커 아이템 */
+.deco-item.deco-special {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+}
+.deco-item.deco-special .special-icon { font-size: 20px; }
+.deco-item.deco-special .special-label { font-size: 9px; font-weight: 700; color: #7c3aed; }
+.deco-item.deco-active { background: rgba(124,58,237,0.1); outline: 2px solid #7c3aed; outline-offset: -2px; border-radius: 8px; }
 
 .deco-toolbar {
   position: absolute;

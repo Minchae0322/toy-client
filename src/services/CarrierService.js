@@ -143,13 +143,15 @@ class CarrierService extends BaseApiService {
     if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
     if (!stickerId) throw new Error('스티커 ID가 필요합니다.')
 
-    return await this.patch(`/carriers/${carrierId}/stickers/${stickerId}`, {
+    const body = {
       positionX: data.positionX,
       positionY: data.positionY,
       zIndex: data.zIndex ?? null,
       rotation: data.rotation ?? null,
       scaleRatio: data.scaleRatio ?? null
-    })
+    }
+    if (data.imageUrl !== undefined) body.imageUrl = data.imageUrl
+    return await this.patch(`/carriers/${carrierId}/stickers/${stickerId}`, body)
   }
 
   async updateStickerPositions(carrierId, stickers) {
