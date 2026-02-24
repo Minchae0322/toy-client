@@ -3,6 +3,15 @@
 import { BaseApiService } from './BaseApiService.js'
 import { ENV, getServiceUrl } from '@/config/env.js'
 
+export const CARRIER_TYPE = Object.freeze({
+  DEFAULT: 'DEFAULT',
+  RETRO: 'RETRO',
+  SPACE: 'SPACE',
+  KITTY: 'KITTY'
+})
+
+const VALID_CARRIER_TYPES = new Set(Object.values(CARRIER_TYPE))
+
 export const STICKER_TYPE = Object.freeze({
   EMOJI: 'EMOJI',
   PHOTO_TAG: 'PHOTO_TAG',
@@ -40,9 +49,14 @@ class CarrierService extends BaseApiService {
     const validation = this.validateCreateCarrier(data)
     if (!validation.isValid) throw new Error(validation.errors.join(', '))
 
+    const skinType = data.skinType || CARRIER_TYPE.DEFAULT
+    if (!VALID_CARRIER_TYPES.has(skinType)) {
+      throw new Error(`유효하지 않은 캐리어 타입입니다: ${skinType}`)
+    }
+
     return await this.post('/carriers', {
       name: data.name.trim(),
-      skinType: data.skinType || 'DEFAULT',
+      skinType,
       skinColor: data.skinColor || null
     })
   }
@@ -50,6 +64,9 @@ class CarrierService extends BaseApiService {
   async updateCarrierSkin(carrierId, data) {
     if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
     if (!data.skinType) throw new Error('스킨 타입은 필수입니다.')
+    if (!VALID_CARRIER_TYPES.has(data.skinType)) {
+      throw new Error(`유효하지 않은 캐리어 타입입니다: ${data.skinType}`)
+    }
 
     return await this.patch(`/carriers/${carrierId}/skin`, {
       skinType: data.skinType,
@@ -163,7 +180,7 @@ class CarrierService extends BaseApiService {
     if (!carrier) return null
     return {
       id: carrier.id,
-      skinType: carrier.skinType?.code || carrier.skinType || 'DEFAULT',
+      skinType: carrier.skinType?.code || carrier.skinType || CARRIER_TYPE.DEFAULT,
       skinColor: carrier.skinColor || '#FFFFFF',
       isDefault: carrier.isDefault ?? false,
       itemCount: carrier.itemCount ?? 0,
@@ -176,7 +193,7 @@ class CarrierService extends BaseApiService {
     return {
       id: carrier.id,
       name: carrier.name || '',
-      skinType: carrier.skinType?.code || carrier.skinType || 'DEFAULT',
+      skinType: carrier.skinType?.code || carrier.skinType || CARRIER_TYPE.DEFAULT,
       skinColor: carrier.skinColor || '#FFFFFF',
       isDefault: carrier.isDefault ?? false,
       items: (carrier.items || []).map(item => this.normalizeItem(item)),
