@@ -109,6 +109,16 @@
       </transition>
     </template>
 
+    <!-- 로그인 모달 -->
+    <Teleport to="body">
+      <LoginModal
+        v-if="showLoginModal"
+        title="로그인이 필요합니다"
+        message="PICK 한마디를 남기려면 로그인해주세요."
+        @close="showLoginModal = false"
+      />
+    </Teleport>
+
     <!-- 모바일 바텀시트 -->
     <Teleport to="body">
       <transition name="bottomsheet">
@@ -178,9 +188,8 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
-import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { getUserId } from '@/utils/auth.js'
+import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 const props = defineProps({
   commentSummary: { type: Object, default: null },
@@ -192,11 +201,7 @@ const props = defineProps({
 
 const emit = defineEmits(['open-comments', 'submit-comment'])
 
-const { isLoggedIn } = useAuth()
-const { openLoginRequired } = useConfirmDialog()
-const router = useRouter()
-const route = useRoute()
-
+const showLoginModal = ref(false)
 const imageLoadFailed = ref(false)
 const showInput = ref(false)
 const showBottomSheet = ref(false)
@@ -225,13 +230,10 @@ const avatarInitial = computed(() => {
   return (props.commentSummary?.creatorNickname || '?').charAt(0).toUpperCase()
 })
 
-const toggleInput = async () => {
+const toggleInput = () => {
   // 로그인 체크
-  if (!isLoggedIn.value) {
-    const confirmed = await openLoginRequired('PICK 한마디를 남기려면 로그인이 필요합니다.')
-    if (confirmed) {
-      router.push({ path: '/login', query: { redirect: route.fullPath } })
-    }
+  if (!getUserId()) {
+    showLoginModal.value = true
     return
   }
 
@@ -256,15 +258,12 @@ const closeBottomSheet = () => {
   showBottomSheet.value = false
 }
 
-const handleSubmit = async () => {
+const handleSubmit = () => {
   if (!inputText.value.trim() || props.submitting) return
 
   // 로그인 체크
-  if (!isLoggedIn.value) {
-    const confirmed = await openLoginRequired('PICK 한마디를 남기려면 로그인이 필요합니다.')
-    if (confirmed) {
-      router.push({ path: '/login', query: { redirect: route.fullPath } })
-    }
+  if (!getUserId()) {
+    showLoginModal.value = true
     return
   }
 

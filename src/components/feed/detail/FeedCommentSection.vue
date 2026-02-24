@@ -86,15 +86,23 @@
         <div class="spinner small"></div>
       </div>
     </div>
+    <!-- 로그인 모달 -->
+    <Teleport to="body">
+      <LoginModal
+        v-if="showLoginModal"
+        title="로그인이 필요합니다"
+        message="댓글을 작성하려면 로그인해주세요."
+        @close="showLoginModal = false"
+      />
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
 import { feedUtils } from '@/services/FeedService'
-import { useAuth } from '@/composables/useAuth'
-import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { getUserId } from '@/utils/auth.js'
+import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 const props = defineProps({
   comments: { type: Array, default: () => [] },
@@ -107,13 +115,10 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'update', 'delete', 'load-more'])
 
-const { isLoggedIn } = useAuth()
-const { openLoginRequired } = useConfirmDialog()
-const router = useRouter()
-const route = useRoute()
+const showLoginModal = ref(false)
 
 const commentPlaceholder = computed(() => {
-  return isLoggedIn.value ? '댓글을 입력하세요...' : '로그인 후 댓글을 작성할 수 있습니다'
+  return getUserId() ? '댓글을 입력하세요...' : '로그인 후 댓글을 작성할 수 있습니다'
 })
 
 const newComment = ref('')
@@ -137,13 +142,10 @@ const isMyComment = (creatorId) => {
 const isEdited = (comment) => comment.updatedAt && comment.updatedAt !== comment.createdAt
 const formatDate = (date) => feedUtils.formatCommentDate(date)
 
-const submitComment = async () => {
+const submitComment = () => {
   // 로그인 체크
-  if (!isLoggedIn.value) {
-    const confirmed = await openLoginRequired('댓글을 작성하려면 로그인이 필요합니다.')
-    if (confirmed) {
-      router.push({ path: '/login', query: { redirect: route.fullPath } })
-    }
+  if (!getUserId()) {
+    showLoginModal.value = true
     return
   }
 
