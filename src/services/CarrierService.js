@@ -217,11 +217,26 @@ class CarrierService extends BaseApiService {
     }
   }
 
+  /**
+   * stickerType이 Java enum 객체({ displayName, description })로 올 수 있으므로 문자열로 변환
+   */
+  _resolveStickerType(raw) {
+    if (!raw) return ''
+    if (typeof raw === 'string') return raw
+    // enum 객체인 경우 displayName으로 매핑
+    const nameMap = { '사진택': 'PHOTO_TAG', '이모지': 'EMOJI', '프리셋': 'PRESET' }
+    if (raw.displayName && nameMap[raw.displayName]) return nameMap[raw.displayName]
+    // code 필드가 있으면 사용
+    if (raw.code) return raw.code
+    if (raw.name) return raw.name
+    return String(raw)
+  }
+
   normalizeSticker(sticker) {
     if (!sticker) return null
     return {
       id: sticker.id,
-      stickerType: sticker.stickerType || '',
+      stickerType: this._resolveStickerType(sticker.stickerType),
       content: sticker.content || null,
       imageUrl: sticker.imageUrl || null,
       positionX: sticker.positionX ?? 0,
