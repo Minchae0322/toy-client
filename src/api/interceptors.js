@@ -94,6 +94,7 @@ const refreshTokenViaBackend = async () => {
   try {
     // 🌐 토큰 재발급 API 호출
     // HttpOnly 쿠키(refreshToken)는 브라우저가 자동으로 전송함
+    // 🔥 requestInterceptor가 /reissue URL에는 만료된 AccessToken을 보내지 않음
     const response = await authClient.post('/reissue', null, {
       headers: {
         'X-Device-ID': authUtils.getDeviceId()
@@ -134,11 +135,15 @@ const refreshTokenViaBackend = async () => {
 
 /**
  * 요청 인터셉터 - 모든 요청에 인증 헤더 자동 추가
+ * 🔥 /reissue 요청에는 만료된 AccessToken을 보내지 않음
+ *    → 백엔드가 Authorization 헤더를 먼저 검증하면 401이 발생하여 갱신 실패
+ *    → RefreshToken은 HttpOnly 쿠키로 자동 전송되므로 AccessToken 불필요
  */
 const requestInterceptor = (config) => {
   const token = authUtils.getAccessToken()
+  const isReissueRequest = config.url?.includes('/reissue')
 
-  if (token) {
+  if (token && !isReissueRequest) {
     config.headers.Authorization = `Bearer ${token}`
   }
 

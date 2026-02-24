@@ -6,6 +6,7 @@
 // 참고: Axios 기반 요청은 api/interceptors.js가 토큰 갱신 담당
 
 import * as authUtils from '@/utils/auth.js'
+import { manualRefreshToken } from '@/api/interceptors.js'
 
 /**
  * API 서비스 기반 클래스
@@ -52,6 +53,10 @@ export class BaseApiService {
 
   // ==================== 토큰 갱신 ====================
 
+  /**
+   * 토큰 갱신 - interceptors.js의 manualRefreshToken에 위임하여
+   * Axios/Fetch 양쪽의 갱신 요청을 단일 채널로 통합 (경쟁 조건 방지)
+   */
   async refreshToken() {
     if (this.isRefreshing) {
       return new Promise((resolve, reject) => {
@@ -59,79 +64,28 @@ export class BaseApiService {
       })
     }
 
-    // ⭐ RefreshToken은 쿠키에 있으므로 localStorage 확인 제거
     this.isRefreshing = true
 
     try {
-      console.log(`🔄 [${this.serviceName}] /reissue API를 통한 토큰 갱신 시작...`)
+      console.log(`🔄 [${this.serviceName}] 토큰 갱신 시작 (interceptor 위임)`)
 
-      const authBaseURL = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8081'
+      const success = await manualRefreshToken()
 
-      const response = await fetch(`${authBaseURL}/reissue`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include' // ⭐ 쿠키 포함 (RefreshToken이 여기 있음!)
-      })
-
-      // 상세한 에러 로깅
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'No response body')
-        console.error(`❌ [${this.serviceName}] 토큰 갱신 응답 에러:`, {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText,
-          hint: response.status === 401
-              ? '🍪 RefreshToken 쿠키가 전송되지 않았거나 만료됨. 백엔드 쿠키 설정(SameSite, Secure) 확인 필요'
-              : response.status === 403
-                  ? '🔒 CORS 또는 권한 문제. Access-Control-Allow-Credentials 확인 필요'
-                  : ''
-        })
-        throw new Error(`토큰 갱신 실패: ${response.status} ${response.statusText}`)
+      if (success) {
+        const accessToken = authUtils.getAccessToken()
+        console.log(`✅ [${this.serviceName}] 토큰 갱신 완료`)
+        this.processQueue(null, accessToken)
+        return accessToken
       }
 
-      const responseData = await response.json()
-      // /reissue API 응답: { accessToken: string }
-      const accessToken = responseData.accessToken
-
-      if (!accessToken) {
-        throw new Error('새로운 AccessToken을 받지 못했습니다')
-      }
-
-      // AccessToken만 저장 (RefreshToken은 쿠키로 갱신됨)
-      authUtils.setTokens(accessToken, null)
-
-      console.log(`✅ [${this.serviceName}] 토큰 갱신 완료`)
-
-      this.processQueue(null, accessToken)
-
-      return accessToken
+      throw new Error('토큰 갱신 실패')
 
     } catch (error) {
       console.error(`❌ [${this.serviceName}] 토큰 갱신 실패:`, error.message)
 
-      // 디버깅 정보 출력
-      if (import.meta.env.DEV) {
-        console.group(`🔍 [${this.serviceName}] 토큰 갱신 실패 디버깅 정보`)
-        console.log('1. RefreshToken 쿠키가 설정되어 있는지 확인 (개발자 도구 → Application → Cookies)')
-        console.log('2. 백엔드에서 Set-Cookie 헤더가 올바르게 설정되었는지 확인')
-        console.log('   - secure=false (HTTP 환경)')
-        console.log('   - SameSite=None 또는 Lax (cross-site 요청)')
-        console.log('3. CORS 설정 확인')
-        console.log('   - Access-Control-Allow-Credentials: true')
-        console.log('   - Access-Control-Allow-Origin: 특정 도메인 (와일드카드 * 불가)')
-        console.groupEnd()
-      }
-
-      // 🚨 RefreshToken 없음 또는 갱신 실패 - 로그아웃 처리
       this.processQueue(error, null)
-      authUtils.logout()
 
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login?reason=token_expired'
-      }
-
+      // interceptor 쪽에서 이미 logout/redirect를 처리하므로 여기서는 중복 실행하지 않음
       throw error
     } finally {
       this.isRefreshing = false
