@@ -753,7 +753,7 @@ function colorIdToSkinColor(id) {
 }
 
 // ==================== API Composable ====================
-const { loading: apiLoading, error: apiError, carriers, currentCarrier, fetchMyCarriers, fetchCarrier, createCarrier, updateSkin, deleteCarrier, addItem: apiAddItem, removeItem: apiRemoveItem, addSticker: apiAddSticker, updateSticker: apiUpdateSticker, removeSticker: apiRemoveSticker, updatePositions } = useCarrier()
+const { loading: apiLoading, error: apiError, carriers, currentCarrier, fetchMyCarriers, fetchCarrier, createCarrier, updateSkin, deleteCarrier, addItem: apiAddItem, removeItem: apiRemoveItem, addSticker: apiAddSticker, updateSticker: apiUpdateSticker, removeSticker: apiRemoveSticker, bulkDeleteStickers: apiBulkDeleteStickers, updatePositions } = useCarrier()
 
 const carrierId = ref(null)
 
@@ -1148,7 +1148,10 @@ function applyCarrierData(carrier) {
       uid: 'api_' + s.id,
       apiId: s.id,
       id: s.stickerType,
-      emoji: s.stickerType,
+      emoji: s.content || s.stickerType,
+      content: s.content || null,
+      imageUrl: s.imageUrl || null,
+      stickerType: s.stickerType,
       x: (s.positionX ?? 0.5) * 100,
       y: (s.positionY ?? 0.5) * 100,
       scale: s.scaleRatio ?? 1,
@@ -1410,7 +1413,9 @@ async function placeDeco(d) {
   // API 호출
   if (carrierId.value) {
     const result = await apiAddSticker(carrierId.value, {
-      stickerType: d.emoji,
+      stickerType: 'EMOJI',
+      content: d.emoji,
+      imageUrl: null,
       positionX: newDeco.x / 100,
       positionY: newDeco.y / 100,
       zIndex: 0,

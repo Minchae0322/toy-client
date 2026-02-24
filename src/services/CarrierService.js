@@ -3,6 +3,14 @@
 import { BaseApiService } from './BaseApiService.js'
 import { ENV, getServiceUrl } from '@/config/env.js'
 
+export const STICKER_TYPE = Object.freeze({
+  EMOJI: 'EMOJI',
+  PHOTO_TAG: 'PHOTO_TAG',
+  PRESET: 'PRESET'
+})
+
+const VALID_STICKER_TYPES = new Set(Object.values(STICKER_TYPE))
+
 class CarrierService extends BaseApiService {
   constructor() {
     const baseURL = getServiceUrl('CONTENT')
@@ -98,9 +106,14 @@ class CarrierService extends BaseApiService {
   async addSticker(carrierId, data) {
     if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
     if (!data.stickerType) throw new Error('스티커 타입이 필요합니다.')
+    if (!VALID_STICKER_TYPES.has(data.stickerType)) {
+      throw new Error(`유효하지 않은 스티커 타입입니다: ${data.stickerType}`)
+    }
 
     return await this.post(`/carriers/${carrierId}/stickers`, {
       stickerType: data.stickerType,
+      content: data.content || null,
+      imageUrl: data.imageUrl || null,
       positionX: data.positionX ?? 0.5,
       positionY: data.positionY ?? 0.5,
       zIndex: data.zIndex ?? 0,
@@ -134,6 +147,14 @@ class CarrierService extends BaseApiService {
     if (!stickerId) throw new Error('스티커 ID가 필요합니다.')
 
     return await this.delete(`/carriers/${carrierId}/stickers/${stickerId}`)
+  }
+
+  async bulkDeleteStickers(carrierId, stickerIds) {
+    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
+    if (!Array.isArray(stickerIds) || stickerIds.length === 0) throw new Error('삭제할 스티커 ID 목록이 필요합니다.')
+    if (stickerIds.length > 50) throw new Error('일괄 삭제는 최대 50개까지 가능합니다.')
+
+    return await this.post(`/carriers/${carrierId}/stickers/delete`, { stickerIds })
   }
 
   // ==================== 정규화 ====================
@@ -182,6 +203,8 @@ class CarrierService extends BaseApiService {
     return {
       id: sticker.id,
       stickerType: sticker.stickerType || '',
+      content: sticker.content || null,
+      imageUrl: sticker.imageUrl || null,
       positionX: sticker.positionX ?? 0,
       positionY: sticker.positionY ?? 0,
       zIndex: sticker.zIndex ?? 0,
