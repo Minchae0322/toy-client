@@ -1130,10 +1130,9 @@ export default {
     async handleAddProduct() {
       const userId = getUserId()
       if (!userId) {
-        const confirmed = await this.openLoginRequired('아이템을 등록하려면 로그인이 필요합니다.')
-        if (confirmed) {
-          this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
-        }
+        this.loginModalTitle = '로그인이 필요합니다'
+        this.loginModalMessage = '아이템을 등록하려면 로그인해주세요.'
+        this.showLoginModal = true
         return
       }
       this.showAddModal = true
