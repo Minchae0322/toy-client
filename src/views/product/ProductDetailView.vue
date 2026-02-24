@@ -292,7 +292,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { productService } from '@/services/ProductService.js'
-import { carrierService } from '@/services/CarrierService.js'
+import { carrierService, CARRIER_TYPE } from '@/services/CarrierService.js'
 
 import FeedCard from '@/components/product/detail/FeedCard.vue'
 import BattleCard from '@/components/product/detail/BattleCard.vue'
@@ -484,7 +484,7 @@ const handleAddToCarrier = async () => {
       const carrier = carriersRes.data.find(c => c.isDefault) || carriersRes.data[0]
       carrierId = carrier.id
     } else {
-      const createRes = await carrierService.createCarrier({ name: '내 캐리어', skinType: 'DEFAULT', skinColor: '#7c3aed' })
+      const createRes = await carrierService.createCarrier({ name: '내 캐리어', skinType: CARRIER_TYPE.DEFAULT, skinColor: '#7c3aed' })
       if (createRes.success) carrierId = createRes.data?.id
     }
     if (!carrierId) throw new Error('캐리어를 찾을 수 없습니다.')

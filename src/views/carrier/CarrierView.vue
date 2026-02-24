@@ -680,6 +680,7 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCarrier } from '@/composables/useCarrier.js'
+import { CARRIER_TYPE } from '@/services/CarrierService.js'
 
 const router = useRouter()
 
@@ -738,9 +739,13 @@ const PACK_LABELS = [['basic', '기본'], ['travel', '여행'], ['food', '푸드
 
 const CVB = { x1: 30, y1: 50, x2: 270, y2: 370, vw: 300, vh: 400 }
 
-// skinType enum -> 프론트 스킨 id 매핑
-const SKIN_TYPE_MAP = { DEFAULT: 'default', RETRO: 'retro', SPACE: 'space', KITTY: 'kitty' }
-const SKIN_TYPE_REVERSE = { default: 'DEFAULT', retro: 'RETRO', space: 'SPACE', kitty: 'KITTY' }
+// skinType enum -> 프론트 스킨 id 매핑 (CARRIER_TYPE 기반 자동 생성)
+const SKIN_TYPE_MAP = Object.fromEntries(
+  Object.values(CARRIER_TYPE).map(t => [t, t.toLowerCase()])
+)
+const SKIN_TYPE_REVERSE = Object.fromEntries(
+  Object.values(CARRIER_TYPE).map(t => [t.toLowerCase(), t])
+)
 
 // skinColor -> 프론트 컬러 id 매핑
 function skinColorToColorId(hex) {
@@ -1102,7 +1107,7 @@ async function loadCarrierData() {
 
   if (carriers.value.length === 0) {
     // 캐리어가 없으면 기본 캐리어 생성
-    const result = await createCarrier({ name: '내 캐리어', skinType: 'DEFAULT', skinColor: '#7c3aed' })
+    const result = await createCarrier({ name: '내 캐리어', skinType: CARRIER_TYPE.DEFAULT, skinColor: '#7c3aed' })
     if (result.success) {
       await fetchMyCarriers()
     }
@@ -1179,7 +1184,7 @@ watch(activeSkin, async (newSkin, oldSkin) => {
 // 기본 스킨 색상 변경 시 API 호출
 watch(defaultColor, async (newColor) => {
   if (!carrierId.value || activeSkin.value !== 'default') return
-  await updateSkin(carrierId.value, { skinType: 'DEFAULT', skinColor: colorIdToSkinColor(newColor) })
+  await updateSkin(carrierId.value, { skinType: CARRIER_TYPE.DEFAULT, skinColor: colorIdToSkinColor(newColor) })
 })
 
 // ==================== 공유 배경색 (스킨별) ====================
