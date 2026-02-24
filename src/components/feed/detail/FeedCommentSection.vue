@@ -11,7 +11,7 @@
           type="text"
           v-model="newComment"
           @keyup.enter="submitComment"
-          placeholder="댓글을 입력하세요..."
+          :placeholder="commentPlaceholder"
           class="input"
       />
       <button
@@ -90,8 +90,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { feedUtils } from '@/services/FeedService'
+import { useAuth } from '@/composables/useAuth'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const props = defineProps({
   comments: { type: Array, default: () => [] },
@@ -103,6 +106,15 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'update', 'delete', 'load-more'])
+
+const { isLoggedIn } = useAuth()
+const { openLoginRequired } = useConfirmDialog()
+const router = useRouter()
+const route = useRoute()
+
+const commentPlaceholder = computed(() => {
+  return isLoggedIn.value ? '댓글을 입력하세요...' : '로그인 후 댓글을 작성할 수 있습니다'
+})
 
 const newComment = ref('')
 const editingId = ref(null)
@@ -125,7 +137,16 @@ const isMyComment = (creatorId) => {
 const isEdited = (comment) => comment.updatedAt && comment.updatedAt !== comment.createdAt
 const formatDate = (date) => feedUtils.formatCommentDate(date)
 
-const submitComment = () => {
+const submitComment = async () => {
+  // 로그인 체크
+  if (!isLoggedIn.value) {
+    const confirmed = await openLoginRequired('댓글을 작성하려면 로그인이 필요합니다.')
+    if (confirmed) {
+      router.push({ path: '/login', query: { redirect: route.fullPath } })
+    }
+    return
+  }
+
   if (newComment.value.trim()) {
     emit('submit', newComment.value.trim())
     newComment.value = ''

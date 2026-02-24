@@ -108,8 +108,8 @@ import FeedEditModal from '@/components/feed/detail/FeedEditModal.vue'
 
 const router = useRouter()
 const route = useRoute()
-const { open } = useConfirmDialog()
-const { userId: currentUserId } = useAuth()
+const { open, openLoginRequired } = useConfirmDialog()
+const { userId: currentUserId, isLoggedIn } = useAuth()
 
 const loading = ref(true)
 const error = ref(null)
@@ -200,6 +200,15 @@ const loadMoreComments = () => {
 }
 
 const submitComment = async (content) => {
+  // 로그인 체크
+  if (!isLoggedIn.value) {
+    const confirmed = await openLoginRequired('댓글을 작성하려면 로그인이 필요합니다.')
+    if (confirmed) {
+      router.push({ path: '/login', query: { redirect: route.fullPath } })
+    }
+    return
+  }
+
   try {
     const response = await feedService.createComment(route.params.id, content)
     if (response.success) {
@@ -253,6 +262,15 @@ const likeLoading = ref(false)
 const handleLike = async () => {
   if (!feed.value || likeLoading.value) return
 
+  // 로그인 체크
+  if (!isLoggedIn.value) {
+    const confirmed = await openLoginRequired('좋아요를 누르려면 로그인이 필요합니다.')
+    if (confirmed) {
+      router.push({ path: '/login', query: { redirect: route.fullPath } })
+    }
+    return
+  }
+
   // Optimistic update - 즉시 UI 반영
   const previousHasLike = feed.value.userReactions?.hasLike || false
   const previousLikeCount = feed.value.likeCount || 0
@@ -285,6 +303,15 @@ const handleLike = async () => {
 const hotLoading = ref(false)
 const handleHot = async () => {
   if (!feed.value || hotLoading.value) return
+
+  // 로그인 체크
+  if (!isLoggedIn.value) {
+    const confirmed = await openLoginRequired('핫 반응을 남기려면 로그인이 필요합니다.')
+    if (confirmed) {
+      router.push({ path: '/login', query: { redirect: route.fullPath } })
+    }
+    return
+  }
 
   // 옵티미스틱 UI: 즉시 상태 토글
   const previousHasHot = feed.value.userReactions?.hasHot || false

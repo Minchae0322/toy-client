@@ -555,6 +555,17 @@ export default {
     handleVote(itemId, rank) {
       if (this.submitting) return
 
+      // 로그인 체크
+      const userId = getUserId()
+      if (!userId) {
+        this.openLoginRequired('투표하려면 로그인이 필요합니다.').then(confirmed => {
+          if (confirmed) {
+            this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
+          }
+        })
+        return
+      }
+
       const newRanks = { ...this.selectedRanks }
 
       if (this.isWeightedVote) {
@@ -583,6 +594,16 @@ export default {
 
     async submitVote(argumentText = '') {
       if (this.submitting) return
+
+      // 로그인 체크
+      const userId = getUserId()
+      if (!userId) {
+        const confirmed = await this.openLoginRequired('투표하려면 로그인이 필요합니다.')
+        if (confirmed) {
+          this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
+        }
+        return
+      }
 
       // MULTIPLE/SINGLE 모두 최소 1개 이상 선택 필요
       if (!this.hasSelectedItems) {
@@ -858,6 +879,16 @@ export default {
 
     // 인라인 코멘트 작성
     async handleInlineComment(itemId, content) {
+      // 로그인 체크
+      const userId = getUserId()
+      if (!userId) {
+        const confirmed = await this.openLoginRequired('PICK 한마디를 남기려면 로그인이 필요합니다.')
+        if (confirmed) {
+          this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
+        }
+        return
+      }
+
       const cardRef = this.productCardRefs[itemId]
       if (cardRef) {
         cardRef.setCommentSubmitting(true)
@@ -909,6 +940,16 @@ export default {
 
     // 코멘트 공감 토글
     async handleCommentLike(comment) {
+      // 로그인 체크
+      const userId = getUserId()
+      if (!userId) {
+        const confirmed = await this.openLoginRequired('공감하려면 로그인이 필요합니다.')
+        if (confirmed) {
+          this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
+        }
+        return
+      }
+
       if (!comment.commentId) {
         console.warn('commentId가 없습니다.')
         return
