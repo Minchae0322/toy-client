@@ -11,7 +11,7 @@
           type="text"
           v-model="newComment"
           @keyup.enter="submitComment"
-          placeholder="댓글을 입력하세요..."
+          :placeholder="commentPlaceholder"
           class="input"
       />
       <button
@@ -86,12 +86,23 @@
         <div class="spinner small"></div>
       </div>
     </div>
+    <!-- 로그인 모달 -->
+    <Teleport to="body">
+      <LoginModal
+        v-if="showLoginModal"
+        title="로그인이 필요합니다"
+        message="댓글을 작성하려면 로그인해주세요."
+        @close="showLoginModal = false"
+      />
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { feedUtils } from '@/services/FeedService'
+import { getUserId } from '@/utils/auth.js'
+import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 const props = defineProps({
   comments: { type: Array, default: () => [] },
@@ -103,6 +114,12 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'update', 'delete', 'load-more'])
+
+const showLoginModal = ref(false)
+
+const commentPlaceholder = computed(() => {
+  return getUserId() ? '댓글을 입력하세요...' : '로그인 후 댓글을 작성할 수 있습니다'
+})
 
 const newComment = ref('')
 const editingId = ref(null)
@@ -126,6 +143,12 @@ const isEdited = (comment) => comment.updatedAt && comment.updatedAt !== comment
 const formatDate = (date) => feedUtils.formatCommentDate(date)
 
 const submitComment = () => {
+  // 로그인 체크
+  if (!getUserId()) {
+    showLoginModal.value = true
+    return
+  }
+
   if (newComment.value.trim()) {
     emit('submit', newComment.value.trim())
     newComment.value = ''

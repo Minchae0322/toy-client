@@ -230,6 +230,14 @@
           @comment-created="handleCommentCreated"
       />
 
+      <!-- Login Modal -->
+      <LoginModal
+          v-if="showLoginModal"
+          :title="loginModalTitle"
+          :message="loginModalMessage"
+          @close="showLoginModal = false"
+      />
+
       <!-- YouTube Player Modal -->
       <Teleport to="body">
         <Transition name="modal">
@@ -279,6 +287,7 @@ import VoteSelectionBar from '@/components/battle/detail/VoteSelectionBar.vue'
 import ProductCard from '@/components/battle/detail/ProductCard.vue'
 import AddProductModal from '@/components/battle/detail/AddProductModal.vue'
 import BattleCommentModal from '@/components/battle/detail/BattleCommentModal.vue'
+import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 export default {
   name: 'BattleDetail',
@@ -288,7 +297,8 @@ export default {
     VoteSelectionBar,
     ProductCard,
     AddProductModal,
-    BattleCommentModal
+    BattleCommentModal,
+    LoginModal
   },
   setup() {
     const { open, openLoginRequired } = useConfirmDialog()
@@ -329,7 +339,11 @@ export default {
       // YouTube 플레이어
       showYoutubePlayer: false,
       currentYoutubeItem: null,
-      currentYoutubeEmbedUrl: null
+      currentYoutubeEmbedUrl: null,
+      // 로그인 모달
+      showLoginModal: false,
+      loginModalTitle: '',
+      loginModalMessage: ''
     }
   },
   computed: {
@@ -555,6 +569,15 @@ export default {
     handleVote(itemId, rank) {
       if (this.submitting) return
 
+      // 로그인 체크
+      const userId = getUserId()
+      if (!userId) {
+        this.loginModalTitle = '로그인이 필요합니다'
+        this.loginModalMessage = '투표하려면 로그인해주세요.'
+        this.showLoginModal = true
+        return
+      }
+
       const newRanks = { ...this.selectedRanks }
 
       if (this.isWeightedVote) {
@@ -583,6 +606,15 @@ export default {
 
     async submitVote(argumentText = '') {
       if (this.submitting) return
+
+      // 로그인 체크
+      const userId = getUserId()
+      if (!userId) {
+        this.loginModalTitle = '로그인이 필요합니다'
+        this.loginModalMessage = '투표하려면 로그인해주세요.'
+        this.showLoginModal = true
+        return
+      }
 
       // MULTIPLE/SINGLE 모두 최소 1개 이상 선택 필요
       if (!this.hasSelectedItems) {
@@ -858,6 +890,15 @@ export default {
 
     // 인라인 코멘트 작성
     async handleInlineComment(itemId, content) {
+      // 로그인 체크
+      const userId = getUserId()
+      if (!userId) {
+        this.loginModalTitle = '로그인이 필요합니다'
+        this.loginModalMessage = 'PICK 한마디를 남기려면 로그인해주세요.'
+        this.showLoginModal = true
+        return
+      }
+
       const cardRef = this.productCardRefs[itemId]
       if (cardRef) {
         cardRef.setCommentSubmitting(true)
@@ -909,6 +950,15 @@ export default {
 
     // 코멘트 공감 토글
     async handleCommentLike(comment) {
+      // 로그인 체크
+      const userId = getUserId()
+      if (!userId) {
+        this.loginModalTitle = '로그인이 필요합니다'
+        this.loginModalMessage = '공감하려면 로그인해주세요.'
+        this.showLoginModal = true
+        return
+      }
+
       if (!comment.commentId) {
         console.warn('commentId가 없습니다.')
         return
