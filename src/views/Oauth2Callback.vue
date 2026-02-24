@@ -1,7 +1,7 @@
 <template>
   <div class="callback-wrapper">
     <div class="callback-container">
-      <!-- 로딩: 어떤 서비스로 로그인 중인지 + 단계별 진행 -->
+      <!-- 로딩: 어떤 서비스로 로그인 중인지 표시 -->
       <div v-if="loading" class="loading-state">
         <div class="provider-badge" :class="provider">
           <img v-if="provider === 'google'" src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" class="provider-img" />
@@ -12,17 +12,7 @@
 
         <h2>{{ providerLabel }}로 로그인하고 있어요</h2>
         <p class="loading-sub">안전하게 계정을 확인하는 중입니다</p>
-
-        <div class="steps">
-          <div v-for="(step, i) in steps" :key="i" class="step" :class="{ active: currentStep === i, done: currentStep > i }">
-            <div class="step-dot">
-              <svg v-if="currentStep > i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              <div v-else-if="currentStep === i" class="dot-spinner"></div>
-              <span v-else class="dot-num">{{ i + 1 }}</span>
-            </div>
-            <span class="step-text">{{ step }}</span>
-          </div>
-        </div>
+        <div class="loading-spinner"></div>
       </div>
 
       <!-- 에러: 기술 용어 없이 사용자가 이해할 수 있는 안내 -->
@@ -91,14 +81,11 @@ const loading = ref(true)
 const error = ref(false)
 const errorMessage = ref('')
 const debugInfo = ref('')
-const currentStep = ref(0)
 const welcomeName = ref('')
 const redirectTarget = ref('/feed')
 const provider = ref('oauth')
 
 const isDev = computed(() => import.meta.env.DEV)
-
-const steps = ['서비스 연결 중', '계정 확인 중', '프로필 불러오는 중', '로그인 완료']
 
 // 어떤 소셜 서비스를 선택했는지 감지
 const detectProvider = () => {
@@ -187,9 +174,6 @@ const handleOAuthCallback = async () => {
   try {
     provider.value = detectProvider()
 
-    // Step 1: 서비스 연결
-    currentStep.value = 0
-
     const urlParams = new URLSearchParams(window.location.search)
     const accessToken = urlParams.get('token')
     const refreshToken = urlParams.get('refreshToken')
@@ -202,10 +186,6 @@ const handleOAuthCallback = async () => {
       throw new Error('Access Token이 URL에 없습니다.')
     }
 
-    // Step 2: 계정 확인
-    await new Promise(r => setTimeout(r, 400))
-    currentStep.value = 1
-
     const payload = decodeJWTPayload(accessToken)
     if (!payload) {
       throw new Error('JWT 디코딩 실패')
@@ -214,10 +194,6 @@ const handleOAuthCallback = async () => {
     if (payload.provider) {
       provider.value = payload.provider.toLowerCase()
     }
-
-    // Step 3: 프로필 불러오기
-    await new Promise(r => setTimeout(r, 400))
-    currentStep.value = 2
 
     const userInfo = {
       id: payload.userId || payload.sub,
@@ -250,9 +226,6 @@ const handleOAuthCallback = async () => {
     if (!finalCheck.isAuthenticated) {
       throw new Error('인증 상태 저장 실패')
     }
-
-    // Step 4: 완료
-    currentStep.value = 3
 
     const redirectPath = sessionStorage.getItem('oauth_redirect') || '/feed'
     sessionStorage.removeItem('oauth_redirect')
@@ -357,60 +330,20 @@ onMounted(handleOAuthCallback)
 }
 
 .loading-sub {
-  margin: 0 0 28px;
+  margin: 0 0 0;
   font-size: 13px;
   color: #a1a1aa;
 }
 
-.steps {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.step {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 14px;
-  border-radius: 8px;
-  transition: background 0.25s;
-}
-.step.active { background: #f4f4f5; }
-
-.step-dot {
-  width: 26px;
-  height: 26px;
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f4f4f5;
+  border-top-color: #1DCD9F;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: #f4f4f5;
-  transition: all 0.25s;
+  animation: spin .8s linear infinite;
+  margin: 24px auto 0;
 }
-.step.active .step-dot { background: #18181b; }
-.step.done .step-dot { background: #ecfdf5; }
-
-.dot-num { font-size: 11px; font-weight: 600; color: #a1a1aa; }
-
-.dot-spinner {
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(255,255,255,.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-}
-
-.step-text {
-  font-size: 14px;
-  color: #a1a1aa;
-  transition: color 0.25s;
-}
-.step.active .step-text { color: #18181b; font-weight: 500; }
-.step.done .step-text { color: #1DCD9F; }
-.step.done .step-dot svg { color: #1DCD9F; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
