@@ -87,13 +87,6 @@
           @updated="handleFeedUpdated"
       />
 
-      <!-- Login Modal -->
-      <LoginModal
-          v-if="showLoginModal"
-          :title="loginModalTitle"
-          :message="loginModalMessage"
-          @close="showLoginModal = false"
-      />
     </template>
   </div>
 </template>
@@ -113,16 +106,11 @@ import FeedDetailInfo from '@/components/feed/detail/FeedDetailInfo.vue'
 import FeedCommentSection from '@/components/feed/detail/FeedCommentSection.vue'
 import ShareModal from '@/components/common/ShareModal.vue'
 import FeedEditModal from '@/components/feed/detail/FeedEditModal.vue'
-import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 const router = useRouter()
 const route = useRoute()
-const { open } = useConfirmDialog()
+const { open, openLoginRequired } = useConfirmDialog()
 const { userId: currentUserId, isLoggedIn } = useAuth()
-
-const showLoginModal = ref(false)
-const loginModalTitle = ref('')
-const loginModalMessage = ref('')
 
 const loading = ref(true)
 const error = ref(null)
@@ -215,9 +203,10 @@ const loadMoreComments = () => {
 const submitComment = async (content) => {
   // 로그인 체크
   if (!isLoggedIn.value) {
-    loginModalTitle.value = '로그인이 필요합니다'
-    loginModalMessage.value = '댓글을 작성하려면 로그인해주세요.'
-    showLoginModal.value = true
+    const confirmed = await openLoginRequired('댓글을 작성하려면 로그인이 필요합니다.')
+    if (confirmed) {
+      router.push({ name: 'Login', query: { redirect: route.fullPath } })
+    }
     return
   }
 
@@ -276,9 +265,10 @@ const handleLike = async () => {
 
   // 로그인 체크
   if (!isLoggedIn.value) {
-    loginModalTitle.value = '로그인이 필요합니다'
-    loginModalMessage.value = '좋아요를 누르려면 로그인해주세요.'
-    showLoginModal.value = true
+    const confirmed = await openLoginRequired('좋아요를 누르려면 로그인이 필요합니다.')
+    if (confirmed) {
+      router.push({ name: 'Login', query: { redirect: route.fullPath } })
+    }
     return
   }
 
@@ -317,9 +307,10 @@ const handleHot = async () => {
 
   // 로그인 체크
   if (!isLoggedIn.value) {
-    loginModalTitle.value = '로그인이 필요합니다'
-    loginModalMessage.value = '핫 반응을 남기려면 로그인해주세요.'
-    showLoginModal.value = true
+    const confirmed = await openLoginRequired('핫 반응을 남기려면 로그인이 필요합니다.')
+    if (confirmed) {
+      router.push({ name: 'Login', query: { redirect: route.fullPath } })
+    }
     return
   }
 

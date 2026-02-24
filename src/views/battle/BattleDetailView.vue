@@ -230,14 +230,6 @@
           @comment-created="handleCommentCreated"
       />
 
-      <!-- Login Modal -->
-      <LoginModal
-          v-if="showLoginModal"
-          :title="loginModalTitle"
-          :message="loginModalMessage"
-          @close="showLoginModal = false"
-      />
-
       <!-- YouTube Player Modal -->
       <Teleport to="body">
         <Transition name="modal">
@@ -287,7 +279,6 @@ import VoteSelectionBar from '@/components/battle/detail/VoteSelectionBar.vue'
 import ProductCard from '@/components/battle/detail/ProductCard.vue'
 import AddProductModal from '@/components/battle/detail/AddProductModal.vue'
 import BattleCommentModal from '@/components/battle/detail/BattleCommentModal.vue'
-import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 export default {
   name: 'BattleDetail',
@@ -297,8 +288,7 @@ export default {
     VoteSelectionBar,
     ProductCard,
     AddProductModal,
-    BattleCommentModal,
-    LoginModal
+    BattleCommentModal
   },
   setup() {
     const { open, openLoginRequired } = useConfirmDialog()
@@ -339,11 +329,7 @@ export default {
       // YouTube 플레이어
       showYoutubePlayer: false,
       currentYoutubeItem: null,
-      currentYoutubeEmbedUrl: null,
-      // 로그인 모달
-      showLoginModal: false,
-      loginModalTitle: '',
-      loginModalMessage: ''
+      currentYoutubeEmbedUrl: null
     }
   },
   computed: {
@@ -572,9 +558,11 @@ export default {
       // 로그인 체크
       const userId = getUserId()
       if (!userId) {
-        this.loginModalTitle = '로그인이 필요합니다'
-        this.loginModalMessage = '투표하려면 로그인해주세요.'
-        this.showLoginModal = true
+        this.openLoginRequired('투표하려면 로그인이 필요합니다.').then(confirmed => {
+          if (confirmed) {
+            this.$router.push({ name: 'Login', query: { redirect: this.$route.fullPath } })
+          }
+        })
         return
       }
 
@@ -610,9 +598,10 @@ export default {
       // 로그인 체크
       const userId = getUserId()
       if (!userId) {
-        this.loginModalTitle = '로그인이 필요합니다'
-        this.loginModalMessage = '투표하려면 로그인해주세요.'
-        this.showLoginModal = true
+        const confirmed = await this.openLoginRequired('투표하려면 로그인이 필요합니다.')
+        if (confirmed) {
+          this.$router.push({ name: 'Login', query: { redirect: this.$route.fullPath } })
+        }
         return
       }
 
@@ -893,9 +882,10 @@ export default {
       // 로그인 체크
       const userId = getUserId()
       if (!userId) {
-        this.loginModalTitle = '로그인이 필요합니다'
-        this.loginModalMessage = 'PICK 한마디를 남기려면 로그인해주세요.'
-        this.showLoginModal = true
+        const confirmed = await this.openLoginRequired('PICK 한마디를 남기려면 로그인이 필요합니다.')
+        if (confirmed) {
+          this.$router.push({ name: 'Login', query: { redirect: this.$route.fullPath } })
+        }
         return
       }
 
@@ -953,9 +943,10 @@ export default {
       // 로그인 체크
       const userId = getUserId()
       if (!userId) {
-        this.loginModalTitle = '로그인이 필요합니다'
-        this.loginModalMessage = '공감하려면 로그인해주세요.'
-        this.showLoginModal = true
+        const confirmed = await this.openLoginRequired('공감하려면 로그인이 필요합니다.')
+        if (confirmed) {
+          this.$router.push({ name: 'Login', query: { redirect: this.$route.fullPath } })
+        }
         return
       }
 
@@ -1130,9 +1121,10 @@ export default {
     async handleAddProduct() {
       const userId = getUserId()
       if (!userId) {
-        this.loginModalTitle = '로그인이 필요합니다'
-        this.loginModalMessage = '아이템을 등록하려면 로그인해주세요.'
-        this.showLoginModal = true
+        const confirmed = await this.openLoginRequired('아이템을 등록하려면 로그인이 필요합니다.')
+        if (confirmed) {
+          this.$router.push({ name: 'Login', query: { redirect: this.$route.fullPath } })
+        }
         return
       }
       this.showAddModal = true
