@@ -204,6 +204,11 @@
                 </div>
                 <div v-if="decos.length > 0" class="save-deco-wrap">
                   <button
+                    class="clear-all-deco-btn"
+                    :disabled="bulkDeleting"
+                    @click="bulkDeleteAllDecos"
+                  >{{ bulkDeleting ? '삭제 중...' : `전체 삭제 (${decos.length})` }}</button>
+                  <button
                     class="save-deco-btn"
                     :class="{ disabled: slotFull }"
                     :disabled="slotFull"
@@ -848,6 +853,7 @@ const saving = ref(false)
 const nameTagImg = ref(null)
 const nameTagInputRef = ref(null)
 const phototagUploading = ref(false)
+const bulkDeleting = ref(false)
 
 const hasUnsavedChanges = computed(() => dirtyDecos.value.size > 0 || dirtyBubbles.value)
 const dims = reactive({ w: 0, h: 0 })
@@ -1599,6 +1605,23 @@ async function removeDeco(uid) {
   if (selDeco.value === uid) selDeco.value = null
 }
 
+async function bulkDeleteAllDecos() {
+  if (!decos.value.length || bulkDeleting.value) return
+  bulkDeleting.value = true
+  try {
+    const apiIds = decos.value.filter(d => d.apiId).map(d => d.apiId)
+    if (apiIds.length > 0 && carrierId.value) {
+      await apiBulkDeleteStickers(carrierId.value, apiIds)
+    }
+    decos.value = []
+    nameTagImg.value = null
+    selDeco.value = null
+    dirtyDecos.value = new Set()
+  } finally {
+    bulkDeleting.value = false
+  }
+}
+
 function saveAsMyDeco() {
   if (!decos.value.length || slotFull.value) return
   const snap = {
@@ -2069,7 +2092,21 @@ function downloadCarrierImage() {
 }
 .deco-item:hover { border-color: #c4b5fd; transform: translateY(-2px); }
 
-.save-deco-wrap { padding: 0 10px 12px; }
+.save-deco-wrap { padding: 0 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.clear-all-deco-btn {
+  width: 100%;
+  padding: 8px;
+  border: 1.5px solid #ef4444;
+  border-radius: 10px;
+  background: #fff;
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+}
+.clear-all-deco-btn:hover { background: #fef2f2; }
+.clear-all-deco-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .save-deco-btn {
   width: 100%;
   padding: 10px;

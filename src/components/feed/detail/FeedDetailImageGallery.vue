@@ -157,14 +157,19 @@ const nextImage = () => {
 }
 
 // Touch swipe handlers for gallery
+const isPinching = ref(false)
+
 const onTouchStart = (e) => {
+  if (e.touches.length >= 2) { isPinching.value = true; return }
   touchStartX.value = e.touches[0].clientX
   touchStartY.value = e.touches[0].clientY
   isSwiping.value = false
+  isPinching.value = false
 }
 
 const onTouchMove = (e) => {
-  if (!touchStartX.value) return
+  if (e.touches.length >= 2) { isPinching.value = true; return }
+  if (isPinching.value || !touchStartX.value) return
 
   const diffX = Math.abs(e.touches[0].clientX - touchStartX.value)
   const diffY = Math.abs(e.touches[0].clientY - touchStartY.value)
@@ -177,7 +182,13 @@ const onTouchMove = (e) => {
 }
 
 const onTouchEnd = (e) => {
-  if (!isSwiping.value) return
+  if (isPinching.value || !isSwiping.value) {
+    isPinching.value = false
+    touchStartX.value = 0
+    touchStartY.value = 0
+    isSwiping.value = false
+    return
+  }
 
   const touchEndX = e.changedTouches[0].clientX
   const diff = touchStartX.value - touchEndX
@@ -218,14 +229,18 @@ const lightboxNext = () => {
 // Lightbox touch swipe
 const lbTouchStartX = ref(0)
 const lbSwiping = ref(false)
+const lbPinching = ref(false)
 
 const onLightboxTouchStart = (e) => {
+  if (e.touches.length >= 2) { lbPinching.value = true; return }
   lbTouchStartX.value = e.touches[0].clientX
   lbSwiping.value = false
+  lbPinching.value = false
 }
 
 const onLightboxTouchMove = (e) => {
-  if (!lbTouchStartX.value) return
+  if (e.touches.length >= 2) { lbPinching.value = true; return }
+  if (lbPinching.value || !lbTouchStartX.value) return
   const diffX = Math.abs(e.touches[0].clientX - lbTouchStartX.value)
   if (diffX > 10) {
     lbSwiping.value = true
@@ -233,8 +248,10 @@ const onLightboxTouchMove = (e) => {
 }
 
 const onLightboxTouchEnd = (e) => {
-  if (!lbSwiping.value) {
+  if (lbPinching.value || !lbSwiping.value) {
+    lbPinching.value = false
     lbTouchStartX.value = 0
+    lbSwiping.value = false
     return
   }
 
