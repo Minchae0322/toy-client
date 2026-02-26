@@ -952,8 +952,10 @@ onUnmounted(() => {
 /* 모바일 */
 @media (max-width: 640px) {
   .page-header h1 { font-size: 22px; }
-  .carrier-icon { width: 60px; height: 60px; border-radius: 18px; }
-  .carrier-icon svg { width: 40px; height: 40px; }
+  .carrier-panel { right: auto; left: 12px; align-items: flex-start; }
+  .carrier-icon { width: 56px; height: 56px; border-radius: 16px; }
+  .carrier-icon svg { width: 36px; height: 36px; }
+  .carrier-items { min-width: 210px; max-width: 260px; }
   .rank-bar { display: none; }
 }
 </style>
