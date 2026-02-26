@@ -224,29 +224,30 @@
                 </div>
                 <div ref="boxRef" class="carrier-box" @click="selDeco = null; showColorPicker = false">
 
-                  <!-- 컬러 피커 (기본 스킨 전용) -->
-                  <div v-if="activeSkin === 'default'" class="color-picker">
-                    <div
-                      v-for="c in DEFAULT_COLORS"
-                      :key="c.id"
-                      class="color-dot"
-                      :class="{ active: defaultColor === c.id }"
-                      :style="{ background: c.dot, boxShadow: defaultColor === c.id ? `0 0 0 2px ${c.dot}44` : '0 2px 6px rgba(0,0,0,0.12)' }"
-                      @click.stop="defaultColor = c.id"
-                    ></div>
-                  </div>
-
                   <!-- 토글 바 -->
                   <div class="view-toggle-bar">
-                    <div class="inline-slot-tabs">
-                      <button
-                        v-for="idx in SLOT_COUNT"
-                        :key="idx - 1"
-                        class="inline-slot-btn"
-                        :class="{ active: activeSlotIdx === idx - 1 }"
-                        :disabled="slotSwitching"
-                        @click="selectSlot(idx - 1)"
-                      >{{ idx }}<span v-if="activeSlotIdx === idx - 1 && hasUnsavedChanges" class="inline-slot-dot"></span></button>
+                    <div class="toggle-bar-left">
+                      <div class="inline-slot-tabs">
+                        <button
+                          v-for="idx in SLOT_COUNT"
+                          :key="idx - 1"
+                          class="inline-slot-btn"
+                          :class="{ active: activeSlotIdx === idx - 1 }"
+                          :disabled="slotSwitching"
+                          @click="selectSlot(idx - 1)"
+                        >{{ idx }}<span v-if="activeSlotIdx === idx - 1 && hasUnsavedChanges" class="inline-slot-dot"></span></button>
+                      </div>
+                      <!-- 컬러 피커 (기본 스킨 전용) -->
+                      <div v-if="activeSkin === 'default'" class="color-picker">
+                        <div
+                          v-for="c in DEFAULT_COLORS"
+                          :key="c.id"
+                          class="color-dot"
+                          :class="{ active: defaultColor === c.id }"
+                          :style="{ background: c.dot, boxShadow: defaultColor === c.id ? `0 0 0 2px ${c.dot}44` : '0 2px 6px rgba(0,0,0,0.12)' }"
+                          @click.stop="defaultColor = c.id"
+                        ></div>
+                      </div>
                     </div>
                     <div class="view-toggle">
                       <span class="toggle-label">내부 보기</span>
@@ -419,14 +420,6 @@
                     </div>
                   </div>
 
-                  <!-- 공유하기 버튼 -->
-                  <button class="share-btn" @click.stop="showShareModal = true">
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                    </svg>
-                  </button>
-
                 </div>
 
                 <!-- 배치 중인 스티커 오버레이 (포토택 제외 - 고정 위치) -->
@@ -470,6 +463,13 @@
                     <button class="tb-btn remove" @click.stop="removePhototag()">✕</button>
                   </div>
                 </div>
+              </div>
+
+              <!-- 모바일 전체삭제 -->
+              <div v-if="decos.length > 0" class="mobile-clear-wrap">
+                <button class="mobile-clear-btn" @click="bulkDeleteAllDecos">
+                  전체 삭제 ({{ decos.length }})
+                </button>
               </div>
 
             </div>
@@ -569,24 +569,32 @@
           </div>
         </div>
 
-        <!-- 저장 버튼 (변경사항 있을 때만) -->
-        <Transition name="save-fab">
-          <button
-            v-if="hasUnsavedChanges"
-            class="save-fab"
-            :class="{ saving }"
-            :disabled="saving"
-            @click="saveAllChanges"
-          >
-            <svg v-if="!saving" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-              <polyline points="17 21 17 13 7 13 7 21"/>
-              <polyline points="7 3 7 8 15 8"/>
+        <!-- 우하단 FAB 영역 -->
+        <div class="fab-group">
+          <button class="share-fab" @click.stop="showShareModal = true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
             </svg>
-            <div v-else class="save-spinner"></div>
-            <span>{{ saving ? '저장 중...' : '저장' }}</span>
           </button>
-        </Transition>
+          <Transition name="save-fab">
+            <button
+              v-if="hasUnsavedChanges"
+              class="save-fab"
+              :class="{ saving }"
+              :disabled="saving"
+              @click="saveAllChanges"
+            >
+              <svg v-if="!saving" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              <div v-else class="save-spinner"></div>
+              <span>{{ saving ? '저장 중...' : '저장' }}</span>
+            </button>
+          </Transition>
+        </div>
 
         <!-- 공유 모달 -->
         <Teleport to="body">
@@ -2038,6 +2046,10 @@ function downloadCarrierImage() {
 }
 .clear-all-deco-btn:hover { background: #fef2f2; }
 .clear-all-deco-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 모바일 전체삭제 (center-panel 하단, 데스크톱 숨김) */
+.mobile-clear-wrap { display: none; }
+
 /* 캐꾸 저장 바 */
 .deco-save-bar {
   display: flex;
@@ -2160,34 +2172,42 @@ function downloadCarrierImage() {
   box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 
-.share-btn {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  z-index: 10;
-  width: 40px;
-  height: 40px;
+/* FAB 그룹 (공유 + 저장) */
+.fab-group {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.share-fab {
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.85);
+  background: #fff;
   color: #7c3aed;
   cursor: pointer;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
   transition: background 0.15s, transform 0.15s;
 }
-.share-btn:hover { background: #f5f3ff; transform: scale(1.08); }
+.share-fab:hover { background: #f5f3ff; transform: scale(1.08); }
 
-.color-picker {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  z-index: 10;
+.toggle-bar-left {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
+}
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 .color-dot {
   width: 24px;
@@ -2699,10 +2719,6 @@ function downloadCarrierImage() {
 
 /* ==================== 저장 FAB ==================== */
 .save-fab {
-  position: fixed;
-  bottom: 28px;
-  right: 28px;
-  z-index: 200;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2892,6 +2908,24 @@ function downloadCarrierImage() {
     aspect-ratio: unset;
     height: 100%;
   }
+  .mobile-clear-wrap {
+    display: flex;
+    justify-content: flex-end;
+    padding: 6px 8px 4px;
+    flex-shrink: 0;
+  }
+  .mobile-clear-btn {
+    padding: 6px 14px;
+    border: 1.5px solid #ef4444;
+    border-radius: 8px;
+    background: #fff;
+    color: #ef4444;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mobile-clear-btn:active { background: #fef2f2; }
 
   /* 캐리어 박스 모바일 */
   .carrier-box {
@@ -2963,19 +2997,17 @@ function downloadCarrierImage() {
     left: 10px;
     right: 10px;
   }
-  .color-picker {
-    top: 10px;
-    left: 10px;
-  }
   .color-dot {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
   }
 
-  /* 저장 버튼 모바일 */
-  .save-fab {
+  /* FAB 그룹 모바일 */
+  .fab-group {
     bottom: 20px;
     right: 16px;
+  }
+  .save-fab {
     padding: 10px 18px;
     font-size: 13px;
   }
