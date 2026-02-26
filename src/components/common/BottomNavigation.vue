@@ -502,10 +502,9 @@ onBeforeUnmount(() => {
 
 /* 더보기 Menu */
 .more-menu {
-  position: fixed;
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  left: 50%;
-  transform: translateX(-50%);
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: -12px;
   background: white;
   border-radius: 14px;
   padding: 6px;

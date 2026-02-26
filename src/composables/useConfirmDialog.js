@@ -32,6 +32,11 @@ function open({ type = 'confirm', title = '', message = '', confirmText, cancelT
   })
 }
 
+function dismiss() {
+  if (state.resolve) state.resolve(null)
+  close()
+}
+
 function openLoginRequired(message = '이 기능을 사용하려면 로그인이 필요합니다.') {
   return open({
     type: 'login',
@@ -61,6 +66,7 @@ export function useConfirmDialog() {
     open,
     openLoginRequired,
     confirm,
-    cancel
+    cancel,
+    dismiss
   }
 }

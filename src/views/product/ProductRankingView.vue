@@ -96,21 +96,6 @@
                 <div v-if="isBagged(product.id)" class="bagged-check" :style="{ width: Math.max(16, nodes[i].r * 0.26) + 'px', height: Math.max(16, nodes[i].r * 0.26) + 'px', fontSize: Math.max(8, nodes[i].r * 0.12) + 'px' }">✓</div>
               </div>
 
-              <!-- 범례 -->
-              <div class="bubble-legend">
-                <div class="legend-item">
-                  <div class="legend-dot big"></div>
-                  <span>인기 높음</span>
-                </div>
-                <svg width="28" height="10" viewBox="0 0 28 10" fill="none">
-                  <line x1="0" y1="5" x2="24" y2="5" stroke="#ccc" stroke-width="1.5"/>
-                  <path d="M20 1L27 5L20 9" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <div class="legend-item">
-                  <div class="legend-dot small"></div>
-                  <span>인기 낮음</span>
-                </div>
-              </div>
 
               <!-- 툴팁 -->
               <div v-if="tooltipProduct && !dragging" class="bubble-tooltip" :style="tooltipStyle">
@@ -813,15 +798,6 @@ onUnmounted(() => {
   color: #fff; font-weight: 700;
 }
 
-/* 범례 */
-.bubble-legend {
-  position: absolute; bottom: 14px; left: 16px;
-  display: flex; align-items: center; gap: 8px; pointer-events: none;
-}
-.legend-item { display: flex; align-items: center; gap: 5px; }
-.legend-item span { font-size: 11px; color: #888; }
-.legend-dot.big { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg,#7c3aed,#a78bfa); }
-.legend-dot.small { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid #e5e7eb; background: #fff; }
 
 /* 툴팁 */
 .bubble-tooltip {

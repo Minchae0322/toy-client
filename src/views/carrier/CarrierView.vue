@@ -63,7 +63,7 @@
             <!-- 좌측: 캐꾸샵 -->
             <div class="left-panel" :class="{ 'mobile-active': mobileTab === 'shop' }">
               <div class="panel-title-row">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
                 <span class="panel-label">캐꾸샵</span>
@@ -74,14 +74,6 @@
                 <div class="shop-card-header">
                   <span class="shop-card-title">스킨</span>
                   <div class="shop-card-actions">
-                    <div
-                      v-if="mySkinList.length > 0"
-                      class="my-toggle"
-                      :class="{ active: activeSkin.startsWith('my-') }"
-                      @click="toggleMyView"
-                    >
-                      <span>MY</span>
-                    </div>
                     <div class="current-skin-badge">
                       <span>{{ currentSkin.name }}</span>
                     </div>
@@ -93,67 +85,66 @@
                   </button>
                   <div class="skin-viewport">
                     <div class="skin-track" :style="{ transform: `translateX(-${skinScroll}px)` }">
-                      <template v-for="(item, idx) in allSkinItems" :key="item.divider ? 'div' : item.id">
-                        <div v-if="item.divider" class="skin-divider">
-                          <div class="skin-divider-line"></div>
-                        </div>
+                      <div
+                        v-for="item in allSkinItems"
+                        :key="item.id"
+                        class="skin-item-wrap"
+                      >
                         <div
-                          v-else
-                          class="skin-item-wrap"
-                          @mouseenter="e => showMyDel(e)"
-                          @mouseleave="e => hideMyDel(e)"
+                          class="skin-preview"
+                          :class="{ active: activeSkin === item.id }"
+                          @click="activeSkin = item.id"
                         >
-                          <div
-                            class="skin-preview"
-                            :class="{ active: activeSkin === item.id }"
-                            @click="activeSkin = item.id"
-                          >
-                            <div v-if="item.special" class="skin-badge sp">SP</div>
-                            <div v-if="item.isMy && !item.isEmpty" class="skin-badge my">MY</div>
-                            <div class="skin-svg-wrap">
-                              <!-- 빈 슬롯 -->
-                              <svg v-if="item.isEmpty" width="60" height="80" viewBox="0 0 300 400" fill="none">
-                                <rect x="30" y="50" width="240" height="320" rx="20" fill="none" stroke="#d1d5db" stroke-width="4" stroke-dasharray="12 8"/>
-                                <rect x="116" y="6" width="68" height="18" rx="9" fill="none" stroke="#d1d5db" stroke-width="3" stroke-dasharray="8 6"/>
-                                <text x="150" y="220" text-anchor="middle" font-size="28" fill="#d1d5db">+</text>
-                              </svg>
-                              <!-- 스킨 미리보기 -->
-                              <svg v-else width="60" height="80" viewBox="0 0 300 400" fill="none">
-                                <defs>
-                                  <linearGradient :id="`pg-${item.id}`" x1="0" y1="0" x2="1" y2="1">
-                                    <stop offset="0%" :stop-color="item.body.grad1"/>
-                                    <stop offset="100%" :stop-color="item.body.grad2"/>
-                                  </linearGradient>
-                                </defs>
-                                <rect x="30" y="50" width="240" height="320" rx="20" :fill="`url(#pg-${item.id})`" :stroke="item.body.stroke" stroke-width="5"/>
-                                <rect x="116" y="6" width="68" height="18" rx="9" :fill="item.handle.grip" :stroke="item.handle.stroke" stroke-width="3.5"/>
-                                <rect x="98" y="80" width="22" height="250" rx="11" :fill="item.groove.fill" :stroke="item.groove.stroke" stroke-width="3"/>
-                                <rect x="139" y="80" width="22" height="250" rx="11" :fill="item.groove.fill" :stroke="item.groove.stroke" stroke-width="3"/>
-                                <rect x="180" y="80" width="22" height="250" rx="11" :fill="item.groove.fill" :stroke="item.groove.stroke" stroke-width="3"/>
-                                <circle cx="70" cy="382" r="10" :fill="item.wheel.fill" :stroke="item.wheel.stroke" stroke-width="3"/>
-                                <circle cx="230" cy="382" r="10" :fill="item.wheel.fill" :stroke="item.wheel.stroke" stroke-width="3"/>
-                              </svg>
-                            </div>
-                            <div class="skin-info">
-                              <div class="skin-name" :class="{ empty: item.isEmpty }">{{ item.name }}</div>
-                              <div class="skin-desc" :class="{ empty: item.isEmpty }">{{ item.desc }}</div>
-                            </div>
-                            <div v-if="activeSkin === item.id && !item.isEmpty" class="skin-active-bar"></div>
+                          <div v-if="item.special" class="skin-badge sp">SP</div>
+                          <div class="skin-svg-wrap">
+                            <svg width="60" height="80" viewBox="0 0 300 400" fill="none">
+                              <defs>
+                                <linearGradient :id="`pg-${item.id}`" x1="0" y1="0" x2="1" y2="1">
+                                  <stop offset="0%" :stop-color="item.body.grad1"/>
+                                  <stop offset="100%" :stop-color="item.body.grad2"/>
+                                </linearGradient>
+                              </defs>
+                              <rect x="30" y="50" width="240" height="320" rx="20" :fill="`url(#pg-${item.id})`" :stroke="item.body.stroke" stroke-width="5"/>
+                              <rect x="116" y="6" width="68" height="18" rx="9" :fill="item.handle.grip" :stroke="item.handle.stroke" stroke-width="3.5"/>
+                              <rect x="98" y="80" width="22" height="250" rx="11" :fill="item.groove.fill" :stroke="item.groove.stroke" stroke-width="3"/>
+                              <rect x="139" y="80" width="22" height="250" rx="11" :fill="item.groove.fill" :stroke="item.groove.stroke" stroke-width="3"/>
+                              <rect x="180" y="80" width="22" height="250" rx="11" :fill="item.groove.fill" :stroke="item.groove.stroke" stroke-width="3"/>
+                              <circle cx="70" cy="382" r="10" :fill="item.wheel.fill" :stroke="item.wheel.stroke" stroke-width="3"/>
+                              <circle cx="230" cy="382" r="10" :fill="item.wheel.fill" :stroke="item.wheel.stroke" stroke-width="3"/>
+                            </svg>
                           </div>
-                          <button
-                            v-if="item.isMy && !item.isEmpty"
-                            class="my-del-btn"
-                            data-my-del
-                            @click.stop="removeMySlot(parseInt(item.id.split('-')[1]))"
-                          >✕</button>
+                          <div class="skin-info">
+                            <div class="skin-name">{{ item.name }}</div>
+                            <div class="skin-desc">{{ item.desc }}</div>
+                          </div>
+                          <div v-if="activeSkin === item.id" class="skin-active-bar"></div>
                         </div>
-                      </template>
+                      </div>
                     </div>
                   </div>
                   <button class="carousel-btn" :disabled="skinScroll >= skinMaxScroll" @click="scrollSkins(1)">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3L9 7L5 11" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
                 </div>
+                <!-- 캐꾸 저장 -->
+                <Transition name="deco-bar">
+                  <div v-if="hasUnsavedChanges" class="deco-save-bar">
+                    <div class="deco-save-left">
+                      <svg class="deco-save-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                      </svg>
+                      <span class="deco-save-label">변경사항 있음</span>
+                    </div>
+                    <button
+                      class="deco-save-btn"
+                      :class="{ disabled: saving }"
+                      :disabled="saving"
+                      @click="saveAllChanges"
+                    >{{ saving ? '저장 중...' : '저장' }}</button>
+                  </div>
+                </Transition>
               </div>
 
               <!-- 스티커팩 -->
@@ -205,24 +196,32 @@
                 <div v-if="decos.length > 0" class="save-deco-wrap">
                   <button
                     class="clear-all-deco-btn"
-                    :disabled="bulkDeleting"
                     @click="bulkDeleteAllDecos"
-                  >{{ bulkDeleting ? '삭제 중...' : `전체 삭제 (${decos.length})` }}</button>
-                  <button
-                    class="save-deco-btn"
-                    :class="{ disabled: slotFull }"
-                    :disabled="slotFull"
-                    @click="saveAsMyDeco"
-                  >
-                    {{ slotFull ? '슬롯이 가득 찼어요' : `MY 캐꾸로 저장 (${decos.length}개 스티커)` }}
-                  </button>
+                  >전체 삭제 ({{ decos.length }})</button>
                 </div>
               </div>
             </div>
 
             <!-- 중앙: 캐리어 뷰 -->
             <div class="center-panel" :class="{ 'mobile-active': mobileTab === 'carrier' }">
+              <!-- 캐꾸 슬롯 탭 -->
+              <div class="carrier-slot-tabs">
+                <button
+                  v-for="idx in SLOT_COUNT"
+                  :key="idx - 1"
+                  class="slot-tab"
+                  :class="{ active: activeSlotIdx === idx - 1, empty: !slotCarrierIds[idx - 1] }"
+                  :disabled="slotSwitching"
+                  @click="selectSlot(idx - 1)"
+                >
+                  내 캐리어 {{ idx }}<span v-if="activeSlotIdx === idx - 1 && hasUnsavedChanges" class="slot-unsaved-dot"></span>
+                </button>
+              </div>
+
               <div class="carrier-box-wrap">
+                <div v-if="slotSwitching" class="slot-loading-overlay">
+                  <div class="spinner"></div>
+                </div>
                 <div ref="boxRef" class="carrier-box" @click="selDeco = null; showColorPicker = false">
 
                   <!-- 컬러 피커 (기본 스킨 전용) -->
@@ -237,11 +236,23 @@
                     ></div>
                   </div>
 
-                  <!-- 토글 스위치 -->
-                  <div class="view-toggle">
-                    <span class="toggle-label">내부 보기</span>
-                    <div class="toggle-switch" :class="{ on: isOpen }" @click="toggle">
-                      <div class="toggle-knob" :style="{ left: isOpen ? '27px' : '3px' }"></div>
+                  <!-- 토글 바 -->
+                  <div class="view-toggle-bar">
+                    <div class="inline-slot-tabs">
+                      <button
+                        v-for="idx in SLOT_COUNT"
+                        :key="idx - 1"
+                        class="inline-slot-btn"
+                        :class="{ active: activeSlotIdx === idx - 1 }"
+                        :disabled="slotSwitching"
+                        @click="selectSlot(idx - 1)"
+                      >{{ idx }}<span v-if="activeSlotIdx === idx - 1 && hasUnsavedChanges" class="inline-slot-dot"></span></button>
+                    </div>
+                    <div class="view-toggle">
+                      <span class="toggle-label">내부 보기</span>
+                      <div class="toggle-switch" :class="{ on: isOpen }" @click="toggle">
+                        <div class="toggle-knob" :style="{ left: isOpen ? '27px' : '3px' }"></div>
+                      </div>
                     </div>
                   </div>
 
@@ -286,7 +297,6 @@
                         <rect x="180" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2" filter="url(#iS)"/>
                         <!-- 스킨 스티커 (내장) -->
                         <template v-for="(st, i) in currentSkin.stickers" :key="'sk-' + i">
-                          <template v-if="!(isEditingMy && st.type === 'emoji')">
                             <!-- smallheart -->
                             <g v-if="st.type === 'smallheart'" :transform="`translate(${st.x},${st.y})`">
                               <path d="M0 7C-2 5-9 1-9-4C-9-8-5-10 0-6C5-10 9-8 9-4C9 1 2 5 0 7Z" fill="#fca5a5" stroke="#f87171" stroke-width="1"/>
@@ -310,7 +320,6 @@
                               <circle r="12" fill="#818cf8" opacity="0.6"/>
                               <ellipse rx="20" ry="5" fill="none" stroke="#c7d2fe" stroke-width="1.5" opacity="0.5" transform="rotate(-20)"/>
                             </g>
-                          </template>
                         </template>
                         <!-- 포토택 (고정 위치) -->
                         <g v-if="hasPhototag" transform="rotate(-4,126,53)" class="phototag-fixed"
@@ -331,11 +340,15 @@
                             <tspan x="126" y="120">PHOTO</tspan>
                             <tspan x="126" dy="14">TAG</tspan>
                           </text>
+                          <!-- 사진 영역 클릭 → 사진 변경 -->
                           <rect x="98" y="97" width="56" height="56" rx="3" fill="transparent" style="cursor: pointer" @click.stop="!phototagUploading && nameTagInputRef?.click()"/>
+                          <!-- 사진 삭제 (X) -->
                           <g v-if="nameTagImg && !phototagUploading" class="nt-del" @click.stop="clearPhototagImage()" style="cursor: pointer">
                             <circle cx="154" cy="98" r="7" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
                             <text x="154" y="101.5" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">✕</text>
                           </g>
+                          <!-- 프레임 영역 클릭 → 포토택 선택 -->
+                          <rect x="97" y="53" width="58" height="43" rx="4" fill="transparent" style="cursor: pointer" @click.stop="selectPhototag()"/>
                         </g>
                         <!-- 바퀴 -->
                         <rect x="62" y="365" width="16" height="8" rx="3" :fill="currentSkin.wheel.fill" :stroke="currentSkin.wheel.stroke" stroke-width="1.5"/>
@@ -416,35 +429,6 @@
 
                 </div>
 
-                <!-- 편집 중인 MY 스티커 오버레이 -->
-                <template v-if="isEditingMy && editingMyDecos">
-                  <div
-                    v-for="(d, di) in editingMyDecos"
-                    :key="'my-' + activeMyIdx + '-' + di"
-                    class="deco-overlay"
-                    :style="getDecoOverlayStyle(d)"
-                  >
-                    <div
-                      class="deco-emoji"
-                      :class="{ selected: selDeco === `my-${activeMyIdx}-${di}` }"
-                      :style="{ fontSize: 24 * d.scale + 'px', width: 36 * d.scale + 'px', height: 36 * d.scale + 'px', transform: d.flipped ? 'scaleX(-1)' : 'scaleX(1)' }"
-                      @mousedown.prevent.stop="onMyDown($event, activeMyIdx, di, d)"
-                      @touchstart.prevent.stop="onMyDown($event, activeMyIdx, di, d)"
-                    >{{ d.emoji }}</div>
-                    <div v-if="selDeco === `my-${activeMyIdx}-${di}`" class="deco-toolbar" @click.stop>
-                      <button class="tb-btn" @click.stop="flipMyS(activeMyIdx, di)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 3 3 7 7 11"/><path d="M3 7h13a5 5 0 010 10h-4"/></svg>
-                      </button>
-                      <div class="tb-sep"></div>
-                      <button class="tb-btn" :disabled="d.scale <= DMIN" @click.stop="scaleMyS(activeMyIdx, di, -DSTEP)">−</button>
-                      <span class="tb-scale">{{ Math.round(d.scale * 100) }}%</span>
-                      <button class="tb-btn" :disabled="d.scale >= DMAX" @click.stop="scaleMyS(activeMyIdx, di, DSTEP)">+</button>
-                      <div class="tb-sep"></div>
-                      <button class="tb-btn remove" @click.stop="removeMyS(activeMyIdx, di)">✕</button>
-                    </div>
-                  </div>
-                </template>
-
                 <!-- 배치 중인 스티커 오버레이 (포토택 제외 - 고정 위치) -->
                 <template v-if="!isOpen">
                   <div
@@ -456,7 +440,7 @@
                     <div
                       class="deco-emoji"
                       :class="{ selected: selDeco === d.uid }"
-                      :style="{ fontSize: 24 * d.scale + 'px', width: 36 * d.scale + 'px', height: 36 * d.scale + 'px', transform: d.flipped ? 'scaleX(-1)' : 'scaleX(1)' }"
+                      :style="{ fontSize: decoFont * d.scale + 'px', width: decoBase * d.scale + 'px', height: decoBase * d.scale + 'px', transform: d.flipped ? 'scaleX(-1)' : 'scaleX(1)' }"
                       @mousedown.prevent.stop="onDecoDown($event, d.uid)"
                       @touchstart.prevent.stop="onDecoDown($event, d.uid)"
                     >{{ d.emoji }}</div>
@@ -473,7 +457,21 @@
                     </div>
                   </div>
                 </template>
+
+                <!-- 포토택 선택 시 툴바 -->
+                <div v-if="selPhototag" class="deco-overlay" :style="phototagToolbarStyle" @click.stop>
+                  <div class="deco-toolbar" @click.stop>
+                    <button class="tb-btn" @click.stop="!phototagUploading && nameTagInputRef?.click()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                      </svg>
+                    </button>
+                    <div class="tb-sep"></div>
+                    <button class="tb-btn remove" @click.stop="removePhototag()">✕</button>
+                  </div>
+                </div>
               </div>
+
             </div>
 
             <!-- 우측: 아이템 목록 -->
@@ -742,18 +740,25 @@ import { useRouter } from 'vue-router'
 import { useCarrier } from '@/composables/useCarrier.js'
 import { CARRIER_TYPE } from '@/services/CarrierService.js'
 import { fileService } from '@/services/FileService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const router = useRouter()
+const { open: openConfirm } = useConfirmDialog()
 
 // ==================== 상수 ====================
 const DMIN = 0.6
 const DMAX = 2.5
 const DSTEP = 0.2
+const DECO_BASE = 36
+const DECO_FONT = 24
+const isMobile = computed(() => dims.w > 0 && dims.w < 400)
+const decoBase = computed(() => isMobile.value ? 52 : DECO_BASE)
+const decoFont = computed(() => isMobile.value ? 34 : DECO_FONT)
 const IW = 110
 const G = 8
 const MIN_R = 28
 const MAX_R = 80
-const MY_SLOT_COUNT = 2
+const SLOT_COUNT = 2
 
 const DEFAULT_COLORS = [
   { id: 'violet', label: '바이올렛', dot: '#7c3aed', body: { grad1: '#f5f3ff', grad2: '#e4dff2', stroke: '#7c3aed' }, groove: { fill: '#ebe8f4', stroke: '#d4d0e8' }, handle: { fill: '#d8d2ea', stroke: '#7c3aed', grip: '#ece9f5' }, wheel: { fill: '#d8d2ea', stroke: '#7c3aed', hub: '#7c3aed', inner: '#ece9f5' } },
@@ -826,6 +831,9 @@ function colorIdToSkinColor(id) {
 const { loading: apiLoading, error: apiError, carriers, currentCarrier, fetchMyCarriers, fetchCarrier, createCarrier, updateSkin, deleteCarrier, addItem: apiAddItem, removeItem: apiRemoveItem, addSticker: apiAddSticker, updateSticker: apiUpdateSticker, removeSticker: apiRemoveSticker, bulkDeleteStickers: apiBulkDeleteStickers, updatePositions } = useCarrier()
 
 const carrierId = ref(null)
+const activeSlotIdx = ref(0)
+const slotCarrierIds = ref([null, null])
+const slotSwitching = ref(false)
 
 // ==================== 상태 ====================
 const isOpen = ref(false)
@@ -840,7 +848,6 @@ const stickerPack = ref('basic')
 const decoPage = ref(0)
 const decos = ref([])
 const selDeco = ref(null)
-const savedDecos = ref(Array(MY_SLOT_COUNT).fill(null))
 const showShareModal = ref(false)
 const shareNickname = ref('')
 const itemsExpanded = ref(false)
@@ -853,9 +860,19 @@ const saving = ref(false)
 const nameTagImg = ref(null)
 const nameTagInputRef = ref(null)
 const phototagUploading = ref(false)
-const bulkDeleting = ref(false)
 
-const hasUnsavedChanges = computed(() => dirtyDecos.value.size > 0 || dirtyBubbles.value)
+// 지연 저장 추적
+const pendingAdds = ref([])       // 새로 추가된 스티커 uid (아직 apiId 없음)
+const pendingDeletes = ref([])    // 서버에서 삭제할 apiId 목록
+const dirtySkin = ref(false)      // 스킨/컬러 변경 여부
+
+const hasUnsavedChanges = computed(() =>
+  dirtyDecos.value.size > 0 ||
+  dirtyBubbles.value ||
+  pendingAdds.value.length > 0 ||
+  pendingDeletes.value.length > 0 ||
+  dirtySkin.value
+)
 const dims = reactive({ w: 0, h: 0 })
 
 const boxRef = ref(null)
@@ -879,54 +896,36 @@ const appliedSkins = computed(() => BASE_SKINS.map(s =>
     : s
 ))
 
-const mySkinList = computed(() =>
-  Array.from({ length: MY_SLOT_COUNT }, (_, i) => {
-    const sd = savedDecos.value[i]
-    if (sd) {
-      const savedColor = DEFAULT_COLORS.find(c => c.id === sd.colorId) || DEFAULT_COLORS[0]
-      return {
-        id: 'my-' + i, name: 'MY 캐꾸 ' + (i + 1), desc: '내가 꾸민 #' + (i + 1),
-        special: false, isMy: true, isEmpty: false,
-        body: { ...savedColor.body }, groove: { ...savedColor.groove },
-        handle: { ...savedColor.handle }, wheel: { ...savedColor.wheel },
-        stickers: decoToSvg(sd.items)
-      }
-    }
-    return {
-      id: 'my-' + i, name: 'MY 캐꾸 ' + (i + 1), desc: '비어있음',
-      special: false, isMy: true, isEmpty: true,
-      body: { grad1: '#f9fafb', grad2: '#f3f4f6', stroke: '#d1d5db' },
-      groove: { fill: '#f3f4f6', stroke: '#e5e7eb' },
-      handle: { fill: '#e5e7eb', stroke: '#d1d5db', grip: '#f3f4f6' },
-      wheel: { fill: '#e5e7eb', stroke: '#d1d5db', hub: '#d1d5db', inner: '#f3f4f6' },
-      stickers: []
-    }
-  })
-)
-
-const allSkins = computed(() => [...appliedSkins.value, ...mySkinList.value])
+const allSkins = computed(() => [...appliedSkins.value])
 const currentSkin = computed(() => allSkins.value.find(s => s.id === activeSkin.value) || allSkins.value[0])
 
-const nSkins = computed(() => allSkins.value.filter(s => !s.special && !s.isMy))
+const nSkins = computed(() => allSkins.value.filter(s => !s.special))
 const sSkins = computed(() => allSkins.value.filter(s => s.special))
 
-const allSkinItems = computed(() => {
-  const base = [...nSkins.value, ...sSkins.value]
-  return [...base, { divider: true }, ...mySkinList.value]
-})
+const allSkinItems = computed(() => [...nSkins.value, ...sSkins.value])
 
 const skinMaxScroll = computed(() => {
-  const totalW = allSkinItems.value.reduce((s, it) => s + (it.divider ? 20 + G : IW + G), 0) - G
+  const totalW = allSkinItems.value.length * (IW + G) - G
   const VW = IW * 2 + G + IW * 0.5
   return Math.max(0, totalW - VW)
 })
 
-const activeMyIdx = computed(() => activeSkin.value.startsWith('my-') ? parseInt(activeSkin.value.split('-')[1]) : -1)
-const isEditingMy = computed(() => activeMyIdx.value >= 0 && savedDecos.value[activeMyIdx.value] !== null && !isOpen.value)
-const editingMyDecos = computed(() => isEditingMy.value ? savedDecos.value[activeMyIdx.value].items : null)
-const slotFull = computed(() => savedDecos.value.every(s => s !== null))
 const hasPhototag = computed(() => decos.value.some(d => d.type === 'phototag'))
 const emojiDecos = computed(() => decos.value.filter(d => d.type !== 'phototag'))
+const selPhototag = computed(() => {
+  const pt = decos.value.find(d => d.type === 'phototag')
+  return pt && selDeco.value === pt.uid ? pt : null
+})
+const phototagToolbarStyle = computed(() => {
+  const box = boxRef.value?.getBoundingClientRect()
+  if (!box) return { display: 'none' }
+  const b = getBounds(box.width, box.height)
+  const bw = b.right - b.left, bh = b.bottom - b.top
+  // 포토택 SVG 위치: x=126, y=78 (프레임 상단, viewBox 0 0 300 400 기준)
+  const px = b.left + (126 / 300) * bw
+  const py = b.top + (78 / 400) * bh
+  return { position: 'absolute', left: px + 'px', top: (py - 4) + 'px', zIndex: 20 }
+})
 
 // ==================== 스티커 페이징 ====================
 const curStickers = computed(() => STICKER_PACKS[stickerPack.value] || [])
@@ -1124,24 +1123,46 @@ async function saveAllChanges() {
   saving.value = true
 
   try {
-    const promises = []
+    // Phase 1: 스킨 변경
+    if (dirtySkin.value) {
+      const skinType = SKIN_TYPE_REVERSE[activeSkin.value] || CARRIER_TYPE.DEFAULT
+      const skinColor = skinType === CARRIER_TYPE.DEFAULT ? colorIdToSkinColor(defaultColor.value) : null
+      await updateSkin(carrierId.value, { skinType, skinColor })
+    }
 
-    // 버블 위치 저장
-    if (dirtyBubbles.value && posRef.current.length) {
-      const b = getBounds(dims.w, dims.h)
-      const bw = b.right - b.left, bh = b.bottom - b.top
-      if (bw > 0 && bh > 0) {
-        const itemPositions = posRef.current.map(p => ({
-          itemId: p.id,
-          positionX: Math.max(0, Math.min(1, (p.x - b.left) / bw)),
-          positionY: Math.max(0, Math.min(1, (p.y - b.top) / bh)),
-          zIndex: 0
-        }))
-        promises.push(updatePositions(carrierId.value, itemPositions, null))
+    // Phase 2: 스티커 삭제
+    if (pendingDeletes.value.length > 0) {
+      if (pendingDeletes.value.length > 1) {
+        await apiBulkDeleteStickers(carrierId.value, pendingDeletes.value)
+      } else {
+        await apiRemoveSticker(carrierId.value, pendingDeletes.value[0])
       }
     }
 
-    // 변경된 스티커 저장
+    // Phase 3: 새 스티커 추가 (순차 — 응답에서 apiId 받아야 함)
+    for (const uid of pendingAdds.value) {
+      const deco = decos.value.find(v => v.uid === uid)
+      if (!deco) continue
+
+      const stickerType = deco.type === 'phototag' ? 'PHOTO_TAG' : 'EMOJI'
+      const addData = {
+        stickerType,
+        content: deco.emoji || null,
+        imageUrl: deco.imageUrl || null,
+        positionX: deco.x / 100,
+        positionY: deco.y / 100,
+        zIndex: 0,
+        rotation: deco.rotation ?? 0,
+        scaleRatio: deco.scale ?? 1.0
+      }
+      const result = await apiAddSticker(carrierId.value, addData)
+      if (result.success && result.data?.id) {
+        deco.apiId = result.data.id
+      }
+    }
+
+    // Phase 4: 변경된 스티커 위치/스케일 업데이트 (병렬)
+    const updatePromises = []
     for (const uid of dirtyDecos.value) {
       const deco = decos.value.find(v => v.uid === uid)
       if (deco?.apiId) {
@@ -1154,15 +1175,34 @@ async function saveAllChanges() {
         if (deco.type === 'phototag' && deco.imageUrl !== undefined) {
           updateData.imageUrl = deco.imageUrl
         }
-        promises.push(apiUpdateSticker(carrierId.value, deco.apiId, updateData))
+        updatePromises.push(apiUpdateSticker(carrierId.value, deco.apiId, updateData))
       }
     }
 
-    await Promise.all(promises)
+    // Phase 5: 버블 위치 저장 (병렬)
+    if (dirtyBubbles.value && posRef.current.length) {
+      const b = getBounds(dims.w, dims.h)
+      const bw = b.right - b.left, bh = b.bottom - b.top
+      if (bw > 0 && bh > 0) {
+        const itemPositions = posRef.current.map(p => ({
+          itemId: p.id,
+          positionX: Math.max(0, Math.min(1, (p.x - b.left) / bw)),
+          positionY: Math.max(0, Math.min(1, (p.y - b.top) / bh)),
+          zIndex: 0
+        }))
+        updatePromises.push(updatePositions(carrierId.value, itemPositions, null))
+      }
+    }
 
-    // dirty 초기화
+    await Promise.all(updatePromises)
+
+    // Phase 6: dirty 상태 초기화
     dirtyDecos.value = new Set()
     dirtyBubbles.value = false
+    pendingAdds.value = []
+    pendingDeletes.value = []
+    dirtySkin.value = false
+    decos.value = [...decos.value]  // 반응성 트리거
   } finally {
     saving.value = false
   }
@@ -1182,25 +1222,69 @@ async function loadCarrierData() {
   await fetchMyCarriers()
 
   if (carriers.value.length === 0) {
-    // 캐리어가 없으면 기본 캐리어 생성
-    const result = await createCarrier({ name: '내 캐리어', skinType: CARRIER_TYPE.DEFAULT, skinColor: '#7c3aed' })
+    const result = await createCarrier({ name: '캐꾸 1', skinType: CARRIER_TYPE.DEFAULT, skinColor: '#7c3aed' })
     if (result.success) {
       await fetchMyCarriers()
     }
   }
 
-  if (carriers.value.length > 0) {
-    // 기본 캐리어 또는 첫 번째 캐리어 선택
-    const defaultCarrier = carriers.value.find(c => c.isDefault) || carriers.value[0]
-    carrierId.value = defaultCarrier.id
-    const detail = await fetchCarrier(defaultCarrier.id)
+  // 캐리어 → 슬롯 매핑 (순서대로)
+  slotCarrierIds.value = [null, null]
+  carriers.value.forEach((c, i) => {
+    if (i < SLOT_COUNT) slotCarrierIds.value[i] = c.id
+  })
+
+  await loadSlot(0)
+}
+
+async function loadSlot(idx) {
+  slotSwitching.value = true
+  try {
+    let cid = slotCarrierIds.value[idx]
+    if (!cid) {
+      const result = await createCarrier({ name: `캐꾸 ${idx + 1}`, skinType: CARRIER_TYPE.DEFAULT, skinColor: '#7c3aed' })
+      if (!result.success) return
+      await fetchMyCarriers()
+      cid = result.data.id
+      slotCarrierIds.value[idx] = cid
+    }
+    const detail = await fetchCarrier(cid)
     if (detail) {
+      carrierId.value = cid
+      activeSlotIdx.value = idx
       applyCarrierData(detail)
     }
+  } finally {
+    slotSwitching.value = false
   }
 }
 
+async function selectSlot(idx) {
+  if (idx === activeSlotIdx.value || slotSwitching.value) return
+  if (hasUnsavedChanges.value) {
+    const result = await openConfirm({
+      title: '변경사항을 저장할까요?',
+      message: '다른 캐꾸로 이동하기 전에 현재 변경사항을 저장합니다.',
+      confirmText: '저장하기',
+      cancelText: '저장 안 함'
+    })
+    // null = 오버레이 밖 탭 (머무름)
+    if (result === null) return
+    // true = 저장 후 이동
+    if (result === true) await saveAllChanges()
+    // false = 저장 안 하고 이동
+  }
+  await loadSlot(idx)
+}
+
 function applyCarrierData(carrier) {
+  // pending 상태 초기화
+  pendingAdds.value = []
+  pendingDeletes.value = []
+  dirtySkin.value = false
+  dirtyDecos.value = new Set()
+  dirtyBubbles.value = false
+
   // 스킨 적용
   const skinId = SKIN_TYPE_MAP[carrier.skinType] || 'default'
   activeSkin.value = skinId
@@ -1222,30 +1306,30 @@ function applyCarrierData(carrier) {
     zIndex: item.zIndex ?? 0
   }))
 
-  // 스티커 → decos 매핑 (백엔드 스티커를 savedDecos 슬롯에 로드)
+  // 스티커 → decos 매핑
   const apiStickers = carrier.stickers || []
-  if (apiStickers.length > 0) {
-    decos.value = apiStickers.map(s => ({
-      uid: 'api_' + s.id,
-      apiId: s.id,
-      id: s.stickerType,
-      emoji: s.content || s.stickerType,
-      type: s.stickerType === 'PHOTO_TAG' ? 'phototag' : 'emoji',
-      content: s.content || null,
-      imageUrl: s.imageUrl || null,
-      stickerType: s.stickerType,
-      x: (s.positionX ?? 0.5) * 100,
-      y: (s.positionY ?? 0.5) * 100,
-      scale: s.scaleRatio ?? 1,
-      flipped: false,
-      rotation: s.rotation ?? 0
-    }))
+  nameTagImg.value = null
+  selDeco.value = null
+  decos.value = apiStickers.map(s => ({
+    uid: 'api_' + s.id,
+    apiId: s.id,
+    id: s.stickerType,
+    emoji: s.content || s.stickerType,
+    type: s.stickerType === 'PHOTO_TAG' ? 'phototag' : 'emoji',
+    content: s.content || null,
+    imageUrl: s.imageUrl || null,
+    stickerType: s.stickerType,
+    x: (s.positionX ?? 0.5) * 100,
+    y: (s.positionY ?? 0.5) * 100,
+    scale: s.scaleRatio ?? 1,
+    flipped: false,
+    rotation: s.rotation ?? 0
+  }))
 
-    // 포토택 이미지 URL 복원
-    const phototag = decos.value.find(d => d.type === 'phototag')
-    if (phototag?.imageUrl) {
-      nameTagImg.value = phototag.imageUrl
-    }
+  // 포토택 이미지 URL 복원
+  const phototag = decos.value.find(d => d.type === 'phototag')
+  if (phototag?.imageUrl) {
+    nameTagImg.value = phototag.imageUrl
   }
 }
 
@@ -1253,22 +1337,16 @@ onMounted(() => {
   loadCarrierData()
 })
 
-// 스킨 변경 시 API 호출
-watch(activeSkin, async (newSkin, oldSkin) => {
-  if (!carrierId.value || !oldSkin) return
-  // my- 스킨은 프론트 전용이므로 API 호출 안함
-  if (newSkin.startsWith('my-')) return
-  const skinType = SKIN_TYPE_REVERSE[newSkin]
-  if (skinType) {
-    await updateSkin(carrierId.value, { skinType, skinColor: colorIdToSkinColor(defaultColor.value) })
-  }
-})
+// 스킨 변경 시 dirty 마킹 (저장 시 API 호출)
+watch(activeSkin, (newSkin, oldSkin) => {
+  if (!carrierId.value || !oldSkin || slotSwitching.value) return
+  dirtySkin.value = true
+}, { flush: 'sync' })
 
-// 기본 스킨 색상 변경 시 API 호출
-watch(defaultColor, async (newColor) => {
-  if (!carrierId.value || activeSkin.value !== 'default') return
-  await updateSkin(carrierId.value, { skinType: CARRIER_TYPE.DEFAULT, skinColor: colorIdToSkinColor(newColor) })
-})
+watch(defaultColor, () => {
+  if (!carrierId.value || activeSkin.value !== 'default' || slotSwitching.value) return
+  dirtySkin.value = true
+}, { flush: 'sync' })
 
 // ==================== 공유 배경색 (스킨별) ====================
 const SHARE_BG = { '#7c3aed': '#e5e1f7', '#ec4899': '#f9ecf1', '#0ea5e9': '#f1f8fe', '#eab308': '#fef8e1', '#b45309': '#fef3e1', '#6366f1': '#e0dff7', '#dc2626': '#fce5e5' }
@@ -1429,69 +1507,6 @@ function scrollSkins(dir) {
   skinScroll.value = Math.max(0, Math.min(skinMaxScroll.value, skinScroll.value + dir * (IW + G)))
 }
 
-function toggleMyView() {
-  if (activeSkin.value.startsWith('my-')) {
-    activeSkin.value = 'default'
-    skinScroll.value = 0
-  } else {
-    activeSkin.value = 'my-0'
-    const base = [...nSkins.value, ...sSkins.value]
-    skinScroll.value = Math.max(0, base.length * (IW + G) + 20)
-  }
-}
-
-function showMyDel(e) {
-  const btn = e.currentTarget.querySelector('[data-my-del]')
-  if (btn) btn.style.opacity = '1'
-}
-
-function hideMyDel(e) {
-  const btn = e.currentTarget.querySelector('[data-my-del]')
-  if (btn) btn.style.opacity = '0'
-}
-
-// ==================== MY 캐꾸 관리 ====================
-function removeMySlot(idx) {
-  const newDecos = [...savedDecos.value]
-  newDecos[idx] = null
-  savedDecos.value = newDecos
-  if (activeSkin.value === 'my-' + idx) activeSkin.value = 'default'
-}
-
-function updateMyDeco(idx, fn) {
-  const newDecos = [...savedDecos.value]
-  if (!newDecos[idx]) return
-  const result = fn(newDecos[idx].items)
-  if (result && result.length) {
-    newDecos[idx] = { ...newDecos[idx], items: result }
-  } else {
-    newDecos[idx] = null
-  }
-  savedDecos.value = newDecos
-}
-
-function scaleMyS(mi, si, delta) {
-  updateMyDeco(mi, a => a.map((v, i) => i === si ? { ...v, scale: Math.max(DMIN, Math.min(DMAX, v.scale + delta)) } : v))
-}
-
-function flipMyS(mi, si) {
-  updateMyDeco(mi, a => a.map((v, i) => i === si ? { ...v, flipped: !v.flipped } : v))
-}
-
-function removeMyS(mi, si) {
-  updateMyDeco(mi, a => a.filter((_, i) => i !== si))
-  selDeco.value = null
-}
-
-// ==================== 데코 스티커 ====================
-function decoToSvg(arr) {
-  const bx = 30, by = 50, bw = 240, bh = 320
-  return arr.map(d => ({
-    type: 'emoji', x: bx + (d.x / 100) * bw, y: by + (d.y / 100) * bh,
-    emoji: d.emoji, size: Math.round(24 * d.scale), flipped: d.flipped || false
-  }))
-}
-
 // ==================== 네임택 ====================
 async function onNameTagImgChange(e) {
   const file = e.target.files?.[0]
@@ -1540,43 +1555,46 @@ function clearPhototagImage() {
   }
 }
 
-async function placeDeco(d) {
+function removePhototag() {
+  const phototag = decos.value.find(d => d.type === 'phototag')
+  if (phototag) {
+    removeDeco(phototag.uid)
+    nameTagImg.value = null
+  }
+}
+
+function selectPhototag() {
+  const phototag = decos.value.find(d => d.type === 'phototag')
+  if (phototag) {
+    selDeco.value = selDeco.value === phototag.uid ? null : phototag.uid
+  }
+}
+
+function placeDeco(d) {
   // 포토택 토글 (있으면 제거, 없으면 추가)
   if (d.type === 'phototag') {
     const existing = decos.value.find(v => v.type === 'phototag')
     if (existing) {
-      if (existing.apiId && carrierId.value) await apiRemoveSticker(carrierId.value, existing.apiId)
+      if (existing.apiId) {
+        pendingDeletes.value = [...pendingDeletes.value, existing.apiId]
+      } else {
+        pendingAdds.value = pendingAdds.value.filter(uid => uid !== existing.uid)
+      }
       decos.value = decos.value.filter(v => v.type !== 'phototag')
       nameTagImg.value = null
       return
     }
   }
 
+  const tempUid = d.id + '_' + Date.now()
   const newDeco = {
-    uid: d.id + '_' + Date.now(), id: d.id, emoji: d.emoji,
+    uid: tempUid, id: d.id, emoji: d.emoji,
     type: d.type || 'emoji',
     x: 30 + Math.random() * 40, y: 30 + Math.random() * 40, scale: 1, flipped: false
   }
 
-  // API 호출
-  if (carrierId.value) {
-    const result = await apiAddSticker(carrierId.value, {
-      stickerType: d.type === 'phototag' ? 'PHOTO_TAG' : 'EMOJI',
-      content: d.emoji,
-      imageUrl: null,
-      positionX: newDeco.x / 100,
-      positionY: newDeco.y / 100,
-      zIndex: 0,
-      rotation: 0,
-      scaleRatio: 1
-    })
-    if (result.success && result.data) {
-      newDeco.apiId = result.data.id
-      newDeco.uid = 'api_' + result.data.id
-    }
-  }
-
   decos.value = [...decos.value, newDeco]
+  pendingAdds.value = [...pendingAdds.value, tempUid]
 }
 
 function scaleDeco(uid, delta) {
@@ -1596,46 +1614,33 @@ function markDecoDirty(uid) {
   }
 }
 
-async function removeDeco(uid) {
+function removeDeco(uid) {
   const deco = decos.value.find(v => v.uid === uid)
-  if (deco?.apiId && carrierId.value) {
-    await apiRemoveSticker(carrierId.value, deco.apiId)
+  if (deco?.apiId) {
+    // 서버에 있는 스티커 → 저장 시 삭제
+    pendingDeletes.value = [...pendingDeletes.value, deco.apiId]
+  } else {
+    // 아직 서버에 안 올린 스티커 → pendingAdds에서 제거
+    pendingAdds.value = pendingAdds.value.filter(u => u !== uid)
   }
   decos.value = decos.value.filter(v => v.uid !== uid)
+  dirtyDecos.value = new Set([...dirtyDecos.value].filter(u => u !== uid))
   if (selDeco.value === uid) selDeco.value = null
 }
 
-async function bulkDeleteAllDecos() {
-  if (!decos.value.length || bulkDeleting.value) return
-  bulkDeleting.value = true
-  try {
-    const apiIds = decos.value.filter(d => d.apiId).map(d => d.apiId)
-    if (apiIds.length > 0 && carrierId.value) {
-      await apiBulkDeleteStickers(carrierId.value, apiIds)
-    }
-    decos.value = []
-    nameTagImg.value = null
-    selDeco.value = null
-    dirtyDecos.value = new Set()
-  } finally {
-    bulkDeleting.value = false
+function bulkDeleteAllDecos() {
+  if (!decos.value.length) return
+  // 서버에 있는 스티커들 → 저장 시 삭제
+  const apiIds = decos.value.filter(d => d.apiId).map(d => d.apiId)
+  if (apiIds.length > 0) {
+    pendingDeletes.value = [...pendingDeletes.value, ...apiIds]
   }
-}
-
-function saveAsMyDeco() {
-  if (!decos.value.length || slotFull.value) return
-  const snap = {
-    colorId: defaultColor.value,
-    items: decos.value.map(d => ({ emoji: d.emoji, type: d.type || 'emoji', x: d.x, y: d.y, scale: d.scale, flipped: d.flipped || false }))
-  }
-  const idx = savedDecos.value.findIndex(s => s === null)
-  if (idx < 0) return
-  const newDecos = [...savedDecos.value]
-  newDecos[idx] = snap
-  savedDecos.value = newDecos
-  activeSkin.value = 'my-' + idx
+  // pendingAdds 초기화 (아직 서버에 안 올린 것들은 그냥 버림)
+  pendingAdds.value = []
   decos.value = []
+  nameTagImg.value = null
   selDeco.value = null
+  dirtyDecos.value = new Set()
 }
 
 // ==================== 데코 드래그 ====================
@@ -1646,53 +1651,14 @@ function getDecoOverlayStyle(d) {
   const bw = b.right - b.left, bh = b.bottom - b.top
   const px = b.left + (d.x / 100) * bw
   const py = b.top + (d.y / 100) * bh
-  const sw = 36 * d.scale
-  const sh = 36 * d.scale
+  const sw = decoBase.value * d.scale
+  const sh = decoBase.value * d.scale
   return {
     position: 'absolute',
     left: (px - sw / 2) + 'px',
     top: (py - sh / 2) + 'px',
-    zIndex: selDeco.value === d.uid || selDeco.value === `my-${activeMyIdx.value}-${d.idx}` ? 20 : 5
+    zIndex: selDeco.value === d.uid ? 20 : 5
   }
-}
-
-let myDragActive = false
-
-function onMyDown(e, mi, si, deco) {
-  myDragActive = false
-  const box = boxRef.value?.getBoundingClientRect()
-  if (!box) return
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY
-  const cx = clientX - box.left, cy = clientY - box.top
-  const b = getBounds(box.width, box.height)
-  const bw = b.right - b.left, bh = b.bottom - b.top
-  const dpx = b.left + (deco.x / 100) * bw
-  const dpy = b.top + (deco.y / 100) * bh
-  const ox = dpx - cx, oy = dpy - cy
-  const uid = 'my-' + mi + '-' + si
-
-  const onMove = (ev) => {
-    myDragActive = true
-    const mx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - box.left
-    const my = (ev.touches ? ev.touches[0].clientY : ev.clientY) - box.top
-    const px = Math.max(2, Math.min(98, ((mx + ox - b.left) / bw) * 100))
-    const py = Math.max(2, Math.min(98, ((my + oy - b.top) / bh) * 100))
-    updateMyDeco(mi, a => a.map((d, i) => i === si ? { ...d, x: px, y: py } : d))
-  }
-
-  const onUp = () => {
-    if (!myDragActive) selDeco.value = selDeco.value === uid ? null : uid
-    window.removeEventListener('mousemove', onMove)
-    window.removeEventListener('mouseup', onUp)
-    window.removeEventListener('touchmove', onMove)
-    window.removeEventListener('touchend', onUp)
-  }
-
-  window.addEventListener('mousemove', onMove)
-  window.addEventListener('mouseup', onUp)
-  window.addEventListener('touchmove', onMove, { passive: false })
-  window.addEventListener('touchend', onUp)
 }
 
 let decoDragActive = false
@@ -1854,6 +1820,7 @@ function downloadCarrierImage() {
   white-space: nowrap;
 }
 
+
 /* ==================== 모바일 탭 바 ==================== */
 .mobile-tab-bar {
   display: none;
@@ -1873,49 +1840,38 @@ function downloadCarrierImage() {
 }
 
 .left-panel { flex: 0 0 280px; display: flex; flex-direction: column; gap: 16px; }
-.center-panel { flex: 1 1 400px; min-width: 280px; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
+.center-panel { flex: 1 1 400px; min-width: 280px; max-width: 480px; display: flex; flex-direction: column; gap: 6px; }
 .right-panel { flex: 0 0 220px; min-width: 200px; max-width: 240px; display: flex; flex-direction: column; gap: 16px; }
 
-.panel-title-row { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
-.panel-label { font-size: 15px; font-weight: 500; color: #111; }
+.panel-title-row { display: flex; align-items: center; gap: 6px; padding: 0 2px; margin-bottom: -6px; }
+.panel-label { font-size: 14px; font-weight: 700; color: #333; letter-spacing: -0.3px; }
 
 /* ==================== 카드 공통 ==================== */
 .shop-card {
   background: #fff;
-  border-radius: 16px;
-  border: 1px solid #e0d8f5;
+  border-radius: 14px;
+  border: 1px solid #ebe7f2;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.04);
 }
 .shop-card-header {
-  padding: 14px 14px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f3f1f8;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.shop-card-title { font-size: 13px; font-weight: 700; color: #111; }
+.shop-card-title { font-size: 12px; font-weight: 700; color: #7c3aed; letter-spacing: -0.2px; }
 .shop-card-actions { display: flex; align-items: center; gap: 6px; }
 
 /* ==================== 스킨 캐러셀 ==================== */
-.my-toggle {
-  background: #f5f3ff;
-  padding: 2px 10px;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: all .15s;
-}
-.my-toggle.active { background: #7c3aed; }
-.my-toggle span { font-size: 10px; font-weight: 600; color: #7c3aed; }
-.my-toggle.active span { color: #fff; }
-
 .current-skin-badge {
-  background: #f3f4f6;
-  padding: 2px 10px;
-  border-radius: 14px;
+  background: #f5f3ff;
+  padding: 3px 10px;
+  border-radius: 10px;
 }
-.current-skin-badge span { font-size: 10px; color: #888; font-weight: 600; }
+.current-skin-badge span { font-size: 10px; color: #7c3aed; font-weight: 600; }
 
 .skin-carousel {
   display: flex;
@@ -1951,9 +1907,6 @@ function downloadCarrierImage() {
   transition: transform .35s cubic-bezier(.4,0,.2,1);
 }
 
-.skin-divider { flex: 0 0 20px; display: flex; align-items: center; justify-content: center; }
-.skin-divider-line { width: 1.5px; height: 70%; background: linear-gradient(180deg, transparent, #e0d8f5, transparent); border-radius: 1px; }
-
 .skin-item-wrap { flex: 0 0 110px; position: relative; }
 
 .skin-preview {
@@ -1980,7 +1933,6 @@ function downloadCarrierImage() {
   padding: 3px 8px;
 }
 .skin-badge.sp { top: 0; right: 0; background: linear-gradient(135deg,#f59e0b,#d97706); border-radius: 0 12px 0 8px; }
-.skin-badge.my { top: 0; left: 0; background: linear-gradient(135deg,#7c3aed,#a78bfa); border-radius: 12px 0 8px 0; font-size: 8px; padding: 3px 6px; }
 
 .skin-svg-wrap { padding: 12px 8px 8px; display: flex; justify-content: center; }
 .skin-info { padding: 4px 10px 10px; text-align: center; }
@@ -1989,27 +1941,6 @@ function downloadCarrierImage() {
 .skin-desc { font-size: 10px; color: #999; margin-top: 1px; }
 .skin-desc.empty { color: #ccc; }
 .skin-active-bar { height: 3px; background: linear-gradient(90deg, #7c3aed, #a78bfa); }
-
-.my-del-btn {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #ef4444;
-  color: #fff;
-  border: 2px solid #fff;
-  font-size: 9px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  opacity: 0;
-  transition: opacity .15s;
-}
 
 /* ==================== 스티커 팔레트 ==================== */
 .deco-page-nav { display: flex; align-items: center; gap: 6px; }
@@ -2107,30 +2038,114 @@ function downloadCarrierImage() {
 }
 .clear-all-deco-btn:hover { background: #fef2f2; }
 .clear-all-deco-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.save-deco-btn {
-  width: 100%;
-  padding: 10px;
+/* 캐꾸 저장 바 */
+.deco-save-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 10px 8px;
+  padding: 8px 10px;
+  background: #f5f3ff;
+  border-radius: 10px;
+}
+.deco-save-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.deco-save-emoji {
+  font-size: 14px;
+  line-height: 1;
+}
+.deco-save-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7c3aed;
+  white-space: nowrap;
+}
+.deco-save-btn {
+  padding: 6px 14px;
   border: none;
-  border-radius: 12px;
-  background: #9333EA;
+  border-radius: 8px;
+  background: #7c3aed;
   color: #fff;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(147,51,234,0.3);
-  transition: transform .15s;
+  white-space: nowrap;
+  transition: all .15s;
 }
-.save-deco-btn:hover { transform: translateY(-1px); }
-.save-deco-btn.disabled {
+.deco-save-btn:hover { background: #6d28d9; }
+.deco-save-btn.disabled {
   background: #e5e7eb;
   color: #9ca3af;
   cursor: not-allowed;
-  box-shadow: none;
-  opacity: 0.7;
+}
+.deco-bar-enter-active,
+.deco-bar-leave-active { transition: all .2s ease; }
+.deco-bar-enter-from,
+.deco-bar-leave-to { opacity: 0; transform: translateY(-4px); }
+
+/* ==================== 캐꾸 슬롯 탭 ==================== */
+.carrier-slot-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+.carrier-slot-tabs::-webkit-scrollbar { display: none; }
+.slot-tab {
+  flex: 0 0 auto;
+  min-width: 100px;
+  position: relative;
+  padding: 9px 18px;
+  border: 1.5px dashed #d5d0e0;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #a8a3b3;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.slot-tab.active {
+  border-style: solid;
+  border-color: #7c3aed;
+  background: #f9f5ff;
+  color: #7c3aed;
+}
+.slot-tab:not(.active):hover {
+  border-color: #b8b0c8;
+  background: #faf8fd;
+  color: #7c6b94;
+}
+.slot-tab:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.slot-unsaved-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f87171;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.slot-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 24px;
 }
 
 /* ==================== 캐리어 뷰 ==================== */
@@ -2185,14 +2200,24 @@ function downloadCarrierImage() {
 .color-dot.active { border: 2.5px solid #333; transform: scale(1.15); }
 .color-dot:hover:not(.active) { transform: scale(1.1); }
 
-.view-toggle {
+.view-toggle-bar {
   position: absolute;
   top: 14px;
+  left: 14px;
   right: 14px;
   z-index: 10;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+.inline-slot-tabs {
+  display: none;
+}
+.view-toggle {
+  display: flex;
+  align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 .toggle-label { font-size: 12px; color: #888; font-weight: 500; }
 .toggle-switch {
@@ -2746,6 +2771,46 @@ function downloadCarrierImage() {
     padding-bottom: 0;
   }
 
+  /* center-panel 슬롯 탭 숨기기, carrier-box 안 슬롯 표시 */
+  .center-panel .carrier-slot-tabs {
+    display: none;
+  }
+  .inline-slot-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .inline-slot-btn {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1.5px dashed rgba(124, 58, 237, 0.3);
+    background: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
+    font-weight: 700;
+    color: #a8a3b3;
+    cursor: pointer;
+    transition: all 0.15s;
+    backdrop-filter: blur(4px);
+  }
+  .inline-slot-btn.active {
+    border-style: solid;
+    border-color: #7c3aed;
+    background: rgba(245, 243, 255, 0.9);
+    color: #7c3aed;
+  }
+  .inline-slot-btn:disabled { opacity: 0.5; cursor: wait; }
+  .inline-slot-dot {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #f87171;
+  }
+
   /* 모바일 탭 바 표시 */
   .mobile-tab-bar {
     display: flex;
@@ -2812,6 +2877,22 @@ function downloadCarrierImage() {
     display: flex;
   }
 
+  /* 캐리어 탭 모바일: 뷰포트에 맞춤 */
+  .center-panel.mobile-active {
+    height: calc(100dvh - 94px);
+    overflow: hidden;
+    gap: 0;
+    padding: 4px 0 0;
+  }
+  .center-panel.mobile-active .carrier-box-wrap {
+    flex: 1;
+    min-height: 0;
+  }
+  .center-panel.mobile-active .carrier-box {
+    aspect-ratio: unset;
+    height: 100%;
+  }
+
   /* 캐리어 박스 모바일 */
   .carrier-box {
     border-radius: 20px;
@@ -2876,9 +2957,10 @@ function downloadCarrierImage() {
     border-radius: 16px;
   }
 
-  /* 토글 스위치 모바일 */
-  .view-toggle {
+  /* 토글 바 모바일 */
+  .view-toggle-bar {
     top: 10px;
+    left: 10px;
     right: 10px;
   }
   .color-picker {

@@ -1,13 +1,13 @@
 <script setup>
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
-const { state, confirm, cancel } = useConfirmDialog()
+const { state, confirm, cancel, dismiss } = useConfirmDialog()
 
 const handleOverlayClick = () => {
   if (state.type === 'alert') {
     confirm()
   } else {
-    cancel()
+    dismiss()
   }
 }
 </script>
