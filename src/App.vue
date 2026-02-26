@@ -172,7 +172,7 @@ onUnmounted(() => {
             <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
             <circle cx="12" cy="15" r="2"/>
           </svg>
-          <span>캐리어 꾸미기</span>
+          <span>캐꾸</span>
         </RouterLink>
 
         <!-- 알림 버튼 (로그인 시에만 표시) -->
@@ -623,6 +623,12 @@ onUnmounted(() => {
 }
 
 /* ===================== 반응형 ===================== */
+@media (max-width: 767px) {
+  .logo-image {
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 380px) {
   .header-content {
     padding: 0 8px;
@@ -630,7 +636,7 @@ onUnmounted(() => {
   }
   .logo-image {
     height: 30px;
-    margin-left: 4px;
+    margin-left: 0;
   }
   .nav-mobile {
     gap: 4px;

@@ -502,30 +502,32 @@ onBeforeUnmount(() => {
 
 /* 더보기 Menu */
 .more-menu {
-  position: absolute;
-  bottom: 54px;
-  right: -66px;
+  position: fixed;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
   background: white;
-  border-radius: 16px;
-  padding: 8px;
+  border-radius: 14px;
+  padding: 6px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   z-index: 1002;
-  min-width: 220px;
-  max-height: 70vh;
+  min-width: 200px;
+  max-width: calc(100vw - 32px);
+  max-height: 60vh;
   overflow-y: auto;
 }
 
 .more-menu-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 10px;
+  padding: 9px 10px;
   border: none;
   background: none;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s ease;
@@ -536,9 +538,9 @@ onBeforeUnmount(() => {
 }
 
 .more-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -546,8 +548,8 @@ onBeforeUnmount(() => {
 }
 
 .more-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 17px;
+  height: 17px;
 }
 
 .more-icon.home {
@@ -587,25 +589,25 @@ onBeforeUnmount(() => {
 .more-menu-divider {
   height: 1px;
   background: #f0f0f0;
-  margin: 4px 8px;
+  margin: 2px 8px;
 }
 
 .more-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 1px;
 }
 
 .more-text {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #171717;
   white-space: nowrap;
 }
 
 .more-desc {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 400;
   color: #737373;
   white-space: nowrap;
