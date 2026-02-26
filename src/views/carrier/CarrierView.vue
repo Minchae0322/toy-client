@@ -2910,7 +2910,7 @@ function downloadCarrierImage() {
   }
   .mobile-clear-wrap {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     padding: 6px 8px 4px;
     flex-shrink: 0;
   }
