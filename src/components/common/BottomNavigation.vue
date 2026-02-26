@@ -504,7 +504,7 @@ onBeforeUnmount(() => {
 .more-menu {
   position: absolute;
   bottom: 54px;
-  right: -66px;
+  right: 0;
   background: white;
   border-radius: 16px;
   padding: 8px;
@@ -514,6 +514,7 @@ onBeforeUnmount(() => {
   gap: 4px;
   z-index: 1002;
   min-width: 220px;
+  max-width: calc(100vw - 32px);
   max-height: 70vh;
   overflow-y: auto;
 }
