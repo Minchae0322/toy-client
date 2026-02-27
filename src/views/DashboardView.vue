@@ -18,7 +18,7 @@
             </svg>
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ hotFeeds.length }}</span>
+            <span class="stat-value">{{ dashboardSummary.popularFeedCount }}</span>
             <span class="stat-label">인기 피드</span>
           </div>
           <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -33,10 +33,10 @@
             </svg>
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ hotBattles.length }}</span>
+            <span class="stat-value">{{ dashboardSummary.activeBattleCount }}</span>
             <span class="stat-label">진행중 요거픽</span>
           </div>
-          <div v-if="hotBattles.length > 0" class="live-dot"></div>
+          <div v-if="dashboardSummary.activeBattleCount > 0" class="live-dot"></div>
           <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="m9 18 6-6-6-6" />
           </svg>
@@ -54,8 +54,8 @@
             </svg>
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ hotProducts.length }}</span>
-            <span class="stat-label">지금 뜨는 제품</span>
+            <span class="stat-value">{{ dashboardSummary.totalItemCount }}</span>
+            <span class="stat-label">전체 아이템</span>
           </div>
           <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="m9 18 6-6-6-6" />
@@ -429,10 +429,19 @@ import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { feedService } from '@/services/FeedService'
 import { battleService } from '@/services/BattleService'
 import { productService } from '@/services/ProductService'
+import { dashboardService } from '@/services/DashboardService'
 
 const hotFeeds = ref([])
 const hotBattles = ref([])
 const hotProducts = ref([])
+
+// 대시보드 요약 통계
+const dashboardSummary = ref({
+  activeBattleCount: 0,
+  totalItemCount: 0,
+  popularFeedCount: 0,
+})
+const summaryLoading = ref(true)
 
 // ==================== 버블 차트 관련 ====================
 const DASH_MIN_RADIUS = 22
@@ -642,6 +651,24 @@ const yogurtBomLoading = ref(true)
 const battlesLoading = ref(true)
 const productsLoading = ref(true)
 
+const loadDashboardSummary = async () => {
+  summaryLoading.value = true
+  try {
+    const response = await dashboardService.getSummary()
+    if (response.success && response.data) {
+      dashboardSummary.value = {
+        activeBattleCount: response.data.activeBattleCount ?? 0,
+        totalItemCount: response.data.totalItemCount ?? 0,
+        popularFeedCount: response.data.popularFeedCount ?? 0,
+      }
+    }
+  } catch (error) {
+    console.error('대시보드 요약 로드 실패:', error)
+  } finally {
+    summaryLoading.value = false
+  }
+}
+
 const loadHotFeeds = async () => {
   feedsLoading.value = true
   try {
@@ -822,6 +849,7 @@ const topTrendName = computed(() => {
 
 
 onMounted(() => {
+  loadDashboardSummary()
   loadHotFeeds()
   loadHotBattles()
   loadHotProducts()
