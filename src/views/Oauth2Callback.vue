@@ -59,16 +59,12 @@
         </details>
       </div>
 
-      <!-- 성공: 누구로 로그인했는지 + 이동 안내 -->
-      <div v-else class="success-state">
-        <div class="success-badge">
-          <svg class="success-svg" width="48" height="48" viewBox="0 0 48 48">
-            <circle class="circle-draw" cx="24" cy="24" r="21" fill="none" stroke="#1DCD9F" stroke-width="2.5"/>
-            <polyline class="tick-draw" points="15 24 21 30 33 18" fill="none" stroke="#1DCD9F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+      <!-- 성공: 바로 리다이렉트 (별도 화면 없음) -->
+      <div v-else class="loading-state">
+        <div class="provider-badge" :class="provider">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <h2>반갑습니다!</h2>
-        <p v-if="welcomeName" class="welcome-name">{{ welcomeName }}님, 로그인되었어요</p>
+        <h2>로그인 완료</h2>
         <div class="redirect-pill">
           <span class="pulse-dot"></span>
           {{ redirectLabel }}(으)로 이동하고 있어요
@@ -259,9 +255,9 @@ const handleOAuthCallback = async () => {
     sessionStorage.removeItem('oauth_provider')
     redirectTarget.value = redirectPath
 
-    // 성공 화면 표시 후 이동
+    // 바로 이동
     loading.value = false
-    await new Promise(r => setTimeout(r, 1200))
+    await new Promise(r => setTimeout(r, 300))
 
     try {
       await router.push(redirectPath)
@@ -311,7 +307,7 @@ onMounted(handleOAuthCallback)
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #fafafa;
+  background-color: #ffffff;
   padding: 20px;
 }
 
@@ -521,44 +517,7 @@ onMounted(handleOAuthCallback)
 }
 .btn-ghost:hover { background: #fafafa; color: #18181b; }
 
-/* ===== 성공 ===== */
-.success-state { animation: fadeUp 0.35s ease-out; }
-
-.success-badge {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #ecfdf5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 18px;
-}
-
-.circle-draw {
-  stroke-dasharray: 132;
-  stroke-dashoffset: 132;
-  animation: draw .5s ease forwards;
-}
-.tick-draw {
-  stroke-dasharray: 30;
-  stroke-dashoffset: 30;
-  animation: draw .3s .35s ease forwards;
-}
-@keyframes draw { to { stroke-dashoffset: 0; } }
-
-.success-state h2 {
-  margin: 0 0 4px;
-  font-size: 20px;
-  font-weight: 600;
-  color: #18181b;
-}
-
-.welcome-name {
-  margin: 0 0 18px;
-  font-size: 14px;
-  color: #71717a;
-}
+/* ===== 성공 (리다이렉트 안내만 표시) ===== */
 
 .redirect-pill {
   display: inline-flex;
@@ -610,7 +569,7 @@ onMounted(handleOAuthCallback)
 
 /* ===== 모바일 ===== */
 @media (max-width: 480px) {
-  .callback-wrapper { background: white; padding: 0; align-items: flex-start; padding-top: 60px; }
+  .callback-wrapper { background: #ffffff; padding: 0; align-items: flex-start; padding-top: 60px; }
   .callback-container { border: none; box-shadow: none; border-radius: 0; padding: 32px 24px; }
 }
 </style>
