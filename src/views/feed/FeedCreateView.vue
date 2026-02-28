@@ -242,16 +242,19 @@
               <button type="button" class="btn-toggle" :class="{ active: formData.priceHidden }" @click="togglePriceHidden">비공개</button>
             </span>
           </label>
-          <div v-if="!formData.priceHidden && !formData.priceFree" class="price-input-box">
-            <input
-              type="text"
-              inputmode="numeric"
-              class="price-input-field"
-              placeholder="가격을 입력하세요"
-              :value="formattedPrice"
-              @input="handlePriceInput"
-            />
-            <span class="price-suffix">원</span>
+          <div v-if="!formData.priceHidden && !formData.priceFree" class="feed-price-wrap">
+            <div class="feed-price-line" :class="{ valued: formData.buyPrice }">
+              <input
+                type="text"
+                inputmode="numeric"
+                class="feed-price-input"
+                placeholder="0"
+                :value="formattedPrice"
+                @input="handlePriceInput"
+              />
+              <span class="feed-price-won">원</span>
+            </div>
+            <p v-if="feedPriceKoreanHint" class="feed-price-hint">{{ feedPriceKoreanHint }}</p>
           </div>
           <p v-if="formData.priceHidden" class="price-hidden-notice">
             가격이 비공개로 설정됩니다
@@ -286,7 +289,6 @@
               placeholder="태그 입력"
               v-model="hashtagInput"
               @keydown.enter.prevent="addHashtag"
-              @keydown.space.prevent="addHashtag"
               @keydown.,.prevent="addHashtag"
             />
             <button
@@ -439,6 +441,19 @@ const selectStore = (store) => {
 const formattedPrice = computed(() => {
   if (!formData.value.buyPrice) return ''
   return Number(formData.value.buyPrice).toLocaleString()
+})
+
+const feedPriceKoreanHint = computed(() => {
+  const num = formData.value.buyPrice
+  if (!num || num < 10000) return ''
+  const man = Math.floor(num / 10000)
+  const rest = num % 10000
+  const cheon = Math.floor(rest / 1000)
+  let r = `${man.toLocaleString()}만`
+  if (cheon > 0) r += ` ${cheon}천`
+  const remainder = rest % 1000
+  if (remainder > 0) r += ` ${remainder.toLocaleString()}`
+  return r + '원'
 })
 
 const handlePriceInput = (e) => {
@@ -1657,41 +1672,54 @@ onBeforeUnmount(() => {
   margin-top: 4px;
 }
 
-/* Price Input */
-.price-input-box {
+/* Price Input - Underline Style */
+.feed-price-wrap {
+  padding: 4px 0;
+}
+
+.feed-price-line {
   display: flex;
-  align-items: center;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  max-width: 100%;
+  align-items: baseline;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #E5E8EB;
+  transition: border-color 0.2s ease;
 }
+.feed-price-line:focus-within { border-bottom-color: var(--accent); }
+.feed-price-line.valued { border-bottom-color: #191F28; }
+.feed-price-line.valued:focus-within { border-bottom-color: var(--accent); }
 
-.price-input-box:focus-within {
-  border-color: var(--accent);
-}
-
-.price-input-field {
+.feed-price-input {
   flex: 1;
-  padding: 12px 14px;
   border: none;
-  font-size: 16px;
-  font-weight: 600;
-  text-align: right;
   outline: none;
+  background: transparent;
+  font-size: 18px;
+  font-weight: 700;
+  color: #191F28;
+  text-align: left;
+  padding: 0;
+  min-width: 0;
   font-family: inherit;
+  letter-spacing: -0.02em;
+  caret-color: var(--accent);
+  line-height: 1.3;
 }
+.feed-price-input::placeholder { color: #D1D6DB; font-weight: 400; font-size: 15px; }
 
-.price-input-field::placeholder {
-  color: #d1d5db;
-  font-weight: 400;
-}
-
-.price-suffix {
-  padding: 12px 14px 12px 0;
+.feed-price-won {
   font-size: 14px;
-  color: var(--secondary);
+  font-weight: 600;
+  color: #8B8E95;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+.feed-price-line.valued .feed-price-won { color: #4E5968; }
+
+.feed-price-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8B8E95;
 }
 
 .price-hidden-notice {
@@ -2056,4 +2084,8 @@ onBeforeUnmount(() => {
 
 .toast-enter-active, .toast-leave-active { transition: all 0.3s; }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+
+@media (max-width: 640px) {
+  .create-content { padding: 16px 12px; }
+}
 </style>

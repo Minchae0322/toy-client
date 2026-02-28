@@ -30,7 +30,11 @@
       "Bash(npx vite build 2>&1 | tail -8)",
       "Bash(npx vite build 2>&1 | tail -3)",
       "Bash(npx vite build 2>&1 | tail -30)",
-      "Bash(npx vue-tsc --noEmit 2>&1 | tail -20 || true)"
+      "Bash(npx vue-tsc --noEmit 2>&1 | tail -20 || true)",
+      "WebSearch",
+      "WebFetch(domain:tossmini-docs.toss.im)",
+      "WebFetch(domain:developers-apps-in-toss.toss.im)",
+      "WebFetch(domain:mobbin.com)"
     ]
   }
 }
