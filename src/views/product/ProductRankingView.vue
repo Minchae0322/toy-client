@@ -105,7 +105,7 @@
                 </div>
                 <span class="tooltip-brand">{{ tooltipProduct.brand }}</span>
                 <div class="tooltip-metrics">
-                  <div><div class="metric-label">평점</div><div class="metric-value">⭐ {{ formatRating(tooltipProduct.averageRating) }}</div></div>
+                  <div><div class="metric-label">평점</div><div class="metric-value"><svg class="star-icon" width="14" height="14" viewBox="0 0 14 14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.16666L8.795 4.81249L12.8333 5.40166L9.91667 8.24916L10.59 12.2717L7 10.3792L3.41 12.2717L4.08333 8.24916L1.16667 5.40166L5.205 4.81249L7 1.16666Z"/></svg> {{ formatRating(tooltipProduct.averageRating) }}</div></div>
                   <div><div class="metric-label">피드</div><div class="metric-value">{{ formatCount(tooltipProduct.reviewCount) }}</div></div>
                   <div><div class="metric-label">관심도</div><div class="metric-value purple">{{ getPopularityScore(tooltipProduct) }}</div></div>
                 </div>
@@ -180,7 +180,7 @@
                 <div class="rank-brand">{{ product.brand }}</div>
               </div>
               <div class="rank-stats">
-                <div class="rank-rating">⭐ {{ formatRating(product.averageRating) }}</div>
+                <div class="rank-rating"><svg class="star-icon" width="12" height="12" viewBox="0 0 14 14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.16666L8.795 4.81249L12.8333 5.40166L9.91667 8.24916L10.59 12.2717L7 10.3792L3.41 12.2717L4.08333 8.24916L1.16667 5.40166L5.205 4.81249L7 1.16666Z"/></svg> {{ formatRating(product.averageRating) }}</div>
                 <div class="rank-review">{{ formatCount(product.reviewCount) }}개</div>
               </div>
               <div class="rank-bar">
@@ -812,7 +812,7 @@ onUnmounted(() => {
 .tooltip-brand { font-size: 12px; color: #888; }
 .tooltip-metrics { display: flex; gap: 12px; margin-top: 10px; }
 .metric-label { font-size: 10px; color: #aaa; }
-.metric-value { font-weight: 700; font-size: 14px; color: #333; }
+.metric-value { font-weight: 700; font-size: 14px; color: #333; display: flex; align-items: center; gap: 3px; }
 .metric-value.purple { color: #7c3aed; }
 .tooltip-hint { margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 10px; color: #aaa; }
 
@@ -889,7 +889,7 @@ onUnmounted(() => {
 .rank-brand { font-size: 11px; color: #999; }
 
 .rank-stats { text-align: right; flex-shrink: 0; }
-.rank-rating { font-size: 12px; font-weight: 600; color: #333; }
+.rank-rating { font-size: 12px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 2px; }
 .rank-review { font-size: 10px; color: #aaa; }
 
 .rank-bar { width: 50px; height: 4px; background: #f3f4f6; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
