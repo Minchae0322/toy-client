@@ -29,7 +29,8 @@
       "Bash(npx vite build 2>&1 | tail -2)",
       "Bash(npx vite build 2>&1 | tail -8)",
       "Bash(npx vite build 2>&1 | tail -3)",
-      "Bash(npx vite build 2>&1 | tail -30)"
+      "Bash(npx vite build 2>&1 | tail -30)",
+      "Bash(npx vue-tsc --noEmit 2>&1 | tail -20 || true)"
     ]
   }
 }

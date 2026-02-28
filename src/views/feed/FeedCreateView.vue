@@ -13,335 +13,313 @@
 
     <!-- Main Content -->
     <main class="create-content">
-      <div class="content-grid">
-        <!-- Left Column -->
-        <div class="left-column">
-          <!-- Photo Section -->
-          <section class="card photo-section">
-            <div class="card-header">
-              <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              <h2 class="card-title">사진</h2>
-              <span class="photo-count">{{ selectedPhotos.length }}/5</span>
-            </div>
-
-            <!-- Processing Indicator -->
-            <div v-if="isProcessingImage" class="processing-indicator">
-              <svg class="spinner" viewBox="0 0 24 24" fill="none">
+      <!-- 사진 -->
+      <section class="card photo-section">
+        <div class="card-header">
+          <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <h2 class="card-title required">사진</h2>
+          <span class="photo-count">{{ selectedPhotos.length }}/5</span>
+        </div>
+        <div v-if="isProcessingImage" class="processing-indicator">
+          <svg class="spinner" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <span>이미지 처리 중...</span>
+        </div>
+        <div v-if="selectedPhotos.length > 0" class="photo-grid">
+          <div
+              v-for="(photo, index) in selectedPhotos"
+              :key="photo.id"
+              class="photo-item"
+              draggable="true"
+              @dragstart="handleDragStart($event, index)"
+              @dragover.prevent
+              @drop="handleDrop($event, index)"
+              @dragenter="handleDragEnter(index)"
+              @dragleave="handleDragLeave"
+              :class="{ 'drag-over': dragOverIndex === index, 'uploading': photo.uploading, 'upload-failed': photo.uploadFailed }"
+          >
+            <img :src="photo.preview" :alt="`Photo ${index + 1}`" />
+            <div v-if="photo.uploading" class="upload-overlay">
+              <svg class="upload-spinner" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
                 <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
               </svg>
-              <span>이미지 처리 중...</span>
             </div>
+            <div v-if="photo.uploadFailed" class="upload-failed-overlay">
+              <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+              </svg>
+            </div>
+            <button class="btn-remove" @click="removePhoto(index)" :disabled="photo.uploading">
+              <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+              </svg>
+            </button>
+            <div class="photo-order">{{ index + 1 }}</div>
+          </div>
+        </div>
+        <div class="photo-actions">
+          <label class="btn-photo-action" :class="{ disabled: selectedPhotos.length >= 5 || isProcessingImage }">
+            <input type="file" accept="image/*" multiple @change="handleFileSelect" style="display: none;" :disabled="selectedPhotos.length >= 5 || isProcessingImage" />
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span>갤러리</span>
+          </label>
+          <label class="btn-photo-action mobile-only" :class="{ disabled: selectedPhotos.length >= 5 || isProcessingImage }">
+            <input type="file" accept="image/*" capture="environment" @change="handleFileSelect" style="display: none;" :disabled="selectedPhotos.length >= 5 || isProcessingImage" />
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>카메라</span>
+          </label>
+        </div>
+        <p class="hint-text">사진을 드래그하여 순서를 변경할 수 있습니다 (최대 1920px로 자동 최적화)</p>
+      </section>
 
-            <div v-if="selectedPhotos.length > 0" class="photo-grid">
-              <div
-                  v-for="(photo, index) in selectedPhotos"
-                  :key="photo.id"
-                  class="photo-item"
-                  draggable="true"
-                  @dragstart="handleDragStart($event, index)"
-                  @dragover.prevent
-                  @drop="handleDrop($event, index)"
-                  @dragenter="handleDragEnter(index)"
-                  @dragleave="handleDragLeave"
-                  :class="{ 'drag-over': dragOverIndex === index, 'uploading': photo.uploading, 'upload-failed': photo.uploadFailed }"
-              >
-                <img :src="photo.preview" :alt="`Photo ${index + 1}`" />
-                <!-- 업로드 중 오버레이 -->
-                <div v-if="photo.uploading" class="upload-overlay">
-                  <svg class="upload-spinner" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
-                    <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <!-- 한줄평 -->
+      <section class="card">
+        <label class="form-label required">
+          한줄평
+          <span class="char-count" :class="{ error: formData.review.length > 100 }">{{ formData.review.length }}/100</span>
+        </label>
+        <textarea class="form-textarea" placeholder="제품에 대한 솔직한 리뷰를 작성해주세요" v-model="formData.review" rows="3" maxlength="100"></textarea>
+      </section>
+
+      <!-- 제품 + 카테고리 -->
+      <section class="card additional-info">
+        <div class="form-group">
+          <label class="form-label required">어떤 제품인가요?</label>
+          <div v-if="selectedProduct" class="selected-product-card">
+            <img
+              :src="selectedProduct.thumbnailUrl || '/default-product.png'"
+              :alt="selectedProduct.name"
+              class="selected-product-image"
+            />
+            <div class="selected-product-info">
+              <p class="selected-product-name">{{ selectedProduct.name }}</p>
+              <p class="selected-product-brand">{{ selectedProduct.brand }}</p>
+            </div>
+            <button type="button" class="btn-clear-product" @click="clearSelectedProduct">
+              <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+              </svg>
+            </button>
+          </div>
+          <div v-else class="product-input-wrapper">
+            <div v-if="productInputMode === 'select'" class="product-mode-cards">
+              <button type="button" class="mode-card" @click="openProductModal">
+                <div class="mode-card-icon search">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                   </svg>
                 </div>
-                <!-- 업로드 실패 표시 -->
-                <div v-if="photo.uploadFailed" class="upload-failed-overlay">
-                  <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+                <div class="mode-card-content">
+                  <h4 class="mode-card-title">제품 연동</h4>
+                  <p class="mode-card-desc">등록된 제품 정보 연결</p>
+                </div>
+              </button>
+              <button type="button" class="mode-card" @click="productInputMode = 'custom'">
+                <div class="mode-card-icon custom">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                   </svg>
                 </div>
-                <button class="btn-remove" @click="removePhoto(index)" :disabled="photo.uploading">
-                  <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                <div class="mode-card-content">
+                  <h4 class="mode-card-title">직접 작성</h4>
+                  <p class="mode-card-desc">제품명만 간단히 입력</p>
+                </div>
+              </button>
+            </div>
+            <div v-else class="custom-mode-content">
+              <div class="custom-input-header">
+                <span class="custom-input-label">직접 작성</span>
+                <button type="button" class="btn-back-to-select" @click="resetProductInput">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                   </svg>
                 </button>
-                <div class="photo-order">{{ index + 1 }}</div>
+              </div>
+              <div class="autocomplete-wrapper">
+                <input
+                  type="text"
+                  class="form-input custom-input"
+                  placeholder="브랜드 + 제품명 (예: 나이키 조던 4 레트로)"
+                  v-model="formData.productNameCustom"
+                  @input="handleProductNameInput"
+                  ref="customInputRef"
+                />
+                <div v-if="productSuggestions.length > 0" class="suggestions">
+                  <button v-for="suggestion in productSuggestions" :key="suggestion" class="suggestion-item" @click="selectSuggestion(suggestion)">
+                    {{ suggestion }}
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">카테고리</label>
+          <CategoryChipSelector
+            v-model="formData.subCategoryId"
+            content-type="FEED"
+            @select="handleCategorySelect"
+          />
+        </div>
+      </section>
 
-            <div class="photo-actions">
-              <label class="btn-photo-action" :class="{ disabled: selectedPhotos.length >= 5 || isProcessingImage }">
-                <input type="file" accept="image/*" multiple @change="handleFileSelect" style="display: none;" :disabled="selectedPhotos.length >= 5 || isProcessingImage" />
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <span>갤러리</span>
-              </label>
-              <label class="btn-photo-action mobile-only" :class="{ disabled: selectedPhotos.length >= 5 || isProcessingImage }">
-                <input type="file" accept="image/*" capture="environment" @change="handleFileSelect" style="display: none;" :disabled="selectedPhotos.length >= 5 || isProcessingImage" />
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <span>카메라</span>
-              </label>
-            </div>
-            <p class="hint-text">사진을 드래그하여 순서를 변경할 수 있습니다 (최대 1920px로 자동 최적화)</p>
-          </section>
+      <!-- 평가 + 구매처 -->
+      <section class="card additional-info">
+        <div class="form-group">
+          <label class="form-label required">
+            <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+            </svg>
+            제품 평가
+          </label>
+          <div class="status-grid">
+            <button v-for="ev in evaluations" :key="ev.value" :class="['status-btn', ev.value.toLowerCase(), { active: formData.evaluation === ev.value }]" @click="formData.evaluation = ev.value" type="button">
+              <span>{{ ev.label }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">
+            <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            구매처
+          </label>
+          <div class="quick-store-list">
+            <button
+              v-for="store in quickStores"
+              :key="store"
+              type="button"
+              :class="['quick-store-btn', { active: formData.store === store }]"
+              @click="selectStore(store)"
+              :disabled="formData.storeUnknown"
+            >
+              {{ store }}
+            </button>
+            <button
+              type="button"
+              :class="['quick-store-btn unknown', { active: formData.storeUnknown }]"
+              @click="toggleStoreUnknown"
+            >
+              모름
+            </button>
+          </div>
+          <input
+            v-if="!formData.storeUnknown && !quickStores.includes(formData.store)"
+            type="text"
+            class="form-input mt-8"
+            placeholder="직접 입력 (예: 백화점, 해외직구)"
+            v-model="formData.store"
+          />
+        </div>
+      </section>
 
-          <!-- Product Info -->
-          <section class="card">
-            <label class="form-label required">어떤 제품인가요?</label>
-
-            <!-- 선택된 제품 표시 -->
-            <div v-if="selectedProduct" class="selected-product-card">
-              <img
-                :src="selectedProduct.thumbnailUrl || '/default-product.png'"
-                :alt="selectedProduct.name"
-                class="selected-product-image"
-              />
-              <div class="selected-product-info">
-                <p class="selected-product-name">{{ selectedProduct.name }}</p>
-                <p class="selected-product-brand">{{ selectedProduct.brand }}</p>
-              </div>
-              <button type="button" class="btn-clear-product" @click="clearSelectedProduct">
+      <!-- 추가 정보 (선택) -->
+      <section class="card additional-info">
+        <div class="optional-section-header">
+          <span class="optional-section-title">추가 정보</span>
+          <span class="optional-badge">선택</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            구매 가격
+            <span class="price-toggle-group">
+              <button type="button" class="btn-toggle" :class="{ active: formData.priceFree }" @click="togglePriceFree">무료</button>
+              <button type="button" class="btn-toggle" :class="{ active: formData.priceHidden }" @click="togglePriceHidden">비공개</button>
+            </span>
+          </label>
+          <div v-if="!formData.priceHidden && !formData.priceFree" class="price-input-box">
+            <input
+              type="text"
+              inputmode="numeric"
+              class="price-input-field"
+              placeholder="가격을 입력하세요"
+              :value="formattedPrice"
+              @input="handlePriceInput"
+            />
+            <span class="price-suffix">원</span>
+          </div>
+          <p v-if="formData.priceHidden" class="price-hidden-notice">
+            가격이 비공개로 설정됩니다
+          </p>
+          <p v-if="formData.priceFree" class="price-hidden-notice">
+            무료로 설정됩니다
+          </p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+            </svg>
+            해시태그
+            <span class="count-badge">{{ formData.hashtags.length }}/5</span>
+          </label>
+          <div v-if="formData.hashtags.length > 0" class="selected-hashtags-list">
+            <span v-for="(tag, idx) in formData.hashtags" :key="idx" class="hashtag-chip">
+              <span class="hashtag-symbol">#</span>{{ tag }}
+              <button class="remove-tag" @click="removeHashtag(idx)" type="button">
                 <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
                 </svg>
               </button>
-            </div>
-
-            <!-- 제품 입력 모드 선택 -->
-            <div v-else class="product-input-wrapper">
-              <!-- 카드 선택 (초기 상태) -->
-              <div v-if="productInputMode === 'select'" class="product-mode-cards">
-                <button type="button" class="mode-card" @click="openProductModal">
-                  <div class="mode-card-icon search">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                    </svg>
-                  </div>
-                  <div class="mode-card-content">
-                    <h4 class="mode-card-title">제품 연동</h4>
-                    <p class="mode-card-desc">등록된 제품 정보 연결</p>
-                  </div>
-                </button>
-
-                <button type="button" class="mode-card" @click="productInputMode = 'custom'">
-                  <div class="mode-card-icon custom">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                  </div>
-                  <div class="mode-card-content">
-                    <h4 class="mode-card-title">직접 작성</h4>
-                    <p class="mode-card-desc">제품명만 간단히 입력</p>
-                  </div>
-                </button>
-              </div>
-
-              <!-- 직접 작성 모드 -->
-              <div v-else class="custom-mode-content">
-                <div class="custom-input-header">
-                  <span class="custom-input-label">직접 작성</span>
-                  <button type="button" class="btn-back-to-select" @click="resetProductInput">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                  </button>
-                </div>
-                <div class="autocomplete-wrapper">
-                  <input
-                    type="text"
-                    class="form-input custom-input"
-                    placeholder="브랜드 + 제품명 (예: 나이키 조던 4 레트로)"
-                    v-model="formData.productNameCustom"
-                    @input="handleProductNameInput"
-                    ref="customInputRef"
-                  />
-                  <div v-if="productSuggestions.length > 0" class="suggestions">
-                    <button v-for="suggestion in productSuggestions" :key="suggestion" class="suggestion-item" @click="selectSuggestion(suggestion)">
-                      {{ suggestion }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Category -->
-          <section class="card">
-            <label class="form-label required">카테고리</label>
-            <CategoryChipSelector
-              v-model="formData.subCategoryId"
-              content-type="FEED"
-              @select="handleCategorySelect"
+            </span>
+          </div>
+          <div v-if="formData.hashtags.length < 5" class="hashtag-input-box">
+            <span class="input-prefix">#</span>
+            <input
+              type="text"
+              class="hashtag-input-field"
+              placeholder="태그 입력"
+              v-model="hashtagInput"
+              @keydown.enter.prevent="addHashtag"
+              @keydown.space.prevent="addHashtag"
+              @keydown.,.prevent="addHashtag"
             />
-          </section>
-        </div>
-
-        <!-- Right Column -->
-        <div class="right-column">
-          <!-- Review -->
-          <section class="card">
-            <label class="form-label required">
-              한줄평
-              <span class="char-count" :class="{ error: formData.review.length > 100 }">{{ formData.review.length }}/100</span>
-            </label>
-            <textarea class="form-textarea" placeholder="제품에 대한 솔직한 리뷰를 작성해주세요" v-model="formData.review" rows="4" maxlength="100"></textarea>
-          </section>
-
-          <!-- Additional Info -->
-          <section class="card additional-info">
-            <!-- Store -->
-            <div class="form-group">
-              <label class="form-label">
-                <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <span class="label-with-required">구매처<span class="required-mark">*</span></span>
-              </label>
-              <div class="quick-store-list">
-                <button
-                  v-for="store in quickStores"
-                  :key="store"
-                  type="button"
-                  :class="['quick-store-btn', { active: formData.store === store }]"
-                  @click="selectStore(store)"
-                  :disabled="formData.storeUnknown"
-                >
-                  {{ store }}
-                </button>
-                <button
-                  type="button"
-                  :class="['quick-store-btn unknown', { active: formData.storeUnknown }]"
-                  @click="toggleStoreUnknown"
-                >
-                  모름
-                </button>
-              </div>
-              <input
-                v-if="!formData.storeUnknown && !quickStores.includes(formData.store)"
-                type="text"
-                class="form-input mt-8"
-                placeholder="직접 입력 (예: 백화점, 해외직구)"
-                v-model="formData.store"
-              />
-              <p v-if="formData.store && !formData.storeUnknown && !quickStores.includes(formData.store)" class="input-hint">
-                또는 위 버튼을 눌러 빠르게 선택하세요
-              </p>
-            </div>
-
-            <!-- 구매 가격 -->
-            <div class="form-group">
-              <label class="form-label">
-                <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                구매 가격
-                <button type="button" class="btn-toggle" :class="{ active: formData.priceHidden }" @click="togglePriceHidden">비공개</button>
-              </label>
-              <div v-if="!formData.priceHidden" class="price-input-box">
-                <input
-                  type="text"
-                  inputmode="numeric"
-                  class="price-input-field"
-                  placeholder="0"
-                  :value="formattedPrice"
-                  @input="handlePriceInput"
-                />
-                <span class="price-suffix">원</span>
-              </div>
-              <p v-if="formData.priceHidden" class="price-hidden-notice">
-                💰 가격이 비공개로 설정됩니다
-              </p>
-            </div>
-
-            <!-- Evaluation -->
-            <div class="form-group">
-              <label class="form-label required">
-                <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                </svg>
-                제품 평가
-              </label>
-              <div class="status-grid">
-                <button v-for="ev in evaluations" :key="ev.value" :class="['status-btn', ev.value.toLowerCase(), { active: formData.evaluation === ev.value }]" @click="formData.evaluation = ev.value" type="button">
-                  <span>{{ ev.label }}</span>
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <!-- Hashtags -->
-          <section class="card">
-            <label class="form-label">
-              <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
-              </svg>
-              해시태그
-              <span class="count-badge">{{ formData.hashtags.length }}/5</span>
-            </label>
-
-            <!-- 선택된 해시태그 -->
-            <div v-if="formData.hashtags.length > 0" class="selected-hashtags-list">
-              <span v-for="(tag, idx) in formData.hashtags" :key="idx" class="hashtag-chip">
-                <span class="hashtag-symbol">#</span>{{ tag }}
-                <button class="remove-tag" @click="removeHashtag(idx)" type="button">
-                  <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
-                  </svg>
-                </button>
-              </span>
-            </div>
-
-            <!-- 해시태그 입력 -->
-            <div v-if="formData.hashtags.length < 5" class="hashtag-input-box">
-              <span class="input-prefix">#</span>
-              <input
-                type="text"
-                class="hashtag-input-field"
-                placeholder="태그 입력"
-                v-model="hashtagInput"
-                @keydown.enter.prevent="addHashtag"
-                @keydown.space.prevent="addHashtag"
-                @keydown.,.prevent="addHashtag"
-              />
-              <button
-                type="button"
-                class="btn-add-tag"
-                @click="addHashtag"
-                :disabled="!hashtagInput.trim()"
-              >
-                추가
+            <button
+              type="button"
+              class="btn-add-tag"
+              @click="addHashtag"
+              :disabled="!hashtagInput.trim()"
+            >
+              추가
+            </button>
+          </div>
+          <p class="hashtag-hint">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Enter, 스페이스, 쉼표로 태그 추가
+          </p>
+          <div class="popular-hashtags">
+            <p class="popular-title">추천 태그 <span class="popular-subtitle">클릭하여 추가</span></p>
+            <div class="popular-list">
+              <button v-for="tag in popularHashtags" :key="tag" class="popular-tag" @click="addPopularHashtag(tag)" :disabled="formData.hashtags.includes(tag) || formData.hashtags.length >= 5" type="button">
+                #{{ tag }}
               </button>
             </div>
-            <p class="hashtag-hint">
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              Enter, 스페이스, 쉼표로 태그 추가
-            </p>
-
-            <div class="popular-hashtags">
-              <p class="popular-title">추천 태그 <span class="popular-subtitle">클릭하여 추가</span></p>
-              <div class="popular-list">
-                <button v-for="tag in popularHashtags" :key="tag" class="popular-tag" @click="addPopularHashtag(tag)" :disabled="formData.hashtags.includes(tag) || formData.hashtags.length >= 5" type="button">
-                  #{{ tag }}
-                </button>
-              </div>
-            </div>
-          </section>
+          </div>
         </div>
-      </div>
+      </section>
     </main>
 
     <!-- Fixed Bottom -->
     <div class="fixed-bottom-bar">
       <div class="fixed-bottom-content">
+        <p v-if="!canSubmit && missingFieldsText" class="completion-hint">{{ missingFieldsText }}</p>
         <button class="btn-submit-large" :disabled="!canSubmit" @click="handleSubmit" type="button">
           <svg v-if="isSubmitting" class="spinner" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
@@ -430,6 +408,7 @@ const formData = ref({
   storeUnknown: false,
   buyPrice: null,
   priceHidden: false,
+  priceFree: false,
   evaluation: 'BEST',
   hashtags: []
 })
@@ -464,12 +443,24 @@ const formattedPrice = computed(() => {
 
 const handlePriceInput = (e) => {
   const value = e.target.value.replace(/[^0-9]/g, '')
-  formData.value.buyPrice = value ? parseInt(value) : null
+  const parsed = value ? parseInt(value) : null
+  formData.value.buyPrice = parsed === 0 ? null : parsed
 }
 
 const togglePriceHidden = () => {
   formData.value.priceHidden = !formData.value.priceHidden
   if (formData.value.priceHidden) {
+    formData.value.priceFree = false
+    formData.value.buyPrice = null
+  }
+}
+
+const togglePriceFree = () => {
+  formData.value.priceFree = !formData.value.priceFree
+  if (formData.value.priceFree) {
+    formData.value.priceHidden = false
+    formData.value.buyPrice = 0
+  } else {
     formData.value.buyPrice = null
   }
 }
@@ -489,6 +480,19 @@ const canSubmit = computed(() => {
       !isSubmitting.value &&
       !isProcessingImage.value &&
       !hasUploadingPhotos
+})
+
+const missingFieldsText = computed(() => {
+  const missing = []
+  if (selectedPhotos.value.length === 0) missing.push('사진')
+  if (!formData.value.productNameCustom.trim()) missing.push('제품')
+  if (!formData.value.subCategoryId) missing.push('카테고리')
+  if (!formData.value.review.trim()) missing.push('한줄평')
+  if (!formData.value.store.trim()) missing.push('구매처')
+  if (!formData.value.evaluation) missing.push('제품 평가')
+  if (missing.length === 0) return ''
+  if (missing.length <= 2) return `${missing.join(', ')} 입력이 필요합니다`
+  return `${missing.length}개 항목을 더 입력해주세요`
 })
 
 // 이미지 리사이징 유틸 함수
@@ -829,18 +833,7 @@ const handleCancel = async () => {
       saveDraft()
       cleanupAndGoBack()
     } else {
-      // 저장 안 함 선택 시 정말 나갈지 확인
-      const confirmLeave = await open({
-        type: 'danger',
-        title: '작성 취소',
-        message: '저장하지 않고 나가시겠습니까?\n작성 중인 내용이 삭제됩니다.',
-        confirmText: '나가기',
-        cancelText: '취소'
-      })
-
-      if (confirmLeave) {
-        cleanupAndGoBack()
-      }
+      cleanupAndGoBack()
     }
   } else {
     router.back()
@@ -911,7 +904,7 @@ const handleSubmit = async () => {
       subCategoryId: formData.value.subCategoryId,
       review: formData.value.review.trim(),
       buyPlace: formData.value.store.trim(),
-      buyPrice: formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null,
+      buyPrice: formData.value.priceFree ? 0 : (formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null),
       evaluation: formData.value.evaluation,
       hashtags: formData.value.hashtags,
       thumbnailAttachmentInfo,
@@ -983,7 +976,6 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   color: var(--primary);
   padding-bottom: 100px;
-  overflow-x: hidden;
 }
 
 /* Smooth scroll & custom scrollbar */
@@ -1012,7 +1004,7 @@ onBeforeUnmount(() => {
 /* Header */
 .create-header {
   position: sticky;
-  top: 0;
+  top: 66px;
   z-index: 50;
   background: rgba(255,255,255,0.98);
   backdrop-filter: blur(10px);
@@ -1051,16 +1043,15 @@ onBeforeUnmount(() => {
   width: 40px;
 }
 
-/* Content */
-.create-content { max-width: 1200px; margin: 0 auto; padding: 24px 20px; width: 100%; }
-.content-grid { display: grid; grid-template-columns: 1fr; gap: 24px; min-width: 0; }
-@media (min-width: 1024px) { .content-grid { grid-template-columns: 1fr 1fr; } }
-
-.left-column, .right-column {
+/* Content - Single Column */
+.create-content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-width: 0;
 }
 
 .card {
@@ -1207,9 +1198,17 @@ onBeforeUnmount(() => {
   font-weight: 600;
   margin-bottom: 8px;
 }
-.form-label.required::after { content: '*'; color: #ef4444; }
+.form-label.required::after, .card-title.required::after { content: '*'; color: #ef4444; margin-left: 2px; }
 
 .inline-icon { width: 16px; height: 16px; color: var(--secondary); }
+.optional-badge {
+  padding: 2px 8px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
 .char-count { margin-left: auto; font-size: 12px; color: var(--secondary); }
 .char-count.error { color: #ef4444; }
 
@@ -1750,8 +1749,25 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-.btn-toggle {
+/* 선택 섹션 헤더 */
+.optional-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.optional-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.price-toggle-group {
+  display: flex;
+  gap: 6px;
   margin-left: auto;
+}
+.btn-toggle {
   padding: 4px 10px;
   background: var(--hover);
   border: 1px solid var(--border);
@@ -1956,7 +1972,14 @@ onBeforeUnmount(() => {
   padding: 16px;
   z-index: 40;
 }
-.fixed-bottom-content { max-width: 1200px; margin: 0 auto; }
+.fixed-bottom-content { max-width: 640px; margin: 0 auto; }
+.completion-hint {
+  text-align: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
 .btn-submit-large {
   width: 100%;
   padding: 16px;

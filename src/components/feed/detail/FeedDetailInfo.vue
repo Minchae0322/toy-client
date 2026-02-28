@@ -40,7 +40,7 @@
         </div>
         <div class="price-area">
           <span class="price-label">구매가</span>
-          <span class="price-value">{{ formatPrice(feed.buyPrice || feed.price) }}</span>
+          <span class="price-value">{{ feed.buyPrice == null ? '가격정보 없음' : feed.buyPrice === 0 ? '무료' : formatPrice(feed.buyPrice) }}</span>
         </div>
       </section>
 
