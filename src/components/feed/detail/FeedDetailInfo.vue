@@ -14,7 +14,6 @@
             </svg>
             급상승
           </div>
-          <!-- 카테고리 (우측) -->
           <span class="category-breadcrumb">
             카테고리 <span class="breadcrumb-arrow">›</span> {{ getCategoryName }}
           </span>
@@ -50,21 +49,21 @@
               :class="['stat-btn', { active: feed.userReactions?.hasLike }]"
               @click="$emit('like')"
           >
-            <svg class="icon" :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+            <svg class="icon" viewBox="0 0 24 24" :fill="feed.userReactions?.hasLike ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
             <span>{{ feed.likeCount || 0 }}</span>
           </button>
           <button class="stat-btn" @click="$emit('scroll-to-comments')">
-            <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
             <span>{{ feed.commentCount || 0 }}</span>
           </button>
         </div>
         <button :class="['bookmark-btn', { active: isSaved }]" @click="$emit('save')">
-          <svg class="icon" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+          <svg class="icon" viewBox="0 0 24 24" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
           </svg>
         </button>
       </section>
@@ -101,8 +100,10 @@
             {{ isFollowing ? '팔로잉' : '팔로우' }}
           </button>
           <button class="message-btn" @click="handleSendMessage" :disabled="isCreatingChatRoom">
-            <svg v-if="!isCreatingChatRoom" class="message-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            <svg v-if="!isCreatingChatRoom" class="message-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H6l-4 4V6c0-1.1.9-2 2-2z"/>
+              <line x1="9" y1="10" x2="15" y2="10"/>
+              <line x1="9" y1="14" x2="13" y2="14"/>
             </svg>
             {{ isCreatingChatRoom ? '...' : '메시지' }}
           </button>
@@ -151,147 +152,163 @@ const handleSendMessage = () => {
 </script>
 
 <style scoped>
+/* 색상: #191F28 / #4E5968 / #8B95A1 / #B0B8C1 (토스 계열) */
+/* 간격: 4px 그리드 */
+
 .info-section {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 16px 24px 24px;
+  padding: 16px 20px 24px;
   background: #fff;
 }
 
-.info-content {
-  flex: 1;
-}
+.info-content { flex: 1; }
+.info-footer { margin-top: auto; }
 
-.info-footer {
-  margin-top: auto;
-}
-
-/* 2. Review Section */
+/* 리뷰 섹션 */
 .review-section { margin-bottom: 20px; }
 
 .badge-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 
 .category-breadcrumb {
   margin-left: auto;
-  font-size: 13px;
-  font-weight: 500;
-  color: #9333ea;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8B95A1;
+  letter-spacing: -0.01em;
 }
+.breadcrumb-arrow { margin: 0 2px; color: #B0B8C1; }
 
-.breadcrumb-arrow {
-  margin: 0 4px;
-  color: #c4b5fd;
-}
-
-/* [중요] 파스텔톤 뱃지 스타일 */
+/* 뱃지 */
 .eval-badge {
-  display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px;
-  font-size: 13px; font-weight: 800;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 100px;
+  font-size: 12px; font-weight: 700;
 }
+.eval-badge.best { background-color: rgba(254,243,199,0.92); color: #92400e; }
+.eval-badge.good { background-color: rgba(220,252,231,0.92); color: #166534; }
+.eval-badge.okay { background-color: rgba(243,232,255,0.92); color: #6b21a8; }
+.eval-badge.bad { background-color: rgba(254,226,226,0.92); color: #991b1b; }
 
-/* 급상승 뱃지 */
+.eval-dot { width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; opacity: 0.6; }
+
 .trend-badge {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 7px 16px; border-radius: 100px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  font-size: 13px; font-weight: 800; color: white;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  padding: 6px 12px; border-radius: 100px;
+  background: linear-gradient(135deg, #f43f5e, #ec4899);
+  font-size: 12px; font-weight: 700; color: white;
   animation: pulse-trend 2s ease-in-out infinite;
 }
 @keyframes pulse-trend {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.03); }
 }
-.eval-badge.best { background-color: #fef3c7; color: #92400e; }
-.eval-badge.good { background-color: #dcfce7; color: #166534; }
-.eval-badge.okay { background-color: #f3e8ff; color: #6b21a8; }
-.eval-badge.bad { background-color: #fee2e2; color: #991b1b; }
 
-.eval-dot { width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; opacity: 0.6; }
+/* 리뷰 텍스트 */
+.quote-wrapper { position: relative; padding-left: 28px; }
+.quote-icon {
+  position: absolute; left: 0; top: 2px;
+  width: 18px; height: 18px; color: #9333EA; opacity: 0.3;
+}
+.review-text {
+  font-size: 16px; line-height: 1.7; color: #191F28;
+  font-weight: 600; white-space: pre-line; margin: 0;
+  letter-spacing: -0.02em; word-break: keep-all;
+}
 
-.quote-wrapper { position: relative; padding-left: 32px; }
-.quote-icon { position: absolute; left: 0; top: 2px; width: 20px; height: 20px; color: #9993ea; opacity: 0.4; }
-.review-text { font-size: 18px; line-height: 1.7; color: #1f2937; font-weight: 600; white-space: pre-line; margin: 0; }
-
-/* 3 & 4. Product Banner */
+/* 제품 배너 */
 .product-info-banner {
   display: flex; justify-content: space-between; align-items: center;
-  background: #f8f8fa; padding: 18px 22px; border-radius: 20px; margin-bottom: 16px;
-  border: 1px solid #f1f1f5; cursor: pointer; transition: 0.2s;
+  background: #F7F8FA; padding: 16px 20px; border-radius: 12px;
+  margin-bottom: 16px; border: none;
+  cursor: pointer; transition: all 0.15s ease;
 }
-.product-info-banner:active { transform: scale(0.98); background: #f1f1f5; }
-.buy-place {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #9333ea;
-  margin-bottom: 4px;
-}
-.place-icon {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
+.product-info-banner:active { transform: scale(0.98); background: #F2F4F6; }
 .product-main { min-width: 0; flex: 1; }
-.product-title { font-size: 17px; font-weight: 700; color: #111827; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.price-area { text-align: right; flex-shrink: 0; margin-left: 12px; }
-.price-label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 2px; font-weight: 600; }
-.price-value { font-size: 18px; font-weight: 800; color: #9333ea; white-space: nowrap; }
+.buy-place {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600; color: #9333EA; margin-bottom: 4px;
+}
+.place-icon { width: 13px; height: 13px; flex-shrink: 0; }
+.product-title {
+  font-size: 16px; font-weight: 700; color: #191F28;
+  margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+.price-area { text-align: right; flex-shrink: 0; margin-left: 16px; }
+.price-label { display: block; font-size: 11px; color: #8B95A1; margin-bottom: 2px; font-weight: 500; }
+.price-value { font-size: 17px; font-weight: 800; color: #9333EA; white-space: nowrap; letter-spacing: -0.02em; }
 
-/* 5. Interaction Bar */
-.interaction-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 4px; }
-.stat-group { display: flex; gap: 16px; }
+/* 인터랙션 바 */
+.interaction-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px; padding: 12px 0;
+  border-bottom: 1px solid #F2F4F6;
+}
+.stat-group { display: flex; gap: 12px; }
 .stat-btn {
-  display: flex; align-items: center; gap: 5px; background: none; border: none;
-  font-size: 14px; font-weight: 600; color: #6b7280; cursor: pointer; transition: 0.2s;
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: none; padding: 0;
+  font-size: 14px; font-weight: 600; color: #8B95A1;
+  cursor: pointer; transition: color 0.15s ease;
 }
 .stat-btn .icon { width: 20px; height: 20px; }
 .stat-btn.active { color: #f43f5e; }
-.bookmark-btn { background: none; border: none; color: #6b7280; cursor: pointer; }
-.bookmark-btn .icon { width: 24px; height: 24px; }
-.bookmark-btn.active { color: #9333ea; }
-
-/* 6. Hashtags */
-.hashtag-section { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
-.tag-chip {
-  padding: 8px 14px; border-radius: 12px; background: #f3f4f6; border: none;
-  font-size: 12px; font-weight: 600; color: #4b5563; cursor: pointer; transition: 0.2s;
+.bookmark-btn {
+  background: none; border: none; padding: 0;
+  color: #8B95A1; cursor: pointer; transition: color 0.15s ease;
 }
-.tag-chip:active { background: #e5e7eb; }
+.bookmark-btn .icon { width: 22px; height: 22px; }
+.bookmark-btn.active { color: #9333EA; }
 
-/* 등록일시 · 조회수 */
+/* 해시태그 */
+.hashtag-section { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.tag-chip {
+  padding: 6px 12px; border-radius: 8px;
+  background: #F2F4F6; border: none;
+  font-size: 13px; font-weight: 500; color: #4E5968;
+  cursor: pointer; transition: background 0.15s ease;
+}
+.tag-chip:active { background: #E5E8EB; }
+
+/* 메타 */
 .post-meta {
   text-align: right;
-  font-size: 12px;
-  color: #9ca3af;
-  font-weight: 500;
-  margin-bottom: 12px;
+  font-size: 12px; color: #B0B8C1;
+  font-weight: 400; margin-bottom: 12px;
 }
 
-.divider { height: 1px; background: #f1f5f9; margin-bottom: 20px; }
+.divider { height: 1px; background: #F2F4F6; margin-bottom: 16px; }
 
-/* 7. Author Section */
-.author-section { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-.author-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid #f1f5f9; }
+/* 작성자 */
+.author-section { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.author-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  object-fit: cover; border: 1px solid #F2F4F6;
+}
 .author-meta { flex: 1; }
-.author-name { display: block; font-size: 16px; font-weight: 700; color: #111827; }
+.author-name {
+  display: block; font-size: 15px; font-weight: 600;
+  color: #191F28; letter-spacing: -0.01em;
+}
 .author-actions { display: flex; gap: 8px; }
 .follow-btn {
-  padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none;
-  background: #111827; color: #fff; cursor: pointer; transition: 0.2s;
+  padding: 8px 16px; border-radius: 8px;
+  font-size: 13px; font-weight: 700; border: none;
+  background: #191F28; color: #fff;
+  cursor: pointer; transition: all 0.15s ease;
 }
 .follow-btn:active { transform: scale(0.96); }
-.follow-btn.active { background: #f3f4f6; color: #6b7280; }
+.follow-btn.active { background: #F2F4F6; color: #8B95A1; }
 .message-btn {
-  display: flex; align-items: center; gap: 5px;
-  padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none;
-  background: #9333ea; color: #fff; cursor: pointer; transition: 0.2s;
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 16px; border-radius: 8px;
+  font-size: 13px; font-weight: 700; border: none;
+  background: #9333EA; color: #fff;
+  cursor: pointer; transition: all 0.15s ease;
 }
 .message-btn:active { transform: scale(0.96); }
-.message-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-.message-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.message-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.message-icon { width: 14px; height: 14px; flex-shrink: 0; }
 </style>

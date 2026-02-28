@@ -203,10 +203,10 @@ const formatCount = (count) => {
 
 .sidebar-card {
   background: #ffffff;
-  border: 1px solid #e8e8e8;
+  border: 1px solid #F2F4F6;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .sidebar-header {
@@ -215,12 +215,12 @@ const formatCount = (count) => {
   gap: 8px;
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid #F2F4F6;
 }
 
-.sidebar-icon { width: 16px; height: 16px; color: #6366f1; }
+.sidebar-icon { width: 16px; height: 16px; color: #9333EA; }
 
-.sidebar-title { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+.sidebar-title { font-size: 13px; font-weight: 700; color: #191F28; letter-spacing: -0.01em; }
 
 /* Hashtag Pagination */
 .hashtag-pagination {
@@ -234,17 +234,17 @@ const formatCount = (count) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #e0e0e0;
+  background: #E5E8EB;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .pagination-dot:hover {
-  background: #bbb;
+  background: #B0B8C1;
 }
 
 .pagination-dot.active {
-  background: #6366f1;
+  background: #9333EA;
   width: 16px;
   border-radius: 3px;
 }
@@ -300,7 +300,7 @@ const formatCount = (count) => {
   font-family: inherit;
 }
 
-.hashtag-item:hover { background: #f8f8f8; }
+.hashtag-item:hover { background: #F7F8FA; }
 
 .hashtag-rank {
   width: 18px;
@@ -308,20 +308,20 @@ const formatCount = (count) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f0f0f0;
+  background: #F2F4F6;
   border-radius: 4px;
   font-size: 10px;
   font-weight: 700;
-  color: #666;
+  color: #8B95A1;
 }
 
 .hashtag-rank.rank-gold { background: #fef3c7; color: #d97706; }
 .hashtag-rank.rank-silver { background: #e5e7eb; color: #4b5563; }
 .hashtag-rank.rank-bronze { background: #fed7aa; color: #c2410c; }
 
-.hashtag-name { flex: 1; font-size: 13px; font-weight: 500; color: #1a1a1a; }
+.hashtag-name { flex: 1; font-size: 13px; font-weight: 500; color: #191F28; }
 
-.hashtag-count { font-size: 11px; color: #999; }
+.hashtag-count { font-size: 11px; color: #B0B8C1; }
 
 /* Trending List */
 .trending-list { display: flex; flex-direction: column; gap: 2px; }
@@ -341,15 +341,15 @@ const formatCount = (count) => {
   font-family: inherit;
 }
 
-.trending-item:hover { background: #f8f8f8; }
+.trending-item:hover { background: #F7F8FA; }
 
 .trending-emoji { font-size: 18px; }
 
 .trending-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
 
-.trending-name { font-size: 12px; font-weight: 600; color: #1a1a1a; }
+.trending-name { font-size: 12px; font-weight: 600; color: #191F28; }
 
-.trending-desc { font-size: 10px; color: #999; }
+.trending-desc { font-size: 10px; color: #B0B8C1; }
 
 .trending-badge {
   padding: 2px 5px;
@@ -372,13 +372,13 @@ const formatCount = (count) => {
   transition: background 0.15s;
 }
 
-.user-item:hover { background: #f8f8f8; }
+.user-item:hover { background: #F7F8FA; }
 
 .user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #9333EA, #7C3AED);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -392,24 +392,24 @@ const formatCount = (count) => {
 
 .user-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
 
-.user-name { font-size: 12px; font-weight: 600; color: #1a1a1a; }
+.user-name { font-size: 12px; font-weight: 600; color: #191F28; }
 
-.user-stats { font-size: 10px; color: #999; }
+.user-stats { font-size: 10px; color: #B0B8C1; }
 
 .follow-btn {
   padding: 5px 10px;
-  background: #f5f5f5;
-  border: 1px solid #e8e8e8;
+  background: #F2F4F6;
+  border: 1px solid #F2F4F6;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #4E5968;
   cursor: pointer;
   transition: all 0.15s;
   font-family: inherit;
 }
 
-.follow-btn:hover { background: #6366f1; color: white; border-color: #6366f1; }
+.follow-btn:hover { background: #191F28; color: white; border-color: #191F28; }
 
 /* 1024px 이하에서 숨김 */
 @media (max-width: 1024px) {

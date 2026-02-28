@@ -207,7 +207,7 @@ onUnmounted(() => {
 <style scoped>
 /* ===================== 기본 설정 ===================== */
 * {
-  font-family: 'SUIT', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: 'SUIT', -apple-system, "system-ui", "Segoe UI", sans-serif !important;
 }
 
 /* ===================== 헤더 ===================== */

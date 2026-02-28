@@ -6,20 +6,24 @@
     </div>
 
     <!-- 입력창 -->
-    <div class="input-row">
+    <div class="input-bar" :class="{ focused: inputFocused }">
       <input
           type="text"
           v-model="newComment"
           @keyup.enter="submitComment"
+          @focus="inputFocused = true"
+          @blur="inputFocused = false"
           :placeholder="commentPlaceholder"
           class="input"
       />
       <button
           @click="submitComment"
           :disabled="!newComment.trim()"
-          class="btn-post"
+          :class="['btn-post', { active: newComment.trim() }]"
       >
-        게시
+        <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/>
+        </svg>
       </button>
     </div>
 
@@ -116,6 +120,7 @@ const commentPlaceholder = computed(() => {
 })
 
 const newComment = ref('')
+const inputFocused = ref(false)
 const editingId = ref(null)
 const editingContent = ref('')
 
@@ -175,212 +180,176 @@ const handleDelete = (commentId) => {
 </script>
 
 <style scoped>
+/* 색상: #191F28 / #4E5968 / #8B95A1 / #B0B8C1 */
+
 .comment-section {
   background: #fff;
-  padding: 0 20px 40px;
+  padding: 0 20px 32px;
 }
 
-/* Header */
+/* 헤더 */
 .comment-header {
-  padding: 20px 0 16px;
+  padding: 20px 0 12px;
 }
 
 .comment-title {
   font-size: 15px;
-  font-weight: 600;
-  color: #1c1917;
+  font-weight: 700;
+  color: #191F28;
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .count {
-  color: #a8a29e;
+  color: #8B95A1;
   font-weight: 500;
+  margin-left: 4px;
 }
 
-/* Input */
-.input-row {
+/* 입력 바 */
+.input-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #f5f5f4;
+  gap: 0;
+  padding: 4px 4px 4px 16px;
+  background: #F7F8FA;
+  border: 1px solid #F2F4F6;
+  border-radius: 24px;
+  margin-bottom: 16px;
+  transition: all 0.15s ease;
+}
+.input-bar.focused {
+  border-color: #E5E8EB;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.06);
 }
 
 .input {
   flex: 1;
   min-width: 0;
-  padding: 12px 16px;
-  border: 1px solid #e7e5e4;
-  border-radius: 10px;
+  padding: 8px 0;
+  border: none;
   font-size: 14px;
-  color: #1c1917;
-  background: #fafaf9;
+  color: #191F28;
+  background: transparent;
   outline: none;
-  transition: border-color 0.15s, background 0.15s;
-  box-sizing: border-box;
+  letter-spacing: -0.01em;
 }
-
-.input::placeholder {
-  color: #a8a29e;
-}
-
-.input:focus {
-  border-color: #d6d3d1;
-  background: #fff;
-}
+.input::placeholder { color: #B0B8C1; }
 
 .btn-post {
-  padding: 12px 20px;
-  background: #1c1917;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F2F4F6;
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
+  border-radius: 50%;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s ease;
   flex-shrink: 0;
-  white-space: nowrap;
+  color: #B0B8C1;
 }
+.btn-post.active { background: #9333EA; color: #fff; }
+.btn-post.active:active { background: #7E22CE; transform: scale(0.92); }
+.btn-post:disabled { cursor: not-allowed; }
+.send-icon { width: 18px; height: 18px; }
 
-.btn-post:hover:not(:disabled) {
-  background: #44403c;
-}
+/* 목록 */
+.list-container { padding-top: 4px; }
 
-.btn-post:disabled {
-  background: #e7e5e4;
-  color: #a8a29e;
-  cursor: not-allowed;
-}
-
-/* List */
-.list-container {
-  padding-top: 8px;
-}
-
-.list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+.list { list-style: none; padding: 0; margin: 0; }
 
 .item {
   display: flex;
   gap: 12px;
-  padding: 16px 0;
+  padding: 14px 0;
 }
-
-.item + .item {
-  border-top: 1px solid #f5f5f4;
-}
+.item + .item { border-top: 1px solid #F2F4F6; }
 
 .avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
 }
 
-.body {
-  flex: 1;
-  min-width: 0;
-}
+.body { flex: 1; min-width: 0; }
 
 .comment-top {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .author {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #1c1917;
+  color: #191F28;
+  letter-spacing: -0.01em;
 }
 
 .badge {
-  font-size: 11px;
-  font-weight: 500;
-  color: #8b5cf6;
-  background: #f5f3ff;
+  font-size: 10px;
+  font-weight: 700;
+  color: #9333EA;
+  background: #F3E8FF;
   padding: 2px 6px;
   border-radius: 4px;
+  margin-left: 2px;
 }
 
-.dot {
-  color: #d6d3d1;
-  font-size: 12px;
-}
+.dot { color: #B0B8C1; font-size: 11px; }
 
-.time {
-  font-size: 13px;
-  color: #a8a29e;
-}
+.time { font-size: 12px; color: #B0B8C1; }
 
-.edited {
-  font-size: 12px;
-  color: #a8a29e;
-}
+.edited { font-size: 11px; color: #B0B8C1; }
 
 .text {
   font-size: 14px;
-  color: #44403c;
+  color: #4E5968;
   line-height: 1.6;
   margin: 0;
   word-break: break-word;
+  letter-spacing: -0.01em;
 }
 
 .meta {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .meta-btn {
-  background: none;
-  border: none;
-  font-size: 13px;
-  font-weight: 500;
-  color: #a8a29e;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.15s;
+  background: none; border: none; padding: 0;
+  font-size: 12px; font-weight: 500; color: #8B95A1;
+  cursor: pointer; transition: color 0.15s ease;
 }
+.meta-btn:active { color: #4E5968; }
+.meta-btn.delete:active { color: #E53935; }
 
-.meta-btn:hover {
-  color: #78716c;
-}
-
-.meta-btn.delete:hover {
-  color: #ef4444;
-}
-
-/* Edit */
-.edit-mode {
-  width: 100%;
-}
+/* 수정 */
+.edit-mode { width: 100%; }
 
 .edit-input {
   width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #e7e5e4;
+  padding: 10px 12px;
+  border: 1px solid #E5E8EB;
   border-radius: 8px;
   font-size: 14px;
   line-height: 1.5;
   resize: none;
   outline: none;
   font-family: inherit;
-  background: #fafaf9;
+  background: #F7F8FA;
   box-sizing: border-box;
+  color: #191F28;
 }
-
-.edit-input:focus {
-  border-color: #d6d3d1;
-  background: #fff;
-}
+.edit-input:focus { border-color: #8B95A1; background: #fff; }
 
 .edit-actions {
   display: flex;
@@ -390,46 +359,31 @@ const handleDelete = (commentId) => {
 }
 
 .btn-text {
-  background: none;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: #a8a29e;
-  cursor: pointer;
-  padding: 0;
+  background: none; border: none; padding: 0;
+  font-size: 13px; font-weight: 600; color: #8B95A1; cursor: pointer;
 }
+.btn-text.primary { color: #191F28; }
+.btn-text:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.btn-text.primary {
-  color: #1c1917;
-}
-
-.btn-text:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* More */
+/* 더보기 */
 .btn-more {
   display: block;
   width: 100%;
-  margin: 16px 0 0;
-  padding: 12px;
-  background: #fafaf9;
-  border: 1px solid #e7e5e4;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #78716c;
+  margin: 12px 0 0;
+  padding: 10px;
+  background: #F7F8FA;
+  border: 1px solid #F2F4F6;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8B95A1;
   cursor: pointer;
   text-align: center;
-  transition: background 0.15s;
+  transition: background 0.15s ease;
 }
+.btn-more:active { background: #F2F4F6; }
 
-.btn-more:hover {
-  background: #f5f5f4;
-}
-
-/* States */
+/* 상태 */
 .loading,
 .empty {
   display: flex;
@@ -440,29 +394,20 @@ const handleDelete = (commentId) => {
 }
 
 .spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #e7e5e4;
-  border-top-color: #78716c;
+  width: 20px; height: 20px;
+  border: 2px solid #F2F4F6;
+  border-top-color: #8B95A1;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
-
-.spinner.small {
-  width: 16px;
-  height: 16px;
-}
+.spinner.small { width: 16px; height: 16px; }
 
 .empty p {
-  font-size: 15px;
-  font-weight: 600;
-  color: #57534e;
-  margin: 0 0 4px;
+  font-size: 14px; font-weight: 600;
+  color: #4E5968; margin: 0 0 4px;
 }
-
 .empty span {
-  font-size: 14px;
-  color: #a8a29e;
+  font-size: 13px; color: #B0B8C1;
 }
 
 .loading-more {
@@ -471,7 +416,5 @@ const handleDelete = (commentId) => {
   padding: 16px 0;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>

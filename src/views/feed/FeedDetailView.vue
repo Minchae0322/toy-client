@@ -445,11 +445,12 @@ onMounted(() => loadFeedDetail())
 </script>
 
 <style scoped>
+/* 색상: #191F28 / #4E5968 / #8B95A1 / #B0B8C1 */
+
 .detail-container {
-  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   background: #fff;
   min-height: 100vh;
-  color: #262626;
+  color: #191F28;
 }
 
 .loading-container,
@@ -465,8 +466,8 @@ onMounted(() => loadFeedDetail())
 .spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid #e5e5e5;
-  border-top-color: #262626;
+  border: 2px solid #F2F4F6;
+  border-top-color: #191F28;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -474,50 +475,53 @@ onMounted(() => loadFeedDetail())
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .error-text {
-  color: #262626;
+  color: #4E5968;
   font-size: 14px;
+  font-weight: 500;
   margin-bottom: 16px;
 }
 
 .btn-retry {
   padding: 10px 20px;
-  background: #262626;
+  background: #191F28;
   color: #fff;
   border: none;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
+.btn-retry:active { background: #333D4B; }
 
 .detail-main {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px;
 }
 
 .content-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 24px;
 }
 
 .main-card {
   display: flex;
   flex-direction: column;
-  background: white;
+  background: #fff;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #F2F4F6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .image-area {
-  background: white;
+  background: #F7F8FA;
   overflow: hidden;
 }
 
 .info-area {
-  background: white;
+  background: #fff;
   overflow: hidden;
 }
 
@@ -537,30 +541,38 @@ onMounted(() => loadFeedDetail())
   .info-area {
     flex: 1;
     min-width: 0;
+    border-left: 1px solid #F2F4F6;
   }
 }
 
 @media (max-width: 1023px) {
   .detail-main {
-    padding: 16px;
+    padding: 0;
   }
 
-  .content-wrapper {
-    gap: 16px;
+  .main-card {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
   }
 }
 
 .comment-section-wrapper {
-  margin-top: 24px;
-  background: white;
+  margin-top: 8px;
+  background: #fff;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #F2F4F6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 @media (max-width: 1023px) {
   .comment-section-wrapper {
-    margin-top: 16px;
+    margin-top: 8px;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid #F2F4F6;
+    box-shadow: none;
   }
 }
 </style>

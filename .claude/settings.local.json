@@ -34,7 +34,10 @@
       "WebSearch",
       "WebFetch(domain:tossmini-docs.toss.im)",
       "WebFetch(domain:developers-apps-in-toss.toss.im)",
-      "WebFetch(domain:mobbin.com)"
+      "WebFetch(domain:mobbin.com)",
+      "Bash(npx vue-tsc --noEmit --pretty 2>&1 | head -30 || true)",
+      "Bash(npx vite build --mode development 2>&1 | tail -20)",
+      "Bash(npx vite build --mode development 2>&1 | tail -5)"
     ]
   }
 }

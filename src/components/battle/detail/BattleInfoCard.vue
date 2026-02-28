@@ -114,7 +114,7 @@ const permissionType = computed(() => {
   width: 100%;
   box-sizing: border-box;
   background: #ffffff;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  font-family: 'SUIT', -apple-system, "system-ui", "Segoe UI", sans-serif;
 }
 
 .main-title,

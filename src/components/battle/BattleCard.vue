@@ -38,8 +38,8 @@
       <h3 class="title">{{ battle.title }}</h3>
 
       <div class="stats">
-        <span>{{ itemCount }}개 참여</span>
         <span>{{ formatNumber(battle.totalVotes) }} 투표</span>
+        <span>조회 {{ formatNumber(battle.totalViews || 0) }}</span>
         <span v-if="isActive && daysLeftText" class="days-left">{{ daysLeftText }}</span>
       </div>
 
@@ -51,7 +51,10 @@
           <div v-else class="creator-avatar placeholder"></div>
           <span class="creator-name">{{ creatorNickname }}</span>
         </div>
-        <span class="action-hint">참여하기 →</span>
+        <span class="action-hint">
+          참여하기
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
       </div>
     </div>
   </router-link>
@@ -240,14 +243,14 @@ const daysLeftText = computed(() => {
 .battle-card {
   background: #fff;
   border-radius: 16px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid #F2F4F6;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .battle-card:hover {
-  border-color: #e2e8f0;
+  border-color: #E5E8EB;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
@@ -255,7 +258,7 @@ const daysLeftText = computed(() => {
 .card-thumbnail {
   position: relative;
   aspect-ratio: 16 / 10;
-  background: #f8fafc;
+  background: #F7F8FA;
   overflow: hidden;
 }
 
@@ -271,7 +274,7 @@ const daysLeftText = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #cbd5e1;
+  color: #B0B8C1;
 }
 
 /* 배지 */
@@ -284,10 +287,10 @@ const daysLeftText = computed(() => {
 }
 
 .status-badge {
-  padding: 3px 7px;
+  padding: 3px 8px;
   font-size: 11px;
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .status-badge.active {
@@ -301,7 +304,7 @@ const daysLeftText = computed(() => {
 }
 
 .status-badge.ended {
-  background: #64748b;
+  background: #8B95A1;
   color: #fff;
 }
 
@@ -311,32 +314,32 @@ const daysLeftText = computed(() => {
 }
 
 .status-badge.draft {
-  background: #e2e8f0;
-  color: #64748b;
+  background: #E5E8EB;
+  color: #8B95A1;
 }
 
 .vote-type-badge {
   padding: 2px 6px;
   font-size: 10px;
-  font-weight: 500;
-  border-radius: 4px;
+  font-weight: 600;
+  border-radius: 6px;
   background: #f3e8ff;
-  color: #9333ea;
+  color: #9333EA;
 }
 
 .dday-badge {
   position: absolute;
   top: 8px;
   right: 8px;
-  padding: 2px 6px;
+  padding: 2px 7px;
   font-size: 10px;
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .dday-badge.normal {
   background: rgba(255, 255, 255, 0.95);
-  color: #475569;
+  color: #4E5968;
 }
 
 .dday-badge.urgent {
@@ -351,14 +354,14 @@ const daysLeftText = computed(() => {
 
 .category {
   font-size: 12px;
-  color: #94a3b8;
+  color: #8B95A1;
   margin: 0 0 4px;
 }
 
 .title {
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: #191F28;
   line-height: 1.5;
   margin: 0 0 10px;
   display: -webkit-box;
@@ -372,11 +375,11 @@ const daysLeftText = computed(() => {
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: #94a3b8;
+  color: #B0B8C1;
 }
 
 .stats .days-left {
-  color: #9333ea;
+  color: #9333EA;
   font-weight: 500;
 }
 
@@ -387,7 +390,7 @@ const daysLeftText = computed(() => {
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #F2F4F6;
 }
 
 .creator {
@@ -401,7 +404,7 @@ const daysLeftText = computed(() => {
   height: 20px;
   border-radius: 50%;
   overflow: hidden;
-  background: #e2e8f0;
+  background: #E5E8EB;
 }
 
 .creator-avatar img {
@@ -412,22 +415,30 @@ const daysLeftText = computed(() => {
 
 .creator-name {
   font-size: 12px;
-  color: #94a3b8;
+  color: #8B95A1;
 }
 
 .action-hint {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   font-size: 12px;
   font-weight: 500;
-  color: #9333ea;
+  color: #9333EA;
   opacity: 0;
   transition: opacity 0.2s;
+}
+
+.arrow-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .battle-card:hover .action-hint {
   opacity: 1;
 }
 
-/* 모바일: 컴팩트 카드 */
+/* 모바일 */
 @media (max-width: 768px) {
   .battle-card {
     border-radius: 12px;
@@ -523,14 +534,14 @@ const daysLeftText = computed(() => {
   }
 
   .status-badge {
-    font-size: 12.5px;
-    padding: 3.5px 9px;
+    font-size: 12px;
+    padding: 4px 9px;
   }
 
   .dday-badge {
     top: 9px;
     right: 9px;
-    font-size: 11.5px;
+    font-size: 11px;
   }
 
   .card-content {
@@ -538,7 +549,7 @@ const daysLeftText = computed(() => {
   }
 
   .category {
-    font-size: 13.5px;
+    font-size: 13px;
   }
 
   .title {
@@ -547,7 +558,7 @@ const daysLeftText = computed(() => {
   }
 
   .stats {
-    font-size: 13.5px;
+    font-size: 13px;
   }
 
   .card-footer {
@@ -561,11 +572,11 @@ const daysLeftText = computed(() => {
   }
 
   .creator-name {
-    font-size: 13.5px;
+    font-size: 13px;
   }
 
   .action-hint {
-    font-size: 13.5px;
+    font-size: 13px;
   }
 }
 

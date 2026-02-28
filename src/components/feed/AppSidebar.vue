@@ -154,7 +154,7 @@ const handleProtectedRoute = async (routeName) => {
   height: calc(100vh - 66px);
   top: 66px;
   background: #ffffff;
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  border-right: 1px solid #F2F4F6;
   padding: 28px 16px;
   display: none;
   flex-direction: column;
@@ -180,7 +180,7 @@ const handleProtectedRoute = async (routeName) => {
   padding: 12px;
   background: #ffffff;
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid #F2F4F6;
 }
 
 .nav-section {
@@ -188,7 +188,7 @@ const handleProtectedRoute = async (routeName) => {
   flex-direction: column;
   gap: 2px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid #F2F4F6;
 }
 
 .nav-section:last-child {
@@ -216,14 +216,14 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .nav-item:hover {
-  background: #ffffff;
+  background: #F7F8FA;
 }
 
 .nav-item .icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: rgba(0, 0, 0, 0.4);
+  color: #B0B8C1;
 }
 
 .nav-item.active .icon {
@@ -233,13 +233,13 @@ const handleProtectedRoute = async (routeName) => {
 .nav-text {
   font-size: 14px;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
+  color: #8B95A1;
 }
 
 .nav-item.active .nav-text {
-  color: #9333ea;
+  color: #9333EA;
   font-weight: 600;
-  border-bottom: 2px solid #9333ea;
+  border-bottom: 2px solid #9333EA;
   padding-bottom: 2px;
 }
 
@@ -247,13 +247,13 @@ const handleProtectedRoute = async (routeName) => {
   margin-left: auto;
   padding: 2px 6px;
   background: #ffffff;
-  color: rgba(0, 0, 0, 0.5);
+  color: #8B95A1;
   font-size: 12px;
   font-weight: 600;
   border-radius: 5px;
   min-width: 20px;
   text-align: center;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid #F2F4F6;
 }
 
 .badge-red {
@@ -272,7 +272,7 @@ const handleProtectedRoute = async (routeName) => {
 /* 구분선 */
 .action-divider {
   height: 1px;
-  background: rgba(0, 0, 0, 0.08);
+  background: #F2F4F6;
   margin: 4px 0;
 }
 
