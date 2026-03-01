@@ -216,8 +216,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useCarrier } from '@/composables/useCarrier.js'
 import { CARRIER_TYPE } from '@/services/CarrierService.js'
 import { fileService } from '@/services/FileService.js'
@@ -715,9 +715,16 @@ watch(defaultColor, () => {
   dirtySkin.value = true
 }, { flush: 'sync' })
 
-onBeforeUnmount(async () => {
+onBeforeRouteLeave(async () => {
   if (hasUnsavedChanges.value) {
-    await saveAllChanges()
+    const result = await openConfirm({
+      title: '변경사항을 저장할까요?',
+      message: '페이지를 떠나기 전에 현재 변경사항을 저장합니다.',
+      confirmText: '저장하기',
+      cancelText: '저장 안 함'
+    })
+    if (result === null) return false
+    if (result === true) await saveAllChanges()
   }
 })
 </script>
@@ -1612,7 +1619,7 @@ onBeforeUnmount(async () => {
   justify-content: center;
   transition: background .3s;
 }
-.share-svg-wrap { width: 320px; height: 420px; }
+.share-svg-wrap { width: 380px; height: 500px; }
 
 .share-nickname-row {
   display: flex;
@@ -1924,19 +1931,19 @@ onBeforeUnmount(async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    background: #7c3aed;
     border: none;
-    box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+    box-shadow: 0 2px 10px rgba(124,58,237,0.3);
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
   .mobile-sticker-fab:active {
     transform: scale(0.92);
-    box-shadow: 0 2px 8px rgba(124,58,237,0.3);
+    box-shadow: 0 1px 6px rgba(124,58,237,0.2);
   }
 
   .right-panel .shop-card {
@@ -1991,7 +1998,7 @@ onBeforeUnmount(async () => {
   .share-modal {
     max-width: calc(100% - 32px);
     border-radius: 20px;
-    max-height: 88vh;
+    max-height: 92vh;
     overflow-y: auto;
   }
   .share-modal-overlay {
@@ -2001,7 +2008,7 @@ onBeforeUnmount(async () => {
   .share-preview { padding: 20px 16px 14px; }
   .share-svg-wrap {
     width: 100%;
-    max-width: 280px;
+    max-width: 340px;
     height: auto;
     aspect-ratio: 380 / 500;
   }

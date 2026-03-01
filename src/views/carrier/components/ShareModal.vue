@@ -22,6 +22,14 @@
                   <stop offset="0%" :stop-color="currentSkin.body.grad1"/>
                   <stop offset="100%" :stop-color="currentSkin.body.grad2"/>
                 </linearGradient>
+                <filter id="iS2" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="b"/>
+                  <feOffset dx="-2" dy="1" result="ob"/>
+                  <feComposite in="ob" in2="SourceGraphic" operator="in" result="s"/>
+                  <feFlood flood-color="#7b6fa8" flood-opacity=".3" result="sc2"/>
+                  <feComposite in="sc2" in2="s" operator="in" result="is"/>
+                  <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="is"/></feMerge>
+                </filter>
               </defs>
 
               <!-- 외관 보기 -->
@@ -31,9 +39,9 @@
                 <rect x="122" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
                 <rect x="170" y="18" width="8" height="35" rx="3" :fill="currentSkin.handle.fill" :stroke="currentSkin.handle.stroke" stroke-width="1.5"/>
                 <rect x="116" y="6" width="68" height="18" rx="9" :fill="currentSkin.handle.grip" :stroke="currentSkin.handle.stroke" stroke-width="2.5"/>
-                <rect x="98" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2"/>
-                <rect x="139" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2"/>
-                <rect x="180" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2"/>
+                <rect x="98" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2" filter="url(#iS2)"/>
+                <rect x="139" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2" filter="url(#iS2)"/>
+                <rect x="180" y="80" width="22" height="250" rx="11" :fill="currentSkin.groove.fill" :stroke="currentSkin.groove.stroke" stroke-width="2" filter="url(#iS2)"/>
                 <!-- 스킨 내장 스티커 -->
                 <template v-for="(st, i) in currentSkin.stickers" :key="'share-sk-' + i">
                   <g v-if="st.type === 'smallheart'" :transform="`translate(${st.x},${st.y})`">
