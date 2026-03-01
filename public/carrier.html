@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>내 캐리어</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'HancomMalangMalang';src:url('https://cdn.jsdelivr.net/gh/fontbee/font@main/Hancom/HancomMalangMalang-Bold.woff2') format('woff2');font-weight:700;font-style:normal;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;color:#1a1a1a}
+::-webkit-scrollbar{display:none}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.cube-bubble .cube-del{opacity:0;transition:opacity .15s;}
+.cube-bubble:hover .cube-del{opacity:1;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useRef,useCallback}=React;
+
+/* ===== 테스트 데이터 ===== */
+const BAGGED=[
+{id:1,name:"두쫀쿠",brand:"Apple",rating:4.8,reviewCount:12400,popularityScore:9720,tags:"음향기기",imageUrl:"dubai.png"},
+{id:3,name:"다이슨 에어랩",brand:"Dyson",rating:4.6,reviewCount:6700,popularityScore:5840,tags:"뷰티",imageUrl:null},
+{id:6,name:"맥북 프로 M4",brand:"Apple",rating:4.9,reviewCount:5400,popularityScore:2980,tags:"전자기기",imageUrl:null},
+{id:7,name:"올리브영 레티놀",brand:"올리브영",rating:4.3,reviewCount:18300,popularityScore:2150,tags:"스킨케어",imageUrl:null},
+{id:4,name:"스탠리 텀블러",brand:"Stanley",rating:4.5,reviewCount:15200,popularityScore:4210,tags:"리빙",imageUrl:"stanley.jpg"},
+];
+
+const DEFAULT_COLORS=[
+{id:"violet",label:"바이올렛",dot:"#7c3aed",body:{grad1:"#f5f3ff",grad2:"#e4dff2",stroke:"#7c3aed"},groove:{fill:"#ebe8f4",stroke:"#d4d0e8"},handle:{fill:"#d8d2ea",stroke:"#7c3aed",grip:"#ece9f5"},wheel:{fill:"#d8d2ea",stroke:"#7c3aed",hub:"#7c3aed",inner:"#ece9f5"}},
+{id:"pink",label:"핑크",dot:"#ec4899",body:{grad1:"#fdf2f8",grad2:"#fce7f3",stroke:"#ec4899"},groove:{fill:"#fce7f3",stroke:"#fbcfe8"},handle:{fill:"#fbcfe8",stroke:"#ec4899",grip:"#fce7f3"},wheel:{fill:"#fbcfe8",stroke:"#ec4899",hub:"#ec4899",inner:"#fce7f3"}},
+{id:"sky",label:"스카이",dot:"#0ea5e9",body:{grad1:"#f0f9ff",grad2:"#e0f2fe",stroke:"#0ea5e9"},groove:{fill:"#e0f2fe",stroke:"#bae6fd"},handle:{fill:"#bae6fd",stroke:"#0ea5e9",grip:"#e0f2fe"},wheel:{fill:"#bae6fd",stroke:"#0ea5e9",hub:"#0ea5e9",inner:"#e0f2fe"}},
+{id:"yellow",label:"옐로우",dot:"#eab308",body:{grad1:"#fefce8",grad2:"#fef9c3",stroke:"#eab308"},groove:{fill:"#fef9c3",stroke:"#fde68a"},handle:{fill:"#fde68a",stroke:"#eab308",grip:"#fef9c3"},wheel:{fill:"#fde68a",stroke:"#eab308",hub:"#eab308",inner:"#fef9c3"}},
+];
+
+const BASE_SKINS=[
+{id:"default",name:"기본",desc:"클래식 바이올렛",special:false,body:{grad1:"#f5f3ff",grad2:"#e4dff2",stroke:"#7c3aed"},groove:{fill:"#ebe8f4",stroke:"#d4d0e8"},handle:{fill:"#d8d2ea",stroke:"#7c3aed",grip:"#ece9f5"},wheel:{fill:"#d8d2ea",stroke:"#7c3aed",hub:"#7c3aed",inner:"#ece9f5"},stickers:[]},
+{id:"retro",name:"레트로 트래블",desc:"빈티지 여행",special:false,body:{grad1:"#fefce8",grad2:"#fef3c7",stroke:"#b45309"},groove:{fill:"#fef9c3",stroke:"#fde68a"},handle:{fill:"#fcd34d",stroke:"#b45309",grip:"#fef9c3"},wheel:{fill:"#fcd34d",stroke:"#b45309",hub:"#b45309",inner:"#fef9c3"},stickers:[{type:"stamp",x:90,y:140,label:"PARIS",color:"#dc2626"},{type:"stamp",x:195,y:210,label:"TOKYO",color:"#2563eb"},{type:"stamp",x:120,y:290,label:"NYC",color:"#16a34a"}]},
+{id:"space",name:"스페이스",desc:"은하계 탐험",special:false,body:{grad1:"#1e1b4b",grad2:"#0f0a2e",stroke:"#6366f1"},groove:{fill:"#1e1b4b",stroke:"#4338ca"},handle:{fill:"#312e81",stroke:"#818cf8",grip:"#1e1b4b"},wheel:{fill:"#312e81",stroke:"#818cf8",hub:"#a5b4fc",inner:"#1e1b4b"},stickers:[{type:"star",x:80,y:110,size:6},{type:"star",x:220,y:140,size:4},{type:"star",x:150,y:180,size:7},{type:"planet",x:190,y:230}]},
+{id:"kitty",name:"헬로키티",desc:"리본과 하트",special:true,body:{grad1:"#fff",grad2:"#fff8f9",stroke:"#dc2626"},groove:{fill:"#fee2e2",stroke:"#fca5a5"},handle:{fill:"#fca5a5",stroke:"#dc2626",grip:"#fee2e2"},wheel:{fill:"#fca5a5",stroke:"#dc2626",hub:"#dc2626",inner:"#fee2e2"},stickers:[{type:"bigbow",x:220,y:90},{type:"smallheart",x:75,y:120},{type:"smallheart",x:180,y:160},{type:"smallheart",x:95,y:210},{type:"smallheart",x:220,y:230},{type:"smallheart",x:140,y:270}]},
+];
+
+const STICKER_PACKS={basic:[{id:"b1",emoji:"💟"},{id:"b2",emoji:"🤍"},{id:"b3",emoji:"🫧"},{id:"b4",emoji:"⚪"},{id:"b5",emoji:"➰"},{id:"b6",emoji:"〰️"},{id:"b7",emoji:"➿"},{id:"b8",emoji:"💭"},{id:"b9",emoji:"🍒"},{id:"b10",emoji:"🎀"},{id:"b11",emoji:"✨"},{id:"b12",emoji:"🧸"},{id:"b13",emoji:"🎄"},{id:"b14",emoji:"💐"},{id:"b15",emoji:"🐧"},{id:"b16",emoji:"☑️"}],travel:[{id:"t1",emoji:"🕶️"},{id:"t2",emoji:"👙"},{id:"t3",emoji:"🧢"},{id:"t4",emoji:"🎧"},{id:"t5",emoji:"📷"},{id:"t6",emoji:"🪞"},{id:"t7",emoji:"🏝️"},{id:"t8",emoji:"🏖️"},{id:"t9",emoji:"🗼"},{id:"t10",emoji:"🗽"},{id:"t11",emoji:"🏜️"},{id:"t12",emoji:"🌉"}],food:[{id:"f1",emoji:"🍳"},{id:"f2",emoji:"🍕"},{id:"f3",emoji:"🍔"},{id:"f4",emoji:"🥐"},{id:"f5",emoji:"🥖"},{id:"f6",emoji:"🥫"},{id:"f7",emoji:"🍜"},{id:"f8",emoji:"🍣"},{id:"f9",emoji:"🍰"},{id:"f10",emoji:"🍫"},{id:"f11",emoji:"☕"},{id:"f12",emoji:"🍵"},{id:"f13",emoji:"🍸"},{id:"f14",emoji:"🍺"},{id:"f15",emoji:"🧋"},{id:"f16",emoji:"🍇"},{id:"f17",emoji:"🍉"},{id:"f18",emoji:"🍒"},{id:"f19",emoji:"🥭"},{id:"f20",emoji:"🍓"}],weather:[{id:"w1",emoji:"☁️"},{id:"w2",emoji:"⛅"},{id:"w3",emoji:"🌤️"},{id:"w4",emoji:"🌥️"},{id:"w5",emoji:"🌦️"},{id:"w6",emoji:"🌧️"},{id:"w7",emoji:"🌨️"},{id:"w8",emoji:"🌫️"},{id:"w9",emoji:"🌠"},{id:"w10",emoji:"🌂"},{id:"w11",emoji:"☂️"},{id:"w12",emoji:"☔"},{id:"w13",emoji:"🌀"},{id:"w14",emoji:"⭐"},{id:"w15",emoji:"🌟"},{id:"w16",emoji:"☀️"},{id:"w17",emoji:"🔥"},{id:"w18",emoji:"❄️"},{id:"w19",emoji:"☃️"},{id:"w20",emoji:"⛄"}]};
+const MY_SLOT_COUNT=2;
+
+/* ===== 스티커 렌더러 ===== */
+const Sticker=({s})=>{
+if(s.type==="smallheart")return<g transform={`translate(${s.x},${s.y})`}><path d="M0 7C-2 5-9 1-9-4C-9-8-5-10 0-6C5-10 9-8 9-4C9 1 2 5 0 7Z" fill="#fca5a5" stroke="#f87171" strokeWidth="1"/></g>;
+if(s.type==="bigbow")return<g transform={`translate(${s.x},${s.y})`}><path d="M-20 0C-20-15-4-15 0 0C4-15 20-15 20 0C20 15 4 15 0 0C-4 15-20 15-20 0Z" fill="#dc2626" stroke="#222" strokeWidth="1.5"/><circle r="5" fill="#dc2626" stroke="#222" strokeWidth="1.2"/></g>;
+if(s.type==="stamp")return<g transform={`translate(${s.x},${s.y})`}><rect x="-28" y="-16" width="56" height="32" rx="4" fill="none" stroke={s.color} strokeWidth="2.5" strokeDasharray="3 2" opacity="0.7"/><text x="0" y="5" textAnchor="middle" fontSize="11" fontWeight="900" fill={s.color} opacity="0.75" fontFamily="monospace">{s.label}</text></g>;
+if(s.type==="star")return<circle cx={s.x} cy={s.y} r={s.size||4} fill="#e0e7ff" opacity="0.6"><animate attributeName="opacity" values="0.3;0.9;0.3" dur="3s" repeatCount="indefinite"/></circle>;
+if(s.type==="planet")return<g transform={`translate(${s.x},${s.y})`}><circle r="12" fill="#818cf8" opacity="0.6"/><ellipse rx="20" ry="5" fill="none" stroke="#c7d2fe" strokeWidth="1.5" opacity="0.5" transform="rotate(-20)"/></g>;
+if(s.type==="emoji"){const sz=s.size||22;return<foreignObject x={s.x-sz/2} y={s.y-sz/2} width={sz} height={sz}><div xmlns="http://www.w3.org/1999/xhtml" style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:sz*.85,lineHeight:1,transform:s.flipped?"scaleX(-1)":"scaleX(1)"}}>{s.emoji}</div></foreignObject>;}
+return null;
+};
+
+/* ===== 유틸 ===== */
+const CUBE_S=27,CUBE_M=45,CUBE_L=63;
+const CVB={x1:30,y1:50,x2:270,y2:370,vw:300,vh:400};
+function getBounds(W,H){const sx=W/CVB.vw,sy=H/CVB.vh,sc=Math.min(sx,sy),ox=(W-CVB.vw*sc)/2,oy=(H-CVB.vh*sc)/2;return{left:ox+CVB.x1*sc,top:oy+CVB.y1*sc,right:ox+CVB.x2*sc,bottom:oy+CVB.y2*sc};}
+function decoToSvg(arr){const bx=30,by=50,bw=240,bh=320;return arr.map(d=>({type:"emoji",x:bx+(d.x/100)*bw,y:by+(d.y/100)*bh,emoji:d.emoji,size:Math.round(24*d.scale),flipped:d.flipped||false}));}
+
+function getRankStyle(r,t){
+if(r===1)return{bg:"radial-gradient(circle at 35% 30%, rgba(167,139,250,0.95) 0%, rgba(124,58,237,0.85) 50%, rgba(91,33,182,0.9) 100%)",border:"rgba(124,58,237,0.5)",glow:"rgba(124,58,237,0.35)",tc:"#fff",sc:"rgba(255,255,255,0.8)"};
+if(r===2)return{bg:"radial-gradient(circle at 35% 30%, rgba(196,181,253,0.9) 0%, rgba(139,92,246,0.8) 50%, rgba(109,40,217,0.85) 100%)",border:"rgba(139,92,246,0.5)",glow:"rgba(139,92,246,0.3)",tc:"#fff",sc:"rgba(255,255,255,0.75)"};
+if(r===3)return{bg:"radial-gradient(circle at 35% 30%, rgba(221,214,254,0.9) 0%, rgba(167,139,250,0.8) 50%, rgba(139,92,246,0.85) 100%)",border:"rgba(167,139,250,0.5)",glow:"rgba(167,139,250,0.25)",tc:"#fff",sc:"rgba(255,255,255,0.75)"};
+const l=96+Math.min(1,(r-3)/Math.max(1,t-3))*3;return{bg:`radial-gradient(circle at 35% 30%, hsl(263,50%,${Math.min(98,l+6)}%) 0%, hsl(263,40%,${l}%) 50%, hsl(263,35%,${Math.max(70,l-8)}%) 100%)`,border:`hsla(263,30%,${88+Math.min(1,(r-3)/Math.max(1,t-3))*6}%,0.5)`,glow:"transparent",tc:"#555",sc:"#999"};
+}
+
+function initLayout(nodes,W,H){
+if(!nodes.length||!W||!H)return[];
+const GAP=3,cx=W/2,so=nodes.map((n,i)=>({...n,idx:i})).sort((a,b)=>b.r-a.r);
+const pos=so.map(n=>({x:cx+(Math.random()-.5)*W*.3,y:H-n.r-10,vx:0,vy:0,r:n.r,idx:n.idx}));
+for(let t=0;t<600;t++){const a=Math.max(.001,1-t/600);for(let i=0;i<pos.length;i++){pos[i].vy+=.25*a;pos[i].vx+=(cx-pos[i].x)*.005*a;
+for(let j=i+1;j<pos.length;j++){const dx=pos[i].x-pos[j].x,dy=pos[i].y-pos[j].y,ox=pos[i].r+pos[j].r+GAP-Math.abs(dx),oy=pos[i].r+pos[j].r+GAP-Math.abs(dy);
+if(ox>0&&oy>0){const sx=dx>=0?1:-1,sy=dy>=0?1:-1;if(ox<oy){pos[i].vx+=sx*ox*.25;pos[j].vx-=sx*ox*.25;}else{pos[i].vy+=sy*oy*.25;pos[j].vy-=sy*oy*.25;}}}
+pos[i].vx*=.55;pos[i].vy*=.55;pos[i].x+=pos[i].vx;pos[i].y+=pos[i].vy;const pd=pos[i].r+2;pos[i].x=Math.max(pd,Math.min(W-pd,pos[i].x));pos[i].y=Math.max(pd,Math.min(H-pd,pos[i].y));}}
+const res=new Array(nodes.length);pos.forEach(p=>{res[p.idx]={x:p.x,y:p.y}});return res;
+}
+
+/* ===== 물리엔진 훅 ===== */
+function usePhysics(items,dims,ds){
+const sorted=[...items].sort((a,b)=>b.popularityScore-a.popularityScore);
+const nodes=sorted.map((p,i)=>{const t=sorted.length,pct=t<=1?0:(i/(t-1));return{id:p.id,r:pct<.2?CUBE_L:pct<.55?CUBE_M:CUBE_S};});
+const posRef=useRef([]);const frameRef=useRef(null);const[rendered,setRendered]=useState([]);
+const key=items.map(i=>i.id).join(",");
+useEffect(()=>{if(!dims.w||!dims.h||!nodes.length){posRef.current=[];setRendered([]);return;}
+const b=getBounds(dims.w,dims.h),bw=b.right-b.left,bh=b.bottom-b.top;
+const layout=initLayout(nodes,bw*.85,bh*.85);const ox=b.left+bw*.075,oy=b.top+bh*.075;
+posRef.current=layout.map((p,i)=>({x:p.x+ox,y:p.y+oy,vx:0,vy:0,r:nodes[i].r,id:nodes[i].id}));
+setRendered(posRef.current.map(p=>({x:p.x,y:p.y})));},[key,dims.w,dims.h]);
+useEffect(()=>{if(!dims.w||!dims.h)return;const G=.18,FR=.88,BO=.35,GAP=3;
+const step=()=>{const bodies=posRef.current;if(!bodies.length){frameRef.current=requestAnimationFrame(step);return;}
+const d=ds.current,b=getBounds(dims.w,dims.h);
+for(let i=0;i<bodies.length;i++){const o=bodies[i];if(d.dragging&&d.id===o.id){const pad=o.r+2;o.x=Math.max(b.left+pad,Math.min(b.right-pad,o.x));o.y=Math.max(b.top+pad,Math.min(b.bottom-pad,o.y));o.vx=d.velX||0;o.vy=d.velY||0;continue;}o.vy+=G;o.vx*=FR;o.vy*=FR;o.x+=o.vx;o.y+=o.vy;const pad=o.r+2;if(o.x<b.left+pad){o.x=b.left+pad;o.vx=Math.abs(o.vx)*BO;}if(o.x>b.right-pad){o.x=b.right-pad;o.vx=-Math.abs(o.vx)*BO;}if(o.y<b.top+pad){o.y=b.top+pad;o.vy=Math.abs(o.vy)*BO;}if(o.y>b.bottom-pad){o.y=b.bottom-pad;o.vy=-Math.abs(o.vy)*BO;}}
+for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){const a=bodies[i],bb=bodies[j],dx=a.x-bb.x,dy=a.y-bb.y,ox=a.r+bb.r+GAP-Math.abs(dx),oy=a.r+bb.r+GAP-Math.abs(dy);
+if(ox>0&&oy>0){const aL=d.dragging&&d.id===a.id,bL=d.dragging&&d.id===bb.id,sx=dx>=0?1:-1,sy=dy>=0?1:-1;
+if(ox<oy){if(aL){bb.x-=sx*ox;}else if(bL){a.x+=sx*ox;}else{a.x+=sx*ox*.5;bb.x-=sx*ox*.5;}if(!aL)a.vx*=.1;if(!bL)bb.vx*=.1;
+}else{if(aL){bb.y-=sy*oy;}else if(bL){a.y+=sy*oy;}else{a.y+=sy*oy*.5;bb.y-=sy*oy*.5;}if(!aL){if(sy>0)a.vy=Math.min(a.vy,0);else a.vy=Math.max(a.vy,0);}if(!bL){if(sy<0)bb.vy=Math.min(bb.vy,0);else bb.vy=Math.max(bb.vy,0);}}}}
+for(let i=0;i<bodies.length;i++){const o=bodies[i],pad=o.r+2;if(o.x<b.left+pad){o.x=b.left+pad;if(o.vx<0)o.vx*=-BO;}if(o.x>b.right-pad){o.x=b.right-pad;if(o.vx>0)o.vx*=-BO;}if(o.y<b.top+pad){o.y=b.top+pad;if(o.vy<0)o.vy*=-BO;}if(o.y>b.bottom-pad){o.y=b.bottom-pad;if(o.vy>0)o.vy*=-BO;}}
+setRendered(bodies.map(o=>({x:o.x,y:o.y})));frameRef.current=requestAnimationFrame(step);};
+frameRef.current=requestAnimationFrame(step);return()=>cancelAnimationFrame(frameRef.current);},[dims.w,dims.h,key]);
+return{sorted,nodes,rendered,posRef};
+}
+
+/* ===== 데코 툴바 ===== */
+function DecoToolbar({d,onFlip,onDown,onUp,onRemove,DMIN,DMAX}){
+return(<div style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",marginBottom:6,display:"flex",alignItems:"center",gap:2,background:"#fff",borderRadius:10,padding:"3px 4px",boxShadow:"0 4px 16px rgba(0,0,0,.15)",border:"1px solid #e0d8f5",zIndex:30,whiteSpace:"nowrap"}} onClick={e=>e.stopPropagation()}>
+<button onClick={e=>{e.stopPropagation();onFlip();}} style={{width:24,height:24,border:"none",borderRadius:7,background:d.flipped?"#ede9fe":"#f5f3ff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="7 3 3 7 7 11"/><path d="M3 7h13a5 5 0 010 10h-4"/></svg></button>
+<div style={{width:1,height:16,background:"#e5e7eb",margin:"0 2px"}}/>
+<button onClick={e=>{e.stopPropagation();onDown();}} style={{width:24,height:24,border:"none",borderRadius:7,background:d.scale<=DMIN?"#f5f5f5":"#f5f3ff",cursor:d.scale<=DMIN?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:d.scale<=DMIN?"#ccc":"#7c3aed"}}>−</button>
+<span style={{fontSize:10,fontWeight:700,color:"#7c3aed",minWidth:32,textAlign:"center"}}>{Math.round(d.scale*100)}%</span>
+<button onClick={e=>{e.stopPropagation();onUp();}} style={{width:24,height:24,border:"none",borderRadius:7,background:d.scale>=DMAX?"#f5f5f5":"#f5f3ff",cursor:d.scale>=DMAX?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:d.scale>=DMAX?"#ccc":"#7c3aed"}}>+</button>
+<div style={{width:1,height:16,background:"#e5e7eb",margin:"0 2px"}}/>
+<button onClick={e=>{e.stopPropagation();onRemove();}} style={{width:24,height:24,border:"none",borderRadius:7,background:"#fef2f2",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"#ef4444",fontWeight:700}}>✕</button>
+</div>);
+}
+
+/* ===== 스킨 미리보기 ===== */
+const SkinPreview=({skin:sk,isActive,onClick,special,isMy})=>(
+<div style={{flex:"1 1 0",minWidth:0}}>
+<div onClick={onClick} style={{cursor:"pointer",borderRadius:14,overflow:"hidden",position:"relative",border:isActive?"2.5px solid #7c3aed":sk.isEmpty?"1.5px dashed #d1d5db":"1.5px solid #e0d8f5",boxShadow:isActive?"0 4px 16px rgba(124,58,237,0.15)":"0 2px 8px rgba(0,0,0,0.04)",transition:"all 0.2s",background:sk.isEmpty?"#fafafa":"#fff"}}>
+{special&&<div style={{position:"absolute",top:0,right:0,zIndex:10,background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#fff",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:"0 12px 0 8px"}}>SP</div>}
+{isMy&&!sk.isEmpty&&<div style={{position:"absolute",top:0,left:0,zIndex:10,background:"linear-gradient(135deg,#7c3aed,#a78bfa)",color:"#fff",fontSize:8,fontWeight:800,padding:"3px 6px",borderRadius:"12px 0 8px 0"}}>MY</div>}
+<div style={{padding:"12px 8px 8px",display:"flex",justifyContent:"center"}}>
+{sk.isEmpty?(<svg width="60" height="80" viewBox="0 0 300 400" fill="none"><rect x="30" y="50" width="240" height="320" rx="20" fill="none" stroke="#d1d5db" strokeWidth="4" strokeDasharray="12 8"/><rect x="116" y="6" width="68" height="18" rx="9" fill="none" stroke="#d1d5db" strokeWidth="3" strokeDasharray="8 6"/><text x="150" y="220" textAnchor="middle" fontSize="28" fill="#d1d5db">+</text></svg>
+):(<svg width="60" height="80" viewBox="0 0 300 400" fill="none"><defs><linearGradient id={`pg-${sk.id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={sk.body.grad1}/><stop offset="100%" stopColor={sk.body.grad2}/></linearGradient></defs><rect x="30" y="50" width="240" height="320" rx="20" fill={`url(#pg-${sk.id})`} stroke={sk.body.stroke} strokeWidth="5"/><rect x="116" y="6" width="68" height="18" rx="9" fill={sk.handle.grip} stroke={sk.handle.stroke} strokeWidth="3.5"/><rect x="98" y="80" width="22" height="250" rx="11" fill={sk.groove.fill} stroke={sk.groove.stroke} strokeWidth="3"/><rect x="139" y="80" width="22" height="250" rx="11" fill={sk.groove.fill} stroke={sk.groove.stroke} strokeWidth="3"/><rect x="180" y="80" width="22" height="250" rx="11" fill={sk.groove.fill} stroke={sk.groove.stroke} strokeWidth="3"/><circle cx="70" cy="382" r="10" fill={sk.wheel.fill} stroke={sk.wheel.stroke} strokeWidth="3"/><circle cx="230" cy="382" r="10" fill={sk.wheel.fill} stroke={sk.wheel.stroke} strokeWidth="3"/></svg>)}
+</div>
+<div style={{padding:"4px 10px 10px",textAlign:"center"}}><div style={{fontSize:12,fontWeight:700,color:sk.isEmpty?"#bbb":"#333"}}>{sk.name}</div><div style={{fontSize:10,color:sk.isEmpty?"#ccc":"#999",marginTop:1}}>{sk.desc}</div></div>
+{isActive&&!sk.isEmpty&&<div style={{height:3,background:"linear-gradient(90deg,#7c3aed,#a78bfa)"}}/>}
+</div></div>
+);
+
+/* ===== 모바일 탭 ===== */
+const MobileTabBar=({tab,setTab,count})=>(
+<div style={{display:"none",background:"#fff",borderBottom:"1px solid #eee",position:"sticky",top:52,zIndex:99}} className="mobile-tabs">
+{[{k:"shop",icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/></svg>,label:"캐꾸샵"},
+{k:"carrier",icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg>,label:"캐리어"},
+{k:"items",icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>,label:"아이템"}
+].map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"10px 4px 8px",border:"none",background:"none",cursor:"pointer",color:tab===t.k?"#7c3aed":"#9ca3af",fontSize:11,fontWeight:600,position:"relative"}}>{t.icon}<span>{t.label}</span>{tab===t.k&&<div style={{position:"absolute",bottom:0,left:"20%",right:"20%",height:2.5,background:"#7c3aed",borderRadius:"2px 2px 0 0"}}/>}</button>)}
+</div>
+);
+
+/* ===== 메인 앱 ===== */
+function App(){
+const[isOpen,setIsOpen]=useState(false);
+const[items,setItems]=useState(BAGGED);
+const[selected,setSelected]=useState(null);
+const[anim,setAnim]=useState(false);
+const[defaultColor,setDefaultColor]=useState("violet");
+const[activeSkin,setActiveSkin]=useState("default");
+const[skinScroll,setSkinScroll]=useState(0);
+const[decoPage,setDecoPage]=useState(0);
+const[stickerPack,setStickerPack]=useState("basic");
+const[decos,setDecos]=useState([]);
+const[selDeco,setSelDeco]=useState(null);
+const[savedDecos,setSavedDecos]=useState([null,null]);
+const[showShareModal,setShowShareModal]=useState(false);
+const[itemsExpanded,setItemsExpanded]=useState(false);
+const[mobileTab,setMobileTab]=useState("carrier");
+const[dragId,setDragId]=useState(null);
+const DMIN=0.6,DMAX=2.5,DSTEP=0.2,IW=110,G=8;
+const innerRef=useRef(null);const boxRef=useRef(null);const shareRef=useRef(null);const nameTagInputRef=useRef(null);
+const[nameTagImg,setNameTagImg]=useState(null);
+const[nickname,setNickname]=useState("");
+const onNameTagImgChange=useCallback(e=>{const file=e.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>setNameTagImg(ev.target.result);reader.readAsDataURL(file);e.target.value="";},[]);
+const[dims,setDims]=useState({w:0,h:0});
+const ds=useRef({dragging:false,id:null,ox:0,oy:0,lastX:0,lastY:0,velX:0,velY:0});
+
+const dc=DEFAULT_COLORS.find(c=>c.id===defaultColor)||DEFAULT_COLORS[0];
+const appliedSkins=BASE_SKINS.map(s=>s.id==="default"?{...s,desc:dc.label,body:{...dc.body},groove:{...dc.groove},handle:{...dc.handle},wheel:{...dc.wheel}}:s);
+const mySkins=Array.from({length:MY_SLOT_COUNT},(_,i)=>{const sd=savedDecos[i];if(sd){const sc=DEFAULT_COLORS.find(c=>c.id===sd.colorId)||DEFAULT_COLORS[0];return{id:"my-"+i,name:"MY 캐꾸 "+(i+1),desc:"내가 꾸민 #"+(i+1),special:false,isMy:true,isEmpty:false,body:{...sc.body},groove:{...sc.groove},handle:{...sc.handle},wheel:{...sc.wheel},stickers:decoToSvg(sd.items)};}return{id:"my-"+i,name:"MY 캐꾸 "+(i+1),desc:"비어있음",special:false,isMy:true,isEmpty:true,body:{grad1:"#f9fafb",grad2:"#f3f4f6",stroke:"#d1d5db"},groove:{fill:"#f3f4f6",stroke:"#e5e7eb"},handle:{fill:"#e5e7eb",stroke:"#d1d5db",grip:"#f3f4f6"},wheel:{fill:"#e5e7eb",stroke:"#d1d5db",hub:"#d1d5db",inner:"#f3f4f6"},stickers:[]};});
+const SKINS=[...appliedSkins,...mySkins];
+const skin=SKINS.find(s=>s.id===activeSkin)||SKINS[0];
+const SHARE_BG={"#7c3aed":"#e5e1f7","#ec4899":"#f9ecf1","#0ea5e9":"#f1f8fe","#eab308":"#fef8e1","#b45309":"#fef3e1","#6366f1":"#e0dff7","#dc2626":"#fce5e5"};
+const shareBg=SHARE_BG[skin.body.stroke]||"#e5e1f7";
+const nSkins=SKINS.filter(s=>!s.special&&!s.isMy),sSkins=SKINS.filter(s=>s.special),mySkinList=SKINS.filter(s=>s.isMy);
+const activeMyIdx=activeSkin.startsWith("my-")?parseInt(activeSkin.split("-")[1]):-1;
+const isEditingMy=activeMyIdx>=0&&savedDecos[activeMyIdx]!==null&&!isOpen;
+const editingMyDecos=isEditingMy?savedDecos[activeMyIdx].items:null;
+const slotFull=savedDecos.every(s=>s!==null);
+
+useEffect(()=>{const el=innerRef.current;if(!el)return;const obs=new ResizeObserver(e=>{const{width,height}=e[0].contentRect;setDims({w:width,h:height});});obs.observe(el);return()=>obs.disconnect();},[]);
+const{sorted,nodes,rendered,posRef}=usePhysics(items,dims,ds);
+
+const toggle=()=>{if(anim)return;setAnim(true);setIsOpen(v=>!v);setTimeout(()=>setAnim(false),500);};
+const removeItem=id=>{setItems(p=>p.filter(i=>i.id!==id));if(selected===id)setSelected(null);};
+const selItem=items.find(i=>i.id===selected);
+
+/* 버블 드래그 */
+const onBubbleDown=useCallback((e,id)=>{e.preventDefault();e.stopPropagation();const rect=innerRef.current?.getBoundingClientRect();if(!rect)return;const cx=e.clientX-rect.left,cy=e.clientY-rect.top,b=posRef.current.find(b=>b.id===id);if(!b)return;ds.current={dragging:true,id,ox:b.x-cx,oy:b.y-cy,lastX:cx,lastY:cy,velX:0,velY:0};setDragId(id);
+const onM=ev=>{const px=(ev.touches?ev.touches[0].clientX:ev.clientX)-rect.left,py=(ev.touches?ev.touches[0].clientY:ev.clientY)-rect.top;const d=ds.current;d.velX=(px-d.lastX)*.6;d.velY=(py-d.lastY)*.6;d.lastX=px;d.lastY=py;const body=posRef.current.find(b=>b.id===id);if(body){body.x=px+d.ox;body.y=py+d.oy;}};
+const onU=()=>{const d=ds.current,body=posRef.current.find(b=>b.id===id);if(body){body.vx=d.velX;body.vy=d.velY;}ds.current={dragging:false,id:null,ox:0,oy:0,lastX:0,lastY:0,velX:0,velY:0};setDragId(null);window.removeEventListener("mousemove",onM);window.removeEventListener("mouseup",onU);window.removeEventListener("touchmove",onM);window.removeEventListener("touchend",onU);};
+window.addEventListener("mousemove",onM);window.addEventListener("mouseup",onU);window.addEventListener("touchmove",onM,{passive:false});window.addEventListener("touchend",onU);},[]);
+
+/* 데코 */
+const placeDeco=useCallback(d=>{setDecos(p=>[...p,{uid:d.id+"_"+Date.now(),id:d.id,emoji:d.emoji,x:30+Math.random()*40,y:30+Math.random()*40,scale:1,flipped:false}]);},[]);
+const scaleDeco=useCallback((uid,d)=>setDecos(p=>p.map(v=>v.uid===uid?{...v,scale:Math.max(DMIN,Math.min(DMAX,v.scale+d))}:v)),[]);
+const flipDeco=useCallback(uid=>setDecos(p=>p.map(v=>v.uid===uid?{...v,flipped:!v.flipped}:v)),[]);
+const removeDeco=useCallback(uid=>{setDecos(p=>p.filter(v=>v.uid!==uid));setSelDeco(v=>v===uid?null:v);},[]);
+
+const saveOrUpdateMyDeco=useCallback(()=>{if(!decos.length)return;const snap={colorId:defaultColor,items:decos.map(d=>({emoji:d.emoji,x:d.x,y:d.y,scale:d.scale,flipped:d.flipped||false}))};
+if(activeMyIdx>=0){setSavedDecos(p=>{const n=[...p];n[activeMyIdx]=snap;return n;});setSelDeco(null);}
+else{const idx=savedDecos.findIndex(s=>s===null);if(idx<0)return;setSavedDecos(p=>{const n=[...p];n[idx]=snap;return n;});setActiveSkin("my-"+idx);setSelDeco(null);}
+},[decos,savedDecos,defaultColor,activeMyIdx]);
+const removeMySlot=useCallback(idx=>{setSavedDecos(p=>{const n=[...p];n[idx]=null;return n;});if(activeSkin==="my-"+idx){setActiveSkin("default");setDecos([]);setSelDeco(null);}},[activeSkin]);
+const selectSkin=useCallback(id=>{setActiveSkin(id);if(id.startsWith("my-")){const idx=parseInt(id.split("-")[1]),sd=savedDecos[idx];if(sd){setDecos(sd.items.map((d,i)=>({uid:"me_"+i+"_"+Date.now(),id:"me_"+i,emoji:d.emoji,x:d.x,y:d.y,scale:d.scale,flipped:d.flipped||false})));setSelDeco(null);}else{setDecos([]);setSelDeco(null);}}else{setDecos([]);setSelDeco(null);}},[savedDecos]);
+
+const saveAsImage=useCallback(()=>{
+const svgEl=shareRef.current;if(!svgEl)return;
+const clone=svgEl.cloneNode(true);
+clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+clone.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
+/* 닉네임 텍스트는 캔버스에서 직접 그리므로 SVG에서 제거 */
+clone.querySelectorAll(".nick-text").forEach(el=>el.remove());
+const svgData=new XMLSerializer().serializeToString(clone);
+const canvas=document.createElement("canvas");
+const sc=3,vbX=-40,vbY=-40,vbW=380,vbH=480;canvas.width=vbW*sc;canvas.height=vbH*sc;
+const ctx=canvas.getContext("2d");
+/* 배경색 칠하기 */
+ctx.fillStyle=shareBg;ctx.fillRect(0,0,canvas.width,canvas.height);
+/* SVG 그리기 */
+const svgImg=new Image();
+svgImg.onload=()=>{
+ctx.drawImage(svgImg,0,0,canvas.width,canvas.height);
+/* 닉네임 텍스트 캔버스에 직접 그리기 */
+if(nickname){const nx=(150-vbX)*sc,ny=(-20-vbY)*sc,fs=20*sc;
+ctx.font="700 "+fs+"px 'HancomMalangMalang',sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+ctx.fillStyle="#363636";ctx.fillText(nickname+"의 캐꾸",nx,ny);}
+/* 스티커(이모지) 캔버스에 직접 그리기 */
+const drawEmoji=(emoji,cx,cy,sz)=>{ctx.font=(sz*sc)+"px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,(cx-vbX)*sc,(cy-vbY)*sc);};
+if(!(activeMyIdx>=0&&decos.length>0)){skin.stickers.filter(s=>s.type==="emoji").forEach(s=>{const sz=s.size||22;drawEmoji(s.emoji,s.x,s.y,sz*.85);});}
+decos.forEach(d=>{const x=30+(d.x/100)*240,y=50+(d.y/100)*320,sz=Math.round(20*d.scale);drawEmoji(d.emoji,x,y,sz);});
+const a=document.createElement("a");a.download="my-carrier.png";
+a.href=canvas.toDataURL("image/png");a.click();};
+svgImg.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svgData);
+},[decos,skin,activeMyIdx,shareBg,nickname]);
+
+/* 스킨 캐러셀 */
+const allBase=[...nSkins,...sSkins],allItems=[...allBase,{divider:true},...mySkinList];
+const VW=IW*2+G+IW*.5,CW=VW+60;
+const totalW=allItems.reduce((s,it)=>s+(it.divider?20+G:IW+G),0)-G,mx2=Math.max(0,totalW-VW);
+const cL=skinScroll>0,cR=skinScroll<mx2;
+const go=d=>setSkinScroll(v=>Math.max(0,Math.min(mx2,v+d*(IW+G))));
+
+/* 데코 페이지 */
+const curDecos=stickerPack==="all"?Object.values(STICKER_PACKS).flat():(STICKER_PACKS[stickerPack]||[]);const PP=8,pages=[];for(let i=0;i<curDecos.length;i+=PP)pages.push(curDecos.slice(i,i+PP));
+
+/* 데코 오버레이 위치 */
+const IT=48,IL=16,IR=16,IB=16;
+const getDecoPos=(d)=>{const box=boxRef.current?.getBoundingClientRect();if(!box)return null;const b=getBounds(box.width-IL-IR,box.height-IT-IB),bw=b.right-b.left,bh=b.bottom-b.top;return{px:b.left+IL+(d.x/100)*bw,py:b.top+IT+(d.y/100)*bh};};
+
+const decoDragRef=useRef(false);
+const onDecoDown=useCallback((e,uid)=>{e.preventDefault();e.stopPropagation();decoDragRef.current=false;const box=boxRef.current?.getBoundingClientRect();if(!box)return;const cx=e.clientX-box.left-IL,cy=e.clientY-box.top-IT,b=getBounds(box.width-IL-IR,box.height-IT-IB),deco=decos.find(d=>d.uid===uid);if(!deco)return;const bw=b.right-b.left,bh=b.bottom-b.top,dpx=b.left+(deco.x/100)*bw,dpy=b.top+(deco.y/100)*bh,ox=dpx-cx,oy=dpy-cy;
+const onM=ev=>{decoDragRef.current=true;const mx=(ev.touches?ev.touches[0].clientX:ev.clientX)-box.left-IL,my=(ev.touches?ev.touches[0].clientY:ev.clientY)-box.top-IT;const px=Math.max(5,Math.min(95,((mx+ox-b.left)/bw)*100)),py=Math.max(5,Math.min(95,((my+oy-b.top)/bh)*100));setDecos(p=>p.map(d=>d.uid===uid?{...d,x:px,y:py}:d));};
+const onU=()=>{if(!decoDragRef.current)setSelDeco(p=>p===uid?null:uid);window.removeEventListener("mousemove",onM);window.removeEventListener("mouseup",onU);window.removeEventListener("touchmove",onM);window.removeEventListener("touchend",onU);};
+window.addEventListener("mousemove",onM);window.addEventListener("mouseup",onU);window.addEventListener("touchmove",onM,{passive:false});window.addEventListener("touchend",onU);},[decos]);
+
+const VISIBLE=2,hasMore=sorted.length>VISIBLE;
+
+/* ===== RENDER ===== */
+return(
+<div style={{fontFamily:"'Noto Sans KR',sans-serif",background:"#fff",minHeight:"100vh",userSelect:dragId?"none":"auto"}}>
+
+{/* 헤더 */}
+<header style={{background:"#fff",borderBottom:"1px solid #eee",position:"sticky",top:0,zIndex:100}}>
+<div style={{maxWidth:1280,margin:"0 auto",padding:"0 16px",height:52,display:"flex",alignItems:"center",gap:12}}>
+<button style={{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:10,border:"none",background:"#f5f3ff",color:"#7c3aed",cursor:"pointer"}}><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12.5 15L7.5 10L12.5 5"/></svg></button>
+<div style={{flex:1,display:"flex",alignItems:"baseline",gap:8}}>
+<h1 style={{fontSize:17,fontWeight:800,color:"#111",margin:0}}>내 캐리어</h1>
+<span style={{fontSize:12,color:"#9ca3af",fontWeight:500}}>{items.length}개 아이템</span>
+</div>
+<button onClick={()=>setShowShareModal(true)} style={{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:10,border:"none",background:"#f5f3ff",color:"#7c3aed",cursor:"pointer"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+</div>
+</header>
+
+{/* 메인 */}
+<div style={{maxWidth:1200,margin:"0 auto",padding:"20px 16px 60px"}}>
+<div style={{display:"flex",gap:16,alignItems:"flex-start",justifyContent:"center",flexWrap:"wrap"}}>
+
+{/* 좌측: 캐꾸샵 */}
+<div style={{flex:"0 0 auto",display:"flex",flexDirection:"column",gap:16}}>
+<div style={{display:"flex",alignItems:"center",gap:8,padding:"0 2px"}}>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/></svg>
+<span style={{fontSize:15,fontWeight:500,color:"#111"}}>캐꾸샵</span>
+</div>
+
+{/* 스킨 */}
+<div style={{width:CW}}><div style={{background:"#fff",borderRadius:16,border:"1px solid #e0d8f5",overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,0.04)"}}>
+<div style={{padding:"14px 14px 10px",borderBottom:"1px solid #f3f4f6",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+<span style={{fontSize:13,fontWeight:700,color:"#111"}}>스킨</span>
+<div style={{display:"flex",alignItems:"center",gap:6}}>
+<button onClick={()=>setSkinScroll(v=>v>=mx2?0:mx2)} style={{padding:"2px 8px",borderRadius:14,border:"1.5px solid #e0d8f5",background:activeSkin.startsWith("my-")?"#f5f3ff":"#fff",cursor:"pointer",display:"flex",alignItems:"center",gap:3,transition:"all .2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor="#c4b5fd";e.currentTarget.style.background="#f5f3ff";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#e0d8f5";e.currentTarget.style.background=activeSkin.startsWith("my-")?"#f5f3ff":"#fff";}}><span style={{fontSize:10,fontWeight:700,color:"#7c3aed"}}>{skinScroll>=mx2?"스킨":"MY 캐꾸"}</span></button>
+<div style={{background:"#f3f4f6",padding:"2px 10px",borderRadius:14}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>{skin.name}</span></div>
+</div></div>
+<div style={{display:"flex",alignItems:"center",gap:4,padding:"10px 6px"}}>
+<button onClick={()=>go(-1)} disabled={!cL} style={{border:"none",background:cL?"#f5f3ff":"transparent",cursor:cL?"pointer":"default",borderRadius:8,width:24,height:40,display:"flex",alignItems:"center",justifyContent:"center",opacity:cL?1:.25,flexShrink:0}}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7L9 11" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+<div style={{width:VW,overflow:"hidden",flexShrink:0}}>
+<div style={{transform:`translateX(-${skinScroll}px)`,transition:"transform .35s cubic-bezier(.4,0,.2,1)",display:"flex",gap:G}}>
+{allItems.map((it,idx)=>{
+if(it.divider)return<div key="div" style={{flex:"0 0 20px",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{width:1.5,height:"70%",background:"linear-gradient(180deg,transparent,#e0d8f5,transparent)"}}/></div>;
+const s=it;return<div key={s.id} style={{flex:"0 0 "+IW+"px",position:"relative"}} onMouseEnter={e=>{const b=e.currentTarget.querySelector(".my-del");if(b)b.style.opacity="1";}} onMouseLeave={e=>{const b=e.currentTarget.querySelector(".my-del");if(b)b.style.opacity="0";}}>
+<SkinPreview skin={s} isActive={activeSkin===s.id} onClick={()=>selectSkin(s.id)} special={s.special} isMy={s.isMy}/>
+{s.isMy&&!s.isEmpty&&<button className="my-del" onClick={e=>{e.stopPropagation();removeMySlot(parseInt(s.id.split("-")[1]));}} style={{position:"absolute",top:4,right:4,width:18,height:18,borderRadius:"50%",border:"1.5px solid #fff",background:"#ef4444",color:"#fff",fontSize:9,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:15,boxShadow:"0 2px 6px rgba(0,0,0,0.15)",opacity:0,transition:"opacity .15s"}}>✕</button>}
+</div>;})}
+</div></div>
+<button onClick={()=>go(1)} disabled={!cR} style={{border:"none",background:cR?"#f5f3ff":"transparent",cursor:cR?"pointer":"default",borderRadius:8,width:24,height:40,display:"flex",alignItems:"center",justifyContent:"center",opacity:cR?1:.25,flexShrink:0}}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3L9 7L5 11" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+</div></div></div>
+
+{/* 스티커 */}
+<div style={{width:CW}}><div style={{background:"#fff",borderRadius:16,border:"1px solid #e0d8f5",overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,0.04)"}}>
+<div style={{padding:"14px 14px 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+<span style={{fontSize:13,fontWeight:700,color:"#111"}}>스티커팩</span>
+<div style={{display:"flex",alignItems:"center",gap:6}}>
+<button onClick={()=>setDecoPage(v=>Math.max(0,v-1))} disabled={decoPage<=0} style={{width:22,height:22,border:"none",borderRadius:6,background:decoPage>0?"#f5f3ff":"transparent",cursor:decoPage>0?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",opacity:decoPage>0?1:.3}}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7L9 11" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+<span style={{fontSize:10,color:"#aaa",minWidth:24,textAlign:"center"}}>{decoPage+1}/{pages.length}</span>
+<button onClick={()=>setDecoPage(v=>Math.min(pages.length-1,v+1))} disabled={decoPage>=pages.length-1} style={{width:22,height:22,border:"none",borderRadius:6,background:decoPage<pages.length-1?"#f5f3ff":"transparent",cursor:decoPage<pages.length-1?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",opacity:decoPage<pages.length-1?1:.3}}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 3L9 7L5 11" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+</div>
+</div>
+<div style={{padding:"8px 14px 10px",borderBottom:"1px solid #f3f4f6",display:"flex",gap:6,flexWrap:"wrap"}}>
+{[["basic","기본"],["travel","여행"],["food","푸드"],["weather","날씨"]].map(([k,label])=><button key={k} onClick={()=>{setStickerPack(k);setDecoPage(0);}} style={{padding:"4px 12px",border:"none",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",background:stickerPack===k?"#7c3aed":"#f3f0ff",color:stickerPack===k?"#fff":"#7c3aed",transition:"all .2s"}}>{label}</button>)}
+</div>
+<div style={{padding:"10px 10px 12px",overflow:"hidden"}}><div style={{overflow:"hidden",width:"100%"}}>
+<div style={{display:"flex",transform:`translateX(-${decoPage*(100/pages.length)}%)`,transition:"transform .35s cubic-bezier(.4,0,.2,1)",width:pages.length*100+"%"}}>
+{pages.map((pg,pi)=><div key={pi} style={{width:100/pages.length+"%",flexShrink:0,display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gridTemplateRows:"1fr 1fr",gap:8}}>
+{pg.map(d=><div key={d.id} onClick={()=>placeDeco(d)} style={{cursor:"pointer",borderRadius:12,border:"1.5px solid #e0d8f5",background:"#faf8ff",aspectRatio:"1/1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,transition:"all .2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor="#c4b5fd";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#e0d8f5";e.currentTarget.style.transform="translateY(0)";}}>{d.emoji}</div>)}
+</div>)}</div></div></div>
+{decos.length>0&&<div style={{padding:"0 10px 12px"}}><button onClick={activeMyIdx>=0?saveOrUpdateMyDeco:(slotFull?undefined:saveOrUpdateMyDeco)} style={{width:"100%",padding:10,border:"none",borderRadius:12,background:(activeMyIdx>=0||!slotFull)?"#9333EA":"#e5e7eb",color:(activeMyIdx>=0||!slotFull)?"#fff":"#9ca3af",fontSize:12,fontWeight:700,cursor:(activeMyIdx>=0||!slotFull)?"pointer":"not-allowed",boxShadow:(activeMyIdx>=0||!slotFull)?"0 4px 12px rgba(147,51,234,0.3)":"none"}}>{activeMyIdx>=0?`MY 캐꾸 업데이트 (${decos.length}개)`:(slotFull?"슬롯이 가득 찼어요":`MY 캐꾸로 저장 (${decos.length}개 스티커)`)}</button></div>}
+</div></div>
+</div>
+
+{/* 중앙: 캐리어 */}
+<div style={{flex:"0 1 440px",minWidth:300,maxWidth:480,display:"flex",flexDirection:"column",gap:16}}>
+<div style={{position:"relative"}}>
+<div ref={boxRef} onClick={()=>setSelDeco(null)} style={{position:"relative",width:"100%",aspectRatio:"3/4",borderRadius:24,background:"#fff",border:"1px solid #e0d8f5",boxShadow:"0 4px 24px rgba(0,0,0,0.06)"}}>
+
+{activeSkin==="default"&&<div style={{position:"absolute",top:14,left:14,zIndex:10,display:"flex",gap:6}}>
+{DEFAULT_COLORS.map(c=><div key={c.id} onClick={e=>{e.stopPropagation();setDefaultColor(c.id);}} style={{width:24,height:24,borderRadius:"50%",background:c.dot,cursor:"pointer",border:defaultColor===c.id?"2.5px solid #333":"2px solid rgba(255,255,255,0.8)",boxShadow:defaultColor===c.id?`0 0 0 2px ${c.dot}44`:"0 2px 6px rgba(0,0,0,0.12)",transition:"all .15s",transform:defaultColor===c.id?"scale(1.15)":"scale(1)"}}/>)}
+</div>}
+
+<div style={{position:"absolute",top:14,right:14,zIndex:10,display:"flex",alignItems:"center",gap:8}}>
+<span style={{fontSize:12,color:"#888",fontWeight:500}}>{isOpen?"내부 보기":"외관 보기"}</span>
+<div onClick={toggle} style={{width:52,height:28,borderRadius:14,cursor:"pointer",background:isOpen?"linear-gradient(135deg,#7c3aed,#a78bfa)":"#e5e7eb",position:"relative",transition:"background .3s",flexShrink:0}}><div style={{width:22,height:22,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:isOpen?27:3,transition:"left .3s cubic-bezier(.4,0,.2,1)",boxShadow:"0 1px 4px rgba(0,0,0,.15)"}}/></div>
+</div>
+
+<div style={{position:"absolute",inset:"48px 16px 16px 16px"}}>
+{/* 외관 */}
+<div style={{position:"absolute",inset:0,transition:"opacity .5s",opacity:isOpen?0:1,pointerEvents:isOpen?"none":"auto",zIndex:isOpen?1:2,borderRadius:18,overflow:"hidden"}}>
+<svg width="100%" height="100%" viewBox="0 0 300 400" fill="none" preserveAspectRatio="xMidYMid meet">
+<defs><linearGradient id="sG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={skin.body.grad1}/><stop offset="100%" stopColor={skin.body.grad2}/></linearGradient></defs>
+<rect x="30" y="50" width="240" height="320" rx="20" fill="url(#sG)" stroke={skin.body.stroke} strokeWidth="3"/>
+<line x1="52" y1="122" x2="52" y2="289" stroke="#fff" strokeWidth="6" strokeLinecap="round" opacity=".3"/>
+<rect x="122" y="18" width="8" height="35" rx="3" fill={skin.handle.fill} stroke={skin.handle.stroke} strokeWidth="1.5"/><rect x="170" y="18" width="8" height="35" rx="3" fill={skin.handle.fill} stroke={skin.handle.stroke} strokeWidth="1.5"/>
+<rect x="116" y="6" width="68" height="18" rx="9" fill={skin.handle.grip} stroke={skin.handle.stroke} strokeWidth="2.5"/>
+<rect x="98" y="80" width="22" height="250" rx="11" fill={skin.groove.fill} stroke={skin.groove.stroke} strokeWidth="2"/><rect x="139" y="80" width="22" height="250" rx="11" fill={skin.groove.fill} stroke={skin.groove.stroke} strokeWidth="2"/><rect x="180" y="80" width="22" height="250" rx="11" fill={skin.groove.fill} stroke={skin.groove.stroke} strokeWidth="2"/>
+{!(activeMyIdx>=0&&decos.length>0)&&skin.stickers.map((st,i)=><Sticker key={i} s={st}/>)}
+{/* 네임택 */}
+<g transform="rotate(-4,126,53)" onMouseEnter={e=>{const d=e.currentTarget.querySelector(".nt-del");if(d)d.style.opacity="1";}} onMouseLeave={e=>{const d=e.currentTarget.querySelector(".nt-del");if(d)d.style.opacity="0";}}>
+<line x1="126" y1="53" x2="126" y2="78" stroke={skin.body.stroke} strokeWidth="1.5" opacity=".4" strokeLinecap="round"/>
+<rect x="97" y="78" width="58" height="76" rx="4" fill="#fff" fillOpacity=".92" stroke={skin.body.stroke} strokeWidth="1.2" opacity=".6"/>
+<circle cx="126" cy="86" r="3" fill="none" stroke={skin.body.stroke} strokeWidth=".8" opacity=".3"/>
+<line x1="98" y1="96" x2="154" y2="96" stroke={skin.body.stroke} strokeWidth=".5" opacity=".15"/>
+{nameTagImg?<><defs><clipPath id="ntC"><rect x="99" y="98" width="54" height="54" rx="3"/></clipPath></defs><image href={nameTagImg} x="99" y="98" width="54" height="54" preserveAspectRatio="xMidYMid slice" clipPath="url(#ntC)"/></>:<text textAnchor="middle" fontSize="11" fontWeight="800" fill={skin.body.stroke} opacity=".5" fontFamily="monospace" letterSpacing="1"><tspan x="126" y="120">PHOTO</tspan><tspan x="126" dy="14">TAG</tspan></text>}
+<rect x="98" y="97" width="56" height="56" rx="3" fill="transparent" style={{cursor:"pointer"}} onClick={e=>{e.stopPropagation();nameTagImg?setNameTagImg(null):nameTagInputRef.current?.click();}}/>
+{nameTagImg&&<g className="nt-del" onClick={e=>{e.stopPropagation();setNameTagImg(null);}} style={{cursor:"pointer",opacity:0,transition:"opacity .15s"}}><circle cx="154" cy="98" r="7" fill="#ef4444" stroke="#fff" strokeWidth="1.5"/><text x="154" y="101.5" textAnchor="middle" fontSize="9" fontWeight="700" fill="#fff">✕</text></g>}
+</g>
+<rect x="62" y="365" width="16" height="8" rx="3" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="1.5"/><circle cx="70" cy="382" r="10" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="2"/><circle cx="70" cy="382" r="2" fill={skin.wheel.hub}/>
+<rect x="222" y="365" width="16" height="8" rx="3" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="1.5"/><circle cx="230" cy="382" r="10" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="2"/><circle cx="230" cy="382" r="2" fill={skin.wheel.hub}/>
+</svg></div>
+
+{/* 내부 (물리 버블) */}
+<div style={{position:"absolute",inset:0,transition:"opacity .5s",opacity:isOpen?1:0,pointerEvents:isOpen?"auto":"none",zIndex:isOpen?2:1,borderRadius:18,overflow:"hidden"}}>
+<svg style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}} viewBox="0 0 300 400" fill="none" preserveAspectRatio="xMidYMid meet">
+<rect x="122" y="18" width="8" height="35" rx="3" fill={skin.handle.fill} stroke={skin.handle.stroke} strokeWidth="1.5"/><rect x="170" y="18" width="8" height="35" rx="3" fill={skin.handle.fill} stroke={skin.handle.stroke} strokeWidth="1.5"/>
+<rect x="116" y="6" width="68" height="18" rx="9" fill={skin.handle.grip} stroke={skin.handle.stroke} strokeWidth="2.5"/>
+<rect x="30" y="50" width="240" height="320" rx="20" stroke={skin.body.stroke} strokeWidth="2" strokeDasharray="8 4" fill="none"/>
+<line x1="30" y1="140" x2="270" y2="140" stroke={skin.body.stroke} strokeWidth="1.5" strokeDasharray="6 4" opacity=".5"/><line x1="30" y1="260" x2="270" y2="260" stroke={skin.body.stroke} strokeWidth="1.5" strokeDasharray="6 4" opacity=".5"/>
+<rect x="62" y="365" width="16" height="8" rx="3" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="1.5"/><circle cx="70" cy="382" r="10" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="2"/><circle cx="70" cy="382" r="2" fill={skin.wheel.hub}/>
+<rect x="222" y="365" width="16" height="8" rx="3" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="1.5"/><circle cx="230" cy="382" r="10" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="2"/><circle cx="230" cy="382" r="2" fill={skin.wheel.hub}/>
+</svg>
+<div ref={innerRef} style={{position:"absolute",inset:0}}>
+{items.length===0&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:"#c4b5fd",fontSize:14}}>캐리어가 비어있어요</div>}
+{rendered.map((pos,i)=>{if(!sorted[i]||!pos)return null;const p=sorted[i],rk=i+1,r=nodes[i].r,rs=getRankStyle(rk,sorted.length),isSel=selected===p.id,isD=dragId===p.id;
+return(<div key={p.id} className="cube-bubble" onMouseDown={e=>onBubbleDown(e,p.id)} onClick={()=>{if(!isD)setSelected(isSel?null:p.id);}} style={{position:"absolute",left:pos.x-r,top:pos.y-r,width:r*2,height:r*2+Math.max(6,r*.22),cursor:isD?"grabbing":"grab",zIndex:isD?100:isSel?50:rk<=3?10:1,userSelect:"none",transform:isD?"scale(1.06)":"scale(1)",transition:isD?"none":"transform .25s cubic-bezier(.34,1.56,.64,1)"}}>
+{/* 키캡 베이스 (측면+바닥) */}
+<div style={{position:"absolute",left:0,top:Math.max(5,r*.18),width:r*2,height:r*2,borderRadius:Math.max(10,r*.25),background:p.imageUrl?`url(${p.imageUrl}) center/cover no-repeat`:rs.bg,filter:p.imageUrl?"brightness(0.65)":"brightness(0.78)",border:`${Math.max(2,r*.05)}px solid rgba(80,70,60,0.5)`,boxShadow:`inset 0 -${Math.max(8,r*.2)}px ${Math.max(6,r*.15)}px rgba(0,0,0,0.35), inset 0 ${Math.max(3,r*.07)}px ${Math.max(2,r*.05)}px rgba(255,255,255,0.15), 0 ${Math.max(4,r*.12)}px ${Math.max(6,r*.15)}px rgba(30,30,30,0.4), 0 ${Math.max(2,r*.05)}px ${Math.max(2,r*.05)}px rgba(0,0,0,0.2)`}}/>
+{/* 베이스 테두리 장식 */}
+<div style={{position:"absolute",left:Math.max(2,r*.04),top:Math.max(5,r*.18)+Math.max(2,r*.04),width:r*2-Math.max(4,r*.08),height:r*2-Math.max(4,r*.08),borderRadius:Math.max(8,r*.22),border:`1px solid rgba(255,255,255,0.12)`,pointerEvents:"none"}}/>
+{/* 키캡 윗면 (탑) */}
+<div style={{position:"absolute",left:Math.max(4,r*.1),top:0,width:r*2-Math.max(8,r*.2),height:r*2-Math.max(8,r*.2),borderRadius:Math.max(8,r*.22),background:p.imageUrl?`url(${p.imageUrl}) center/cover no-repeat`:rs.bg,border:`${Math.max(1,r*.03)}px solid rgba(255,255,255,0.35)`,borderBottom:`${Math.max(1,r*.03)}px solid rgba(80,70,60,0.25)`,overflow:"hidden",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",boxShadow:`0 -${Math.max(10,r*.25)}px ${Math.max(12,r*.3)}px ${Math.max(3,r*.08)}px rgba(255,255,255,0.18), inset 0 -${Math.max(3,r*.07)}px ${Math.max(4,r*.1)}px rgba(80,70,60,0.35), inset 0 ${Math.max(2,r*.05)}px ${Math.max(3,r*.07)}px rgba(255,255,255,0.25), 0 ${Math.max(2,r*.04)}px ${Math.max(1,r*.03)}px rgba(0,0,0,0.15)`}}>
+{/* 탑 하이라이트 */}
+<div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.15) 35%, transparent 100%)",pointerEvents:"none"}}/>
+{/* 탑 하단 음영 */}
+<div style={{position:"absolute",bottom:0,left:0,right:0,height:"30%",background:"linear-gradient(0deg, rgba(0,0,0,0.15) 0%, transparent 100%)",pointerEvents:"none"}}/>
+{/* 텍스트 */}
+{r>24&&<span style={{fontSize:Math.max(10,r*.2),fontWeight:700,color:rs.tc,maxWidth:r*1.4,textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",padding:"0 4px",pointerEvents:"none",position:"relative",zIndex:2,textShadow:"0 1px 2px rgba(0,0,0,0.3)"}}>{p.name}</span>}
+{r>40&&<span style={{fontSize:Math.max(9,r*.14),color:rs.sc,marginTop:2,pointerEvents:"none",position:"relative",zIndex:2,textShadow:"0 1px 1px rgba(0,0,0,0.2)"}}>{p.brand}</span>}
+</div>
+{/* 순위 뱃지 */}
+{rk<=3?<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",background:rk===1?"#FFD700":rk===2?"#C0C0C0":"#CD7F32",color:rk===1?"#7a5a00":rk===2?"#444":"#5a2d00",fontSize:Math.max(8,r*.12),fontWeight:900,padding:"1px 6px",borderRadius:4,pointerEvents:"none",zIndex:5}}>{rk}</div>:<div style={{position:"absolute",top:-2,right:Math.max(1,r*.06),width:Math.max(14,r*.22),height:Math.max(14,r*.22),borderRadius:Math.max(3,r*.06),background:"#f3f4f6",display:"flex",alignItems:"center",justifyContent:"center",fontSize:Math.max(7,r*.12),fontWeight:700,color:"#888",border:"1.5px solid #fff",pointerEvents:"none",zIndex:5}}>{rk}</div>}
+{/* 삭제 버튼 */}
+{!isD&&<div className="cube-del" onClick={e=>{e.stopPropagation();removeItem(p.id);}} style={{position:"absolute",top:-5,right:-2,width:20,height:20,borderRadius:6,background:"#ef4444",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,cursor:"pointer",border:"2px solid #fff",zIndex:10}}>✕</div>}
+</div>);})}
+</div></div>
+</div>
+
+{/* 데코 오버레이 - 본체 클리핑 */}
+{!isOpen&&(()=>{const el=boxRef.current;if(!el)return null;const w=el.offsetWidth-IL-IR,h=el.offsetHeight-IT-IB,bd=getBounds(w,h),bw=bd.right-bd.left,bh=bd.bottom-bd.top;
+return <div style={{position:"absolute",left:bd.left+IL,top:bd.top+IT,width:bw,height:bh,overflow:"hidden",borderRadius:12,pointerEvents:"none",zIndex:5}}>
+{decos.map(d=>{const dx=(d.x/100)*bw,dy=(d.y/100)*bh,sz=36*d.scale;
+return(<div key={d.uid} onClick={e=>e.stopPropagation()} style={{position:"absolute",left:dx-sz/2,top:dy-sz/2,pointerEvents:"auto"}}>
+<div onMouseDown={e=>onDecoDown(e,d.uid)} style={{width:sz,height:sz,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24*d.scale,cursor:"grab",userSelect:"none",filter:"drop-shadow(0 2px 4px rgba(0,0,0,.15))",transform:d.flipped?"scaleX(-1)":"scaleX(1)",borderRadius:8,outline:selDeco===d.uid?"2.5px solid #7c3aed":"none",outlineOffset:selDeco===d.uid?3:0,background:selDeco===d.uid?"rgba(124,58,237,.06)":"transparent"}}>{d.emoji}</div>
+</div>);})}
+</div>;})()}
+</div>
+
+{/* 데코 툴바 - boxRef 바깥에서 렌더 */}
+{!isOpen&&(()=>{const el=boxRef.current;if(!el||!selDeco)return null;const w=el.offsetWidth-IL-IR,h=el.offsetHeight-IT-IB,bd=getBounds(w,h),bw=bd.right-bd.left,bh=bd.bottom-bd.top;
+const d=decos.find(v=>v.uid===selDeco);if(!d)return null;const dx=bd.left+IL+(d.x/100)*bw,dy=bd.top+IT+(d.y/100)*bh,sz=36*d.scale;
+return(<div style={{position:"absolute",left:dx,top:dy-sz/2-44,zIndex:100,pointerEvents:"auto"}} onClick={e=>e.stopPropagation()}>
+<div style={{position:"relative",left:"-50%",display:"flex",alignItems:"center",gap:3,background:"#fff",borderRadius:10,padding:"3px 5px",boxShadow:"0 4px 16px rgba(0,0,0,.15)",border:"1px solid #e0d8f5",whiteSpace:"nowrap"}}>
+<button onClick={e=>{e.stopPropagation();flipDeco(d.uid);}} style={{width:26,height:26,border:"none",borderRadius:7,background:d.flipped?"#ede9fe":"#f5f3ff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="7 3 3 7 7 11"/><path d="M3 7h13a5 5 0 010 10h-4"/></svg></button>
+<div style={{width:1,height:18,background:"#e5e7eb",margin:"0 1px"}}/>
+<button onClick={e=>{e.stopPropagation();scaleDeco(d.uid,-DSTEP);}} style={{width:26,height:26,border:"none",borderRadius:7,background:d.scale<=DMIN?"#f5f5f5":"#f5f3ff",cursor:d.scale<=DMIN?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,color:d.scale<=DMIN?"#ccc":"#7c3aed"}}>−</button>
+<span style={{fontSize:10,fontWeight:700,color:"#7c3aed",minWidth:30,textAlign:"center"}}>{Math.round(d.scale*100)}%</span>
+<button onClick={e=>{e.stopPropagation();scaleDeco(d.uid,DSTEP);}} style={{width:26,height:26,border:"none",borderRadius:7,background:d.scale>=DMAX?"#f5f5f5":"#f5f3ff",cursor:d.scale>=DMAX?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,color:d.scale>=DMAX?"#ccc":"#7c3aed"}}>+</button>
+<div style={{width:1,height:18,background:"#e5e7eb",margin:"0 1px"}}/>
+<button onClick={e=>{e.stopPropagation();removeDeco(d.uid);}} style={{width:26,height:26,border:"none",borderRadius:7,background:"#fef2f2",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#ef4444",fontWeight:700}}>✕</button>
+</div>
+</div>);})()}
+
+{/* 우측 하단 공유 버튼 */}
+<button onClick={()=>setShowShareModal(true)} style={{position:"absolute",bottom:12,right:12,zIndex:20,width:40,height:40,borderRadius:12,border:"none",background:"rgba(255,255,255,0.85)",backdropFilter:"blur(8px)",boxShadow:"0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(124,58,237,0.15)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}} onMouseEnter={e=>{e.currentTarget.style.background="#f5f3ff";e.currentTarget.style.transform="scale(1.08)";e.currentTarget.style.boxShadow="0 4px 16px rgba(124,58,237,0.2), 0 0 0 1.5px rgba(124,58,237,0.3)";}} onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.85)";e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(124,58,237,0.15)";}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+</div></div>
+
+{/* 우측: 아이템 */}
+<div style={{flex:"0 0 220px",minWidth:200,maxWidth:240,display:"flex",flexDirection:"column",gap:16}}>
+<div style={{background:"#fff",borderRadius:16,border:"1px solid #e0d8f5",overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.04)"}}>
+<div style={{padding:"14px 14px",borderBottom:"1px solid #f3f4f6",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+<span style={{fontSize:13,fontWeight:700,color:"#111"}}>담은 아이템</span>
+<div style={{background:"#f5f3ff",padding:"2px 8px",borderRadius:10}}><span style={{fontSize:11,color:"#7c3aed",fontWeight:700}}>{items.length}</span></div>
+</div>
+{items.length===0&&<div style={{padding:"30px 14px",textAlign:"center",color:"#ccc",fontSize:12}}>아직 담긴 아이템이 없어요</div>}
+<div style={{overflow:"hidden"}}>
+{(itemsExpanded?sorted:sorted.slice(0,VISIBLE+1)).map((item,i)=>{const isSel=selected===item.id,rk=i+1,isHalf=!itemsExpanded&&i===VISIBLE&&sorted.length>VISIBLE;
+return(<div key={item.id} onClick={()=>setSelected(isSel?null:item.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderBottom:"1px solid #f5f5f5",background:isSel?"#f5f3ff":"transparent",cursor:"pointer",borderLeft:isSel?"3px solid #7c3aed":"3px solid transparent",maxHeight:isHalf?28:"none",overflow:isHalf?"hidden":"visible",opacity:isHalf?.4:1,maskImage:isHalf?"linear-gradient(to bottom,black 0%,transparent 100%)":"none",WebkitMaskImage:isHalf?"linear-gradient(to bottom,black 0%,transparent 100%)":"none"}}>
+<div style={{width:36,height:36,borderRadius:10,flexShrink:0,background:isSel?"#ede9fe":"#f5f3ff",display:"flex",alignItems:"center",justifyContent:"center",border:`1.5px solid ${isSel?"#c4b5fd":"#e0d8f5"}`,position:"relative"}}>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.7"><circle cx="12" cy="12" r="10"/></svg>
+{rk<=3&&<div style={{position:"absolute",top:-3,right:-3,width:15,height:15,borderRadius:"50%",background:rk===1?"#FFD700":rk===2?"#C0C0C0":"#CD7F32",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:rk===1?"#7a5a00":rk===2?"#444":"#5a2d00",border:"1.5px solid #fff"}}>{rk}</div>}
+</div>
+<div style={{flex:1,minWidth:0}}><span style={{fontSize:12,fontWeight:650,color:"#111",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{item.name}</span>
+<div style={{display:"flex",alignItems:"center",gap:4,marginTop:2}}><span style={{fontSize:10,color:"#999"}}>{item.brand}</span>{item.rating&&<><span style={{fontSize:9,color:"#e0e0e0"}}>·</span><span style={{fontSize:10,color:"#f59e0b"}}>★ {item.rating}</span></>}</div></div>
+<button onClick={e=>{e.stopPropagation();removeItem(item.id);}} style={{border:"none",background:"none",cursor:"pointer",color:"#ddd",fontSize:12,padding:3,borderRadius:6,width:22,height:22,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}} onMouseEnter={e=>{e.currentTarget.style.color="#ef4444";e.currentTarget.style.background="#fef2f2";}} onMouseLeave={e=>{e.currentTarget.style.color="#ddd";e.currentTarget.style.background="none";}}>✕</button>
+</div>);})}
+</div>
+{hasMore&&<button onClick={()=>setItemsExpanded(v=>!v)} style={{width:"100%",padding:10,border:"none",borderTop:"1px solid #f3f4f6",background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:4,fontSize:11,fontWeight:600,color:"#7c3aed"}}>{itemsExpanded?"접기":`더보기 (${sorted.length-VISIBLE}개)`}</button>}
+</div>
+
+<button style={{width:"100%",padding:10,border:"none",borderRadius:10,background:"#9333EA",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontSize:12,fontWeight:700,boxShadow:"0 4px 12px rgba(147,51,234,0.25)"}}>
+<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#fff" strokeWidth="1.5"/><path d="M8 5.5V10.5M5.5 8H10.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
+더 담으러 가기</button>
+
+{selItem&&(()=>{const rk=sorted.findIndex(s=>s.id===selItem.id)+1,rs=getRankStyle(rk,sorted.length);
+return(<div style={{background:"#fff",borderRadius:16,border:"1px solid #e0d8f5",overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.04)",animation:"slideUp .3s ease"}}>
+<div style={{padding:16,borderBottom:"1px solid #f3f4f6",display:"flex",alignItems:"center",gap:8}}>
+<div style={{width:32,height:32,borderRadius:8,background:"#f5f3ff",display:"flex",alignItems:"center",justifyContent:"center",border:"1.5px solid #e0d8f5"}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.7"><circle cx="12" cy="12" r="10"/></svg></div>
+<div><div style={{fontSize:14,fontWeight:700,color:"#111"}}>{selItem.name}</div><div style={{fontSize:11,color:"#999"}}>{selItem.brand}</div></div>
+<div style={{marginLeft:"auto",background:rk<=3?rs.bg:"#f5f3ff",color:rk<=3?rs.tc:"#7c3aed",fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:8}}>#{rk}</div>
+</div>
+{selItem.imageUrl&&<div style={{margin:"12px 16px 0",height:110,borderRadius:10,border:"1px solid #e0d8f5",overflow:"hidden",background:`url(${selItem.imageUrl}) center/cover no-repeat`}}/>}
+<div style={{padding:"12px 16px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+<div style={{background:"#f5f3ff",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:10,color:"#999",marginBottom:2}}>평점</div><div style={{fontSize:16,fontWeight:800,color:"#7c3aed"}}>★ {selItem.rating}</div></div>
+<div style={{background:"#f5f3ff",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:10,color:"#999",marginBottom:2}}>리뷰</div><div style={{fontSize:16,fontWeight:800,color:"#7c3aed"}}>{(selItem.reviewCount/1000).toFixed(1)}K</div></div>
+<div style={{gridColumn:"1/-1",background:"#f5f3ff",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:10,color:"#999",marginBottom:2}}>인기도</div><div style={{fontSize:16,fontWeight:800,color:"#7c3aed"}}>{selItem.popularityScore.toLocaleString()}</div></div>
+</div></div>);})()}
+</div>
+
+</div></div>
+
+{/* 공유 모달 */}
+{showShareModal&&<div onClick={()=>setShowShareModal(false)} style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+<div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:24,padding:"32px 28px 24px",maxWidth:360,width:"100%",boxShadow:"0 24px 64px rgba(0,0,0,0.2)",animation:"modalIn .25s ease"}}>
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+<span style={{fontSize:16,fontWeight:700,color:"#111"}}>내 캐꾸 공유하기</span>
+<button onClick={()=>setShowShareModal(false)} style={{border:"none",background:"#f3f4f6",width:28,height:28,borderRadius:8,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#888",fontWeight:700}}>✕</button>
+</div>
+<div style={{borderRadius:16,overflow:"hidden",border:"1px solid #e0d8f5",background:shareBg}}>
+<div style={{width:280,aspectRatio:"380/480"}}>
+<svg ref={shareRef} width="380" height="480" viewBox="-40 -40 380 480" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:"100%",height:"100%",display:"block"}}>
+<defs><linearGradient id="sG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={skin.body.grad1}/><stop offset="100%" stopColor={skin.body.grad2}/></linearGradient></defs>
+<rect x="-40" y="-40" width="380" height="480" fill={shareBg}/>
+{nickname&&<text className="nick-text" x="150" y="-20" textAnchor="middle" fontSize="20" fontWeight="700" fill="#363636" fontFamily="'HancomMalangMalang',sans-serif">{nickname}의 캐꾸</text>}
+<rect x="30" y="50" width="240" height="320" rx="20" fill="url(#sG2)" stroke={skin.body.stroke} strokeWidth="3"/>
+<line x1="52" y1="122" x2="52" y2="289" stroke="#fff" strokeWidth="6" strokeLinecap="round" opacity=".3"/>
+<rect x="122" y="18" width="8" height="35" rx="3" fill={skin.handle.fill} stroke={skin.handle.stroke} strokeWidth="1.5"/><rect x="170" y="18" width="8" height="35" rx="3" fill={skin.handle.fill} stroke={skin.handle.stroke} strokeWidth="1.5"/>
+<rect x="116" y="6" width="68" height="18" rx="9" fill={skin.handle.grip} stroke={skin.handle.stroke} strokeWidth="2.5"/>
+<rect x="98" y="80" width="22" height="250" rx="11" fill={skin.groove.fill} stroke={skin.groove.stroke} strokeWidth="2"/><rect x="139" y="80" width="22" height="250" rx="11" fill={skin.groove.fill} stroke={skin.groove.stroke} strokeWidth="2"/><rect x="180" y="80" width="22" height="250" rx="11" fill={skin.groove.fill} stroke={skin.groove.stroke} strokeWidth="2"/>
+{!(activeMyIdx>=0&&decos.length>0)&&skin.stickers.map((st,i)=><Sticker key={i} s={st}/>)}
+{decos.map((d,i)=>{const x=30+(d.x/100)*240,y=50+(d.y/100)*320,sz=Math.round(24*d.scale);return<foreignObject key={"sd"+i} x={x-sz/2} y={y-sz/2} width={sz} height={sz}><div xmlns="http://www.w3.org/1999/xhtml" style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:sz*.85,lineHeight:1,transform:d.flipped?"scaleX(-1)":"scaleX(1)"}}>{d.emoji}</div></foreignObject>;})}
+<g transform="rotate(-4,126,53)"><line x1="126" y1="53" x2="126" y2="78" stroke={skin.body.stroke} strokeWidth="1.5" opacity=".4" strokeLinecap="round"/><rect x="97" y="78" width="58" height="76" rx="4" fill="#fff" fillOpacity=".92" stroke={skin.body.stroke} strokeWidth="1.2" opacity=".6"/><circle cx="126" cy="86" r="3" fill="none" stroke={skin.body.stroke} strokeWidth=".8" opacity=".3"/><line x1="98" y1="96" x2="154" y2="96" stroke={skin.body.stroke} strokeWidth=".5" opacity=".15"/>{nameTagImg?<><defs><clipPath id="ntC2"><rect x="99" y="98" width="54" height="54" rx="3"/></clipPath></defs><image href={nameTagImg} x="99" y="98" width="54" height="54" preserveAspectRatio="xMidYMid slice" clipPath="url(#ntC2)"/></>:<text textAnchor="middle" fontSize="11" fontWeight="800" fill={skin.body.stroke} opacity=".5" fontFamily="monospace" letterSpacing="1"><tspan x="126" y="120">PHOTO</tspan><tspan x="126" dy="14">TAG</tspan></text>}</g>
+<rect x="62" y="365" width="16" height="8" rx="3" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="1.5"/><circle cx="70" cy="382" r="10" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="2"/><circle cx="70" cy="382" r="2" fill={skin.wheel.hub}/>
+<rect x="222" y="365" width="16" height="8" rx="3" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="1.5"/><circle cx="230" cy="382" r="10" fill={skin.wheel.fill} stroke={skin.wheel.stroke} strokeWidth="2"/><circle cx="230" cy="382" r="2" fill={skin.wheel.hub}/>
+</svg>
+</div>
+</div>
+<div style={{marginTop:12,display:"flex",alignItems:"center",gap:8}}>
+<input value={nickname} onChange={e=>setNickname(e.target.value)} placeholder="닉네임 입력" maxLength={10} style={{flex:1,padding:"8px 12px",border:"1.5px solid #e0d8f5",borderRadius:10,fontSize:13,outline:"none",fontFamily:"'Noto Sans KR',sans-serif",color:"#333",background:"#faf8ff"}} onFocus={e=>e.target.style.borderColor="#7c3aed"} onBlur={e=>e.target.style.borderColor="#e0d8f5"}/>
+<span style={{fontSize:12,color:"#888",fontWeight:600,whiteSpace:"nowrap"}}>의 캐꾸</span>
+</div>
+<button onClick={saveAsImage} style={{width:"100%",marginTop:10,padding:12,border:"none",borderRadius:12,background:"linear-gradient(135deg,#7c3aed,#9333ea)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,boxShadow:"0 4px 12px rgba(124,58,237,0.3)"}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>이미지 저장하기</button>
+</div>
+</div>}
+<input ref={nameTagInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={onNameTagImgChange}/>
+</div>);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

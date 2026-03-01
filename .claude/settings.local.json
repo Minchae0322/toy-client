@@ -38,7 +38,9 @@
       "Bash(npx vue-tsc --noEmit --pretty 2>&1 | head -30 || true)",
       "Bash(npx vite build --mode development 2>&1 | tail -20)",
       "Bash(npx vite build --mode development 2>&1 | tail -5)",
-      "Bash(npx vite build --mode development 2>&1 | tail -10)"
+      "Bash(npx vite build --mode development 2>&1 | tail -10)",
+      "Bash(git -C /Users/minchae/sources/toy-client status)",
+      "Bash(git -C /Users/minchae/sources/toy-client diff --stat)"
     ]
   }
 }
