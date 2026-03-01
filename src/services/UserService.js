@@ -174,6 +174,7 @@ class UserService extends BaseApiService {
     return {
       userId: profile.userId,
       nickname: profile.nickname || '알 수 없음',
+      email: profile.email || null,
       description: profile.description || '',
       followerCount: profile.followerCount || 0,
       followingCount: profile.followingCount || 0,

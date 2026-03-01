@@ -47,7 +47,7 @@
                 <div class="info-top">
                   <div>
                     <h3 class="nickname">{{ profile.nickname }}</h3>
-                    <p class="user-id">@user_{{ profile.userId }}</p>
+                    <p v-if="displayEmail" class="email">{{ displayEmail }}</p>
                   </div>
                   <button v-if="!isEditing" class="btn-edit" @click="startEditing">
                     편집
@@ -100,10 +100,6 @@
               </div>
 
               <div class="meta-section">
-                <div v-if="profile.email" class="meta-item">
-                  <Mail :size="16" />
-                  <span>{{ profile.email }}</span>
-                </div>
                 <div class="meta-item">
                   <Calendar :size="16" />
                   <span>{{ formatDate(profile.createdAt) }} 가입</span>
@@ -197,7 +193,7 @@ const imageKey = ref(Date.now())
 const profile = reactive({
   userId: null,
   nickname: '',
-  email: '',
+  email: null,
   description: '',
   followerCount: 0,
   followingCount: 0,
@@ -213,6 +209,8 @@ const editForm = reactive({
 
 // ==================== Computed ====================
 const currentUser = computed(() => getUserInfo())
+
+const displayEmail = computed(() => profile.email || '')
 
 // ✅ 수정된 부분: profile.profilePicture?.fileUrl 직접 접근
 const profileImageUrl = computed(() => {
@@ -249,6 +247,7 @@ const loadProfile = async () => {
       Object.assign(profile, response.data)
       imageKey.value = Date.now()
       console.log('[PROFILE] 프로필 로드 완료:', profile)
+      console.log('[PROFILE] email:', profile.email)
     } else {
       throw new Error(response.message || '프로필을 불러올 수 없습니다.')
     }
@@ -643,7 +642,7 @@ onMounted(() => {
   color: var(--primary);
 }
 
-.user-id {
+.email {
   font-size: 13px;
   color: var(--secondary);
   margin-top: 2px;
