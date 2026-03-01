@@ -129,11 +129,11 @@
             <label class="section-label">
               <span class="label-dot accent"></span>
               가격 & 판매
-              <span class="opt">선택</span>
+              <span class="req">필수</span>
             </label>
 
             <div class="field">
-              <label class="field-label">가격</label>
+              <label class="field-label">가격 <span class="asterisk">*</span></label>
 
               <div class="price-row">
                 <div class="price-line" :class="{ valued: priceSingle }">
@@ -170,7 +170,8 @@
               </div>
 
               <div class="price-sub">
-                <p v-if="priceKoreanHint" class="price-hint">{{ priceKoreanHint }}</p>
+                <p v-if="errors.price" class="field-error">{{ errors.price }}</p>
+                <p v-else-if="priceKoreanHint" class="price-hint">{{ priceKoreanHint }}</p>
                 <button v-if="!showRange" type="button" class="price-range-btn" @click="showRange = true">
                   범위 입력
                 </button>
@@ -342,11 +343,12 @@ const errors = reactive({
   name: '',
   subCategoryId: '',
   thumbnail: '',
+  price: '',
   auth: ''
 })
 
 const isFormValid = computed(() => {
-  return isLoggedIn.value && form.name.trim() && form.subCategoryId && thumbnailFile.value !== null
+  return isLoggedIn.value && form.name.trim() && form.subCategoryId && thumbnailFile.value !== null && priceSingle.value.replace(/[^\d]/g, '')
 })
 
 const canSubmit = computed(() => {
@@ -358,6 +360,7 @@ const missingFieldsText = computed(() => {
   if (!thumbnailFile.value) missing.push('대표 이미지')
   if (!form.name.trim()) missing.push('제품명')
   if (!form.subCategoryId) missing.push('카테고리')
+  if (!priceSingle.value.replace(/[^\d]/g, '')) missing.push('가격')
   if (missing.length === 0) return ''
   if (missing.length <= 2) return `${missing.join(', ')} 입력이 필요합니다`
   return `${missing.length}개 항목을 더 입력해주세요`
@@ -430,12 +433,16 @@ const validateField = (fieldName) => {
     case 'subCategoryId':
       if (!form.subCategoryId) errors.subCategoryId = '카테고리를 선택해주세요'
       break
+    case 'price':
+      if (!priceSingle.value.replace(/[^\d]/g, '')) errors.price = '가격은 필수입니다'
+      break
   }
 }
 
 const validateForm = () => {
   validateField('name')
   validateField('subCategoryId')
+  validateField('price')
   if (!thumbnailFile.value) errors.thumbnail = '대표 이미지는 필수입니다'
   else errors.thumbnail = ''
   return !Object.values(errors).some(e => e !== '')

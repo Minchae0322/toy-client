@@ -40,7 +40,8 @@
       "Bash(npx vite build --mode development 2>&1 | tail -5)",
       "Bash(npx vite build --mode development 2>&1 | tail -10)",
       "Bash(git -C /Users/minchae/sources/toy-client status)",
-      "Bash(git -C /Users/minchae/sources/toy-client diff --stat)"
+      "Bash(git -C /Users/minchae/sources/toy-client diff --stat)",
+      "Bash(find /Users/minchae/sources/toy-client/src -name \"*.vue\" -o -name \"*.js\" | xargs grep -l \"export.*CategoryChipSelector\" 2>/dev/null | head -5)"
     ]
   }
 }
