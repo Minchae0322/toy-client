@@ -29,11 +29,39 @@
           </button>
         </div>
 
-        <!-- 로딩 -->
+        <!-- 로딩 스켈레톤 -->
         <Transition name="view-fade" mode="out-in">
-        <div v-if="loading && !products.length" key="loading" class="loading-state">
-          <div class="spinner"></div>
-          <p>랭킹을 불러오는 중...</p>
+        <div v-if="loading && !products.length" key="loading" class="skeleton-wrapper">
+          <!-- 버블 차트 스켈레톤 -->
+          <div class="skeleton-bubble-area">
+            <div class="skeleton-bubble skeleton-bubble-1"></div>
+            <div class="skeleton-bubble skeleton-bubble-2"></div>
+            <div class="skeleton-bubble skeleton-bubble-3"></div>
+            <div class="skeleton-bubble skeleton-bubble-4"></div>
+            <div class="skeleton-bubble skeleton-bubble-5"></div>
+            <div class="skeleton-bubble skeleton-bubble-6"></div>
+            <div class="skeleton-bubble skeleton-bubble-7"></div>
+            <div class="skeleton-bubble skeleton-bubble-8"></div>
+          </div>
+
+          <!-- 순위 리스트 스켈레톤 -->
+          <div class="skeleton-rank-list">
+            <div class="skeleton-rank-header">
+              <div class="skeleton-line" style="width: 70px; height: 13px;"></div>
+            </div>
+            <div v-for="n in 3" :key="'skel-rank-' + n" class="skeleton-rank-item">
+              <div class="skeleton-rank-num"></div>
+              <div class="skeleton-rank-info">
+                <div class="skeleton-line" style="width: 55%; height: 14px;"></div>
+                <div class="skeleton-line" style="width: 35%; height: 11px; margin-top: 4px;"></div>
+              </div>
+              <div class="skeleton-rank-stats">
+                <div class="skeleton-line" style="width: 40px; height: 12px;"></div>
+                <div class="skeleton-line" style="width: 28px; height: 10px; margin-top: 3px;"></div>
+              </div>
+              <div class="skeleton-rank-bar"></div>
+            </div>
+          </div>
         </div>
 
         <!-- 빈 상태 -->
@@ -723,10 +751,108 @@ onUnmounted(() => {
 .search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; background: #f3f4f6; border: none; border-radius: 50%; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .search-clear:hover { background: #e5e7eb; }
 
-/* 로딩 & 빈 상태 */
-.loading-state, .empty-state { display: flex; flex-direction: column; align-items: center; padding: 80px 0; color: #888; }
-.spinner { width: 32px; height: 32px; border: 2px solid #f0f0f0; border-top-color: #7c3aed; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* 빈 상태 */
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 80px 0; color: #888; }
+
+/* ==================== 스켈레톤 로딩 ==================== */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.skeleton-wrapper { pointer-events: none; }
+
+.skeleton-line {
+  background: #f0f0f0;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 버블 차트 스켈레톤 */
+.skeleton-bubble-area {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.skeleton-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: #f0f0f0;
+  animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeleton-bubble-1 { width: 160px; height: 160px; top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: 0s; }
+.skeleton-bubble-2 { width: 120px; height: 120px; top: 18%; left: 28%; animation-delay: 0.15s; }
+.skeleton-bubble-3 { width: 110px; height: 110px; top: 22%; right: 18%; animation-delay: 0.3s; }
+.skeleton-bubble-4 { width: 80px; height: 80px; bottom: 18%; left: 15%; animation-delay: 0.1s; }
+.skeleton-bubble-5 { width: 70px; height: 70px; bottom: 22%; right: 14%; animation-delay: 0.25s; }
+.skeleton-bubble-6 { width: 56px; height: 56px; top: 12%; left: 58%; animation-delay: 0.35s; }
+.skeleton-bubble-7 { width: 50px; height: 50px; bottom: 12%; left: 45%; animation-delay: 0.2s; }
+.skeleton-bubble-8 { width: 44px; height: 44px; top: 55%; left: 12%; animation-delay: 0.4s; }
+
+/* 순위 리스트 스켈레톤 */
+.skeleton-rank-list {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.skeleton-rank-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.skeleton-rank-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #f8f8f8;
+}
+.skeleton-rank-item:last-child { border-bottom: none; }
+
+.skeleton-rank-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  flex-shrink: 0;
+  animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeleton-rank-info { flex: 1; min-width: 0; }
+
+.skeleton-rank-stats { text-align: right; flex-shrink: 0; }
+
+.skeleton-rank-bar {
+  width: 50px;
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  flex-shrink: 0;
+  animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (max-width: 640px) {
+  .skeleton-bubble-area { height: 360px; }
+  .skeleton-bubble-1 { width: 120px; height: 120px; }
+  .skeleton-bubble-2 { width: 90px; height: 90px; }
+  .skeleton-bubble-3 { width: 80px; height: 80px; }
+  .skeleton-bubble-4 { width: 60px; height: 60px; }
+  .skeleton-bubble-5 { width: 52px; height: 52px; }
+  .skeleton-bubble-6 { width: 44px; height: 44px; }
+  .skeleton-bubble-7 { width: 40px; height: 40px; }
+  .skeleton-bubble-8 { width: 36px; height: 36px; }
+  .skeleton-rank-bar { display: none; }
+}
 
 /* ==================== 버블 차트 ==================== */
 .bubble-wrapper { position: relative; margin-bottom: 16px; }
