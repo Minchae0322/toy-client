@@ -134,25 +134,14 @@ export function useCarrier() {
     }
   }
 
-  const addSticker = async (carrierId, data) => {
+  const bulkSaveStickers = async (carrierId, stickers) => {
     try {
-      const response = await carrierService.addSticker(carrierId, data)
+      const response = await carrierService.bulkSaveStickers(carrierId, stickers)
       if (response.success) return { success: true, data: response.data }
-      throw new Error(response.error || '스티커 추가에 실패했습니다.')
+      throw new Error(response.error || '스티커 저장에 실패했습니다.')
     } catch (err) {
-      handleError(err, '스티커 추가')
+      handleError(err, '스티커 저장')
       return { success: false, error: err.message }
-    }
-  }
-
-  const updateSticker = async (carrierId, stickerId, data) => {
-    try {
-      const response = await carrierService.updateSticker(carrierId, stickerId, data)
-      if (response.success) return true
-      throw new Error(response.error || '스티커 수정에 실패했습니다.')
-    } catch (err) {
-      handleError(err, '스티커 수정')
-      return false
     }
   }
 
@@ -195,12 +184,9 @@ export function useCarrier() {
     }
   }
 
-  const updatePositions = async (carrierId, items, stickers) => {
+  const updatePositions = async (carrierId, items) => {
     try {
-      const promises = []
-      if (items?.length) promises.push(carrierService.updateItemPositions(carrierId, items))
-      if (stickers?.length) promises.push(carrierService.updateStickerPositions(carrierId, stickers))
-      await Promise.all(promises)
+      if (items?.length) await carrierService.updateItemPositions(carrierId, items)
       return true
     } catch (err) {
       handleError(err, '위치 업데이트')
@@ -228,8 +214,7 @@ export function useCarrier() {
     deleteCarrier,
     addItem,
     removeItem,
-    addSticker,
-    updateSticker,
+    bulkSaveStickers,
     removeSticker,
     bulkDeleteStickers,
     updatePositions,

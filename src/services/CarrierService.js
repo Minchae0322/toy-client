@@ -120,60 +120,27 @@ class CarrierService extends BaseApiService {
 
   // ==================== 캐리어 스티커 ====================
 
-  async addSticker(carrierId, data) {
-    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
-    if (!data.stickerType) throw new Error('스티커 타입이 필요합니다.')
-    if (!VALID_STICKER_TYPES.has(data.stickerType)) {
-      throw new Error(`유효하지 않은 스티커 타입입니다: ${data.stickerType}`)
-    }
-
-    return await this.post(`/carriers/${carrierId}/stickers`, {
-      stickerType: data.stickerType,
-      content: data.content || null,
-      imageUrl: data.imageUrl || null,
-      positionX: data.positionX ?? 0.5,
-      positionY: data.positionY ?? 0.5,
-      zIndex: data.zIndex ?? 0,
-      rotation: data.rotation ?? 0,
-      scaleRatio: data.scaleRatio ?? 1.0
-    })
-  }
-
-  async updateSticker(carrierId, stickerId, data) {
-    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
-    if (!stickerId) throw new Error('스티커 ID가 필요합니다.')
-
-    const body = {
-      positionX: data.positionX,
-      positionY: data.positionY,
-      zIndex: data.zIndex ?? null,
-      rotation: data.rotation ?? null,
-      scaleRatio: data.scaleRatio ?? null
-    }
-    if ('imageUrl' in data) body.imageUrl = data.imageUrl ?? null
-    return await this.patch(`/carriers/${carrierId}/stickers/${stickerId}`, body)
-  }
-
-  async updateStickerPositions(carrierId, stickers) {
+  async bulkSaveStickers(carrierId, stickers) {
     if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
     if (!Array.isArray(stickers) || stickers.length === 0) throw new Error('스티커 목록이 필요합니다.')
 
-    return await this.put(`/carriers/${carrierId}/stickers/positions`, stickers)
+    return await this.put(`/carriers/${carrierId}/stickers`, { stickers })
   }
 
-  async removeSticker(carrierId, stickerId) {
+  async removeSticker(carrierId, stickerId, stickerType) {
     if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
     if (!stickerId) throw new Error('스티커 ID가 필요합니다.')
 
-    return await this.delete(`/carriers/${carrierId}/stickers/${stickerId}`)
+    const query = stickerType ? `?stickerType=${stickerType}` : ''
+    return await this.delete(`/carriers/${carrierId}/stickers/${stickerId}${query}`)
   }
 
-  async bulkDeleteStickers(carrierId, stickerIds) {
+  async bulkDeleteStickers(carrierId, stickerIds, stickerTypes) {
     if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
     if (!Array.isArray(stickerIds) || stickerIds.length === 0) throw new Error('삭제할 스티커 ID 목록이 필요합니다.')
     if (stickerIds.length > 50) throw new Error('일괄 삭제는 최대 50개까지 가능합니다.')
 
-    return await this.post(`/carriers/${carrierId}/stickers/delete`, { stickerIds })
+    return await this.post(`/carriers/${carrierId}/stickers/delete`, { stickerIds, stickerTypes })
   }
 
   // ==================== 정규화 ====================

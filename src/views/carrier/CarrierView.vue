@@ -238,7 +238,7 @@ const router = useRouter()
 const { open: openConfirm } = useConfirmDialog()
 
 // ==================== API Composable ====================
-const { loading: apiLoading, error: apiError, carriers, currentCarrier, fetchMyCarriers, fetchCarrier, createCarrier, updateSkin, deleteCarrier, addItem: apiAddItem, removeItem: apiRemoveItem, addSticker: apiAddSticker, updateSticker: apiUpdateSticker, removeSticker: apiRemoveSticker, bulkDeleteStickers: apiBulkDeleteStickers, updatePositions } = useCarrier()
+const { loading: apiLoading, error: apiError, carriers, currentCarrier, fetchMyCarriers, fetchCarrier, createCarrier, updateSkin, deleteCarrier, addItem: apiAddItem, removeItem: apiRemoveItem, bulkSaveStickers: apiBulkSaveStickers, removeSticker: apiRemoveSticker, bulkDeleteStickers: apiBulkDeleteStickers, updatePositions } = useCarrier()
 
 const canvasRef = ref(null)
 const carrierId = ref(null)
@@ -516,21 +516,26 @@ async function saveAllChanges() {
 
     // Phase 2: 스티커 삭제
     if (pendingDeletes.value.length > 0) {
-      if (pendingDeletes.value.length > 1) {
-        await apiBulkDeleteStickers(carrierId.value, pendingDeletes.value)
+      const deleteIds = pendingDeletes.value.map(d => d.id)
+      const stickerTypes = pendingDeletes.value.map(d => d.stickerType)
+      if (deleteIds.length > 1) {
+        await apiBulkDeleteStickers(carrierId.value, deleteIds, stickerTypes)
       } else {
-        await apiRemoveSticker(carrierId.value, pendingDeletes.value[0])
+        await apiRemoveSticker(carrierId.value, deleteIds[0], stickerTypes[0])
       }
     }
 
-    // Phase 3: 새 스티커 추가
+    // Phase 3+4: 새 스티커 추가 + 변경된 스티커 일괄 저장
+    const upsertStickers = []
+    const newDecoUids = []
+
     for (const uid of pendingAdds.value) {
       const deco = decos.value.find(v => v.uid === uid)
       if (!deco) continue
-
-      const stickerType = deco.type === 'phototag' ? 'PHOTO_TAG' : 'EMOJI'
-      const addData = {
-        stickerType,
+      newDecoUids.push(uid)
+      upsertStickers.push({
+        stickerId: null,
+        stickerType: deco.type === 'phototag' ? 'PHOTO_TAG' : 'EMOJI',
         content: deco.emoji || null,
         imageUrl: deco.imageUrl || null,
         positionX: deco.x / 100,
@@ -538,28 +543,34 @@ async function saveAllChanges() {
         zIndex: 0,
         rotation: deco.rotation ?? 0,
         scaleRatio: deco.scale ?? 1.0
-      }
-      const result = await apiAddSticker(carrierId.value, addData)
-      if (result.success && result.data?.id) {
-        deco.apiId = result.data.id
-      }
+      })
     }
 
-    // Phase 4: 변경된 스티커 위치/스케일 업데이트
-    const updatePromises = []
     for (const uid of dirtyDecos.value) {
       const deco = decos.value.find(v => v.uid === uid)
       if (deco?.apiId) {
-        const updateData = {
+        upsertStickers.push({
+          stickerId: deco.apiId,
+          stickerType: deco.type === 'phototag' ? 'PHOTO_TAG' : 'EMOJI',
+          content: deco.emoji || null,
+          imageUrl: deco.imageUrl || null,
           positionX: deco.x / 100,
           positionY: deco.y / 100,
-          scaleRatio: deco.scale,
-          rotation: deco.rotation ?? 0
-        }
-        if (deco.type === 'phototag') {
-          updateData.imageUrl = deco.imageUrl ?? null
-        }
-        updatePromises.push(apiUpdateSticker(carrierId.value, deco.apiId, updateData))
+          zIndex: null,
+          rotation: deco.rotation ?? 0,
+          scaleRatio: deco.scale ?? 1.0
+        })
+      }
+    }
+
+    const updatePromises = []
+    if (upsertStickers.length > 0) {
+      const result = await apiBulkSaveStickers(carrierId.value, upsertStickers)
+      if (result.success && Array.isArray(result.data)) {
+        result.data.slice(0, newDecoUids.length).forEach((saved, i) => {
+          const deco = decos.value.find(v => v.uid === newDecoUids[i])
+          if (deco && saved?.id) deco.apiId = saved.id
+        })
       }
     }
 
@@ -576,7 +587,7 @@ async function saveAllChanges() {
           positionY: Math.max(0, Math.min(1, (p.y - b.top) / bh)),
           zIndex: 0
         }))
-        updatePromises.push(updatePositions(carrierId.value, itemPositions, null))
+        updatePromises.push(updatePositions(carrierId.value, itemPositions))
       }
     }
 
