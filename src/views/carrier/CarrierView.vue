@@ -437,6 +437,13 @@
                       @mousedown.prevent.stop="onDecoDown($event, d.uid)"
                       @touchstart.prevent.stop="onDecoDown($event, d.uid)"
                     >{{ d.emoji }}</div>
+                    <!-- 리사이즈 핸들 (4개 모서리) -->
+                    <template v-if="selDeco === d.uid">
+                      <div class="resize-handle corner-nw" @mousedown.prevent.stop="onResizeDown($event, d)" @touchstart.prevent.stop="onResizeDown($event, d)"></div>
+                      <div class="resize-handle corner-ne" @mousedown.prevent.stop="onResizeDown($event, d)" @touchstart.prevent.stop="onResizeDown($event, d)"></div>
+                      <div class="resize-handle corner-sw" @mousedown.prevent.stop="onResizeDown($event, d)" @touchstart.prevent.stop="onResizeDown($event, d)"></div>
+                      <div class="resize-handle corner-se" @mousedown.prevent.stop="onResizeDown($event, d)" @touchstart.prevent.stop="onResizeDown($event, d)"></div>
+                    </template>
                     <div v-if="selDeco === d.uid" class="deco-toolbar" @click.stop>
                       <button class="tb-btn" @click.stop="flipDeco(d.uid)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 3 3 7 7 11"/><path d="M3 7h13a5 5 0 010 10h-4"/></svg>
@@ -571,6 +578,15 @@
 
         <!-- 우하단 FAB 영역 -->
         <div class="fab-group">
+          <!-- 모바일 스티커 FAB -->
+          <button class="mobile-sticker-fab" @click.stop="mobileStickerTray = true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+              <line x1="9" y1="9" x2="9.01" y2="9"/>
+              <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+          </button>
           <button class="share-fab" @click.stop="showShareModal = true">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
@@ -595,6 +611,46 @@
             </button>
           </Transition>
         </div>
+
+        <!-- 모바일 스티커 바텀 트레이 -->
+        <Teleport to="body">
+          <Transition name="sticker-tray">
+            <div v-if="mobileStickerTray" class="sticker-tray-backdrop" @click.self="mobileStickerTray = false">
+              <div class="sticker-tray">
+                <div class="sticker-tray-handle" @click="mobileStickerTray = false"><div class="handle-bar"></div></div>
+                <div class="sticker-tray-tabs">
+                  <button
+                    v-for="[key, label] in PACK_LABELS"
+                    :key="key"
+                    class="stray-tab"
+                    :class="{ active: stickerPack === key }"
+                    @click="stickerPack = key"
+                  >{{ label }}</button>
+                  <button
+                    class="stray-tab stray-tab-special"
+                    :class="{ active: stickerPack === SPECIAL_PACK[0] }"
+                    @click="stickerPack = SPECIAL_PACK[0]"
+                  >{{ SPECIAL_PACK[1] }}</button>
+                </div>
+                <div class="sticker-tray-grid">
+                  <div
+                    v-for="d in curStickers"
+                    :key="d.id"
+                    class="stray-item"
+                    :class="{ 'stray-special': d.type === 'phototag', 'stray-active': d.type === 'phototag' && hasPhototag }"
+                    @click="placeDeco(d)"
+                  >
+                    <template v-if="d.type === 'phototag'">
+                      <span class="stray-special-icon">📷</span>
+                      <span class="stray-special-label">{{ d.label }}</span>
+                    </template>
+                    <template v-else>{{ d.emoji }}</template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </Teleport>
 
         <!-- 공유 모달 -->
         <Teleport to="body">
@@ -860,6 +916,7 @@ const showShareModal = ref(false)
 const shareNickname = ref('')
 const itemsExpanded = ref(false)
 const mobileTab = ref('carrier')
+const mobileStickerTray = ref(false)
 const dragId = ref(null)
 const dirtyDecos = ref(new Set())  // 변경된 스티커 uid 추적
 const dirtyBubbles = ref(false)    // 버블 위치 변경 추적
@@ -1180,8 +1237,8 @@ async function saveAllChanges() {
           scaleRatio: deco.scale,
           rotation: deco.rotation ?? 0
         }
-        if (deco.type === 'phototag' && deco.imageUrl !== undefined) {
-          updateData.imageUrl = deco.imageUrl
+        if (deco.type === 'phototag') {
+          updateData.imageUrl = deco.imageUrl ?? null
         }
         updatePromises.push(apiUpdateSticker(carrierId.value, deco.apiId, updateData))
       }
@@ -1665,6 +1722,8 @@ function getDecoOverlayStyle(d) {
     position: 'absolute',
     left: (px - sw / 2) + 'px',
     top: (py - sh / 2) + 'px',
+    width: sw + 'px',
+    height: sh + 'px',
     zIndex: selDeco.value === d.uid ? 20 : 5
   }
 }
@@ -1733,6 +1792,48 @@ function onDecoDown(e, uid) {
   const onUp = () => {
     if (!decoDragActive) selDeco.value = selDeco.value === uid ? null : uid
     else markDecoDirty(uid)
+    window.removeEventListener('mousemove', onMove)
+    window.removeEventListener('mouseup', onUp)
+    window.removeEventListener('touchmove', onMove)
+    window.removeEventListener('touchend', onUp)
+  }
+
+  window.addEventListener('mousemove', onMove)
+  window.addEventListener('mouseup', onUp)
+  window.addEventListener('touchmove', onMove, { passive: false })
+  window.addEventListener('touchend', onUp)
+}
+
+// ==================== 모서리 리사이즈 ====================
+function onResizeDown(e, deco) {
+  e.stopPropagation()
+  const box = boxRef.value?.getBoundingClientRect()
+  if (!box) return
+
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY
+
+  // 스티커 중심 좌표 (화면 픽셀)
+  const b = getBounds(box.width, box.height)
+  const bw = b.right - b.left, bh = b.bottom - b.top
+  const centerX = box.left + b.left + (deco.x / 100) * bw
+  const centerY = box.top + b.top + (deco.y / 100) * bh
+
+  const initDist = Math.hypot(clientX - centerX, clientY - centerY) || 1
+  const initScale = deco.scale
+  const uid = deco.uid
+
+  const onMove = (ev) => {
+    ev.preventDefault()
+    const mx = ev.touches ? ev.touches[0].clientX : ev.clientX
+    const my = ev.touches ? ev.touches[0].clientY : ev.clientY
+    const dist = Math.hypot(mx - centerX, my - centerY)
+    const newScale = Math.max(DMIN, Math.min(DMAX, initScale * (dist / initDist)))
+    decos.value = decos.value.map(d => d.uid === uid ? { ...d, scale: newScale } : d)
+  }
+
+  const onUp = () => {
+    markDecoDirty(uid)
     window.removeEventListener('mousemove', onMove)
     window.removeEventListener('mouseup', onUp)
     window.removeEventListener('touchmove', onMove)
@@ -2374,6 +2475,23 @@ function downloadCarrierImage() {
 }
 .deco-emoji.selected { outline: 2.5px solid #7c3aed; outline-offset: 3px; background: rgba(124,58,237,.06); }
 
+/* 리사이즈 핸들 */
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 2px solid #7c3aed;
+  border-radius: 50%;
+  z-index: 25;
+  touch-action: none;
+}
+.resize-handle:hover { background: #7c3aed; }
+.corner-nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.corner-ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.corner-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.corner-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
 /* 포토택 (고정 SVG) */
 .phototag-fixed .nt-del { opacity: 0; transition: opacity .15s; }
 
@@ -2780,6 +2898,9 @@ function downloadCarrierImage() {
   }
 }
 
+/* 모바일 스티커 FAB: 데스크톱 숨김 */
+.mobile-sticker-fab { display: none; }
+
 /* ==================== 모바일 (768px 이하) ==================== */
 @media (max-width: 768px) {
   .carrier-page {
@@ -2958,6 +3079,26 @@ function downloadCarrierImage() {
     border-radius: 10px;
   }
 
+  /* 모바일 스티커 FAB */
+  .mobile-sticker-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    border: none;
+    box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-sticker-fab:active {
+    transform: scale(0.92);
+    box-shadow: 0 2px 8px rgba(124,58,237,0.3);
+  }
+
   /* 아이템 리스트 모바일 */
   .right-panel .shop-card {
     border-radius: 16px;
@@ -3058,4 +3199,122 @@ function downloadCarrierImage() {
 }
 
 @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
+</style>
+
+<!-- 모바일 스티커 트레이 (Teleport → body이므로 non-scoped) -->
+<style>
+.sticker-tray-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: flex-end;
+}
+.sticker-tray {
+  width: 100%;
+  max-height: 50vh;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sticker-tray-handle {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 6px;
+  cursor: pointer;
+}
+.handle-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #d1d5db;
+}
+.sticker-tray-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px 14px 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  flex-shrink: 0;
+}
+.stray-tab {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.stray-tab.active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+}
+.stray-tab-special {
+  border-color: #e0d8f5;
+  color: #7c3aed;
+}
+.stray-tab-special.active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+}
+.sticker-tray-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 4px 14px 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
+}
+.stray-item {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  border-radius: 14px;
+  background: #faf8ff;
+  border: 1.5px solid #e0d8f5;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.stray-item:active {
+  transform: scale(0.9);
+  background: #ede9fe;
+}
+.stray-special {
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+.stray-special-icon { font-size: 24px; }
+.stray-special-label { font-size: 10px; font-weight: 700; color: #7c3aed; }
+.stray-active {
+  background: rgba(124,58,237,0.1);
+  border-color: #7c3aed;
+}
+
+/* 트레이 트랜지션 */
+.sticker-tray-enter-active { transition: opacity 0.2s ease; }
+.sticker-tray-enter-active .sticker-tray { animation: stickerTrayUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+.sticker-tray-leave-active { transition: opacity 0.2s ease; }
+.sticker-tray-leave-active .sticker-tray { animation: stickerTrayDown 0.2s ease forwards; }
+.sticker-tray-enter-from,
+.sticker-tray-leave-to { opacity: 0; }
+
+@keyframes stickerTrayUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes stickerTrayDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
 </style>

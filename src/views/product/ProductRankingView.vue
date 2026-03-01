@@ -107,7 +107,7 @@
                 <div class="tooltip-metrics">
                   <div><div class="metric-label">평점</div><div class="metric-value"><svg class="star-icon" width="14" height="14" viewBox="0 0 14 14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.16666L8.795 4.81249L12.8333 5.40166L9.91667 8.24916L10.59 12.2717L7 10.3792L3.41 12.2717L4.08333 8.24916L1.16667 5.40166L5.205 4.81249L7 1.16666Z"/></svg> {{ formatRating(tooltipProduct.averageRating) }}</div></div>
                   <div><div class="metric-label">피드</div><div class="metric-value">{{ formatCount(tooltipProduct.reviewCount) }}</div></div>
-                  <div><div class="metric-label">관심도</div><div class="metric-value purple">{{ getPopularityScore(tooltipProduct) }}</div></div>
+                  <div><div class="metric-label">관심도</div><div class="metric-value purple">{{ Number(getPopularityScore(tooltipProduct)).toFixed(2) }}</div></div>
                 </div>
                 <div class="tooltip-hint">
                   <span>드래그해서 캐리어에 담기</span>

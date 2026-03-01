@@ -150,7 +150,7 @@ class CarrierService extends BaseApiService {
       rotation: data.rotation ?? null,
       scaleRatio: data.scaleRatio ?? null
     }
-    if (data.imageUrl !== undefined) body.imageUrl = data.imageUrl
+    if ('imageUrl' in data) body.imageUrl = data.imageUrl ?? null
     return await this.patch(`/carriers/${carrierId}/stickers/${stickerId}`, body)
   }
 

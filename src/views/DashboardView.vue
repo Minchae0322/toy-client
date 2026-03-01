@@ -309,7 +309,7 @@
           <div class="section-header">
             <div class="title-with-badge">
               <h2 class="section-title">실시간 제품 랭킹</h2>
-              <span class="sub-title">버블이 클수록 인기가 높아요</span>
+              <span class="sub-title">지금 가장 주목받는 아이템</span>
             </div>
             <router-link :to="{ name: 'ProductRanking' }" class="view-all-btn">
               전체보기
@@ -407,9 +407,18 @@
                 </div>
                 <span class="dash-tooltip-brand">{{ bubbleTooltipProduct.brand }}</span>
                 <div class="dash-tooltip-metrics">
-                  <div><div class="dash-metric-label">인기</div><div class="dash-metric-value purple">{{ formatNumber(getProductPopularityScore(bubbleTooltipProduct)) }}</div></div>
-                  <div v-if="bubbleTooltipProduct.averageRating"><div class="dash-metric-label">평점</div><div class="dash-metric-value">⭐ {{ Number(bubbleTooltipProduct.averageRating).toFixed(1) }}</div></div>
-                  <div v-if="bubbleTooltipProduct.reviewCount"><div class="dash-metric-label">리뷰</div><div class="dash-metric-value">{{ formatNumber(bubbleTooltipProduct.reviewCount) }}</div></div>
+                  <div class="dash-tooltip-metric">
+                    <div class="dash-metric-label">평점</div>
+                    <div class="dash-metric-value"><svg class="dash-star-icon" width="14" height="14" viewBox="0 0 14 14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.16666L8.795 4.81249L12.8333 5.40166L9.91667 8.24916L10.59 12.2717L7 10.3792L3.41 12.2717L4.08333 8.24916L1.16667 5.40166L5.205 4.81249L7 1.16666Z"/></svg> {{ bubbleTooltipProduct.averageRating ? Number(bubbleTooltipProduct.averageRating).toFixed(1) : '0.0' }}</div>
+                  </div>
+                  <div class="dash-tooltip-metric">
+                    <div class="dash-metric-label">피드</div>
+                    <div class="dash-metric-value">{{ formatNumber(bubbleTooltipProduct.reviewCount || 0) }}개</div>
+                  </div>
+                  <div class="dash-tooltip-metric">
+                    <div class="dash-metric-label">관심도</div>
+                    <div class="dash-metric-value purple">{{ Number(getProductPopularityScore(bubbleTooltipProduct)).toFixed(2) }}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -460,9 +469,9 @@ function getDashRadius(score, maxScore) {
 }
 
 function getDashRankColor(rank) {
-  if (rank === 1) return { bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)', border: '#7c3aed', glow: 'rgba(124,58,237,0.3)' }
-  if (rank === 2) return { bg: 'linear-gradient(135deg,#6366f1,#818cf8)', border: '#6366f1', glow: 'rgba(99,102,241,0.2)' }
-  if (rank === 3) return { bg: 'linear-gradient(135deg,#8b5cf6,#c4b5fd)', border: '#8b5cf6', glow: 'rgba(139,92,246,0.2)' }
+  if (rank === 1) return { bg: '#7c3aed', border: '#7c3aed', glow: 'rgba(124,58,237,0.12)' }
+  if (rank === 2) return { bg: '#6366f1', border: '#6366f1', glow: 'rgba(99,102,241,0.1)' }
+  if (rank === 3) return { bg: '#8b5cf6', border: '#8b5cf6', glow: 'rgba(139,92,246,0.1)' }
   return { bg: '#fff', border: '#e5e7eb', glow: 'transparent' }
 }
 
@@ -520,9 +529,9 @@ const bubbleTooltipProduct = computed(() => {
 
 const bubbleTooltipStyle = computed(() => {
   if (!bubbleTooltipProduct.value) return {}
-  const W = 200
+  const W = 240
   let left = bubbleMousePos.value.x - W / 2
-  let top = bubbleMousePos.value.y - 130
+  let top = bubbleMousePos.value.y - 140
   if (top < 0) top = bubbleMousePos.value.y + 10
   if (left < 0) left = 4
   if (left + W > bubbleDims.value.w) left = bubbleDims.value.w - W - 4
@@ -2520,8 +2529,11 @@ onUnmounted(() => {
 }
 
 /* 제품 랭킹 섹션 - 버블 차트 */
+/* ========================================
+   제품 랭킹 - 버블 차트
+   ======================================== */
 .ranking-section {
-  background: linear-gradient(to bottom, #ffffff, #faf8ff);
+  background: #fff;
 }
 
 .dash-bubble-wrapper {
@@ -2532,12 +2544,12 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   min-height: 320px;
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  background: #fafafa;
+  border-radius: 16px;
+  border: 1px solid #f0f0f0;
   overflow: hidden;
   cursor: default;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: none;
 }
 
 .dash-grid-bg {
@@ -2545,28 +2557,30 @@ onUnmounted(() => {
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.3;
+  opacity: 0.2;
 }
 
 /* 버블 */
 .dash-bubble {
   position: absolute;
   border-radius: 50%;
-  border: 2px solid;
+  border: 2.5px solid;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.15s, box-shadow 0.2s, border-color 0.2s, filter 0.2s, transform 0.15s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   text-decoration: none;
 }
 .dash-bubble:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
+  z-index: 20 !important;
 }
 .dash-bubble.is-dimmed {
-  filter: brightness(0.55) saturate(0.3);
+  filter: brightness(0.6) saturate(0.2);
+  opacity: 0.7;
 }
 
 /* 버블 배경 이미지 */
@@ -2590,7 +2604,7 @@ onUnmounted(() => {
 .dash-bubble.has-image .dash-bubble-brand {
   position: relative;
   z-index: 2;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.6);
 }
 .dash-bubble.has-image .dash-rank-badge-top,
 .dash-bubble.has-image .dash-rank-badge-sm {
@@ -2604,29 +2618,43 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 0 4px;
+  padding: 0 6px;
+  letter-spacing: -0.01em;
 }
 .dash-bubble-brand {
-  margin-top: 1px;
+  margin-top: 2px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 /* Top 3 뱃지 */
 .dash-rank-badge-top {
   position: absolute;
-  top: 6px;
+  top: 4px;
   left: 50%;
   transform: translateX(-50%);
   font-weight: 900;
-  padding: 2px 7px;
-  border-radius: 4px;
-  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
   white-space: nowrap;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
   z-index: 5;
 }
-.dash-rank-badge-top.rank-1 { background: #FFD700; color: #7a5a00; }
-.dash-rank-badge-top.rank-2 { background: #C0C0C0; color: #444; }
-.dash-rank-badge-top.rank-3 { background: #CD7F32; color: #5a2d00; }
+.dash-rank-badge-top.rank-1 {
+  background: #fbbf24;
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.dash-rank-badge-top.rank-2 {
+  background: #94a3b8;
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.dash-rank-badge-top.rank-3 {
+  background: #d97706;
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
 
 /* 4위+ 뱃지 */
 .dash-rank-badge-sm {
@@ -2634,25 +2662,30 @@ onUnmounted(() => {
   top: -3px;
   right: -3px;
   border-radius: 50%;
-  background: #f3f4f6;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #888;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1.5px solid #fff;
+  color: #9ca3af;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  border: 1.5px solid #e5e7eb;
 }
 
 /* 범례 */
 .dash-bubble-legend {
   position: absolute;
-  bottom: 10px;
-  left: 12px;
+  bottom: 12px;
+  left: 14px;
   display: flex;
   align-items: center;
   gap: 6px;
   pointer-events: none;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(229, 231, 235, 0.6);
 }
 .dash-legend-item {
   display: flex;
@@ -2661,19 +2694,20 @@ onUnmounted(() => {
 }
 .dash-legend-item span {
   font-size: 10px;
-  color: #888;
+  color: #6b7280;
+  font-weight: 500;
 }
 .dash-legend-dot.big {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  background: #7c3aed;
 }
 .dash-legend-dot.small {
-  width: 11px;
-  height: 11px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid #d1d5db;
   background: #fff;
 }
 
@@ -2682,52 +2716,69 @@ onUnmounted(() => {
   position: absolute;
   z-index: 100;
   background: #fff;
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 14px;
+  padding: 14px 16px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.15);
   border: 1px solid #e5e7eb;
   pointer-events: none;
-  animation: fadeIn 0.15s ease;
+  animation: tooltipFadeIn 0.15s ease;
 }
 .dash-tooltip-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 .dash-tooltip-name {
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .dash-tooltip-rank {
   font-size: 11px;
   color: #7c3aed;
   font-weight: 700;
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 .dash-tooltip-brand {
-  font-size: 11px;
+  font-size: 12px;
   color: #888;
 }
 .dash-tooltip-metrics {
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 12px;
+  margin-top: 10px;
+}
+.dash-tooltip-metric {
+  display: flex;
+  flex-direction: column;
 }
 .dash-metric-label {
-  font-size: 9px;
+  font-size: 10px;
   color: #aaa;
 }
 .dash-metric-value {
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   color: #333;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
 }
 .dash-metric-value.purple {
   color: #7c3aed;
 }
+.dash-star-icon {
+  flex-shrink: 0;
+}
 
-@keyframes fadeIn {
+@keyframes tooltipFadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
