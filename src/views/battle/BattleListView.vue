@@ -35,7 +35,18 @@
                   :class="{ active: activeTab === tab.id }"
                   @click="activeTab = tab.id"
               >
-                {{ tab.label }}
+                <svg v-if="tab.id === 'ongoing'" class="chip-icon" width="14" height="14" viewBox="0 0 14 14">
+                  <circle cx="7" cy="7" r="3.5" fill="#22c55e"/>
+                  <circle cx="7" cy="7" r="5.5" fill="none" stroke="#22c55e" stroke-width="1" opacity="0.3"/>
+                </svg>
+                <svg v-else-if="tab.id === 'ended'" class="chip-icon" width="14" height="14" viewBox="0 0 14 14">
+                  <circle cx="7" cy="7" r="5.5" fill="none" stroke="#d1d5db" stroke-width="1.5"/>
+                  <line x1="4" y1="7" x2="10" y2="7" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <svg v-else-if="tab.id === 'my'" class="chip-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                </svg>
+                <span class="chip-label">{{ tab.label }}</span>
                 <span v-if="tab.count" class="chip-count">{{ formatCount(tab.count) }}</span>
               </button>
             </div>
@@ -531,6 +542,10 @@ onUnmounted(() => {
   color: #a78bfa;
 }
 
+.chip-icon {
+  flex-shrink: 0;
+}
+
 /* 액션 그룹 */
 .header-actions {
   display: flex;
@@ -615,10 +630,18 @@ onUnmounted(() => {
 }
 
 @media (max-width: 640px) {
+  .chip-label {
+    display: none;
+  }
+  .filter-chip {
+    padding: 0.375rem 0.5rem;
+  }
+  .chip-count {
+    font-size: 0.625rem;
+  }
   .create-battle-btn span {
     display: none;
   }
-
   .create-battle-btn {
     width: 2rem;
     height: 2rem;

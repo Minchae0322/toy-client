@@ -6,7 +6,7 @@
       <!-- 카테고리 필터 -->
       <CommonCategoryFilter
           :categories="rootCategories"
-          :initial-selected="selectedCategoryId"
+          :initial-category-id="selectedCategoryId"
           content-type="FEED"
           @category-change="handleCategoryChange"
       />

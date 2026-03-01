@@ -159,8 +159,8 @@
               <span class="list-product-name">{{ feed.productName }}</span>
             </div>
 
-            <div v-if="feed.hashtags?.length" class="list-hashtags">
-              <span v-for="tag in feed.hashtags.slice(0, 2)" :key="tag" class="list-tag">#{{ tag }}</span>
+            <div class="list-hashtags">
+              <span v-for="tag in feed.hashtags?.slice(0, 2)" :key="tag" class="list-tag">#{{ tag }}</span>
             </div>
 
             <!-- 푸터: 작성자 + 조회수/좋아요/댓글 -->
@@ -492,6 +492,7 @@ defineExpose({ observerTarget });
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  min-height: 18px;
 }
 
 .list-tag {

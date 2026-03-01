@@ -29,9 +29,9 @@
       <!-- 더보기 버튼 -->
       <button
           v-if="hasMoreCategories"
-          @click="goToCategoryPage"
+          @click="showCategoryModal = true"
           class="category-tab more-btn"
-          title="전체 카테고리"
+          title="더보기"
       >
         <svg viewBox="0 0 24 24" fill="currentColor">
           <circle cx="5" cy="12" r="2"/>
@@ -40,6 +40,14 @@
         </svg>
       </button>
     </div>
+
+    <CategorySelectModal
+        v-if="showCategoryModal"
+        :content-type="contentType"
+        :initial-category-id="selectedCategory?.categoryId"
+        @select="handleModalSelect"
+        @close="showCategoryModal = false"
+    />
 
     <!-- 2뎁스 하위 카테고리 -->
     <div v-if="selectedCategory && subCategories.length > 0" class="sub-category-tabs">
@@ -61,7 +69,7 @@
 
     <!-- 선택된 카테고리가 인기 목록에 없을 경우 표시 -->
     <div v-if="showSelectedChip" class="selected-chip-wrapper">
-      <button class="selected-chip" @click="goToCategoryPage">
+      <button class="selected-chip" @click="showCategoryModal = true">
         <span>{{ selectedCategory?.categoryName }}</span>
         <span v-if="selectedSubCategory" class="chip-separator">›</span>
         <span v-if="selectedSubCategory">{{ selectedSubCategory?.categoryName }}</span>
@@ -75,10 +83,8 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useCategoryCache } from '@/composables/useCategoryCache.js';
-
-const router = useRouter();
+import CategorySelectModal from '@/components/common/CategorySelectModal.vue';
 const { loadPopularCategories: loadPopularFromCache } = useCategoryCache();
 
 const props = defineProps({
@@ -106,6 +112,7 @@ const selectedCategory = ref(null);
 const selectedSubCategory = ref(null);
 const popularCategories = ref([]);
 const loading = ref(false);
+const showCategoryModal = ref(false);
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
 // 화면 크기에 따른 카테고리 개수
@@ -174,10 +181,21 @@ const fetchPopularCategories = async () => {
   }
 };
 
-const goToCategoryPage = () => {
-  router.push({
-    name: 'CategoryList',
-    query: { from: router.currentRoute.value.name }
+
+const handleModalSelect = ({ categoryId, categoryDepth, category, parent }) => {
+  showCategoryModal.value = false;
+  if (parent) {
+    selectedCategory.value = parent;
+    selectedSubCategory.value = category;
+  } else {
+    selectedCategory.value = category;
+    selectedSubCategory.value = null;
+  }
+  emit('category-change', {
+    categoryId,
+    categoryDepth,
+    category: parent || category,
+    subCategory: parent ? category : null
   });
 };
 
@@ -335,7 +353,11 @@ watch(() => props.contentType, () => {
   display: flex;
   gap: 8px;
   align-items: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.category-tabs::-webkit-scrollbar { display: none; }
 
 .category-tab {
   padding: 8px 18px;

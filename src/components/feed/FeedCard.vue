@@ -40,8 +40,8 @@
         <h3 class="product-name">{{ feed.productName }}</h3>
       </div>
 
-      <div class="hashtag-group">
-        <span v-for="tag in feed.hashtags?.slice(0, 3)" :key="tag" class="tag-item">#{{ tag }}</span>
+      <div v-if="feed.hashtags?.length" class="hashtag-group">
+        <span v-for="tag in feed.hashtags.slice(0, 3)" :key="tag" class="tag-item">#{{ tag }}</span>
       </div>
 
       <div class="post-footer">
@@ -262,7 +262,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 
   .primary-review {
     font-size: 15px; margin-bottom: 8px; line-height: 1.5;
-    min-height: calc(1.5em * 2);
+    min-height: unset;
   }
   .quote { font-size: 15px; }
 
@@ -273,7 +273,8 @@ const formatDate = (date) => feedUtils.formatDate(date);
   .buy-place { font-size: 10px; }
   .product-name { font-size: 12px; }
 
-  .hashtag-group { margin-bottom: 8px; gap: 4px; min-height: 14px; }
+  .hashtag-group { margin-bottom: 8px; gap: 4px; min-height: unset; }
+  .hashtag-group:empty { display: none; }
   .tag-item { font-size: 11px; }
 
   .post-footer { padding-top: 8px; border-top: none; }
