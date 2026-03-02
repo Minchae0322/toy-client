@@ -13,7 +13,7 @@
       <div class="stats-grid">
         <router-link :to="{ name: 'FeedHome' }" class="stat-card">
           <div class="stat-icon feeds">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
             </svg>
           </div>
@@ -21,30 +21,25 @@
             <span class="stat-value">{{ dashboardSummary.popularFeedCount }}</span>
             <span class="stat-label">인기 피드</span>
           </div>
-          <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m9 18 6-6-6-6" />
-          </svg>
+          <div v-if="dashboardSummary.activeBattleCount > 0" class="live-dot"></div>
         </router-link>
 
         <router-link :to="{ name: 'BattleList' }" class="stat-card">
           <div class="stat-icon battles">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
           </div>
           <div class="stat-content">
             <span class="stat-value">{{ dashboardSummary.activeBattleCount }}</span>
-            <span class="stat-label">진행중 요거픽</span>
+            <span class="stat-label">요거픽</span>
           </div>
           <div v-if="dashboardSummary.activeBattleCount > 0" class="live-dot"></div>
-          <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m9 18 6-6-6-6" />
-          </svg>
         </router-link>
 
         <router-link :to="{ name: 'ProductRanking' }" class="stat-card">
           <div class="stat-icon products">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
               <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
               <path d="M4 22h16" />
@@ -55,12 +50,21 @@
           </div>
           <div class="stat-content">
             <span class="stat-value">{{ dashboardSummary.totalItemCount }}</span>
-            <span class="stat-label">전체 아이템</span>
+            <span class="stat-label">아이템</span>
           </div>
-          <svg class="stat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m9 18 6-6-6-6" />
-          </svg>
         </router-link>
+      </div>
+
+      <!-- 구글 애즈 (가로 배너) -->
+      <div class="ad-banner">
+        <ins class="adsbygoogle"
+          style="display:block"
+          :data-ad-client="googleAdClient"
+          :data-ad-slot="googleAdSlot"
+          data-ad-format="horizontal"
+          data-full-width-responsive="true"
+        ></ins>
+        <span class="ad-label">AD</span>
       </div>
 
       <!-- 실시간 요거 봄 섹션 -->
@@ -451,6 +455,10 @@ const dashboardSummary = ref({
   popularFeedCount: 0,
 })
 const summaryLoading = ref(true)
+
+// 구글 애즈
+const googleAdClient = ref('ca-pub-XXXXXXXXXXXXXXXX')
+const googleAdSlot = ref('XXXXXXXXXX')
 
 // ==================== 버블 차트 관련 ====================
 const DASH_MIN_RADIUS = 22
@@ -870,6 +878,13 @@ onMounted(() => {
   refreshTimer = setInterval(() => {
     loadYogurtBomFeeds()
   }, 30000)
+
+  // 구글 애즈 초기화
+  nextTick(() => {
+    try {
+      ;(window.adsbygoogle = window.adsbygoogle || []).push({})
+    } catch (e) { /* 광고 차단기 등 */ }
+  })
 })
 
 onUnmounted(() => {
@@ -953,51 +968,54 @@ onUnmounted(() => {
 
 /* 페이지 헤더 */
 .page-header {
-  padding: 1.25rem 0 0.75rem;
-}
-
-@media (min-width: 768px) {
-  .page-header {
-    padding: 1.5rem 0 0.875rem;
-  }
+  padding: 0.75rem 0 0.5rem;
 }
 
 .page-title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.125rem;
   letter-spacing: -0.02em;
 }
 
-@media (min-width: 768px) {
-  .page-title {
-    font-size: 1.5rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  .page-title {
-    font-size: 1.75rem;
-  }
-}
-
 .page-description {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: #a78bfa;
   margin: 0;
 }
 
 @media (min-width: 768px) {
-  .page-description {
-    font-size: 0.875rem;
-  }
+  .page-title { font-size: 1.25rem; }
+  .page-description { font-size: 0.8125rem; }
 }
 
-@media (min-width: 1280px) {
-  .page-description {
-    font-size: 0.9375rem;
-  }
+/* 구글 애즈 (가로 배너) */
+.ad-banner {
+  width: 100%;
+  min-height: 90px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.ad-banner ins {
+  width: 100%;
+  min-height: 90px;
+}
+
+.ad-label {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #bbb;
+  letter-spacing: 0.05em;
+  pointer-events: none;
 }
 
 /* 글래스 배너 */
@@ -1124,32 +1142,26 @@ onUnmounted(() => {
   color: #9333ea;
 }
 
-/* 통계 그리드 */
+/* 통계 그리드 (컴팩트) */
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-@media (min-width: 768px) {
-  .stats-grid {
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
-  }
+  margin-bottom: 0.75rem;
 }
 
 .stat-card {
+  flex: 1;
   background: #fff;
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 10px;
+  padding: 0.625rem 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid #f0f0f0;
   position: relative;
+  text-decoration: none;
 }
 
 .stat-card:hover {
@@ -1157,36 +1169,19 @@ onUnmounted(() => {
   box-shadow: 0 2px 8px rgba(147, 51, 234, 0.08);
 }
 
-@media (min-width: 768px) {
-  .stat-card {
-    padding: 1.25rem;
-  }
-}
-
 .stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.stat-icon.feeds {
-  background: #fff5f5;
-  color: #e53e3e;
-}
-
-.stat-icon.battles {
-  background: #fffaf0;
-  color: #dd6b20;
-}
-
-.stat-icon.products {
-  background: #f0fff4;
-  color: #38a169;
-}
+.stat-icon.feeds { background: #fff5f5; color: #e53e3e; }
+.stat-icon.battles { background: #fffaf0; color: #dd6b20; }
+.stat-icon.products { background: #f0fff4; color: #38a169; }
 
 .stat-content {
   flex: 1;
@@ -1195,7 +1190,7 @@ onUnmounted(() => {
 
 .stat-value {
   display: block;
-  font-size: 1.375rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #7c3aed;
   line-height: 1.2;
@@ -1203,45 +1198,15 @@ onUnmounted(() => {
 
 .stat-label {
   display: block;
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;
   color: #999;
-  margin-top: 0.125rem;
-}
-
-@media (max-width: 767px) {
-  .stat-value {
-    font-size: 1.125rem;
-  }
-
-  .stat-label {
-    font-size: 0.6875rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  .stat-value {
-    font-size: 1.5rem;
-  }
-
-  .stat-label {
-    font-size: 0.875rem;
-  }
-}
-
-.stat-arrow {
-  color: #d4d4d8;
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-
-.stat-card:hover .stat-arrow {
-  color: #9333ea;
+  margin-top: 1px;
 }
 
 .live-dot {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  top: 0.5rem;
+  right: 0.5rem;
   width: 8px;
   height: 8px;
   background: #e53e3e;
@@ -3001,18 +2966,28 @@ onUnmounted(() => {
     height: 10px;
   }
 
-  /* 페이지 헤더 축소 */
+  /* 상단 모바일 */
   .page-header {
-    padding: 0.75rem 0 0.5rem;
+    padding: 0.5rem 0 0.375rem;
   }
 
   .page-title {
-    font-size: 1.1rem;
-    margin-bottom: 0.125rem;
+    font-size: 1rem;
+    margin-bottom: 1px;
   }
 
   .page-description {
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
+  }
+
+  .ad-banner {
+    min-height: 60px;
+    border-radius: 10px;
+    margin-bottom: 0.625rem;
+  }
+
+  .ad-banner ins {
+    min-height: 60px;
   }
 
   /* 글래스 배너 컴팩트 */
@@ -3063,45 +3038,40 @@ onUnmounted(() => {
   /* 통계 카드 컴팩트 */
   .stats-grid {
     gap: 0.375rem;
-    margin-bottom: 0.625rem;
   }
 
   .stat-card {
-    padding: 0.625rem 0.5rem;
-    border-radius: 10px;
-    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    gap: 0.375rem;
     flex-direction: column;
     align-items: flex-start;
   }
 
   .stat-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
   }
 
   .stat-icon svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 
   .stat-value {
-    font-size: 1rem;
+    font-size: 0.9375rem;
   }
 
   .stat-label {
-    font-size: 0.625rem;
-  }
-
-  .stat-arrow {
-    display: none;
+    font-size: 0.5625rem;
   }
 
   .live-dot {
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 6px;
-    height: 6px;
+    top: 0.375rem;
+    right: 0.375rem;
+    width: 5px;
+    height: 5px;
   }
 
   /* 섹션 컴팩트 */
