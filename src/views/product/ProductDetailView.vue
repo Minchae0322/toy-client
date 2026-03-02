@@ -1,25 +1,51 @@
 <template>
   <div class="product-detail-view">
     <!-- 헤더 -->
-    <header class="header">
-      <div class="header-container">
-        <button class="back-btn" @click="goBack">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12.5 15L7.5 10L12.5 5"/>
+    <header class="detail-header">
+      <button class="btn-back" @click="goBack" aria-label="뒤로 가기">
+        <svg class="back-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <h1 class="header-title">상품 상세</h1>
+      <div class="header-actions">
+        <button v-if="isLoggedIn" class="hdr-action-btn" @click="showHeaderMenu = !showHeaderMenu" aria-label="더보기">
+          <svg class="hdr-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+            <circle cx="12" cy="18" r="1.5" fill="currentColor" stroke="none"/>
           </svg>
         </button>
-        <nav class="breadcrumb">
-          <router-link to="/">홈</router-link>
-          <span class="sep">/</span>
-          <router-link to="/products">상품</router-link>
-          <span class="sep">/</span>
-          <span class="current">{{ product?.name || '상품 상세' }}</span>
-        </nav>
-        <div v-if="isLoggedIn && isOwner" class="header-actions">
-          <button class="header-btn" @click="editProduct">수정</button>
-          <button class="header-btn danger" @click="deleteProduct">삭제</button>
-        </div>
       </div>
+      <Transition name="menu">
+        <div v-if="showHeaderMenu" class="menu-overlay" @click="showHeaderMenu = false">
+          <div class="menu-dropdown" @click.stop>
+            <template v-if="isOwner">
+              <button class="menu-item" @click="showHeaderMenu = false; editProduct()">
+                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                수정하기
+              </button>
+              <div class="menu-divider" />
+              <button class="menu-item menu-item--danger" @click="showHeaderMenu = false; deleteProduct()">
+                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                삭제하기
+              </button>
+            </template>
+            <template v-else>
+              <button class="menu-item menu-item--danger" @click="showHeaderMenu = false">
+                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                신고하기
+              </button>
+            </template>
+          </div>
+        </div>
+      </Transition>
     </header>
 
     <!-- 메인 컨테이너 -->
@@ -256,6 +282,7 @@ const loginModalMessage = ref('')
 const activeTab = ref('feed')
 const isInCarrier = ref(false)
 const carrierLoading = ref(false)
+const showHeaderMenu = ref(false)
 
 const product = ref(null)
 const feeds = ref([])
@@ -513,6 +540,7 @@ const deleteProduct = async () => {
 
 const goBack = () => { router.go(-1) }
 
+
 onMounted(() => { fetchProductData() })
 
 watch(() => route.params.id, (newId, oldId) => {
@@ -531,20 +559,26 @@ watch(isLoggedIn, (val) => {
 .product-detail-view { min-height: 100vh; background: #fff; }
 
 /* ===== Header ===== */
-.header { background: #fff; border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 100; }
-.header-container { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; gap: 16px; }
-.back-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: none; background: transparent; color: #333; cursor: pointer; }
-.back-btn:hover { background: #f5f5f5; }
-.breadcrumb { flex: 1; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #aaa; }
-.breadcrumb a { color: #888; text-decoration: none; }
-.breadcrumb a:hover { color: #333; }
-.breadcrumb .sep { color: #ddd; }
-.breadcrumb .current { color: #333; font-weight: 500; }
-.header-actions { display: flex; gap: 6px; }
-.header-btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #e5e5e5; background: #fff; color: #333; transition: background 0.15s; }
-.header-btn:hover { background: #f5f5f5; }
-.header-btn.danger { color: #dc2626; border-color: #fecaca; }
-.header-btn.danger:hover { background: #fef2f2; }
+.detail-header { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #F2F4F6; padding: 0 12px; height: 52px; display: flex; align-items: center; gap: 4px; }
+.btn-back { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-radius: 10px; cursor: pointer; color: #191F28; transition: background 0.15s ease; flex-shrink: 0; }
+.btn-back:active { background: #F2F4F6; }
+.back-icon { width: 22px; height: 22px; }
+.header-title { flex: 1; font-size: 16px; font-weight: 700; color: #191F28; letter-spacing: -0.02em; margin: 0; padding-left: 4px; }
+.header-actions { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+.hdr-action-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-radius: 10px; cursor: pointer; color: #4E5968; transition: all 0.15s ease; }
+.hdr-action-btn:active { background: #F2F4F6; }
+.hdr-action-icon { width: 20px; height: 20px; }
+.menu-overlay { position: fixed; inset: 0; z-index: 200; }
+.menu-dropdown { position: absolute; top: 48px; right: 12px; background: #fff; border-radius: 12px; border: 1px solid #F2F4F6; box-shadow: 0 4px 24px rgba(0,0,0,0.08); min-width: 160px; padding: 4px; overflow: hidden; }
+.menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; color: #191F28; cursor: pointer; transition: background 0.15s ease; text-align: left; }
+.menu-item:active { background: #F2F4F6; }
+.menu-item--danger { color: #E53935; }
+.menu-item--danger:active { background: #FFF5F5; }
+.menu-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.menu-divider { height: 1px; background: #F2F4F6; margin: 4px 0; }
+.menu-enter-active { transition: opacity 0.15s ease; }
+.menu-leave-active { transition: opacity 0.1s ease; }
+.menu-enter-from, .menu-leave-to { opacity: 0; }
 
 /* ===== Main ===== */
 .main-container { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
@@ -667,8 +701,7 @@ watch(isLoggedIn, (val) => {
 
 @media (max-width: 768px) {
   .main-container { padding: 16px; }
-  .header-container { padding: 0 16px; }
-  .breadcrumb { display: none; }
+  .detail-header { padding: 0 8px; }
   .sidebar-sticky { flex-direction: column; }
   .product-image-wrap { width: 100%; }
   .product-desc, .info-table, .tags { display: block; }
