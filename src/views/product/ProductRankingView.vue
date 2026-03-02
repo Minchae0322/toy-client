@@ -264,7 +264,7 @@ const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache(
 const { isLoggedIn } = useAuth()
 
 // ==================== 상수 ====================
-const BUBBLE_LIMIT = 30
+const bubbleLimit = computed(() => dims.value.w < 600 ? 10 : 30)
 const PAGE_SIZE = 20
 
 // ==================== 유틸 함수 ====================
@@ -383,7 +383,7 @@ const filtered = computed(() => {
   return list.sort((a, b) => getPopularityScore(b) - getPopularityScore(a))
 })
 
-const bubbleProducts = computed(() => filtered.value.slice(0, BUBBLE_LIMIT))
+const bubbleProducts = computed(() => filtered.value.slice(0, bubbleLimit.value))
 const maxScore = computed(() => getPopularityScore(filtered.value[0]) || 1)
 
 const radiusBounds = computed(() =>

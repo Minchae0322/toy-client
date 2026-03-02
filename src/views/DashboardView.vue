@@ -446,7 +446,7 @@ const summaryLoading = ref(true)
 
 
 // ==================== 버블 차트 관련 ====================
-const DASH_BUBBLE_LIMIT = 20
+const dashBubbleLimit = computed(() => bubbleDims.value.w < 600 ? 10 : 20)
 
 const bubbleContainerRef = ref(null)
 const bubbleDims = ref({ w: 0, h: 0 })
@@ -519,7 +519,7 @@ function computeBubbleLayout(nodeList, W, H) {
 
 const dashBubbleProducts = computed(() => {
   const sorted = [...hotProducts.value].sort((a, b) => getProductPopularityScore(b) - getProductPopularityScore(a))
-  return sorted.slice(0, DASH_BUBBLE_LIMIT)
+  return sorted.slice(0, dashBubbleLimit.value)
 })
 
 const dashMaxScore = computed(() => getProductPopularityScore(dashBubbleProducts.value[0]) || 1)
