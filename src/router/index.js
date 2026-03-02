@@ -47,6 +47,7 @@ import NotFoundView from '@/views/NotFoundView.vue'
 
 // ⭐ Admin Views import
 import ProductAdminView from '@/views/product/ProductAdminView.vue'
+import BulkProductAdminView from '@/views/product/BulkProductAdminView.vue'
 
 const routes = [
   // ==================== 대시보드 (홈) ====================
@@ -209,6 +210,16 @@ const routes = [
       requiresAuth: true,
       requiresAdmin: true,
       title: '카테고리 관리'
+    }
+  },
+  {
+    path: '/admin/bulk-product',
+    name: 'AdminBulkProduct',
+    component: BulkProductAdminView,
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: '벌크 제품 등록'
     }
   },
   // 추후 확장용
@@ -490,6 +501,10 @@ export const adminNavigation = {
 
   toStatistics() {
     return router.push({ name: 'AdminStatistics' })
+  },
+
+  toBulkProduct() {
+    return router.push({ name: 'AdminBulkProduct' })
   },
 
   isAdminPage() {

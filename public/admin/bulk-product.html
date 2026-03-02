@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>요거트 - 벌크 제품 등록</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans-serif;background:#f5f6fa;color:#222;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:1400px;margin:0 auto;padding:20px 24px}
+
+h1{text-align:center;margin:8px 0 20px;font-size:22px;color:#333;font-weight:700}
+h1 span{color:#e74c3c}
+
+.card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.card h2{font-size:15px;color:#333;margin-bottom:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.card-desc{font-size:12px;color:#888;margin-bottom:10px}
+
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.row>div{flex:1;min-width:200px}
+label{font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500}
+input[type=text],input[type=number],input[type=password]{width:100%;padding:8px 12px;background:#fff;border:1px solid #d0d5dd;border-radius:8px;color:#333;font-size:13px;transition:border .2s}
+input[type=text]:focus,input[type=number]:focus,input[type=password]:focus{border-color:#4a7cff;outline:none;box-shadow:0 0 0 3px rgba(74,124,255,.1)}
+
+.btn{padding:8px 18px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.btn-primary{background:#4a7cff;color:#fff}.btn-primary:hover{background:#3a6ae8}
+.btn-danger{background:#e74c3c;color:#fff}.btn-danger:hover{background:#d63031}
+.btn-secondary{background:#f0f1f3;color:#555;border:1px solid #d0d5dd}.btn-secondary:hover{background:#e4e6e9}
+.btn-success{background:#27ae60;color:#fff}.btn-success:hover{background:#219a52}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Stats */
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px}
+.stat{background:#f8f9fb;border:1px solid #e8e8e8;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;flex:1}
+.stat .n{font-size:26px;font-weight:800;color:#4a7cff}.stat .l{font-size:11px;color:#999;margin-top:2px}
+.stat.s-match .n{color:#27ae60}
+.stat.s-fail .n{color:#e74c3c}
+.stat.s-done .n{color:#f39c12}
+
+.prog{width:100%;height:8px;background:#eee;border-radius:4px;overflow:hidden;margin:8px 0}
+.prog-fill{height:100%;background:linear-gradient(90deg,#4a7cff,#27ae60);transition:width .3s;border-radius:4px}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:2px solid #e8e8e8;margin-bottom:0}
+.tab{padding:10px 20px;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;font-size:14px;color:#999;font-weight:600;transition:all .15s}
+.tab:hover{color:#555}
+.tab.on{color:#4a7cff;border-bottom-color:#4a7cff}
+
+.panel{display:none}.panel.on{display:block}
+.panel.card{border-top-left-radius:0;border-top-right-radius:0;border-top:none;margin-top:0}
+
+/* File upload drop zone */
+.drop-zone{border:2px dashed #d0d5dd;border-radius:10px;padding:24px;text-align:center;transition:all .2s;cursor:pointer;background:#fafbfc}
+.drop-zone:hover,.drop-zone.over{border-color:#4a7cff;background:#f0f4ff}
+.drop-zone p{color:#888;font-size:13px;margin-top:6px}
+.drop-zone .drop-icon{font-size:32px;opacity:.6}
+
+/* File grid */
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;max-height:360px;overflow-y:auto;padding:4px 0}
+.file-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8f9fb;border:1px solid #eee;border-radius:8px;font-size:12px;transition:background .15s}
+.file-item:hover{background:#f0f1f3}
+.file-item img{width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid #e8e8e8;flex-shrink:0}
+.file-item .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#333}
+.file-item.matched{border-left:3px solid #27ae60}
+.file-item.unmatched{border-left:3px solid #e74c3c}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:-.2px}
+.b-wait{background:#f0f1f3;color:#999}
+.b-ok{background:#e8f8ee;color:#27ae60}
+.b-err{background:#fde8e8;color:#e74c3c}
+
+/* Log */
+.log{background:#f8f9fb;border:1px solid #e8e8e8;border-radius:8px;padding:12px;max-height:300px;overflow-y:auto;font-family:'JetBrains Mono','Fira Code',monospace;font-size:11px;line-height:1.7}
+.log:empty::before{content:'업로드 로그가 여기에 표시됩니다...';color:#ccc;font-style:italic}
+.log .ok{color:#27ae60}.log .err{color:#e74c3c}.log .info{color:#4a7cff}.log .warn{color:#f39c12}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f8f9fb;color:#666;padding:10px 8px;text-align:left;position:sticky;top:0;z-index:5;font-weight:600;border-bottom:2px solid #e8e8e8}
+td{padding:8px;border-bottom:1px solid #f0f0f0;color:#444}
+tr:hover td{background:#f8f9fb}
+.tbl-wrap{max-height:400px;overflow-y:auto;border:1px solid #e8e8e8;border-radius:8px}
+
+/* SQL area */
+#sqlArea{width:100%;min-height:250px;font-family:'JetBrains Mono','Fira Code',monospace;font-size:11px;background:#1e1e2e;color:#a6e3a1;border:1px solid #e8e8e8;border-radius:8px;padding:14px;resize:vertical}
+
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mb8{margin-bottom:8px}
+.gap8{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.gap12{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+/* Excel upload */
+.excel-upload{display:flex;gap:10px;align-items:center}
+.excel-upload input[type=file]{flex:1}
+input[type=file]{font-size:12px;color:#666}
+input[type=file]::file-selector-button{padding:6px 14px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;color:#444;font-size:12px;font-weight:600;cursor:pointer;margin-right:8px;transition:background .15s}
+input[type=file]::file-selector-button:hover{background:#f0f1f3}
+
+/* Checkbox */
+input[type=checkbox]{accent-color:#4a7cff;width:14px;height:14px;margin-right:4px;vertical-align:middle}
+
+/* Section divider */
+.section-title{font-size:13px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>벌크 제품 등록</h1>
+
+<!-- API 설정 (접힌 상태 기본) -->
+<details class="card">
+<summary style="cursor:pointer;font-size:14px;font-weight:700;color:#333;list-style:none;display:flex;align-items:center;gap:6px">
+  <span style="transition:transform .2s;display:inline-block" class="chevron">&#9654;</span> API 설정
+</summary>
+<div style="margin-top:14px">
+<div class="row">
+<div><label>Base URL (비워두면 프록시)</label><input type="text" id="cfgBase" value="" placeholder="https://..."></div>
+<div><label>Bearer Token (자동 로드)</label><input type="password" id="cfgToken" placeholder="로그인 시 자동 로드됩니다"></div>
+<div><label>Creator ID</label><input type="number" id="cfgCreator" value="7"></div>
+<div style="flex:0"><label>&nbsp;</label><button class="btn btn-secondary" onclick="testAuth()">연결 테스트</button></div>
+</div>
+</div>
+</details>
+
+<!-- 제품 데이터 로드 -->
+<div class="card">
+<h2>제품 데이터</h2>
+<p class="card-desc">엑셀(.xlsx, .xls) 또는 CSV 파일을 업로드하세요. 컬럼: no, name, name_en, brand, price, category, category_id</p>
+<div class="excel-upload mb8">
+<input type="file" id="excelInput" accept=".xlsx,.xls,.csv">
+<button class="btn btn-secondary" onclick="clearProducts()">초기화</button>
+</div>
+<div id="excelStatus" style="font-size:13px"></div>
+<div id="excelPreview" class="tbl-wrap" style="max-height:200px;display:none;margin-top:10px">
+<table><thead><tr>
+<th>No</th><th>제품명</th><th>브랜드</th><th>가격</th><th>카테고리</th><th>카테고리ID</th><th>출시일</th><th>설명</th>
+</tr></thead><tbody id="excelBody"></tbody></table>
+</div>
+</div>
+
+<!-- 통계 -->
+<div class="card">
+<div class="stats">
+<div class="stat"><div class="n" id="sTotal">0</div><div class="l">전체 제품</div></div>
+<div class="stat"><div class="n" id="sFile">0</div><div class="l">파일 선택</div></div>
+<div class="stat s-match"><div class="n" id="sMatch">0</div><div class="l">매칭 성공</div></div>
+<div class="stat s-done"><div class="n" id="sUploaded">0</div><div class="l">업로드 완료</div></div>
+<div class="stat s-fail"><div class="n" id="sFailed">0</div><div class="l">실패</div></div>
+</div>
+<div class="prog"><div class="prog-fill" id="progBar" style="width:0%"></div></div>
+<div id="progTxt" style="text-align:center;font-size:12px;color:#999"></div>
+</div>
+
+<!-- 탭 -->
+<div class="tabs">
+<div class="tab on" onclick="openTab(0)">이미지 업로드</div>
+<div class="tab" onclick="openTab(1)">업로드 결과</div>
+<div class="tab" onclick="openTab(2)">SQL 생성</div>
+</div>
+
+<!-- 탭1: 파일 업로드 -->
+<div class="panel on card" id="p0">
+<div id="dropZone" class="drop-zone mb8">
+  <div class="drop-icon">📁</div>
+  <p>이미지를 드래그하거나 클릭하여 선택하세요</p>
+  <p style="font-size:11px;color:#aaa">파일명이 제품명과 일치하면 자동 매칭됩니다</p>
+  <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
+</div>
+
+<div class="gap8 mb8" id="fileActions" style="display:none">
+  <button class="btn btn-secondary" onclick="matchFiles()">재매칭</button>
+  <button class="btn btn-primary" id="btnUpload" onclick="startUpload()" disabled>벌크 업로드 시작</button>
+  <button class="btn btn-secondary" onclick="stopUpload()">중지</button>
+  <span id="uploadSpeed" style="font-size:12px;color:#999"></span>
+</div>
+
+<div id="fileGrid" class="file-grid"></div>
+<div class="log mt12" id="uploadLog"></div>
+</div>
+
+<!-- 탭2: 업로드 결과 -->
+<div class="panel card" id="p1">
+<div class="gap8 mb8">
+<button class="btn btn-primary" onclick="renderResultTable()">새로고침</button>
+<button class="btn btn-secondary" onclick="exportResultCSV()">CSV 내보내기</button>
+</div>
+<div class="tbl-wrap">
+<table><thead><tr>
+<th>No</th><th>제품명</th><th>파일ID</th><th>fileUrl</th><th>파일명</th><th>크기</th><th>상태</th>
+</tr></thead><tbody id="resultBody"></tbody></table>
+</div>
+</div>
+
+<!-- 탭3: SQL -->
+<div class="panel card" id="p2">
+<div class="gap12 mb8">
+<label style="margin:0;display:flex;align-items:center;gap:4px">product_id 시작 <input type="number" id="startProductId" value="100" style="width:80px"></label>
+<label style="margin:0;display:flex;align-items:center;gap:4px">attachment id 시작 <input type="number" id="startAttachId" value="100" style="width:80px"></label>
+<button class="btn btn-success" onclick="genSQL()">SQL 생성</button>
+<button class="btn btn-secondary" onclick="copySQL()">복사</button>
+<button class="btn btn-secondary" onclick="dlSQL()">다운로드</button>
+</div>
+<div class="gap12 mb8" style="font-size:13px;color:#666">
+<label><input type="checkbox" id="chkCat" checked> 카테고리 INSERT</label>
+<label><input type="checkbox" id="chkProduct" checked> 제품 INSERT</label>
+<label><input type="checkbox" id="chkAttach" checked> 첨부파일 INSERT (업로드된 것만)</label>
+</div>
+<textarea id="sqlArea" readonly></textarea>
+</div>
+
+</div>
+
+<script>
+let PRODUCTS = [];
+
+// ============ 카테고리 DB (depth=1 서브카테고리) ============
+// [id, name, keywords, parentId]
+const CATEGORIES = [
+  // 패션(1)
+  [101,'상의','상의,티셔츠,셔츠,맨투맨,후드',1],[102,'하의','하의,바지,청바지,슬랙스',1],
+  [103,'아우터','아우터,자켓,코트,패딩',1],[104,'원피스/스커트','원피스,스커트,치마',1],
+  [105,'언더웨어/잠옷','속옷,잠옷,양말',1],[106,'스트릿/캐주얼','스트릿,캐주얼',1],
+  [107,'럭셔리/명품','명품,럭셔리,구찌,샤넬',1],[108,'빈티지/리셀','빈티지,리셀,중고',1],
+  [109,'정장/포멀','정장,포멀,수트',1],
+  // 신발(2)
+  [201,'운동화/스니커즈','운동화,스니커즈,나이키,아디다스',2],[202,'구두/로퍼','구두,로퍼',2],
+  [203,'샌들/슬리퍼','샌들,슬리퍼',2],[204,'부츠','부츠',2],
+  [205,'한정판/콜라보','한정판,콜라보,드로우',2],[206,'리셀/드로우','리셀,드로우',2],
+  // 가방/잡화(3)
+  [301,'백팩','백팩,가방',3],[302,'크로스백/숄더백','크로스백,숄더백',3],
+  [303,'토트백/에코백','토트백,에코백',3],[304,'지갑/카드지갑','지갑,카드지갑',3],
+  [305,'캐리어/여행가방','캐리어,여행가방',3],[306,'모자/선글라스','모자,선글라스,캡',3],
+  [307,'기타 액세서리','액세서리,벨트,스카프',3],
+  // 뷰티(4)
+  [401,'스킨케어','스킨케어,로션,크림,세럼',4],[402,'메이크업','메이크업,립스틱,파운데이션',4],
+  [403,'헤어케어','헤어,샴푸,린스,트리트먼트',4],[404,'바디케어','바디,로션,핸드크림',4],
+  [405,'향수/디퓨저','향수,디퓨저,퍼퓸',4],[406,'네일','네일,매니큐어',4],
+  [407,'남성 그루밍','그루밍,면도기,쉐이빙',4],[408,'뷰티디바이스','뷰티디바이스',4],
+  // 디지털/가전(5)
+  [501,'스마트폰','스마트폰,아이폰,갤럭시,폰',5],[502,'노트북/PC','노트북,PC,컴퓨터,그램,맥북',5],
+  [503,'태블릿','태블릿,아이패드,갤럭시탭',5],[504,'모니터/디스플레이','모니터,디스플레이',5],
+  [505,'이어폰/헤드폰','이어폰,헤드폰,에어팟,버즈',5],[506,'스피커/음향','스피커,음향,사운드바',5],
+  [507,'카메라/영상장비','카메라,캠코더',5],[508,'TV/프로젝터','TV,프로젝터,스탠바이미',5],
+  [509,'키보드/마우스/주변기기','키보드,마우스,허브,주변기기',5],
+  [510,'웨어러블/스마트워치','스마트워치,워치,웨어러블',5],
+  [511,'AI/스마트기기','AI,스마트,로봇청소기',5],
+  [512,'생활가전/주방가전','생활가전,주방가전,에어컨,냉장고,세탁기,식기세척기,공기청정기,청소기',5],
+  // 가구/인테리어(6)
+  [601,'가구','가구,책상,의자,소파',6],[602,'침구/매트리스','침구,매트리스,이불',6],
+  [603,'조명','조명,스탠드,전구',6],[604,'홈데코/소품','홈데코,소품,인테리어',6],
+  [605,'셀프인테리어/DIY','셀프인테리어,DIY',6],[606,'수납/정리','수납,정리,선반',6],
+  // 식품/음료(7)
+  [701,'간식/디저트','간식,디저트,과자,스낵,초콜릿,젤리,캔디',7],
+  [702,'음료/커피/차','음료,커피,차,아메리카노,라떼,녹차',7],
+  [703,'밀키트/간편식','밀키트,간편식,즉석,레토르트',7],
+  [704,'건강식품','건강식품,프로틴,단백질',7],[705,'주류','주류,술,소주,맥주,와인,하이볼',7],
+  [706,'신선/가공식품','신선,가공식품,고기,생선',7],
+  [10000,'캔디/젤리/초콜릿','캔디,젤리,초콜릿,가나,페레로,M&M,킨더',7],
+  [10001,'인스턴트 식품','인스턴트,즉석식품',7],
+  [10002,'과자/스낵','과자,스낵,칩,새우깡,포테토칩,쿠키,크래커,프링글스',7],
+  [10003,'아이스크림/빙과','아이스크림,빙과,메로나,투게더,하겐다즈,바,콘',7],
+  [10004,'디저트/빵','빵,디저트,케이크,마카롱,약과,타르트,에그타르트,소금빵,크로와상,도넛,와플',7],
+  [10005,'커피','커피,아메리카노,라떼,카페,콜드브루,캔커피,스타벅스',7],
+  [10006,'탄산음료','탄산,콜라,사이다,스프라이트,펩시,환타,밀키스,웰치스',7],
+  [10007,'주스','주스,오렌지주스,포도주스,토마토주스,자몽주스,스무디',7],
+  [10008,'건강/에너지음료','비타500,에너지,핫식스,레드불,몬스터,이온,게토레이,파워에이드,박카스',7],
+  [10009,'차','녹차,보리차,옥수수차,아이스티,밀크티,타로,콤부차,레몬차,유자차',7],
+  [10010,'생수','생수,물,삼다수,아이시스,백산수,에비앙',7],
+  [10011,'우유','우유,바나나맛우유,딸기우유,초코우유,흰우유,두유',7],
+  [10012,'유제품','요거트,요플레,치즈,야쿠르트,요구르트,크림치즈',7],
+  [10013,'삼각김밥','삼각김밥,주먹밥,오니기리',7],
+  [10014,'도시락','도시락,편의점도시락,컵밥,한끼,한상,혜자',7],
+  [10015,'샌드위치','샌드위치,토스트,클럽샌드위치,에그샌드',7],
+  [10016,'간편식','간편식,핫바,떡볶이,핫도그,만두,닭강정,치킨,양념치킨,스파게티,김치볶음밥,볶음밥',7],
+  [10017,'컵라면','컵라면,사발면,큰컵,컵누들,컵',7],
+  [10018,'봉지라면','봉지라면,라면,5개입,멀티팩',7],
+  [10019,'냉동식품','냉동식품,냉동만두,냉동피자,냉동김밥,냉동',7],
+  [10020,'즉석식품','즉석식품,햇반,3분카레,컵반,즉석밥',7],
+  [10021,'김/반찬','김,반찬,참치캔,스팸,김치,장아찌,젓갈',7],
+  [10022,'소스/조미료','소스,조미료,케첩,마요네즈,참기름,간장,고추장',7],
+  [10023,'과일','과일,바나나,사과,컵과일,귤,딸기,포도',7],
+  [10024,'맥주','맥주,카스,테라,하이네켄,클라우드,칭따오,필스너',7],
+  [10025,'소주','소주,참이슬,처음처럼,새로,진로,좋은데이',7],
+  [10026,'와인','와인,레드와인,화이트와인,로제,스파클링',7],
+  [10027,'막걸리','막걸리,생막걸리,탁주,느린마을',7],
+  [10028,'하이볼/RTD','하이볼,RTD,캔하이볼,레몬하이볼,곰표',7],
+  [10029,'초콜릿','초콜릿,가나,페레로로쉐,킨더,허쉬,리세스',7],
+  // 생활용품(8)
+  [801,'생활잡화','생활잡화,우산,보조배터리,충전기,포켓티슈,티슈',8],
+  [802,'욕실/위생용품','욕실,위생용품,치약,칫솔,샤워',8],
+  [803,'주방용품','주방용품,접시,컵,수저',8],[804,'세제/세정','세제,세정,세탁',8],
+  [805,'문구/오피스','문구,오피스,펜,노트',8],
+  // 스포츠/레저(9)
+  [901,'헬스/요가','헬스,요가,피트니스',9],[902,'골프','골프,골프채,골프공',9],
+  [903,'등산/아웃도어','등산,아웃도어,트레킹',9],[904,'캠핑','캠핑,텐트,랜턴',9],
+  [905,'자전거','자전거,사이클',9],[906,'수상스포츠','수상,서핑,수영',9],
+  [907,'구기종목','축구,야구,농구,배구',9],[908,'스키/보드','스키,보드,스노우',9],
+  [909,'스포츠웨어','스포츠웨어,운동복',9],
+  // 자동차/모빌리티(10)
+  [1001,'신차/전기차','신차,전기차,자동차',10],[1002,'차량용품/튜닝','차량용품,튜닝,블랙박스',10],
+  [1003,'오토바이','오토바이,바이크',10],[1004,'전동킥보드/퍼스널모빌리티','전동킥보드,킥보드',10],
+  // 도서(11)
+  [1101,'소설/에세이','소설,에세이',11],[1102,'자기계발/경영','자기계발,경영',11],
+  [1103,'IT/과학','IT,과학,프로그래밍',11],[1104,'만화/라이트노벨','만화,라이트노벨',11],
+  [1105,'eBook/오디오북','eBook,오디오북,전자책',11],
+  // 완구/취미(12)
+  [1201,'프라모델/피규어','프라모델,피규어,건담',12],[1202,'보드게임/퍼즐','보드게임,퍼즐',12],
+  [1203,'레고/블록','레고,블록',12],[1204,'악기','악기,기타,피아노',12],
+  [1205,'미술/공예','미술,공예,그림',12],[1206,'드론/RC','드론,RC,무선',12],
+  [1207,'카드/트레이딩','카드,트레이딩,포켓몬',12],
+  // 반려동물(13)
+  [1301,'강아지','강아지,개,사료,간식',13],[1302,'고양이','고양이,캣,츄르',13],
+  [1303,'소동물/어류','소동물,어류,햄스터',13],[1304,'반려용품','반려용품,펫',13],
+  // 건강/헬스(14)
+  [1401,'영양제/비타민','영양제,비타민,오메가3,프로바이오틱스',14],
+  [1402,'다이어트/체중관리','다이어트,체중관리',14],
+  [1403,'건강기기','건강기기,혈압계,체온계',14],[1404,'안마/마사지','안마,마사지,안마기',14],
+  // 유아동(15)
+  [1501,'유아동 의류/신발','유아,아동,의류',15],[1502,'유아용품','유아용품,젖병,기저귀',15],
+  [1503,'장난감/교구','장난감,교구',15],[1504,'출산/임부용품','출산,임부용품',15],
+  // 주얼리/시계(16)
+  [1601,'반지/귀걸이','반지,귀걸이',16],[1602,'목걸이/팔찌','목걸이,팔찌',16],
+  [1603,'시계','시계,워치',16],[1604,'커플링/웨딩','커플링,웨딩',16],
+  // 게임(17)
+  [1701,'FPS/슈터','FPS,슈터,배틀필드',17],[1702,'MOBA/AOS','MOBA,AOS,롤',17],
+  [1703,'전략/시뮬레이션','전략,시뮬레이션',17],[1704,'RPG/MMORPG','RPG,MMORPG',17],
+  [1705,'배틀로얄/서바이벌','배틀로얄,서바이벌',17],[1706,'스포츠/레이싱','스포츠게임,레이싱',17],
+  [1707,'캐주얼/퍼즐/리듬','캐주얼,퍼즐,리듬',17],[1708,'인디/로그라이크','인디,로그라이크',17],
+  [1709,'오픈월드/어드벤처','오픈월드,어드벤처',17],[1710,'게임기/주변기기','게임기,닌텐도,플스',17],
+  [1711,'e스포츠','e스포츠,프로게이머',17],[1712,'게임굿즈/스킨','게임굿즈,스킨',17],
+  // 앱/서비스(18)
+  [1801,'생산성/유틸리티','생산성,유틸리티',18],[1802,'SNS/커뮤니티','SNS,커뮤니티',18],
+  [1803,'배달/커머스','배달,커머스,쿠팡,배민',18],[1804,'구독서비스','구독,서비스',18],
+  [1805,'AI/테크서비스','AI,테크',18],[1806,'핀테크/금융앱','핀테크,금융앱,토스',18],
+  [1807,'데이팅','데이팅,소개팅',18],
+  // 영화/드라마(19)
+  [1901,'한국영화','한국영화',19],[1902,'해외영화','해외영화,할리우드',19],
+  [1903,'한국드라마','한국드라마',19],[1904,'해외시리즈','해외시리즈,미드',19],
+  [1905,'예능/리얼리티','예능,리얼리티',19],[1906,'OTT/스트리밍','OTT,넷플릭스,디즈니,웨이브',19],
+  [1907,'애니메이션','애니메이션,애니',19],
+  // 음악/공연(20)
+  [2001,'K-POP','K-POP,케이팝,아이돌',20],[2002,'해외음악','해외음악,팝,힙합',20],
+  [2003,'콘서트/페스티벌','콘서트,페스티벌',20],[2004,'뮤지컬/연극','뮤지컬,연극',20],
+  [2005,'전시/아트','전시,아트,미술관',20],
+  // 웹툰/웹소설(21)
+  [2101,'네이버웹툰','네이버웹툰',21],[2102,'카카오웹툰/페이지','카카오웹툰,카카오페이지',21],
+  [2103,'레진/기타플랫폼','레진,탑툰',21],[2104,'웹소설','웹소설,판타지,로맨스',21],
+  [2105,'일본만화/번역','일본만화,번역만화',21],
+  // 유튜브/숏폼(22)
+  [2201,'유튜브','유튜브,유튜버',22],[2202,'틱톡/릴스/숏츠','틱톡,릴스,숏츠',22],
+  [2203,'트위치/치지직','트위치,치지직,방송',22],[2204,'팟캐스트','팟캐스트,라디오',22],
+  // 교육/자기계발(23)
+  [2301,'온라인강의','온라인강의,인강',23],[2302,'어학/외국어','어학,외국어,영어',23],
+  [2303,'IT/코딩교육','코딩교육,프로그래밍',23],[2304,'자격증/취업','자격증,취업',23],
+  [2305,'독서/글쓰기','독서,글쓰기',23],
+  // 금융/재테크(24)
+  [2401,'주식/ETF','주식,ETF',24],[2402,'가상자산/코인','가상자산,코인,비트코인',24],
+  [2403,'부동산','부동산,아파트',24],[2404,'저축/보험','저축,보험,적금',24],
+  [2405,'카드/포인트','카드,포인트,혜택',24],
+  // 여행/숙박(25)
+  [2501,'국내여행','국내여행,제주,부산',25],[2502,'해외여행','해외여행,유럽,동남아',25],
+  [2503,'항공권','항공권,비행기',25],[2504,'숙박/호텔','숙박,호텔,에어비앤비',25],
+  [2505,'액티비티/투어','액티비티,투어',25],
+  // 맛집/카페(26)
+  [2601,'맛집','맛집,식당,레스토랑',26],[2602,'카페/디저트','카페,디저트카페',26],
+  [2603,'배달음식','배달음식,치킨,피자,족발',26],[2604,'편의점/신상','편의점,신상,CU,GS25,세븐일레븐,이마트24',26],
+  [2605,'팝업스토어','팝업스토어,팝업',26],
+  // 덕질/팬덤(27)
+  [2701,'아이돌/K-POP','아이돌,팬덤',27],[2702,'애니/만화','애니,만화',27],
+  [2703,'영화/드라마팬덤','영화팬덤,드라마팬덤',27],[2704,'굿즈/포카','굿즈,포카,포토카드',27],
+  [2705,'코스프레','코스프레',27],[2706,'팬아트/2차창작','팬아트,2차창작',27],
+  // 기타
+  [9999,'기타/미분류','기타,미분류',99],
+];
+
+// 카테고리 매칭용 맵 구축
+const _catNameMap = new Map();
+const _catKwMap = [];
+CATEGORIES.forEach(([id, name, kw]) => {
+  _catNameMap.set(name.toLowerCase(), id);
+  // 슬래시로 나뉜 이름도 각각 등록
+  name.split('/').forEach(n => _catNameMap.set(n.trim().toLowerCase(), id));
+  if (kw) {
+    kw.split(',').forEach(k => {
+      _catKwMap.push([k.trim().toLowerCase(), id, k.trim().length]);
+    });
+  }
+});
+// 긴 키워드 우선 매칭 (오매칭 방지)
+_catKwMap.sort((a, b) => b[2] - a[2]);
+
+function matchCategory(categoryText, productName) {
+  if (!categoryText && !productName) return 0;
+
+  // 1) 카테고리명 정확 매칭
+  if (categoryText) {
+    const ct = categoryText.toLowerCase().trim();
+    if (_catNameMap.has(ct)) return _catNameMap.get(ct);
+    // 부분 매칭 (카테고리명이 포함되어 있으면)
+    for (const [name, id] of _catNameMap) {
+      if (ct.includes(name) || name.includes(ct)) return id;
+    }
+  }
+
+  // 2) 제품명으로 키워드 매칭
+  const searchText = ((categoryText || '') + ' ' + (productName || '')).toLowerCase();
+  for (const [kw, id] of _catKwMap) {
+    if (searchText.includes(kw)) return id;
+  }
+
+  return 0;
+}
+
+let state = {
+  files: [],
+  results: {},
+  uploading: false,
+  aborted: false,
+};
+
+// details chevron 회전
+document.querySelectorAll('details').forEach(d => {
+  d.addEventListener('toggle', () => {
+    const ch = d.querySelector('.chevron');
+    if (ch) ch.style.transform = d.open ? 'rotate(90deg)' : '';
+  });
+});
+
+function openTab(i) {
+  document.querySelectorAll('.tab').forEach((t,idx) => t.classList.toggle('on', idx===i));
+  document.querySelectorAll('.panel').forEach((p,idx) => p.classList.toggle('on', idx===i));
+  if (i===1) renderResultTable();
+}
+
+async function testAuth() {
+  try {
+    const r = await apiFetch('/api/auth/files/presigned/upload?fileName=test.png&contentType=image/png');
+    if (r.presignedUrl) { log('info', '✅ API 연결 성공! presigned URL 발급 확인'); }
+    else { log('err', '❌ 응답에 presignedUrl 없음: ' + JSON.stringify(r)); }
+  } catch(e) { log('err', '❌ 연결 실패: ' + e.message); }
+}
+
+// 드래그앤드롭 + 클릭 파일 선택
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('over');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  if (!files || files.length === 0) return;
+  state.files = Array.from(files).map(f => ({ file: f, productNo: null, matched: false }));
+  document.getElementById('fileActions').style.display = 'flex';
+  matchFiles();
+}
+
+function parsePrice(val) {
+  if (val == null || val === '') return 0;
+  const s = String(val).replace(/,/g, '').trim();
+  // 범위: "1250000~1500000" or "1250000-1500000" → 최솟값
+  const rangeMatch = s.match(/^(\d+)\s*[~\-–—]\s*(\d+)$/);
+  if (rangeMatch) return parseInt(rangeMatch[1]);
+  const n = parseInt(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function norm(s) {
+  return s.normalize('NFC').toLowerCase().replace(/[\s_\-\(\)\[\]\.]/g, '').trim();
+}
+
+function stripParens(s) {
+  return s.replace(/\s*[\(\[][^\)\]]*[\)\]]\s*/g, '').trim();
+}
+
+function stripExt(s) {
+  return s.replace(/\.(jpg|jpeg|png|gif|webp|bmp|svg|tiff|avif)$/i, '').trim();
+}
+
+const _nameMap = new Map();
+const _normMap = new Map();
+const _filenameMap = new Map();
+
+function rebuildMaps() {
+  _nameMap.clear();
+  _normMap.clear();
+  _filenameMap.clear();
+  PRODUCTS.forEach(p => {
+    const name = p.name.normalize('NFC');
+    _nameMap.set(name.toLowerCase(), p);
+    _normMap.set(norm(name), p);
+    if (p.filename) {
+      const fn = stripExt(p.filename).normalize('NFC');
+      _filenameMap.set(fn.toLowerCase(), p);
+      _filenameMap.set(norm(fn), p);
+    }
+  });
+}
+
+// 엑셀 파일 파싱
+document.getElementById('excelInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const wb = XLSX.read(evt.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws);
+      if (rows.length === 0) { alert('데이터가 없습니다'); return; }
+
+      // 컬럼명 자동 탐색 (엑셀 컬럼명이 다양할 수 있으므로)
+      const keys = Object.keys(rows[0]);
+      function findCol(...candidates) {
+        // 정확 매칭
+        for (const c of candidates) {
+          if (keys.includes(c)) return c;
+        }
+        // 부분 매칭 (컬럼명에 키워드 포함)
+        for (const c of candidates) {
+          const found = keys.find(k => k.toLowerCase().includes(c.toLowerCase()));
+          if (found) return found;
+        }
+        return null;
+      }
+      const col = {
+        no: findCol('no', 'No', 'NO', '번호'),
+        name: findCol('name', '제품명', '이름', '상품명', '품명'),
+        nameEn: findCol('name_en', 'Name_EN', '영문명', '영문'),
+        brand: findCol('brand', 'Brand', '브랜드', '제조사', '업체'),
+        price: findCol('price', 'Price', '가격', '판매가', '정가', '단가', '소비자가', '최저가'),
+        priceMax: findCol('최고가', 'price_max', 'PriceMax', 'max_price'),
+        category: findCol('category', 'Category', '카테고리', '분류'),
+        categoryId: findCol('category_id', 'Category_ID', '카테고리ID', '카테고리_id', '분류ID'),
+        description: findCol('description', 'Description', '설명', '상세설명', '제품설명'),
+        releaseDate: findCol('release_date', 'ReleaseDate', '출시일', '출시', '발매일'),
+        filename: findCol('filename', 'Filename', '파일명'),
+      };
+
+      console.log('엑셀 컬럼 매핑:', col, '| 원본 컬럼:', keys);
+
+      PRODUCTS = rows.map((r, i) => {
+        const name = String(r[col.name] || '').trim();
+        const category = String(r[col.category] || '').trim();
+        let category_id = parseInt(r[col.categoryId] || 0);
+        if (!category_id) {
+          category_id = matchCategory(category, name);
+        }
+        // 가격: 최저가, 최고가 둘 다 파싱
+        let price = parsePrice(r[col.price]);
+        let priceMax = col.priceMax ? parsePrice(r[col.priceMax]) : 0;
+        if (!price && priceMax) price = priceMax;
+        // 출시일 파싱
+        let releaseDate = '';
+        if (col.releaseDate && r[col.releaseDate]) {
+          const rd = r[col.releaseDate];
+          if (typeof rd === 'number') {
+            // 엑셀 날짜 시리얼 → JS Date
+            const d = new Date((rd - 25569) * 86400000);
+            releaseDate = d.toISOString().substring(0, 10);
+          } else {
+            releaseDate = String(rd).trim().substring(0, 10);
+          }
+        }
+        return {
+          no: parseInt(r[col.no] ?? (i + 1)),
+          name,
+          name_en: String(r[col.nameEn] || '').trim(),
+          brand: String(r[col.brand] || '').trim(),
+          price,
+          priceMax,
+          description: String(r[col.description] || '').trim(),
+          releaseDate,
+          category,
+          category_id,
+          filename: String(r[col.filename] || r[col.name] || '').trim()
+        };
+      }).filter(p => p.name);
+
+      // 미매칭 카테고리 → 새 카테고리 자동 생성
+      let nextNewCatId = Math.max(...CATEGORIES.map(([id]) => id)) + 1;
+      const newCatMap = new Map(); // categoryText → newId
+      for (const p of PRODUCTS) {
+        if (p.category_id > 0 || !p.category) continue;
+        const catKey = p.category.trim().toLowerCase();
+        if (newCatMap.has(catKey)) {
+          p.category_id = newCatMap.get(catKey);
+        } else {
+          const newId = nextNewCatId++;
+          newCatMap.set(catKey, newId);
+          p.category_id = newId;
+          // 상위 카테고리 추정 (카테고리명 키워드로)
+          let parentId = 99;
+          for (const [id, name, kw, pid] of CATEGORIES) {
+            if (pid && kw) {
+              const kws = kw.split(',').map(k => k.trim().toLowerCase());
+              if (kws.some(k => catKey.includes(k) || k.includes(catKey))) {
+                parentId = pid;
+                break;
+              }
+            }
+          }
+          CATEGORIES.push([newId, p.category.trim(), p.category.trim(), parentId]);
+        }
+      }
+      if (newCatMap.size > 0) {
+        // 새 카테고리 이름맵에도 추가
+        for (const [catKey, id] of newCatMap) {
+          _catNameMap.set(catKey, id);
+        }
+        console.log(`새 카테고리 ${newCatMap.size}개 자동 생성:`, [...newCatMap.entries()]);
+      }
+
+      // 카테고리 매칭 통계
+      const catMatched = PRODUCTS.filter(p => p.category_id > 0).length;
+      const catUnmatched = PRODUCTS.length - catMatched;
+      console.log(`카테고리 매칭: ${catMatched}/${PRODUCTS.length} (미매칭: ${catUnmatched})`);
+
+      rebuildMaps();
+      document.getElementById('sTotal').textContent = PRODUCTS.length;
+
+      // 매핑 안 된 컬럼 경고 (선택적 컬럼은 제외)
+      const optionalCols = new Set(['categoryId', 'filename', 'nameEn', 'priceMax', 'description', 'releaseDate']);
+      const unmapped = Object.entries(col).filter(([k,v]) => !v && !optionalCols.has(k)).map(([k]) => k);
+      const warnHtml = unmapped.length > 0
+        ? ` <span style="color:#f39c12">⚠ 미매핑 컬럼: ${unmapped.join(', ')}</span>` : '';
+      const catInfo = ` | 카테고리 매칭: <b>${catMatched}</b>/${PRODUCTS.length}`;
+      const catWarn = catUnmatched > 0 ? ` <span style="color:#f39c12">(미매칭 ${catUnmatched}개)</span>` : '';
+      document.getElementById('excelStatus').innerHTML =
+        `<span style="color:#27ae60;font-weight:600">✅ ${PRODUCTS.length}개 제품 로드 완료</span> <span style="color:#999">(시트: ${wb.SheetNames[0]})</span>${catInfo}${catWarn}${warnHtml}`;
+
+      const preview = document.getElementById('excelPreview');
+      const tbody = document.getElementById('excelBody');
+      preview.style.display = 'block';
+      const catLookup = Object.fromEntries(CATEGORIES.map(([id, name]) => [id, name]));
+      const unmatchedCat = PRODUCTS.filter(p => !p.category_id);
+      const previewList = unmatchedCat.length > 0
+        ? [...unmatchedCat, ...PRODUCTS.filter(p => p.category_id > 0).slice(0, 10 - unmatchedCat.length)]
+        : PRODUCTS.slice(0, 10);
+      tbody.innerHTML = previewList.map(p => {
+        const catName = catLookup[p.category_id] || '-';
+        const catStyle = p.category_id > 0 ? 'color:#27ae60' : 'color:#e74c3c;background:#fff5f5';
+        const desc = p.description ? (p.description.length > 30 ? p.description.substring(0, 30) + '...' : p.description) : '-';
+        const priceDisplay = (p.priceMax && p.priceMax > 0 && p.priceMax !== p.price)
+          ? `${p.price.toLocaleString()}~${p.priceMax.toLocaleString()}`
+          : p.price.toLocaleString();
+        const catLabel = p.category_id > 0 ? `${p.category_id} (${catName})` : '⚠ 미매칭';
+        return `<tr><td>${p.no}</td><td>${p.name}</td><td>${p.brand}</td><td>${priceDisplay}</td><td>${p.category}</td><td style="${catStyle};font-weight:600">${catLabel}</td><td>${p.releaseDate || '-'}</td><td title="${p.description}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${desc}</td></tr>`;
+      }).join('') + (PRODUCTS.length > previewList.length ? `<tr><td colspan="8" style="text-align:center;color:#999;padding:10px">... 외 ${PRODUCTS.length - previewList.length}개</td></tr>` : '');
+
+      if (state.files.length > 0) matchFiles();
+    } catch(err) {
+      document.getElementById('excelStatus').innerHTML =
+        `<span style="color:#e74c3c;font-weight:600">❌ 파싱 실패: ${err.message}</span>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function clearProducts() {
+  PRODUCTS = [];
+  rebuildMaps();
+  document.getElementById('sTotal').textContent = '0';
+  document.getElementById('excelStatus').innerHTML = '';
+  document.getElementById('excelPreview').style.display = 'none';
+  document.getElementById('excelInput').value = '';
+}
+
+function matchFiles() {
+  let matched = 0;
+  const usedNos = new Set();
+
+  function prep(item) {
+    const raw = stripExt(item.file.name).normalize('NFC').trim();
+    return {
+      raw,
+      fname: raw.toLowerCase(),
+      fnorm: norm(raw),
+      fstripped: stripParens(raw).toLowerCase(),
+      fstrippedNorm: norm(stripParens(raw))
+    };
+  }
+
+  // Pass 1: 정확 매칭 (정확/정규화/괄호제거)
+  for (const item of state.files) {
+    const { fname, fnorm, fstripped, fstrippedNorm } = prep(item);
+    let best = null;
+
+    if (_nameMap.has(fname) && !usedNos.has(_nameMap.get(fname).no)) {
+      best = _nameMap.get(fname);
+    }
+    if (!best && _filenameMap.has(fname) && !usedNos.has(_filenameMap.get(fname).no)) {
+      best = _filenameMap.get(fname);
+    }
+    if (!best && _normMap.has(fnorm)) {
+      const p = _normMap.get(fnorm);
+      if (!usedNos.has(p.no)) best = p;
+    }
+    if (!best && _filenameMap.has(fnorm) && !usedNos.has(_filenameMap.get(fnorm).no)) {
+      best = _filenameMap.get(fnorm);
+    }
+    if (!best && _nameMap.has(fstripped) && !usedNos.has(_nameMap.get(fstripped).no)) {
+      best = _nameMap.get(fstripped);
+    }
+    if (!best && _normMap.has(fstrippedNorm)) {
+      const p = _normMap.get(fstrippedNorm);
+      if (!usedNos.has(p.no)) best = p;
+    }
+
+    item.productNo = best ? best.no : null;
+    item.matched = !!best;
+    if (best) { matched++; usedNos.add(best.no); }
+  }
+
+  // Pass 2: 퍼지 매칭 (미매칭만)
+  for (const item of state.files) {
+    if (item.matched) continue;
+    const { raw, fname, fnorm, fstripped } = prep(item);
+    let best = null, bestScore = 0;
+
+    const numMatch = raw.match(/^(?:No\.?|#)?\s*(\d+)[\s_\-\.]/i);
+    if (numMatch) {
+      const no = parseInt(numMatch[1]);
+      const p = PRODUCTS.find(x => x.no === no);
+      if (p && !usedNos.has(p.no)) { best = p; bestScore = 8000; }
+    }
+
+    if (!best) {
+      for (const p of PRODUCTS) {
+        if (usedNos.has(p.no)) continue;
+        const pn = p.name.normalize('NFC').toLowerCase();
+        const pnorm = norm(p.name);
+        if (fname.includes(pn) || pn.includes(fname) || fnorm.includes(pnorm) || pnorm.includes(fnorm)) {
+          const score = Math.min(fname.length, pn.length) * 2;
+          if (score > bestScore) { bestScore = score; best = p; }
+        }
+        if (!best && (fstripped.includes(pn) || pn.includes(fstripped))) {
+          const score = Math.min(fstripped.length, pn.length) * 2;
+          if (score > bestScore) { bestScore = score; best = p; }
+        }
+      }
+    }
+
+    if (!best) {
+      for (const p of PRODUCTS) {
+        if (usedNos.has(p.no)) continue;
+        const words = p.name.normalize('NFC').toLowerCase().split(/\s+/).filter(w => w.length > 1);
+        const hit = words.filter(w => fname.includes(w)).length;
+        const score = words.length > 0 ? hit / words.length : 0;
+        if (score >= 0.6 && hit >= 2 && score > bestScore) { bestScore = score; best = p; }
+      }
+    }
+
+    item.productNo = best ? best.no : null;
+    item.matched = !!best;
+    if (best) { matched++; usedNos.add(best.no); }
+  }
+
+  document.getElementById('sFile').textContent = state.files.length;
+  document.getElementById('sMatch').textContent = matched;
+  document.getElementById('btnUpload').disabled = matched === 0;
+  renderFileGrid();
+}
+
+function renderFileGrid() {
+  const grid = document.getElementById('fileGrid');
+  // 매칭된 파일 먼저, 미매칭 뒤로
+  const sorted = [...state.files].sort((a, b) => {
+    if (a.matched === b.matched) return 0;
+    return a.matched ? -1 : 1;
+  });
+  grid.innerHTML = sorted.map(item => {
+    const p = item.matched ? PRODUCTS.find(x => x.no === item.productNo) : null;
+    const url = URL.createObjectURL(item.file);
+    const cls = item.matched ? 'matched' : 'unmatched';
+    const status = item.matched
+      ? `<span class="badge b-ok">No.${item.productNo}</span>`
+      : `<span class="badge b-err">미매칭</span>`;
+    const label = p ? p.name : item.file.name;
+    return `<div class="file-item ${cls}">
+      <img src="${url}" loading="lazy">
+      <div class="name" title="${item.file.name}&#10;→ ${label}">${label}</div>
+      ${status}
+    </div>`;
+  }).join('');
+}
+
+function getHeaders() {
+  return {
+    'Authorization': 'Bearer ' + document.getElementById('cfgToken').value,
+    'Content-Type': 'application/json'
+  };
+}
+
+async function apiFetch(path, opts={}) {
+  const base = document.getElementById('cfgBase').value.replace(/\/$/, '');
+  const r = await fetch(base + path, {
+    ...opts,
+    headers: { ...getHeaders(), ...(opts.headers||{}) }
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function startUpload() {
+  const token = document.getElementById('cfgToken').value;
+  if (!token) { alert('Bearer Token을 입력하세요'); return; }
+
+  state.uploading = true;
+  state.aborted = false;
+  document.getElementById('btnUpload').disabled = true;
+
+  const matched = state.files.filter(f => f.matched);
+  let done = 0, fail = 0;
+  const startTime = Date.now();
+
+  for (const item of matched) {
+    if (state.aborted) break;
+    const p = PRODUCTS.find(x => x.no === item.productNo);
+    try {
+      updateProg(done, matched.length, `No.${item.productNo} ${p?.name || ''} 업로드 중...`);
+
+      const presigned = await apiFetch(
+        `/api/auth/files/presigned/upload?fileName=${encodeURIComponent(item.file.name)}&contentType=${encodeURIComponent(item.file.type)}`
+      );
+
+      const putResp = await fetch(presigned.presignedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': item.file.type },
+        body: item.file
+      });
+      if (!putResp.ok) throw new Error(`S3 PUT ${putResp.status}`);
+
+      const complete = await apiFetch('/api/auth/files/presigned/complete', {
+        method: 'POST',
+        body: JSON.stringify({
+          s3Key: presigned.s3Key,
+          storeFileName: presigned.storeFileName,
+          originalFileName: item.file.name,
+          fileCode: 'FEED',
+          fileExplain: null
+        })
+      });
+
+      state.results[item.productNo] = {
+        fileId: complete.id,
+        fileUrl: complete.fileUrl,
+        fileSize: complete.fileSize || item.file.size,
+        orgFileNm: complete.orgFileNm || item.file.name,
+        storeFileNm: complete.storeFileNm,
+        contentType: item.file.type,
+        fileExt: complete.fileExt || item.file.name.split('.').pop()
+      };
+
+      done++;
+      log('ok', `✅ No.${item.productNo} ${p?.name} → fileId: ${complete.id}`);
+
+    } catch(e) {
+      fail++;
+      done++;
+      log('err', `❌ No.${item.productNo} ${p?.name}: ${e.message}`);
+    }
+
+    const elapsed = (Date.now() - startTime) / 1000;
+    const speed = done / elapsed;
+    const eta = ((matched.length - done) / speed).toFixed(0);
+    document.getElementById('uploadSpeed').textContent = `${speed.toFixed(1)}/s · 남은시간: ~${eta}초`;
+  }
+
+  state.uploading = false;
+  document.getElementById('btnUpload').disabled = false;
+  document.getElementById('sUploaded').textContent = Object.keys(state.results).length;
+  document.getElementById('sFailed').textContent = fail;
+  updateProg(done, matched.length, state.aborted ? '중지됨' : '업로드 완료!');
+  log('info', `\n완료! 성공: ${Object.keys(state.results).length}, 실패: ${fail}`);
+}
+
+function stopUpload() { state.aborted = true; }
+
+function updateProg(done, total, txt) {
+  const pct = total > 0 ? (done/total*100) : 0;
+  document.getElementById('progBar').style.width = pct+'%';
+  document.getElementById('progTxt').textContent = `${txt} (${done}/${total})`;
+}
+
+function log(cls, msg) {
+  const el = document.getElementById('uploadLog');
+  el.innerHTML += `<div class="${cls}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderResultTable() {
+  const tbody = document.getElementById('resultBody');
+  const rows = PRODUCTS.map(p => {
+    const r = state.results[p.no];
+    if (!r) return `<tr><td>${p.no}</td><td>${p.name}</td><td colspan="5"><span class="badge b-wait">미업로드</span></td></tr>`;
+    return `<tr>
+      <td>${p.no}</td><td>${p.name}</td>
+      <td style="color:#27ae60;font-weight:700">${r.fileId}</td>
+      <td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.fileUrl}</td>
+      <td>${r.orgFileNm}</td>
+      <td>${(r.fileSize/1024).toFixed(1)}KB</td>
+      <td><span class="badge b-ok">완료</span></td>
+    </tr>`;
+  });
+  tbody.innerHTML = rows.join('');
+}
+
+function exportResultCSV() {
+  const lines = ['No,제품명,fileId,fileUrl,orgFileNm,fileSize'];
+  for (const p of PRODUCTS) {
+    const r = state.results[p.no];
+    if (r) lines.push(`${p.no},"${p.name}",${r.fileId},"${r.fileUrl}","${r.orgFileNm}",${r.fileSize}`);
+  }
+  downloadFile(lines.join('\n'), '업로드결과.csv', 'text/csv');
+}
+
+function genSQL() {
+  const creatorId = document.getElementById('cfgCreator').value || 7;
+  const startPid = parseInt(document.getElementById('startProductId').value) || 100;
+  const startAid = parseInt(document.getElementById('startAttachId').value) || 100;
+  const now = new Date().toISOString().replace('T',' ').substring(0,19);
+  const lines = [];
+
+  lines.push('-- ==========================================');
+  lines.push('-- 요거트 벌크 제품 등록 SQL');
+  lines.push(`-- 생성: ${now}`);
+  lines.push('-- ==========================================\n');
+
+  if (document.getElementById('chkCat').checked) {
+    // 제품에서 사용된 카테고리ID 수집 → DB에 없을 수 있는 것만 INSERT
+    const usedCatIds = new Set(PRODUCTS.map(p => p.category_id).filter(id => id > 0));
+    const catsToInsert = CATEGORIES.filter(([id]) => usedCatIds.has(id));
+    if (catsToInsert.length > 0) {
+      lines.push(`-- [1] 사용된 카테고리 확인 (${catsToInsert.length}개) — 이미 존재하면 SKIP`);
+      lines.push('-- ==========================================\n');
+      for (const [id, name, kw, parent] of catsToInsert) {
+        const kwSafe = (kw || '').replace(/'/g, "''");
+        const nameSafe = name.replace(/'/g, "''");
+        lines.push(`INSERT IGNORE INTO content.categories (category_id, created_at, updated_at, \`depth\`, description, is_active, keywords, name, sort_order, parent_id)`);
+        lines.push(`VALUES(${id}, NOW(), NOW(), 1, NULL, 1, '${kwSafe}', '${nameSafe}', 0, ${parent});`);
+      }
+      lines.push('');
+    }
+  }
+
+  if (document.getElementById('chkProduct').checked) {
+    lines.push('\n-- [2] 제품 INSERT (' + PRODUCTS.length + '개)');
+    lines.push('-- ==========================================\n');
+    for (let i = 0; i < PRODUCTS.length; i++) {
+      const p = PRODUCTS[i];
+      const pid = startPid + i;
+      const name = p.name.replace(/'/g, "''");
+      const brand = p.brand.replace(/'/g, "''");
+      const desc = p.description ? `'${p.description.replace(/'/g, "''")}'` : 'NULL';
+      const createdAt = p.releaseDate ? `'${p.releaseDate} 00:00:00'` : `'${now}'`;
+      const priceVal = (p.priceMax && p.priceMax > 0 && p.priceMax !== p.price)
+        ? `'${p.price}~${p.priceMax}'`
+        : `${p.price}`;
+      lines.push(`INSERT INTO content.tb_product (product_id, created_at, updated_at, avg_rating, brand, creator_id, description, distributor, feature, like_count, name, popularity_dirty, popularity_score, price, share_count, status, tags, view_count, category_id)`);
+      lines.push(`VALUES(${pid}, ${createdAt}, '${now}', 0.0, '${brand}', ${creatorId}, ${desc}, NULL, NULL, 0, '${name}', 1, 0, ${priceVal}, 0, 'APPROVED', '', 0, ${p.category_id});`);
+    }
+    lines.push('');
+  }
+
+  if (document.getElementById('chkAttach').checked) {
+    const uploaded = Object.entries(state.results);
+    if (uploaded.length > 0) {
+      lines.push('\n-- [3] 제품-첨부파일 연결 (' + uploaded.length + '개)');
+      lines.push('-- tb_product_attachment_file');
+      lines.push('-- ==========================================\n');
+      let aidx = 0;
+      for (const [no, r] of uploaded) {
+        const p = PRODUCTS.find(x => x.no == no);
+        if (!p) continue;
+        const pid = startPid + PRODUCTS.indexOf(p);
+        const aid = startAid + aidx;
+        const orgNm = (r.orgFileNm || '').replace(/'/g, "''");
+        const fUrl = (r.fileUrl || '').replace(/'/g, "''");
+        lines.push(`INSERT INTO content.tb_product_attachment_file (id, attch_file_id, content_type, file_explain, file_size, file_url, is_primary, org_file_nm, sort_order, product_id, review_id)`);
+        lines.push(`VALUES(${aid}, ${r.fileId}, '${r.contentType}', '제품 대표 이미지', ${r.fileSize}, '${fUrl}', 1, '${orgNm}', 0, ${pid}, NULL);`);
+        aidx++;
+      }
+    } else {
+      lines.push('\n-- [3] 첨부파일: 아직 업로드된 파일 없음');
+      lines.push('-- 먼저 이미지 업로드 탭에서 이미지를 업로드하세요');
+    }
+  }
+
+  document.getElementById('sqlArea').value = lines.join('\n');
+}
+
+function copySQL() {
+  navigator.clipboard.writeText(document.getElementById('sqlArea').value)
+    .then(() => alert('SQL 복사 완료!'))
+    .catch(() => { document.getElementById('sqlArea').select(); document.execCommand('copy'); alert('SQL 복사 완료!'); });
+}
+
+function dlSQL() {
+  const sql = document.getElementById('sqlArea').value;
+  if (!sql) { alert('먼저 SQL을 생성하세요'); return; }
+  downloadFile(sql, '요거트_벌크등록.sql', 'text/sql');
+}
+
+function downloadFile(content, name, type) {
+  const blob = new Blob([content], { type });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// 자동 토큰 로드
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      document.getElementById('cfgToken').value = token;
+      log('info', '🔐 토큰 자동 로드 완료');
+    }
+  } catch(e) {
+    console.warn('토큰 자동 로드 실패:', e);
+  }
+});
+</script>
+</body>
+</html>
