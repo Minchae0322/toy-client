@@ -10,14 +10,14 @@
         </button>
         <nav class="breadcrumb">
           <router-link to="/">홈</router-link>
-          <span class="separator">/</span>
+          <span class="sep">/</span>
           <router-link to="/products">상품</router-link>
-          <span class="separator">/</span>
+          <span class="sep">/</span>
           <span class="current">{{ product?.name || '상품 상세' }}</span>
         </nav>
         <div v-if="isLoggedIn && isOwner" class="header-actions">
-          <button class="edit-btn" @click="editProduct">수정</button>
-          <button class="delete-btn" @click="deleteProduct">삭제</button>
+          <button class="header-btn" @click="editProduct">수정</button>
+          <button class="header-btn danger" @click="deleteProduct">삭제</button>
         </div>
       </div>
     </header>
@@ -25,16 +25,16 @@
     <!-- 메인 컨테이너 -->
     <main class="main-container">
       <!-- 로딩 -->
-      <div v-if="loading" class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>상품 정보를 불러오는 중입니다</p>
+      <div v-if="loading" class="state-box">
+        <div class="spinner"></div>
+        <p class="state-text">상품 정보를 불러오는 중입니다</p>
       </div>
 
       <!-- 에러 -->
-      <div v-else-if="error" class="error-container">
-        <h3>상품을 불러올 수 없습니다</h3>
-        <p>{{ error }}</p>
-        <button @click="fetchProductData" class="retry-btn">다시 시도</button>
+      <div v-else-if="error" class="state-box">
+        <p class="state-title">상품을 불러올 수 없습니다</p>
+        <p class="state-text">{{ error }}</p>
+        <button @click="fetchProductData" class="btn-solid">다시 시도</button>
       </div>
 
       <!-- 콘텐츠 -->
@@ -42,113 +42,67 @@
         <div class="content-layout">
           <!-- 왼쪽: 피드/배틀 메인 -->
           <section class="main-content">
-            <!-- 탭 네비게이션 -->
-            <div class="tab-nav">
-              <button
-                  :class="['tab-btn', { active: activeTab === 'feed' }]"
-                  @click="activeTab = 'feed'"
-              >
-                피드
-                <span class="tab-count">{{ feeds.length }}</span>
+            <!-- 탭 -->
+            <div class="tab-bar">
+              <button :class="['tab', { active: activeTab === 'feed' }]" @click="activeTab = 'feed'">
+                피드 <span class="tab-count">{{ feeds.length }}</span>
               </button>
-              <button
-                  :class="['tab-btn', { active: activeTab === 'battle' }]"
-                  @click="activeTab = 'battle'"
-              >
-                배틀
-                <span class="tab-count">{{ battles.length }}</span>
+              <button :class="['tab', { active: activeTab === 'battle' }]" @click="activeTab = 'battle'">
+                배틀 <span class="tab-count">{{ battles.length }}</span>
               </button>
+              <div class="tab-indicator" :style="{ left: activeTab === 'feed' ? '0' : '50%' }"></div>
             </div>
 
             <!-- 피드 탭 -->
             <div v-if="activeTab === 'feed'" class="tab-content">
-              <!-- 피드 작성 -->
-              <div class="feed-write-box">
-                <div class="user-avatar">😊</div>
-                <input
-                    type="text"
-                    placeholder="이 상품에 대한 의견을 남겨보세요..."
-                    class="feed-input"
-                    @click="handleWriteFeed"
-                    readonly
-                />
-                <button class="write-btn" @click="handleWriteFeed">작성</button>
+              <div class="write-box" @click="handleWriteFeed">
+                <div class="write-avatar">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <span class="write-placeholder">이 상품에 대한 의견을 남겨보세요</span>
+                <span class="write-action">작성</span>
               </div>
 
-              <!-- 피드 목록 -->
-              <FeedCard
-                  v-for="feed in feeds"
-                  :key="feed.id"
-                  :feed="feed"
-                  @like="handleFeedLike"
-              />
+              <FeedCard v-for="feed in feeds" :key="feed.id" :feed="feed" @like="handleFeedLike" />
 
-              <!-- 로딩 상태 -->
-              <div v-if="feedsLoading && feeds.length === 0" class="tab-loading">
-                <div class="loading-spinner small"></div>
+              <div v-if="feedsLoading && feeds.length === 0" class="loading-box">
+                <div class="spinner sm"></div>
                 <p>피드를 불러오는 중...</p>
               </div>
 
-              <!-- 빈 상태 -->
-              <div v-else-if="feeds.length === 0 && !feedsLoading" class="empty-state">
-                <div class="empty-icon">📝</div>
+              <div v-else-if="feeds.length === 0 && !feedsLoading" class="empty-box">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 <p class="empty-title">아직 피드가 없어요</p>
-                <p class="empty-desc">첫 번째 피드를 작성해보세요!</p>
+                <p class="empty-desc">첫 번째 피드를 작성해보세요</p>
               </div>
 
-              <!-- 더보기 버튼 -->
-              <button
-                  v-if="hasMoreFeeds && feeds.length > 0"
-                  class="load-more-btn"
-                  :disabled="feedsLoading"
-                  @click="fetchFeeds(route.params.id, true)"
-              >
-                <span v-if="feedsLoading">불러오는 중...</span>
-                <span v-else>더보기</span>
+              <button v-if="hasMoreFeeds && feeds.length > 0" class="btn-more" :disabled="feedsLoading" @click="fetchFeeds(route.params.id, true)">
+                {{ feedsLoading ? '불러오는 중...' : '더보기' }}
               </button>
             </div>
 
             <!-- 배틀 탭 -->
             <div v-if="activeTab === 'battle'" class="tab-content">
-              <!-- 배틀 생성 -->
-              <button class="battle-create-btn" @click="handleCreateBattle">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
+              <button class="btn-outline full" @click="handleCreateBattle">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 새 배틀 만들기
               </button>
 
-              <!-- 배틀 목록 -->
-              <BattleCard
-                  v-for="battle in battles"
-                  :key="battle.id"
-                  :battle="battle"
-                  @vote="handleVote"
-                  @view="viewBattle"
-              />
+              <BattleCard v-for="battle in battles" :key="battle.id" :battle="battle" @vote="handleVote" @view="viewBattle" />
 
-              <!-- 로딩 상태 -->
-              <div v-if="battlesLoading && battles.length === 0" class="tab-loading">
-                <div class="loading-spinner small"></div>
+              <div v-if="battlesLoading && battles.length === 0" class="loading-box">
+                <div class="spinner sm"></div>
                 <p>배틀을 불러오는 중...</p>
               </div>
 
-              <!-- 빈 상태 -->
-              <div v-else-if="battles.length === 0 && !battlesLoading" class="empty-state">
-                <div class="empty-icon">🏆</div>
+              <div v-else-if="battles.length === 0 && !battlesLoading" class="empty-box">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
                 <p class="empty-title">참여 중인 배틀이 없어요</p>
-                <p class="empty-desc">새로운 배틀을 시작해보세요!</p>
+                <p class="empty-desc">새로운 배틀을 시작해보세요</p>
               </div>
 
-              <!-- 더보기 버튼 -->
-              <button
-                  v-if="hasMoreBattles && battles.length > 0"
-                  class="load-more-btn"
-                  :disabled="battlesLoading"
-                  @click="fetchBattles(route.params.id, true)"
-              >
-                <span v-if="battlesLoading">불러오는 중...</span>
-                <span v-else>더보기</span>
+              <button v-if="hasMoreBattles && battles.length > 0" class="btn-more" :disabled="battlesLoading" @click="fetchBattles(route.params.id, true)">
+                {{ battlesLoading ? '불러오는 중...' : '더보기' }}
               </button>
             </div>
           </section>
@@ -156,117 +110,111 @@
           <!-- 오른쪽: 상품 정보 사이드바 -->
           <aside class="product-sidebar">
             <div class="sidebar-sticky">
-              <!-- 상품 이미지 -->
-              <div class="product-image-wrapper">
+              <!-- 이미지 -->
+              <div class="product-image-wrap">
                 <img :src="product.thumbnailUrl || defaultImage" :alt="product.name" class="product-image"/>
               </div>
 
-              <!-- 상품 정보 -->
-              <div class="product-info-section">
-                <div class="info-header">
-                  <span class="brand">{{ product.brand }}</span>
-                  <span class="category-badge">{{ product.category?.name || product.category }}</span>
+              <!-- 브랜드 + 카테고리 -->
+              <div class="product-meta">
+                <span class="brand">{{ product.brand }}</span>
+                <span class="category">{{ product.category?.name || product.category }}</span>
+              </div>
+
+              <!-- 이름 -->
+              <h1 class="product-name">{{ product.name }}</h1>
+
+              <!-- 가격 -->
+              <p class="product-price">{{ formatPrice(product.price) }}<span class="won">원</span></p>
+
+              <!-- 설명 -->
+              <p v-if="product.description" class="product-desc">{{ product.description }}</p>
+
+              <!-- 상세 정보 -->
+              <div v-if="hasDetailGrid || displayDate" class="info-table">
+                <div v-if="product.feature" class="info-row">
+                  <span class="info-key">특징</span>
+                  <span class="info-val">{{ product.feature }}</span>
                 </div>
-                <h1 class="product-name">{{ product.name }}</h1>
-                <p class="product-price">{{ formatPrice(product.price) }}<span class="currency">원</span></p>
+                <div v-if="product.distributor" class="info-row">
+                  <span class="info-key">판매처</span>
+                  <span class="info-val">{{ product.distributor }}</span>
+                </div>
+                <div v-if="displayDate" class="info-row">
+                  <span class="info-key">출시일</span>
+                  <span class="info-val">{{ formatDate(displayDate) }}</span>
+                </div>
+              </div>
+
+              <!-- 태그 -->
+              <div v-if="product.tags" class="tags">
+                <span v-for="tag in parseTags(product.tags)" :key="tag" class="tag">#{{ tag }}</span>
               </div>
 
               <!-- 통계 -->
-              <div class="stats-section">
-                <div class="stat-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                  </svg>
-                  <span>{{ product.avgRating?.toFixed(1) || '0.0' }}</span>
+              <div class="stats-row">
+                <div class="stat">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  {{ product.avgRating?.toFixed(1) || '0.0' }}
                 </div>
-                <div class="stat-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                  </svg>
-                  <span>{{ formatCount(product.viewCount) }}</span>
+                <span class="dot"></span>
+                <div class="stat">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  {{ formatCount(product.viewCount) }}
                 </div>
-                <div class="stat-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                  </svg>
-                  <span>{{ formatCount(product.likeCount) }}</span>
+                <span class="dot"></span>
+                <div class="stat">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                  {{ formatCount(product.likeCount) }}
+                </div>
+                <span class="dot"></span>
+                <div class="stat">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  {{ formatCount(product.reviewCount) }}
                 </div>
               </div>
 
-              <!-- 액션 버튼 -->
-              <div class="action-section">
-                <button :class="['action-btn', { active: userReaction.hasLike }]" @click="handleLikeAction">
-                  <svg width="18" height="18" viewBox="0 0 24 24" :fill="userReaction.hasLike ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+              <!-- 액션 -->
+              <div class="action-bar">
+                <button :class="['action-btn', { on: userReaction.hasLike }]" @click="handleLikeAction">
+                  <svg width="18" height="18" viewBox="0 0 24 24" :fill="userReaction.hasLike ? '#7c3aed' : 'none'" :stroke="userReaction.hasLike ? '#7c3aed' : '#666'" stroke-width="2">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                   </svg>
-                  좋아요
+                  <span>좋아요</span>
                 </button>
-                <button :class="['action-btn', { active: userReaction.hasBookmark }]" @click="handleBookmarkAction">
-                  <svg width="18" height="18" viewBox="0 0 24 24" :fill="userReaction.hasBookmark ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+                <button :class="['action-btn', { on: userReaction.hasBookmark }]" @click="handleBookmarkAction">
+                  <svg width="18" height="18" viewBox="0 0 24 24" :fill="userReaction.hasBookmark ? '#7c3aed' : 'none'" :stroke="userReaction.hasBookmark ? '#7c3aed' : '#666'" stroke-width="2">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                   </svg>
-                  저장
+                  <span>저장</span>
                 </button>
                 <button class="action-btn" @click="handleShareAction">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
                   </svg>
-                  공유
-                </button>
-                <button :class="['action-btn', { active: isInCarrier }]" :disabled="carrierLoading" @click="handleAddToCarrier">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="7" width="18" height="14" rx="2"/>
-                    <path d="M8 7V5a4 4 0 0 1 8 0v2"/>
-                    <line v-if="!isInCarrier" x1="12" y1="12" x2="12" y2="18"/>
-                    <line v-if="!isInCarrier" x1="9" y1="15" x2="15" y2="15"/>
-                    <path v-if="isInCarrier" d="M9 15l2 2 4-4"/>
-                  </svg>
-                  {{ isInCarrier ? '담김' : '캐리어' }}
+                  <span>공유</span>
                 </button>
               </div>
 
-              <!-- 상세 정보 (조건부 렌더링) -->
-              <div v-if="hasDetailContent" class="detail-section">
-                <!-- 설명 -->
-                <div
-                    v-if="product.description"
-                    class="detail-block description"
-                    :class="{ 'has-more': hasDetailGrid || product.tags }"
-                >
-                  <p>{{ product.description }}</p>
-                </div>
+              <!-- 캐리어 담기 -->
+              <button :class="['carrier-btn', { on: isInCarrier }]" :disabled="carrierLoading" @click="handleAddToCarrier">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/>
+                  <path v-if="isInCarrier" d="M9 15l2 2 4-4"/>
+                  <template v-else><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></template>
+                </svg>
+                {{ isInCarrier ? '캐리어에 담김' : '캐리어에 담기' }}
+              </button>
 
-                <!-- 상세 그리드 -->
-                <div v-if="hasDetailGrid" class="detail-grid" :class="{ 'has-tags': product.tags }">
-                  <div v-if="product.feature" class="detail-item">
-                    <span class="detail-label">특징</span>
-                    <span class="detail-value">{{ product.feature }}</span>
-                  </div>
-                  <div v-if="product.distributor" class="detail-item">
-                    <span class="detail-label">판매처</span>
-                    <span class="detail-value">{{ product.distributor }}</span>
-                  </div>
-                  <div v-if="product.releaseDate" class="detail-item">
-                    <span class="detail-label">출시일</span>
-                    <span class="detail-value">{{ formatDate(product.releaseDate) }}</span>
-                  </div>
-                </div>
-
-                <!-- 태그 -->
-                <div v-if="product.tags" class="tags-wrapper">
-                  <span v-for="tag in parseTags(product.tags)" :key="tag" class="tag">#{{ tag }}</span>
-                </div>
-              </div>
-
-              <!-- 활동 요약 -->
-              <div class="activity-section">
+              <!-- 활동 -->
+              <div class="activity-row">
                 <div class="activity-item">
-                  <span class="activity-number">{{ feeds.length }}</span>
+                  <span class="activity-num">{{ feeds.length }}</span>
                   <span class="activity-label">피드</span>
                 </div>
-                <div class="activity-divider"></div>
+                <div class="activity-div"></div>
                 <div class="activity-item">
-                  <span class="activity-number">{{ battles.length }}</span>
+                  <span class="activity-num">{{ battles.length }}</span>
                   <span class="activity-label">배틀</span>
                 </div>
               </div>
@@ -276,13 +224,7 @@
       </template>
     </main>
 
-    <!-- 로그인 모달 -->
-    <LoginModal
-        v-if="showLoginModal"
-        :title="loginModalTitle"
-        :message="loginModalMessage"
-        @close="closeLoginModal"
-    />
+    <LoginModal v-if="showLoginModal" :title="loginModalTitle" :message="loginModalMessage" @close="closeLoginModal" />
   </div>
 </template>
 
@@ -320,7 +262,6 @@ const feeds = ref([])
 const battles = ref([])
 const userReaction = ref({ hasLike: false, hasBookmark: false })
 
-// 피드/배틀 페이지네이션 상태
 const feedsLoading = ref(false)
 const battlesLoading = ref(false)
 const feedsCursor = ref(null)
@@ -332,23 +273,25 @@ const isOwner = computed(() => {
   return isLoggedIn.value && userId.value && product.value?.creatorId === userId.value
 })
 
-// 상세 정보 섹션 표시 여부
-const hasDetailContent = computed(() => {
-  if (!product.value) return false
-  return product.value.description || product.value.feature ||
-      product.value.distributor || product.value.releaseDate || product.value.tags
+const displayDate = computed(() => {
+  if (!product.value) return null
+  return product.value.releaseDate || product.value.createdAt || null
 })
 
-// 상세 그리드 표시 여부
 const hasDetailGrid = computed(() => {
   if (!product.value) return false
-  return product.value.feature || product.value.distributor || product.value.releaseDate
+  return product.value.feature || product.value.distributor || displayDate.value
 })
 
 const formatPrice = (price) => {
   if (!price) return '0'
-  const num = typeof price === 'string' ? parseInt(price.replace(/,/g, '')) : price
-  return num.toLocaleString()
+  const s = String(price).replace(/,/g, '').trim()
+  const rangeMatch = s.match(/^(\d+)\s*[~\-–—]\s*(\d+)$/)
+  if (rangeMatch) {
+    return `${parseInt(rangeMatch[1]).toLocaleString()} ~ ${parseInt(rangeMatch[2]).toLocaleString()}`
+  }
+  const num = parseInt(s)
+  return isNaN(num) ? '0' : num.toLocaleString()
 }
 
 const formatCount = (count) => {
@@ -477,7 +420,6 @@ const handleAddToCarrier = async () => {
   if (isInCarrier.value || carrierLoading.value) return
   carrierLoading.value = true
   try {
-    // 기본 캐리어 가져오기 (없으면 생성)
     let carrierId = null
     const carriersRes = await carrierService.getMyCarriers()
     if (carriersRes.success && carriersRes.data?.length) {
@@ -496,7 +438,7 @@ const handleAddToCarrier = async () => {
     })
     if (res.success) {
       isInCarrier.value = true
-      await open({ type: 'alert', title: '캐리어에 담았어요!', message: `${product.value.name}이(가) 캐리어에 추가되었습니다.` })
+      await open({ type: 'alert', title: '캐리어에 담았어요', message: `${product.value.name}이(가) 캐리어에 추가되었습니다.` })
     }
   } catch (err) {
     console.error('캐리어 담기 실패:', err)
@@ -517,9 +459,7 @@ const checkCarrierStatus = async () => {
         isInCarrier.value = detail.data.items.some(item => item.productId === product.value.id)
       }
     }
-  } catch (e) {
-    // 캐리어 상태 확인 실패는 무시
-  }
+  } catch (e) { /* ignore */ }
 }
 
 const handleShareAction = async () => {
@@ -528,7 +468,7 @@ const handleShareAction = async () => {
       await navigator.share({ title: product.value.name, url: window.location.href })
     } else {
       await navigator.clipboard.writeText(window.location.href)
-      await open({ type: 'alert', title: '링크 복사 완료', message: '링크가 복사되었습니다!' })
+      await open({ type: 'alert', title: '링크 복사 완료', message: '링크가 복사되었습니다.' })
     }
   } catch (err) { console.log('공유 취소:', err) }
 }
@@ -588,486 +528,141 @@ watch(isLoggedIn, (val) => {
 <style scoped>
 * { box-sizing: border-box; }
 
-.product-detail-view {
-  min-height: 100vh;
-  background: #fff;
-}
+.product-detail-view { min-height: 100vh; background: #fff; }
 
-/* Header */
-.header {
-  background: #fff;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.header-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.back-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  border: 1px solid #eee;
-  background: #fff;
-  color: #333;
-  cursor: pointer;
-  transition: background 0.15s;
-}
+/* ===== Header ===== */
+.header { background: #fff; border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 100; }
+.header-container { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 52px; display: flex; align-items: center; gap: 16px; }
+.back-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: none; background: transparent; color: #333; cursor: pointer; }
 .back-btn:hover { background: #f5f5f5; }
-.breadcrumb {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #999;
-}
-.breadcrumb a { color: #666; text-decoration: none; }
-.breadcrumb a:hover { color: #7c3aed; }
-.breadcrumb .separator { color: #ddd; }
+.breadcrumb { flex: 1; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #aaa; }
+.breadcrumb a { color: #888; text-decoration: none; }
+.breadcrumb a:hover { color: #333; }
+.breadcrumb .sep { color: #ddd; }
 .breadcrumb .current { color: #333; font-weight: 500; }
-.header-actions { display: flex; gap: 8px; }
-.edit-btn, .delete-btn {
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.edit-btn { border: 1px solid #ddd; background: #fff; color: #333; }
-.edit-btn:hover { background: #f5f5f5; }
-.delete-btn { border: 1px solid #fecaca; background: #fff; color: #dc2626; }
-.delete-btn:hover { background: #fef2f2; }
+.header-actions { display: flex; gap: 6px; }
+.header-btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #e5e5e5; background: #fff; color: #333; transition: background 0.15s; }
+.header-btn:hover { background: #f5f5f5; }
+.header-btn.danger { color: #dc2626; border-color: #fecaca; }
+.header-btn.danger:hover { background: #fef2f2; }
 
-/* Main */
-.main-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 24px;
-}
-.loading-container, .error-container {
-  padding: 80px 24px;
-  text-align: center;
-}
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 2px solid #eee;
-  border-top-color: #7c3aed;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
+/* ===== Main ===== */
+.main-container { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+.state-box { padding: 80px 24px; text-align: center; }
+.state-title { font-size: 16px; font-weight: 600; color: #333; margin: 0 0 6px; }
+.state-text { font-size: 14px; color: #888; margin: 0; }
+.spinner { width: 28px; height: 28px; border: 2.5px solid #eee; border-top-color: #333; border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 16px; }
+.spinner.sm { width: 22px; height: 22px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.error-container h3 { font-size: 16px; color: #333; margin: 0 0 8px; }
-.error-container p { font-size: 14px; color: #666; margin: 0; }
-.retry-btn {
-  margin-top: 16px;
-  padding: 10px 20px;
-  background: #7c3aed;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-}
+.btn-solid { margin-top: 16px; padding: 10px 24px; background: #333; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.btn-solid:hover { background: #222; }
 
-/* Layout */
-.content-layout {
-  display: flex;
-  gap: 40px;
-}
-.main-content {
-  flex: 1;
-  min-width: 0;
-}
-.product-sidebar {
-  width: 380px;
-  flex-shrink: 0;
-}
-.sidebar-sticky {
-  position: sticky;
-  top: 80px;
-}
+/* ===== Layout ===== */
+.content-layout { display: flex; gap: 48px; }
+.main-content { flex: 1; min-width: 0; }
+.product-sidebar { width: 360px; flex-shrink: 0; }
+.sidebar-sticky { position: sticky; top: 76px; }
 
-/* Tab Navigation */
-.tab-nav {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  background: #f5f5f5;
-  border-radius: 10px;
-  margin-bottom: 20px;
-}
-.tab-btn {
-  flex: 1;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.15s;
-}
-.tab-btn:hover { color: #333; }
-.tab-btn.active { background: #fff; color: #333; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-.tab-count {
-  padding: 2px 8px;
-  background: rgba(0,0,0,0.06);
-  border-radius: 10px;
-  font-size: 12px;
-}
-.tab-btn.active .tab-count { background: #7c3aed; color: #fff; }
+/* ===== Tabs ===== */
+.tab-bar { position: relative; display: flex; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+.tab { flex: 1; padding: 14px 0; border: none; background: transparent; font-size: 15px; font-weight: 500; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: color 0.15s; }
+.tab:hover { color: #666; }
+.tab.active { color: #111; }
+.tab-count { font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: #f0f0f0; color: #888; }
+.tab.active .tab-count { background: #111; color: #fff; }
+.tab-indicator { position: absolute; bottom: -1px; width: 50%; height: 2px; background: #111; transition: left 0.2s ease; }
 
-/* Tab Content */
-.tab-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* ===== Tab Content ===== */
+.tab-content { display: flex; flex-direction: column; gap: 12px; }
 
-/* Feed Write Box */
-.feed-write-box {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 12px;
-}
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.feed-input {
-  flex: 1;
-  padding: 10px 16px;
-  background: #f5f5f5;
-  border: none;
-  border-radius: 20px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-}
-.feed-input::placeholder { color: #999; }
-.write-btn {
-  padding: 10px 20px;
-  background: #7c3aed;
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.write-btn:hover { background: #6d28d9; }
+/* Write Box */
+.write-box { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f8f8f8; border-radius: 12px; cursor: pointer; transition: background 0.15s; }
+.write-box:hover { background: #f0f0f0; }
+.write-avatar { width: 36px; height: 36px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.write-placeholder { flex: 1; font-size: 14px; color: #aaa; }
+.write-action { font-size: 14px; font-weight: 600; color: #333; padding: 6px 16px; background: #fff; border-radius: 20px; border: 1px solid #e5e5e5; }
 
-/* Battle Create */
-.battle-create-btn {
-  width: 100%;
-  padding: 16px;
-  background: #fff;
-  border: 1px dashed #ddd;
-  border-radius: 12px;
-  color: #7c3aed;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.15s;
-}
-.battle-create-btn:hover { border-color: #7c3aed; background: #faf5ff; }
+/* Empty / Loading */
+.empty-box { padding: 56px 24px; text-align: center; }
+.empty-box svg { margin: 0 auto 12px; display: block; }
+.empty-title { font-size: 15px; font-weight: 600; color: #333; margin: 0 0 4px; }
+.empty-desc { font-size: 13px; color: #aaa; margin: 0; }
+.loading-box { padding: 40px 24px; text-align: center; }
+.loading-box p { margin: 8px 0 0; font-size: 13px; color: #888; }
 
-/* Empty State */
-.empty-state {
-  padding: 60px 24px;
-  text-align: center;
-  border: 1px solid #eee;
-  border-radius: 12px;
-}
-.empty-icon { font-size: 40px; margin-bottom: 12px; }
-.empty-title { font-size: 15px; font-weight: 500; color: #333; margin: 0 0 4px; }
-.empty-desc { font-size: 13px; color: #999; margin: 0; }
+/* Buttons */
+.btn-more { width: 100%; padding: 13px; background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; font-size: 14px; font-weight: 500; color: #666; cursor: pointer; transition: background 0.15s; }
+.btn-more:hover:not(:disabled) { background: #f8f8f8; }
+.btn-more:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-outline { padding: 14px; background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; color: #333; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s; }
+.btn-outline:hover { background: #f8f8f8; }
+.btn-outline.full { width: 100%; }
 
-/* Tab Loading */
-.tab-loading {
-  padding: 40px 24px;
-  text-align: center;
-  border: 1px solid #eee;
-  border-radius: 12px;
-}
-.tab-loading p {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: #666;
-}
-.loading-spinner.small {
-  width: 24px;
-  height: 24px;
-}
+/* ===== Sidebar ===== */
+.product-image-wrap { border-radius: 12px; overflow: hidden; background: #f5f5f5; }
+.product-image { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
 
-/* Load More Button */
-.load-more-btn {
-  width: 100%;
-  padding: 14px;
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.load-more-btn:hover:not(:disabled) {
-  background: #f5f5f5;
-  border-color: #ddd;
-}
-.load-more-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.product-meta { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+.brand { font-size: 14px; font-weight: 600; color: #333; }
+.category { font-size: 12px; color: #888; padding: 3px 8px; background: #f5f5f5; border-radius: 4px; }
 
-/* Product Sidebar */
-.product-image-wrapper {
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #eee;
-}
-.product-image {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  display: block;
-}
+.product-name { font-size: 20px; font-weight: 700; color: #111; margin: 10px 0 0; line-height: 1.4; letter-spacing: -0.3px; }
 
-.product-info-section {
-  padding: 20px 0;
-  border-bottom: 1px solid #eee;
-}
-.info-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-.brand {
-  font-size: 13px;
-  font-weight: 600;
-  color: #7c3aed;
-}
-.category-badge {
-  padding: 4px 10px;
-  background: #f5f5f5;
-  color: #666;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-.product-name {
-  font-size: 20px;
-  font-weight: 600;
-  color: #111;
-  margin: 0 0 12px;
-  line-height: 1.4;
-}
-.product-price {
-  font-size: 24px;
-  font-weight: 700;
-  color: #111;
-  margin: 0;
-}
-.currency {
-  font-size: 16px;
-  font-weight: 500;
-  color: #666;
-  margin-left: 2px;
-}
+.product-price { font-size: 22px; font-weight: 700; color: #111; margin: 12px 0 0; letter-spacing: -0.3px; }
+.won { font-size: 15px; font-weight: 500; color: #888; margin-left: 2px; }
 
-/* Stats */
-.stats-section {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 16px 0;
-  border-bottom: 1px solid #eee;
-}
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #666;
-}
+.product-desc { font-size: 14px; line-height: 1.7; color: #666; margin: 16px 0 0; word-break: keep-all; }
+
+/* Info Table */
+.info-table { margin-top: 20px; padding: 16px; background: #fafafa; border-radius: 10px; display: flex; flex-direction: column; gap: 10px; }
+.info-row { display: flex; justify-content: space-between; align-items: center; }
+.info-key { font-size: 13px; color: #999; }
+.info-val { font-size: 13px; color: #333; font-weight: 500; }
+
+/* Tags */
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.tag { padding: 5px 12px; background: #f5f5f5; color: #666; border-radius: 6px; font-size: 12px; font-weight: 500; }
+
+/* Stats Row */
+.stats-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; margin-top: 8px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
+.stat { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #666; font-weight: 500; }
+.dot { width: 3px; height: 3px; border-radius: 50%; background: #ddd; }
 
 /* Actions */
-.action-section {
-  display: flex;
-  gap: 8px;
-  padding: 16px 0;
-  border-bottom: 1px solid #eee;
-}
-.action-btn {
-  flex: 1;
-  padding: 12px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  color: #666;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-.action-btn:hover { background: #f5f5f5; }
-.action-btn.active { border-color: #7c3aed; color: #7c3aed; background: #faf5ff; }
+.action-bar { display: flex; gap: 0; margin-top: 16px; border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden; }
+.action-btn { flex: 1; padding: 12px 0; background: #fff; border: none; border-right: 1px solid #f0f0f0; font-size: 12px; font-weight: 500; color: #666; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: background 0.15s; }
+.action-btn:last-child { border-right: none; }
+.action-btn:hover { background: #fafafa; }
+.action-btn.on { color: #7c3aed; }
+.action-btn span { font-size: 11px; }
 
-/* Detail Section - 조건부 여백 처리 */
-.detail-section {
-  padding: 20px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.detail-block.description {
-  padding: 16px;
-  background: #f9f9f9;
-  border-radius: 8px;
-}
-.detail-block.description.has-more {
-  margin-bottom: 16px;
-}
-.detail-block.description p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.7;
-  color: #555;
-}
-
-.detail-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.detail-grid.has-tags {
-  margin-bottom: 16px;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.detail-label {
-  font-size: 13px;
-  color: #999;
-}
-.detail-value {
-  font-size: 13px;
-  color: #333;
-  font-weight: 500;
-}
-
-.tags-wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.tag {
-  padding: 6px 12px;
-  background: #f5f5f5;
-  color: #666;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.tag:hover { background: #ede9fe; color: #7c3aed; }
+/* Carrier Button */
+.carrier-btn { width: 100%; margin-top: 10px; padding: 14px; background: #111; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s; }
+.carrier-btn:hover { background: #222; }
+.carrier-btn.on { background: #f5f3ff; color: #7c3aed; border: 1px solid #e9e5f5; }
+.carrier-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Activity */
-.activity-section {
-  display: flex;
-  align-items: center;
-  padding: 20px 0;
-}
-.activity-item {
-  flex: 1;
-  text-align: center;
-}
-.activity-number {
-  display: block;
-  font-size: 24px;
-  font-weight: 700;
-  color: #111;
-}
-.activity-label {
-  display: block;
-  font-size: 12px;
-  color: #999;
-  margin-top: 4px;
-}
-.activity-divider {
-  width: 1px;
-  height: 40px;
-  background: #eee;
-}
+.activity-row { display: flex; align-items: center; margin-top: 16px; padding: 16px 0; }
+.activity-item { flex: 1; text-align: center; }
+.activity-num { display: block; font-size: 20px; font-weight: 700; color: #111; }
+.activity-label { display: block; font-size: 12px; color: #aaa; margin-top: 2px; }
+.activity-div { width: 1px; height: 32px; background: #f0f0f0; }
 
-/* FeedCard/BattleCard 이미지 4:3 비율 */
-.tab-content :deep(.feed-image img) {
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  width: 100%;
-  max-height: none;
-}
-
+/* Feed/Battle Card Border */
+.tab-content :deep(.feed-image img) { aspect-ratio: 4 / 3; object-fit: cover; width: 100%; max-height: none; }
 .tab-content :deep(.feed-card),
-.tab-content :deep(.battle-card) {
-  border: 1px solid #eee;
-}
+.tab-content :deep(.battle-card) { border: 1px solid #f0f0f0; border-radius: 12px; }
 
-/* Responsive */
+/* ===== Responsive ===== */
 @media (max-width: 1024px) {
   .content-layout { flex-direction: column-reverse; gap: 24px; }
   .product-sidebar { width: 100%; }
   .sidebar-sticky { position: relative; top: 0; display: flex; flex-wrap: wrap; gap: 20px; }
-  .product-image-wrapper { width: 200px; flex-shrink: 0; }
-  .product-info-section { flex: 1; padding: 0; border: none; }
-  .stats-section, .action-section, .detail-section, .activity-section { display: none; }
+  .product-image-wrap { width: 200px; flex-shrink: 0; }
+  .product-meta, .product-name, .product-price { margin-top: 0; }
+  .product-info-block { flex: 1; }
+  .product-desc, .info-table, .tags, .stats-row, .action-bar, .carrier-btn, .activity-row { display: none; }
 }
 
 @media (max-width: 768px) {
@@ -1075,8 +670,8 @@ watch(isLoggedIn, (val) => {
   .header-container { padding: 0 16px; }
   .breadcrumb { display: none; }
   .sidebar-sticky { flex-direction: column; }
-  .product-image-wrapper { width: 100%; }
-  .stats-section, .action-section { display: flex; }
-  .detail-section, .activity-section { display: block; }
+  .product-image-wrap { width: 100%; }
+  .product-desc, .info-table, .tags { display: block; }
+  .stats-row, .action-bar, .carrier-btn, .activity-row { display: flex; }
 }
 </style>

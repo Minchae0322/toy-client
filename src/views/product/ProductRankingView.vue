@@ -112,8 +112,8 @@
                 <!-- 이미지 위 오버레이 (텍스트 가독성) -->
                 <div v-if="getThumbnailUrl(product)" class="bubble-overlay"></div>
 
-                <span v-if="nodes[i]?.r > 45" class="bubble-name" :style="{ fontSize: Math.max(9, nodes[i].r * 0.13) + 'px', color: getThumbnailUrl(product) || i < 3 ? '#fff' : '#333', maxWidth: nodes[i].r * 1.4 + 'px' }">{{ product.name }}</span>
-                <span v-if="nodes[i]?.r > 55" class="bubble-brand" :style="{ fontSize: Math.max(8, nodes[i].r * 0.1) + 'px', color: getThumbnailUrl(product) || i < 3 ? 'rgba(255,255,255,0.85)' : '#999' }">{{ product.brand }}</span>
+                <span v-if="nodes[i]?.r > radiusBounds.min * 1.3" class="bubble-name" :style="{ fontSize: Math.max(10, nodes[i].r * 0.14) + 'px', color: getThumbnailUrl(product) || i < 3 ? '#fff' : '#333', maxWidth: nodes[i].r * 1.4 + 'px' }">{{ product.name }}</span>
+                <span v-if="nodes[i]?.r > radiusBounds.min * 1.6" class="bubble-brand" :style="{ fontSize: Math.max(9, nodes[i].r * 0.11) + 'px', color: getThumbnailUrl(product) || i < 3 ? 'rgba(255,255,255,0.85)' : '#999' }">{{ product.brand }}</span>
 
                 <!-- Top 3 뱃지 -->
                 <div v-if="i < 3" class="rank-badge-top" :class="'rank-' + (i + 1)" :style="{ fontSize: Math.max(8, nodes[i].r * 0.11) + 'px' }">{{ i + 1 }}</div>
@@ -264,15 +264,25 @@ const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache(
 const { isLoggedIn } = useAuth()
 
 // ==================== 상수 ====================
-const MIN_RADIUS = 28
-const MAX_RADIUS = 110
 const BUBBLE_LIMIT = 30
 const PAGE_SIZE = 20
 
 // ==================== 유틸 함수 ====================
-function getRadius(score, maxScore) {
-  if (!maxScore) return MIN_RADIUS
-  return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(score / maxScore)
+function calcRadiusBounds(count, W, H) {
+  const area = W * H
+  if (count <= 0 || !area) return { min: 28, max: 110 }
+  // 전체 면적의 ~65%를 버블이 채우도록
+  const fillRatio = 0.65
+  const totalBubbleArea = area * fillRatio
+  // 제품 1개면 영역의 40% 지름, 많을수록 작아짐
+  const maxR = Math.min(W, H) * (count === 1 ? 0.4 : count <= 3 ? 0.3 : 0.25)
+  const minR = Math.max(20, maxR * 0.25)
+  return { min: Math.round(minR), max: Math.round(Math.min(maxR, Math.min(W, H) * 0.45)) }
+}
+
+function getRadius(score, maxScore, minR, maxR) {
+  if (!maxScore) return minR
+  return minR + (maxR - minR) * Math.sqrt(score / maxScore)
 }
 
 function getRankColor(rank) {
@@ -285,21 +295,31 @@ function getRankColor(rank) {
 function computeLayout(nodeList, W, H) {
   if (!nodeList.length || !W || !H) return []
   const cx = W / 2, cy = H / 2
-  const pos = nodeList.map((n, i) => {
-    const angle = (i / nodeList.length) * Math.PI * 2
-    const dist = 50 + Math.min(cx, cy) * 0.4 * (i / nodeList.length)
-    return { x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist, vx: 0, vy: 0, r: n.r }
+  const n = nodeList.length
+
+  // 1개일 때 정중앙
+  if (n === 1) return [{ x: cx, y: cy }]
+
+  const pos = nodeList.map((nd, i) => {
+    const angle = (i / n) * Math.PI * 2
+    const spread = n <= 5 ? 0.2 : 0.4
+    const dist = 30 + Math.min(cx, cy) * spread * (i / n)
+    return { x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist, vx: 0, vy: 0, r: nd.r }
   })
+
+  const gap = n <= 5 ? 4 : 6
+  const centerPull = n <= 5 ? 0.015 : 0.01
+
   for (let tick = 0; tick < 300; tick++) {
     const alpha = Math.max(0.001, 1 - tick / 300)
     for (let i = 0; i < pos.length; i++) {
       const dx = cx - pos[i].x, dy = cy - pos[i].y
-      const pull = 0.01 * alpha * (i < 3 ? 1.8 : 0.3)
+      const pull = centerPull * alpha * (i < 3 ? 1.8 : 0.3)
       pos[i].vx += dx * pull; pos[i].vy += dy * pull
       for (let j = i + 1; j < pos.length; j++) {
         const ddx = pos[i].x - pos[j].x, ddy = pos[i].y - pos[j].y
         const d = Math.sqrt(ddx * ddx + ddy * ddy) || 1
-        const minD = pos[i].r + pos[j].r + 6
+        const minD = pos[i].r + pos[j].r + gap
         if (d < minD) {
           const f = (minD - d) / d * 0.3
           pos[i].vx += ddx * f; pos[i].vy += ddy * f
@@ -366,9 +386,14 @@ const filtered = computed(() => {
 const bubbleProducts = computed(() => filtered.value.slice(0, BUBBLE_LIMIT))
 const maxScore = computed(() => getPopularityScore(filtered.value[0]) || 1)
 
-const nodes = computed(() =>
-  bubbleProducts.value.map(p => ({ id: p.id, r: getRadius(getPopularityScore(p), maxScore.value) }))
+const radiusBounds = computed(() =>
+  calcRadiusBounds(bubbleProducts.value.length, dims.value.w, dims.value.h)
 )
+
+const nodes = computed(() => {
+  const { min, max } = radiusBounds.value
+  return bubbleProducts.value.map(p => ({ id: p.id, r: getRadius(getPopularityScore(p), maxScore.value, min, max) }))
+})
 
 const positions = computed(() => computeLayout(nodes.value, dims.value.w, dims.value.h))
 
