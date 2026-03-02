@@ -41,7 +41,9 @@
       "Bash(npx vite build --mode development 2>&1 | tail -10)",
       "Bash(git -C /Users/minchae/sources/toy-client status)",
       "Bash(git -C /Users/minchae/sources/toy-client diff --stat)",
-      "Bash(find /Users/minchae/sources/toy-client/src -name \"*.vue\" -o -name \"*.js\" | xargs grep -l \"export.*CategoryChipSelector\" 2>/dev/null | head -5)"
+      "Bash(find /Users/minchae/sources/toy-client/src -name \"*.vue\" -o -name \"*.js\" | xargs grep -l \"export.*CategoryChipSelector\" 2>/dev/null | head -5)",
+      "Bash(git add src/views/DashboardView.vue index.html && git commit -m \"$\\(cat <<'EOF'\nfeat: 대시보드 상단 통계 카드 축소 및 구글 애즈 슬롯 추가\n\n- 트렌드 한눈에 헤더 + 통계 카드 크기 축소 \\(아이콘 32px, 폰트 축소\\)\n- 통계 카드 옆에 300px 구글 애즈 슬롯 배치 \\(모바일: 풀너비\\)\n- index.html에 AdSense 스크립트 태그 추가\n- ca-pub/ad-slot 값은 실제 발급 후 교체 필요\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git add src/views/DashboardView.vue && git commit --amend -m \"$\\(cat <<'EOF'\nfeat: 대시보드 상단 통계 카드 축소 및 구글 애즈 가로 배너 추가\n\n- 트렌드 한눈에 헤더 + 통계 카드 크기 축소 \\(아이콘 32px, 폰트 축소\\)\n- 통계 카드 아래에 가로 풀너비 구글 애즈 배너 배치\n- index.html에 AdSense 스크립트 태그 추가\n- ca-pub/ad-slot 값은 실제 발급 후 교체 필요\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

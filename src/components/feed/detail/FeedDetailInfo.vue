@@ -133,7 +133,14 @@ const getAuthorProfileImage = computed(() => props.feed?.userInfo?.profileImageF
 const getAuthorNickname = computed(() => props.feed?.userInfo?.nickname || '사용자')
 
 const formatDate = (date) => date ? new Date(date).toLocaleDateString('ko-KR') : ''
-const formatPrice = (price) => price ? new Intl.NumberFormat('ko-KR').format(price) + '원' : '가격 미정'
+const formatPrice = (price) => {
+  if (!price && price !== 0) return '가격 미정'
+  const s = String(price).replace(/,/g, '').trim()
+  const m = s.match(/^(\d+)\s*~\s*(\d+)$/)
+  if (m) return Number(m[1]).toLocaleString() + ' ~ ' + Number(m[2]).toLocaleString() + '원'
+  const n = Number(s)
+  return isNaN(n) ? '가격 미정' : n.toLocaleString() + '원'
+}
 
 const getEvaluationLabel = (ev) => {
   const code = typeof ev === 'string' ? ev : ev?.code

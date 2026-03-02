@@ -178,8 +178,15 @@ const changePage = (page) => {
 };
 
 const formatPrice = (price) => {
-  if (!price) return '가격 미정';
-  return new Intl.NumberFormat('ko-KR').format(price) + '원';
+  if (!price && price !== 0) return '가격 미정';
+  const s = String(price).replace(/,/g, '').trim();
+  const rangeMatch = s.match(/^(\d+)\s*~\s*(\d+)$/);
+  if (rangeMatch) {
+    return Number(rangeMatch[1]).toLocaleString() + ' ~ ' + Number(rangeMatch[2]).toLocaleString() + '원';
+  }
+  const num = Number(s);
+  if (isNaN(num)) return '가격 미정';
+  return num.toLocaleString() + '원';
 };
 </script>
 

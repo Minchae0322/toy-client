@@ -55,18 +55,6 @@
         </router-link>
       </div>
 
-      <!-- 구글 애즈 (가로 배너) -->
-      <div class="ad-banner">
-        <ins class="adsbygoogle"
-          style="display:block"
-          :data-ad-client="googleAdClient"
-          :data-ad-slot="googleAdSlot"
-          data-ad-format="horizontal"
-          data-full-width-responsive="true"
-        ></ins>
-        <span class="ad-label">AD</span>
-      </div>
-
       <!-- 실시간 요거 봄 섹션 -->
       <section class="yogurt-bom-section">
         <div class="yb-left">
@@ -378,8 +366,8 @@
                 <img v-if="getProductThumbnail(product)" :src="getProductThumbnail(product)" alt="" class="dash-bubble-bg-image" @error="handleImageError" />
                 <div v-if="getProductThumbnail(product)" class="dash-bubble-overlay"></div>
 
-                <span v-if="dashBubbleNodes[i]?.r > 35" class="dash-bubble-name" :style="{ fontSize: Math.max(9, dashBubbleNodes[i].r * 0.14) + 'px', color: getProductThumbnail(product) || i < 3 ? '#fff' : '#333', maxWidth: dashBubbleNodes[i].r * 1.4 + 'px' }">{{ product.name }}</span>
-                <span v-if="dashBubbleNodes[i]?.r > 45" class="dash-bubble-brand" :style="{ fontSize: Math.max(8, dashBubbleNodes[i].r * 0.11) + 'px', color: getProductThumbnail(product) || i < 3 ? 'rgba(255,255,255,0.85)' : '#999' }">{{ product.brand }}</span>
+                <span v-if="dashBubbleNodes[i]?.r > dashRadiusBounds.min * 1.3" class="dash-bubble-name" :style="{ fontSize: Math.max(9, dashBubbleNodes[i].r * 0.14) + 'px', color: getProductThumbnail(product) || i < 3 ? '#fff' : '#333', maxWidth: dashBubbleNodes[i].r * 1.4 + 'px' }">{{ product.name }}</span>
+                <span v-if="dashBubbleNodes[i]?.r > dashRadiusBounds.min * 1.6" class="dash-bubble-brand" :style="{ fontSize: Math.max(8, dashBubbleNodes[i].r * 0.11) + 'px', color: getProductThumbnail(product) || i < 3 ? 'rgba(255,255,255,0.85)' : '#999' }">{{ product.brand }}</span>
 
                 <!-- Top 3 뱃지 -->
                 <div v-if="i < 3" class="dash-rank-badge-top" :class="'rank-' + (i + 1)" :style="{ fontSize: Math.max(8, dashBubbleNodes[i].r * 0.12) + 'px' }">{{ i + 1 }}</div>
@@ -456,13 +444,8 @@ const dashboardSummary = ref({
 })
 const summaryLoading = ref(true)
 
-// 구글 애즈
-const googleAdClient = ref('ca-pub-XXXXXXXXXXXXXXXX')
-const googleAdSlot = ref('XXXXXXXXXX')
 
 // ==================== 버블 차트 관련 ====================
-const DASH_MIN_RADIUS = 22
-const DASH_MAX_RADIUS = 80
 const DASH_BUBBLE_LIMIT = 20
 
 const bubbleContainerRef = ref(null)
@@ -471,9 +454,17 @@ const bubbleHovered = ref(null)
 const bubbleMousePos = ref({ x: 0, y: 0 })
 let bubbleResizeObserver = null
 
-function getDashRadius(score, maxScore) {
-  if (!maxScore) return DASH_MIN_RADIUS
-  return DASH_MIN_RADIUS + (DASH_MAX_RADIUS - DASH_MIN_RADIUS) * Math.sqrt(score / maxScore)
+function calcDashRadiusBounds(count, W, H) {
+  const area = W * H
+  if (count <= 0 || !area) return { min: 28, max: 110 }
+  const maxR = Math.min(W, H) * (count === 1 ? 0.4 : count <= 3 ? 0.3 : 0.25)
+  const minR = Math.max(20, maxR * 0.25)
+  return { min: Math.round(minR), max: Math.round(Math.min(maxR, Math.min(W, H) * 0.45)) }
+}
+
+function getDashRadius(score, maxScore, minR, maxR) {
+  if (!maxScore) return minR
+  return minR + (maxR - minR) * Math.sqrt(score / maxScore)
 }
 
 function getDashRankColor(rank) {
@@ -486,21 +477,30 @@ function getDashRankColor(rank) {
 function computeBubbleLayout(nodeList, W, H) {
   if (!nodeList.length || !W || !H) return []
   const cx = W / 2, cy = H / 2
-  const pos = nodeList.map((n, i) => {
-    const angle = (i / nodeList.length) * Math.PI * 2
-    const dist = 40 + Math.min(cx, cy) * 0.35 * (i / nodeList.length)
-    return { x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist, vx: 0, vy: 0, r: n.r }
+  const n = nodeList.length
+
+  if (n === 1) return [{ x: cx, y: cy }]
+
+  const pos = nodeList.map((nd, i) => {
+    const angle = (i / n) * Math.PI * 2
+    const spread = n <= 5 ? 0.2 : 0.4
+    const dist = 30 + Math.min(cx, cy) * spread * (i / n)
+    return { x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist, vx: 0, vy: 0, r: nd.r }
   })
+
+  const gap = n <= 5 ? 4 : 6
+  const centerPull = n <= 5 ? 0.015 : 0.01
+
   for (let tick = 0; tick < 300; tick++) {
     const alpha = Math.max(0.001, 1 - tick / 300)
     for (let i = 0; i < pos.length; i++) {
       const dx = cx - pos[i].x, dy = cy - pos[i].y
-      const pull = 0.01 * alpha * (i < 3 ? 1.8 : 0.3)
+      const pull = centerPull * alpha * (i < 3 ? 1.8 : 0.3)
       pos[i].vx += dx * pull; pos[i].vy += dy * pull
       for (let j = i + 1; j < pos.length; j++) {
         const ddx = pos[i].x - pos[j].x, ddy = pos[i].y - pos[j].y
         const d = Math.sqrt(ddx * ddx + ddy * ddy) || 1
-        const minD = pos[i].r + pos[j].r + 4
+        const minD = pos[i].r + pos[j].r + gap
         if (d < minD) {
           const f = (minD - d) / d * 0.3
           pos[i].vx += ddx * f; pos[i].vy += ddy * f
@@ -524,9 +524,14 @@ const dashBubbleProducts = computed(() => {
 
 const dashMaxScore = computed(() => getProductPopularityScore(dashBubbleProducts.value[0]) || 1)
 
-const dashBubbleNodes = computed(() =>
-  dashBubbleProducts.value.map(p => ({ id: p.id, r: getDashRadius(getProductPopularityScore(p), dashMaxScore.value) }))
+const dashRadiusBounds = computed(() =>
+  calcDashRadiusBounds(dashBubbleProducts.value.length, bubbleDims.value.w, bubbleDims.value.h)
 )
+
+const dashBubbleNodes = computed(() => {
+  const { min, max } = dashRadiusBounds.value
+  return dashBubbleProducts.value.map(p => ({ id: p.id, r: getDashRadius(getProductPopularityScore(p), dashMaxScore.value, min, max) }))
+})
 
 const dashBubblePositions = computed(() => computeBubbleLayout(dashBubbleNodes.value, bubbleDims.value.w, bubbleDims.value.h))
 
@@ -879,12 +884,6 @@ onMounted(() => {
     loadYogurtBomFeeds()
   }, 30000)
 
-  // 구글 애즈 초기화
-  nextTick(() => {
-    try {
-      ;(window.adsbygoogle = window.adsbygoogle || []).push({})
-    } catch (e) { /* 광고 차단기 등 */ }
-  })
 })
 
 onUnmounted(() => {
@@ -990,33 +989,6 @@ onUnmounted(() => {
   .page-description { font-size: 0.8125rem; }
 }
 
-/* 구글 애즈 (가로 배너) */
-.ad-banner {
-  width: 100%;
-  min-height: 90px;
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  margin-bottom: 1rem;
-}
-
-.ad-banner ins {
-  width: 100%;
-  min-height: 90px;
-}
-
-.ad-label {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  font-size: 9px;
-  font-weight: 600;
-  color: #bbb;
-  letter-spacing: 0.05em;
-  pointer-events: none;
-}
 
 /* 글래스 배너 */
 .glass-banner {
@@ -2980,15 +2952,6 @@ onUnmounted(() => {
     font-size: 0.6875rem;
   }
 
-  .ad-banner {
-    min-height: 60px;
-    border-radius: 10px;
-    margin-bottom: 0.625rem;
-  }
-
-  .ad-banner ins {
-    min-height: 60px;
-  }
 
   /* 글래스 배너 컴팩트 */
   .glass-banner {

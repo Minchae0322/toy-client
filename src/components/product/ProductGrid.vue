@@ -102,15 +102,16 @@ const formatCount = (count) => {
 }
 
 const formatPrice = (price) => {
-  if (!price) return ''
-
-  // String 타입일 경우 숫자로 변환
-  const numPrice = typeof price === 'string' ? parseInt(price.replace(/,/g, '')) : price
-
-  if (numPrice === 0) return '무료'
-  if (isNaN(numPrice)) return ''
-
-  return numPrice.toLocaleString() + '원'
+  if (!price && price !== 0) return ''
+  const s = String(price).replace(/,/g, '').trim()
+  if (s === '0') return '무료'
+  const rangeMatch = s.match(/^(\d+)\s*~\s*(\d+)$/)
+  if (rangeMatch) {
+    return Number(rangeMatch[1]).toLocaleString() + ' ~ ' + Number(rangeMatch[2]).toLocaleString() + '원'
+  }
+  const num = Number(s)
+  if (isNaN(num)) return ''
+  return num.toLocaleString() + '원'
 }
 
 const getProductBadge = (productType) => {

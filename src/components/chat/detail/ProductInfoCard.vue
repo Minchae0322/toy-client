@@ -20,7 +20,7 @@
 
       <div class="product-details">
         <h4 class="product-name">{{ product.name }}</h4>
-        <div class="product-price">{{ formatPrice(product.price) }}원</div>
+        <div class="product-price">{{ formatPrice(product.price) }}</div>
         <div class="product-status" :class="statusClass">
           {{ statusText }}
         </div>
@@ -53,7 +53,15 @@ const emit = defineEmits(['view-product'])
 
 // 가격 포맷팅
 const formatPrice = (price) => {
-  return new Intl.NumberFormat('ko-KR').format(price || 0)
+  if (!price && price !== 0) return '0원'
+  const s = String(price).replace(/,/g, '').trim()
+  const rangeMatch = s.match(/^(\d+)\s*~\s*(\d+)$/)
+  if (rangeMatch) {
+    return Number(rangeMatch[1]).toLocaleString() + ' ~ ' + Number(rangeMatch[2]).toLocaleString() + '원'
+  }
+  const num = Number(s)
+  if (isNaN(num)) return '0원'
+  return num.toLocaleString() + '원'
 }
 
 // 상품 상태 관련

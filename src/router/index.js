@@ -290,6 +290,20 @@ const routes = [
     }
   },
 
+  // ==================== 법적 페이지 ====================
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: () => import('@/views/PrivacyPolicyView.vue'),
+    meta: { requiresAuth: false, public: true, title: '개인정보처리방침' }
+  },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: () => import('@/views/TermsOfServiceView.vue'),
+    meta: { requiresAuth: false, public: true, title: '이용약관' }
+  },
+
   // ==================== 리다이렉트 & 404 ====================
   { path: '/', redirect: '/dashboard' },
   {

@@ -217,6 +217,20 @@ onUnmounted(() => {
     <RouterView/>
   </main>
 
+  <!-- 푸터 -->
+  <footer v-if="!isAuthPage" class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <RouterLink to="/dashboard" class="footer-logo">요거뜨</RouterLink>
+        <div class="footer-links">
+          <RouterLink to="/terms">이용약관</RouterLink>
+          <RouterLink to="/privacy">개인정보처리방침</RouterLink>
+        </div>
+      </div>
+      <p class="footer-copy">&copy; {{ new Date().getFullYear() }} 요거뜨(yogurtte). All rights reserved.</p>
+    </div>
+  </footer>
+
   <!-- 글로벌 확인 다이얼로그 -->
   <GlobalConfirmDialog />
 
@@ -640,6 +654,55 @@ onUnmounted(() => {
 
 .main.auth-page {
   background: #ffffff;
+}
+
+/* ===================== 푸터 ===================== */
+.site-footer {
+  background: #ffffff;
+  border-top: 1px solid #f0f0f0;
+  padding: 24px 24px 32px;
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.footer-logo {
+  font-size: 15px;
+  font-weight: 700;
+  color: #888;
+  text-decoration: none;
+}
+
+.footer-links {
+  display: flex;
+  gap: 16px;
+}
+
+.footer-links a {
+  font-size: 13px;
+  color: #888;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.footer-links a:hover {
+  color: #333;
+}
+
+.footer-copy {
+  font-size: 12px;
+  color: #bbb;
+  margin: 0;
 }
 
 /* ===================== 반응형 ===================== */
