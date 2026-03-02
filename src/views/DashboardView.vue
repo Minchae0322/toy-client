@@ -301,14 +301,24 @@
           <div class="section-header">
             <div class="title-with-badge">
               <h2 class="section-title">실시간 제품 랭킹</h2>
-              <span class="sub-title">지금 가장 주목받는 아이템</span>
+              <div class="sub-title-row">
+                <span class="sub-title">지금 가장 주목받는 아이템</span>
+                <span class="sort-indicator">
+                  <span class="sort-dot" style="width:12px;height:12px;background:#7c3aed;"></span>
+                  <span class="sort-dot" style="width:9px;height:9px;background:#a78bfa;"></span>
+                  <span class="sort-dot" style="width:6px;height:6px;background:#c4b5fd;"></span>
+                  <span class="sort-label">크면 인기 많은 제품</span>
+                </span>
+              </div>
             </div>
-            <router-link :to="{ name: 'ProductRanking' }" class="view-all-btn">
-              전체보기
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-            </router-link>
+            <div class="header-right-group">
+              <router-link :to="{ name: 'ProductRanking' }" class="view-all-btn">
+                전체보기
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </router-link>
+            </div>
           </div>
 
           <div v-if="productsLoading" class="dash-bubble-wrapper">
@@ -366,30 +376,14 @@
                 <img v-if="getProductThumbnail(product)" :src="getProductThumbnail(product)" alt="" class="dash-bubble-bg-image" @error="handleImageError" />
                 <div v-if="getProductThumbnail(product)" class="dash-bubble-overlay"></div>
 
-                <span v-if="dashBubbleNodes[i]?.r > dashRadiusBounds.min * 1.3" class="dash-bubble-name" :style="{ fontSize: Math.max(9, dashBubbleNodes[i].r * 0.14) + 'px', color: getProductThumbnail(product) || i < 3 ? '#fff' : '#333', maxWidth: dashBubbleNodes[i].r * 1.4 + 'px' }">{{ product.name }}</span>
-                <span v-if="dashBubbleNodes[i]?.r > dashRadiusBounds.min * 1.6" class="dash-bubble-brand" :style="{ fontSize: Math.max(8, dashBubbleNodes[i].r * 0.11) + 'px', color: getProductThumbnail(product) || i < 3 ? 'rgba(255,255,255,0.85)' : '#999' }">{{ product.brand }}</span>
+                <span v-if="dashBubbleNodes[i]?.r > dashRadiusBounds.min * 1.3" class="dash-bubble-name" :style="{ fontSize: Math.max(9, dashBubbleNodes[i].r * 0.14) + 'px', color: getProductThumbnail(product) || i < 3 ? '#fff' : i < 6 ? '#3b1a6e' : '#4a3560', maxWidth: dashBubbleNodes[i].r * 1.4 + 'px' }">{{ product.name }}</span>
+                <span v-if="dashBubbleNodes[i]?.r > dashRadiusBounds.min * 1.6" class="dash-bubble-brand" :style="{ fontSize: Math.max(8, dashBubbleNodes[i].r * 0.11) + 'px', color: getProductThumbnail(product) || i < 3 ? 'rgba(255,255,255,0.85)' : 'rgba(90,60,120,0.7)' }">{{ product.brand }}</span>
 
                 <!-- Top 3 뱃지 -->
                 <div v-if="i < 3" class="dash-rank-badge-top" :class="'rank-' + (i + 1)" :style="{ fontSize: Math.max(8, dashBubbleNodes[i].r * 0.12) + 'px' }">{{ i + 1 }}</div>
                 <!-- 4위 이하 뱃지 -->
                 <div v-else class="dash-rank-badge-sm" :style="{ width: Math.max(14, dashBubbleNodes[i].r * 0.24) + 'px', height: Math.max(14, dashBubbleNodes[i].r * 0.24) + 'px', fontSize: Math.max(7, dashBubbleNodes[i].r * 0.12) + 'px' }">{{ i + 1 }}</div>
               </router-link>
-
-              <!-- 범례 -->
-              <div class="dash-bubble-legend">
-                <div class="dash-legend-item">
-                  <div class="dash-legend-dot big"></div>
-                  <span>인기 높음</span>
-                </div>
-                <svg width="24" height="10" viewBox="0 0 28 10" fill="none">
-                  <line x1="0" y1="5" x2="20" y2="5" stroke="#ccc" stroke-width="1.5"/>
-                  <path d="M17 1L24 5L17 9" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <div class="dash-legend-item">
-                  <div class="dash-legend-dot small"></div>
-                  <span>인기 낮음</span>
-                </div>
-              </div>
 
               <!-- 툴팁 -->
               <div v-if="bubbleTooltipProduct" class="dash-bubble-tooltip" :style="bubbleTooltipStyle">
@@ -467,11 +461,18 @@ function getDashRadius(score, maxScore, minR, maxR) {
   return minR + (maxR - minR) * Math.sqrt(score / maxScore)
 }
 
-function getDashRankColor(rank) {
+function getDashRankColor(rank, total) {
   if (rank === 1) return { bg: '#7c3aed', border: '#7c3aed', glow: 'rgba(124,58,237,0.12)' }
   if (rank === 2) return { bg: '#6366f1', border: '#6366f1', glow: 'rgba(99,102,241,0.1)' }
   if (rank === 3) return { bg: '#8b5cf6', border: '#8b5cf6', glow: 'rgba(139,92,246,0.1)' }
-  return { bg: '#fff', border: '#e5e7eb', glow: 'transparent' }
+  const n = Math.max(total || 20, 5)
+  const t = Math.min((rank - 4) / (n - 4), 1)
+  const r = Math.round(168 + t * (229 - 168))
+  const g = Math.round(139 + t * (231 - 139))
+  const b = Math.round(250 + t * (235 - 250))
+  const bg = `rgb(${r},${g},${b})`
+  const borderAlpha = 0.4 - t * 0.2
+  return { bg, border: `rgba(139,92,246,${borderAlpha})`, glow: `rgba(139,92,246,${0.08 - t * 0.05})` }
 }
 
 function computeBubbleLayout(nodeList, W, H) {
@@ -556,7 +557,8 @@ function getDashBubbleStyle(i) {
   const pos = dashBubblePositions.value[i]
   const r = dashBubbleNodes.value[i].r
   const rank = i + 1
-  const colors = getDashRankColor(rank)
+  const total = dashBubbleProducts.value.length
+  const colors = getDashRankColor(rank, total)
   const product = dashBubbleProducts.value[i]
   const isHov = bubbleHovered.value === product?.id
   const hasImage = !!getProductThumbnail(product)
@@ -566,10 +568,10 @@ function getDashBubbleStyle(i) {
     top: (pos.y - r) + 'px',
     width: (r * 2) + 'px',
     height: (r * 2) + 'px',
-    background: hasImage ? '#000' : (rank <= 3 ? colors.bg : '#fff'),
+    background: hasImage ? '#000' : colors.bg,
     borderColor: isHov ? '#7c3aed' : colors.border,
     boxShadow: isHov ? `0 8px 32px ${colors.glow}, 0 0 0 4px rgba(124,58,237,0.1)`
-      : rank <= 3 ? `0 4px 16px ${colors.glow}` : '0 2px 8px rgba(0,0,0,0.06)',
+      : `0 4px 16px ${colors.glow}`,
     zIndex: isHov ? 50 : rank <= 3 ? 10 : 1,
     textDecoration: 'none'
   }
@@ -584,13 +586,13 @@ function handleBubbleMouseMove(e) {
 function initBubbleContainer() {
   if (!bubbleContainerRef.value) return
   const rect = bubbleContainerRef.value.getBoundingClientRect()
-  bubbleDims.value = { w: rect.width, h: Math.max(320, rect.width * 0.55) }
+  bubbleDims.value = { w: rect.width, h: Math.max(500, Math.min(700, rect.width * 0.75)) }
 
   bubbleResizeObserver = new ResizeObserver(entries => {
     const entry = entries[0]
     if (entry) {
       const w = entry.contentRect.width
-      bubbleDims.value = { w, h: Math.max(320, w * 0.55) }
+      bubbleDims.value = { w, h: Math.max(500, Math.min(700, w * 0.75)) }
     }
   })
   bubbleResizeObserver.observe(bubbleContainerRef.value)
@@ -1461,12 +1463,12 @@ onUnmounted(() => {
 
 .title-with-badge {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .section-title {
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
@@ -1488,11 +1490,44 @@ onUnmounted(() => {
 
 .sub-title {
   font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  padding-left: 13px;
+}
+
+.sub-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-right-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sort-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: #f5f0ff;
+  border: 1px solid #ede5ff;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.sort-dot {
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sort-label {
+  font-size: 11px;
   font-weight: 500;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 3px 8px;
-  border-radius: 100px;
+  color: #8b5cf6;
+  margin-left: 2px;
 }
 
 .view-all-btn {
@@ -2599,53 +2634,14 @@ onUnmounted(() => {
   top: -3px;
   right: -3px;
   border-radius: 50%;
-  background: #fff;
+  background: rgba(255,255,255,0.9);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #9ca3af;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  border: 1.5px solid #e5e7eb;
-}
-
-/* 범례 */
-.dash-bubble-legend {
-  position: absolute;
-  bottom: 12px;
-  left: 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  pointer-events: none;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(6px);
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(229, 231, 235, 0.6);
-}
-.dash-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.dash-legend-item span {
-  font-size: 10px;
-  color: #6b7280;
-  font-weight: 500;
-}
-.dash-legend-dot.big {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #7c3aed;
-}
-.dash-legend-dot.small {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 1.5px solid #d1d5db;
-  background: #fff;
+  color: #7c3aed;
+  box-shadow: 0 1px 4px rgba(124,58,237,0.1);
+  border: 1.5px solid rgba(139,92,246,0.3);
 }
 
 /* 툴팁 */
@@ -3053,14 +3049,20 @@ onUnmounted(() => {
   }
 
   .section-title {
-    font-size: 0.875rem;
-    padding-left: 8px;
-    border-left-width: 2.5px;
+    font-size: 1.125rem;
   }
 
   .sub-title {
     font-size: 10px;
     padding: 2px 6px;
+  }
+
+  .sort-indicator {
+    padding: 2px 8px;
+  }
+
+  .sort-label {
+    font-size: 10px;
   }
 
   .view-all-link,

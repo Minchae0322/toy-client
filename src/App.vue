@@ -710,6 +710,9 @@ onUnmounted(() => {
   .logo-image {
     margin-left: 0;
   }
+  .site-footer {
+    padding-bottom: 100px;
+  }
 }
 
 @media (max-width: 380px) {

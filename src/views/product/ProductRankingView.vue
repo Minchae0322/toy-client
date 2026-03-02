@@ -13,9 +13,8 @@
       <div class="ranking-view">
         <!-- 헤더 -->
         <header class="page-header">
-          <span class="header-label">WEEKLY CHART</span>
-          <h1>HOT 100</h1>
-          <p class="header-desc">버블이 클수록 이번 주 인기가 높아요</p>
+          <h1>핫 아이템</h1>
+          <span class="sub-title">버블이 클수록 이번 주 인기가 높아요</span>
         </header>
 
         <!-- 검색 -->
@@ -146,7 +145,6 @@
 
             <!-- 캐리어 패널 -->
             <div ref="carrierPanelRef" class="carrier-panel">
-              <!-- 담긴 목록 -->
               <Transition name="panel-fade">
                 <div v-if="bagOpen" class="carrier-items">
                   <div class="carrier-items-header">
@@ -166,11 +164,7 @@
                   <button class="carrier-go-btn" @click="goToCarrier">내 캐리어 보러가기</button>
                 </div>
               </Transition>
-
-              <!-- 드롭 힌트 -->
               <div v-if="isOverBag && dragging" class="carrier-drop-hint">놓아서 담기!</div>
-
-              <!-- 캐리어 아이콘 -->
               <div
                 ref="bagRef"
                 class="carrier-icon"
@@ -762,10 +756,11 @@ onUnmounted(() => {
 .ranking-view { max-width: 1000px; margin: 0; }
 
 /* 헤더 */
-.page-header { padding: 20px 0 16px; }
-.header-label { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; color: #7c3aed; display: block; margin-bottom: 4px; padding-left: 13px; }
-.page-header h1 { font-size: 26px; font-weight: 800; color: #111; margin: 4px 0; border-left: 3px solid #9333ea; padding-left: 10px; }
-.header-desc { font-size: 13px; color: #94a3b8; margin: 0; padding-left: 13px; }
+.page-header { padding: 20px 0 8px; }
+.page-header h1 { font-size: 1rem; font-weight: 600; color: #1a1a1a; margin: 0 0 4px; padding-left: 10px; border-left: 3px solid #9333ea; }
+@media (min-width: 768px) { .page-header h1 { font-size: 1.125rem; } }
+@media (min-width: 1280px) { .page-header h1 { font-size: 1.3125rem; } }
+.sub-title { font-size: 12px; font-weight: 400; color: #999; padding-left: 13px; }
 
 /* 검색 */
 .search-box { position: relative; margin-bottom: 16px; }
@@ -1079,10 +1074,18 @@ onUnmounted(() => {
 
 /* 모바일 */
 @media (max-width: 640px) {
-  .page-header h1 { font-size: 22px; }
-  .carrier-panel { right: auto; left: 12px; align-items: flex-start; }
+  .page-header h1 { font-size: 0.875rem; padding-left: 8px; border-left-width: 2.5px; }
+  .sub-title { font-size: 10px; }
+  .carrier-panel {
+    position: fixed; bottom: 140px; right: auto; left: 50%; z-index: 200;
+    transform: translateX(-50%);
+    max-width: calc(400px + 32px); width: 100%; padding-right: 24px; box-sizing: border-box;
+    pointer-events: none;
+  }
+  .carrier-panel > * { pointer-events: auto; }
   .carrier-icon { width: 56px; height: 56px; border-radius: 16px; }
   .carrier-icon svg { width: 36px; height: 36px; }
+  .carrier-panel { padding-right: 20px; }
   .carrier-items { min-width: 210px; max-width: 260px; }
   .rank-bar { display: none; }
 }

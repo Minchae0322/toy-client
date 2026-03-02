@@ -265,18 +265,17 @@ defineExpose({ observerTarget });
 
 .title-with-badge {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .section-title {
   font-size: 1rem;
-  font-weight: 700;
-  color: #191F28;
+  font-weight: 600;
+  color: #1a1a1a;
   margin: 0;
   padding-left: 10px;
-  border-left: 3px solid #9333EA;
-  letter-spacing: -0.02em;
+  border-left: 3px solid #9333ea;
 }
 
 @media (min-width: 768px) {
@@ -293,11 +292,9 @@ defineExpose({ observerTarget });
 
 .sub-title {
   font-size: 12px;
-  font-weight: 500;
-  color: #8B95A1;
-  background: #F2F4F6;
-  padding: 3px 8px;
-  border-radius: 100px;
+  font-weight: 400;
+  color: #999;
+  padding-left: 13px;
 }
 
 /* 뷰 모드 스위처 */

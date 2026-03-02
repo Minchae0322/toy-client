@@ -410,6 +410,7 @@ onUnmounted(() => {
   box-sizing: border-box;
 }
 
+
 .app-container {
   background: var(--bg);
   min-height: 100vh;

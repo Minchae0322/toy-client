@@ -2,7 +2,10 @@
   <section v-if="battles.length > 0" class="hot-section">
     <!-- 헤더 -->
     <div class="section-header">
-      <h2 class="section-title">실시간 HOT</h2>
+      <div class="title-with-badge">
+        <h2 class="section-title">실시간 HOT</h2>
+        <span class="sub-title">유저들이 직접 고르는 승부</span>
+      </div>
       <button class="view-all-btn" @click="$emit('view-all')">더보기</button>
     </div>
 
@@ -124,23 +127,42 @@ const handleImageError = (battleId) => {
 /* 헤더 */
 .section-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 12px;
+}
+
+.title-with-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .section-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #0f172a;
+  color: #1a1a1a;
   margin: 0;
   padding-left: 10px;
   border-left: 3px solid #9333ea;
 }
 
+.sub-title {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  padding-left: 13px;
+}
+
 @media (min-width: 768px) {
   .section-title {
     font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .section-title {
+    font-size: 1.3125rem;
   }
 }
 

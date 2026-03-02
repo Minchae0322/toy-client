@@ -4,7 +4,6 @@
       <div class="title-with-badge">
         <h2 class="section-title">지금 뜨는 핫-기록</h2>
         <span class="sub-title">실시간 인기 리뷰</span>
-        <span class="live-indicator"><span class="dot"></span> LIVE</span>
       </div>
       <button class="view-all-link" @click="handleSeeAll">
         더보기
@@ -182,8 +181,8 @@ onUnmounted(() => {
 
 .title-with-badge {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .section-title {
@@ -209,38 +208,11 @@ onUnmounted(() => {
 
 .sub-title {
   font-size: 12px;
-  font-weight: 500;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 3px 8px;
-  border-radius: 100px;
+  font-weight: 400;
+  color: #999;
+  padding-left: 13px;
 }
 
-.live-indicator {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 3px 8px;
-  border-radius: 100px;
-  letter-spacing: 0.5px;
-}
-
-.live-indicator .dot {
-  width: 6px;
-  height: 6px;
-  background: #22c55e;
-  border-radius: 50%;
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
-}
 
 .view-all-link {
   display: flex;
