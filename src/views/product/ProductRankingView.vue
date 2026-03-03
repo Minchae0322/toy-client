@@ -369,12 +369,7 @@ const getPopularityScore = (product) => {
 }
 
 const filtered = computed(() => {
-  let list = products.value
-  if (searchKeyword.value.trim()) {
-    const kw = searchKeyword.value.toLowerCase().trim()
-    list = list.filter(p => p.name?.toLowerCase().includes(kw) || p.brand?.toLowerCase().includes(kw))
-  }
-  return list.sort((a, b) => getPopularityScore(b) - getPopularityScore(a))
+  return [...products.value].sort((a, b) => getPopularityScore(b) - getPopularityScore(a))
 })
 
 const bubbleProducts = computed(() => filtered.value.slice(0, bubbleLimit.value))
@@ -637,6 +632,9 @@ async function fetchRanking(reset = false) {
       searchCondition.categoryId = selectedCategoryId.value
       searchCondition.categoryDepth = selectedCategoryDepth.value
     }
+    if (searchKeyword.value.trim()) {
+      searchCondition.keyword = searchKeyword.value.trim()
+    }
 
     const response = await productService.getProducts(searchCondition, {
       page: currentPage.value,
@@ -686,6 +684,14 @@ function loadMore() {
 }
 
 // ==================== 라이프사이클 ====================
+let searchTimer = null
+watch(searchKeyword, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    fetchRanking(true)
+  }, 300)
+})
+
 watch(() => route.query, (query) => {
   if (query.categoryId) {
     selectedCategoryId.value = Number(query.categoryId)
