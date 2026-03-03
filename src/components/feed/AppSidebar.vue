@@ -356,8 +356,9 @@ const handleProtectedRoute = async (routeName) => {
 
 /* 버튼 텍스트 */
 .btn-text {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
   transition: color 0.2s;
 }
 
