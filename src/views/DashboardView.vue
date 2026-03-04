@@ -56,11 +56,76 @@
       </div>
 
       <!-- 실시간 요거 봄 섹션 -->
-      <YogurtBomSection
-        :feeds="yogurtBomFeeds"
-        :hot-feed-ids="hotFeedIds"
-        :loading="yogurtBomLoading"
-      />
+      <section class="yogurt-bom-section">
+        <div class="yb-left">
+          <div class="yb-title-box">
+            <svg class="yb-icon" width="26" height="20" viewBox="0 0 30 24" fill="none">
+              <!-- 왼쪽 눈 (세로로 긴) -->
+              <ellipse cx="8" cy="12" rx="5.5" ry="8" fill="rgba(255,255,255,0.25)" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="9" cy="10" r="3" fill="currentColor"/>
+              <circle cx="10" cy="8.5" r="1.2" fill="rgba(255,255,255,0.95)"/>
+              <circle cx="7.5" cy="11" r="0.5" fill="rgba(255,255,255,0.5)"/>
+              <!-- 오른쪽 눈 (세로로 긴) -->
+              <ellipse cx="22" cy="12" rx="5.5" ry="8" fill="rgba(255,255,255,0.25)" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="23" cy="10" r="3" fill="currentColor"/>
+              <circle cx="24" cy="8.5" r="1.2" fill="rgba(255,255,255,0.95)"/>
+              <circle cx="21.5" cy="11" r="0.5" fill="rgba(255,255,255,0.5)"/>
+            </svg>
+            <h2 class="yb-main-title">실시간 요거 봄</h2>
+          </div>
+          <span class="yb-update-time">업데이트 {{ lastUpdateTime }}</span>
+        </div>
+
+        <div class="yb-right">
+          <div v-if="yogurtBomLoading" class="yb-list">
+            <div v-for="i in 6" :key="i" class="yb-item skeleton-item">
+              <div class="skeleton yb-sk-rank"></div>
+              <div class="yb-sk-content">
+                <div class="skeleton yb-sk-line"></div>
+                <div class="skeleton yb-sk-line short"></div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="yogurtBomFeeds.length === 0" class="empty-state compact">
+            <p class="empty-text">실시간 데이터가 없습니다</p>
+          </div>
+
+          <div v-else ref="ybSwipeRef" class="yb-swipe-container" @scroll="onYbSwipe">
+            <div v-for="(page, pageIdx) in ybPages" :key="pageIdx" class="yb-swipe-page">
+              <div class="yb-list">
+                <router-link
+                  v-for="(feed, index) in page"
+                  :key="feed.feedId"
+                  :to="{ name: 'FeedDetail', params: { id: feed.feedId } }"
+                  class="yb-item"
+                >
+                  <span class="yb-rank-num">{{ pageIdx * 6 + index + 1 }}</span>
+                  <div class="yb-info">
+                    <span class="yb-product">{{ feed.productName }}</span>
+                    <span class="yb-author-name">{{ feed.buyPlace || '' }}</span>
+                  </div>
+                  <span v-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
+                  <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
+                </router-link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="yb-pagination">
+          <button
+            class="yb-page-btn"
+            :class="{ active: ybCurrentPage === 0 }"
+            @click="setYbPage(0)"
+          ></button>
+          <button
+            class="yb-page-btn"
+            :class="{ active: ybCurrentPage === 1 }"
+            @click="setYbPage(1)"
+          ></button>
+        </div>
+      </section>
 
       <div class="dashboard-content">
         <!-- 핫 피드 섹션 -->
@@ -356,7 +421,6 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
-import YogurtBomSection from '@/components/feed/YogurtBomSection.vue'
 import { feedService } from '@/services/FeedService'
 import { battleService } from '@/services/BattleService'
 import { productService } from '@/services/ProductService'
@@ -542,8 +606,9 @@ watch(() => hotProducts.value.length, (len) => {
 
 const yogurtBomFeeds = ref([])
 const lastUpdateTime = ref('')
-
-const hotFeedIds = computed(() => hotFeeds.value.map(f => f.feedId))
+const ybCurrentPage = ref(0)
+const ybSwipeRef = ref(null)
+let ybAutoSlideTimer = null
 
 // 캐시 관리 (5분 유효)
 const CACHE_DURATION = 5 * 60 * 1000
@@ -551,6 +616,58 @@ let yogurtBomCache = {
   data: null,
   timestamp: 0,
   updateTime: ''
+}
+
+const currentYogurtBomFeeds = computed(() => {
+  const start = ybCurrentPage.value * 6
+  return yogurtBomFeeds.value.slice(start, start + 6)
+})
+
+const ybPages = computed(() => {
+  const pages = []
+  for (let i = 0; i < yogurtBomFeeds.value.length; i += 6) {
+    pages.push(yogurtBomFeeds.value.slice(i, i + 6))
+  }
+  return pages
+})
+
+const setYbPage = (page) => {
+  ybCurrentPage.value = page
+  if (ybSwipeRef.value) {
+    const pageWidth = ybSwipeRef.value.offsetWidth
+    ybSwipeRef.value.scrollTo({ left: page * pageWidth, behavior: 'smooth' })
+  }
+  resetYbAutoSlide()
+}
+
+let ybSwipeTimeout = null
+const onYbSwipe = () => {
+  if (!ybSwipeRef.value) return
+  if (ybSwipeTimeout) clearTimeout(ybSwipeTimeout)
+  ybSwipeTimeout = setTimeout(() => {
+    const container = ybSwipeRef.value
+    if (!container) return
+    const pageWidth = container.offsetWidth
+    const page = Math.round(container.scrollLeft / pageWidth)
+    if (page !== ybCurrentPage.value) {
+      ybCurrentPage.value = page
+      resetYbAutoSlide()
+    }
+  }, 50)
+}
+
+const resetYbAutoSlide = () => {
+  if (ybAutoSlideTimer) {
+    clearInterval(ybAutoSlideTimer)
+  }
+  ybAutoSlideTimer = setInterval(() => {
+    const nextPage = ybCurrentPage.value === 0 ? 1 : 0
+    ybCurrentPage.value = nextPage
+    if (ybSwipeRef.value) {
+      const pageWidth = ybSwipeRef.value.offsetWidth
+      ybSwipeRef.value.scrollTo({ left: nextPage * pageWidth, behavior: 'smooth' })
+    }
+  }, 5000)
 }
 
 const feedsLoading = ref(true)
@@ -665,6 +782,29 @@ const loadYogurtBomFeeds = async (forceRefresh = false) => {
   }
 }
 
+const isNewFeed = (feed) => {
+  if (!feed.createdAt) return false
+  let createdAt
+  if (Array.isArray(feed.createdAt)) {
+    // LocalDateTime 배열 형식: [year, month, day, hour, minute, second]
+    const [y, m, d, h = 0, min = 0, s = 0] = feed.createdAt
+    createdAt = new Date(y, m - 1, d, h, min, s)
+  } else {
+    // "2026-02-08 14:00:33" 또는 "2026-02-08T14:00:33" 형식
+    const dateStr = feed.createdAt.replace(' ', 'T')
+    createdAt = new Date(dateStr)
+  }
+  if (isNaN(createdAt.getTime())) return false
+  // KST 기준 현재시간으로부터 24시간 이내면 NEW
+  const now = new Date()
+  const diffHours = (now - createdAt) / (1000 * 60 * 60)
+  return diffHours < 24
+}
+
+const isHotFeed = (feed) => {
+  return hotFeeds.value.some(hotFeed => hotFeed.feedId === feed.feedId)
+}
+
 let refreshTimer = null
 
 const formatNumber = (num) => {
@@ -739,6 +879,9 @@ onMounted(() => {
   loadHotProducts()
   loadYogurtBomFeeds()
 
+  // 요거 봄 자동 슬라이드 시작
+  resetYbAutoSlide()
+
   refreshTimer = setInterval(() => {
     loadYogurtBomFeeds()
   }, 30000)
@@ -749,6 +892,14 @@ onUnmounted(() => {
   if (refreshTimer) {
     clearInterval(refreshTimer)
     refreshTimer = null
+  }
+  if (ybAutoSlideTimer) {
+    clearInterval(ybAutoSlideTimer)
+    ybAutoSlideTimer = null
+  }
+  if (ybSwipeTimeout) {
+    clearTimeout(ybSwipeTimeout)
+    ybSwipeTimeout = null
   }
   if (bubbleResizeObserver) {
     bubbleResizeObserver.disconnect()
@@ -1040,6 +1191,241 @@ onUnmounted(() => {
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ===== 실시간 요거 봄 섹션 ===== */
+.yogurt-bom-section {
+  display: flex;
+  gap: 1rem;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.625rem;
+  border: 1px solid #f0f0f0;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .yogurt-bom-section {
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.yb-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.yb-title-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #9333ea;
+  padding: 0.625rem 1.125rem;
+  border-radius: 50px;
+}
+
+.yb-icon {
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+}
+
+.yb-main-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .yb-main-title {
+    font-size: 1rem;
+  }
+}
+
+.yb-update-time {
+  font-size: 0.6875rem;
+  color: #9ca3af;
+  padding-left: 0.25rem;
+}
+
+.yb-right {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.yb-swipe-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.yb-swipe-container::-webkit-scrollbar {
+  display: none;
+}
+
+.yb-swipe-page {
+  flex: 0 0 100%;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.yb-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, auto);
+  gap: 0.375rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .yb-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, auto);
+    gap: 0.5rem 2rem;
+  }
+}
+
+.yb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.yb-item:hover {
+  background: #faf5ff;
+  padding-left: 0.375rem;
+  margin-left: -0.375rem;
+}
+
+.yb-rank-num {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #9333ea;
+  min-width: 16px;
+}
+
+.yb-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.yb-product {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.yb-author-name {
+  font-size: 0.6875rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.yb-tag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.yb-tag.hot {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.yb-tag.new {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+/* 요거 봄 스켈레톤 */
+.yb-item.skeleton-item {
+  background: transparent;
+}
+
+.yb-sk-rank {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.yb-sk-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.yb-sk-line {
+  height: 14px;
+  border-radius: 4px;
+  width: 60%;
+}
+
+.yb-sk-line.short {
+  width: 30%;
+  height: 12px;
+}
+
+/* 요거 봄 페이지네이션 */
+.yb-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding-left: 0.75rem;
+}
+
+.yb-page-btn {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.yb-page-btn:hover {
+  background: #c4b5fd;
+}
+
+.yb-page-btn.active {
+  background: #9333ea;
+  width: 20px;
+  border-radius: 10px;
+}
+
+/* 요거 봄 빈 상태 */
+.empty-state.compact {
+  padding: 1.5rem 1rem;
+  background: #fafafa;
+  border-radius: 10px;
 }
 
 /* 대시보드 콘텐츠 */
@@ -2455,6 +2841,99 @@ onUnmounted(() => {
 
 /* ===== 모바일 컴팩트 레이아웃 ===== */
 @media (max-width: 767px) {
+  /* 실시간 요거 봄 모바일 */
+  .yogurt-bom-section {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 12px;
+  }
+
+  .yb-left {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .yb-title-box {
+    padding: 0.375rem 0.875rem;
+    border-radius: 50px;
+  }
+
+  .yb-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .yb-main-title {
+    font-size: 0.8125rem;
+  }
+
+  .yb-pagination {
+    position: absolute;
+    bottom: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding-left: 0;
+  }
+
+  .yogurt-bom-section {
+    position: relative;
+    padding-bottom: 2rem;
+  }
+
+  .yb-update-time {
+    font-size: 0.625rem;
+    padding-left: 0;
+  }
+
+  .yb-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, auto);
+    grid-auto-flow: column;
+    gap: 0.25rem 1rem;
+  }
+
+  .yb-item {
+    padding: 0.25rem 0;
+    gap: 0.375rem;
+  }
+
+  .yb-rank-num {
+    font-size: 0.75rem;
+    min-width: 14px;
+  }
+
+  .yb-product {
+    font-size: 0.75rem;
+    max-width: none;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .yb-author-name {
+    font-size: 0.625rem;
+  }
+
+  .yb-tag {
+    font-size: 0.5625rem;
+    padding: 0.0625rem 0.25rem;
+  }
+
+  .yb-sk-rank {
+    width: 14px;
+    height: 14px;
+  }
+
+  .yb-sk-line {
+    height: 12px;
+  }
+
+  .yb-sk-line.short {
+    height: 10px;
+  }
+
   /* 상단 모바일 */
   .page-header {
     padding: 0.5rem 0 0.375rem;
