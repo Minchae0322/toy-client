@@ -1,18 +1,13 @@
 <template>
-  <section
-    class="yb-card"
-    @touchstart="onTouchStart"
-    @touchend="onTouchEnd"
-  >
+  <section class="yb-card">
     <!-- Header -->
     <div class="yb-header">
-      <div class="yb-header-left">
-        <div class="yb-header-top">
-          <span class="yb-trend-badge">TREND</span>
-          <span class="yb-time">{{ currentTime }} 기준</span>
-        </div>
+      <div>
+        <p class="yb-subtitle">
+          실시간 업데이트 · {{ currentTime }}
+        </p>
         <h2 class="yb-title">
-          실시간 <span class="yb-title-accent">요거 봄</span>
+          요거 봄 <span class="yb-title-accent">Top {{ feeds.length || 12 }}</span>
         </h2>
       </div>
       <div class="yb-dots">
@@ -27,15 +22,19 @@
     </div>
 
     <!-- List Area -->
-    <div class="yb-list-area">
+    <div
+      class="yb-list-area"
+      @touchstart="onTouchStart"
+      @touchend="onTouchEnd"
+    >
       <!-- Loading -->
       <div v-if="loading" class="yb-slider">
         <div class="yb-page">
           <div v-for="i in 6" :key="i" class="yb-item skeleton-item">
-            <div class="yb-rank skeleton-block" style="width: 24px; height: 18px;"></div>
+            <div class="skeleton-block" style="width: 20px; height: 15px;"></div>
             <div class="yb-content">
-              <div class="skeleton-block" style="width: 70%; height: 15px; margin-bottom: 4px;"></div>
-              <div class="skeleton-block" style="width: 45%; height: 13px;"></div>
+              <div class="skeleton-block" style="width: 65%; height: 14px; margin-bottom: 4px;"></div>
+              <div class="skeleton-block" style="width: 40%; height: 12px;"></div>
             </div>
           </div>
         </div>
@@ -57,31 +56,31 @@
             @mouseenter="hovered = `${pIdx}-${idx}`"
             @mouseleave="hovered = null"
           >
-            <!-- Rank Number -->
+            <!-- Rank -->
             <span
               class="yb-rank"
-              :class="{ 'top3': pIdx * 6 + idx < 3 }"
+              :class="{ top3: pIdx * 6 + idx < 3 }"
             >{{ pIdx * 6 + idx + 1 }}</span>
 
-            <!-- Content -->
+            <!-- Info -->
             <div class="yb-content">
               <div class="yb-name-row">
-                <span class="yb-product-name">{{ feed.productName }}</span>
+                <span
+                  class="yb-product-name"
+                  :class="{ top3: pIdx * 6 + idx < 3 }"
+                >{{ feed.productName }}</span>
                 <span v-if="isHotFeed(feed)" class="yb-badge hot">HOT</span>
+                <span v-if="isNewFeed(feed)" class="yb-badge new">NEW</span>
               </div>
-              <span class="yb-buy-place">{{ feed.buyPlace || '' }}</span>
-            </div>
-
-            <!-- Arrow -->
-            <div class="yb-arrow" :class="{ visible: hovered === `${pIdx}-${idx}` }">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M7 5l5 5-5 5" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <p class="yb-buy-place">{{ feed.buyPlace || '' }}</p>
             </div>
           </router-link>
         </div>
       </div>
     </div>
+
+    <!-- Swipe hint (mobile) -->
+    <p class="yb-hint">좌우로 스와이프하여 더 많은 순위를 확인하세요</p>
   </section>
 </template>
 
@@ -109,18 +108,31 @@ const pages = computed(() => {
 
 const currentTime = computed(() => {
   const now = new Date()
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  return `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
 })
 
 const isHotFeed = (feed) => {
   return props.hotFeedIds.includes(feed.feedId)
 }
 
+const isNewFeed = (feed) => {
+  if (!feed.createdAt) return false
+  let createdAt
+  if (Array.isArray(feed.createdAt)) {
+    const [y, m, d, h = 0, min = 0, s = 0] = feed.createdAt
+    createdAt = new Date(y, m - 1, d, h, min, s)
+  } else {
+    createdAt = new Date(String(feed.createdAt).replace(' ', 'T'))
+  }
+  if (isNaN(createdAt.getTime())) return false
+  return (new Date() - createdAt) / (1000 * 60 * 60) < 24
+}
+
 const goToPage = (i) => {
   if (i === currentPage.value || animating.value) return
   animating.value = true
   currentPage.value = i
-  setTimeout(() => { animating.value = false }, 400)
+  setTimeout(() => { animating.value = false }, 450)
 }
 
 const onTouchStart = (e) => {
@@ -140,94 +152,71 @@ const onTouchEnd = (e) => {
 
 <style scoped>
 .yb-card {
-  background: #FFFFFF;
+  border: 1px solid #F2F2F2;
   border-radius: 24px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  background: #FFFFFF;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.03);
   margin-bottom: 0.75rem;
 }
 
 /* Header */
 .yb-header {
-  padding: 24px 20px 16px;
+  padding: 24px 20px 12px;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
 }
 
-.yb-header-left {
-  display: flex;
-  flex-direction: column;
-}
-
-.yb-header-top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.yb-trend-badge {
-  padding: 4px 10px;
-  background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
-  border-radius: 8px;
+.yb-subtitle {
   font-size: 12px;
-  font-weight: 700;
-  color: #FFF;
-  letter-spacing: 0.05em;
-}
-
-.yb-time {
-  font-size: 13px;
-  color: #6B7280;
+  color: #ADB5BD;
   font-weight: 500;
+  margin: 0 0 4px 0;
 }
 
 .yb-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #111827;
+  font-size: 19px;
+  font-weight: 700;
+  color: #1A1A1A;
   margin: 0;
   letter-spacing: -0.03em;
 }
 
 .yb-title-accent {
-  color: #7C3AED;
+  color: #9333EA;
 }
 
 /* Pagination dots */
 .yb-dots {
   display: flex;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 5px;
+  margin-bottom: 4px;
 }
 
 .yb-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   border: none;
-  background: #E5E7EB;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #E9ECEF;
+  transition: background 0.2s ease;
   cursor: pointer;
   padding: 0;
 }
 
 .yb-dot.active {
-  width: 24px;
-  background: #7C3AED;
+  background: #9333EA;
 }
 
 /* List area */
 .yb-list-area {
-  padding: 0 12px 24px;
+  padding: 0 8px 16px;
   overflow: hidden;
 }
 
 .yb-slider {
   display: flex;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .yb-page {
@@ -235,96 +224,99 @@ const onTouchEnd = (e) => {
   width: 100%;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 4px 12px;
+  gap: 2px 4px;
 }
 
 /* Item */
 .yb-item {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
-  border-radius: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
   background: transparent;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
-  position: relative;
 }
 
 .yb-item:hover {
-  background: #F9FAFB;
-  transform: translateY(-2px);
+  background: #F8F9FA;
 }
 
 /* Rank */
 .yb-rank {
-  width: 32px;
-  font-size: 18px;
-  font-weight: 800;
-  color: #D1D5DB;
-  font-style: italic;
+  width: 24px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #DEE2E6;
   margin-right: 12px;
-  text-align: center;
   flex-shrink: 0;
 }
 
 .yb-rank.top3 {
-  color: #7C3AED;
+  color: #9333EA;
 }
 
 /* Content */
 .yb-content {
   flex: 1;
-  overflow: hidden;
+  min-width: 0;
 }
 
 .yb-name-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 2px;
 }
 
 .yb-product-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1F2937;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4E5968;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.yb-product-name.top3 {
+  color: #1A1A1A;
+}
+
 .yb-badge {
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 1px 4px;
+  border-radius: 3px;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
 .yb-badge.hot {
-  background-color: #FEE2E2;
-  color: #EF4444;
+  background: #F3EAFF;
+  color: #9333EA;
+}
+
+.yb-badge.new {
+  background: #ECFDF5;
+  color: #10B981;
 }
 
 .yb-buy-place {
-  font-size: 13px;
-  color: #9CA3AF;
+  font-size: 12px;
+  color: #8B95A1;
   font-weight: 400;
+  margin: 2px 0 0 0;
 }
 
-/* Arrow */
-.yb-arrow {
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.yb-arrow.visible {
-  opacity: 1;
-  transform: translateX(0);
+/* Swipe hint */
+.yb-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #ADB5BD;
+  font-weight: 400;
+  margin: 0;
+  padding: 0 16px 16px;
+  display: none;
 }
 
 /* Skeleton */
@@ -333,10 +325,10 @@ const onTouchEnd = (e) => {
 }
 
 .skeleton-block {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 @keyframes skeleton-shimmer {
@@ -348,37 +340,35 @@ const onTouchEnd = (e) => {
 .yb-empty {
   padding: 2rem 1rem;
   text-align: center;
-  color: #9CA3AF;
-  font-size: 14px;
+  color: #ADB5BD;
+  font-size: 13px;
 }
 
 /* PC */
 @media (min-width: 768px) {
-  .yb-card {
-    border-radius: 32px;
-  }
-
   .yb-header {
-    padding: 32px 32px 24px;
+    padding: 32px 32px 20px;
   }
 
   .yb-title {
-    font-size: 26px;
+    font-size: 22px;
   }
 
   .yb-list-area {
-    padding: 0 20px 32px;
+    padding: 0 16px 24px;
   }
 
   .yb-page {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: repeat(3, auto);
-    gap: 8px 12px;
+    gap: 2px 4px;
   }
+}
 
-  .yb-item {
-    padding: 16px;
-    border-radius: 20px;
+/* Mobile: show swipe hint */
+@media (max-width: 767px) {
+  .yb-hint {
+    display: block;
   }
 }
 </style>
