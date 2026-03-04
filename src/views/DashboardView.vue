@@ -5,8 +5,13 @@
     <main class="main-content">
       <!-- 페이지 헤더 -->
       <header class="page-header">
-        <h1 class="page-title">트렌드 한눈에</h1>
-        <p class="page-description">인기 피드, 요거픽, 제품 랭킹을 모아봤어요</p>
+        <h1 class="page-title">
+          <svg class="title-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+            <polyline points="16 7 22 7 22 13" />
+          </svg>
+          트렌드 <span class="title-accent">한눈에</span>
+        </h1>
       </header>
 
       <!-- 통계 카드 -->
@@ -58,22 +63,14 @@
       <!-- 실시간 요거 봄 섹션 -->
       <section class="yogurt-bom-section">
         <div class="yb-left">
-          <div class="yb-title-box">
-            <svg class="yb-icon" width="26" height="20" viewBox="0 0 30 24" fill="none">
-              <!-- 왼쪽 눈 (세로로 긴) -->
-              <ellipse cx="8" cy="12" rx="5.5" ry="8" fill="rgba(255,255,255,0.25)" stroke="currentColor" stroke-width="1.5"/>
-              <circle cx="9" cy="10" r="3" fill="currentColor"/>
-              <circle cx="10" cy="8.5" r="1.2" fill="rgba(255,255,255,0.95)"/>
-              <circle cx="7.5" cy="11" r="0.5" fill="rgba(255,255,255,0.5)"/>
-              <!-- 오른쪽 눈 (세로로 긴) -->
-              <ellipse cx="22" cy="12" rx="5.5" ry="8" fill="rgba(255,255,255,0.25)" stroke="currentColor" stroke-width="1.5"/>
-              <circle cx="23" cy="10" r="3" fill="currentColor"/>
-              <circle cx="24" cy="8.5" r="1.2" fill="rgba(255,255,255,0.95)"/>
-              <circle cx="21.5" cy="11" r="0.5" fill="rgba(255,255,255,0.5)"/>
-            </svg>
-            <h2 class="yb-main-title">실시간 요거 봄</h2>
+          <div class="yb-status-badge">
+            <span class="pulse-dot"></span>
+            LIVE
           </div>
-          <span class="yb-update-time">업데이트 {{ lastUpdateTime }}</span>
+          <div class="yb-title-group">
+            <h2 class="yb-main-title">실시간<br/>요거 봄</h2>
+            <span class="yb-update-time">{{ lastUpdateTime }}</span>
+          </div>
         </div>
 
         <div class="yb-right">
@@ -100,13 +97,15 @@
                   :to="{ name: 'FeedDetail', params: { id: feed.feedId } }"
                   class="yb-item"
                 >
-                  <span class="yb-rank-num">{{ pageIdx * 6 + index + 1 }}</span>
+                  <span class="yb-rank-badge" :class="'rank-' + (pageIdx * 6 + index + 1)">{{ pageIdx * 6 + index + 1 }}</span>
                   <div class="yb-info">
                     <span class="yb-product">{{ feed.productName }}</span>
                     <span class="yb-author-name">{{ feed.buyPlace || '' }}</span>
                   </div>
-                  <span v-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
-                  <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
+                  <div class="yb-tag-group">
+                    <span v-if="isHotFeed(feed)" class="yb-tag hot">HOT</span>
+                    <span v-if="isNewFeed(feed)" class="yb-tag new">NEW</span>
+                  </div>
                 </router-link>
               </div>
             </div>
@@ -969,26 +968,31 @@ onUnmounted(() => {
 
 /* 페이지 헤더 */
 .page-header {
-  padding: 0.75rem 0 0.5rem;
+  padding: 1rem 0 0.625rem;
 }
 
 .page-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 0.125rem;
-  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #9333ea;
+  margin: 0;
+  letter-spacing: -0.03em;
 }
 
-.page-description {
-  font-size: 0.75rem;
-  color: #a78bfa;
-  margin: 0;
+.title-icon {
+  color: #9333ea;
+  flex-shrink: 0;
+}
+
+.title-accent {
+  color: #1a1a1a;
 }
 
 @media (min-width: 768px) {
-  .page-title { font-size: 1.25rem; }
-  .page-description { font-size: 0.8125rem; }
+  .page-title { font-size: 1.5rem; }
 }
 
 
@@ -1196,67 +1200,78 @@ onUnmounted(() => {
 /* ===== 실시간 요거 봄 섹션 ===== */
 .yogurt-bom-section {
   display: flex;
+  align-items: stretch;
   gap: 1rem;
-  background: #fff;
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 0.625rem;
-  border: 1px solid #f0f0f0;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 1.125rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid #f1f5f9;
+  box-shadow: none;
+  position: relative;
   overflow: hidden;
 }
 
-@media (min-width: 768px) {
-  .yogurt-bom-section {
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 0.75rem;
-  }
-}
-
+/* ===== LEFT: 실시간 펄스 애니메이션 ===== */
 .yb-left {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  flex-shrink: 0;
+  justify-content: space-between;
+  min-width: 100px;
+  padding-right: 1rem;
+  border-right: 1px solid #f1f2f6;
 }
 
-.yb-title-box {
+.yb-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: #9333ea;
-  padding: 0.625rem 1.125rem;
-  border-radius: 50px;
+  gap: 6px;
+  background: #f5f3ff;
+  color: #7c3aed;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 100px;
+  width: fit-content;
 }
 
-.yb-icon {
-  color: rgba(255, 255, 255, 0.9);
-  flex-shrink: 0;
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: #7c3aed;
+  border-radius: 50%;
+  animation: yb-pulse 1.5s infinite;
+}
+
+@keyframes yb-pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(124, 58, 237, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+}
+
+.yb-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .yb-main-title {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: #fff;
-  margin: 0;
-  white-space: nowrap;
-}
-
-@media (min-width: 768px) {
-  .yb-main-title {
-    font-size: 1rem;
-  }
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.2;
+  margin: 0.375rem 0;
 }
 
 .yb-update-time {
-  font-size: 0.6875rem;
-  color: #9ca3af;
-  padding-left: 0.25rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
 }
 
+/* ===== RIGHT: 리스트 영역 ===== */
 .yb-right {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 .yb-swipe-container {
@@ -1278,86 +1293,109 @@ onUnmounted(() => {
   scroll-snap-align: start;
 }
 
+/* ===== 그리드 & 아이템 ===== */
 .yb-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, auto);
-  gap: 0.375rem 1.5rem;
-}
-
-@media (min-width: 768px) {
-  .yb-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: repeat(2, auto);
-    gap: 0.5rem 2rem;
-  }
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem 0.75rem;
 }
 
 .yb-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.375rem 0;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border-radius: 6px;
+  padding: 0.375rem 0.5rem;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
   overflow: hidden;
 }
 
 .yb-item:hover {
-  background: #faf5ff;
-  padding-left: 0.375rem;
-  margin-left: -0.375rem;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
 
-.yb-rank-num {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #9333ea;
-  min-width: 16px;
+.yb-rank-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.yb-rank-badge.rank-1 {
+  background: #9333ea;
+  color: #fff;
+}
+
+.yb-rank-badge.rank-2 {
+  background: #a855f7;
+  color: #fff;
+}
+
+.yb-rank-badge.rank-3 {
+  background: #c084fc;
+  color: #fff;
 }
 
 .yb-info {
   flex: 1;
-  min-width: 0;
   display: flex;
-  align-items: center;
-  gap: 0.375rem;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
 .yb-product {
-  font-size: 0.8125rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #334155;
+  display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
 }
 
 .yb-author-name {
-  font-size: 0.6875rem;
-  color: #9ca3af;
-  white-space: nowrap;
-  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
 }
 
+.yb-tag-group {
+  display: flex;
+  gap: 2px;
+}
+
+/* 태그: 미세한 보더 추가 */
 .yb-tag {
-  font-size: 0.625rem;
-  font-weight: 700;
-  padding: 0.125rem 0.375rem;
-  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid transparent;
   flex-shrink: 0;
 }
 
 .yb-tag.hot {
-  background: #fef2f2;
-  color: #ef4444;
+  background: #fff1f2;
+  color: #f43f5e;
+  border-color: #ffe4e6;
 }
 
 .yb-tag.new {
-  background: #eff6ff;
-  color: #3b82f6;
+  background: #f0f9ff;
+  color: #0ea5e9;
+  border-color: #e0f2fe;
 }
 
 /* 요거 봄 스켈레톤 */
@@ -1390,25 +1428,23 @@ onUnmounted(() => {
   height: 12px;
 }
 
-/* 요거 봄 페이지네이션 */
+/* ===== 페이지네이션: 세로형 ===== */
 .yb-pagination {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding-left: 0.75rem;
+  gap: 8px;
 }
 
 .yb-page-btn {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  background: #cbd5e1;
   border: none;
-  background: #e5e7eb;
+  border-radius: 10px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
   padding: 0;
-  transition: all 0.2s ease;
 }
 
 .yb-page-btn:hover {
@@ -1416,9 +1452,8 @@ onUnmounted(() => {
 }
 
 .yb-page-btn.active {
-  background: #9333ea;
-  width: 20px;
-  border-radius: 10px;
+  height: 24px;
+  background: #7c3aed;
 }
 
 /* 요거 봄 빈 상태 */
@@ -2844,81 +2879,99 @@ onUnmounted(() => {
   /* 실시간 요거 봄 모바일 */
   .yogurt-bom-section {
     flex-direction: column;
+    padding: 0.875rem;
     gap: 0.75rem;
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-    border-radius: 12px;
+    border-radius: 16px;
   }
 
   .yb-left {
+    border-right: none;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 0 0 0.625rem 0;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    min-width: auto;
   }
 
-  .yb-title-box {
-    padding: 0.375rem 0.875rem;
-    border-radius: 50px;
-  }
-
-  .yb-icon {
-    width: 14px;
-    height: 14px;
+  .yb-title-group {
+    flex: 1;
+    margin-left: 0.5rem;
   }
 
   .yb-main-title {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
+    margin: 0;
   }
 
-  .yb-pagination {
-    position: absolute;
-    bottom: 0.75rem;
-    left: 50%;
-    transform: translateX(-50%);
-    padding-left: 0;
-  }
-
-  .yogurt-bom-section {
-    position: relative;
-    padding-bottom: 2rem;
+  .yb-main-title br {
+    display: none;
   }
 
   .yb-update-time {
     font-size: 0.625rem;
-    padding-left: 0;
+  }
+
+  .yb-status-badge {
+    font-size: 0.6rem;
+    padding: 3px 8px;
   }
 
   .yb-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(3, auto);
-    grid-auto-flow: column;
-    gap: 0.25rem 1rem;
+    gap: 0 0.5rem;
   }
 
   .yb-item {
-    padding: 0.25rem 0;
-    gap: 0.375rem;
+    padding: 0.3rem 0.375rem;
+    gap: 0.4rem;
+    border-radius: 8px;
   }
 
-  .yb-rank-num {
-    font-size: 0.75rem;
-    min-width: 14px;
+  .yb-rank-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    font-size: 0.65rem;
   }
 
   .yb-product {
     font-size: 0.75rem;
-    max-width: none;
-    flex: 1;
-    min-width: 0;
+  }
+
+  .yb-info {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .yb-product {
+    flex-shrink: 0;
+    max-width: 55%;
   }
 
   .yb-author-name {
     font-size: 0.625rem;
+    margin-top: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
   }
 
   .yb-tag {
-    font-size: 0.5625rem;
-    padding: 0.0625rem 0.25rem;
+    font-size: 0.55rem;
+    padding: 1px 4px;
+  }
+
+  .yb-pagination {
+    flex-direction: row;
+    margin-top: 0.5rem;
+    justify-content: center;
+  }
+
+  .yb-page-btn.active {
+    width: 20px;
+    height: 6px;
   }
 
   .yb-sk-rank {
@@ -2936,16 +2989,11 @@ onUnmounted(() => {
 
   /* 상단 모바일 */
   .page-header {
-    padding: 0.5rem 0 0.375rem;
+    padding: 0.75rem 0 0.5rem;
   }
 
   .page-title {
-    font-size: 1rem;
-    margin-bottom: 1px;
-  }
-
-  .page-description {
-    font-size: 0.6875rem;
+    font-size: 1.25rem;
   }
 
 
