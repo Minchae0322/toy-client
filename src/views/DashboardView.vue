@@ -1311,10 +1311,17 @@ onUnmounted(() => {
 }
 
 .yb-rank-num {
-  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #9333ea;
+  color: #fff;
+  font-size: 0.6875rem;
   font-weight: 700;
-  color: #9333ea;
-  min-width: 16px;
+  flex-shrink: 0;
 }
 
 .yb-info {
@@ -2901,8 +2908,9 @@ onUnmounted(() => {
   }
 
   .yb-rank-num {
-    font-size: 0.75rem;
-    min-width: 14px;
+    width: 18px;
+    height: 18px;
+    font-size: 0.625rem;
   }
 
   .yb-product {
