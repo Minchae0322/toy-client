@@ -59,6 +59,13 @@
       <section class="yogurt-bom-section">
         <div class="yb-left">
           <div class="yb-title-box">
+            <span class="yb-icon-circle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="8" cy="12" r="4"/>
+                <circle cx="16" cy="12" r="4"/>
+                <path d="M12 12h0"/>
+              </svg>
+            </span>
             <h2 class="yb-main-title">실시간 요거 봄</h2>
           </div>
           <span class="yb-update-time">업데이트 {{ lastUpdateTime }}</span>
@@ -1210,9 +1217,22 @@ onUnmounted(() => {
 .yb-title-box {
   display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
   background: #9333ea;
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
+  padding: 0.375rem 1rem 0.375rem 0.375rem;
+  border-radius: 50px;
+}
+
+.yb-icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  flex-shrink: 0;
 }
 
 .yb-main-title {
@@ -2840,8 +2860,18 @@ onUnmounted(() => {
   }
 
   .yb-title-box {
-    padding: 0.3125rem 0.75rem;
-    border-radius: 8px;
+    padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+    border-radius: 50px;
+  }
+
+  .yb-icon-circle {
+    width: 24px;
+    height: 24px;
+  }
+
+  .yb-icon-circle svg {
+    width: 13px;
+    height: 13px;
   }
 
   .yb-main-title {
