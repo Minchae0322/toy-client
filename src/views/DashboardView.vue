@@ -59,6 +59,18 @@
       <section class="yogurt-bom-section">
         <div class="yb-left">
           <div class="yb-title-box">
+            <svg class="yb-icon" width="26" height="20" viewBox="0 0 30 24" fill="none">
+              <!-- 왼쪽 눈 (세로로 긴) -->
+              <ellipse cx="8" cy="12" rx="5.5" ry="8" fill="rgba(255,255,255,0.25)" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="9" cy="10" r="3" fill="currentColor"/>
+              <circle cx="10" cy="8.5" r="1.2" fill="rgba(255,255,255,0.95)"/>
+              <circle cx="7.5" cy="11" r="0.5" fill="rgba(255,255,255,0.5)"/>
+              <!-- 오른쪽 눈 (세로로 긴) -->
+              <ellipse cx="22" cy="12" rx="5.5" ry="8" fill="rgba(255,255,255,0.25)" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="23" cy="10" r="3" fill="currentColor"/>
+              <circle cx="24" cy="8.5" r="1.2" fill="rgba(255,255,255,0.95)"/>
+              <circle cx="21.5" cy="11" r="0.5" fill="rgba(255,255,255,0.5)"/>
+            </svg>
             <h2 class="yb-main-title">실시간 요거 봄</h2>
           </div>
           <span class="yb-update-time">업데이트 {{ lastUpdateTime }}</span>
@@ -1210,23 +1222,28 @@ onUnmounted(() => {
 .yb-title-box {
   display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
   background: #9333ea;
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
+  padding: 0.625rem 1.125rem;
+  border-radius: 50px;
+}
+
+.yb-icon {
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
 }
 
 .yb-main-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.9375rem;
+  font-weight: 700;
   color: #fff;
   margin: 0;
   white-space: nowrap;
-  letter-spacing: 0.01em;
 }
 
 @media (min-width: 768px) {
   .yb-main-title {
-    font-size: 0.875rem;
+    font-size: 1rem;
   }
 }
 
@@ -2840,12 +2857,17 @@ onUnmounted(() => {
   }
 
   .yb-title-box {
-    padding: 0.3125rem 0.75rem;
-    border-radius: 8px;
+    padding: 0.375rem 0.875rem;
+    border-radius: 50px;
+  }
+
+  .yb-icon {
+    width: 14px;
+    height: 14px;
   }
 
   .yb-main-title {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
 
   .yb-pagination {
