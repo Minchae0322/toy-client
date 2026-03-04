@@ -231,7 +231,8 @@ const onTouchEnd = (e) => {
 }
 
 .yb-page {
-  min-width: 100%;
+  flex: 0 0 100%;
+  width: 100%;
   display: grid;
   grid-template-columns: 1fr;
   gap: 4px 12px;
@@ -371,6 +372,7 @@ const onTouchEnd = (e) => {
 
   .yb-page {
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(3, auto);
     gap: 8px 12px;
   }
 
