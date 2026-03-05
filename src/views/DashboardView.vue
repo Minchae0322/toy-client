@@ -1201,10 +1201,10 @@ onUnmounted(() => {
 .yogurt-bom-section {
   display: flex;
   align-items: stretch;
-  gap: 1rem;
+  gap: 0;
   background: #ffffff;
   border-radius: 24px;
-  padding: 1.125rem 1.25rem;
+  padding: 0;
   margin-bottom: 1rem;
   border: 1px solid #f1f5f9;
   box-shadow: none;
@@ -1217,9 +1217,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-width: 100px;
-  padding-right: 1rem;
-  border-right: 1px solid #f1f2f6;
+  min-width: 110px;
+  padding: 1.125rem 1.25rem;
+  background: rgba(255, 248, 225, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 220, 100, 0.25);
 }
 
 .yb-status-badge {
@@ -1278,6 +1281,7 @@ onUnmounted(() => {
 .yb-right {
   flex: 1;
   min-width: 0;
+  padding: 1.125rem 1.25rem;
 }
 
 .yb-swipe-container {
@@ -1440,6 +1444,7 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: center;
   gap: 8px;
+  padding-right: 1.25rem;
 }
 
 .yb-page-btn {
@@ -2898,7 +2903,10 @@ onUnmounted(() => {
     flex-direction: row;
     align-items: center;
     min-width: auto;
-    background: #FFF8E1;
+    background: rgba(255, 248, 225, 0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 220, 100, 0.25);
     border-radius: 0;
   }
 
