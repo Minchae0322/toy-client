@@ -1201,28 +1201,28 @@ onUnmounted(() => {
 .yogurt-bom-section {
   display: flex;
   align-items: stretch;
-  gap: 0;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 0;
-  margin-bottom: 1rem;
-  border: 1px solid #f1f5f9;
-  box-shadow: none;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.625rem;
+  border: 1px solid #f0f0f0;
   position: relative;
   overflow: hidden;
+  gap: 1rem;
 }
 
-/* ===== LEFT: 실시간 펄스 애니메이션 ===== */
+/* ===== LEFT ===== */
 .yb-left {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-width: 95px;
-  padding: 0.75rem 0.875rem;
-  background: rgba(255, 248, 225, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 100px;
+  padding: 0.75rem 1rem 0.75rem 0;
   border-right: 1px solid rgba(255, 220, 100, 0.25);
+  background: rgba(255, 248, 225, 0.55);
+  margin: -1rem 0 -1rem -1.25rem;
+  padding-left: 1.25rem;
 }
 
 .yb-status-badge {
@@ -1231,11 +1231,12 @@ onUnmounted(() => {
   gap: 5px;
   background: rgba(255, 180, 0, 0.15);
   color: #B8860B;
-  font-size: 0.6rem;
+  font-size: 0.625rem;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 100px;
   width: fit-content;
+  letter-spacing: 0.03em;
 }
 
 .pulse-dot {
@@ -1243,45 +1244,38 @@ onUnmounted(() => {
   height: 5px;
   background: #DAA520;
   border-radius: 50%;
-  animation: yb-pulse-gold 1.5s infinite;
+  animation: yb-pulse 1.5s infinite;
 }
 
 @keyframes yb-pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(124, 58, 237, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
-}
-
-@keyframes yb-pulse-gold {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(218, 165, 32, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(218, 165, 32, 0); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(218, 165, 32, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(218, 165, 32, 0); }
 }
 
 .yb-title-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.125rem;
 }
 
 .yb-main-title {
-  font-size: 0.9375rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 700;
   color: #8B6914;
-  line-height: 1.2;
-  margin: 0.25rem 0;
+  line-height: 1.25;
+  margin: 0;
 }
 
 .yb-update-time {
   font-size: 0.625rem;
-  color: #94a3b8;
+  color: #999;
 }
 
-/* ===== RIGHT: 리스트 영역 ===== */
+/* ===== RIGHT ===== */
 .yb-right {
   flex: 1;
   min-width: 0;
-  padding: 0.75rem 0.875rem;
 }
 
 .yb-swipe-container {
@@ -1307,39 +1301,37 @@ onUnmounted(() => {
 .yb-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.125rem 0.5rem;
+  gap: 0.25rem 0.75rem;
 }
 
 .yb-item {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.25rem 0.375rem;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
   border-radius: 8px;
   text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   min-width: 0;
   overflow: hidden;
 }
 
 .yb-item:hover {
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
+  background: #faf5ff;
 }
 
 .yb-rank-badge {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  font-size: 0.6875rem;
   font-weight: 800;
   flex-shrink: 0;
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: #f5f5f5;
+  color: #999;
 }
 
 .yb-rank-badge.rank-1 {
@@ -1353,7 +1345,7 @@ onUnmounted(() => {
 }
 
 .yb-rank-badge.rank-3 {
-  background: #c084fc;
+  background: #c4b5fd;
   color: #fff;
 }
 
@@ -1366,19 +1358,19 @@ onUnmounted(() => {
 }
 
 .yb-product {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #111;
   display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
 .yb-author-name {
-  font-size: 0.675rem;
-  color: #64748b;
-  margin-top: 1px;
+  font-size: 0.6875rem;
+  color: #bbb;
 }
 
 .yb-tag-group {
@@ -1386,26 +1378,22 @@ onUnmounted(() => {
   gap: 2px;
 }
 
-/* 태그: 미세한 보더 추가 */
 .yb-tag {
-  font-size: 0.575rem;
-  font-weight: 800;
+  font-size: 0.5625rem;
+  font-weight: 700;
   padding: 1px 5px;
-  border-radius: 5px;
-  border: 1px solid transparent;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
 .yb-tag.hot {
-  background: #fff1f2;
-  color: #f43f5e;
-  border-color: #ffe4e6;
+  background: #fef2f2;
+  color: #ef4444;
 }
 
 .yb-tag.new {
-  background: #f0f9ff;
-  color: #0ea5e9;
-  border-color: #e0f2fe;
+  background: #f3e8ff;
+  color: #9333ea;
 }
 
 /* 요거 봄 스켈레톤 */
@@ -1438,22 +1426,22 @@ onUnmounted(() => {
   height: 12px;
 }
 
-/* ===== 페이지네이션: 세로형 ===== */
+/* ===== 페이지네이션 ===== */
 .yb-pagination {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
-  padding-right: 0.875rem;
+  gap: 5px;
+  padding-right: 0.25rem;
 }
 
 .yb-page-btn {
   width: 6px;
   height: 6px;
-  background: #cbd5e1;
+  background: #e5e7eb;
   border: none;
   border-radius: 10px;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.2s ease;
   cursor: pointer;
   padding: 0;
 }
@@ -1463,8 +1451,8 @@ onUnmounted(() => {
 }
 
 .yb-page-btn.active {
-  height: 18px;
-  background: #7c3aed;
+  height: 16px;
+  background: #9333ea;
 }
 
 /* 요거 봄 빈 상태 */
@@ -2892,22 +2880,20 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 0;
     gap: 0;
-    border-radius: 16px;
+    border-radius: 14px;
     overflow: hidden;
+    margin-bottom: 0.5rem;
   }
 
   .yb-left {
     border-right: none;
-    border-bottom: none;
+    border-bottom: 1px solid rgba(255, 220, 100, 0.25);
     padding: 0.75rem 0.875rem;
+    margin: 0;
     flex-direction: row;
     align-items: center;
     min-width: auto;
     background: rgba(255, 248, 225, 0.55);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 220, 100, 0.25);
-    border-radius: 0;
   }
 
   .yb-right {
@@ -2941,15 +2927,6 @@ onUnmounted(() => {
 
   .yb-left .pulse-dot {
     background: #DAA520;
-    animation-name: yb-pulse-gold;
-  }
-
-  .yb-left .yb-main-title {
-    color: #8B6914;
-  }
-
-  .yb-left .yb-update-time {
-    color: #B8960B;
   }
 
   .yb-list {
@@ -2970,10 +2947,6 @@ onUnmounted(() => {
     font-size: 0.65rem;
   }
 
-  .yb-product {
-    font-size: 0.75rem;
-  }
-
   .yb-info {
     flex-direction: row;
     align-items: center;
@@ -2981,17 +2954,19 @@ onUnmounted(() => {
   }
 
   .yb-product {
-    flex-shrink: 0;
-    max-width: 55%;
+    font-size: 0.75rem;
+    flex: 1;
+    min-width: 0;
   }
 
   .yb-author-name {
     font-size: 0.625rem;
     margin-top: 0;
+    flex-shrink: 0;
+    max-width: 40%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 0;
   }
 
   .yb-tag {
