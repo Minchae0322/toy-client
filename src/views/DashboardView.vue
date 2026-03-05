@@ -1249,6 +1249,12 @@ onUnmounted(() => {
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
 }
 
+@keyframes yb-pulse-gold {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(218, 165, 32, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(218, 165, 32, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(218, 165, 32, 0); }
+}
+
 .yb-title-group {
   display: flex;
   flex-direction: column;
@@ -2879,18 +2885,25 @@ onUnmounted(() => {
   /* 실시간 요거 봄 모바일 */
   .yogurt-bom-section {
     flex-direction: column;
-    padding: 0.875rem;
-    gap: 0.75rem;
+    padding: 0;
+    gap: 0;
     border-radius: 16px;
+    overflow: hidden;
   }
 
   .yb-left {
     border-right: none;
-    border-bottom: 1px solid #f1f5f9;
-    padding: 0 0 0.625rem 0;
+    border-bottom: none;
+    padding: 0.75rem 0.875rem;
     flex-direction: row;
     align-items: center;
     min-width: auto;
+    background: #FFF8E1;
+    border-radius: 0;
+  }
+
+  .yb-right {
+    padding: 0.875rem;
   }
 
   .yb-title-group {
@@ -2914,6 +2927,21 @@ onUnmounted(() => {
   .yb-status-badge {
     font-size: 0.6rem;
     padding: 3px 8px;
+    background: rgba(255, 180, 0, 0.15);
+    color: #B8860B;
+  }
+
+  .yb-left .pulse-dot {
+    background: #DAA520;
+    animation-name: yb-pulse-gold;
+  }
+
+  .yb-left .yb-main-title {
+    color: #8B6914;
+  }
+
+  .yb-left .yb-update-time {
+    color: #B8960B;
   }
 
   .yb-list {
@@ -2965,7 +2993,8 @@ onUnmounted(() => {
 
   .yb-pagination {
     flex-direction: row;
-    margin-top: 0.5rem;
+    margin-top: 0;
+    padding: 0.5rem 0.875rem 0.75rem;
     justify-content: center;
   }
 
