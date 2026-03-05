@@ -241,7 +241,7 @@ onUnmounted(() => {
 <style scoped>
 /* ===================== 기본 설정 ===================== */
 * {
-  font-family: 'SUIT', -apple-system, "system-ui", "Segoe UI", sans-serif !important;
+  font-family: 'SUIT', -apple-system, "system-ui", "Segoe UI", "Malgun Gothic", "맑은 고딕", sans-serif !important;
 }
 
 /* ===================== 헤더 ===================== */
