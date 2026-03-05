@@ -1229,8 +1229,8 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #f5f3ff;
-  color: #7c3aed;
+  background: rgba(255, 180, 0, 0.15);
+  color: #B8860B;
   font-size: 0.6rem;
   font-weight: 800;
   padding: 3px 8px;
@@ -1241,9 +1241,9 @@ onUnmounted(() => {
 .pulse-dot {
   width: 5px;
   height: 5px;
-  background: #7c3aed;
+  background: #DAA520;
   border-radius: 50%;
-  animation: yb-pulse 1.5s infinite;
+  animation: yb-pulse-gold 1.5s infinite;
 }
 
 @keyframes yb-pulse {
@@ -1267,7 +1267,7 @@ onUnmounted(() => {
 .yb-main-title {
   font-size: 0.9375rem;
   font-weight: 800;
-  color: #1e293b;
+  color: #8B6914;
   line-height: 1.2;
   margin: 0.25rem 0;
 }
