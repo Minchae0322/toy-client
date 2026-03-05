@@ -918,7 +918,7 @@ onUnmounted(() => {
   background: #ffffff;
   min-height: 100vh;
   color: #1a1a1a;
-  font-family: 'SUIT', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'SUIT', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", sans-serif;
   display: flex;
   max-width: 100%;
   overflow-x: clip;
@@ -1203,7 +1203,7 @@ onUnmounted(() => {
   align-items: stretch;
   gap: 0;
   background: #ffffff;
-  border-radius: 24px;
+  border-radius: 18px;
   padding: 0;
   margin-bottom: 1rem;
   border: 1px solid #f1f5f9;
@@ -1217,8 +1217,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-width: 110px;
-  padding: 1.125rem 1.25rem;
+  min-width: 95px;
+  padding: 0.75rem 0.875rem;
   background: rgba(255, 248, 225, 0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -1228,19 +1228,19 @@ onUnmounted(() => {
 .yb-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: #f5f3ff;
   color: #7c3aed;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 800;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 100px;
   width: fit-content;
 }
 
 .pulse-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background: #7c3aed;
   border-radius: 50%;
   animation: yb-pulse 1.5s infinite;
@@ -1265,15 +1265,15 @@ onUnmounted(() => {
 }
 
 .yb-main-title {
-  font-size: 1.125rem;
+  font-size: 0.9375rem;
   font-weight: 800;
   color: #1e293b;
   line-height: 1.2;
-  margin: 0.375rem 0;
+  margin: 0.25rem 0;
 }
 
 .yb-update-time {
-  font-size: 0.7rem;
+  font-size: 0.625rem;
   color: #94a3b8;
 }
 
@@ -1281,7 +1281,7 @@ onUnmounted(() => {
 .yb-right {
   flex: 1;
   min-width: 0;
-  padding: 1.125rem 1.25rem;
+  padding: 0.75rem 0.875rem;
 }
 
 .yb-swipe-container {
@@ -1307,15 +1307,15 @@ onUnmounted(() => {
 .yb-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.25rem 0.75rem;
+  gap: 0.125rem 0.5rem;
 }
 
 .yb-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 0.5rem;
-  border-radius: 10px;
+  gap: 0.375rem;
+  padding: 0.25rem 0.375rem;
+  border-radius: 8px;
   text-decoration: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 0;
@@ -1329,13 +1329,13 @@ onUnmounted(() => {
 }
 
 .yb-rank-badge {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 800;
   flex-shrink: 0;
   background: #f1f5f9;
@@ -1366,7 +1366,7 @@ onUnmounted(() => {
 }
 
 .yb-product {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #334155;
   display: block;
@@ -1376,9 +1376,9 @@ onUnmounted(() => {
 }
 
 .yb-author-name {
-  font-size: 0.75rem;
+  font-size: 0.675rem;
   color: #64748b;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .yb-tag-group {
@@ -1388,10 +1388,10 @@ onUnmounted(() => {
 
 /* 태그: 미세한 보더 추가 */
 .yb-tag {
-  font-size: 0.65rem;
+  font-size: 0.575rem;
   font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 1px 5px;
+  border-radius: 5px;
   border: 1px solid transparent;
   flex-shrink: 0;
 }
@@ -1443,8 +1443,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 8px;
-  padding-right: 1.25rem;
+  gap: 6px;
+  padding-right: 0.875rem;
 }
 
 .yb-page-btn {
@@ -1463,7 +1463,7 @@ onUnmounted(() => {
 }
 
 .yb-page-btn.active {
-  height: 24px;
+  height: 18px;
   background: #7c3aed;
 }
 
