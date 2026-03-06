@@ -36,6 +36,9 @@ import BattleDetailView from '@/views/battle/BattleDetailView.vue'
 // Carrier Views import
 import CarrierView from '@/views/carrier/CarrierView.vue'
 
+// Collection Views import
+import CollectionView from '@/views/CollectionView.vue'
+
 // User Views import
 import MyPageView from '@/views/MyPageView.vue'
 
@@ -147,6 +150,14 @@ const routes = [
     name: 'Carrier',
     component: CarrierView,
     meta: { requiresAuth: true, title: '내 캐리어' }
+  },
+
+  // ==================== 컬렉션(레벨/뱃지) 관련 라우트 ====================
+  {
+    path: '/collection',
+    name: 'Collection',
+    component: CollectionView,
+    meta: { requiresAuth: false, public: true, title: '컬렉션 - 레벨 & 뱃지', description: '5단계 레벨 시스템과 10종 뱃지 컬렉션을 확인하세요.' }
   },
 
   // ==================== 마이페이지 관련 라우트 ====================
