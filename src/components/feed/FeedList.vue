@@ -479,7 +479,7 @@ defineExpose({ observerTarget });
 
 .list-quote {
   color: #C4B5FD;
-  font-family: Georgia, serif;
+  font-family: 'SUIT', sans-serif;
   font-size: 16px;
   margin-right: 1px;
 }

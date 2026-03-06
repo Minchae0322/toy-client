@@ -194,7 +194,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   min-height: calc(1.5em * 2);
   letter-spacing: -0.02em; word-break: keep-all;
 }
-.quote { color: #C4B5FD; font-size: 16px; font-family: Georgia, serif; margin-right: 1px; }
+.quote { color: #C4B5FD; font-size: 16px; font-family: 'SUIT', sans-serif; margin-right: 1px; }
 
 /* 제품 정보 박스 */
 .product-info-box {

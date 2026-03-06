@@ -2083,7 +2083,6 @@ onUnmounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-style: italic;
 }
 
 /* 제품 정보 행 */
