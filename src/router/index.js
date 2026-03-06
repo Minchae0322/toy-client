@@ -303,6 +303,12 @@ const routes = [
     component: () => import('@/views/TermsOfServiceView.vue'),
     meta: { requiresAuth: false, public: true, title: '이용약관' }
   },
+  {
+    path: '/about',
+    name: 'About',
+    component: () => import('@/views/AboutView.vue'),
+    meta: { requiresAuth: false, public: true, title: '소개', description: '요거뜨 - 제품 리뷰, 랭킹, 피드를 한눈에 확인할 수 있는 커뮤니티 플랫폼입니다.' }
+  },
 
   // ==================== 리다이렉트 & 404 ====================
   { path: '/', redirect: '/dashboard' },
