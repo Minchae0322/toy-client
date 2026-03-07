@@ -236,7 +236,7 @@ const handleCreate = async (type) => {
 };
 
 const moreNavMap = {
-  home: { name: 'Dashboard', path: '/dashboard' },
+  home: { name: 'Dashboard', path: '/' },
   carrier: { name: 'Carrier', path: '/carrier' },
   chat: { name: 'Chat', path: '/chat' },
   mypage: { name: 'MyPage', path: '/mypage' },

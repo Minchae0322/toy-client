@@ -106,7 +106,7 @@ onUnmounted(() => {
   <header v-if="!isAuthPage" class="header">
     <div class="header-content">
       <!-- 로고 -->
-      <RouterLink to="/dashboard" class="logo">
+      <RouterLink to="/" class="logo">
         <img src="/images/logo5.png" alt="요거뜨" class="logo-image" />
       </RouterLink>
 
@@ -221,8 +221,9 @@ onUnmounted(() => {
   <footer v-if="!isAuthPage" class="site-footer">
     <div class="footer-inner">
       <div class="footer-top">
-        <RouterLink to="/dashboard" class="footer-logo">요거뜨</RouterLink>
+        <RouterLink to="/" class="footer-logo">요거뜨</RouterLink>
         <div class="footer-links">
+          <RouterLink to="/about">소개</RouterLink>
           <RouterLink to="/terms">이용약관</RouterLink>
           <RouterLink to="/privacy">개인정보처리방침</RouterLink>
         </div>

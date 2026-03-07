@@ -115,7 +115,7 @@ const providerLabel = computed(() => {
 })
 
 const redirectLabel = computed(() => {
-  const map = { '/feed': '피드', '/dashboard': '홈', '/mypage': '마이페이지', '/products': '상품 목록', '/carrier': '캐리어' }
+  const map = { '/feed': '피드', '/': '홈', '/mypage': '마이페이지', '/products': '상품 목록', '/carrier': '캐리어' }
   return map[redirectTarget.value] || '홈'
 })
 

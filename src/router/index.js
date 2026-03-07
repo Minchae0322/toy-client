@@ -55,7 +55,7 @@ import BulkProductAdminView from '@/views/product/BulkProductAdminView.vue'
 const routes = [
   // ==================== 대시보드 (홈) ====================
   {
-    path: '/dashboard',
+    path: '/',
     name: 'Dashboard',
     component: DashboardView,
     meta: { requiresAuth: false, public: true, description: '요거뜨 - 인기 제품 랭킹, 리뷰, 피드를 한눈에. 좋아하는 제품을 발견하고 공유하세요.' }
@@ -322,7 +322,7 @@ const routes = [
   },
 
   // ==================== 리다이렉트 & 404 ====================
-  { path: '/', redirect: '/dashboard' },
+  { path: '/dashboard', redirect: '/' },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',

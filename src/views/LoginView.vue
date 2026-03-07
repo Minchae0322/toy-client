@@ -2,7 +2,7 @@
   <div class="auth-wrapper">
     <div class="auth-container">
       <div class="logo-area">
-        <RouterLink to="/dashboard">
+        <RouterLink to="/">
           <img src="/images/yogodde02.png" alt="요거뜨" class="logo-image" />
         </RouterLink>
       </div>
