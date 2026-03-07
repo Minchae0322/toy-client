@@ -414,9 +414,10 @@ const showFollowings = () => console.log('팔로잉 목록')
 const goToProfile = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToMyFeeds = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToMyProducts = () => router.push({name: 'MyProducts'})
-const goToSavedPosts = () => console.log('저장한 글')
-const goToNotificationSettings = () => console.log('알림 설정')
-const goToAccountSettings = () => console.log('계정 설정')
+const showComingSoon = () => open({ type: 'alert', title: '준비중입니다', message: '해당 기능은 현재 준비중입니다.' })
+const goToSavedPosts = () => showComingSoon()
+const goToNotificationSettings = () => showComingSoon()
+const goToAccountSettings = () => showComingSoon()
 
 const handleLogout = async () => {
   const confirmed = await open({ type: 'confirm', title: '로그아웃', message: '로그아웃 하시겠습니까?' })

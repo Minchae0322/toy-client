@@ -250,7 +250,6 @@
       </template>
     </main>
 
-    <LoginModal v-if="showLoginModal" :title="loginModalTitle" :message="loginModalMessage" @close="closeLoginModal" />
   </div>
 </template>
 
@@ -264,21 +263,17 @@ import { carrierService, CARRIER_TYPE } from '@/services/CarrierService.js'
 
 import FeedCard from '@/components/product/detail/FeedCard.vue'
 import BattleCard from '@/components/product/detail/BattleCard.vue'
-import LoginModal from '@/components/product/detail/LoginModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const { isLoggedIn, userId } = useAuth()
-const { open } = useConfirmDialog()
+const { open, openLoginRequired } = useConfirmDialog()
 
 const defaultImage = 'https://placehold.co/400x400?text=No+Image'
 
 const loading = ref(true)
 const error = ref(null)
 const actionLoading = ref(false)
-const showLoginModal = ref(false)
-const loginModalTitle = ref('')
-const loginModalMessage = ref('')
 const activeTab = ref('feed')
 const isInCarrier = ref(false)
 const carrierLoading = ref(false)
@@ -415,15 +410,15 @@ const fetchBattles = async (productId, loadMore = false) => {
   }
 }
 
-const showLoginRequiredModal = (title, message) => {
-  loginModalTitle.value = title
-  loginModalMessage.value = message
-  showLoginModal.value = true
+const showLoginRequiredModal = async (message) => {
+  const confirmed = await openLoginRequired(message)
+  if (confirmed) {
+    router.push({ name: 'Login', query: { redirect: route.fullPath } })
+  }
 }
-const closeLoginModal = () => { showLoginModal.value = false }
 
 const handleLikeAction = async () => {
-  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '좋아요를 누르려면 로그인해주세요.')
+  if (!isLoggedIn.value) return showLoginRequiredModal('좋아요를 누르려면 로그인해주세요.')
   try {
     actionLoading.value = true
     const response = await productService.likeProduct(product.value.id)
@@ -433,7 +428,7 @@ const handleLikeAction = async () => {
 }
 
 const handleBookmarkAction = async () => {
-  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '저장하려면 로그인해주세요.')
+  if (!isLoggedIn.value) return showLoginRequiredModal('저장하려면 로그인해주세요.')
   try {
     actionLoading.value = true
     const response = await productService.bookmarkProduct(product.value.id)
@@ -443,7 +438,7 @@ const handleBookmarkAction = async () => {
 }
 
 const handleAddToCarrier = async () => {
-  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '캐리어에 담으려면 로그인해주세요.')
+  if (!isLoggedIn.value) return showLoginRequiredModal('캐리어에 담으려면 로그인해주세요.')
   if (isInCarrier.value || carrierLoading.value) return
   carrierLoading.value = true
   try {
@@ -501,12 +496,12 @@ const handleShareAction = async () => {
 }
 
 const handleWriteFeed = () => {
-  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '피드를 작성하려면 로그인해주세요.')
+  if (!isLoggedIn.value) return showLoginRequiredModal('피드를 작성하려면 로그인해주세요.')
   router.push(`/products/${product.value.id}/feed/write`)
 }
 
 const handleFeedLike = (feedId) => {
-  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '좋아요를 누르려면 로그인해주세요.')
+  if (!isLoggedIn.value) return showLoginRequiredModal('좋아요를 누르려면 로그인해주세요.')
   const feed = feeds.value.find(f => f.id === feedId)
   if (feed) {
     feed.liked = !feed.liked
@@ -515,12 +510,12 @@ const handleFeedLike = (feedId) => {
 }
 
 const handleCreateBattle = () => {
-  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '배틀을 만들려면 로그인해주세요.')
+  if (!isLoggedIn.value) return showLoginRequiredModal('배틀을 만들려면 로그인해주세요.')
   router.push(`/battles/create?productId=${product.value.id}`)
 }
 
 const handleVote = (battleId) => {
-  if (!isLoggedIn.value) return showLoginRequiredModal('로그인이 필요합니다', '투표하려면 로그인해주세요.')
+  if (!isLoggedIn.value) return showLoginRequiredModal('투표하려면 로그인해주세요.')
   router.push(`/battles/${battleId}`)
 }
 
