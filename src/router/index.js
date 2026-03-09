@@ -323,6 +323,7 @@ const routes = [
 
   // ==================== 리다이렉트 & 404 ====================
   { path: '/dashboard', redirect: '/' },
+  { path: '/home', redirect: '/' },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
