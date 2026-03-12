@@ -381,6 +381,16 @@ const radiusBounds = computed(() =>
 
 const nodes = computed(() => {
   const { min, max } = radiusBounds.value
+  const scores = bubbleProducts.value.map(p => getPopularityScore(p))
+  const actualMax = Math.max(...scores, 0)
+  // 모든 인기도가 동일하면(0 포함) 화면을 꽉 채우는 균일한 크기 사용
+  if (actualMax === 0 || scores.every(s => s === scores[0])) {
+    const { w, h } = dims.value
+    const count = bubbleProducts.value.length || 1
+    const uniformR = Math.sqrt((w * h * 0.65) / (count * Math.PI))
+    const cappedR = Math.round(Math.max(min, Math.min(uniformR, max)))
+    return bubbleProducts.value.map(p => ({ id: p.id, r: cappedR }))
+  }
   return bubbleProducts.value.map(p => ({ id: p.id, r: getRadius(getPopularityScore(p), maxScore.value, min, max) }))
 })
 
