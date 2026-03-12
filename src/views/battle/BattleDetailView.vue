@@ -554,6 +554,10 @@ export default {
 
     handleVote(itemId, rank) {
       if (this.submitting) return
+      if (!this.canVote) {
+        this.open({ type: 'alert', title: '투표 종료', message: '종료된 요거픽에는 투표할 수 없습니다.' })
+        return
+      }
 
       // 로그인 체크
       const userId = getUserId()
@@ -594,6 +598,10 @@ export default {
 
     async submitVote(argumentText = '') {
       if (this.submitting) return
+      if (!this.canVote) {
+        await this.open({ type: 'alert', title: '투표 종료', message: '종료된 요거픽에는 투표할 수 없습니다.' })
+        return
+      }
 
       // 로그인 체크
       const userId = getUserId()
