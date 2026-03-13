@@ -295,94 +295,6 @@
           </div>
         </section>
 
-        <!-- 핫 아이템 섹션 -->
-        <section class="content-section hot-items-section">
-          <div class="section-header">
-            <div class="title-with-badge">
-              <h2 class="section-title">핫 아이템</h2>
-              <span class="sub-title">지금 가장 인기 있는 제품</span>
-            </div>
-            <router-link :to="{ name: 'ProductRanking' }" class="view-all-btn">
-              전체보기
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-            </router-link>
-          </div>
-
-          <div v-if="hotItemsLoading" class="hot-items-scroll">
-            <div v-for="i in 5" :key="i" class="hot-item-card skeleton-card">
-              <div class="skeleton" style="width:100%;height:160px;border-radius:10px 10px 0 0;"></div>
-              <div style="padding:12px;">
-                <div class="skeleton" style="height:12px;width:40%;margin-bottom:8px;"></div>
-                <div class="skeleton" style="height:14px;width:80%;margin-bottom:6px;"></div>
-                <div class="skeleton" style="height:12px;width:60%;"></div>
-              </div>
-            </div>
-          </div>
-
-          <div v-else-if="hotItems.length === 0" class="empty-state">
-            <div class="empty-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                <path d="M4 22h16" />
-                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-              </svg>
-            </div>
-            <p class="empty-text">인기 아이템이 없습니다</p>
-          </div>
-
-          <div v-else class="hot-items-scroll">
-            <router-link
-              v-for="(item, index) in hotItems"
-              :key="item.id || item.productId"
-              :to="{ name: 'ProductDetail', params: { id: item.id || item.productId } }"
-              class="hot-item-card"
-            >
-              <div class="hot-item-image-wrap">
-                <img
-                  v-if="item.thumbnailUrl"
-                  :src="item.thumbnailUrl"
-                  :alt="item.name"
-                  class="hot-item-image"
-                  @error="handleImageError"
-                />
-                <div v-else class="hot-item-image-placeholder">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                </div>
-                <span class="hot-item-rank" :class="'rank-' + (index + 1)">{{ index + 1 }}</span>
-                <span v-if="index < 3" class="hot-item-fire-badge">HOT</span>
-              </div>
-              <div class="hot-item-info">
-                <span class="hot-item-brand">{{ item.brand }}</span>
-                <h3 class="hot-item-name">{{ item.name }}</h3>
-                <div class="hot-item-rating" v-if="item.averageRating > 0">
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1"><path d="M7 1.16666L8.795 4.81249L12.8333 5.40166L9.91667 8.24916L10.59 12.2717L7 10.3792L3.41 12.2717L4.08333 8.24916L1.16667 5.40166L5.205 4.81249L7 1.16666Z"/></svg>
-                  <span>{{ Number(item.averageRating).toFixed(1) }}</span>
-                  <span class="hot-item-review-count">({{ item.reviewCount || 0 }})</span>
-                </div>
-                <div class="hot-item-price" v-if="item.displayPrice">{{ item.displayPrice }}</div>
-                <div class="hot-item-stats">
-                  <span class="hot-item-stat">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    {{ formatNumber(item.viewCount || 0) }}
-                  </span>
-                  <span class="hot-item-stat">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                    {{ formatNumber(item.likeCount || 0) }}
-                  </span>
-                </div>
-              </div>
-            </router-link>
-          </div>
-        </section>
-
         <!-- 실시간 제품 랭킹 섹션 (버블 차트) -->
         <section class="content-section ranking-section">
           <div class="section-header">
@@ -516,7 +428,6 @@ import { dashboardService } from '@/services/DashboardService'
 const hotFeeds = ref([])
 const hotBattles = ref([])
 const hotProducts = ref([])
-const hotItems = ref([])
 
 // 대시보드 요약 통계
 const dashboardSummary = ref({
@@ -762,7 +673,6 @@ const feedsLoading = ref(true)
 const yogurtBomLoading = ref(true)
 const battlesLoading = ref(true)
 const productsLoading = ref(true)
-const hotItemsLoading = ref(true)
 
 const loadDashboardSummary = async () => {
   summaryLoading.value = true
@@ -814,7 +724,7 @@ const loadHotProducts = async () => {
   productsLoading.value = true
   try {
     console.log('📦 [DASHBOARD] 제품 조회 시작')
-    const response = await productService.getProducts({}, { size: 20, sort: 'viewCount,DESC' })
+    const response = await productService.getProducts({ status: 'APPROVED' }, { page: 0, size: 20, sort: 'popularityScore,DESC' })
     console.log('📦 [DASHBOARD] 제품 응답:', response)
     if (response.success) {
       hotProducts.value = response.data?.content || response.data || []
@@ -826,23 +736,6 @@ const loadHotProducts = async () => {
     console.error('📦 [DASHBOARD] 제품 로드 실패:', error)
   } finally {
     productsLoading.value = false
-  }
-}
-
-const loadHotItems = async () => {
-  hotItemsLoading.value = true
-  try {
-    const response = await productService.getProducts(
-      { status: 'APPROVED' },
-      { page: 0, size: 20, sort: 'popularityScore,DESC' }
-    )
-    if (response.success) {
-      hotItems.value = response.data?.content || response.data || []
-    }
-  } catch (error) {
-    console.error('핫 아이템 로드 실패:', error)
-  } finally {
-    hotItemsLoading.value = false
   }
 }
 
@@ -983,7 +876,6 @@ onMounted(() => {
   loadHotFeeds()
   loadHotBattles()
   loadHotProducts()
-  loadHotItems()
   loadYogurtBomFeeds()
 
   // 요거 봄 자동 슬라이드 시작
@@ -2639,189 +2531,6 @@ onUnmounted(() => {
 /* 스켈레톤 */
 .battle-hot-card.skeleton-card .battle-hot-thumb {
   background: #e5e7eb;
-}
-
-/* ========================================
-   핫 아이템 섹션
-   ======================================== */
-.hot-items-section {
-  background: #fff;
-}
-
-.hot-items-scroll {
-  display: flex;
-  gap: 1rem;
-  overflow-x: auto;
-  padding-bottom: 0.75rem;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.hot-items-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.hot-item-card {
-  flex: 0 0 170px;
-  scroll-snap-align: start;
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #f0f0f0;
-  overflow: hidden;
-  text-decoration: none;
-  color: inherit;
-  transition: all 0.25s ease;
-}
-
-.hot-item-card:hover {
-  border-color: #e0d4f5;
-  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.1);
-  transform: translateY(-3px);
-}
-
-.hot-item-card.skeleton-card {
-  pointer-events: none;
-}
-
-.hot-item-image-wrap {
-  position: relative;
-  width: 100%;
-  height: 160px;
-  overflow: hidden;
-  background: #f8fafc;
-}
-
-.hot-item-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.hot-item-card:hover .hot-item-image {
-  transform: scale(1.06);
-}
-
-.hot-item-image-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f1f5f9;
-}
-
-.hot-item-rank {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
-}
-
-.hot-item-rank.rank-1 { background: #7c3aed; }
-.hot-item-rank.rank-2 { background: #6366f1; }
-.hot-item-rank.rank-3 { background: #8b5cf6; }
-
-.hot-item-fire-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 2px 7px;
-  border-radius: 4px;
-  font-size: 0.6rem;
-  font-weight: 800;
-  color: #fff;
-  background: linear-gradient(135deg, #f97316, #ef4444);
-  letter-spacing: 0.04em;
-}
-
-.hot-item-info {
-  padding: 0.75rem;
-}
-
-.hot-item-brand {
-  display: block;
-  font-size: 0.65rem;
-  color: #9333ea;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.hot-item-name {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 4px 0;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.hot-item-rating {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 4px;
-}
-
-.hot-item-review-count {
-  color: #9ca3af;
-  font-weight: 400;
-}
-
-.hot-item-price {
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #1e293b;
-  margin-bottom: 6px;
-}
-
-.hot-item-stats {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.hot-item-stat {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.68rem;
-  color: #9ca3af;
-}
-
-.hot-item-stat svg {
-  flex-shrink: 0;
-}
-
-@media (min-width: 768px) {
-  .hot-item-card {
-    flex: 0 0 190px;
-  }
-
-  .hot-item-image-wrap {
-    height: 180px;
-  }
 }
 
 /* 제품 랭킹 섹션 - 버블 차트 */
