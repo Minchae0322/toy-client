@@ -1429,10 +1429,10 @@ onUnmounted(() => {
 /* ===== 페이지네이션 ===== */
 .yb-pagination {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   gap: 5px;
-  padding-right: 0.25rem;
+  padding-top: 0.5rem;
 }
 
 .yb-page-btn {
@@ -1451,7 +1451,7 @@ onUnmounted(() => {
 }
 
 .yb-page-btn.active {
-  height: 16px;
+  width: 16px;
   background: #9333ea;
 }
 
