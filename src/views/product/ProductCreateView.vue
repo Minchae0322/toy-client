@@ -11,7 +11,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
         </button>
-        <h1 class="header-title">아이템 등록</h1>
+        <h1 class="header-title">{{ isEditMode ? '아이템 수정' : '아이템 등록' }}</h1>
         <div class="header-spacer"></div>
       </header>
 
@@ -276,9 +276,9 @@
                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
                 <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
               </svg>
-              등록 중...
+              {{ isEditMode ? '수정 중...' : '등록 중...' }}
             </template>
-            <template v-else>아이템 등록</template>
+            <template v-else>{{ isEditMode ? '아이템 수정' : '아이템 등록' }}</template>
           </button>
         </div>
       </footer>
@@ -292,8 +292,9 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useProduct } from '@/composables/useProduct.js'
+import { productService } from '@/services/ProductService.js'
 import { useFile } from '@/services/FileService.js'
 import { useAuth } from '@/composables/useAuth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
@@ -306,8 +307,12 @@ import SuccessModal from '@/components/product/create/SuccessModal.vue'
 import CategoryChipSelector from '@/components/common/CategoryChipSelector.vue'
 
 const router = useRouter()
+const route = useRoute()
 const { user, isLoggedIn, loading: authLoading, userId, userNickname, checkAuthStatus, logout } = useAuth()
 const { createProduct, debugStatus } = useProduct()
+
+const isEditMode = computed(() => !!route.params.id)
+const editProductId = computed(() => route.params.id)
 const { upload } = useFile()
 const { open } = useConfirmDialog()
 
@@ -373,8 +378,14 @@ watch(isLoggedIn, (newValue, oldValue) => {
 
 onMounted(async () => {
   await checkAuthenticationStatus()
-  if (isLoggedIn.value) await initializeComponent()
-  else showAuthRequiredMessage()
+  if (isLoggedIn.value) {
+    if (isEditMode.value) {
+      window.addEventListener('beforeunload', beforeUnloadHandler)
+      await loadProductForEdit()
+    } else {
+      await initializeComponent()
+    }
+  } else showAuthRequiredMessage()
 })
 
 onUnmounted(() => {
@@ -395,7 +406,7 @@ const checkAuthenticationStatus = async () => {
 const showAuthRequiredMessage = () => { showLoginModal.value = true }
 
 const handleLoggedOut = async () => {
-  if (hasFormData()) {
+  if (hasFormData() && !isEditMode.value) {
     saveDraft()
     await open({ type: 'alert', title: '알림', message: '로그아웃되었습니다. 입력하신 내용은 임시저장되었습니다.' })
   }
@@ -403,10 +414,14 @@ const handleLoggedOut = async () => {
 }
 
 const handleLoggedIn = async () => {
-  await initializeComponent()
-  if (localStorage.getItem('productFormDraft')) {
-    const confirmed = await open({ type: 'confirm', title: '확인', message: '이전에 작성하던 내용이 있습니다. 복원하시겠습니까?' })
-    if (confirmed) restoreDraft()
+  if (isEditMode.value) {
+    await loadProductForEdit()
+  } else {
+    await initializeComponent()
+    if (localStorage.getItem('productFormDraft')) {
+      const confirmed = await open({ type: 'confirm', title: '확인', message: '이전에 작성하던 내용이 있습니다. 복원하시겠습니까?' })
+      if (confirmed) restoreDraft()
+    }
   }
   showLoginModal.value = false
 }
@@ -420,6 +435,68 @@ const closeLoginModal = () => { showLoginModal.value = false; router.push('/') }
 const initializeComponent = async () => {
   try { restoreDraft(); debugStatus(); window.addEventListener('beforeunload', beforeUnloadHandler) }
   catch (error) { console.error('컴포넌트 초기화 실패:', error) }
+}
+
+const loadProductForEdit = async () => {
+  isLoading.value = true
+  try {
+    const response = await productService.getProduct(editProductId.value)
+    if (!response.success || !response.data) {
+      await open({ type: 'alert', title: '오류', message: '상품 정보를 불러오는데 실패했습니다.' })
+      router.push('/'); return
+    }
+    const p = response.data
+    form.name = p.name || ''
+    form.brand = p.brand || ''
+    form.description = p.description || ''
+    form.distributor = p.distributor || ''
+    form.releaseDate = p.releaseDate || ''
+    form.subCategoryId = p.subCategoryDetail?.subCategoryId || p.category?.id || p.categoryId || null
+
+    if (p.price) {
+      if (p.price.includes('~')) {
+        const [min, max] = p.price.split('~')
+        priceSingle.value = formatNumber(min)
+        priceMax.value = formatNumber(max)
+        showRange.value = true
+      } else {
+        priceSingle.value = formatNumber(p.price)
+      }
+    }
+
+    if (p.feature) {
+      selectedFeatures.value = p.feature.split(';').filter(f => f.trim())
+    }
+
+    if (p.tags) {
+      if (typeof p.tags === 'string') {
+        selectedTags.value = p.tags.split(';').filter(t => t.trim())
+      } else if (Array.isArray(p.tags)) {
+        selectedTags.value = [...p.tags]
+      }
+    }
+
+    const thumbUrl = p.thumbnailUrl || p.thumbnailDto?.fileUrl || (p.attachmentFiles?.length > 0 ? p.attachmentFiles[0].fileUrl : null)
+    if (thumbUrl) {
+      thumbnailFile.value = { file: null, preview: thumbUrl, isExisting: true, existingInfo: p.thumbnailDto || p.attachmentFiles?.[0] }
+    }
+
+    const allFiles = p.attachmentFiles || []
+    const thumbFileId = thumbnailFile.value?.existingInfo?.id || thumbnailFile.value?.existingInfo?.fileId
+    const additionalImgs = thumbFileId ? allFiles.filter(f => (f.id || f.fileId) !== thumbFileId) : allFiles.slice(1)
+    additionalFiles.value = additionalImgs.map(f => ({
+      file: null,
+      preview: f.fileUrl,
+      isExisting: true,
+      existingInfo: f
+    }))
+  } catch (error) {
+    console.error('상품 로드 실패:', error)
+    await open({ type: 'alert', title: '오류', message: '상품 정보를 불러오는데 실패했습니다.' })
+    router.push('/')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const validateField = (fieldName) => {
@@ -551,6 +628,15 @@ const buildPriceString = () => {
   return single || max || null
 }
 
+const buildImageInfo = (info) => ({
+  fileId: info.id || info.fileId,
+  storedPath: info.fileUrl || info.storedPath,
+  originName: info.orgFileNm || info.originName,
+  fileSize: info.fileSize,
+  contentType: info.contentType || 'image/jpeg',
+  fileExplain: '제품 이미지'
+})
+
 const handleSubmit = async () => {
   if (!isLoggedIn.value) {
     await open({ type: 'login', title: '로그인이 필요합니다', message: '제품을 등록하려면 로그인이 필요합니다.' })
@@ -569,30 +655,38 @@ const handleSubmit = async () => {
 
   isLoading.value = true
   try {
-    const thumbnailUploadResult = await upload(thumbnailFile.value.file, { fileCode: 'PRODUCT' })
-    if (!thumbnailUploadResult.success) throw new Error(`대표 이미지 업로드 실패: ${thumbnailUploadResult.error}`)
+    // 대표 이미지 처리
+    let thumbnailAttachmentInfo
+    if (thumbnailFile.value.isExisting) {
+      thumbnailAttachmentInfo = { ...buildImageInfo(thumbnailFile.value.existingInfo), fileExplain: '제품 대표 이미지' }
+    } else {
+      const thumbnailUploadResult = await upload(thumbnailFile.value.file, { fileCode: 'PRODUCT' })
+      if (!thumbnailUploadResult.success) throw new Error(`대표 이미지 업로드 실패: ${thumbnailUploadResult.error}`)
+      thumbnailAttachmentInfo = {
+        fileId: thumbnailUploadResult.data.id,
+        storedPath: thumbnailUploadResult.data.fileUrl,
+        originName: thumbnailUploadResult.data.orgFileNm,
+        fileSize: thumbnailUploadResult.data.fileSize,
+        contentType: thumbnailUploadResult.data.contentType || 'image/jpeg',
+        fileExplain: '제품 대표 이미지'
+      }
+    }
 
-    const additionalUploadResults = []
+    // 추가 이미지 처리
+    const attachmentFileInfos = []
     for (const fileObj of additionalFiles.value) {
-      const uploadResult = await upload(fileObj.file, { fileCode: 'PRODUCT' })
-      if (!uploadResult.success) throw new Error(`추가 이미지 업로드 실패: ${uploadResult.error}`)
-      additionalUploadResults.push(uploadResult.data)
+      if (fileObj.isExisting) {
+        attachmentFileInfos.push({ ...buildImageInfo(fileObj.existingInfo), fileExplain: `제품 추가 이미지 ${attachmentFileInfos.length + 1}`, sortOrder: attachmentFileInfos.length + 1 })
+      } else {
+        const uploadResult = await upload(fileObj.file, { fileCode: 'PRODUCT' })
+        if (!uploadResult.success) throw new Error(`추가 이미지 업로드 실패: ${uploadResult.error}`)
+        attachmentFileInfos.push({
+          fileId: uploadResult.data.id, storedPath: uploadResult.data.fileUrl, originName: uploadResult.data.orgFileNm,
+          fileSize: uploadResult.data.fileSize, contentType: uploadResult.data.contentType || 'image/jpeg',
+          fileExplain: `제품 추가 이미지 ${attachmentFileInfos.length + 1}`, sortOrder: attachmentFileInfos.length + 1
+        })
+      }
     }
-
-    const thumbnailAttachmentInfo = {
-      fileId: thumbnailUploadResult.data.id,
-      storedPath: thumbnailUploadResult.data.fileUrl,
-      originName: thumbnailUploadResult.data.orgFileNm,
-      fileSize: thumbnailUploadResult.data.fileSize,
-      contentType: thumbnailUploadResult.data.contentType || 'image/jpeg',
-      fileExplain: '제품 대표 이미지'
-    }
-
-    const attachmentFileInfos = additionalUploadResults.map((d, i) => ({
-      fileId: d.id, storedPath: d.fileUrl, originName: d.orgFileNm,
-      fileSize: d.fileSize, contentType: d.contentType || 'image/jpeg',
-      fileExplain: `제품 추가 이미지 ${i + 1}`, sortOrder: i + 1
-    }))
 
     const allFeatures = [...selectedFeatures.value]
     if (customFeature.value.trim()) allFeatures.push(customFeature.value.trim())
@@ -611,20 +705,30 @@ const handleSubmit = async () => {
       attachmentFileInfos
     }
 
-    const response = await createProduct(productData)
-    if (response.success) {
-      localStorage.removeItem('productFormDraft')
-      showSuccessModal.value = true
+    if (isEditMode.value) {
+      const response = await productService.updateProduct(editProductId.value, productData)
+      if (response.success) {
+        await open({ type: 'alert', title: '수정 완료', message: '상품 정보가 수정되었습니다.' })
+        router.push(`/products/${editProductId.value}`)
+      } else {
+        throw new Error(response.error || '제품 수정에 실패했습니다')
+      }
     } else {
-      throw new Error(response.error || '제품 등록에 실패했습니다')
+      const response = await createProduct(productData)
+      if (response.success) {
+        localStorage.removeItem('productFormDraft')
+        showSuccessModal.value = true
+      } else {
+        throw new Error(response.error || '제품 등록에 실패했습니다')
+      }
     }
   } catch (error) {
-    console.error('제품 등록 실패:', error)
+    console.error(isEditMode.value ? '제품 수정 실패:' : '제품 등록 실패:', error)
     if (error.message.includes('인증') || error.message.includes('권한')) {
       await open({ type: 'alert', title: '인증 만료', message: '인증이 만료되었습니다. 다시 로그인해주세요' })
       await logout()
     } else {
-      await open({ type: 'alert', title: '오류', message: error.message || '제품 등록 중 오류가 발생했습니다' })
+      await open({ type: 'alert', title: '오류', message: error.message || '제품 처리 중 오류가 발생했습니다' })
     }
   } finally { isLoading.value = false }
 }
@@ -658,6 +762,10 @@ const restoreDraft = async () => {
 }
 
 const goBack = async () => {
+  if (isEditMode.value) {
+    router.push(`/products/${editProductId.value}`)
+    return
+  }
   if (hasFormData()) {
     const ok = await open({ type: 'confirm', title: '임시저장', message: '작성 중인 내용을 임시저장하시겠습니까?', confirmText: '임시저장', cancelText: '저장 안 함' })
     if (ok) saveDraft()

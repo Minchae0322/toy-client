@@ -81,6 +81,13 @@ const routes = [
     meta: { requiresAuth: true, title: '상품 등록' }
   },
   {
+    path: '/products/:id/edit',
+    name: 'ProductEdit',
+    component: ProductCreateView,
+    props: true,
+    meta: { requiresAuth: true, title: '상품 수정' }
+  },
+  {
     path: '/products/:id',
     name: 'ProductDetail',
     component: ProductDetailView,
@@ -591,6 +598,10 @@ export const productNavigation = {
     return router.push({ name: 'ProductDetail', params: { id: productId } })
   },
   toProductCreate() { return router.push({ name: 'ProductCreate' }) },
+  toProductEdit(productId) {
+    if (!productId) return this.toRanking()
+    return router.push({ name: 'ProductEdit', params: { id: productId } })
+  },
   toSellStep2() { return router.push({ name: 'SellStep2' }) },
   isProductPage() {
     const route = router.currentRoute.value

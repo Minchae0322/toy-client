@@ -120,7 +120,9 @@ class ProductService extends BaseApiService {
       distributor: productData.distributor?.trim() || null,
       releaseDate: productData.releaseDate || null,
       feature: productData.feature?.trim() || null,
-      tags: productData.tags || []
+      tags: productData.tags || [],
+      thumbnailAttachmentInfo: productData.thumbnailAttachmentInfo || null,
+      attachmentFileInfos: productData.attachmentFileInfos || []
     }
     return await this.put(`/products/${productId}`, requestData)
   }

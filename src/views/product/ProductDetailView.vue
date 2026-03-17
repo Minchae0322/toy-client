@@ -520,7 +520,10 @@ const handleVote = (battleId) => {
 }
 
 const viewBattle = (battleId) => { router.push(`/battles/${battleId}`) }
-const editProduct = () => { router.push(`/products/${product.value.id}/edit`) }
+const editProduct = () => {
+  if (!product.value) return
+  router.push(`/products/${product.value.id}/edit`)
+}
 
 const deleteProduct = async () => {
   const confirmed = await open({ type: 'danger', title: '상품 삭제', message: '정말로 이 상품을 삭제하시겠습니까?' })
@@ -702,4 +705,5 @@ watch(isLoggedIn, (val) => {
   .product-desc, .info-table, .tags { display: block; }
   .stats-row, .action-bar, .carrier-btn, .activity-row { display: flex; }
 }
+
 </style>
