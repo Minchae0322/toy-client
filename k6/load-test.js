@@ -5,7 +5,7 @@ const TOKEN = __ENV.TOKEN || '';
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8082';
 
 if (!TOKEN) {
-    console.warn('⚠ TOKEN이 설정되지 않았습니다. -e TOKEN=xxx 옵션으로 전달하세요.');
+    console.warn('TOKEN이 설정되지 않았습니다. -e TOKEN=xxx 옵션으로 전달하세요.');
 }
 
 // ─── 시나리오별 동접 비율 (총 100 VU, 5분) ───
