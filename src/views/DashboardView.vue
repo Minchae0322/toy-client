@@ -3,61 +3,30 @@
     <AppSidebar />
 
     <main class="main-content">
-      <!-- 페이지 헤더 -->
-      <header class="page-header">
-        <h1 class="page-title">
-          <svg class="title-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-            <polyline points="16 7 22 7 22 13" />
-          </svg>
-          트렌드 <span class="title-accent">한눈에</span>
-        </h1>
-      </header>
-
-      <!-- 통계 카드 -->
-      <div class="stats-grid">
-        <router-link :to="{ name: 'FeedHome' }" class="stat-card">
-          <div class="stat-icon feeds">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ dashboardSummary.popularFeedCount }}</span>
-            <span class="stat-label">인기 피드</span>
-          </div>
-          <div v-if="dashboardSummary.activeBattleCount > 0" class="live-dot"></div>
-        </router-link>
-
-        <router-link :to="{ name: 'BattleList' }" class="stat-card">
-          <div class="stat-icon battles">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ dashboardSummary.activeBattleCount }}</span>
-            <span class="stat-label">요거픽</span>
-          </div>
-          <div v-if="dashboardSummary.activeBattleCount > 0" class="live-dot"></div>
-        </router-link>
-
-        <router-link :to="{ name: 'ProductRanking' }" class="stat-card">
-          <div class="stat-icon products">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-              <path d="M4 22h16" />
-              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ dashboardSummary.totalItemCount }}</span>
-            <span class="stat-label">아이템</span>
-          </div>
-        </router-link>
+      <!-- 대시보드 요약 -->
+      <div class="dash-summary">
+        <div class="dash-summary-left">
+          <h1 class="dash-greeting">트렌드 <span class="dash-greeting-accent">한눈에</span></h1>
+          <p class="dash-greeting-sub">{{ topTrendName }} 외 실시간 인기 데이터</p>
+        </div>
+        <div class="dash-summary-right">
+          <router-link :to="{ name: 'FeedHome' }" class="dash-kpi">
+            <span class="dash-kpi-num">{{ dashboardSummary.popularFeedCount }}</span>
+            <span class="dash-kpi-label">인기 피드</span>
+            <div v-if="dashboardSummary.activeBattleCount > 0" class="live-dot"></div>
+          </router-link>
+          <div class="dash-kpi-divider"></div>
+          <router-link :to="{ name: 'BattleList' }" class="dash-kpi">
+            <span class="dash-kpi-num">{{ dashboardSummary.activeBattleCount }}</span>
+            <span class="dash-kpi-label">요거픽</span>
+            <div v-if="dashboardSummary.activeBattleCount > 0" class="live-dot"></div>
+          </router-link>
+          <div class="dash-kpi-divider"></div>
+          <router-link :to="{ name: 'ProductRanking' }" class="dash-kpi">
+            <span class="dash-kpi-num">{{ dashboardSummary.totalItemCount }}</span>
+            <span class="dash-kpi-label">아이템</span>
+          </router-link>
+        </div>
       </div>
 
       <!-- 실시간 요거 봄 섹션 -->
@@ -131,7 +100,7 @@
         <section class="content-section hot-feeds-section">
           <div class="section-header">
             <div class="title-with-badge">
-              <h2 class="section-title">지금 뜨는 핫-기록</h2>
+              <h2 class="section-title">지금 뜨는 <span class="title-accent">핫-기록</span></h2>
               <span class="sub-title">실시간 인기 리뷰</span>
             </div>
             <router-link :to="{ name: 'FeedHome' }" class="view-all-link">
@@ -186,7 +155,7 @@
         <section class="content-section">
           <div class="section-header">
             <div class="title-with-badge">
-              <h2 class="section-title">실시간 요거픽</h2>
+              <h2 class="section-title">실시간 <span class="title-accent">요거픽</span></h2>
               <span class="sub-title">유저들이 직접 고르는 승부</span>
             </div>
             <router-link :to="{ name: 'BattleList' }" class="view-all-btn">
@@ -299,7 +268,7 @@
         <section class="content-section ranking-section">
           <div class="section-header">
             <div class="title-with-badge">
-              <h2 class="section-title">실시간 제품 랭킹</h2>
+              <h2 class="section-title">실시간 <span class="title-accent">제품 랭킹</span></h2>
               <div class="sub-title-row">
                 <span class="sub-title">지금 가장 주목받는 아이템</span>
                 <span class="sort-indicator">
@@ -969,33 +938,106 @@ onUnmounted(() => {
   }
 }
 
-/* 페이지 헤더 */
-.page-header {
-  padding: 1rem 0 0.625rem;
-}
-
-.page-title {
+/* 대시보드 요약 */
+.dash-summary {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 1.375rem;
-  font-weight: 800;
-  color: #9333ea;
-  margin: 0;
-  letter-spacing: -0.03em;
+  justify-content: space-between;
+  padding: 1.25rem 0 1rem;
+  gap: 1rem;
 }
 
-.title-icon {
+.dash-summary-left {
+  min-width: 0;
+}
+
+.dash-greeting {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #18181b;
+  margin: 0;
+  letter-spacing: -0.03em;
+  line-height: 1.3;
+}
+
+.dash-greeting-accent {
   color: #9333ea;
+}
+
+.dash-greeting-sub {
+  font-size: 0.8125rem;
+  color: #a1a1aa;
+  margin: 0.25rem 0 0;
+  font-weight: 400;
+}
+
+.dash-summary-right {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #fafafa;
+  border-radius: 14px;
+  padding: 0.625rem 0.25rem;
   flex-shrink: 0;
 }
 
-.title-accent {
-  color: #1a1a1a;
+.dash-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem 1.25rem;
+  text-decoration: none;
+  position: relative;
+  transition: opacity 0.15s;
+}
+
+.dash-kpi:hover {
+  opacity: 0.7;
+}
+
+.dash-kpi-num {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #18181b;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.dash-kpi-label {
+  font-size: 0.6875rem;
+  color: #a1a1aa;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.dash-kpi-divider {
+  width: 1px;
+  height: 28px;
+  background: #e4e4e7;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .dash-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem 0 0.75rem;
+    gap: 0.75rem;
+  }
+  .dash-summary-right {
+    width: 100%;
+    justify-content: space-around;
+  }
+  .dash-kpi {
+    padding: 0.25rem 0.75rem;
+  }
+  .dash-greeting {
+    font-size: 1.25rem;
+  }
 }
 
 @media (min-width: 768px) {
-  .page-title { font-size: 1.5rem; }
+  .dash-greeting { font-size: 1.625rem; }
 }
 
 
@@ -1123,74 +1165,14 @@ onUnmounted(() => {
   color: #9333ea;
 }
 
-/* 통계 그리드 (컴팩트) */
-.stats-grid {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.stat-card {
-  flex: 1;
-  background: #fff;
-  border-radius: 10px;
-  padding: 0.625rem 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid #f0f0f0;
-  position: relative;
-  text-decoration: none;
-}
-
-.stat-card:hover {
-  border-color: #e9d5ff;
-  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.08);
-}
-
-.stat-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.stat-icon.feeds { background: #fff5f5; color: #e53e3e; }
-.stat-icon.battles { background: #fffaf0; color: #dd6b20; }
-.stat-icon.products { background: #f0fff4; color: #38a169; }
-
-.stat-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.stat-value {
-  display: block;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #7c3aed;
-  line-height: 1.2;
-}
-
-.stat-label {
-  display: block;
-  font-size: 0.6875rem;
-  color: #999;
-  margin-top: 1px;
-}
-
+/* live dot */
 .live-dot {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 8px;
-  height: 8px;
-  background: #e53e3e;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
   border-radius: 50%;
   animation: pulse-dot 2s ease-in-out infinite;
 }
@@ -1205,13 +1187,13 @@ onUnmounted(() => {
   display: flex;
   align-items: stretch;
   background: #fff;
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 0.625rem;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 0.875rem;
   border: 1px solid #f0f0f0;
   position: relative;
   overflow: hidden;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 /* ===== LEFT ===== */
@@ -1220,40 +1202,37 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: center;
   gap: 0.5rem;
-  min-width: 100px;
-  padding: 0.75rem 1rem 0.75rem 0;
-  border-right: 1px solid rgba(255, 220, 100, 0.25);
-  background: rgba(255, 248, 225, 0.55);
-  margin: -1rem 0 -1rem -1.25rem;
-  padding-left: 1.25rem;
+  min-width: 110px;
+  padding: 0.75rem 1.25rem 0.75rem 0;
+  border-right: 1px solid #f0f0f0;
 }
 
 .yb-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(255, 180, 0, 0.15);
-  color: #B8860B;
+  background: #fef2f2;
+  color: #dc2626;
   font-size: 0.625rem;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 100px;
   width: fit-content;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
 }
 
 .pulse-dot {
   width: 5px;
   height: 5px;
-  background: #DAA520;
+  background: #ef4444;
   border-radius: 50%;
   animation: yb-pulse 1.5s infinite;
 }
 
 @keyframes yb-pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(218, 165, 32, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(218, 165, 32, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(218, 165, 32, 0); }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
 .yb-title-group {
@@ -1265,7 +1244,7 @@ onUnmounted(() => {
 .yb-main-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #8B6914;
+  color: #18181b;
   line-height: 1.25;
   margin: 0;
 }
@@ -1338,17 +1317,17 @@ onUnmounted(() => {
 }
 
 .yb-rank-badge.rank-1 {
-  background: #9333ea;
+  background: #18181b;
   color: #fff;
 }
 
 .yb-rank-badge.rank-2 {
-  background: #a855f7;
+  background: #3f3f46;
   color: #fff;
 }
 
 .yb-rank-badge.rank-3 {
-  background: #c4b5fd;
+  background: #71717a;
   color: #fff;
 }
 
@@ -1473,16 +1452,16 @@ onUnmounted(() => {
 /* 섹션 */
 .content-section {
   background: #fff;
-  border-radius: 14px;
-  padding: 1rem;
-  margin-bottom: 0.625rem;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 0.875rem;
   border: 1px solid #f0f0f0;
 }
 
 @media (min-width: 768px) {
   .content-section {
-    padding: 1.25rem;
-    margin-bottom: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
   }
 }
 
@@ -1505,12 +1484,17 @@ onUnmounted(() => {
 }
 
 .section-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #18181b;
   margin: 0;
-  padding-left: 10px;
-  border-left: 3px solid #9333ea;
+  padding-left: 0;
+  border-left: none;
+  letter-spacing: -0.02em;
+}
+
+.section-title .title-accent {
+  color: #9333ea;
 }
 
 @media (min-width: 768px) {
@@ -1690,7 +1674,7 @@ onUnmounted(() => {
   transform: scale(1.05);
 }
 
-/* 럭셔리 그라데이션 오버레이 */
+/* 그라데이션 오버레이 */
 .card-overlay {
   position: absolute;
   inset: 0;
@@ -2551,13 +2535,12 @@ onUnmounted(() => {
 .dash-bubble-area {
   position: relative;
   width: 100%;
-  min-height: 320px;
+  min-height: 360px;
   background: #fafafa;
   border-radius: 16px;
   border: 1px solid #f0f0f0;
   overflow: hidden;
   cursor: default;
-  box-shadow: none;
 }
 
 .dash-grid-bg {
@@ -2882,20 +2865,18 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 0;
     gap: 0;
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
   .yb-left {
     border-right: none;
-    border-bottom: 1px solid rgba(255, 220, 100, 0.25);
+    border-bottom: 1px solid #f0f0f0;
     padding: 0.75rem 0.875rem;
-    margin: 0;
     flex-direction: row;
     align-items: center;
     min-width: auto;
-    background: rgba(255, 248, 225, 0.55);
   }
 
   .yb-right {
@@ -2923,12 +2904,6 @@ onUnmounted(() => {
   .yb-status-badge {
     font-size: 0.6rem;
     padding: 3px 8px;
-    background: rgba(255, 180, 0, 0.15);
-    color: #B8860B;
-  }
-
-  .yb-left .pulse-dot {
-    background: #DAA520;
   }
 
   .yb-list {
@@ -3001,100 +2976,6 @@ onUnmounted(() => {
     height: 10px;
   }
 
-  /* 상단 모바일 */
-  .page-header {
-    padding: 0.75rem 0 0.5rem;
-  }
-
-  .page-title {
-    font-size: 1.25rem;
-  }
-
-
-  /* 글래스 배너 컴팩트 */
-  .glass-banner {
-    margin-bottom: 0.5rem;
-    border-radius: 14px;
-  }
-
-  .banner-inner {
-    padding: 0.625rem 0.875rem;
-    border-radius: 14px;
-  }
-
-  .banner-tag {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.625rem;
-    border-radius: 6px;
-  }
-
-  .tag-dot {
-    width: 5px;
-    height: 5px;
-  }
-
-  .banner-text-group {
-    gap: 0.125rem;
-  }
-
-  .banner-title {
-    font-size: 0.8125rem;
-  }
-
-  .banner-sub {
-    font-size: 0.6875rem;
-  }
-
-  .banner-action {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-  }
-
-  .banner-action svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  /* 통계 카드 컴팩트 */
-  .stats-grid {
-    gap: 0.375rem;
-  }
-
-  .stat-card {
-    padding: 0.5rem;
-    border-radius: 8px;
-    gap: 0.375rem;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .stat-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-  }
-
-  .stat-icon svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .stat-value {
-    font-size: 0.9375rem;
-  }
-
-  .stat-label {
-    font-size: 0.5625rem;
-  }
-
-  .live-dot {
-    top: 0.375rem;
-    right: 0.375rem;
-    width: 5px;
-    height: 5px;
-  }
-
   /* 섹션 컴팩트 */
   .content-section {
     padding: 0.75rem;
@@ -3104,33 +2985,6 @@ onUnmounted(() => {
 
   .hot-feeds-section {
     margin-bottom: 0.5rem !important;
-  }
-
-  .section-header {
-    margin-bottom: 0.5rem;
-  }
-
-  .section-title {
-    font-size: 1.125rem;
-  }
-
-  .sub-title {
-    font-size: 10px;
-    padding: 2px 6px;
-  }
-
-  .sort-indicator {
-    padding: 2px 8px;
-  }
-
-  .sort-label {
-    font-size: 10px;
-  }
-
-  .view-all-link,
-  .view-all-btn {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.375rem;
   }
 
   /* 핫 피드 카드 컴팩트 */
@@ -3184,6 +3038,33 @@ onUnmounted(() => {
   /* 배틀 그리드 컴팩트 */
   .battle-grid {
     gap: 0.5rem;
+  }
+
+  .section-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .section-title {
+    font-size: 1.125rem;
+  }
+
+  .sub-title {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .sort-indicator {
+    padding: 2px 8px;
+  }
+
+  .sort-label {
+    font-size: 10px;
+  }
+
+  .view-all-link,
+  .view-all-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.375rem;
   }
 
   /* 빈 상태 컴팩트 */
