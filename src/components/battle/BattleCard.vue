@@ -22,7 +22,17 @@
 
       <!-- 상태 배지 -->
       <div class="badges-top">
-        <span class="status-badge" :class="statusClass">{{ statusText }}</span>
+        <span class="status-badge" :class="statusClass">
+          <svg v-if="statusClass === 'active'" class="status-icon" width="10" height="10" viewBox="0 0 14 14">
+            <circle cx="7" cy="7" r="3.5" fill="#fff"/>
+            <circle cx="7" cy="7" r="5.5" fill="none" stroke="#fff" stroke-width="1" opacity="0.4"/>
+          </svg>
+          <svg v-else-if="statusClass === 'ended'" class="status-icon" width="10" height="10" viewBox="0 0 14 14">
+            <circle cx="7" cy="7" r="5.5" fill="none" stroke="#fff" stroke-width="1.5"/>
+            <line x1="4" y1="7" x2="10" y2="7" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          {{ statusText }}
+        </span>
         <span v-if="battle.voteType === 'MULTIPLE'" class="vote-type-badge">순위</span>
       </div>
 
@@ -123,10 +133,10 @@ const statusText = computed(() => {
 
   // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
   if (props.battle?.isActive !== undefined) {
-    return props.battle.isActive ? '진행중' : '종료'
+    return props.battle.isActive ? '진행중' : '종료됨'
   }
 
-  const map = { ACTIVE: '진행중', SCHEDULED: '예정', CLOSED: '종료', ENDED: '종료', EARLY_CLOSED: '조기종료', SUSPENDED: '중단됨' }
+  const map = { ACTIVE: '진행중', SCHEDULED: '예정', CLOSED: '종료됨', ENDED: '종료됨', EARLY_CLOSED: '조기종료', SUSPENDED: '중단됨' }
   return map[status] || '대기'
 })
 
@@ -287,10 +297,17 @@ const daysLeftText = computed(() => {
 }
 
 .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   padding: 3px 8px;
   font-size: 11px;
   font-weight: 600;
   border-radius: 6px;
+}
+
+.status-icon {
+  flex-shrink: 0;
 }
 
 .status-badge.active {
