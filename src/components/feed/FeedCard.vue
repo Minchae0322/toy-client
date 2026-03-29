@@ -21,6 +21,10 @@
         </div>
       </div>
 
+      <div v-if="feed.imageCount > 1" class="multi-photo-indicator">
+        <span v-for="i in Math.min(feed.imageCount, 5)" :key="i" class="indicator-dot" :class="{ active: i === 1 }"></span>
+      </div>
+
     </div>
 
     <div class="post-content">
@@ -173,6 +177,27 @@ const formatDate = (date) => feedUtils.formatDate(date);
   padding: 5px 8px; border-radius: 100px;
   background: linear-gradient(135deg, #f43f5e, #ec4899);
   font-size: 11px; font-weight: 700; color: white;
+}
+
+/* 멀티 사진 인디케이터 */
+.multi-photo-indicator {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+.indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transition: background 0.2s;
+}
+.indicator-dot.active {
+  background: #fff;
 }
 
 /* 콘텐츠 영역 */

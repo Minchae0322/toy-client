@@ -143,6 +143,12 @@
                 {{ getEvaluationLabel(feed.feedEvaluation) }}
               </span>
             </div>
+            <div v-if="feed.imageCount > 1" class="list-multi-photo">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="16" height="16" rx="2"/>
+                <rect x="6" y="6" width="16" height="16" rx="2"/>
+              </svg>
+            </div>
           </div>
           <div class="list-content">
             <p class="list-review">
@@ -366,6 +372,20 @@ defineExpose({ observerTarget });
 }
 
 .list-image img { width: 100%; height: 100%; object-fit: cover; }
+
+.list-multi-photo {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* 이미지 뱃지 영역 */
 .list-badges-top {
