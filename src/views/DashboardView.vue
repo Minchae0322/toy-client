@@ -460,9 +460,11 @@ function computeBubbleLayout(nodeList, W, H) {
 
   const gap = n <= 5 ? 4 : 6
   const centerPull = n <= 5 ? 0.015 : 0.01
+  const maxTicks = 150
 
-  for (let tick = 0; tick < 300; tick++) {
-    const alpha = Math.max(0.001, 1 - tick / 300)
+  for (let tick = 0; tick < maxTicks; tick++) {
+    const alpha = Math.max(0.001, 1 - tick / maxTicks)
+    let settled = true
     for (let i = 0; i < pos.length; i++) {
       const dx = cx - pos[i].x, dy = cy - pos[i].y
       const pull = centerPull * alpha * (i < 3 ? 1.8 : 0.3)
@@ -482,7 +484,9 @@ function computeBubbleLayout(nodeList, W, H) {
       const pad = pos[i].r + 2
       pos[i].x = Math.max(pad, Math.min(W - pad, pos[i].x))
       pos[i].y = Math.max(pad, Math.min(H - pad, pos[i].y))
+      if (Math.abs(pos[i].vx) > 0.5 || Math.abs(pos[i].vy) > 0.5) settled = false
     }
+    if (settled && tick > 60) break
   }
   return pos.map(p => ({ x: p.x, y: p.y }))
 }
@@ -503,7 +507,16 @@ const dashBubbleNodes = computed(() => {
   return dashBubbleProducts.value.map(p => ({ id: p.id, r: getDashRadius(getProductPopularityScore(p), dashMaxScore.value, min, max) }))
 })
 
-const dashBubblePositions = computed(() => computeBubbleLayout(dashBubbleNodes.value, bubbleDims.value.w, bubbleDims.value.h))
+const dashBubblePositions = ref([])
+let bubbleRafId = null
+
+watch([dashBubbleNodes, bubbleDims], ([nodes, dims]) => {
+  if (bubbleRafId) cancelAnimationFrame(bubbleRafId)
+  bubbleRafId = requestAnimationFrame(() => {
+    dashBubblePositions.value = computeBubbleLayout(nodes, dims.w, dims.h)
+    bubbleRafId = null
+  })
+}, { immediate: true })
 
 const bubbleTooltipProduct = computed(() => {
   if (!bubbleHovered.value) return null
@@ -557,12 +570,16 @@ function initBubbleContainer() {
   const rect = bubbleContainerRef.value.getBoundingClientRect()
   bubbleDims.value = { w: rect.width, h: Math.max(500, Math.min(700, rect.width * 0.75)) }
 
+  let resizeTimer = null
   bubbleResizeObserver = new ResizeObserver(entries => {
-    const entry = entries[0]
-    if (entry) {
-      const w = entry.contentRect.width
-      bubbleDims.value = { w, h: Math.max(500, Math.min(700, w * 0.75)) }
-    }
+    if (resizeTimer) clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(() => {
+      const entry = entries[0]
+      if (entry) {
+        const w = entry.contentRect.width
+        bubbleDims.value = { w, h: Math.max(500, Math.min(700, w * 0.75)) }
+      }
+    }, 150)
   })
   bubbleResizeObserver.observe(bubbleContainerRef.value)
 }
@@ -875,6 +892,10 @@ onUnmounted(() => {
   if (bubbleResizeObserver) {
     bubbleResizeObserver.disconnect()
     bubbleResizeObserver = null
+  }
+  if (bubbleRafId) {
+    cancelAnimationFrame(bubbleRafId)
+    bubbleRafId = null
   }
 })
 </script>
