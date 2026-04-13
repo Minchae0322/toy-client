@@ -154,6 +154,18 @@ const setupGlobalMessageHandlers = () => {
   webSocketService.onMessage('system-notification', (notification) => {
     showSystemToast(notification)
   })
+
+  // 채팅방에 접속하지 않은 온라인 사용자용 헤드업 알림
+  webSocketService.onMessage('headsup', (data) => {
+    const normalized = {
+      roomId: data.chatRoomId,
+      senderName: data.senderName,
+      content: data.content,
+      type: 'TEXT',
+    }
+    const duration = (data.config?.displayDuration ?? 5) * 1000
+    showMessageToast(normalized, duration)
+  })
 }
 
 // 앱 초기화
@@ -200,7 +212,7 @@ const handleNewMessage = (message) => {
 }
 
 // 메시지 토스트
-const showMessageToast = (message) => {
+const showMessageToast = (message, duration = 5000) => {
   if (message.senderId === currentUserId.value) return
 
   pendingNotification.value = {
@@ -213,7 +225,7 @@ const showMessageToast = (message) => {
   showNotificationToast.value = true
 
   if (toastTimeout.value) clearTimeout(toastTimeout.value)
-  toastTimeout.value = setTimeout(dismissToast, 5000)
+  toastTimeout.value = setTimeout(dismissToast, duration)
 
   if (document.hidden && Notification.permission === 'granted') {
     new Notification(pendingNotification.value.senderName, {
@@ -317,6 +329,7 @@ onBeforeUnmount(async () => {
   // 메시지 핸들러만 해제, disconnect는 App.vue에서 관리
   webSocketService.offMessage('chat-message')
   webSocketService.offMessage('system-notification')
+  webSocketService.offMessage('headsup')
 })
 </script>
 
