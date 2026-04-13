@@ -943,8 +943,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 0 1rem;
-  gap: 1rem;
+  padding: 1.75rem 0 1.25rem;
+  gap: 1.25rem;
 }
 
 .dash-summary-left {
@@ -952,12 +952,12 @@ onUnmounted(() => {
 }
 
 .dash-greeting {
-  font-size: 1.5rem;
+  font-size: 1.625rem;
   font-weight: 800;
   color: #18181b;
   margin: 0;
-  letter-spacing: -0.03em;
-  line-height: 1.3;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
 }
 
 .dash-greeting-accent {
@@ -967,8 +967,9 @@ onUnmounted(() => {
 .dash-greeting-sub {
   font-size: 0.8125rem;
   color: #a1a1aa;
-  margin: 0.25rem 0 0;
+  margin: 0.375rem 0 0;
   font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 .dash-summary-right {
@@ -976,8 +977,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 0;
   background: #fafafa;
-  border-radius: 14px;
-  padding: 0.625rem 0.25rem;
+  border-radius: 100px;
+  padding: 0.5rem 0.375rem;
   flex-shrink: 0;
 }
 
@@ -1037,7 +1038,7 @@ onUnmounted(() => {
 }
 
 @media (min-width: 768px) {
-  .dash-greeting { font-size: 1.625rem; }
+  .dash-greeting { font-size: 1.75rem; }
 }
 
 
@@ -1189,7 +1190,7 @@ onUnmounted(() => {
   background: #fff;
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
-  margin-bottom: 0.875rem;
+  margin-bottom: 1rem;
   border: 1px solid #f0f0f0;
   position: relative;
   overflow: hidden;
@@ -1453,15 +1454,15 @@ onUnmounted(() => {
 .content-section {
   background: #fff;
   border-radius: 16px;
-  padding: 1.25rem;
-  margin-bottom: 0.875rem;
+  padding: 1.375rem;
+  margin-bottom: 1rem;
   border: 1px solid #f0f0f0;
 }
 
 @media (min-width: 768px) {
   .content-section {
-    padding: 1.5rem;
-    margin-bottom: 1rem;
+    padding: 1.625rem;
+    margin-bottom: 1.125rem;
   }
 }
 
@@ -1474,23 +1475,23 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .title-with-badge {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid #e4e4e7;
 }
 
 .section-title {
   font-size: 1.0625rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #18181b;
   margin: 0;
-  padding-left: 0;
-  border-left: none;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .section-title .title-accent {
@@ -1513,7 +1514,7 @@ onUnmounted(() => {
   font-size: 12px;
   font-weight: 400;
   color: #999;
-  padding-left: 13px;
+  padding-left: 0;
 }
 
 .sub-title-row {
@@ -1554,22 +1555,23 @@ onUnmounted(() => {
 .view-all-btn {
   display: flex;
   align-items: center;
-  gap: 0.125rem;
-  padding: 0.375rem 0.5rem;
-  background: transparent;
+  gap: 2px;
+  padding: 0.375rem 0.875rem;
+  background: #f5f5f5;
   border: none;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: #999;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
+  text-decoration: none;
 }
 
 .view-all-btn:hover {
-  background: #faf5ff;
-  color: #9333ea;
+  background: #ebebeb;
+  color: #666;
 }
 
 @media (min-width: 1280px) {
@@ -1595,21 +1597,22 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 0.375rem 0.5rem;
-  background: transparent;
+  padding: 0.375rem 0.875rem;
+  background: #f5f5f5;
   border: none;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: #999;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
+  text-decoration: none;
 }
 
 .view-all-link:hover {
-  background: #faf5ff;
-  color: #9333ea;
+  background: #ebebeb;
+  color: #666;
 }
 
 /* 가로 스크롤 영역 */
@@ -1653,8 +1656,8 @@ onUnmounted(() => {
 }
 
 .dash-feed-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 30px rgba(124, 58, 237, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.12);
 }
 
 .card-visual-wrapper {
@@ -1671,7 +1674,7 @@ onUnmounted(() => {
 }
 
 .dash-feed-card:hover .card-visual-wrapper img {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 /* 그라데이션 오버레이 */
@@ -2232,17 +2235,16 @@ onUnmounted(() => {
 
 .battle-hot-card {
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #e8eaf4;
-  box-shadow: 0 2px 16px rgba(100, 100, 180, 0.07);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: 1px solid #f0f0f0;
+  transition: transform 0.2s ease, border-color 0.2s ease;
   text-decoration: none;
   display: block;
 }
 .battle-hot-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 36px rgba(124, 110, 245, 0.13), 0 2px 8px rgba(0,0,0,0.04);
+  transform: translateY(-3px);
+  border-color: #e0e0e0;
 }
 
 /* 썸네일 */
@@ -2251,7 +2253,7 @@ onUnmounted(() => {
   width: 100%;
   height: 180px;
   overflow: hidden;
-  background: linear-gradient(135deg, #c9b8f5 0%, #a78bfa 45%, #818cf8 100%);
+  background: #e8e8ec;
 }
 .battle-hot-thumb img {
   width: 100%;
@@ -2363,11 +2365,12 @@ onUnmounted(() => {
 }
 .battle-hot-stat svg { stroke: #c8cce0; }
 .battle-hot-title {
-  font-size: 14.5px;
-  font-weight: 800;
-  color: #1a1d2e;
+  font-size: 15px;
+  font-weight: 700;
+  color: #18181b;
   margin-bottom: 5px;
-  line-height: 1.45;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
 }
 .battle-hot-meta {
   font-size: 11px;
@@ -2428,9 +2431,8 @@ onUnmounted(() => {
   position: relative;
 }
 .rank-badge.r1 {
-  background: linear-gradient(135deg, #fde68a, #fbbf24);
-  color: #92400e;
-  box-shadow: 0 2px 8px rgba(251,191,36,0.3);
+  background: #fbbf24;
+  color: #fff;
 }
 .rank-badge.r2 {
   background: #f3f4f8;
@@ -2815,13 +2817,13 @@ onUnmounted(() => {
   justify-content: center;
   padding: 2.5rem 1rem;
   background: #fafafa;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .empty-icon {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: 12px;
   background: #f0f0f0;
   display: flex;
   align-items: center;
@@ -2831,7 +2833,8 @@ onUnmounted(() => {
 }
 
 .empty-text {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: #999;
   margin: 0;
 }
