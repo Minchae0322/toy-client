@@ -596,11 +596,11 @@ watch(isLoggedIn, (val) => {
 .sidebar-sticky { position: sticky; top: 76px; }
 
 /* ===== Tabs ===== */
-.tab-bar { position: relative; display: flex; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+.tab-bar { position: relative; display: flex; border-bottom: 1px solid #efefef; margin-bottom: 20px; }
 .tab { flex: 1; padding: 14px 0; border: none; background: transparent; font-size: 15px; font-weight: 500; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: color 0.15s; }
 .tab:hover { color: #666; }
 .tab.active { color: #111; }
-.tab-count { font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: #f0f0f0; color: #888; }
+.tab-count { font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: #efefef; color: #888; }
 .tab.active .tab-count { background: #111; color: #fff; }
 .tab-indicator { position: absolute; bottom: -1px; width: 50%; height: 2px; background: #111; transition: left 0.2s ease; }
 
@@ -609,7 +609,7 @@ watch(isLoggedIn, (val) => {
 
 /* Write Box */
 .write-box { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f8f8f8; border-radius: 12px; cursor: pointer; transition: background 0.15s; }
-.write-box:hover { background: #f0f0f0; }
+.write-box:hover { background: #efefef; }
 .write-avatar { width: 36px; height: 36px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .write-placeholder { flex: 1; font-size: 14px; color: #aaa; }
 .write-action { font-size: 14px; font-weight: 600; color: #333; padding: 6px 16px; background: #fff; border-radius: 20px; border: 1px solid #e5e5e5; }
@@ -656,13 +656,13 @@ watch(isLoggedIn, (val) => {
 .tag { padding: 5px 12px; background: #f5f5f5; color: #666; border-radius: 6px; font-size: 12px; font-weight: 500; }
 
 /* Stats Row */
-.stats-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; margin-top: 8px; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
+.stats-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; margin-top: 8px; border-top: 1px solid #efefef; border-bottom: 1px solid #efefef; }
 .stat { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #666; font-weight: 500; }
 .dot { width: 3px; height: 3px; border-radius: 50%; background: #ddd; }
 
 /* Actions */
 .action-bar { display: flex; gap: 0; margin-top: 16px; border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden; }
-.action-btn { flex: 1; padding: 12px 0; background: #fff; border: none; border-right: 1px solid #f0f0f0; font-size: 12px; font-weight: 500; color: #666; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: background 0.15s; }
+.action-btn { flex: 1; padding: 12px 0; background: #fff; border: none; border-right: 1px solid #efefef; font-size: 12px; font-weight: 500; color: #666; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: background 0.15s; }
 .action-btn:last-child { border-right: none; }
 .action-btn:hover { background: #fafafa; }
 .action-btn.on { color: #7c3aed; }
@@ -679,12 +679,12 @@ watch(isLoggedIn, (val) => {
 .activity-item { flex: 1; text-align: center; }
 .activity-num { display: block; font-size: 20px; font-weight: 700; color: #111; }
 .activity-label { display: block; font-size: 12px; color: #aaa; margin-top: 2px; }
-.activity-div { width: 1px; height: 32px; background: #f0f0f0; }
+.activity-div { width: 1px; height: 32px; background: #efefef; }
 
 /* Feed/Battle Card Border */
 .tab-content :deep(.feed-image img) { aspect-ratio: 4 / 3; object-fit: cover; width: 100%; max-height: none; }
 .tab-content :deep(.feed-card),
-.tab-content :deep(.battle-card) { border: 1px solid #f0f0f0; border-radius: 12px; }
+.tab-content :deep(.battle-card) { border: 1px solid #efefef; border-radius: 12px; }
 
 /* ===== Responsive ===== */
 @media (max-width: 1024px) {

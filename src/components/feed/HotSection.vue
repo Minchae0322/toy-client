@@ -365,7 +365,7 @@ onUnmounted(() => {
 
 .rank-num {
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 700;
   color: rgba(255,255,255,0.35);
   font-style: italic;
   line-height: 1;

@@ -280,9 +280,9 @@ function getRadius(score, maxScore, minR, maxR) {
 }
 
 function getRankColor(rank) {
-  if (rank === 1) return { bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)', border: '#7c3aed', glow: 'rgba(124,58,237,0.3)' }
-  if (rank === 2) return { bg: 'linear-gradient(135deg,#6366f1,#818cf8)', border: '#6366f1', glow: 'rgba(99,102,241,0.2)' }
-  if (rank === 3) return { bg: 'linear-gradient(135deg,#8b5cf6,#c4b5fd)', border: '#8b5cf6', glow: 'rgba(139,92,246,0.2)' }
+  if (rank === 1) return { bg: '#7c3aed', border: '#7c3aed', glow: 'rgba(124,58,237,0.25)' }
+  if (rank === 2) return { bg: '#6366f1', border: '#6366f1', glow: 'rgba(99,102,241,0.18)' }
+  if (rank === 3) return { bg: '#8b5cf6', border: '#8b5cf6', glow: 'rgba(139,92,246,0.18)' }
   return { bg: '#fff', border: '#e5e7eb', glow: 'transparent' }
 }
 
@@ -937,9 +937,9 @@ onUnmounted(() => {
 /* Top 3 뱃지 */
 .rank-badge-top {
   position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
-  font-weight: 900; padding: 2px 8px; border-radius: 4px;
-  letter-spacing: 0.06em; white-space: nowrap;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18); z-index: 5;
+  font-weight: 700; padding: 2px 8px; border-radius: 4px;
+  letter-spacing: 0.04em; white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12); z-index: 5;
 }
 .rank-badge-top.rank-1 { background: #FFD700; color: #7a5a00; }
 .rank-badge-top.rank-2 { background: #C0C0C0; color: #444; }
@@ -1020,10 +1020,10 @@ onUnmounted(() => {
 .carrier-badge {
   position: absolute; top: -7px; right: -7px;
   width: 22px; height: 22px; border-radius: 50%;
-  background: linear-gradient(135deg,#7c3aed,#a78bfa); color: #fff;
+  background: #7c3aed; color: #fff;
   font-size: 11px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 6px rgba(124,58,237,0.4); border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(124,58,237,0.3); border: 2px solid #fff;
   animation: popIn 0.25s ease;
 }
 
@@ -1043,9 +1043,9 @@ onUnmounted(() => {
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 700; background: #f3f4f6; color: #888;
 }
-.rank-num.gold { background: linear-gradient(135deg,#FFD700,#FFA500); color: #000; }
-.rank-num.silver { background: linear-gradient(135deg,#E8E8E8,#B8B8B8); color: #fff; }
-.rank-num.bronze { background: linear-gradient(135deg,#CD7F32,#8B4513); color: #fff; }
+.rank-num.gold { background: #f5c518; color: #5a4200; }
+.rank-num.silver { background: #d4d4d8; color: #555; }
+.rank-num.bronze { background: #c8874d; color: #fff; }
 
 .rank-info { flex: 1; min-width: 0; }
 .rank-name { font-size: 14px; font-weight: 600; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1056,7 +1056,7 @@ onUnmounted(() => {
 .rank-review { font-size: 10px; color: #aaa; }
 
 .rank-bar { width: 50px; height: 4px; background: #f3f4f6; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
-.rank-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg,#8B5CF6,#A78BFA); transition: width 0.3s; }
+.rank-bar-fill { height: 100%; border-radius: 2px; background: #9b7be8; transition: width 0.3s; }
 
 .rank-toggle-btn {
   width: 100%; padding: 12px 0; border: none; background: none; cursor: pointer;
@@ -1115,9 +1115,9 @@ onUnmounted(() => {
 }
 .drag-ghost-circle {
   width: 56px; height: 56px; border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  background: #7c3aed;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 28px rgba(124,58,237,0.5);
+  box-shadow: 0 8px 24px rgba(124,58,237,0.35);
   border: 3px solid #fff; opacity: 0.93; overflow: hidden;
 }
 .drag-ghost-circle img { width: 100%; height: 100%; object-fit: cover; }

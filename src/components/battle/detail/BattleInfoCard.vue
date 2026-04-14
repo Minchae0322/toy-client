@@ -218,7 +218,7 @@ const permissionType = computed(() => {
 /* 타이틀 섹션 */
 .main-title {
   font-size: 38px;
-  font-weight: 800;
+  font-weight: 700;
   color: #111827;
   letter-spacing: -0.03em;
   margin: 0 auto 12px;
@@ -270,7 +270,7 @@ const permissionType = computed(() => {
 
 .stat-box .val {
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 700;
   color: #1f2937;
 }
 
@@ -314,7 +314,7 @@ const permissionType = computed(() => {
 .plus-circle {
   width: 28px;
   height: 28px;
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  background: #9333ea;
   border-radius: 50%;
   display: flex;
   align-items: center;

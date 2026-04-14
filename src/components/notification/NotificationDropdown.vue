@@ -754,7 +754,7 @@ onUnmounted(() => {
 }
 
 .notification-item.unread .notification-title :deep(.actor-name) {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .notification-body {

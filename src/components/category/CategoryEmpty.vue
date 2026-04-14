@@ -62,14 +62,14 @@ const handleAddClick = () => {
 .circle-1 {
   width: 160px;
   height: 160px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: rgba(102, 126, 234, 0.1);
   animation-delay: 0s;
 }
 
 .circle-2 {
   width: 120px;
   height: 120px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  background: rgba(102, 126, 234, 0.15);
   animation-delay: 0.5s;
 }
 
@@ -97,7 +97,7 @@ const handleAddClick = () => {
 
 .empty-title {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   color: #1a202c;
   margin: 0 0 12px 0;
 }
@@ -114,7 +114,7 @@ const handleAddClick = () => {
   align-items: center;
   gap: 10px;
   padding: 16px 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   border: none;
   border-radius: 14px;

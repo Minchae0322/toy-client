@@ -203,7 +203,7 @@ const handleSendMessage = () => {
 .trend-badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 6px 12px; border-radius: 100px;
-  background: linear-gradient(135deg, #f43f5e, #ec4899);
+  background: #f43f5e;
   font-size: 12px; font-weight: 700; color: white;
   animation: pulse-trend 2s ease-in-out infinite;
 }
@@ -245,7 +245,7 @@ const handleSendMessage = () => {
 }
 .price-area { text-align: right; flex-shrink: 0; margin-left: 16px; }
 .price-label { display: block; font-size: 11px; color: #8B95A1; margin-bottom: 2px; font-weight: 500; }
-.price-value { font-size: 17px; font-weight: 800; color: #9333EA; white-space: nowrap; letter-spacing: -0.02em; }
+.price-value { font-size: 17px; font-weight: 700; color: #9333EA; white-space: nowrap; letter-spacing: -0.02em; }
 
 /* 인터랙션 바 */
 .interaction-bar {

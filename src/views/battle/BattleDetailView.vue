@@ -1202,7 +1202,7 @@ export default {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f0f0f0;
+  border: 3px solid #efefef;
   border-top-color: #4a6cf7;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -1253,7 +1253,7 @@ export default {
 /* PC 디바이더 */
 .pc-divider {
   height: 1px;
-  background: #f0f0f0;
+  background: #efefef;
   margin: 32px 24px;
 }
 
@@ -1286,8 +1286,8 @@ export default {
 
 .pc-arguments-section .section-heading h2 {
   font-size: 22px;
-  font-weight: 800;
-  color: #111;
+  font-weight: 700;
+  color: #1a1a1e;
   margin: 0;
   display: flex;
   align-items: center;
@@ -1315,8 +1315,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-  border: 2px solid #e9d5ff;
+  background: #f9f6fd;
+  border: 1.5px solid #ece5f5;
   border-radius: 16px;
   margin-bottom: 20px;
 }
@@ -1377,13 +1377,13 @@ export default {
 .pc-tab-container {
   background: #fff;
   border-radius: 20px;
-  border: 1.5px solid #f0f0f0;
+  border: 1.5px solid #efefef;
   overflow: hidden;
 }
 
 .pc-tab-header {
   display: flex;
-  border-bottom: 1.5px solid #f0f0f0;
+  border-bottom: 1.5px solid #efefef;
   padding: 0 24px;
 }
 
@@ -1456,7 +1456,7 @@ export default {
 }
 
 .pc-arg-card.best {
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  background: #fffbf0;
   border: 1px solid #fde68a;
 }
 
@@ -1537,7 +1537,7 @@ export default {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  background: #dde3f8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1585,7 +1585,7 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 14px 28px;
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  background: #8b2de0;
   color: white;
   border: none;
   border-radius: 12px;
@@ -1593,7 +1593,7 @@ export default {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.25);
+  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.2);
 }
 
 .load-comments-btn:hover {

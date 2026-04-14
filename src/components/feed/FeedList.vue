@@ -432,9 +432,9 @@ defineExpose({ observerTarget });
   gap: 3px;
   padding: 4px 9px;
   border-radius: 100px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: #ef4444;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 700;
   color: white;
   box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
 }
@@ -796,14 +796,14 @@ defineExpose({ observerTarget });
 .feed-empty-state .circle-1 {
   width: 140px;
   height: 140px;
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.12) 0%, rgba(147, 51, 234, 0.04) 100%);
+  background: rgba(147, 51, 234, 0.12);
   animation-delay: 0s;
 }
 
 .feed-empty-state .circle-2 {
   width: 100px;
   height: 100px;
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(147, 51, 234, 0.06) 100%);
+  background: rgba(147, 51, 234, 0.15);
   animation-delay: 0.5s;
 }
 

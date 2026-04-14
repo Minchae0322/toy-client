@@ -423,7 +423,7 @@ defineExpose({ closeInput })
   display: flex;
   gap: 8px;
   padding: 8px 10px;
-  background: linear-gradient(135deg, #fffbeb, #fef9e7);
+  background: #fffbeb;
   border-radius: 10px;
   border: 1px solid #fde68a;
   cursor: pointer;
@@ -431,7 +431,7 @@ defineExpose({ closeInput })
 }
 
 .best-arg:hover {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  background: #fef3c7;
 }
 
 img.ba-avatar {
@@ -446,7 +446,7 @@ div.ba-avatar {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  background: #e0e7ff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -751,7 +751,7 @@ div.ba-avatar {
 .bottomsheet-header h3 {
   margin: 0;
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   color: #111;
 }
 

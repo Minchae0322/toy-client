@@ -974,11 +974,11 @@ onUnmounted(() => {
 
 .dash-greeting {
   font-size: 1.625rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #18181b;
   margin: 0;
-  letter-spacing: -0.04em;
-  line-height: 1.2;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
 }
 
 .dash-greeting-accent {
@@ -997,10 +997,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0;
-  background: #fafafa;
+  background: #f8f8f9;
   border-radius: 100px;
   padding: 0.5rem 0.375rem;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .dash-kpi {
@@ -1019,7 +1020,7 @@ onUnmounted(() => {
 
 .dash-kpi-num {
   font-size: 1.375rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #18181b;
   line-height: 1.2;
   letter-spacing: -0.02em;
@@ -1076,7 +1077,7 @@ onUnmounted(() => {
 
 .glass-banner:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(147, 51, 234, 0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
 }
 
 .glass-banner:active {
@@ -1096,12 +1097,12 @@ onUnmounted(() => {
   padding: 1rem 1.25rem;
   border-radius: 18px;
   background: #fff;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #efefef;
   transition: border-color 0.2s;
 }
 
 .glass-banner:hover .banner-inner {
-  border-color: #e9d5ff;
+  border-color: #e4e4e6;
 }
 
 .banner-left {
@@ -1183,8 +1184,8 @@ onUnmounted(() => {
 }
 
 .glass-banner:hover .banner-action {
-  background: #f3e8ff;
-  color: #9333ea;
+  background: #f0ebf5;
+  color: #7c3aed;
 }
 
 /* live dot */
@@ -1212,10 +1213,11 @@ onUnmounted(() => {
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1rem;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #efefef;
   position: relative;
   overflow: hidden;
   gap: 1.25rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 
 /* ===== LEFT ===== */
@@ -1236,7 +1238,7 @@ onUnmounted(() => {
   background: #fef2f2;
   color: #dc2626;
   font-size: 0.625rem;
-  font-weight: 800;
+  font-weight: 700;
   padding: 3px 8px;
   border-radius: 100px;
   width: fit-content;
@@ -1265,8 +1267,8 @@ onUnmounted(() => {
 
 .yb-main-title {
   font-size: 1rem;
-  font-weight: 700;
-  color: #18181b;
+  font-weight: 650;
+  color: #1a1a1e;
   line-height: 1.25;
   margin: 0;
 }
@@ -1321,7 +1323,7 @@ onUnmounted(() => {
 }
 
 .yb-item:hover {
-  background: #faf5ff;
+  background: #f8f6fb;
 }
 
 .yb-rank-badge {
@@ -1332,9 +1334,9 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 0.6875rem;
-  font-weight: 800;
+  font-weight: 700;
   flex-shrink: 0;
-  background: #f5f5f5;
+  background: #f3f3f4;
   color: #999;
 }
 
@@ -1363,8 +1365,8 @@ onUnmounted(() => {
 
 .yb-product {
   font-size: 0.875rem;
-  font-weight: 700;
-  color: #111;
+  font-weight: 600;
+  color: #1a1a1e;
   display: block;
   white-space: nowrap;
   overflow: hidden;
@@ -1477,7 +1479,8 @@ onUnmounted(() => {
   border-radius: 16px;
   padding: 1.375rem;
   margin-bottom: 1rem;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #efefef;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 
 @media (min-width: 768px) {
@@ -1509,10 +1512,10 @@ onUnmounted(() => {
 
 .section-title {
   font-size: 1.0625rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #18181b;
   margin: 0;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 .section-title .title-accent {
@@ -1555,8 +1558,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 4px;
   padding: 3px 10px;
-  background: #f5f0ff;
-  border: 1px solid #ede5ff;
+  background: #f6f4fa;
+  border: 1px solid #eceaf0;
   border-radius: 12px;
   white-space: nowrap;
 }
@@ -1569,7 +1572,7 @@ onUnmounted(() => {
 .sort-label {
   font-size: 11px;
   font-weight: 500;
-  color: #8b5cf6;
+  color: #7c6cba;
   margin-left: 2px;
 }
 
@@ -1578,21 +1581,21 @@ onUnmounted(() => {
   align-items: center;
   gap: 2px;
   padding: 0.375rem 0.875rem;
-  background: #f5f5f5;
+  background: #f5f5f6;
   border: none;
   border-radius: 100px;
   font-size: 0.75rem;
-  font-weight: 600;
-  color: #999;
+  font-weight: 500;
+  color: #888;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
   font-family: inherit;
   text-decoration: none;
 }
 
 .view-all-btn:hover {
-  background: #ebebeb;
-  color: #666;
+  background: #eaeaeb;
+  color: #555;
 }
 
 @media (min-width: 1280px) {
@@ -1619,21 +1622,21 @@ onUnmounted(() => {
   align-items: center;
   gap: 2px;
   padding: 0.375rem 0.875rem;
-  background: #f5f5f5;
+  background: #f5f5f6;
   border: none;
   border-radius: 100px;
   font-size: 0.75rem;
-  font-weight: 600;
-  color: #999;
+  font-weight: 500;
+  color: #888;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
   font-family: inherit;
   text-decoration: none;
 }
 
 .view-all-link:hover {
-  background: #ebebeb;
-  color: #666;
+  background: #eaeaeb;
+  color: #555;
 }
 
 /* 가로 스크롤 영역 */
@@ -1654,11 +1657,11 @@ onUnmounted(() => {
 .dash-feed-card {
   flex: 0 0 160px;
   height: 230px;
-  border-radius: 20px;
+  border-radius: 18px;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   cursor: pointer;
 }
 
@@ -1677,8 +1680,8 @@ onUnmounted(() => {
 }
 
 .dash-feed-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
 }
 
 .card-visual-wrapper {
@@ -1728,8 +1731,8 @@ onUnmounted(() => {
 
 .rank-num {
   font-size: 24px;
-  font-weight: 900;
-  color: rgba(255,255,255,0.35);
+  font-weight: 700;
+  color: rgba(255,255,255,0.3);
   font-style: italic;
   line-height: 1;
 }
@@ -1902,12 +1905,12 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.1875rem;
   padding: 0.1875rem 0.375rem;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: #ef4444;
   border-radius: 4px;
   font-size: 0.5625rem;
   font-weight: 700;
   color: white;
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
   animation: pulse-trend 2s ease-in-out infinite;
 }
 
@@ -1933,8 +1936,8 @@ onUnmounted(() => {
   border: 2px solid white;
   margin-left: -8px;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  background: #8b7cc8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .liker-avatar:first-child {
@@ -1981,7 +1984,7 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #8b7cc8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2052,7 +2055,7 @@ onUnmounted(() => {
   padding: 5px 10px;
   border-radius: 100px;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   z-index: 3;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -2115,7 +2118,7 @@ onUnmounted(() => {
 .category-tag {
   display: inline-block;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 700;
   color: #9333ea;
   text-transform: uppercase;
   margin-bottom: 1px;
@@ -2134,7 +2137,7 @@ onUnmounted(() => {
 
 .price {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   color: #9333ea;
   white-space: nowrap;
 }
@@ -2258,14 +2261,16 @@ onUnmounted(() => {
   background: #ffffff;
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #f0f0f0;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  border: 1px solid #efefef;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, border-color 0.25s ease;
   text-decoration: none;
   display: block;
 }
 .battle-hot-card:hover {
-  transform: translateY(-3px);
-  border-color: #e0e0e0;
+  transform: translateY(-2px);
+  border-color: #e4e4e5;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
 }
 
 /* 썸네일 */
@@ -2319,7 +2324,7 @@ onUnmounted(() => {
   border-radius: 50px;
   padding: 6px 16px;
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 700;
   color: #fff;
   letter-spacing: 3px;
   text-shadow: 0 1px 8px rgba(0,0,0,0.18);
@@ -2330,10 +2335,10 @@ onUnmounted(() => {
   left: 10px;
   background: rgba(255,255,255,0.92);
   border: 1px solid rgba(255,255,255,0.7);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   color: #6d5dfc;
   font-size: 11.5px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 4px 10px;
   border-radius: 8px;
   letter-spacing: 0.8px;
@@ -2387,11 +2392,11 @@ onUnmounted(() => {
 .battle-hot-stat svg { stroke: #c8cce0; }
 .battle-hot-title {
   font-size: 15px;
-  font-weight: 700;
-  color: #18181b;
+  font-weight: 650;
+  color: #1a1a1e;
   margin-bottom: 5px;
   line-height: 1.4;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
 }
 .battle-hot-meta {
   font-size: 11px;
@@ -2415,8 +2420,8 @@ onUnmounted(() => {
 }
 .battle-label {
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
   color: #b8bdd6;
   white-space: nowrap;
   text-transform: uppercase;
@@ -2447,7 +2452,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   flex-shrink: 0;
   position: relative;
 }
@@ -2476,9 +2481,9 @@ onUnmounted(() => {
 }
 .rank-pct {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   flex-shrink: 0;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
 }
 .rank-pct.p1 { color: #7c6ef5; }
 .rank-pct.p2 { color: #c8cce0; }
@@ -2559,9 +2564,9 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   min-height: 360px;
-  background: #fafafa;
+  background: #f9f9fa;
   border-radius: 16px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #efefef;
   overflow: hidden;
   cursor: default;
 }
@@ -2578,23 +2583,23 @@ onUnmounted(() => {
 .dash-bubble {
   position: absolute;
   border-radius: 50%;
-  border: 2.5px solid;
+  border: 2px solid;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   user-select: none;
   text-decoration: none;
 }
 .dash-bubble:hover {
-  transform: scale(1.08);
+  transform: scale(1.06);
   z-index: 20 !important;
 }
 .dash-bubble.is-dimmed {
-  filter: brightness(0.6) saturate(0.2);
-  opacity: 0.7;
+  filter: brightness(0.65) saturate(0.25);
+  opacity: 0.65;
 }
 
 /* 버블 배경 이미지 */
@@ -2647,7 +2652,7 @@ onUnmounted(() => {
   top: 4px;
   left: 50%;
   transform: translateX(-50%);
-  font-weight: 900;
+  font-weight: 700;
   padding: 3px 8px;
   border-radius: 6px;
   letter-spacing: 0.02em;
@@ -2693,8 +2698,8 @@ onUnmounted(() => {
   background: #fff;
   border-radius: 14px;
   padding: 14px 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  border: 1px solid #eeeef0;
   pointer-events: none;
   animation: tooltipFadeIn 0.15s ease;
 }
@@ -2837,7 +2842,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 2.5rem 1rem;
-  background: #fafafa;
+  background: #f9f9fa;
   border-radius: 12px;
 }
 
@@ -2845,7 +2850,7 @@ onUnmounted(() => {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #f0f0f0;
+  background: #f0f0f1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2856,7 +2861,7 @@ onUnmounted(() => {
 .empty-text {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #999;
+  color: #909094;
   margin: 0;
 }
 

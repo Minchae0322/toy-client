@@ -105,7 +105,7 @@ function formatNumber(num) {
 
 .level-number {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   color: #222;
 }
 

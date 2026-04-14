@@ -383,7 +383,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.4);
+  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.3);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -395,7 +395,7 @@ onBeforeUnmount(() => {
 .fab-btn.open {
   transform: rotate(45deg);
   background: #7c3aed;
-  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
 }
 
 .fab-icon {
@@ -411,7 +411,7 @@ onBeforeUnmount(() => {
   background: white;
   border-radius: 16px;
   padding: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -421,7 +421,7 @@ onBeforeUnmount(() => {
 
 .fab-menu-divider {
   height: 1px;
-  background: #f0f0f0;
+  background: #efefef;
   margin: 4px 8px;
 }
 
@@ -508,7 +508,7 @@ onBeforeUnmount(() => {
   background: white;
   border-radius: 14px;
   padding: 6px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -587,7 +587,7 @@ onBeforeUnmount(() => {
 
 .more-menu-divider {
   height: 1px;
-  background: #f0f0f0;
+  background: #efefef;
   margin: 2px 8px;
 }
 

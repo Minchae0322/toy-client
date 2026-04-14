@@ -108,7 +108,7 @@ onUnmounted(() => {
 .error-code {
   position: relative;
   font-size: 64px;
-  font-weight: 800;
+  font-weight: 700;
   color: #9933EA;
   letter-spacing: -2px;
   z-index: 1;

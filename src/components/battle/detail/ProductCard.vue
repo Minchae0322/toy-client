@@ -177,7 +177,7 @@ defineExpose({ setCommentSubmitting })
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.25s ease;
   position: relative;
-  border: 1.5px solid #f0f0f0;
+  border: 1.5px solid #efefef;
   display: flex;
   flex-direction: column;
   max-width: 100%;
@@ -227,7 +227,7 @@ defineExpose({ setCommentSubmitting })
 
 .selected-rank-badge .rank-number {
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -255,7 +255,7 @@ defineExpose({ setCommentSubmitting })
 
 .selected-rank-badge .pick-text {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 1px;
 }
 
@@ -293,7 +293,7 @@ defineExpose({ setCommentSubmitting })
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: #555;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
 }
@@ -410,7 +410,7 @@ defineExpose({ setCommentSubmitting })
 
 .score-percent {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.5px;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }

@@ -577,7 +577,7 @@ watch(activeTab, async (newTab) => {
 
 .modal-title {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   color: #111827;
 }
 
@@ -1097,7 +1097,7 @@ watch(activeTab, async (newTab) => {
 .empty-illustration {
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  background: #f3e8ff;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1112,7 +1112,7 @@ watch(activeTab, async (newTab) => {
 }
 
 .empty-illustration.warning {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background: #fef3c7;
 }
 
 .empty-illustration.warning svg {

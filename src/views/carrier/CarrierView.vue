@@ -790,7 +790,7 @@ onBeforeRouteLeave(async () => {
 }
 .header-page-title {
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 700;
   color: #111;
   margin: 0;
   white-space: nowrap;
@@ -911,10 +911,10 @@ onBeforeRouteLeave(async () => {
   z-index: 10;
   color: #fff;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 3px 8px;
 }
-.skin-badge.sp { top: 0; right: 0; background: linear-gradient(135deg,#f59e0b,#d97706); border-radius: 0 12px 0 8px; }
+.skin-badge.sp { top: 0; right: 0; background: #f59e0b; border-radius: 0 12px 0 8px; }
 
 .skin-svg-wrap { padding: 12px 8px 8px; display: flex; justify-content: center; }
 .skin-info { padding: 4px 10px 10px; text-align: center; }
@@ -922,7 +922,7 @@ onBeforeRouteLeave(async () => {
 .skin-name.empty { color: #bbb; }
 .skin-desc { font-size: 10px; color: #999; margin-top: 1px; }
 .skin-desc.empty { color: #ccc; }
-.skin-active-bar { height: 3px; background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.skin-active-bar { height: 3px; background: #7c3aed; }
 
 /* ==================== 스티커 팔레트 ==================== */
 .deco-page-nav { display: flex; align-items: center; gap: 6px; }
@@ -1219,7 +1219,7 @@ onBeforeRouteLeave(async () => {
   transition: background .3s;
   flex-shrink: 0;
 }
-.toggle-switch.on { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+.toggle-switch.on { background: #7c3aed; }
 .toggle-knob {
   width: 22px;
   height: 22px;
@@ -1287,7 +1287,7 @@ onBeforeRouteLeave(async () => {
 
 .rank-badge {
   position: absolute;
-  font-weight: 900;
+  font-weight: 700;
   padding: 1px 6px;
   pointer-events: none;
 }
@@ -1460,7 +1460,7 @@ onBeforeRouteLeave(async () => {
   align-items: center;
   justify-content: center;
   font-size: 8px;
-  font-weight: 900;
+  font-weight: 700;
   border: 1.5px solid #fff;
 }
 
@@ -1558,7 +1558,7 @@ onBeforeRouteLeave(async () => {
 .detail-rank {
   margin-left: auto;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 3px 10px;
   border-radius: 8px;
 }
@@ -1577,7 +1577,7 @@ onBeforeRouteLeave(async () => {
 }
 .stat-box.full { grid-column: 1 / -1; }
 .stat-label { font-size: 10px; color: #999; margin-bottom: 2px; }
-.stat-value { font-size: 16px; font-weight: 800; color: #7c3aed; }
+.stat-value { font-size: 16px; font-weight: 700; color: #7c3aed; }
 
 /* ==================== 공유 모달 ==================== */
 .share-modal-overlay {
