@@ -297,8 +297,8 @@ onMounted(() => {
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-  box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1);
+  background: #f3f4f6;
+  border: 3px solid #e5e7eb;
 }
 
 @media (min-width: 768px) {
@@ -319,8 +319,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  background: #f9fafb;
 }
 
 .avatar-placeholder svg {
@@ -365,65 +364,67 @@ onMounted(() => {
 
 /* 닉네임 */
 .username {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: #111827;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
 }
 
 @media (min-width: 768px) {
   .username {
-    font-size: 20px;
+    font-size: 18px;
     margin: 0;
   }
 }
 
 @media (min-width: 1024px) {
   .username {
-    font-size: 22px;
+    font-size: 20px;
   }
 }
 
 /* 팔로우 버튼 */
 .follow-btn {
-  padding: 8px 24px;
-  border-radius: 9999px;
-  font-size: 14px;
+  padding: 7px 20px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
-  background: #9333EA;
+  transition: all 0.15s ease;
+  background: #111827;
   color: #ffffff;
   white-space: nowrap;
   margin-bottom: 16px;
+  letter-spacing: -0.01em;
 }
 
 @media (min-width: 768px) {
   .follow-btn {
-    padding: 6px 20px;
-    border-radius: 8px;
-    font-size: 14px;
+    padding: 6px 18px;
     margin-bottom: 0;
   }
 }
 
 .follow-btn:hover:not(:disabled) {
-  background: #7c3aed;
+  background: #1f2937;
 }
 
 .follow-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .follow-btn.active {
-  background: #f3f4f6;
-  color: #374151;
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
 }
 
 .follow-btn.active:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: #f9fafb;
+  color: #374151;
 }
 
 /* 통계 */
@@ -450,31 +451,32 @@ onMounted(() => {
   border: none;
   cursor: pointer;
   padding: 4px 8px;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 6px;
+  transition: background 0.15s;
 }
 
 @media (min-width: 768px) {
   .stat {
     flex-direction: row;
-    gap: 6px;
+    gap: 5px;
   }
 }
 
 .stat:hover {
-  background: #f9fafb;
+  background: #f3f4f6;
 }
 
 .stat:hover .stat-value,
 .stat:hover .stat-label {
-  color: #9333EA;
+  color: #111827;
 }
 
 .stat-value {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #111827;
-  transition: color 0.2s;
+  transition: color 0.15s;
+  letter-spacing: -0.01em;
 }
 
 @media (min-width: 768px) {
@@ -486,22 +488,22 @@ onMounted(() => {
 
 .stat-label {
   font-size: 12px;
-  color: #6b7280;
-  transition: color 0.2s;
+  color: #9ca3af;
+  transition: color 0.15s;
 }
 
 @media (min-width: 768px) {
   .stat-label {
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 
 /* 자기소개 */
 .bio {
-  font-size: 14px;
-  color: #374151;
+  font-size: 13px;
+  color: #4b5563;
   line-height: 1.6;
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
   word-break: break-word;
   padding: 0 8px;
 }
@@ -511,7 +513,7 @@ onMounted(() => {
     font-size: 14px;
     padding: 0;
     margin: 0 0 8px 0;
-    max-width: 400px;
+    max-width: 360px;
   }
 }
 
@@ -544,7 +546,7 @@ onMounted(() => {
 
 /* 구분선 */
 .divider {
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid #e5e7eb;
 }
 
 /* 스켈레톤 로딩 */
@@ -552,9 +554,8 @@ onMounted(() => {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  background: #f3f4f6;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
   margin-bottom: 16px;
 }
 
@@ -579,9 +580,8 @@ onMounted(() => {
 }
 
 .skeleton-text {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  background: #f3f4f6;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
   border-radius: 4px;
 }
 
@@ -641,8 +641,8 @@ onMounted(() => {
   }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>

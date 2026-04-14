@@ -112,7 +112,7 @@ watch(() => props.modelValue, (newVal) => {
 <style scoped>
 .tabs-container {
   background: #fff;
-  border-top: 1px solid #efefef;
+  border-top: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -138,53 +138,53 @@ watch(() => props.modelValue, (newVal) => {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 16px 0;
+  padding: 14px 0;
   background: none;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.15s ease;
   position: relative;
 }
 
 .tab-icon {
-  width: 22px;
-  height: 22px;
-  color: #8e8e8e;
-  transition: color 0.2s ease;
+  width: 20px;
+  height: 20px;
+  color: #9ca3af;
+  transition: color 0.15s ease;
 }
 
 .tab-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #8e8e8e;
+  color: #9ca3af;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: color 0.2s ease;
+  letter-spacing: 0.8px;
+  transition: color 0.15s ease;
 }
 
 /* 활성 상태 */
 .tab-item.active .tab-icon {
-  color: #111;
+  color: #111827;
 }
 
 .tab-item.active .tab-label {
-  color: #111;
+  color: #111827;
 }
 
 /* 호버 상태 */
 .tab-item:hover:not(.active) .tab-icon,
 .tab-item:hover:not(.active) .tab-label {
-  color: #555;
+  color: #6b7280;
 }
 
 /* 슬라이딩 인디케이터 */
 .tab-indicator {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
-  height: 1px;
-  background: #111;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 2px;
+  background: #111827;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 모바일: 아이콘만 표시 */

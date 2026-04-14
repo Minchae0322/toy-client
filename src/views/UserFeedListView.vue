@@ -196,30 +196,11 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-:root {
-  --primary: #222222;
-  --secondary: #64748B;
-  --accent: #F97316;
-  --bg: #FFFFFF;
-  --card: #FFFFFF;
-  --border: #E2E8F0;
-  --hover: #F8FAFC;
-  --shadow: rgba(0, 0, 0, 0.04);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 .app-container {
-  background: var(--bg);
+  background: #ffffff;
   min-height: 100vh;
-  color: var(--primary);
-  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+  color: #111827;
+  font-family: 'SUIT', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
   display: flex;
   max-width: 100%;
   overflow-x: clip;
@@ -251,26 +232,27 @@ onUnmounted(() => {
   flex: 1;
   min-width: 0;
   min-height: 100vh;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
   padding-bottom: 5rem;
   padding-left: 1.5rem;
+  max-width: 680px;
 }
 
 @media (max-width: 767px) {
   .main-content {
     padding-left: 0;
+    max-width: 100%;
   }
 }
 
 @media (min-width: 768px) {
   .main-content {
-    padding-top: 1.5rem;
+    padding-top: 1rem;
     padding-bottom: 2.5rem;
   }
 }
 
 .tab-nav {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
 }
-
 </style>
