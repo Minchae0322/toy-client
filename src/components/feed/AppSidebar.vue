@@ -154,7 +154,7 @@ const handleProtectedRoute = async (routeName) => {
   height: calc(100vh - 66px);
   top: 66px;
   background: #ffffff;
-  border-right: 1px solid #F2F4F6;
+  border-right: 1px solid #ede9f8;
   padding: 28px 16px;
   display: none;
   flex-direction: column;
@@ -180,7 +180,7 @@ const handleProtectedRoute = async (routeName) => {
   padding: 12px;
   background: #ffffff;
   border-radius: 12px;
-  border: 1px solid #F2F4F6;
+  border: 1px solid #ede9f8;
 }
 
 .nav-section {
@@ -188,7 +188,7 @@ const handleProtectedRoute = async (routeName) => {
   flex-direction: column;
   gap: 2px;
   padding: 8px 0;
-  border-bottom: 1px solid #F2F4F6;
+  border-bottom: 1px solid #ede9f8;
 }
 
 .nav-section:last-child {
@@ -216,7 +216,11 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .nav-item:hover {
-  background: #F7F8FA;
+  background: #faf7ff;
+}
+
+.nav-item.active {
+  background: #faf7ff;
 }
 
 .nav-item .icon {
@@ -253,7 +257,7 @@ const handleProtectedRoute = async (routeName) => {
   border-radius: 5px;
   min-width: 20px;
   text-align: center;
-  border: 1px solid #F2F4F6;
+  border: 1px solid #ede9f8;
 }
 
 .badge-red {
@@ -272,7 +276,7 @@ const handleProtectedRoute = async (routeName) => {
 /* 구분선 */
 .action-divider {
   height: 1px;
-  background: #F2F4F6;
+  background: #ede9f8;
   margin: 4px 0;
 }
 

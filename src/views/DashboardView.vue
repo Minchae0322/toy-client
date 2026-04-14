@@ -1504,7 +1504,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 0.25rem;
   padding-left: 0.75rem;
-  border-left: 3px solid #e4e4e7;
+  border-left: 3px solid #a1a1aa;
 }
 
 .section-title {

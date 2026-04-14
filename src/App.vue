@@ -250,7 +250,7 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   background: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #ede9f8;
   z-index: 1000;
 }
 
@@ -284,68 +284,70 @@ onUnmounted(() => {
 .nav-desktop {
   display: none;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
 }
 
 .nav-item {
   text-decoration: none;
-  color: #888888;
+  color: #6b7280;
   font-size: 14px;
   font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
   transition: all 0.15s ease;
 }
 
 .nav-item:hover {
-  color: #333333;
-  background: #f5f5f5;
+  color: #111827;
+  background: #f5f5f7;
 }
 
 .nav-item.router-link-active {
-  color: #9933EA;
+  color: #7c3aed;
   font-weight: 600;
-  background: #FAF5FF;
+  background: #f3e8ff;
 }
 
 .nav-divider {
   width: 1px;
-  height: 16px;
-  background: #e5e5e5;
-  margin: 0 8px;
+  height: 20px;
+  background: #e5e7eb;
+  margin: 0 10px;
+  flex-shrink: 0;
 }
 
 /* ===================== 버튼 ===================== */
 .btn-primary {
   text-decoration: none;
-  background: #9933EA;
+  background: #7c3aed;
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
   padding: 8px 18px;
-  border-radius: 6px;
+  border-radius: 7px;
   transition: all 0.15s ease;
 }
 
 .btn-primary:hover {
-  background: #8529D4;
+  background: #6d28d9;
 }
 
 .btn-ghost {
   background: transparent;
-  color: #aaaaaa;
+  color: #9ca3af;
   border: none;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  padding: 8px 14px;
+  padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .btn-ghost:hover:not(:disabled) {
-  color: #555555;
-  background: #f5f5f5;
+  color: #4b5563;
+  background: transparent;
 }
 
 .btn-ghost:disabled {
@@ -359,33 +361,34 @@ onUnmounted(() => {
 }
 
 .dropdown-trigger {
-  background: transparent;
-  border: none;
-  color: #888888;
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .dropdown-trigger:hover {
-  color: #9933EA;
-  background: #FAF5FF;
+  color: #7c3aed;
+  background: #f5f3ff;
 }
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   right: 0;
   background: #ffffff;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  border: 1px solid #ede9f8;
+  border-radius: 10px;
   padding: 4px;
-  min-width: 140px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  min-width: 148px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-4px);
@@ -401,37 +404,26 @@ onUnmounted(() => {
 .dropdown-item {
   display: block;
   text-decoration: none;
-  color: #666666;
+  color: #374151;
   font-size: 13px;
   font-weight: 500;
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 9px 12px;
+  border-radius: 7px;
   transition: all 0.15s ease;
 }
 
 .dropdown-item:hover {
-  background: #f5f5f5;
-  color: #222222;
+  background: #f5f5f7;
+  color: #111827;
 }
 
 .dropdown-item.router-link-active {
-  background: #FAF5FF;
-  color: #9933EA;
+  background: #f3e8ff;
+  color: #7c3aed;
   font-weight: 600;
 }
 
-/* ===================== 알림 버튼 크기 축소 ===================== */
-:deep(.notification-trigger) {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 8px !important;
-}
-
-:deep(.notification-icon) {
-  width: 17px !important;
-  height: 17px !important;
-}
-
+/* ===================== 알림 버튼 배지 크기 ===================== */
 :deep(.notification-badge) {
   min-width: 16px !important;
   height: 16px !important;
@@ -445,12 +437,12 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
+  padding: 7px 16px;
   margin-right: auto;
-  border: 1.5px solid #9933EA;
-  background: #FAF5FF;
-  border-radius: 20px;
-  color: #9933EA;
+  border: 1.5px solid #7c3aed;
+  background: transparent;
+  border-radius: 8px;
+  color: #7c3aed;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -461,12 +453,14 @@ onUnmounted(() => {
 
 .carrier-btn:hover {
   color: #ffffff;
-  background: #9933EA;
+  background: #7c3aed;
+  border-color: #7c3aed;
 }
 
 .carrier-btn.router-link-active {
   color: #ffffff;
-  background: #9933EA;
+  background: #7c3aed;
+  border-color: #7c3aed;
 }
 
 .mobile-carrier-btn {
@@ -475,10 +469,10 @@ onUnmounted(() => {
   gap: 4px;
   padding: 6px 12px;
   margin-right: auto;
-  border: 1.5px solid #9933EA;
-  background: #FAF5FF;
-  border-radius: 18px;
-  color: #9933EA;
+  border: 1.5px solid #7c3aed;
+  background: transparent;
+  border-radius: 8px;
+  color: #7c3aed;
   font-size: 12px;
   font-weight: 600;
   text-decoration: none;
@@ -489,12 +483,14 @@ onUnmounted(() => {
 
 .mobile-carrier-btn:hover {
   color: #ffffff;
-  background: #9933EA;
+  background: #7c3aed;
+  border-color: #7c3aed;
 }
 
 .mobile-carrier-btn.router-link-active {
   color: #ffffff;
-  background: #9933EA;
+  background: #7c3aed;
+  border-color: #7c3aed;
 }
 
 /* ===================== 메시지 버튼 ===================== */
@@ -502,12 +498,12 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: none;
-  background: #FAF5FF;
-  border-radius: 8px;
-  color: #9933EA;
+  background: transparent;
+  border-radius: 7px;
+  color: #6b7280;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -518,20 +514,20 @@ onUnmounted(() => {
 }
 
 .msg-btn:hover {
-  color: #ffffff;
-  background: #9933EA;
+  color: #7c3aed;
+  background: #f5f3ff;
 }
 
 .mobile-msg-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: none;
-  background: #FAF5FF;
-  border-radius: 8px;
-  color: #9933EA;
+  background: transparent;
+  border-radius: 7px;
+  color: #6b7280;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -542,17 +538,16 @@ onUnmounted(() => {
 }
 
 .mobile-msg-btn:hover {
-  color: #ffffff;
-  background: #9933EA;
+  color: #7c3aed;
+  background: #f5f3ff;
 }
 
 /* ===================== 유저 메뉴 (데스크톱) ===================== */
 .user-menu {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
-
 
 .user-info {
   display: flex;
@@ -561,32 +556,33 @@ onUnmounted(() => {
   padding: 4px 10px 4px 4px;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease;
 }
 
 .user-info:hover {
-  background: #f5f5f5;
+  background: #f5f5f7;
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
-  background: #9933EA;
+  width: 28px;
+  height: 28px;
+  background: #7c3aed;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   overflow: hidden;
-  border: 2.5px solid #ddd;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  border: 1.5px solid rgba(124, 58, 237, 0.2);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  flex-shrink: 0;
 }
 
 .user-avatar.connected {
   border-color: #00C853;
-  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.2);
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.18);
 }
 
 .user-avatar img {
@@ -597,8 +593,8 @@ onUnmounted(() => {
 
 .user-name {
   font-size: 13px;
-  font-weight: 600;
-  color: #222222;
+  font-weight: 500;
+  color: #374151;
 }
 
 /* ===================== 모바일 헤더 우측 ===================== */
@@ -609,25 +605,25 @@ onUnmounted(() => {
 }
 
 .mobile-avatar {
-  width: 36px;
-  height: 36px;
-  background: #9933EA;
+  width: 30px;
+  height: 30px;
+  background: #7c3aed;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   overflow: hidden;
   cursor: pointer;
-  border: 2.5px solid #ddd;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  border: 1.5px solid rgba(124, 58, 237, 0.2);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .mobile-avatar.connected {
   border-color: #00C853;
-  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.2);
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.18);
 }
 
 .mobile-avatar img {
@@ -660,7 +656,7 @@ onUnmounted(() => {
 /* ===================== 푸터 ===================== */
 .site-footer {
   background: #ffffff;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #ede9f8;
   padding: 24px 24px 32px;
 }
 

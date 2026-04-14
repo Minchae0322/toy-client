@@ -434,28 +434,28 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border: none;
-  background: #FAF5FF;
-  border-radius: 10px;
+  background: transparent;
+  border-radius: 7px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .notification-trigger:hover {
-  background: #9933EA;
+  background: #f5f3ff;
 }
 
 .notification-icon {
-  width: 20px;
-  height: 20px;
-  color: #9933EA;
+  width: 17px;
+  height: 17px;
+  color: #6b7280;
   transition: color 0.15s ease;
 }
 
 .notification-trigger:hover .notification-icon {
-  color: #ffffff;
+  color: #7c3aed;
 }
 
 /* 배지 */

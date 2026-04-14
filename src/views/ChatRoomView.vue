@@ -2,7 +2,10 @@
   <div class="chat-container">
     <!-- 헤더 -->
     <header class="header">
-      <h1 class="header-title">메시지</h1>
+      <div class="header-left">
+        <h1 class="header-title">메시지</h1>
+        <span class="header-sub">{{ allChatRooms.length }}개의 대화</span>
+      </div>
       <div class="header-actions">
         <button @click="toggleSearch" class="icon-btn" :class="{ active: showSearch }">
           <Search :size="20" />
@@ -70,30 +73,7 @@
               class="room-item"
               :class="{ unread: room.unreadCount > 0 }"
           >
-            <!-- 프로필 -->
-            <div class="profile">
-              <img
-                  v-if="room.userInfo?.profileImage"
-                  :src="room.userInfo.profileImage"
-                  :alt="room.name"
-                  class="profile-img"
-              />
-              <div v-else class="profile-img profile-placeholder">
-                <User :size="22" />
-              </div>
-              <div v-if="room.userInfo?.isOnline" class="online-dot"></div>
-            </div>
-
-            <!-- 채팅 내용 -->
-            <div class="room-info">
-              <div class="room-header">
-                <h3 class="room-name">{{ room.name }}</h3>
-                <span class="room-time">{{ formatTime(room.lastMessageAt) }}</span>
-              </div>
-              <p class="room-message">{{ room.lastMessage || '메시지가 없습니다' }}</p>
-            </div>
-
-            <!-- 피드 썸네일 -->
+            <!-- 피드 썸네일 (왼쪽) -->
             <div class="feed-thumb">
               <img
                   v-if="room.feed?.thumbnail"
@@ -103,9 +83,24 @@
               <div v-else class="feed-thumb-placeholder">
                 <ImageIcon :size="18" />
               </div>
-              <span v-if="room.unreadCount > 0" class="unread-badge">
-                {{ room.unreadCount > 99 ? '99+' : room.unreadCount }}
-              </span>
+            </div>
+
+            <!-- 채팅 내용 -->
+            <div class="room-info">
+              <div class="room-header">
+                <h3 class="room-name">{{ room.name }}</h3>
+                <span class="room-time">{{ formatTime(room.lastMessageAt) }}</span>
+              </div>
+              <p v-if="room.feed?.title" class="feed-title">
+                <span class="feed-title-text">{{ room.feed.title }}</span>
+                <span v-if="room.feed?.price" class="feed-price">{{ formatPrice(room.feed.price) }}</span>
+              </p>
+              <div class="room-footer">
+                <p class="room-message">{{ room.lastMessage || '메시지가 없습니다' }}</p>
+                <span v-if="room.unreadCount > 0" class="unread-badge">
+                  {{ room.unreadCount > 99 ? '99+' : room.unreadCount }}
+                </span>
+              </div>
             </div>
           </div>
         </TransitionGroup>
@@ -135,7 +130,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, X, AlertCircle, Check, User, ImageIcon, MessageCircle, CheckCircle } from 'lucide-vue-next'
+import { Search, X, AlertCircle, Check, ImageIcon, MessageCircle, CheckCircle } from 'lucide-vue-next'
 import { chatService } from '@/services/ChatService.js'
 
 const router = useRouter()
@@ -284,6 +279,11 @@ const getSampleChatRooms = () => [
   }
 ]
 
+const formatPrice = (price) => {
+  if (!price) return ''
+  return new Intl.NumberFormat('ko-KR').format(price) + '원'
+}
+
 const formatTime = (date) => {
   if (!date) return ''
   const d = new Date(date)
@@ -317,7 +317,7 @@ onMounted(() => {
 .chat-container {
   width: 100%;
   min-height: 100vh;
-  background: #ffffff;
+  background: #f5f3fb;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: #111827;
   -webkit-font-smoothing: antialiased;
@@ -328,63 +328,73 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 20px 20px 16px;
   background: #ffffff;
+  border-bottom: 1px solid #eee9f8;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-@media (min-width: 768px) {
-  .header { padding: 16px 32px; }
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.header-title { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.02em; color: #111827; }
+.header-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.03em;
+  color: #111827;
+}
+
+.header-sub {
+  font-size: 12px;
+  color: #a78bfa;
+  font-weight: 500;
+}
+
 .header-actions { display: flex; gap: 8px; }
 
 .icon-btn {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid #ede9f8;
+  background: #faf8ff;
   border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
-  transition: all 0.2s;
+  color: #7c3aed;
+  transition: all 0.18s;
 }
 
-.icon-btn:hover { background: #f9fafb; }
-.icon-btn.active { background: #faf5ff; border-color: #9333ea; color: #9333ea; }
+.icon-btn:hover { background: #f3e8ff; border-color: #c4b5fd; }
+.icon-btn.active { background: #f3e8ff; border-color: #9333ea; color: #9333ea; }
 
 /* 검색바 */
 .search-wrapper {
-  padding: 12px 24px;
+  padding: 10px 16px;
   background: #ffffff;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-@media (min-width: 768px) {
-  .search-wrapper { padding: 12px 32px; }
+  border-bottom: 1px solid #eee9f8;
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #faf8ff;
+  border: 1.5px solid #ede9f8;
   border-radius: 10px;
   padding: 0 14px;
-  height: 44px;
-  transition: border-color 0.2s;
+  height: 42px;
+  transition: all 0.18s;
 }
 
-.search-box:focus-within { border-color: #9333ea; }
-
-.search-icon { color: #9ca3af; margin-right: 10px; }
+.search-box:focus-within { border-color: #9333ea; background: #fff; box-shadow: 0 0 0 3px rgba(147,51,234,0.08); }
+.search-icon { color: #a78bfa; margin-right: 10px; flex-shrink: 0; }
 
 .search-input {
   flex: 1;
@@ -396,12 +406,12 @@ onMounted(() => {
   font-family: inherit;
 }
 
-.search-input::placeholder { color: #9ca3af; }
+.search-input::placeholder { color: #c4b5fd; }
 
 .clear-btn {
   border: none;
   background: none;
-  color: #9ca3af;
+  color: #a78bfa;
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -410,40 +420,37 @@ onMounted(() => {
 /* 탭 */
 .tabs {
   display: flex;
-  padding: 0 24px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 0 16px;
   background: #ffffff;
-}
-
-@media (min-width: 768px) {
-  .tabs { padding: 0 32px; }
+  border-bottom: 1px solid #eee9f8;
+  gap: 4px;
 }
 
 .tab {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: none;
   background: none;
   font-size: 14px;
   font-weight: 500;
-  color: #9ca3af;
+  color: #b0a8c8;
   cursor: pointer;
   position: relative;
   font-family: inherit;
-  transition: color 0.2s;
+  transition: color 0.18s;
 }
 
-.tab:hover { color: #6b7280; }
-.tab.active { color: #111827; font-weight: 600; }
+.tab:hover { color: #7c3aed; }
+.tab.active { color: #7c3aed; font-weight: 700; }
 
 .tab.active::after {
   content: '';
   position: absolute;
   bottom: -1px;
-  left: 16px;
-  right: 16px;
+  left: 14px;
+  right: 14px;
   height: 2px;
   background: #9333ea;
   border-radius: 1px;
@@ -456,7 +463,7 @@ onMounted(() => {
   background: #9333ea;
   color: #fff;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 9px;
   display: flex;
   align-items: center;
@@ -465,109 +472,53 @@ onMounted(() => {
 
 /* 채팅 리스트 */
 .chat-list {
-  background: #ffffff;
+  padding: 14px 14px 28px;
 }
 
-.room-list { padding: 0; }
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .room-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
-  padding: 16px 24px;
+  padding: 14px 16px;
   cursor: pointer;
-  transition: background 0.15s;
-  border-bottom: 1px solid #f3f4f6;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1.5px solid #ede9f8;
+  box-shadow: 0 1px 4px rgba(147, 51, 234, 0.05);
+  transition: all 0.18s;
 }
 
-@media (min-width: 768px) {
-  .room-item { padding: 16px 32px; }
+.room-item:hover {
+  background: #faf7ff;
+  border-color: #c4b5fd;
+  box-shadow: 0 4px 16px rgba(147, 51, 234, 0.1);
+  transform: translateY(-1px);
 }
 
-.room-item:hover { background: #f9fafb; }
-.room-item.unread { background: #faf5ff; }
-
-/* 프로필 */
-.profile {
-  position: relative;
-  flex-shrink: 0;
+.room-item.unread {
+  background: #faf7ff;
+  border-color: #c4b5fd;
+  box-shadow: inset 3px 0 0 #9333ea, 0 1px 6px rgba(147, 51, 234, 0.08);
 }
 
-.profile-img {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
-}
-
-.profile-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  color: #d1d5db;
-}
-
-.online-dot {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 12px;
-  height: 12px;
-  background: #22c55e;
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-}
-
-/* 채팅 내용 */
-.room-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.room-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.room-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.room-time { font-size: 12px; color: #9ca3af; }
-
-.room-message {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.room-item.unread .room-message {
-  color: #111827;
-  font-weight: 500;
+.room-item.unread:hover {
+  box-shadow: inset 3px 0 0 #9333ea, 0 4px 16px rgba(147, 51, 234, 0.12);
 }
 
 /* 피드 썸네일 */
 .feed-thumb {
-  width: 52px;
-  height: 52px;
-  border-radius: 10px;
+  width: 62px;
+  height: 62px;
+  border-radius: 12px;
   overflow: hidden;
   flex-shrink: 0;
-  position: relative;
-  background: #f9fafb;
+  border: 1px solid #ede9f8;
 }
 
 .feed-thumb img {
@@ -582,15 +533,101 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d1d5db;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  background: #f5f3fb;
+  color: #c4b5fd;
+}
+
+/* 채팅 내용 */
+.room-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 1px;
+}
+
+.room-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.room-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-time {
+  font-size: 11px;
+  color: #c4b5fd;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.feed-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+}
+
+.feed-title-text {
+  font-size: 12px;
+  color: #8b5cf6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.feed-price {
+  font-size: 11px;
+  background: #f3e8ff;
+  color: #9333ea;
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
+}
+
+.room-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 1px;
+}
+
+.room-message {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.room-item.unread .room-name { color: #1a1040; }
+.room-item.unread .room-time { color: #9333ea; }
+
+.room-item.unread .room-message {
+  color: #374151;
+  font-weight: 600;
 }
 
 .unread-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
+  flex-shrink: 0;
   min-width: 20px;
   height: 20px;
   background: #9333ea;
@@ -610,9 +647,8 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 120px 40px;
+  padding: 100px 40px;
   text-align: center;
-  background: #ffffff;
 }
 
 .loader {
@@ -622,6 +658,7 @@ onMounted(() => {
   border-top-color: #9333ea;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -629,29 +666,29 @@ onMounted(() => {
 .error-circle {
   width: 56px;
   height: 56px;
-  border-radius: 50%;
+  border-radius: 16px;
   background: #fef2f2;
   color: #ef4444;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .empty-icon-wrapper {
   width: 56px;
   height: 56px;
-  border-radius: 50%;
-  background: #f3f4f6;
-  color: #9ca3af;
+  border-radius: 16px;
+  background: #f3e8ff;
+  color: #a78bfa;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
-.state-title { font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 8px; }
-.state-text { font-size: 14px; color: #6b7280; margin: 0 0 24px; }
+.state-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 6px; }
+.state-text { font-size: 14px; color: #9ca3af; margin: 0 0 24px; }
 
 .btn-primary {
   padding: 10px 24px;
@@ -662,7 +699,7 @@ onMounted(() => {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s;
   font-family: inherit;
 }
 
@@ -678,12 +715,12 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 14px 24px;
-  background: #111827;
+  background: #1a1040;
   color: #fff;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 14px;
   font-weight: 500;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   z-index: 1001;
 }
 
@@ -691,12 +728,12 @@ onMounted(() => {
 .toast.error { background: #dc2626; }
 
 /* 트랜지션 */
-.slide-enter-active, .slide-leave-active { transition: all 0.3s ease; }
-.slide-enter-from, .slide-leave-to { opacity: 0; transform: translateY(-10px); }
+.slide-enter-active, .slide-leave-active { transition: all 0.25s ease; }
+.slide-enter-from, .slide-leave-to { opacity: 0; transform: translateY(-8px); }
 
-.list-enter-active, .list-leave-active { transition: all 0.3s ease; }
-.list-enter-from, .list-leave-to { opacity: 0; transform: translateX(-20px); }
+.list-enter-active, .list-leave-active { transition: all 0.25s ease; }
+.list-enter-from, .list-leave-to { opacity: 0; transform: translateX(-16px); }
 
 .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
-.toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 20px); }
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 16px); }
 </style>
