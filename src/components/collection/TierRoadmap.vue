@@ -21,11 +21,12 @@
         <div
           class="roadmap-circle"
           :style="{
-            borderColor: (isAchieved(tier) || currentTier.tier === tier.tier) ? tier.color : '#d1d5db',
-            background: isAchieved(tier) ? tier.bgColor : (currentTier.tier === tier.tier ? tier.bgColor : '#f9fafb'),
+            borderColor: (isAchieved(tier) || currentTier.tier === tier.tier) ? tier.color : '#E5E7EB',
+            background: (isAchieved(tier) || currentTier.tier === tier.tier) ? tier.color : 'white',
+            color: (isAchieved(tier) || currentTier.tier === tier.tier) ? 'white' : '#CBD5E1',
           }"
         >
-          <span class="roadmap-emoji">{{ tier.emoji }}</span>
+          <component :is="getTierIcon(tier.tier)" :size="18" :stroke-width="2.2" />
         </div>
         <div class="roadmap-info">
           <span
@@ -42,6 +43,7 @@
 <script setup>
 import { computed } from 'vue'
 import { LEVEL_TIERS, getTierByLevel } from '@/data/levelSystemData.js'
+import { getTierIcon } from '@/utils/collectionIcons.js'
 
 const props = defineProps({
   userLevel: { type: Number, required: true },
@@ -59,14 +61,24 @@ function isAchieved(tier) {
 
 <style scoped>
 .section-card {
-  background: #fff;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 20px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 18px;
   margin-bottom: 16px;
 }
 
-.section-title { font-size: 16px; font-weight: 700; color: #222; margin-bottom: 16px; }
+@media (min-width: 768px) { .section-card { padding: 22px; } }
+
+.section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0A0E1A;
+  margin-bottom: 16px;
+  letter-spacing: -0.2px;
+}
+
+@media (min-width: 768px) { .section-title { font-size: 16px; } }
 
 .tier-roadmap {
   display: flex;
@@ -104,16 +116,17 @@ function isAchieved(tier) {
 .connector-line.filled { background: #a855f7; }
 
 .roadmap-circle {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: 3px solid;
+  border: 2.5px solid;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 1;
   transition: all 0.3s;
+  background: white;
 }
 
 .roadmap-item.current .roadmap-circle {
@@ -121,14 +134,11 @@ function isAchieved(tier) {
   transform: scale(1.1);
 }
 
-.roadmap-emoji { font-size: 18px; line-height: 1; }
+.roadmap-circle svg { line-height: 1; }
 
-.roadmap-item.locked .roadmap-emoji {
-  filter: grayscale(0.6);
-  opacity: 0.5;
-}
+.roadmap-info { text-align: center; margin-top: 10px; }
+.roadmap-name { display: block; font-size: 12px; font-weight: 800; letter-spacing: -0.1px; }
+.roadmap-levels { display: block; font-size: 11px; color: #94a3b8; margin-top: 2px; font-weight: 600; }
 
-.roadmap-info { text-align: center; margin-top: 8px; }
-.roadmap-name { display: block; font-size: 11px; font-weight: 700; }
-.roadmap-levels { display: block; font-size: 10px; color: #9ca3af; margin-top: 1px; }
+.roadmap-connector { top: 24px; }
 </style>

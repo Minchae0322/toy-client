@@ -1,48 +1,83 @@
 <template>
-  <div class="level-card" :style="cardStyle">
-    <div class="level-card-header">
-      <div class="level-info">
-        <span class="tier-emoji">{{ tier.emoji }}</span>
-        <div>
-          <div class="tier-name" :style="{ color: tier.color }">{{ tier.name }}</div>
-          <div class="level-number">Lv. {{ user.level }}</div>
+  <div class="hero-card" :style="{ background: tier.bgColor }">
+    <div class="hero-content">
+      <!-- 인사 -->
+      <div class="greeting">
+        <div class="greeting-title">
+          <strong>{{ user.nickname }}</strong>님, 오늘도 성장 중이에요
+        </div>
+        <div class="greeting-sub">{{ encouragement }}</div>
+      </div>
+
+      <!-- 프로필 + 스트릭 -->
+      <div class="hero-top">
+        <div class="identity">
+          <div class="tier-avatar">
+            <span class="tier-emoji">{{ tier.emoji }}</span>
+          </div>
+          <div class="identity-text">
+            <div class="tier-name" :style="{ color: tier.color }">{{ tier.name }}</div>
+            <div class="level-pill">Lv.{{ user.level }}</div>
+          </div>
+        </div>
+
+        <div v-if="streak && streak.currentStreak > 0" class="streak-pill">
+          <Flame :size="18" :stroke-width="2.2" class="streak-icon" />
+          <div class="streak-text">
+            <div class="streak-num">
+              <span>{{ streak.currentStreak }}</span><em>일 연속</em>
+            </div>
+            <div class="streak-sub">오늘도 잊지 마세요</div>
+          </div>
         </div>
       </div>
-      <div class="user-nickname">{{ user.nickname }}</div>
-    </div>
 
-    <div class="level-progress-section">
-      <div class="progress-header">
-        <span class="progress-label">다음 레벨까지</span>
-        <span class="progress-value">
-          {{ user.currentExp }} / {{ nextExp }} EXP
-        </span>
+      <!-- EXP 진행률 -->
+      <div class="exp-section">
+        <div class="exp-text">
+          <span v-if="expToNext != null">
+            <strong>Lv.{{ user.level + 1 }}</strong>까지 <strong class="exp-remain">{{ expToNext.toLocaleString() }} EXP</strong> 남았어요
+          </span>
+          <span v-else>최고 레벨에 도달했어요</span>
+        </div>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            :style="{ width: progress + '%', background: tier.color }"
+          ></div>
+        </div>
       </div>
-      <div class="progress-bar-track">
-        <div
-          class="progress-bar-fill"
-          :style="{ width: progress + '%', background: tier.color }"
-        ></div>
-      </div>
-      <div class="progress-percentage">{{ progress }}%</div>
-    </div>
 
-    <div class="level-stats">
-      <div class="stat-box">
-        <span class="stat-value">{{ formatNumber(user.totalExp) }}</span>
-        <span class="stat-label">총 EXP</span>
+      <!-- 활동 요약 -->
+      <div class="season-summary">
+        <div class="summary-cell">
+          <span class="summary-value">{{ user.certificationCount }}</span>
+          <span class="summary-label">총 인증</span>
+        </div>
+        <div class="divider"></div>
+        <div class="summary-cell">
+          <span class="summary-value">{{ formatNumber(user.fireCount) }}</span>
+          <span class="summary-label">받은 반응</span>
+        </div>
+        <div class="divider"></div>
+        <div class="summary-cell">
+          <span class="summary-value">{{ formatNumber(user.followerCount) }}</span>
+          <span class="summary-label">팔로워</span>
+        </div>
       </div>
-      <div class="stat-box">
-        <span class="stat-value">{{ user.certificationCount }}</span>
-        <span class="stat-label">인증</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-value">{{ formatNumber(user.fireCount) }}</span>
-        <span class="stat-label">받은 🔥</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-value">{{ formatNumber(user.followerCount) }}</span>
-        <span class="stat-label">팔로워</span>
+
+      <!-- 복구 티켓 -->
+      <div v-if="streak && streak.recoveryTickets > 0" class="ticket-row">
+        <div class="ticket-info">
+          <div class="ticket-icon-wrap">
+            <Ticket :size="18" :stroke-width="2" />
+          </div>
+          <div class="ticket-text">
+            <div class="ticket-title">복구 티켓 <strong>{{ streak.recoveryTickets }}장</strong>이 있어요</div>
+            <div class="ticket-desc">연속 인증이 끊겼을 때 사용하면 유지돼요</div>
+          </div>
+        </div>
+        <button class="ticket-btn" @click="$emit('use-ticket')">사용하기</button>
       </div>
     </div>
   </div>
@@ -51,19 +86,33 @@
 <script setup>
 import { computed } from 'vue'
 import { getTierByLevel, getNextLevelExp, getLevelProgress } from '@/data/levelSystemData.js'
+import { Ticket, Flame } from '@/utils/collectionIcons.js'
 
 const props = defineProps({
   user: { type: Object, required: true },
+  streak: { type: Object, default: null },
 })
 
+defineEmits(['use-ticket'])
+
 const tier = computed(() => getTierByLevel(props.user.level))
-const nextExp = computed(() => getNextLevelExp(props.user.level) || '∞')
+const nextExp = computed(() => getNextLevelExp(props.user.level))
 const progress = computed(() => getLevelProgress(props.user.level, props.user.currentExp))
 
-const cardStyle = computed(() => ({
-  borderColor: tier.value.borderColor,
-  background: tier.value.bgColor,
-}))
+const expToNext = computed(() => {
+  if (!nextExp.value) return null
+  return Math.max(nextExp.value - props.user.currentExp, 0)
+})
+
+const encouragement = computed(() => {
+  const p = progress.value
+  const s = props.streak?.currentStreak || 0
+  if (s >= 30) return `${s}일째 연속 인증 중이에요. 엄청난 꾸준함이에요.`
+  if (p >= 90) return '레벨업까지 거의 다 왔어요.'
+  if (p >= 60) return '꾸준히 잘하고 있어요.'
+  if (s >= 3) return `${s}일 연속 인증 중이에요.`
+  return '작은 인증 하나부터 시작해 보세요.'
+})
 
 function formatNumber(num) {
   if (num >= 10000) return (num / 10000).toFixed(1) + '만'
@@ -73,99 +122,229 @@ function formatNumber(num) {
 </script>
 
 <style scoped>
-.level-card {
-  border: 2px solid;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  transition: all 0.3s;
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  padding: 22px 20px;
+  border-radius: 18px;
 }
 
-.level-card-header {
+@media (min-width: 768px) { .hero-card { padding: 28px 32px; border-radius: 20px; } }
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 768px) { .hero-content { gap: 22px; } }
+
+/* ===== 인사 ===== */
+.greeting { display: flex; flex-direction: column; gap: 6px; }
+
+.greeting-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0A0E1A;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+}
+
+@media (min-width: 768px) { .greeting-title { font-size: 18px; } }
+
+.greeting-title strong { font-weight: 800; }
+
+.greeting-sub {
+  font-size: 12.5px;
+  color: #475569;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.1px;
+}
+
+@media (min-width: 768px) { .greeting-sub { font-size: 13px; } }
+
+/* ===== 프로필 + 스트릭 ===== */
+.hero-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
-.level-info {
+.identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+.tier-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  flex-shrink: 0;
+  background: white;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
-.tier-emoji { font-size: 36px; line-height: 1; }
+@media (min-width: 768px) { .tier-avatar { width: 54px; height: 54px; border-radius: 15px; } }
+
+.tier-emoji { font-size: 24px; line-height: 1; }
+@media (min-width: 768px) { .tier-emoji { font-size: 28px; } }
+
+.identity-text { display: flex; flex-direction: column; gap: 5px; }
 
 .tier-name {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
+  line-height: 1;
 }
 
-.level-number {
-  font-size: 22px;
-  font-weight: 700;
-  color: #222;
+.level-pill {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0A0E1A;
+  letter-spacing: -0.5px;
+  line-height: 1;
 }
 
-.user-nickname {
-  font-size: 14px;
-  font-weight: 600;
-  color: #64748B;
+@media (min-width: 768px) { .level-pill { font-size: 23px; } }
+
+/* ===== 스트릭 ===== */
+.streak-pill {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  background: #F97316;
+  color: white;
+  border-radius: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 6px 14px rgba(249, 115, 22, 0.25);
+}
+
+.streak-icon { color: white; flex-shrink: 0; }
+.streak-text { line-height: 1.2; }
+.streak-num { display: flex; align-items: baseline; gap: 3px; }
+.streak-num span { font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.3px; line-height: 1; }
+.streak-num em { font-size: 10.5px; color: rgba(255,255,255,0.9); font-style: normal; font-weight: 700; }
+.streak-sub { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 2px; font-weight: 500; }
+
+/* ===== EXP ===== */
+.exp-section {
   background: white;
-  padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: 12px;
+  padding: 14px 16px;
 }
 
-.level-progress-section { margin-bottom: 20px; }
+.exp-text {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+  margin-bottom: 10px;
+  letter-spacing: -0.1px;
+}
 
-.progress-header {
+.exp-text strong { color: #0A0E1A; font-weight: 800; }
+.exp-text .exp-remain { color: #9333EA; font-variant-numeric: tabular-nums; }
+
+.progress-bar {
+  height: 7px;
+  background: #F1F3F6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ===== 활동 요약 ===== */
+.season-summary {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 12px;
+  padding: 12px 4px;
+}
+
+.summary-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.divider { width: 1px; align-self: stretch; background: #F1F3F6; }
+
+.summary-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0A0E1A;
+  letter-spacing: -0.4px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) { .summary-value { font-size: 19px; } }
+
+.summary-label { font-size: 11px; color: #94A3B8; font-weight: 600; }
+
+/* ===== 티켓 row ===== */
+.ticket-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 12px;
+  padding: 12px 14px;
+  background: white;
+  border-radius: 12px;
+  flex-wrap: wrap;
 }
 
-.progress-label { font-size: 12px; color: #64748B; font-weight: 500; }
-.progress-value { font-size: 13px; font-weight: 600; color: #222; }
-
-.progress-bar-track {
-  height: 10px;
-  background: rgba(255,255,255,0.8);
-  border-radius: 5px;
-  overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.05);
+@media (max-width: 400px) {
+  .ticket-row { flex-direction: column; align-items: stretch; }
+  .ticket-btn { width: 100%; }
 }
 
-.progress-bar-fill {
-  height: 100%;
-  border-radius: 5px;
-  transition: width 0.6s ease;
+.ticket-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+.ticket-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #F1F3F6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  flex-shrink: 0;
 }
 
-.progress-percentage {
-  text-align: right;
-  font-size: 11px;
-  color: #64748B;
-  margin-top: 4px;
-  font-weight: 500;
+.ticket-text { min-width: 0; }
+.ticket-title { font-size: 12.5px; font-weight: 700; color: #0A0E1A; line-height: 1.3; letter-spacing: -0.2px; }
+.ticket-title strong { color: #9333EA; }
+.ticket-desc { font-size: 11.5px; color: #94A3B8; margin-top: 2px; font-weight: 500; }
+
+.ticket-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 9px;
+  background: #0A0E1A;
+  color: white;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
 }
 
-.level-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.stat-box {
-  text-align: center;
-  padding: 10px 4px;
-  background: rgba(255,255,255,0.7);
-  border-radius: 10px;
-  border: 1px solid rgba(0,0,0,0.04);
-}
-
-.stat-value { display: block; font-size: 16px; font-weight: 700; color: #222; }
-.stat-label { display: block; font-size: 11px; color: #64748B; margin-top: 2px; }
+.ticket-btn:hover { background: #1E293B; }
 </style>

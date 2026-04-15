@@ -1,7 +1,9 @@
 <template>
   <div class="section-card" :style="{ borderColor: tier.borderColor }">
     <div class="tier-detail-header">
-      <span class="tier-detail-emoji">{{ tier.emoji }}</span>
+      <div class="tier-detail-avatar">
+        <span class="tier-detail-emoji">{{ tier.emoji }}</span>
+      </div>
       <div>
         <h3 class="section-title">{{ tier.name }} 등급</h3>
         <p class="tier-description">{{ tier.description }}</p>
@@ -25,7 +27,7 @@
     </div>
 
     <div class="next-goal" v-if="tier.nextGoal">
-      <span class="goal-icon">🎯</span>
+      <Target :size="16" :stroke-width="2.2" class="goal-icon" />
       <span class="goal-text">{{ tier.nextGoal }}</span>
     </div>
   </div>
@@ -34,6 +36,7 @@
 <script setup>
 import { computed } from 'vue'
 import { getTierByLevel } from '@/data/levelSystemData.js'
+import { Target } from '@/utils/collectionIcons.js'
 
 const props = defineProps({
   userLevel: { type: Number, required: true },
@@ -44,61 +47,85 @@ const tier = computed(() => getTierByLevel(props.userLevel))
 
 <style scoped>
 .section-card {
-  background: #fff;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 20px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 18px;
   margin-bottom: 16px;
+  height: 100%;
 }
 
-.section-title { font-size: 16px; font-weight: 700; color: #222; margin-bottom: 2px; }
+@media (min-width: 768px) { .section-card { padding: 22px; } }
+
+.section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0A0E1A;
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+@media (min-width: 768px) { .section-title { font-size: 16px; } }
 
 .tier-detail-header {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #F1F5F9;
 }
 
-.tier-detail-emoji { font-size: 32px; line-height: 1; }
+.tier-detail-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F7F8FA;
+  flex-shrink: 0;
+}
 
-.tier-description { font-size: 13px; color: #64748B; line-height: 1.5; }
+.tier-detail-emoji { font-size: 26px; line-height: 1; }
 
-.feature-list { margin-bottom: 12px; }
+.tier-description { font-size: 13px; color: #64748B; line-height: 1.5; margin-top: 4px; }
+
+.feature-list { margin-bottom: 16px; }
+.feature-list:last-of-type { margin-bottom: 0; }
 
 .feature-heading {
   font-size: 12px;
-  font-weight: 600;
-  color: #64748B;
-  margin-bottom: 8px;
-  text-transform: uppercase;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 10px;
   letter-spacing: 0.3px;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  font-size: 13px;
-  color: #222;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #334155;
+  font-weight: 500;
 }
 
-.feature-item.restricted { color: #64748B; }
+.feature-item.restricted { color: #94a3b8; }
 
 .feature-icon { font-size: 14px; line-height: 1; flex-shrink: 0; }
 
 .next-goal {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #FAF5FF;
   border-radius: 10px;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
-.goal-icon { font-size: 18px; flex-shrink: 0; }
-.goal-text { font-size: 13px; font-weight: 600; color: #7c3aed; }
+.goal-icon { color: #9333EA; flex-shrink: 0; }
+.goal-text { font-size: 13.5px; font-weight: 600; color: #6d28d9; line-height: 1.4; }
 </style>

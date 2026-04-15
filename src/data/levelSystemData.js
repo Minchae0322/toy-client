@@ -428,7 +428,178 @@ export const TEST_USERS = [
   },
 ]
 
+// ==================== 스트릭 데이터 ====================
+export const STREAK_DATA = {
+  user_001: { currentStreak: 3, maxStreak: 7, lastPostedDate: '2026-04-14', recoveryTickets: 0 },
+  user_002: { currentStreak: 12, maxStreak: 18, lastPostedDate: '2026-04-15', recoveryTickets: 1 },
+  user_003: { currentStreak: 28, maxStreak: 42, lastPostedDate: '2026-04-15', recoveryTickets: 2 },
+  user_004: { currentStreak: 45, maxStreak: 60, lastPostedDate: '2026-04-15', recoveryTickets: 3 },
+  user_005: { currentStreak: 120, maxStreak: 120, lastPostedDate: '2026-04-15', recoveryTickets: 5 },
+}
+
+// ==================== 오늘의 미션 ====================
+export const DAILY_MISSIONS = {
+  user_001: [
+    { missionId: 'm1', title: '인증 1개 올리기', difficulty: 'EASY', exp: 50, currentCount: 0, targetCount: 1, status: 'IN_PROGRESS' },
+    { missionId: 'm2', title: '배틀 3개 투표', difficulty: 'EASY', exp: 30, currentCount: 2, targetCount: 3, status: 'IN_PROGRESS' },
+    { missionId: 'm3', title: '댓글 5개 작성', difficulty: 'NORMAL', exp: 50, currentCount: 0, targetCount: 5, status: 'IN_PROGRESS' },
+  ],
+  user_002: [
+    { missionId: 'm1', title: '인증 2개 올리기', difficulty: 'EASY', exp: 50, currentCount: 2, targetCount: 2, status: 'COMPLETED' },
+    { missionId: 'm2', title: '배틀 5개 투표', difficulty: 'NORMAL', exp: 50, currentCount: 5, targetCount: 5, status: 'CLAIMED' },
+    { missionId: 'm3', title: '🔥 20개 받기', difficulty: 'HARD', exp: 150, currentCount: 12, targetCount: 20, status: 'IN_PROGRESS' },
+  ],
+  user_003: [
+    { missionId: 'm1', title: '인증 3개 올리기', difficulty: 'NORMAL', exp: 80, currentCount: 3, targetCount: 3, status: 'COMPLETED' },
+    { missionId: 'm2', title: '배틀 10개 투표', difficulty: 'NORMAL', exp: 60, currentCount: 10, targetCount: 10, status: 'CLAIMED' },
+    { missionId: 'm3', title: '🔥 30개 받기', difficulty: 'HARD', exp: 200, currentCount: 25, targetCount: 30, status: 'IN_PROGRESS' },
+  ],
+  user_004: [
+    { missionId: 'm1', title: '배틀 제품 등록', difficulty: 'NORMAL', exp: 100, currentCount: 1, targetCount: 1, status: 'CLAIMED' },
+    { missionId: 'm2', title: '🔥 50개 받기', difficulty: 'HARD', exp: 250, currentCount: 42, targetCount: 50, status: 'IN_PROGRESS' },
+    { missionId: 'm3', title: '신상 최초 인증', difficulty: 'HARD', exp: 300, currentCount: 0, targetCount: 1, status: 'IN_PROGRESS' },
+  ],
+  user_005: [
+    { missionId: 'm1', title: '인증 5개 올리기', difficulty: 'HARD', exp: 200, currentCount: 5, targetCount: 5, status: 'COMPLETED' },
+    { missionId: 'm2', title: '팔로워 10명 늘리기', difficulty: 'HARD', exp: 300, currentCount: 7, targetCount: 10, status: 'IN_PROGRESS' },
+    { missionId: 'm3', title: '배틀 우승', difficulty: 'HARD', exp: 1000, currentCount: 1, targetCount: 1, status: 'CLAIMED' },
+  ],
+}
+
+// ==================== 카테고리 숙련도 ====================
+export const PROFICIENCY_TIERS = [
+  { tier: 'BEGINNER', name: '비기너', color: '#94a3b8', bgColor: '#f1f5f9', icon: '🥉', minActivity: 0 },
+  { tier: 'INTERMEDIATE', name: '인터미디엇', color: '#22c55e', bgColor: '#f0fdf4', icon: '🥈', minActivity: 30 },
+  { tier: 'ADVANCED', name: '어드밴스드', color: '#3b82f6', bgColor: '#eff6ff', icon: '🥇', minActivity: 100 },
+  { tier: 'EXPERT', name: '엑스퍼트', color: '#a855f7', bgColor: '#faf5ff', icon: '💠', minActivity: 300 },
+  { tier: 'MASTER', name: '마스터', color: '#f59e0b', bgColor: '#fffbeb', icon: '👑', minActivity: 700 },
+]
+
+export const CATEGORIES = [
+  { categoryId: 'sneakers', name: '스니커즈', emoji: '👟' },
+  { categoryId: 'tech', name: '테크', emoji: '💻' },
+  { categoryId: 'fashion', name: '패션', emoji: '👔' },
+  { categoryId: 'beauty', name: '뷰티', emoji: '💄' },
+  { categoryId: 'food', name: '푸드', emoji: '🍔' },
+]
+
+export const USER_PROFICIENCY = {
+  user_001: [
+    { categoryId: 'sneakers', activity: 5 },
+    { categoryId: 'fashion', activity: 2 },
+  ],
+  user_002: [
+    { categoryId: 'sneakers', activity: 45 },
+    { categoryId: 'tech', activity: 18 },
+    { categoryId: 'fashion', activity: 12 },
+  ],
+  user_003: [
+    { categoryId: 'sneakers', activity: 180 },
+    { categoryId: 'fashion', activity: 65 },
+    { categoryId: 'tech', activity: 22 },
+  ],
+  user_004: [
+    { categoryId: 'tech', activity: 420 },
+    { categoryId: 'sneakers', activity: 150 },
+    { categoryId: 'beauty', activity: 40 },
+  ],
+  user_005: [
+    { categoryId: 'sneakers', activity: 850 },
+    { categoryId: 'fashion', activity: 320 },
+    { categoryId: 'tech', activity: 180 },
+    { categoryId: 'food', activity: 90 },
+  ],
+}
+
+export const CATEGORY_TOP_RANKERS = {
+  sneakers: [
+    { userId: 'user_005', nickname: '정레전드', activity: 850, rank: 1 },
+    { userId: 'user_003', nickname: '이컬렉터', activity: 180, rank: 2 },
+    { userId: 'user_004', nickname: '최마니아', activity: 150, rank: 3 },
+    { userId: 'user_002', nickname: '박레귤러', activity: 45, rank: 4 },
+    { userId: 'user_001', nickname: '김뉴비', activity: 5, rank: 5 },
+  ],
+  tech: [
+    { userId: 'user_004', nickname: '최마니아', activity: 420, rank: 1 },
+    { userId: 'user_005', nickname: '정레전드', activity: 180, rank: 2 },
+    { userId: 'user_003', nickname: '이컬렉터', activity: 22, rank: 3 },
+    { userId: 'user_002', nickname: '박레귤러', activity: 18, rank: 4 },
+  ],
+  fashion: [
+    { userId: 'user_005', nickname: '정레전드', activity: 320, rank: 1 },
+    { userId: 'user_003', nickname: '이컬렉터', activity: 65, rank: 2 },
+    { userId: 'user_002', nickname: '박레귤러', activity: 12, rank: 3 },
+    { userId: 'user_001', nickname: '김뉴비', activity: 2, rank: 4 },
+  ],
+  beauty: [
+    { userId: 'user_004', nickname: '최마니아', activity: 40, rank: 1 },
+  ],
+  food: [
+    { userId: 'user_005', nickname: '정레전드', activity: 90, rank: 1 },
+  ],
+}
+
+// ==================== 배틀 예측 히스토리 ====================
+export const PREDICTION_SUMMARY = {
+  user_001: { hitCount: 2, totalPredictions: 8 },
+  user_002: { hitCount: 14, totalPredictions: 28 },
+  user_003: { hitCount: 38, totalPredictions: 65 },
+  user_004: { hitCount: 72, totalPredictions: 110 },
+  user_005: { hitCount: 156, totalPredictions: 220 },
+}
+
+function buildPredictionHistory(userId, total, hitRatio) {
+  const items = []
+  const battles = [
+    { title: '나이키 덩크 vs 아디다스 삼바', items: ['덩크', '삼바'] },
+    { title: '아이폰 16 vs 갤럭시 S25', items: ['아이폰 16', '갤럭시 S25'] },
+    { title: '스투시 후디 vs 슈프림 후디', items: ['스투시', '슈프림'] },
+    { title: '에어팟 프로 vs 소니 WF-1000XM5', items: ['에어팟 프로', '소니'] },
+    { title: '조던 1 vs 덩크 로우', items: ['조던 1', '덩크 로우'] },
+    { title: '룰루레몬 vs 나이키 테크 플리스', items: ['룰루레몬', '테크 플리스'] },
+    { title: '티파니 vs 까르띠에', items: ['티파니', '까르띠에'] },
+    { title: '아식스 GT-2000 vs 호카 본디', items: ['아식스', '호카'] },
+  ]
+  for (let i = 0; i < total; i++) {
+    const b = battles[i % battles.length]
+    const hit = i < Math.round(total * hitRatio)
+    const pick = i % 2
+    const date = new Date('2026-04-15')
+    date.setDate(date.getDate() - i)
+    items.push({
+      id: `${userId}_p${i}`,
+      battleTitle: b.title,
+      predictedItem: b.items[pick],
+      winnerItem: hit ? b.items[pick] : b.items[1 - pick],
+      hit,
+      date: date.toISOString().slice(0, 10),
+    })
+  }
+  return items
+}
+
+export const PREDICTION_HISTORY = {
+  user_001: buildPredictionHistory('user_001', 8, 0.25),
+  user_002: buildPredictionHistory('user_002', 28, 0.5),
+  user_003: buildPredictionHistory('user_003', 65, 0.58),
+  user_004: buildPredictionHistory('user_004', 110, 0.65),
+  user_005: buildPredictionHistory('user_005', 220, 0.71),
+}
+
 // ==================== 헬퍼 함수 ====================
+
+export function getProficiencyTier(activity) {
+  const sorted = [...PROFICIENCY_TIERS].reverse()
+  return sorted.find((t) => activity >= t.minActivity) || PROFICIENCY_TIERS[0]
+}
+
+export function getNextProficiencyTier(activity) {
+  return PROFICIENCY_TIERS.find((t) => t.minActivity > activity) || null
+}
+
+export function getCategoryById(categoryId) {
+  return CATEGORIES.find((c) => c.categoryId === categoryId)
+}
 
 /** 레벨로 등급(tier) 구하기 */
 export function getTierByLevel(level) {

@@ -32,44 +32,53 @@ const rulesByCategory = computed(() => ({
 
 <style scoped>
 .section-card {
-  background: #fff;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 20px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 18px;
   margin-bottom: 16px;
+  height: 100%;
 }
 
-.section-title { font-size: 16px; font-weight: 700; color: #222; margin-bottom: 16px; }
+@media (min-width: 768px) { .section-card { padding: 22px; } }
 
-.exp-category { margin-bottom: 16px; }
+.section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0A0E1A;
+  margin-bottom: 16px;
+  letter-spacing: -0.2px;
+}
+
+@media (min-width: 768px) { .section-title { font-size: 16px; } }
+
+.exp-category { margin-bottom: 20px; }
 .exp-category:last-child { margin-bottom: 0; }
 
 .exp-category-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: #222;
+  color: #94a3b8;
   margin-bottom: 8px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #E2E8F0;
+  letter-spacing: 0.3px;
 }
 
-.exp-rules-list { display: flex; flex-direction: column; gap: 2px; }
+.exp-rules-list { display: flex; flex-direction: column; }
 
 .exp-rule-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 4px;
-  border-radius: 8px;
-  transition: background 0.15s;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #F1F5F9;
 }
 
-.exp-rule-item:hover { background: #f8fafc; }
+.exp-rule-item:first-child { border-top: none; }
 
-.exp-rule-icon { font-size: 16px; flex-shrink: 0; width: 22px; text-align: center; }
-.exp-rule-action { flex: 1; font-size: 13px; color: #222; }
+.exp-rule-icon { font-size: 17px; flex-shrink: 0; width: 24px; text-align: center; }
+.exp-rule-action { flex: 1; font-size: 14px; color: #334155; font-weight: 500; }
 
-.exp-rule-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-.exp-rule-value { font-size: 13px; font-weight: 700; color: #9333ea; white-space: nowrap; }
-.exp-rule-limit { font-size: 10px; color: #64748B; }
+.exp-rule-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.exp-rule-value { font-size: 13px; font-weight: 800; color: #9333ea; white-space: nowrap; letter-spacing: -0.2px; }
+.exp-rule-limit { font-size: 11px; color: #94a3b8; font-weight: 500; }
 </style>
