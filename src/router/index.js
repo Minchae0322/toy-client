@@ -240,6 +240,16 @@ const routes = [
       title: '벌크 제품 등록'
     }
   },
+  {
+    path: '/admin/collection',
+    name: 'CollectionAdmin',
+    component: () => import('@/views/admin/CollectionAdminView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: '보상 시스템 관리'
+    }
+  },
   // 추후 확장용
   // {
   //   path: '/admin/users',
