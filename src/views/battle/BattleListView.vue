@@ -35,17 +35,18 @@
                   :class="{ active: activeTab === tab.id }"
                   @click="activeTab = tab.id"
               >
-                <svg v-if="tab.id === 'ongoing'" class="chip-icon" width="14" height="14" viewBox="0 0 14 14">
-                  <circle cx="7" cy="7" r="3.5" fill="#22c55e"/>
-                  <circle cx="7" cy="7" r="5.5" fill="none" stroke="#22c55e" stroke-width="1" opacity="0.3"/>
+                <svg v-if="tab.id === 'ongoing'" class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9"/>
+                  <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
                 </svg>
-                <svg v-else-if="tab.id === 'ended'" class="chip-icon" width="14" height="14" viewBox="0 0 14 14">
-                  <circle cx="7" cy="7" r="5.5" fill="none" stroke="#d1d5db" stroke-width="1.5"/>
-                  <line x1="4" y1="7" x2="10" y2="7" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/>
+                <svg v-else-if="tab.id === 'ended'" class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
                 </svg>
-                <svg v-else-if="tab.id === 'my'" class="chip-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 20h9"/>
-                  <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                <svg v-else-if="tab.id === 'my'" class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9"/>
+                  <circle cx="12" cy="10" r="2.5"/>
+                  <path d="M7.5 19c.5-3.5 2.5-5 4.5-5s4 1.5 4.5 5"/>
                 </svg>
                 <span class="chip-label">{{ tab.label }}</span>
                 <span v-if="tab.count" class="chip-count">{{ formatCount(tab.count) }}</span>
@@ -498,53 +499,58 @@ onUnmounted(() => {
   }
 }
 
-/* 필터 칩 - 소프트 모던 */
+/* 필터 칩 */
 .filter-chips {
   display: flex;
-  gap: 0.5rem;
+  gap: 6px;
+  align-items: center;
 }
 
 .filter-chip {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.4375rem 0.875rem;
-  background: transparent;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 999px;
-  color: #94a3b8;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  color: #64748B;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
   white-space: nowrap;
 }
 
 .filter-chip:hover {
-  background: #faf5ff;
-  border-color: #d8b4fe;
-  color: #7c3aed;
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #334155;
 }
 
 .filter-chip.active {
-  background: #f5f3ff;
-  border-color: #c4b5fd;
-  color: #7c3aed;
-  font-weight: 600;
+  background: #0F172A;
+  border-color: #0F172A;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
 }
 
 .chip-count {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: #c4b5fd;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.5;
+  margin-left: 2px;
 }
 
 .filter-chip.active .chip-count {
-  color: #a78bfa;
+  opacity: 1;
+  color: #94A3B8;
 }
 
 .chip-icon {
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
 }
 
@@ -570,18 +576,20 @@ onUnmounted(() => {
   justify-content: center;
   background: transparent;
   border: none;
-  border-radius: 0.375rem;
-  color: #cbd5e1;
+  border-radius: 6px;
+  color: #94A3B8;
+  padding: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .view-btn:hover {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .view-btn.active {
-  color: #64748b;
+  background: #F1F5F9;
+  color: #0F172A;
 }
 
 /* 정렬 */
@@ -609,22 +617,23 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.4375rem 0.875rem;
-  background: #f5f3ff;
-  color: #7c3aed;
-  border: 1.5px solid #e9d5ff;
-  border-radius: 999px;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  padding: 8px 16px;
+  background: #7C3AED;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
   font-family: inherit;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);
 }
 
 .create-battle-btn:hover {
-  background: #ede9fe;
-  border-color: #c4b5fd;
+  background: #6D28D9;
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
 }
 
 .create-battle-btn svg {
