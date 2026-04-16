@@ -126,10 +126,10 @@ function formatNumber(num) {
   position: relative;
   overflow: hidden;
   padding: 22px 20px;
-  border-radius: 18px;
+  border-radius: 4px;
 }
 
-@media (min-width: 768px) { .hero-card { padding: 28px 32px; border-radius: 20px; } }
+@media (min-width: 768px) { .hero-card { padding: 28px 32px; border-radius: 4px; } }
 
 .hero-content {
   display: flex;
@@ -144,20 +144,20 @@ function formatNumber(num) {
 
 .greeting-title {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 800;
   color: #0A0E1A;
   letter-spacing: -0.3px;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 @media (min-width: 768px) { .greeting-title { font-size: 18px; } }
 
-.greeting-title strong { font-weight: 800; }
+.greeting-title strong { font-weight: 900; }
 
 .greeting-sub {
   font-size: 12.5px;
   color: #475569;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.4;
   letter-spacing: -0.1px;
 }
@@ -178,16 +178,16 @@ function formatNumber(num) {
 .tier-avatar {
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   background: white;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
 }
 
-@media (min-width: 768px) { .tier-avatar { width: 54px; height: 54px; border-radius: 15px; } }
+@media (min-width: 768px) { .tier-avatar { width: 54px; height: 54px; border-radius: 6px; } }
 
 .tier-emoji { font-size: 24px; line-height: 1; }
 @media (min-width: 768px) { .tier-emoji { font-size: 28px; } }
@@ -195,71 +195,73 @@ function formatNumber(num) {
 .identity-text { display: flex; flex-direction: column; gap: 5px; }
 
 .tier-name {
-  font-size: 11.5px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.8px;
   line-height: 1;
 }
 
 .level-pill {
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 900;
   color: #0A0E1A;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.8px;
   line-height: 1;
 }
 
-@media (min-width: 768px) { .level-pill { font-size: 23px; } }
+@media (min-width: 768px) { .level-pill { font-size: 26px; } }
 
-/* ===== 스트릭 ===== */
+/* ===== 스트릭 (Neo-Brutalism) ===== */
 .streak-pill {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 8px 12px;
-  background: #F97316;
-  color: white;
-  border-radius: 12px;
+  padding: 9px 13px;
+  background: #FF6B35;
+  color: #0A0E1A;
+  border: 2px solid #0A0E1A;
+  border-radius: 4px;
   flex-shrink: 0;
-  box-shadow: 0 6px 14px rgba(249, 115, 22, 0.25);
+  box-shadow: 3px 3px 0 #0A0E1A;
 }
 
-.streak-icon { color: white; flex-shrink: 0; }
+.streak-icon { color: #0A0E1A; flex-shrink: 0; }
 .streak-text { line-height: 1.2; }
-.streak-num { display: flex; align-items: baseline; gap: 3px; }
-.streak-num span { font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.3px; line-height: 1; }
-.streak-num em { font-size: 10.5px; color: rgba(255,255,255,0.9); font-style: normal; font-weight: 700; }
-.streak-sub { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 2px; font-weight: 500; }
+.streak-num { display: flex; align-items: baseline; gap: 4px; }
+.streak-num span { font-size: 18px; font-weight: 900; color: #0A0E1A; letter-spacing: -0.4px; line-height: 1; font-variant-numeric: tabular-nums; }
+.streak-num em { font-size: 10.5px; color: #0A0E1A; font-style: normal; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; }
+.streak-sub { font-size: 10px; color: #0A0E1A; margin-top: 3px; font-weight: 700; letter-spacing: 0.2px; text-transform: uppercase; opacity: 0.8; }
 
 /* ===== EXP ===== */
 .exp-section {
   background: white;
-  border-radius: 12px;
+  border-radius: 6px;
   padding: 14px 16px;
 }
 
 .exp-text {
   font-size: 13px;
   color: #475569;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 10px;
   letter-spacing: -0.1px;
 }
 
 .exp-text strong { color: #0A0E1A; font-weight: 800; }
-.exp-text .exp-remain { color: #9333EA; font-variant-numeric: tabular-nums; }
+.exp-text .exp-remain { color: #0A0E1A; font-variant-numeric: tabular-nums; font-weight: 900; }
 
 .progress-bar {
-  height: 7px;
+  height: 8px;
   background: #F1F3F6;
-  border-radius: 4px;
+  border: 1.5px solid #0A0E1A;
+  border-radius: 2px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 0;
   transition: width 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
@@ -268,7 +270,7 @@ function formatNumber(num) {
   display: flex;
   align-items: center;
   background: white;
-  border-radius: 12px;
+  border-radius: 6px;
   padding: 12px 4px;
 }
 
@@ -277,24 +279,24 @@ function formatNumber(num) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 0 8px;
 }
 
-.divider { width: 1px; align-self: stretch; background: #F1F3F6; }
+.divider { width: 1px; align-self: stretch; background: #E5E7EB; }
 
 .summary-value {
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 900;
   color: #0A0E1A;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.5px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
-@media (min-width: 768px) { .summary-value { font-size: 19px; } }
+@media (min-width: 768px) { .summary-value { font-size: 20px; } }
 
-.summary-label { font-size: 11px; color: #94A3B8; font-weight: 600; }
+.summary-label { font-size: 10.5px; color: #64748B; font-weight: 700; letter-spacing: 0.2px; }
 
 /* ===== 티켓 row ===== */
 .ticket-row {
@@ -304,7 +306,7 @@ function formatNumber(num) {
   gap: 12px;
   padding: 12px 14px;
   background: white;
-  border-radius: 12px;
+  border-radius: 6px;
   flex-wrap: wrap;
 }
 
@@ -318,7 +320,7 @@ function formatNumber(num) {
 .ticket-icon-wrap {
   width: 32px;
   height: 32px;
-  border-radius: 9px;
+  border-radius: 4px;
   background: #F1F3F6;
   display: flex;
   align-items: center;
@@ -329,18 +331,19 @@ function formatNumber(num) {
 
 .ticket-text { min-width: 0; }
 .ticket-title { font-size: 12.5px; font-weight: 700; color: #0A0E1A; line-height: 1.3; letter-spacing: -0.2px; }
-.ticket-title strong { color: #9333EA; }
+.ticket-title strong { color: #0A0E1A; font-weight: 900; }
 .ticket-desc { font-size: 11.5px; color: #94A3B8; margin-top: 2px; font-weight: 500; }
 
 .ticket-btn {
   padding: 8px 15px;
   border: none;
-  border-radius: 9px;
+  border-radius: 4px;
   background: #0A0E1A;
   color: white;
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 800;
   font-family: inherit;
+  letter-spacing: -0.1px;
   cursor: pointer;
   transition: background 0.15s ease;
   flex-shrink: 0;

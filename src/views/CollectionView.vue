@@ -300,9 +300,9 @@ watch(() => selectedUser.value.userId, loadRewardData)
 </script>
 
 <style scoped>
-/* ===== 컨테이너 ===== */
+/* ===== 컨테이너 (Neo-Brutalism) ===== */
 .app-container {
-  background: #fff;
+  background: #FFFFFF;
   min-height: 100vh;
   color: #0A0E1A;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
@@ -327,9 +327,11 @@ watch(() => selectedUser.value.userId, loadRewardData)
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: #F2F4F6;
-  border-radius: 10px;
-  margin: 12px 0 0;
+  background: #FFFFFF;
+  border: 2px solid #0A0E1A;
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 #0A0E1A;
+  margin: 16px 0 4px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -351,15 +353,15 @@ watch(() => selectedUser.value.userId, loadRewardData)
 
 .dev-chip {
   padding: 5px 10px;
-  border: none;
-  border-radius: 6px;
+  border: 1.5px solid transparent;
+  border-radius: 2px;
   background: transparent;
   font-size: 12px;
   font-family: inherit;
-  color: #64748B;
+  color: #0A0E1A;
   cursor: pointer;
   white-space: nowrap;
-  font-weight: 600;
+  font-weight: 700;
   transition: all 0.1s ease;
   display: inline-flex;
   align-items: center;
@@ -373,10 +375,10 @@ watch(() => selectedUser.value.userId, loadRewardData)
   letter-spacing: -0.1px;
 }
 
-.dev-chip:hover { background: #F2F4F6; color: #0A0E1A; }
+.dev-chip:hover { background: #FAFAF5; border-color: #0A0E1A; }
 .dev-chip:hover .dev-lv { color: #64748B; }
-.dev-chip.active { background: #0A0E1A; color: white; }
-.dev-chip.active .dev-lv { color: rgba(255,255,255,0.6); }
+.dev-chip.active { background: #0A0E1A; color: white; border-color: #0A0E1A; }
+.dev-chip.active .dev-lv { color: #B4FF39; }
 
 .content-inner {
   max-width: 720px;
@@ -395,32 +397,37 @@ watch(() => selectedUser.value.userId, loadRewardData)
 @media (min-width: 768px) { .page-header { padding: 32px 0 20px; } }
 
 .page-title {
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 900;
   color: #0A0E1A;
-  letter-spacing: -0.6px;
-  line-height: 1.15;
+  letter-spacing: -1.2px;
+  line-height: 1.05;
+  text-transform: uppercase;
 }
 
-@media (min-width: 768px) { .page-title { font-size: 26px; } }
+@media (min-width: 768px) { .page-title { font-size: 38px; letter-spacing: -1.6px; } }
 
 .page-subtitle {
-  font-size: 13px;
-  color: #64748B;
-  margin-top: 6px;
-  font-weight: 500;
+  font-size: 12px;
+  color: #0A0E1A;
+  margin-top: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 
-@media (min-width: 768px) { .page-subtitle { font-size: 14px; } }
+@media (min-width: 768px) { .page-subtitle { font-size: 13px; } }
 
-/* ===== 탭 바 (세그먼트 컨트롤 스타일) ===== */
+/* ===== 탭 바 (Neo-Brutalism 세그먼트) ===== */
 .tab-bar {
   display: flex;
   gap: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   padding: 4px;
-  background: #F2F4F6;
-  border-radius: 12px;
+  background: #FFFFFF;
+  border: 2px solid #0A0E1A;
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 #0A0E1A;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -435,19 +442,20 @@ watch(() => selectedUser.value.userId, loadRewardData)
   min-width: 0;
   justify-content: center;
   padding: 10px 12px;
-  border: none;
+  border: 2px solid transparent;
   background: transparent;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   font-family: inherit;
-  color: #64748B;
+  color: #0A0E1A;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: transform 0.08s ease, background 0.18s ease;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: 9px;
-  letter-spacing: -0.2px;
+  border-radius: 2px;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -457,16 +465,19 @@ watch(() => selectedUser.value.userId, loadRewardData)
 
 .tab:hover:not(.active) {
   color: #0A0E1A;
-  background: rgba(255, 255, 255, 0.5);
+  background: #FAFAF5;
 }
+
+.tab:active { transform: scale(0.96); }
 
 .tab.active {
   color: #0A0E1A;
-  background: white;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  background: #B4FF39;
+  border-color: #0A0E1A;
+  box-shadow: 2px 2px 0 #0A0E1A;
 }
 
-.tab.active .tab-icon { color: #9333EA; }
+.tab.active .tab-icon { color: #0A0E1A; }
 
 /* ===== 탭 패널 ===== */
 .tab-panel {
@@ -506,27 +517,29 @@ watch(() => selectedUser.value.userId, loadRewardData)
 }
 
 .accent-dot {
-  width: 4px;
-  height: 18px;
-  border-radius: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 0;
+  border: 2px solid #0A0E1A;
   flex-shrink: 0;
 }
 
-.accent-purple .accent-dot { background: #9333EA; }
-.accent-gold .accent-dot { background: #EAB308; }
-.accent-orange .accent-dot { background: #F97316; }
-.accent-green .accent-dot { background: #16A34A; }
-.accent-gray .accent-dot { background: #94A3B8; }
+.accent-purple .accent-dot { background: #B4FF39; }
+.accent-gold .accent-dot { background: #FFD93D; }
+.accent-orange .accent-dot { background: #FF6B35; }
+.accent-green .accent-dot { background: #4ADE80; }
+.accent-gray .accent-dot { background: #FFFFFF; }
 
 .group-title {
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 900;
   color: #0A0E1A;
-  letter-spacing: -0.3px;
-  line-height: 1.2;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  text-transform: uppercase;
 }
 
-@media (min-width: 768px) { .group-title { font-size: 19px; } }
+@media (min-width: 768px) { .group-title { font-size: 22px; } }
 
 .group-desc {
   font-size: 13px;
@@ -560,28 +573,30 @@ watch(() => selectedUser.value.userId, loadRewardData)
 
 .group-desc .emphasize { color: #9333EA; font-weight: 800; }
 
-/* ===== Claim ready 배너 ===== */
+/* ===== Claim ready 배너 (Neo-Brutalism) ===== */
 .claim-banner {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
-  background: #FAF5FF;
-  border: 1.5px solid #E9D5FF;
-  border-radius: 14px;
-  margin-bottom: -4px;
+  padding: 16px 18px;
+  background: #B4FF39;
+  border: 2px solid #0A0E1A;
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 #0A0E1A;
+  margin-bottom: 4px;
   flex-wrap: wrap;
 }
 
 .banner-text { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
 
 .banner-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: white;
-  color: #9333EA;
+  width: 40px;
+  height: 40px;
+  border-radius: 2px;
+  background: #0A0E1A;
+  color: #B4FF39;
+  border: 2px solid #0A0E1A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -589,53 +604,58 @@ watch(() => selectedUser.value.userId, loadRewardData)
 }
 
 .banner-title {
-  font-size: 13.5px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 900;
   color: #0A0E1A;
-  letter-spacing: -0.2px;
-  line-height: 1.3;
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 .banner-sub {
   font-size: 12px;
-  color: #64748B;
-  margin-top: 2px;
-  font-weight: 500;
+  color: #0A0E1A;
+  margin-top: 3px;
+  font-weight: 700;
 }
 
 .banner-btn {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 9px;
-  background: #9333EA;
-  color: white;
+  padding: 10px 16px;
+  border: 2px solid #0A0E1A;
+  border-radius: 2px;
+  background: #0A0E1A;
+  color: #B4FF39;
   font-size: 12.5px;
-  font-weight: 800;
+  font-weight: 900;
   font-family: inherit;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(147, 51, 234, 0.26);
+  box-shadow: 3px 3px 0 #FFFFFF;
 }
 
-.banner-btn:hover { background: #7C3AED; transform: translateY(-1px); box-shadow: 0 8px 18px rgba(147, 51, 234, 0.35); }
+.banner-btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #FFFFFF; }
+.banner-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 #FFFFFF; }
 
 @media (max-width: 480px) {
   .claim-banner { flex-direction: column; align-items: stretch; }
   .banner-btn { width: 100%; }
 }
 
-/* 세컨더리 — 회색 recessed 블록 */
+/* 세컨더리 — Neo-Brutalism 블록 */
 .section-group.secondary {
-  background: #F7F8FA;
-  margin: 0 -16px;
-  padding: 24px 16px;
-  border-radius: 16px;
+  background: #FFFFFF;
+  border: 2px solid #0A0E1A;
+  margin: 0;
+  padding: 24px 20px;
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 #0A0E1A;
 }
 
 @media (min-width: 768px) {
   .section-group.secondary {
-    margin: 0 -24px;
     padding: 28px 24px;
   }
 }
@@ -644,22 +664,26 @@ watch(() => selectedUser.value.userId, loadRewardData)
 @media (min-width: 768px) { .section-group.secondary .group-title { font-size: 19px; } }
 
 .toggle-btn {
-  border: none;
-  background: transparent;
+  border: 2px solid #0A0E1A;
+  background: #FFFFFF;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: #64748B;
+  font-size: 12px;
+  font-weight: 900;
+  color: #0A0E1A;
   cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 2px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  transition: background 0.15s;
+  box-shadow: 2px 2px 0 #0A0E1A;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
-.toggle-btn:hover { background: #F7F8FA; color: #0A0E1A; }
+.toggle-btn:hover { background: #B4FF39; }
+.toggle-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 #0A0E1A; }
 .toggle-btn .arrow { transition: transform 0.2s; display: inline-block; }
 .toggle-btn .arrow.open { transform: rotate(180deg); }
 
@@ -668,30 +692,37 @@ watch(() => selectedUser.value.userId, loadRewardData)
 .two-col { display: grid; gap: 16px; grid-template-columns: 1fr; }
 @media (min-width: 960px) { .two-col { grid-template-columns: 1fr 1fr; gap: 16px; } }
 
-/* ===== 카드 공통 디자인 시스템 오버라이드 ===== */
+/* ===== 카드 공통 오버라이드 (Neo-Brutalism) ===== */
 .tab-panel :deep(.section-card),
 .tab-panel :deep(.hero-card) {
   margin-bottom: 0 !important;
-  border: none !important;
-  border-radius: 20px !important;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.05), 0 6px 20px rgba(15, 23, 42, 0.05) !important;
-  transition: box-shadow 0.25s ease;
+  border: 2px solid #0A0E1A !important;
+  border-radius: 4px !important;
+  box-shadow: 5px 5px 0 #0A0E1A !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .tab-panel :deep(.section-card) {
   background: white !important;
 }
 
-/* Hero는 자체 컬러 유지 - 그림자만 살짝 더 */
 .tab-panel :deep(.hero-card) {
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04) !important;
+  box-shadow: 6px 6px 0 #0A0E1A !important;
+}
+
+.tab-panel :deep(.section-card):hover,
+.tab-panel :deep(.hero-card):hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 #0A0E1A !important;
 }
 
 /* 세컨더리 영역 카드 */
 .section-group.secondary :deep(.section-card) {
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06) !important;
+  border: 2px solid #0A0E1A !important;
+  box-shadow: 3px 3px 0 #0A0E1A !important;
   background: white !important;
   padding: 20px !important;
+  border-radius: 4px !important;
 }
 
 @media (min-width: 768px) {
@@ -705,29 +736,29 @@ watch(() => selectedUser.value.userId, loadRewardData)
   color: #334155 !important;
 }
 
-/* ===== 토스트 (토스 스타일 pill + blur) ===== */
+/* ===== 토스트 (Neo-Brutalism) ===== */
 .toast {
   position: fixed;
   bottom: 88px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(25, 31, 40, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: white;
-  padding: 14px 26px;
-  border-radius: 100px;
+  background: #0A0E1A;
+  color: #B4FF39;
+  padding: 12px 20px;
+  border: 2px solid #0A0E1A;
+  border-radius: 2px;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 4px 4px 0 #B4FF39, 4px 4px 0 2px #0A0E1A;
   z-index: 1000;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
-@media (min-width: 768px) { .toast { bottom: 40px; font-size: 15px; padding: 14px 28px; } }
+@media (min-width: 768px) { .toast { bottom: 40px; font-size: 14px; padding: 14px 24px; } }
 
 .toast-icon { color: currentColor; flex-shrink: 0; }
 .toast-enter-active, .toast-leave-active {
