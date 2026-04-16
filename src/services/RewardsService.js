@@ -22,11 +22,6 @@ class RewardsService extends BaseApiService {
     return await this.get('/rewards/me/badges')
   }
 
-  /** GET /rewards/me/badges/pinned — 고정 뱃지 목록 */
-  async getPinnedBadges() {
-    return await this.get('/rewards/me/badges/pinned')
-  }
-
   /** POST /rewards/me/badges/{badgeId}/pin — 뱃지 고정 */
   async pinBadge(badgeId) {
     return await this.post(`/rewards/me/badges/${badgeId}/pin`)
@@ -37,29 +32,44 @@ class RewardsService extends BaseApiService {
     return await this.delete(`/rewards/me/badges/${badgeId}/pin`)
   }
 
-  /** GET /rewards/me/streaks — 스트릭 조회 */
+  /** GET /rewards/me/streak — 스트릭 조회 */
   async getMyStreak() {
-    return await this.get('/rewards/me/streaks')
+    return await this.get('/rewards/me/streak')
   }
 
-  /** POST /rewards/me/streaks/recovery — 복구 티켓 사용 */
+  /** POST /rewards/me/streak/posting — 오늘 작성 인증 */
+  async recordPosting() {
+    return await this.post('/rewards/me/streak/posting')
+  }
+
+  /** POST /rewards/me/streak/recovery — 복구 티켓 사용 */
   async useRecoveryTicket() {
-    return await this.post('/rewards/me/streaks/recovery')
+    return await this.post('/rewards/me/streak/recovery')
   }
 
-  /** GET /rewards/me/missions/daily — 일일 미션 */
+  /** GET /rewards/me/missions/today — 오늘 미션 조회 */
   async getDailyMissions() {
-    return await this.get('/rewards/me/missions/daily')
+    return await this.get('/rewards/me/missions/today')
   }
 
-  /** POST /rewards/me/missions/{missionId}/claim — 미션 보상 수령 */
-  async claimMission(missionId) {
-    return await this.post(`/rewards/me/missions/${missionId}/claim`)
+  /** GET /rewards/me/missions?date= — 날짜별 미션 조회 */
+  async getMissionsByDate(date) {
+    return await this.get('/rewards/me/missions', { date })
   }
 
-  /** GET /rewards/masteries — 내 숙련도 */
+  /** POST /rewards/me/missions/assign — 일일 미션 배정 */
+  async assignMissions(missionIds) {
+    return await this.post('/rewards/me/missions/assign', { missionIds })
+  }
+
+  /** POST /rewards/me/missions/{assignmentId}/claim — 미션 보상 수령 */
+  async claimMission(assignmentId) {
+    return await this.post(`/rewards/me/missions/${assignmentId}/claim`)
+  }
+
+  /** GET /rewards/me/masteries — 내 숙련도 */
   async getMyMasteries() {
-    return await this.get('/rewards/masteries')
+    return await this.get('/rewards/me/masteries')
   }
 
   /** GET /rewards/masteries/top — 카테고리 상위 유저 */
@@ -67,14 +77,14 @@ class RewardsService extends BaseApiService {
     return await this.get('/rewards/masteries/top', { categoryId, limit })
   }
 
-  /** GET /rewards/predictions/summary — 예측 요약 */
-  async getPredictionSummary() {
-    return await this.get('/rewards/predictions/summary')
+  /** GET /rewards/me/predictions/stats — 예측 통계 */
+  async getPredictionStats() {
+    return await this.get('/rewards/me/predictions/stats')
   }
 
-  /** GET /rewards/predictions/history — 예측 기록 */
-  async getPredictionHistory({ page = 0, size = 10 } = {}) {
-    return await this.get('/rewards/predictions/history', { page, size })
+  /** GET /rewards/me/predictions — 예측 이력 */
+  async getPredictionHistory({ page = 0, size = 20 } = {}) {
+    return await this.get('/rewards/me/predictions', { page, size })
   }
 
   // ==================== 어드민 API (/rewards/admin) ====================

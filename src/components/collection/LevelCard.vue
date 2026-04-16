@@ -95,7 +95,7 @@ const props = defineProps({
 
 defineEmits(['use-ticket'])
 
-const tier = computed(() => getTierByLevel(props.user.level))
+const tier = computed(() => getTierByLevel(props.user.level) ?? getTierByLevel(1))
 const nextExp = computed(() => getNextLevelExp(props.user.level))
 const progress = computed(() => getLevelProgress(props.user.level, props.user.currentExp))
 

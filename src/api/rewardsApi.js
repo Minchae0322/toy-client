@@ -109,7 +109,7 @@ export async function useRecoveryTicket(userId) {
 
 /* ============================================================
  *  Daily Missions
- *  GET  /missions/daily
+ *  GET  /missions/today
  *  POST /missions/{missionId}/claim
  * ============================================================ */
 export async function fetchDailyMissions(userId) {

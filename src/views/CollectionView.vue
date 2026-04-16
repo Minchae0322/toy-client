@@ -3,23 +3,6 @@
     <AppSidebar />
 
     <main class="main-content">
-      <!-- 개발용 유저 스위처 (얇은 상단 바) -->
-      <div class="dev-bar">
-        <span class="dev-label">TEST</span>
-        <div class="dev-chips">
-          <button
-            v-for="user in testUsers"
-            :key="user.userId"
-            class="dev-chip"
-            :class="{ active: selectedUser.userId === user.userId }"
-            @click="selectUser(user)"
-          >
-            <span class="dev-lv">Lv.{{ user.level }}</span>
-            {{ user.nickname }}
-          </button>
-        </div>
-      </div>
-
       <div class="content-inner">
         <!-- 헤더 -->
         <header class="page-header">
@@ -59,7 +42,7 @@
 
           <!-- 지금의 나 -->
           <section class="section-group hero-group">
-            <LevelCard :user="selectedUser" :streak="streak" @use-ticket="onUseTicket" />
+            <LevelCard :user="currentUser" :streak="streak" @use-ticket="onUseTicket" />
           </section>
 
           <!-- 오늘 할 일 -->
@@ -126,24 +109,24 @@
             <p class="group-desc">레벨을 올리고 등급별 혜택을 확인해 보세요</p>
 
             <div v-show="guideExpanded" class="secondary-body">
-              <TierRoadmap :user-level="selectedUser.level" />
+              <TierRoadmap :user-level="currentUser.level" />
               <div class="two-col">
-                <TierDetail :user-level="selectedUser.level" />
+                <TierDetail :user-level="currentUser.level" />
                 <ExpGuide />
               </div>
-              <ExpHistory :history="selectedUser.recentExpHistory" />
+              <ExpHistory :history="currentUser.recentExpHistory" />
             </div>
           </section>
         </div>
 
         <!-- 숙련도 탭 -->
         <div v-else-if="currentTab === 'proficiency'" class="tab-panel">
-          <ProficiencySection :user-id="selectedUser.userId" />
+          <ProficiencySection :user-id="authStore.userId" />
         </div>
 
         <!-- 예측 탭 -->
         <div v-else-if="currentTab === 'prediction'" class="tab-panel">
-          <PredictionHistory :user-id="selectedUser.userId" />
+          <PredictionHistory :user-id="authStore.userId" />
         </div>
 
         <BadgeDetailModal
@@ -165,7 +148,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth.js'
+import { rewardsService } from '@/services/RewardsService.js'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import LevelCard from '@/components/collection/LevelCard.vue'
@@ -179,21 +164,6 @@ import DailyMissions from '@/components/collection/DailyMissions.vue'
 import ProficiencySection from '@/components/collection/ProficiencySection.vue'
 import PredictionHistory from '@/components/collection/PredictionHistory.vue'
 import {
-  TEST_USERS,
-  getTierByLevel,
-  getUserBadges,
-  getUnearnedBadges,
-  ALL_BADGES,
-} from '@/data/levelSystemData.js'
-import {
-  fetchStreak,
-  useRecoveryTicket,
-  fetchDailyMissions,
-  claimMission,
-  fetchPinnedBadges,
-  toggleBadgePin,
-} from '@/api/rewardsApi.js'
-import {
   Gift,
   Ticket,
   Sparkles,
@@ -204,14 +174,25 @@ import {
   CheckCircle2,
 } from '@/utils/collectionIcons.js'
 
+const authStore = useAuthStore()
+
 const tabs = [
   { id: 'rewards', icon: Gift, label: '보상' },
   { id: 'proficiency', icon: Award, label: '숙련도' },
   { id: 'prediction', icon: Target, label: '예측' },
 ]
 
-const testUsers = ref(TEST_USERS)
-const selectedUser = ref(TEST_USERS[2])
+const currentUser = reactive({
+  nickname: authStore.userNickname || '',
+  level: 1,
+  currentExp: 0,
+  totalExp: 0,
+  certificationCount: 0,
+  fireCount: 0,
+  followerCount: 0,
+  recentExpHistory: [],
+})
+
 const badgeDetail = ref(null)
 const currentTab = ref('rewards')
 const guideExpanded = ref(false)
@@ -219,23 +200,21 @@ const guideExpanded = ref(false)
 const streak = ref(null)
 const missions = ref([])
 const pinnedIds = ref([])
+const earnedBadges = ref([])
+const unearnedBadges = ref([])
+const totalBadgeCount = ref(0)
 
 const toast = ref(null)
 let toastTimer = null
 
-const earnedBadges = computed(() => getUserBadges(selectedUser.value))
-const unearnedBadges = computed(() => getUnearnedBadges(selectedUser.value))
-const totalBadgeCount = computed(() => ALL_BADGES.basic.length + ALL_BADGES.special.length)
 const claimedMissionCount = computed(() => missions.value.filter((m) => m.status === 'CLAIMED').length)
 const readyMissionCount = computed(() => missions.value.filter((m) => m.status === 'COMPLETED').length)
 
-// 받을 보상 있는 미션이 먼저 보이도록 정렬
 const sortedMissions = computed(() => {
   const order = { COMPLETED: 0, IN_PROGRESS: 1, CLAIMED: 2 }
   return [...missions.value].sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9))
 })
 
-// 획득 임박 뱃지 (progress ≥ 70%)
 const nearCompleteBadges = computed(() =>
   unearnedBadges.value.filter((b) => b.progress && (b.progress.current / b.progress.target) >= 0.7)
 )
@@ -246,20 +225,38 @@ function scrollToMissions() {
 }
 
 async function loadRewardData() {
-  const uid = selectedUser.value.userId
-  const [s, m, p] = await Promise.all([
-    fetchStreak(uid),
-    fetchDailyMissions(uid),
-    fetchPinnedBadges(uid),
-  ])
-  streak.value = s
-  missions.value = m
-  pinnedIds.value = p
-}
+  try {
+    const [rewardsRes, streakRes, missionsRes, badgesRes] = await Promise.all([
+      rewardsService.getMyRewards(),
+      rewardsService.getMyStreak(),
+      rewardsService.getDailyMissions(),
+      rewardsService.getMyBadges(),
+    ])
 
-function selectUser(user) {
-  selectedUser.value = user
-  badgeDetail.value = null
+    // 유저 레벨/경험치 반영
+    const rewards = rewardsRes?.data
+    if (rewards) {
+      currentUser.level = rewards.level ?? 1
+      currentUser.currentExp = rewards.currentLevelExp ?? 0
+      currentUser.totalExp = rewards.totalExp ?? 0
+      currentUser.nextLevelExp = rewards.nextLevelExp ?? 0
+      currentUser.seasonExp = rewards.seasonExp ?? 0
+      currentUser.seasonCode = rewards.seasonCode ?? ''
+    }
+
+    streak.value = streakRes?.data ?? null
+    const missionData = missionsRes?.data
+    missions.value = Array.isArray(missionData) ? missionData : []
+
+    // 뱃지 (서버는 List<UserBadgeInfo> 플랫 리스트 반환)
+    const badgeList = Array.isArray(badgesRes?.data) ? badgesRes.data : []
+    earnedBadges.value = badgeList
+    unearnedBadges.value = []
+    totalBadgeCount.value = badgeList.length
+    pinnedIds.value = badgeList.filter(b => b.pinned).map(b => b.id)
+  } catch (e) {
+    console.error('[CollectionView] 데이터 로딩 실패:', e)
+  }
 }
 
 function showToast(icon, text) {
@@ -270,8 +267,8 @@ function showToast(icon, text) {
 
 async function onUseTicket() {
   try {
-    const updated = await useRecoveryTicket(selectedUser.value.userId)
-    streak.value = updated
+    const updated = await rewardsService.useRecoveryTicket()
+    streak.value = updated?.data ?? null
     showToast(Ticket, '복구 티켓 사용! 스트릭이 유지됐어요')
   } catch (e) {
     showToast(AlertCircle, e.message === 'NO_TICKETS' ? '티켓이 없습니다' : '오류가 발생했어요')
@@ -280,23 +277,34 @@ async function onUseTicket() {
 
 async function onClaimMission(mission) {
   try {
-    const result = await claimMission(selectedUser.value.userId, mission.missionId)
-    const found = missions.value.find((m) => m.missionId === result.missionId)
+    const result = await rewardsService.claimMission(mission.missionId)
+    const claimed = result?.data
+    const found = missions.value.find((m) => m.id === claimed?.id)
     if (found) found.status = 'CLAIMED'
-    showToast(Sparkles, `+${result.exp} EXP 획득!`)
+    showToast(Sparkles, `+${claimed?.mission?.rewardExp ?? 0} EXP 획득!`)
   } catch (e) {
     showToast(AlertCircle, '보상을 받을 수 없습니다')
   }
 }
 
 async function onTogglePin(badge) {
-  const result = await toggleBadgePin(selectedUser.value.userId, badge.id)
-  pinnedIds.value = await fetchPinnedBadges(selectedUser.value.userId)
-  showToast(Pin, result.pinned ? '프로필에 고정됐어요' : '고정이 해제됐어요')
+  try {
+    const isPinned = pinnedIds.value.includes(badge.id)
+    if (isPinned) {
+      await rewardsService.unpinBadge(badge.id)
+    } else {
+      await rewardsService.pinBadge(badge.id)
+    }
+    const updatedRes = await rewardsService.getMyBadges()
+    const list = Array.isArray(updatedRes?.data) ? updatedRes.data : []
+    pinnedIds.value = list.filter(b => b.pinned).map(b => b.id)
+    showToast(Pin, isPinned ? '고정이 해제됐어요' : '프로필에 고정됐어요')
+  } catch (e) {
+    showToast(AlertCircle, '오류가 발생했어요')
+  }
 }
 
 onMounted(loadRewardData)
-watch(() => selectedUser.value.userId, loadRewardData)
 </script>
 
 <style scoped>
@@ -320,65 +328,6 @@ watch(() => selectedUser.value.userId, loadRewardData)
 }
 
 @media (min-width: 768px) { .main-content { padding-bottom: 3rem; } }
-
-/* ===== 개발 바 ===== */
-.dev-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: #FFFFFF;
-  border: 2px solid #0A0E1A;
-  border-radius: 4px;
-  box-shadow: 3px 3px 0 #0A0E1A;
-  margin: 16px 0 4px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.dev-bar::-webkit-scrollbar { display: none; }
-
-@media (min-width: 768px) { .dev-bar { padding: 8px 16px; gap: 10px; } }
-
-.dev-label {
-  font-size: 10px;
-  font-weight: 800;
-  color: #94A3B8;
-  letter-spacing: 1px;
-  flex-shrink: 0;
-}
-
-.dev-chips { display: flex; gap: 4px; }
-
-.dev-chip {
-  padding: 5px 10px;
-  border: 1.5px solid transparent;
-  border-radius: 2px;
-  background: transparent;
-  font-size: 12px;
-  font-family: inherit;
-  color: #0A0E1A;
-  cursor: pointer;
-  white-space: nowrap;
-  font-weight: 700;
-  transition: all 0.1s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.dev-lv {
-  font-size: 10px;
-  font-weight: 800;
-  color: #94A3B8;
-  letter-spacing: -0.1px;
-}
-
-.dev-chip:hover { background: #FAFAF5; border-color: #0A0E1A; }
-.dev-chip:hover .dev-lv { color: #64748B; }
-.dev-chip.active { background: #0A0E1A; color: white; border-color: #0A0E1A; }
-.dev-chip.active .dev-lv { color: #B4FF39; }
 
 .content-inner {
   max-width: 720px;
