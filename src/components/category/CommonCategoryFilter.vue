@@ -339,41 +339,39 @@ watch(() => props.contentType, () => {
 <style scoped>
 .filter-container {
   background: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
-  padding: 12px 20px;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #f2f2f7;
 }
 
-@media (min-width: 1024px) {
-  .filter-container {
-    padding: 14px 24px;
-  }
-}
-
+/* 1뎁스: 캡슐형 탭 */
 .category-tabs {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  padding: 12px 20px 0;
 }
 .category-tabs::-webkit-scrollbar { display: none; }
 
 .category-tab {
-  padding: 8px 18px;
-  border-radius: 20px;
-  background: #f5f5f5;
-  color: #666;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: #f2f2f7;
+  color: #3a3a3c;
   border: none;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .category-tab:hover {
-  background: #eee;
+  background: #e5e5ea;
 }
 
 .category-tab.active {
@@ -382,14 +380,14 @@ watch(() => props.contentType, () => {
 }
 
 .category-tab.more-btn {
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: transparent;
-  color: #888;
+  color: #8e8e93;
 }
 
 .category-tab.more-btn:hover {
-  background: #f5f5f5;
-  color: #666;
+  background: #f2f2f7;
+  color: #3a3a3c;
 }
 
 .category-tab.more-btn svg {
@@ -397,17 +395,17 @@ watch(() => props.contentType, () => {
   height: 20px;
 }
 
-/* 로딩 */
+/* 로딩 애니메이션: 은은하게 */
 .loading-placeholder {
   display: flex;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 0 12px;
 }
 
 .loading-dot {
-  width: 6px;
-  height: 6px;
-  background: #ddd;
+  width: 4px;
+  height: 4px;
+  background: #d1d1d6;
   border-radius: 50%;
   animation: loading-pulse 1.2s ease-in-out infinite;
 }
@@ -428,14 +426,14 @@ watch(() => props.contentType, () => {
 .selected-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 10px 6px 14px;
-  background: #9933EA;
-  color: #fff;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f2f2f7;
+  color: #3a3a3c;
   border: none;
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 500;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -445,15 +443,15 @@ watch(() => props.contentType, () => {
 }
 
 .chip-clear {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   margin-left: 4px;
-  opacity: 0.7;
+  color: #8e8e93;
   cursor: pointer;
 }
 
 .chip-clear:hover {
-  opacity: 1;
+  color: #3a3a3c;
 }
 
 /* 2뎁스 하위 카테고리 */
@@ -461,34 +459,32 @@ watch(() => props.contentType, () => {
   display: flex;
   gap: 6px;
   align-items: center;
-  margin-top: 10px;
+  margin: 10px 20px 0;
   padding-top: 10px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #f2f2f7;
   flex-wrap: wrap;
 }
 
 .sub-category-tab {
-  padding: 6px 14px;
-  border-radius: 16px;
-  background: #fff;
-  color: #888;
-  border: 1px solid #e5e5e5;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: transparent;
+  color: #8e8e93;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .sub-category-tab:hover {
-  background: #faf5ff;
-  border-color: #d8b4fe;
-  color: #9333ea;
+  background: #f2f2f7;
+  color: #3a3a3c;
 }
 
 .sub-category-tab.active {
-  background: #f3e8ff;
-  border-color: #9333ea;
-  color: #9333ea;
+  background: #3a3a3c;
+  color: #ffffff;
 }
 </style>
