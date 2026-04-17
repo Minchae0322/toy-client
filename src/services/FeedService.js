@@ -403,7 +403,10 @@ class FeedService extends BaseApiService {
       profileImageFile: userInfo.profileImageFile || null,
       role: userInfo.role || 'USER',
       activated: userInfo.activated !== undefined ? userInfo.activated : true,
-      fcmToken: userInfo.fcmToken || null
+      fcmToken: userInfo.fcmToken || null,
+      level: userInfo.level ?? null,
+      primaryBadgeId: userInfo.primaryBadgeId || userInfo.representativeBadgeId || null,
+      badgeIds: userInfo.badgeIds || [],
     }
   }
 

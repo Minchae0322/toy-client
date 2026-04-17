@@ -172,7 +172,12 @@
             <!-- 푸터: 작성자 + 조회수/좋아요/댓글 -->
             <div class="list-footer">
               <div class="list-author">
-                <img :src="getProfileImageUrl(feed) || '/default-avatar.png'" class="list-avatar" />
+                <div class="list-avatar-wrap">
+                  <img :src="getProfileImageUrl(feed) || '/default-avatar.png'" class="list-avatar" />
+                  <div v-if="getUserTierArt(feed)" class="list-tier-coin">
+                    <YogurtTierArt :tier="getUserTierArt(feed)" :color="getUserTierColor(feed)" :size="14" />
+                  </div>
+                </div>
                 <div class="list-author-meta">
                   <div class="list-nickname-row">
                     <span class="list-nickname">{{ getDisplayNickname(feed) }}</span>
@@ -215,6 +220,8 @@ import FeedCard from './FeedCard.vue';
 import feedService, { feedUtils } from '@/services/FeedService';
 import UserLevelTag from '@/components/identity/UserLevelTag.vue';
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
+import YogurtTierArt from '@/components/identity/YogurtTierArt.vue';
+import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js';
 
 const props = defineProps({
   feeds: { type: Array, default: () => [] },
@@ -228,6 +235,14 @@ const observerTarget = ref(null);
 const getProfileImageUrl = (feed) => feed.userInfo?.profileImageFile?.fileUrl || feed.userInfo?.profileImgUrl || null;
 const getDisplayNickname = (feed) => feed.userInfo?.nickname || feed.userInfo?.nickName || '익명';
 const getUserLevel = (feed) => feed.userInfo?.level ?? null;
+const getUserTierArt = (feed) => {
+  const lv = getUserLevel(feed);
+  return lv != null ? (getTierByLevel(lv)?.art ?? 'plain') : null;
+};
+const getUserTierColor = (feed) => {
+  const lv = getUserLevel(feed);
+  return lv != null ? getTierColor(lv) : 'white';
+};
 const getPrimaryBadgeId = (feed) => {
   const u = feed.userInfo;
   return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null);
@@ -541,9 +556,23 @@ defineExpose({ observerTarget });
 }
 
 .list-author { display: flex; align-items: center; gap: 8px; }
+.list-avatar-wrap { position: relative; flex-shrink: 0; }
 .list-author-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .list-nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.list-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.list-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; }
+.list-tier-coin {
+  position: absolute;
+  bottom: -2px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(0,0,0,0.1);
+}
 .list-nickname { font-size: 12px; font-weight: 600; color: #191F28; }
 .list-time { font-size: 10px; color: #B0B8C1; }
 

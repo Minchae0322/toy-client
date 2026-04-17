@@ -1,14 +1,14 @@
 <template>
   <span class="user-level-tag" :class="size" :style="tagStyle">
-    <component :is="TierIcon" :size="iconSize" :stroke-width="2.4" :style="iconStyle" />
+    <YogurtTierArt :tier="tier.art" :color="tierColor" :size="artSize" />
     <span class="lv-text">Lv.{{ level }}</span>
   </span>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import { getTierByLevel } from '@/data/levelSystemData.js'
-import { getTierIcon } from '@/utils/collectionIcons.js'
+import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js'
+import YogurtTierArt from './YogurtTierArt.vue'
 
 const props = defineProps({
   level: { type: Number, required: true },
@@ -17,12 +17,12 @@ const props = defineProps({
 })
 
 const tier = computed(() => getTierByLevel(props.level))
-const TierIcon = computed(() => getTierIcon(tier.value.tier))
+const tierColor = computed(() => getTierColor(props.level))
 
-const iconSize = computed(() => {
-  if (props.size === 'xs') return 10
-  if (props.size === 'sm') return 12
-  return 14
+const artSize = computed(() => {
+  if (props.size === 'xs') return 12
+  if (props.size === 'sm') return 14
+  return 16
 })
 
 const tagStyle = computed(() => {
@@ -34,9 +34,9 @@ const tagStyle = computed(() => {
   }
   if (props.variant === 'dark') {
     return {
-      background: '#ffffff',
-      color: '#1a1a1c',
-      boxShadow: 'inset 0 0 0 1px #e5e5ea',
+      background: '#0A0E1A',
+      color: '#ffffff',
+      borderRadius: '999px',
     }
   }
   return {
@@ -44,13 +44,6 @@ const tagStyle = computed(() => {
     color: tier.value.color,
     boxShadow: `inset 0 0 0 1px ${tier.value.color}`,
   }
-})
-
-const iconStyle = computed(() => {
-  if (props.variant === 'dark') {
-    return { color: tier.value.color }
-  }
-  return {}
 })
 </script>
 

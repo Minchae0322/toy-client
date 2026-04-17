@@ -9,6 +9,9 @@ import NotificationDropdown from '@/components/notification/NotificationDropdown
 import NotificationToast from '@/components/notification/NotificationToast.vue'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
+import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
+import {rewardsService} from '@/services/RewardsService.js'
+import {getTierByLevel, getTierColor} from '@/data/levelSystemData.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -27,10 +30,38 @@ const profileImageUrl = computed(() => {
   return user.value?.profilePicture?.fileUrl || null
 })
 
+// ===== 보상 데이터 (레벨/뱃지) =====
+const userLevel = ref(null)
+const userBadges = ref([])
+const userTierArt = computed(() => {
+  if (userLevel.value == null) return null
+  return getTierByLevel(userLevel.value)?.art ?? 'plain'
+})
+const userTierColor = computed(() => {
+  if (userLevel.value == null) return 'white'
+  return getTierColor(userLevel.value)
+})
+
 const primaryBadgeId = computed(() => {
   const u = user.value
-  return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
+  const authBadge = u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
+  if (authBadge) return authBadge
+  const pinned = userBadges.value.find(b => b.pinned)
+  return pinned?.badgeId || pinned?.id || userBadges.value[0]?.badgeId || userBadges.value[0]?.id || null
 })
+
+async function loadHeaderRewards() {
+  try {
+    const [rewardsRes, badgesRes] = await Promise.all([
+      rewardsService.getMyRewards(),
+      rewardsService.getMyBadges(),
+    ])
+    userLevel.value = rewardsRes?.data?.level ?? null
+    userBadges.value = Array.isArray(badgesRes?.data) ? badgesRes.data : []
+  } catch (e) {
+    console.warn('[App] 헤더 보상 데이터 로딩 실패:', e)
+  }
+}
 
 const monitorWebSocketStatus = () => {
   wsConnected.value = webSocketService.isConnected()
@@ -87,14 +118,18 @@ const goToProfile = async () => {
 onMounted(() => {
   if (isLoggedIn.value) {
     webSocketService.connect().catch(console.error)
+    loadHeaderRewards()
   }
   monitorWebSocketStatus()
 })
 
 watch(isLoggedIn, (newVal) => {
   if (newVal) {
+    loadHeaderRewards()
     webSocketService.connect().catch(console.error)
   } else {
+    userLevel.value = null
+    userBadges.value = []
     webSocketService.disconnect()
   }
   monitorWebSocketStatus()
@@ -178,8 +213,8 @@ onUnmounted(() => {
               </div>
               <div class="user-name-row">
                 <span class="user-name">{{ user?.nickname || user?.username }}</span>
-                <UserLevelTag v-if="user?.level != null" :level="user.level" size="xs" variant="dark" />
-                <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="xs" />
+                <UserLevelTag v-if="userLevel != null" :level="userLevel" size="sm" variant="dark" />
+                <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="sm" />
               </div>
             </div>
             <button @click="handleLogout" class="btn-ghost" :disabled="isLoggingOut">
@@ -574,6 +609,15 @@ onUnmounted(() => {
   background: #f5f5f7;
 }
 
+.tier-avatar-wrap {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .user-avatar {
   width: 28px;
   height: 28px;
@@ -611,8 +655,9 @@ onUnmounted(() => {
 
 .user-name {
   font-size: 13px;
-  font-weight: 500;
-  color: #374151;
+  font-weight: 800;
+  color: #0A0E1A;
+  letter-spacing: -0.02em;
 }
 
 /* ===================== 모바일 헤더 우측 ===================== */
