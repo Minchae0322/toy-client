@@ -269,15 +269,16 @@ border-radius: 16px;
 
 ## 6. 아이콘 시스템
 
-### 원칙 — 이모지는 **뱃지에만** (+ tier 아바타 예외)
+### 원칙 — 이모지는 **뱃지에만**, 큰 Tier 블록은 **YogurtTierArt SVG**
 
 | 유형 | 아이콘 |
 |---|---|
 | **뱃지 10종** (유저가 수집하는 성취 아이템) | **이모지** (badge.emoji) |
-| **큰 Tier 아바타 블록** (Hero `.tier-avatar`, TierDetail `.tier-detail-avatar`) | **이모지** (tier.emoji) |
+| **큰 Tier 아바타 블록** (Hero `.tier-avatar`, TierDetail `.tier-detail-avatar`) | **YogurtTierArt SVG** (요거트 컵/글라스/볼/파르페/고블릿 커스텀 아트) |
+| **인라인 tier 표시** (UserLevelTag, 작은 칩) | **Lucide SVG** (`getTierIcon()`) |
 | **그 외 모든 UI** | **Lucide SVG** |
 
-streak, 메달, 토스트, 배너, 버튼, 레이블, 구분자, 인라인 tier tag, 작은 tier 원 등은 예외 없이 Lucide SVG. 이모지를 UI에 남발하지 않는다 — 토스/당근/무신사의 절제된 톤을 유지하기 위함. Tier 아바타는 "큰 사각 블록의 대표 심볼" 역할이라 tier.emoji 허용.
+streak, 메달, 토스트, 배너, 버튼, 레이블, 구분자, 인라인 tier tag, 작은 tier 원 등은 예외 없이 Lucide SVG. 이모지를 UI에 남발하지 않는다 — 토스/당근/무신사의 절제된 톤을 유지하기 위함. 큰 Tier 블록은 제품 정체성(요거뜨)을 반영하는 커스텀 SVG로 대체.
 
 ### 6.1 이모지 사용 위치
 
@@ -300,21 +301,30 @@ streak, 메달, 토스트, 배너, 버튼, 레이블, 구분자, 인라인 tier 
 
 렌더 위치: `BadgeCollection.vue`, `UserBadgeInline.vue`, `BadgeDetailModal.vue`.
 
-#### Tier 아바타 (tier.emoji)
+#### Tier 아바타 (YogurtTierArt SVG)
 
-큰 심볼 블록으로 사용. 뱃지처럼 "카드의 대표 이미지" 역할.
+큰 tier 블록은 **`src/components/identity/YogurtTierArt.vue`** 사용. 5개 티어 × 5개 rank 컬러 = 25개 조합. 요거트 제품 정체성(컵/글라스/볼/파르페/고블릿)을 그대로 반영.
 
-| Tier | emoji |
-|---|---|
-| newbie | 🌱 |
-| regular | 💪 |
-| collector | 🎨 |
-| maniac | 🔥 |
-| legend | 💎 |
+| Tier (데이터 key) | art (YogurtTierArt `:tier` prop) | 오브젝트 |
+|---|---|---|
+| newbie | plain | 플라스틱 컵 |
+| regular | fruity | 유리컵 + 딸기 3개 |
+| collector | granola | 도자기 볼 + 그래놀라 + 드리즐 |
+| maniac | parfait | 파르페 잔 + 레이어 + 휘핑 + 체리 |
+| legend | signature | 크리스탈 고블릿 + 금박 + 플라워 |
+
+**레벨 → 컬러** 매핑: `getTierColor(level)`. 티어 내 위치에 따라 `white → red → blue → violet → gold` 순. 예) Lv.1=white, Lv.5=gold. Lv.6=white, Lv.10=gold.
+
+사용 예:
+```vue
+<YogurtTierArt :tier="tier.art" :color="getTierColor(user.level)" :size="48" />
+```
 
 렌더 위치: **`LevelCard.vue` `.tier-avatar`**, **`TierDetail.vue` `.tier-detail-avatar`**.
 
-**인라인 tier 표시**(UserLevelTag, 작은 칩 등)는 이모지 금지 → `getTierIcon()` SVG 사용.
+> **legacy**: `LEVEL_TIERS[].emoji` 필드(🌱💪🎨🔥💎)는 **폴백용으로만 유지**. 새 UI에서 직접 쓰지 말 것. 기존 참조는 점진적으로 YogurtTierArt로 교체.
+
+**인라인 tier 표시**(UserLevelTag, 작은 칩 등)는 이모지·YogurtTierArt 금지 → `getTierIcon()` Lucide SVG 사용.
 
 ### 6.2 SVG (UI chrome 전부)
 

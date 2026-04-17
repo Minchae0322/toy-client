@@ -13,7 +13,7 @@
       <div class="hero-top">
         <div class="identity">
           <div class="tier-avatar">
-            <span class="tier-emoji">{{ tier.emoji }}</span>
+            <YogurtTierArt :tier="tier.art" :color="tierColor" :size="heroArtSize" />
           </div>
           <div class="identity-text">
             <div class="tier-name" :style="{ color: tier.color }">{{ tier.name }}</div>
@@ -84,9 +84,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { getTierByLevel, getNextLevelExp, getLevelProgress } from '@/data/levelSystemData.js'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { getTierByLevel, getNextLevelExp, getLevelProgress, getTierColor } from '@/data/levelSystemData.js'
 import { Ticket, Flame } from '@/utils/collectionIcons.js'
+import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
 
 const props = defineProps({
   user: { type: Object, required: true },
@@ -96,8 +97,15 @@ const props = defineProps({
 defineEmits(['use-ticket'])
 
 const tier = computed(() => getTierByLevel(props.user.level) ?? getTierByLevel(1))
+const tierColor = computed(() => getTierColor(props.user.level))
 const nextExp = computed(() => getNextLevelExp(props.user.level))
 const progress = computed(() => getLevelProgress(props.user.level, props.user.currentExp))
+
+const vw = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
+const onResize = () => (vw.value = window.innerWidth)
+onMounted(() => window.addEventListener('resize', onResize))
+onUnmounted(() => window.removeEventListener('resize', onResize))
+const heroArtSize = computed(() => (vw.value >= 768 ? 54 : 48))
 
 const expToNext = computed(() => {
   if (!nextExp.value) return null

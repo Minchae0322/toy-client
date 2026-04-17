@@ -52,7 +52,11 @@
         <div class="user-block">
           <img :src="profileImageUrl || '/default-avatar.png'" class="user-avatar" />
           <div class="user-meta">
-            <span class="user-nickname">{{ displayNickname }}</span>
+            <div class="nickname-row">
+              <span class="user-nickname">{{ displayNickname }}</span>
+              <UserLevelTag v-if="userLevel != null" :level="userLevel" size="xs" variant="dark" />
+              <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="xs" />
+            </div>
             <span class="post-date">{{ formatDate(feed.createdAt) }}</span>
           </div>
         </div>
@@ -86,6 +90,8 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { feedService, feedUtils } from '@/services/FeedService';
+import UserLevelTag from '@/components/identity/UserLevelTag.vue';
+import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
 
 const props = defineProps({ feed: { type: Object, required: true } });
 const emit = defineEmits(['update']);
@@ -95,6 +101,11 @@ const localLikeCount = ref(props.feed.likeCount || 0);
 
 const profileImageUrl = computed(() => props.feed.userInfo?.profileImageFile?.fileUrl || props.feed.userInfo?.profileImgUrl);
 const displayNickname = computed(() => props.feed.userInfo?.nickname || '익명');
+const userLevel = computed(() => props.feed.userInfo?.level ?? null);
+const primaryBadgeId = computed(() => {
+  const u = props.feed.userInfo;
+  return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null);
+});
 
 const handleLike = async () => {
   const prevLiked = localIsLiked.value;
@@ -249,7 +260,8 @@ const formatDate = (date) => feedUtils.formatDate(date);
 }
 .user-block { display: flex; align-items: center; gap: 8px; }
 .user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
-.user-meta { display: flex; flex-direction: column; gap: 1px; }
+.user-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .user-nickname { font-size: 13px; font-weight: 600; color: #191F28; letter-spacing: -0.01em; }
 .post-date { font-size: 12px; color: #B0B8C1; font-weight: 400; }
 

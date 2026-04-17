@@ -2,7 +2,7 @@
   <div class="section-card" :style="{ borderColor: tier.borderColor }">
     <div class="tier-detail-header">
       <div class="tier-detail-avatar">
-        <span class="tier-detail-emoji">{{ tier.emoji }}</span>
+        <YogurtTierArt :tier="tier.art" :color="tierColor" :size="48" />
       </div>
       <div>
         <h3 class="section-title">{{ tier.name }} 등급</h3>
@@ -35,14 +35,16 @@
 
 <script setup>
 import { computed } from 'vue'
-import { getTierByLevel } from '@/data/levelSystemData.js'
+import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js'
 import { Target } from '@/utils/collectionIcons.js'
+import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
 
 const props = defineProps({
   userLevel: { type: Number, required: true },
 })
 
 const tier = computed(() => getTierByLevel(props.userLevel))
+const tierColor = computed(() => getTierColor(props.userLevel))
 </script>
 
 <style scoped>

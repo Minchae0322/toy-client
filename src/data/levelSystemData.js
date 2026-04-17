@@ -8,6 +8,7 @@ export const LEVEL_TIERS = [
     tier: 'newbie',
     name: '뉴비',
     emoji: '🌱',
+    art: 'plain',
     levelRange: [1, 5],
     color: '#22c55e',
     bgColor: '#f0fdf4',
@@ -22,6 +23,7 @@ export const LEVEL_TIERS = [
     tier: 'regular',
     name: '레귤러',
     emoji: '💪',
+    art: 'fruity',
     levelRange: [6, 10],
     color: '#3b82f6',
     bgColor: '#eff6ff',
@@ -36,6 +38,7 @@ export const LEVEL_TIERS = [
     tier: 'collector',
     name: '컬렉터',
     emoji: '🎨',
+    art: 'granola',
     levelRange: [11, 15],
     color: '#a855f7',
     bgColor: '#faf5ff',
@@ -50,6 +53,7 @@ export const LEVEL_TIERS = [
     tier: 'maniac',
     name: '마니아',
     emoji: '🔥',
+    art: 'parfait',
     levelRange: [16, 20],
     color: '#f97316',
     bgColor: '#fff7ed',
@@ -64,6 +68,7 @@ export const LEVEL_TIERS = [
     tier: 'legend',
     name: '레전드',
     emoji: '💎',
+    art: 'signature',
     levelRange: [21, 99],
     color: '#06b6d4',
     bgColor: '#ecfeff',
@@ -606,6 +611,22 @@ export function getTierByLevel(level) {
   return LEVEL_TIERS.find(
     (t) => level >= t.levelRange[0] && level <= t.levelRange[1]
   )
+}
+
+/**
+ * 레벨로 rank 컬러 키 반환. YogurtTierArt의 color prop에 사용.
+ * 티어 안에서 레벨 위치에 따라 white → red → blue → violet → gold 순으로 순환.
+ * legend 티어(21-99)는 5단계로 비례 분할.
+ */
+export function getTierColor(level) {
+  const RANK = ['white', 'red', 'blue', 'violet', 'gold']
+  const tier = getTierByLevel(level)
+  if (!tier) return 'white'
+  const [min, max] = tier.levelRange
+  const span = max - min + 1
+  const perColor = span / 5
+  const idx = Math.min(4, Math.max(0, Math.floor((level - min) / perColor)))
+  return RANK[idx]
 }
 
 /** 다음 레벨까지 필요한 EXP 구하기 */

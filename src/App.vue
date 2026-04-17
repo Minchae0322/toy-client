@@ -7,6 +7,8 @@ import GlobalConfirmDialog from '@/components/common/GlobalConfirmDialog.vue'
 import {useConfirmDialog} from '@/composables/useConfirmDialog'
 import NotificationDropdown from '@/components/notification/NotificationDropdown.vue'
 import NotificationToast from '@/components/notification/NotificationToast.vue'
+import UserLevelTag from '@/components/identity/UserLevelTag.vue'
+import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,6 +25,11 @@ const isAuthPage = computed(() =>
 
 const profileImageUrl = computed(() => {
   return user.value?.profilePicture?.fileUrl || null
+})
+
+const primaryBadgeId = computed(() => {
+  const u = user.value
+  return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
 })
 
 const monitorWebSocketStatus = () => {
@@ -169,7 +176,11 @@ onUnmounted(() => {
                 <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
                 <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
               </div>
-              <span class="user-name">{{ user?.nickname || user?.username }}</span>
+              <div class="user-name-row">
+                <span class="user-name">{{ user?.nickname || user?.username }}</span>
+                <UserLevelTag v-if="user?.level != null" :level="user.level" size="xs" variant="dark" />
+                <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="xs" />
+              </div>
             </div>
             <button @click="handleLogout" class="btn-ghost" :disabled="isLoggingOut">
               {{ isLoggingOut ? '...' : '로그아웃' }}
@@ -589,6 +600,13 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.user-name-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
 }
 
 .user-name {

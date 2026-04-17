@@ -174,7 +174,11 @@
               <div class="list-author">
                 <img :src="getProfileImageUrl(feed) || '/default-avatar.png'" class="list-avatar" />
                 <div class="list-author-meta">
-                  <span class="list-nickname">{{ getDisplayNickname(feed) }}</span>
+                  <div class="list-nickname-row">
+                    <span class="list-nickname">{{ getDisplayNickname(feed) }}</span>
+                    <UserLevelTag v-if="getUserLevel(feed) != null" :level="getUserLevel(feed)" size="xs" variant="dark" />
+                    <UserBadgeInline v-if="getPrimaryBadgeId(feed)" :badge-id="getPrimaryBadgeId(feed)" size="xs" />
+                  </div>
                   <span class="list-time">{{ formatDate(feed.createdAt) }}</span>
                 </div>
               </div>
@@ -209,6 +213,8 @@
 import { ref } from 'vue';
 import FeedCard from './FeedCard.vue';
 import feedService, { feedUtils } from '@/services/FeedService';
+import UserLevelTag from '@/components/identity/UserLevelTag.vue';
+import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
 
 const props = defineProps({
   feeds: { type: Array, default: () => [] },
@@ -221,6 +227,11 @@ const observerTarget = ref(null);
 
 const getProfileImageUrl = (feed) => feed.userInfo?.profileImageFile?.fileUrl || feed.userInfo?.profileImgUrl || null;
 const getDisplayNickname = (feed) => feed.userInfo?.nickname || feed.userInfo?.nickName || '익명';
+const getUserLevel = (feed) => feed.userInfo?.level ?? null;
+const getPrimaryBadgeId = (feed) => {
+  const u = feed.userInfo;
+  return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null);
+};
 const getEvaluationLabel = (evaluation) => feedUtils.getEvaluationLabel(evaluation);
 const getEvaluationClass = (evaluation) => {
   const code = typeof evaluation === 'string' ? evaluation : evaluation?.code;
@@ -530,7 +541,8 @@ defineExpose({ observerTarget });
 }
 
 .list-author { display: flex; align-items: center; gap: 8px; }
-.list-author-meta { display: flex; flex-direction: column; gap: 1px; }
+.list-author-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.list-nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .list-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 .list-nickname { font-size: 12px; font-weight: 600; color: #191F28; }
 .list-time { font-size: 10px; color: #B0B8C1; }

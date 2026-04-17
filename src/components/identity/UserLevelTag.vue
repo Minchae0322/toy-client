@@ -1,6 +1,6 @@
 <template>
   <span class="user-level-tag" :class="size" :style="tagStyle">
-    <component :is="TierIcon" :size="iconSize" :stroke-width="2.4" />
+    <component :is="TierIcon" :size="iconSize" :stroke-width="2.4" :style="iconStyle" />
     <span class="lv-text">Lv.{{ level }}</span>
   </span>
 </template>
@@ -13,7 +13,7 @@ import { getTierIcon } from '@/utils/collectionIcons.js'
 const props = defineProps({
   level: { type: Number, required: true },
   size: { type: String, default: 'md', validator: (v) => ['xs', 'sm', 'md'].includes(v) },
-  variant: { type: String, default: 'soft', validator: (v) => ['filled', 'soft', 'outline'].includes(v) },
+  variant: { type: String, default: 'soft', validator: (v) => ['filled', 'soft', 'outline', 'dark'].includes(v) },
 })
 
 const tier = computed(() => getTierByLevel(props.level))
@@ -32,11 +32,25 @@ const tagStyle = computed(() => {
   if (props.variant === 'soft') {
     return { background: tier.value.bgColor, color: tier.value.color }
   }
+  if (props.variant === 'dark') {
+    return {
+      background: '#ffffff',
+      color: '#1a1a1c',
+      boxShadow: 'inset 0 0 0 1px #e5e5ea',
+    }
+  }
   return {
     background: 'transparent',
     color: tier.value.color,
     boxShadow: `inset 0 0 0 1px ${tier.value.color}`,
   }
+})
+
+const iconStyle = computed(() => {
+  if (props.variant === 'dark') {
+    return { color: tier.value.color }
+  }
+  return {}
 })
 </script>
 
