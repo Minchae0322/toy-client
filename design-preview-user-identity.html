@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>User Identity — Refined</title>
+<link rel="stylesheet" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root {
+    --ink: #0a0a0b;
+    --ink-2: #1a1a1c;
+    --ink-3: #3a3a3c;
+    --gray: #8e8e93;
+    --gray-2: #c7c7cc;
+    --bg: #f7f7f9;
+    --surface: #ffffff;
+    --line: #ececf0;
+    --line-2: #f2f2f7;
+    --gold: #c9962b;
+    --gold-tint: #fdf4e1;
+    --brand: #7c3aed;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 56px 24px 120px;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  /* Hero */
+  .hero { margin-bottom: 56px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 700; color: var(--gray);
+    text-transform: uppercase; letter-spacing: 0.14em; margin: 0 0 8px;
+  }
+  h1.title {
+    font-size: 34px; font-weight: 800; letter-spacing: -0.035em;
+    margin: 0 0 10px; line-height: 1.1;
+  }
+  .subtitle { font-size: 14px; color: var(--ink-3); margin: 0; max-width: 620px; line-height: 1.55; }
+
+  /* Compare strip */
+  .compare {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    background: var(--ink-2); border-radius: 18px; padding: 20px;
+    margin-bottom: 56px;
+  }
+  .compare .cell {
+    background: var(--surface); border-radius: 12px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .compare .tag {
+    font-size: 10px; font-weight: 800; color: var(--gray);
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+
+  /* Variant section */
+  .variant { margin-bottom: 64px; }
+  .variant-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .variant-num {
+    font-size: 11px; font-weight: 800; color: var(--gray);
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .variant-name { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+  .variant-pill {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; background: var(--line-2); color: var(--ink-3);
+    padding: 3px 8px; border-radius: 999px; margin-left: 4px;
+  }
+  .variant-desc { font-size: 13px; color: var(--gray); line-height: 1.6; margin: 0 0 18px; max-width: 600px; }
+
+  .ctx-label {
+    font-size: 10px; font-weight: 800; color: var(--gray);
+    text-transform: uppercase; letter-spacing: 0.14em;
+    margin: 0 0 8px; padding-left: 2px;
+  }
+
+  /* Feed card */
+  .feedcard {
+    background: var(--surface); border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--line); margin-bottom: 14px;
+  }
+  .feedcard .head { padding: 14px 16px 12px; }
+  .feedcard .media {
+    aspect-ratio: 16/11; background: #e5e5ea; background-size: cover; background-position: center;
+  }
+  .feedcard .foot {
+    display: flex; gap: 16px; align-items: center;
+    padding: 12px 16px 14px; color: var(--ink-3); font-size: 13px; font-weight: 600;
+  }
+  .feedcard .foot .like { color: var(--ink); }
+  .feedcard .foot .dot { color: var(--gray-2); }
+
+  /* Header bar mock */
+  .appbar {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .appbar .brand {
+    font-size: 15px; font-weight: 800; letter-spacing: -0.03em;
+  }
+
+  /* Pros/Cons */
+  .matrix {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;
+  }
+  .matrix > div {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .matrix b {
+    display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--gray); margin-bottom: 8px;
+  }
+  .matrix p { font-size: 13px; line-height: 1.6; margin: 0; color: var(--ink-2); }
+
+  /* Final */
+  .final {
+    background: var(--ink); color: #fff; border-radius: 22px;
+    padding: 40px; margin-top: 32px;
+  }
+  .final .eyebrow { color: var(--gray-2); }
+  .final h2 {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.03em;
+    margin: 0 0 6px; line-height: 1.15;
+  }
+  .final .lede { font-size: 14px; color: #c7c7cc; max-width: 680px; line-height: 1.65; margin: 0 0 28px; }
+  .final .showcase {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .final .showcase .cell {
+    background: var(--surface); color: var(--ink); border-radius: 14px; padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .final .showcase .cell .lbl {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray);
+  }
+
+  .note {
+    margin-top: 36px; font-size: 12px; color: var(--gray); line-height: 1.6;
+  }
+  .note b { color: var(--ink-2); font-weight: 700; }
+  code {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11px; background: var(--line-2); padding: 1px 6px; border-radius: 4px; color: var(--ink-2);
+  }
+
+  /* Yogurt tier art */
+  .yogurt-tier { margin-top: 80px; padding-top: 56px; border-top: 1px solid var(--line); }
+  .yogurt-tier h2 {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.03em;
+    margin: 0 0 10px; line-height: 1.15;
+  }
+  .yogurt-tier .lede {
+    font-size: 14px; color: var(--ink-3); line-height: 1.65;
+    margin: 0 0 28px; max-width: 700px;
+  }
+  .yg-gallery {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 28px 22px;
+    margin-bottom: 24px;
+  }
+  .yg-gallery.compact { padding: 22px; }
+  .ygcell {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 10px 4px;
+  }
+  .yg-art-bg {
+    width: 120px; height: 120px; border-radius: 16px;
+    background: #fafafb; border: 1px solid var(--line-2);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,0.03);
+  }
+  .yg-name {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink);
+  }
+  .yg-levels { font-size: 11px; font-weight: 700; color: var(--gray-2); letter-spacing: -0.02em; }
+  .yg-desc { font-size: 11px; color: var(--gray); text-align: center; line-height: 1.4; }
+  .tier-block-dark {
+    width: 64px; height: 64px; border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px;
+  }
+  .tier-block-dark .art-slot {
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+  }
+  .tier-block-dark .lv-label {
+    font-size: 9px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em;
+  }
+  .flavor-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 22px; margin-bottom: 24px;
+  }
+  .flavor-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px 10px 10px; border-radius: 10px;
+    background: #fafafb; border: 1px solid var(--line-2);
+  }
+  .flavor-chip .art-mini { width: 44px; height: 44px; display: flex; }
+  .flavor-chip .fmeta { display: flex; flex-direction: column; }
+  .flavor-chip .fname { font-size: 12px; font-weight: 800; letter-spacing: -0.02em; }
+  .flavor-chip .fcolor { font-size: 10px; color: var(--gray); font-family: ui-monospace,Menlo,monospace; }
+  .flavor-title {
+    font-size: 11px; font-weight: 800; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--gray); margin: 0 0 10px;
+  }
+
+  /* Tier apply section */
+  .tier-apply { margin-top: 80px; padding-top: 56px; border-top: 1px solid var(--line); }
+  .tier-apply h2 {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.03em;
+    margin: 0 0 10px; line-height: 1.15;
+  }
+  .tier-apply .lede {
+    font-size: 14px; color: var(--ink-3); line-height: 1.65; margin: 0 0 28px; max-width: 680px;
+  }
+  .ba-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 32px;
+  }
+  .ba-cell {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 24px;
+  }
+  .ba-cell.after { border-color: var(--ink); }
+  .ba-label {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gray); margin-bottom: 18px;
+  }
+  .ba-label.after { color: var(--ink); }
+  .ba-label .tag {
+    display: inline-block; background: var(--ink); color: #fff;
+    padding: 2px 6px; border-radius: 4px; margin-left: 6px; letter-spacing: 0.06em;
+  }
+  .gallery-title {
+    font-size: 15px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 12px;
+  }
+  .gallery {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 22px;
+  }
+  .gallery .gcell {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 14px 8px;
+  }
+  .gallery .gcell .tname {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  @media (max-width: 720px) {
+    .compare, .final .showcase { grid-template-columns: 1fr; }
+    .ba-grid { grid-template-columns: 1fr; }
+    .gallery, .yg-gallery { grid-template-columns: repeat(2, 1fr); }
+    h1.title { font-size: 26px; }
+    .final { padding: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="root"></div>
+</div>
+
+<script type="text/babel">
+const { useMemo } = React;
+
+/* =========================================================
+   Data
+========================================================= */
+const USER = {
+  name: '민채',
+  time: '2시간 전',
+  // pravatar portrait
+  avatar: 'https://i.pravatar.cc/200?img=47',
+};
+const TIER = {
+  code: 'GOLD',
+  level: 15,
+  color: '#c9962b',
+  tint: '#fdf4e1',
+};
+const BADGE = {
+  emoji: '🔥',
+  name: '스트릭 마스터',
+  tint: '#ffe8e0',
+};
+const MEDIA = 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&auto=format&fit=crop';
+
+/* =========================================================
+   Atoms
+========================================================= */
+function Avatar({ size = 40, src = USER.avatar, style }) {
+  return (
+    <img src={src} alt="" style={{
+      width: size, height: size, borderRadius: '50%',
+      objectFit: 'cover', flexShrink: 0, background: '#eceef1',
+      ...style,
+    }}/>
+  );
+}
+
+// Lucide Crown (stroke)
+function IconCrown({ size = 12, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/>
+      <path d="M5 21h14"/>
+    </svg>
+  );
+}
+function IconHeart({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+  );
+}
+function IconChat({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  );
+}
+function IconMore({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+    </svg>
+  );
+}
+
+/* Lucide icons for tiers (matches src/utils/collectionIcons.js) */
+function IconSprout({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 20h10"/>
+      <path d="M10 20c5.5-2.5.8-6.4 3-10"/>
+      <path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/>
+      <path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>
+    </svg>
+  );
+}
+function IconZap({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
+    </svg>
+  );
+}
+function IconPalette({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+    </svg>
+  );
+}
+function IconRocket({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+    </svg>
+  );
+}
+function IconGem({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 3h12l4 6-10 13L2 9z"/>
+      <path d="M11 3 8 9l4 13 4-13-3-6"/>
+      <path d="M2 9h20"/>
+    </svg>
+  );
+}
+
+const TIERS = [
+  { key:'newbie',    name:'Newbie',    emoji:'🌱', color:'#10b981', bg:'#d1fae5', Icon:IconSprout,  lv:3  },
+  { key:'regular',   name:'Regular',   emoji:'💪', color:'#f59e0b', bg:'#fef3c7', Icon:IconZap,     lv:8  },
+  { key:'collector', name:'Collector', emoji:'🎨', color:'#8b5cf6', bg:'#ede9fe', Icon:IconPalette, lv:15 },
+  { key:'maniac',    name:'Maniac',    emoji:'🔥', color:'#ef4444', bg:'#fee2e2', Icon:IconRocket,  lv:22 },
+  { key:'legend',    name:'Legend',    emoji:'💎', color:'#06b6d4', bg:'#cffafe', Icon:IconGem,     lv:35 },
+];
+
+/* Big tier block — BEFORE (tier.emoji) */
+function TierAvatarBefore({ tier, size = 54 }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: 8,
+      background: tier.bg,
+      display:'flex', alignItems:'center', justifyContent:'center',
+      fontSize: size * 0.52, lineHeight: 1,
+    }}>{tier.emoji}</div>
+  );
+}
+
+/* Big tier block — AFTER (Lucide + Lv, Variant B tone) */
+function TierAvatarAfter({ tier, lv, size = 54 }) {
+  const Icon = tier.Icon;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: 8,
+      background: 'var(--ink)',
+      display:'flex', flexDirection:'column',
+      alignItems:'center', justifyContent:'center', gap: 3,
+    }}>
+      <span style={{ color: tier.color, display:'inline-flex', lineHeight: 1 }}>
+        <Icon size={Math.round(size * 0.38)}/>
+      </span>
+      <span style={{
+        fontSize: Math.max(9, Math.round(size * 0.18)), fontWeight: 800, color: '#fff',
+        letterSpacing:'-0.02em', lineHeight: 1
+      }}>Lv.{lv}</span>
+    </div>
+  );
+}
+
+/* =========================================================
+   Yogurt Tier Art v3 — emoji-style SVG
+   120×120 viewBox · 볼륨감 · 채도 있는 컬러 · 실제 티어 느낌
+========================================================= */
+
+/* --- 통합 랭크 컬러 5종 (모든 티어 공통) -------------- */
+const RANK_COLORS = {
+  white:  { base:'#F5F5F7', hi:'#FFFFFF', sh:'#D1D5DB', dk:'#6B7280', y:'#FFFFFF',  yHi:'#FFFFFF' },
+  red:    { base:'#EF4444', hi:'#FCA5A5', sh:'#B91C1C', dk:'#7F1D1D', y:'#FEE2E2',  yHi:'#FEF2F2' },
+  blue:   { base:'#3B82F6', hi:'#93C5FD', sh:'#1D4ED8', dk:'#1E3A8A', y:'#DBEAFE',  yHi:'#EFF6FF' },
+  violet: { base:'#A855F7', hi:'#D8B4FE', sh:'#7E22CE', dk:'#581C87', y:'#F3E8FF',  yHi:'#FAF5FF' },
+  gold:   { base:'#F59E0B', hi:'#FCD34D', sh:'#D97706', dk:'#78350F', y:'#FEF3C7',  yHi:'#FFFBEB' },
+};
+
+/* --- 1. PLAIN — 플라스틱 컵 -------------------------- */
+function ArtPlain({ size = 64, color = 'white' }) {
+  const c = RANK_COLORS[color] || RANK_COLORS.white;
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="108" rx="32" ry="4" fill="#000000" opacity="0.2"/>
+      {/* cup dark outer */}
+      <path d="M30 34 L38 100 Q38 106 60 106 Q82 106 82 100 L90 34 Z" fill={c.dk}/>
+      {/* cup main */}
+      <path d="M32 35 L40 100 Q40 104 60 104 Q80 104 80 100 L88 35 Z" fill={c.base}/>
+      {/* right shadow band */}
+      <path d="M80 100 L88 35 L82 35 L74 100 Z" fill={c.sh} opacity="0.85"/>
+      {/* left shine big */}
+      <path d="M38 44 Q33 72 42 98" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" opacity="0.9"/>
+      {/* rim back */}
+      <ellipse cx="60" cy="34" rx="30" ry="6" fill={c.dk}/>
+      {/* rim top */}
+      <ellipse cx="60" cy="32" rx="30" ry="5" fill={c.base}/>
+      <ellipse cx="60" cy="31" rx="30" ry="4.2" fill="#FFFFFF" opacity="0.35"/>
+      {/* yogurt surface - always cream */}
+      <ellipse cx="60" cy="32" rx="27" ry="3.8" fill="#F2E8D6"/>
+      <ellipse cx="60" cy="31.2" rx="26" ry="2.8" fill="#FEF7EC"/>
+      <ellipse cx="48" cy="30.5" rx="10" ry="1.2" fill="#FFFFFF" opacity="0.95"/>
+    </svg>
+  );
+}
+
+/* --- 2. FRUITY — 유리컵 + 과일 -------------------- */
+function ArtFruity({ size = 64, color = 'red' }) {
+  const c = RANK_COLORS[color] || RANK_COLORS.red;
+  const leaf = '#22C55E', leafSh = '#166534';
+
+  const Strawberry = ({ tx, ty, s = 1 }) => (
+    <g transform={`translate(${tx} ${ty}) scale(${s})`}>
+      <ellipse cx="0.5" cy="9" rx="7.5" ry="1.3" fill="#000" opacity="0.15"/>
+      <path d="M-9 -3 Q-9 -12 0 -12 Q9 -12 9 -3 Q9 6 0 10 Q-9 6 -9 -3Z" fill={c.sh}/>
+      <path d="M-8 -3 Q-8 -11 0 -11 Q8 -11 8 -3 Q8 5 0 9 Q-8 5 -8 -3Z" fill={c.base}/>
+      <path d="M-6 -5 Q-6 -10 -1 -10 Q3 -10 5 -6" fill={c.hi}/>
+      <ellipse cx="-3" cy="-7" rx="2.4" ry="1.3" fill="#FFFFFF" opacity="0.85"/>
+      {/* seeds (same-color darker dots) */}
+      <ellipse cx="-4" cy="-4" rx="0.8" ry="1.3" fill={c.dk}/>
+      <ellipse cx="2" cy="-5" rx="0.8" ry="1.3" fill={c.dk}/>
+      <ellipse cx="-1" cy="-1" rx="0.8" ry="1.3" fill={c.dk}/>
+      <ellipse cx="4" cy="0" rx="0.8" ry="1.3" fill={c.dk}/>
+      <ellipse cx="-3" cy="2" rx="0.8" ry="1.3" fill={c.dk}/>
+      <ellipse cx="2" cy="4" rx="0.8" ry="1.3" fill={c.dk}/>
+      {/* leaves crown */}
+      <path d="M-7 -10 L-4 -15 L-1 -11 L2 -16 L5 -11 L7 -14 L6 -9 Z" fill={leafSh}/>
+      <path d="M-6 -10 L-4 -14 L-1 -11 L2 -15 L5 -11 L6 -13 L5 -9 Z" fill={leaf}/>
+    </g>
+  );
+  const Fruit = Strawberry;
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="112" rx="30" ry="4" fill="#000000" opacity="0.18"/>
+
+      {/* glass dark outer */}
+      <path d="M26 30 Q22 56 34 80 L36 102 Q36 108 60 108 Q84 108 84 102 L86 80 Q98 56 94 30 Z"
+        fill="#C8D0D8"/>
+      {/* glass main */}
+      <path d="M28 31 Q24 56 36 79 L38 101 Q38 106 60 106 Q82 106 82 101 L84 79 Q96 56 92 31 Z"
+        fill="#EFF2F5" fillOpacity="0.55"/>
+      {/* yogurt (colored) at bottom */}
+      <path d="M36 79 L38 101 Q38 106 60 106 Q82 106 82 101 L84 79 Q72 85 60 85 Q48 85 36 79Z"
+        fill={c.y}/>
+      <path d="M36 79 Q48 82 60 82 Q72 82 84 79" stroke={c.yHi} strokeWidth="2" opacity="0.9"/>
+      {/* yogurt highlight on surface */}
+      <ellipse cx="50" cy="81" rx="10" ry="1.6" fill="#FFFFFF" opacity="0.7"/>
+
+      {/* rim back big */}
+      <ellipse cx="60" cy="30" rx="32" ry="5" fill="#8FA0B0"/>
+      {/* rim main light */}
+      <ellipse cx="60" cy="28" rx="32" ry="4.4" fill="#E4EAEF"/>
+      <ellipse cx="60" cy="27.2" rx="31" ry="3.2" fill="#F6F8FA"/>
+
+      {/* fruits cluster on top */}
+      <Fruit tx={38} ty={24} s={0.95}/>
+      <Fruit tx={60} ty={18} s={1.15}/>
+      <Fruit tx={82} ty={24} s={0.95}/>
+
+      {/* mint sprig */}
+      <g transform="translate(50 10)">
+        <path d="M0 0 Q-2 -4 -1 -8 Q1 -9 2.5 -5 Q1.5 -1 0 0Z" fill={leaf}/>
+        <path d="M0 -1 Q-1 -4 -0.5 -7" stroke={leafSh} strokeWidth="0.6"/>
+      </g>
+
+      {/* glass big highlight left */}
+      <path d="M32 40 Q26 62 34 82" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" opacity="0.95"/>
+      <path d="M36 46 Q32 64 40 80" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" opacity="0.7"/>
+      {/* subtle right highlight */}
+      <path d="M92 48 Q94 66 88 80" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+    </svg>
+  );
+}
+
+/* --- 3. GRANOLA — 도자기 볼 + 그래놀라 (3 flavors) -- */
+function ArtGranola({ size = 64, color = 'gold' }) {
+  const r = RANK_COLORS[color] || RANK_COLORS.gold;
+  const c = { dz:r.base, dzHi:r.hi, dzSh:r.sh, g1:r.base, g2:r.sh, g3:r.hi };
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="106" rx="48" ry="5" fill="#000000" opacity="0.18"/>
+
+      {/* bowl outer dark rim */}
+      <path d="M8 52 Q8 98 60 98 Q112 98 112 52 Z" fill="#8B5A2B"/>
+      {/* bowl main ceramic */}
+      <path d="M10 53 Q10 97 60 97 Q110 97 110 53 Z" fill="#F5D9B1"/>
+      {/* bowl inner shadow */}
+      <path d="M16 55 Q18 90 60 92 Q102 90 104 55" stroke="#B8926A" strokeWidth="2" opacity="0.6" fill="none"/>
+      {/* bowl highlight curve */}
+      <path d="M14 62 Q10 82 22 96" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" opacity="0.7"/>
+      <path d="M18 66 Q16 82 26 94" stroke="#FFF5E1" strokeWidth="1.5" strokeLinecap="round" opacity="0.8"/>
+
+      {/* rim back darker */}
+      <ellipse cx="60" cy="52" rx="50" ry="6" fill="#A6763E"/>
+      {/* rim ceramic */}
+      <ellipse cx="60" cy="50" rx="50" ry="5.2" fill="#F5D9B1"/>
+      {/* rim inner cream */}
+      <ellipse cx="60" cy="50" rx="48" ry="4.4" fill="#FEF3E0"/>
+
+      {/* yogurt surface */}
+      <ellipse cx="60" cy="49" rx="46" ry="3.6" fill="#FFFFFF"/>
+      <ellipse cx="35" cy="48" rx="12" ry="1.4" fill="#FFFFFF" opacity="0.9"/>
+
+      {/* granola chunks - 6 clean rounds, 2 tones */}
+      <g>
+        <circle cx="24" cy="47" r="4" fill={c.g2}/>
+        <ellipse cx="22" cy="45" rx="1.2" ry="0.8" fill={c.g3} opacity="0.6"/>
+        <circle cx="38" cy="45" r="4.5" fill={c.g1}/>
+        <ellipse cx="36" cy="43" rx="1.3" ry="0.9" fill={c.g3} opacity="0.6"/>
+        <circle cx="54" cy="47" r="4" fill={c.g2}/>
+        <ellipse cx="52" cy="45" rx="1.2" ry="0.8" fill={c.g3} opacity="0.6"/>
+        <circle cx="70" cy="45" r="4.5" fill={c.g1}/>
+        <ellipse cx="68" cy="43" rx="1.3" ry="0.9" fill={c.g3} opacity="0.6"/>
+        <circle cx="86" cy="47" r="4" fill={c.g2}/>
+        <ellipse cx="84" cy="45" rx="1.2" ry="0.8" fill={c.g3} opacity="0.6"/>
+        <circle cx="98" cy="46" r="3.2" fill={c.g1}/>
+      </g>
+
+      {/* drizzle wave - THICK golden */}
+      <path d="M18 32 Q30 38 40 32 Q52 26 62 32 Q74 38 84 32 Q96 26 100 32"
+        stroke={c.dzSh} strokeWidth="6" strokeLinecap="round" fill="none"/>
+      <path d="M18 32 Q30 38 40 32 Q52 26 62 32 Q74 38 84 32 Q96 26 100 32"
+        stroke={c.dz} strokeWidth="4.5" strokeLinecap="round" fill="none"/>
+      <path d="M20 31 Q30 36 42 31 Q54 26 64 31 Q76 36 86 31"
+        stroke={c.dzHi} strokeWidth="1.4" strokeLinecap="round" fill="none"/>
+      {/* drizzle droplets */}
+      <g>
+        <ellipse cx="46" cy="39" rx="2" ry="3" fill={c.dzSh}/>
+        <ellipse cx="46" cy="38.5" rx="1.5" ry="2.5" fill={c.dz}/>
+        <ellipse cx="45.5" cy="37.5" rx="0.6" ry="1" fill={c.dzHi}/>
+
+        <ellipse cx="72" cy="38" rx="1.5" ry="2.3" fill={c.dzSh}/>
+        <ellipse cx="72" cy="37.5" rx="1.1" ry="1.9" fill={c.dz}/>
+        <ellipse cx="71.7" cy="36.7" rx="0.4" ry="0.8" fill={c.dzHi}/>
+      </g>
+    </svg>
+  );
+}
+
+/* --- 4. PARFAIT — 파르페 잔 · 레벨별 컬러 5종 -------- */
+function ArtParfait({ size = 64, color = 'red' }) {
+  const r = RANK_COLORS[color] || RANK_COLORS.red;
+  const ROSE = r.base, ROSE_HI = r.hi, ROSE_SH = r.sh;
+  const CHERRY = r.base, CHERRY_HI = '#FFFFFF', CHERRY_SH = r.dk;
+  const CREAM = '#FFFBFB', CREAM_SH = r.y;
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="114" rx="26" ry="3" fill="#000000" opacity="0.2"/>
+
+      {/* base dark outer */}
+      <ellipse cx="60" cy="110" rx="22" ry="4.5" fill="#8E253D"/>
+      {/* base main */}
+      <ellipse cx="60" cy="108" rx="22" ry="3.8" fill="#F8DDE3"/>
+      <ellipse cx="60" cy="107.3" rx="21" ry="2.8" fill="#FFFFFF"/>
+      <path d="M44 108 L76 108 L72 106 L48 106Z" fill={ROSE_HI} opacity="0.5"/>
+
+      {/* stem */}
+      <rect x="55" y="84" width="10" height="22" fill="#F8DDE3"/>
+      <rect x="54" y="84" width="12" height="22" fill="none" stroke={ROSE} strokeWidth="1.5"/>
+      <rect x="57" y="84" width="2" height="22" fill="#FFFFFF" opacity="0.9"/>
+      <rect x="64" y="84" width="1.2" height="22" fill={ROSE_SH} opacity="0.3"/>
+
+      {/* glass bowl dark outer */}
+      <path d="M24 26 L34 88 L86 88 L96 26 Z" fill={ROSE}/>
+      {/* glass bowl main */}
+      <path d="M26 27 L36 87 L84 87 L94 27 Z"
+        fill="#FFFFFF" fillOpacity="0.3"/>
+
+      {/* granola base layer */}
+      <path d="M35 81 L36 87 L84 87 L85 81 Z" fill="#8B5A2B"/>
+      <circle cx="42" cy="84" r="1.3" fill="#C58A2C"/>
+      <circle cx="52" cy="84" r="1.1" fill="#E0A420"/>
+      <circle cx="62" cy="84" r="1.3" fill="#C58A2C"/>
+      <circle cx="72" cy="84" r="1.1" fill="#E0A420"/>
+      <circle cx="80" cy="84" r="1" fill="#C58A2C"/>
+
+      {/* rose jam lower dark */}
+      <path d="M33 66 L35 81 L85 81 L87 66 Z" fill={ROSE_SH}/>
+      <path d="M33 66 L34 72 L86 72 L87 66 Z" fill={ROSE}/>
+      <path d="M35 68 L37 70 L84 70 L86 68" stroke={ROSE_HI} strokeWidth="1" opacity="0.7"/>
+
+      {/* white yogurt layer */}
+      <path d="M31 54 L33 66 L87 66 L89 54 Z" fill={CREAM}/>
+      <path d="M31 54 L32 59 L88 59 L89 54 Z" fill="#FFFFFF"/>
+      {/* berries peek in yogurt */}
+      <circle cx="46" cy="61" r="2" fill={ROSE}/>
+      <circle cx="46" cy="61" r="1.6" fill={ROSE_HI}/>
+      <circle cx="72" cy="61" r="1.7" fill={ROSE}/>
+      <circle cx="72" cy="61" r="1.3" fill={ROSE_HI}/>
+
+      {/* rose jam mid */}
+      <path d="M29 42 L31 54 L89 54 L91 42 Z" fill={ROSE_SH}/>
+      <path d="M29 42 L30 48 L90 48 L91 42 Z" fill={ROSE}/>
+      <path d="M31 44 L33 46 L88 46 L90 44" stroke={ROSE_HI} strokeWidth="1" opacity="0.7"/>
+
+      {/* white yogurt top */}
+      <path d="M27 28 L29 42 L91 42 L93 28 Z" fill={CREAM}/>
+      <path d="M27 28 L28 34 L92 34 L93 28 Z" fill="#FFFFFF"/>
+
+      {/* fruit bits in top cream (same-color, no yellow seeds) */}
+      <circle cx="42" cy="28" r="3.5" fill={ROSE_SH}/>
+      <circle cx="42" cy="28" r="3" fill={ROSE}/>
+      <ellipse cx="41" cy="27" r="0.9" fill={ROSE_HI} opacity="0.8"/>
+      <circle cx="72" cy="26" r="3" fill={ROSE_SH}/>
+      <circle cx="72" cy="26" r="2.5" fill={ROSE}/>
+      <ellipse cx="71" cy="25" r="0.7" fill={ROSE_HI} opacity="0.8"/>
+
+      {/* whipped cream - fat soft-serve swirl */}
+      <path d="M22 26 Q24 14 30 18 Q34 8 40 16 Q48 4 56 14 Q60 0 66 12 Q72 0 78 14 Q84 6 88 16 Q94 10 98 26 Q90 18 82 26 Q74 16 66 26 Q58 16 50 26 Q42 16 34 26 Q28 18 22 26Z"
+        fill={CREAM_SH}/>
+      <path d="M24 26 Q26 16 32 20 Q36 10 42 18 Q50 8 58 16 Q62 6 68 14 Q74 4 80 16 Q86 10 90 20 Q94 14 96 26 Q88 20 80 26 Q72 18 64 26 Q56 18 48 26 Q40 18 32 26 Q28 20 24 26Z"
+        fill="#FFFFFF"/>
+      {/* cream highlights */}
+      <path d="M34 20 Q38 14 42 20" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+      <path d="M50 16 Q54 10 58 16" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+      <path d="M66 16 Q70 10 74 16" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+      <path d="M80 20 Q84 14 88 20" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+      {/* cream specular highlights */}
+      <ellipse cx="40" cy="16" rx="2.5" ry="1" fill="#FFFFFF" opacity="0.95"/>
+      <ellipse cx="72" cy="14" rx="2.5" ry="1" fill="#FFFFFF" opacity="0.95"/>
+
+      {/* cherry on top - juicy */}
+      <ellipse cx="60" cy="14" rx="6.5" ry="1.4" fill="#000" opacity="0.12"/>
+      <circle cx="60" cy="9" r="6.5" fill={CHERRY_SH}/>
+      <circle cx="60" cy="9" r="5.8" fill={CHERRY}/>
+      <path d="M55 5 Q55 3 58 3 Q62 3 62 6" fill={CHERRY_HI}/>
+      <ellipse cx="57" cy="5.5" rx="2.2" ry="1.4" fill="#FFFFFF" opacity="0.9"/>
+      <path d="M60 3 Q62 -2 68 -4" stroke="#2D5A3F" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
+      <path d="M68 -4 Q70 -5 73 -5" stroke="#4ADE80" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
+
+      {/* glass big left highlight */}
+      <path d="M30 32 Q26 60 38 86" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" opacity="0.9"/>
+      <path d="M34 38 Q32 64 40 84" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
+    </svg>
+  );
+}
+
+/* --- 5. SIGNATURE — 크리스탈 고블릿 + 금박 + 플라워 -- */
+function ArtSignature({ size = 64, color = 'gold' }) {
+  const r = RANK_COLORS[color] || RANK_COLORS.gold;
+  const GOLD = '#E8B028', GOLD_HI = '#FFD964', GOLD_SH = '#8B5F08';
+  const OBS = '#0A0A0C', OBS_HI = '#2E2E34';
+  /* flower petals = rank color, goblet stays gold */
+  const P = r.base, PH = r.hi, PS = r.sh;
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="114" rx="30" ry="4" fill="#000000" opacity="0.25"/>
+
+      {/* base dark rim */}
+      <ellipse cx="60" cy="110" rx="26" ry="4.5" fill={GOLD_SH}/>
+      {/* base gold */}
+      <ellipse cx="60" cy="108" rx="26" ry="4" fill={GOLD}/>
+      <ellipse cx="60" cy="107" rx="25" ry="3" fill={GOLD_HI}/>
+      {/* base facet highlight */}
+      <path d="M36 108 L84 108 L78 105 L42 105Z" fill="#FFFBDC" opacity="0.8"/>
+
+      {/* stem dark */}
+      <path d="M54 76 L56 108 L64 108 L66 76 Z" fill={GOLD_SH}/>
+      {/* stem gold */}
+      <rect x="55" y="76" width="10" height="32" fill={GOLD}/>
+      <rect x="56.5" y="76" width="3" height="32" fill={GOLD_HI}/>
+      <rect x="62" y="76" width="1.5" height="32" fill={GOLD_SH} opacity="0.6"/>
+
+      {/* stem node decorative */}
+      <ellipse cx="60" cy="86" rx="9" ry="4" fill={GOLD_SH}/>
+      <ellipse cx="60" cy="84" rx="9" ry="3.5" fill={GOLD}/>
+      <ellipse cx="60" cy="83" rx="8" ry="2.4" fill={GOLD_HI}/>
+      <ellipse cx="56" cy="82.5" rx="3" ry="1" fill="#FFFBDC"/>
+
+      {/* bowl back dark */}
+      <path d="M16 24 Q18 52 28 66 Q40 76 60 76 Q80 76 92 66 Q102 52 104 24 Z" fill={GOLD_SH}/>
+      {/* bowl main gold-tinted crystal */}
+      <path d="M18 25 Q20 52 30 66 Q40 75 60 75 Q80 75 90 66 Q100 52 102 25 Z" fill="#F7E6A5"/>
+      {/* bowl inner crystal */}
+      <path d="M20 26 Q22 52 32 64 Q42 72 60 72 Q78 72 88 64 Q98 52 100 26 Q80 30 60 30 Q40 30 20 26Z"
+        fill="#FAEAB1" opacity="0.8"/>
+
+      {/* crystal facet highlights - strong */}
+      <path d="M24 32 Q26 54 34 64" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" opacity="0.95"/>
+      <path d="M30 38 Q32 54 38 62" stroke="#FFFBDC" strokeWidth="1.5" strokeLinecap="round" opacity="0.8"/>
+      <path d="M96 32 Q94 54 86 64" stroke="#FFFBDC" strokeWidth="1.5" strokeLinecap="round" opacity="0.8"/>
+
+      {/* rim thick gold - back */}
+      <ellipse cx="60" cy="24" rx="36" ry="5" fill={GOLD_SH}/>
+      {/* rim gold top */}
+      <ellipse cx="60" cy="22" rx="36" ry="4.6" fill={GOLD}/>
+      {/* rim highlight */}
+      <ellipse cx="60" cy="21" rx="36" ry="3.5" fill={GOLD_HI}/>
+      <ellipse cx="40" cy="20.5" rx="12" ry="1.6" fill="#FFFBDC"/>
+
+      {/* obsidian yogurt surface */}
+      <ellipse cx="60" cy="22" rx="32" ry="3.4" fill={OBS}/>
+      <ellipse cx="60" cy="21.2" rx="31" ry="2" fill={OBS_HI}/>
+      <ellipse cx="48" cy="20.8" rx="10" ry="0.8" fill="#4A4A52" opacity="0.8"/>
+
+      {/* inside dark obsidian */}
+      <path d="M21 26 Q23 50 32 62 Q42 70 60 70 Q78 70 88 62 Q97 50 99 26 Q80 32 60 32 Q40 32 21 26Z"
+        fill={OBS}/>
+
+      {/* gold flakes - 7 clean, 2 tones */}
+      <g>
+        <path d="M32 38 L35 35 L37 38 L35 41Z" fill={GOLD_HI}/>
+        <circle cx="46" cy="40" r="1.6" fill={GOLD}/>
+        <path d="M58 36 L61 33 L63 36 L61 39Z" fill={GOLD_HI}/>
+        <circle cx="74" cy="42" r="1.7" fill={GOLD}/>
+        <path d="M86 36 L89 33 L91 36 L89 39Z" fill={GOLD_HI}/>
+        <circle cx="50" cy="54" r="1" fill={GOLD}/>
+        <circle cx="72" cy="56" r="1" fill={GOLD_HI}/>
+        <circle cx="60" cy="50" r="1.2" fill={GOLD}/>
+      </g>
+
+      {/* flower — petals use rank color, center gold */}
+      <g transform="translate(60 12)">
+        <ellipse cx="0" cy="-7" rx="5" ry="5.5" fill={PS}/>
+        <ellipse cx="-6" cy="-1" rx="5.5" ry="5" fill={PS}/>
+        <ellipse cx="6" cy="-1" rx="5.5" ry="5" fill={PS}/>
+        <ellipse cx="-3" cy="5" rx="5" ry="4.5" fill={PS}/>
+        <ellipse cx="3" cy="5" rx="5" ry="4.5" fill={PS}/>
+        <ellipse cx="0" cy="-7" rx="4" ry="4.5" fill={P}/>
+        <ellipse cx="-6" cy="-1" rx="4.5" ry="4" fill={P}/>
+        <ellipse cx="6" cy="-1" rx="4.5" ry="4" fill={P}/>
+        <ellipse cx="-3" cy="5" rx="4" ry="3.5" fill={P}/>
+        <ellipse cx="3" cy="5" rx="4" ry="3.5" fill={P}/>
+        <ellipse cx="-1" cy="-8" rx="1.8" ry="2.5" fill={PH}/>
+        <ellipse cx="-7" cy="-2" rx="2" ry="1.8" fill={PH}/>
+        <ellipse cx="5" cy="-2" rx="2" ry="1.8" fill={PH}/>
+        <circle r="2.8" fill={GOLD_SH}/>
+        <circle r="2" fill="#FFFBDC"/>
+        <circle r="0.8" fill={GOLD}/>
+      </g>
+
+    </svg>
+  );
+}
+
+const YOGURT_TIERS = [
+  { key:'plain',     name:'Plain',     code:'PLAIN',     levels:'Lv.1 – 5',   desc:'플라스틱 컵',           Art: ArtPlain,     lv:3,  hasFlavor: false },
+  { key:'fruity',    name:'Fruity',    code:'FRUITY',    levels:'Lv.6 – 15',  desc:'유리컵 + 과일 토핑',    Art: ArtFruity,    lv:10, hasFlavor: true },
+  { key:'granola',   name:'Granola',   code:'GRANOLA',   levels:'Lv.16 – 25', desc:'도자기 볼 + 그래놀라',  Art: ArtGranola,   lv:20, hasFlavor: true },
+  { key:'parfait',   name:'Parfait',   code:'PARFAIT',   levels:'Lv.26 – 35', desc:'파르페 잔 + 레이어',    Art: ArtParfait,   lv:30, hasFlavor: false },
+  { key:'signature', name:'Signature', code:'SIGNATURE', levels:'Lv.36+',     desc:'고블릿 + 금박 · 플라워', Art: ArtSignature, lv:42, hasFlavor: false },
+];
+
+/* 통합 5 랭크 컬러 (티어 공통) */
+const RANK_LEVELS = [
+  { key:'white',  name:'화이트' },
+  { key:'red',    name:'레드' },
+  { key:'blue',   name:'블루' },
+  { key:'violet', name:'바이올렛' },
+  { key:'gold',   name:'골드' },
+];
+
+/* LevelCard hero row mock */
+function HeroRow({ variant, tier }) {
+  const Avatar = variant === 'before' ? TierAvatarBefore : TierAvatarAfter;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: 14 }}>
+      <Avatar tier={tier} lv={tier.lv}/>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 18, fontWeight: 800, letterSpacing:'-0.02em' }}>민채</div>
+        <div style={{
+          fontSize: 10, fontWeight: 800, color: tier.color,
+          letterSpacing:'0.14em', textTransform:'uppercase', marginTop: 3,
+        }}>{tier.name} · Lv.{tier.lv}</div>
+        <div style={{ fontSize: 12, color: 'var(--gray)', marginTop: 4 }}>EXP 2,400 / 3,200</div>
+      </div>
+    </div>
+  );
+}
+
+/* TierDetail bigger block mock */
+function TierDetailRow({ variant, tier }) {
+  const Avatar = variant === 'before' ? TierAvatarBefore : TierAvatarAfter;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: 16 }}>
+      <Avatar tier={tier} lv={tier.lv} size={68}/>
+      <div>
+        <div style={{
+          fontSize: 11, fontWeight: 800, color: tier.color,
+          letterSpacing:'0.14em', textTransform:'uppercase',
+        }}>Current Tier</div>
+        <div style={{ fontSize: 20, fontWeight: 800, letterSpacing:'-0.02em', marginTop: 2 }}>
+          {tier.name}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--gray)', marginTop: 4, lineHeight:1.5 }}>
+          배틀을 만들고 5명에게 댓글을 남기면<br/>다음 tier로 승급합니다
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   Variant A — 타이포 미니멀
+   닉네임 + 가는 UPPERCASE tier 라벨 + 뱃지 emoji (스탠드얼론)
+   → 가장 토스스러움. 이모지 tier 제거.
+========================================================= */
+function UserBlockA({ compact }) {
+  const sz = compact ? 28 : 40;
+  const nick = compact ? 14 : 16;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: compact ? 8 : 12 }}>
+      <Avatar size={sz}/>
+      <div style={{ display:'flex', alignItems:'center', gap: 8, minWidth:0, flex:1 }}>
+        <span style={{ fontSize: nick, fontWeight: 800, letterSpacing:'-0.02em' }}>{USER.name}</span>
+        <span style={{
+          fontSize: 10, fontWeight: 800, color: 'var(--gray)',
+          letterSpacing: '0.14em', textTransform: 'uppercase'
+        }}>{TIER.code} · Lv.{TIER.level}</span>
+        <span style={{ fontSize: 13, lineHeight: 1 }} aria-label={BADGE.name}>{BADGE.emoji}</span>
+        {!compact && <span style={{ fontSize: 12, color:'var(--gray)', marginLeft:'auto' }}>{USER.time}</span>}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   Variant B — 다크 Pill + Lucide Crown
+   Tier는 검정 캡슐 안에 Crown SVG + Lv숫자 (무신사 리뷰어 톤)
+   Badge는 tinted pill
+========================================================= */
+function UserBlockB({ compact }) {
+  const sz = compact ? 28 : 40;
+  const nick = compact ? 14 : 16;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: compact ? 8 : 12 }}>
+      <Avatar size={sz}/>
+      <div style={{ display:'flex', alignItems:'center', gap: 6, minWidth:0, flex:1 }}>
+        <span style={{ fontSize: nick, fontWeight: 800, letterSpacing:'-0.02em' }}>{USER.name}</span>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          padding: '2px 8px', background: 'var(--ink-2)', color: '#fff',
+          borderRadius: 999, fontSize: 11, fontWeight: 800, letterSpacing:'-0.01em',
+          lineHeight: 1.55,
+        }}>
+          <IconCrown size={10} color={TIER.color}/>
+          <span>Lv.{TIER.level}</span>
+        </span>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          padding: '0 6px', background: BADGE.tint,
+          borderRadius: 999, fontSize: 12, lineHeight: 1.65,
+        }} aria-label={BADGE.name}>{BADGE.emoji}</span>
+        {!compact && <span style={{ fontSize: 12, color:'var(--gray)', marginLeft:'auto' }}>{USER.time}</span>}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   Variant C — 아바타 코인
+   Tier는 아바타 우하단 다크 코인에 Lv숫자 (이모지 없음)
+   Badge는 닉네임 옆 tint 원형 orb
+========================================================= */
+function UserBlockC({ compact }) {
+  const sz = compact ? 30 : 42;
+  const coin = compact ? 16 : 20;
+  const nick = compact ? 14 : 16;
+  const orb = compact ? 18 : 22;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: compact ? 10 : 12 }}>
+      <div style={{ position: 'relative' }}>
+        <Avatar size={sz}/>
+        <div style={{
+          position: 'absolute', bottom: -2, right: -2,
+          width: coin, height: coin, borderRadius: '50%',
+          background: 'var(--ink)',
+          color: '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: compact ? 8 : 10, fontWeight: 800, letterSpacing:'-0.03em',
+          boxShadow: '0 0 0 2px #fff',
+          lineHeight: 1,
+        }} aria-label={`${TIER.code} Lv.${TIER.level}`}>{TIER.level}</div>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap: 7, minWidth:0, flex:1 }}>
+        <span style={{ fontSize: nick, fontWeight: 800, letterSpacing:'-0.02em' }}>{USER.name}</span>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: orb, height: orb, borderRadius: '50%',
+          background: BADGE.tint, fontSize: compact ? 10 : 12, lineHeight: 1,
+        }} aria-label={BADGE.name}>{BADGE.emoji}</span>
+        {!compact && <span style={{ fontSize: 12, color:'var(--gray)', marginLeft:'auto' }}>{USER.time}</span>}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   Mocks
+========================================================= */
+function FeedCard({ Block }) {
+  return (
+    <div className="feedcard">
+      <div className="head"><BlockWithMore Block={Block}/></div>
+      <div className="media" style={{ backgroundImage:`url(${MEDIA})` }}/>
+      <div className="foot">
+        <span className="like" style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+          <IconHeart size={16}/> 234
+        </span>
+        <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+          <IconChat size={16}/> 18
+        </span>
+      </div>
+    </div>
+  );
+}
+function BlockWithMore({ Block }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
+      <div style={{ flex:1, minWidth:0 }}><Block/></div>
+      <button style={{
+        background:'none', border:'none', padding:6, cursor:'pointer',
+        color:'var(--gray)', display:'inline-flex'
+      }}><IconMore size={18}/></button>
+    </div>
+  );
+}
+function AppBar({ Block }) {
+  return (
+    <div className="appbar">
+      <div className="brand">myClub</div>
+      <Block compact/>
+    </div>
+  );
+}
+
+/* =========================================================
+   Variant block
+========================================================= */
+function Variant({ num, name, pill, desc, Block, pros, cons }) {
+  return (
+    <section className="variant">
+      <div className="variant-head">
+        <span className="variant-num">Variant {num}</span>
+      </div>
+      <h2 className="variant-name">{name}<span className="variant-pill">{pill}</span></h2>
+      <p className="variant-desc">{desc}</p>
+
+      <div className="ctx-label">Feed Card · 피드 상단 user-block</div>
+      <FeedCard Block={Block}/>
+
+      <div className="ctx-label">AppHeader · 글로벌 헤더 user-info (compact)</div>
+      <AppBar Block={Block}/>
+
+      <div className="matrix">
+        <div><b>Pros</b><p>{pros}</p></div>
+        <div><b>Cons</b><p>{cons}</p></div>
+      </div>
+    </section>
+  );
+}
+
+/* =========================================================
+   App
+========================================================= */
+function App() {
+  return (
+    <>
+      <header className="hero">
+        <p className="eyebrow">User Identity · v2</p>
+        <h1 className="title">닉네임 옆, 성장과 개성을<br/>조용히 말하는 방법.</h1>
+        <p className="subtitle">
+          Tier와 대표 뱃지를 유저 블록에 노출. 토스/무신사 톤, 흰 배경·솔리드 컬러·Pretendard Variable.
+          인라인 tier에서는 이모지를 쓰지 않고 <code>Lucide SVG</code> 또는 타이포그래피로 표현합니다 (뱃지 emoji만 허용).
+        </p>
+      </header>
+
+      <div className="compare">
+        <div className="cell">
+          <span className="tag">A · Typographic</span>
+          <UserBlockA/>
+        </div>
+        <div className="cell">
+          <span className="tag">B · Dark pill</span>
+          <UserBlockB/>
+        </div>
+        <div className="cell">
+          <span className="tag">C · Avatar coin</span>
+          <UserBlockC/>
+        </div>
+      </div>
+
+      <Variant
+        num="A"
+        name="타이포 미니멀"
+        pill="Typographic"
+        desc="이모지/칩 장식 없이 타이포로만. Tier는 UPPERCASE 회색 라벨 (GOLD · Lv.15), 대표 뱃지 이모지만 스탠드얼론으로. Threads·Substack 감성."
+        Block={UserBlockA}
+        pros="콘텐츠가 주인공. 스캔 리듬 안 깨짐. 공간 절약 극한. 모든 컨텍스트(댓글·채팅·피드·헤더)에 자연스레 스며든다."
+        cons="tier 시각 강도가 낮아 성장 피드백이 약함. 뱃지 이모지가 주변 텍스트와 경쟁할 수 있음(주변 디자인이 조용해야 살아남음)."
+      />
+
+      <Variant
+        num="B"
+        name="다크 Pill + Crown"
+        pill="Informative"
+        desc="검정 캡슐 안에 Lucide Crown + Lv 숫자. 뱃지는 연한 tint 원형. 무신사 리뷰어 뱃지처럼 '얻은 지위'로 읽히게."
+        Block={UserBlockB}
+        pros="Lv 숫자 가시화 → 성장·랭킹 심리 자극. Crown 컬러로 tier 구분 명확. 흑백 대비가 강해 어디서든 눈에 들어옴."
+        cons="헤더처럼 좁은 공간에서는 요소가 빼곡. 뱃지 pill까지 2개 pill이 나란히 있어 과해 보일 수 있음(피드 스크롤 방해 가능)."
+      />
+
+      <Variant
+        num="C"
+        name="아바타 코인 + 뱃지 오브"
+        pill="Sophisticated"
+        desc="Tier는 아바타 우하단 다크 코인 안에 Lv 숫자(이모지 배제). 뱃지는 닉네임 옆 tint 원형. 카카오뱅크·애플 계정 스타일."
+        Block={UserBlockC}
+        pros="닉네임 줄이 가장 깨끗함. 아바타 자체가 tier를 말해줘 여러 컨텍스트에 일관 적용 쉬움. 재사용 컴포넌트로 만들기 좋음."
+        cons="아바타 주변에 코인 영역(2~3px) 차지 → 기존 레이아웃 소폭 재조정 필요. 코인이 24px 이하로 작아지면 Lv 숫자 가독 약함."
+      />
+
+      <div className="final">
+        <p className="eyebrow">Recommendation</p>
+        <h2>시안 C를 기본으로, 헤더에서만 시안 B.</h2>
+        <p className="lede">
+          피드·댓글·채팅처럼 <b style={{color:'#fff'}}>콘텐츠가 주인공</b>인 곳에서는 닉네임 줄이 가장 깨끗한 C가 최적.
+          Tier는 아바타 자체로 말하고, 뱃지 하나만 조용히 옆에 둔다. 반대로 <b style={{color:'#fff'}}>AppHeader의 "내 정보"</b>는
+          성장·뱃지 수집 동기 부여가 목적이므로 Lv 숫자가 직접 읽히는 B가 유리.
+          <br/>구현: 기존 <code>UserIdentity</code>에 <code>variant="coin" | "pill"</code> prop 추가 → 한 컴포넌트로 통일.
+        </p>
+        <div className="showcase">
+          <div className="cell">
+            <span className="lbl">Feed · 댓글 · 채팅</span>
+            <UserBlockC/>
+          </div>
+          <div className="cell">
+            <span className="lbl">AppHeader</span>
+            <UserBlockB compact/>
+          </div>
+        </div>
+      </div>
+
+      <section className="tier-apply">
+        <p className="eyebrow">Collection View · big tier block</p>
+        <h2>LevelCard / TierDetail에<br/>Variant B 톤 적용.</h2>
+        <p className="lede">
+          큰 tier 아바타 블록에서 <code>tier.emoji</code>를 빼고,
+          <code>getTierIcon(tier.tier)</code>의 Lucide 아이콘 + <code>Lv.숫자</code>를
+          검정 블록 안에 스택. 피드 인라인(Variant B)과 완전히 같은 언어 → 전체 제품이 한 톤.
+        </p>
+
+        <div className="ctx-label">LevelCard · "지금의 나" Hero</div>
+        <div className="ba-grid">
+          <div className="ba-cell">
+            <div className="ba-label">Before · tier.emoji</div>
+            <HeroRow variant="before" tier={TIERS[3]}/>
+          </div>
+          <div className="ba-cell after">
+            <div className="ba-label after">After · Lucide + Lv <span className="tag">Variant B</span></div>
+            <HeroRow variant="after" tier={TIERS[3]}/>
+          </div>
+        </div>
+
+        <div className="ctx-label">TierDetail · 큰 디테일 블록 (더 큼직)</div>
+        <div className="ba-grid">
+          <div className="ba-cell">
+            <div className="ba-label">Before · tier.emoji</div>
+            <TierDetailRow variant="before" tier={TIERS[3]}/>
+          </div>
+          <div className="ba-cell after">
+            <div className="ba-label after">After · Lucide + Lv</div>
+            <TierDetailRow variant="after" tier={TIERS[3]}/>
+          </div>
+        </div>
+
+        <div className="ctx-label" style={{ marginTop: 24 }}>모든 tier 미리보기 (After)</div>
+        <p className="gallery-title">5개 tier × Lucide 매핑 (<code>collectionIcons.js</code>의 getTierIcon 그대로)</p>
+        <div className="gallery">
+          {TIERS.map(t => (
+            <div key={t.key} className="gcell">
+              <TierAvatarAfter tier={t} lv={t.lv} size={60}/>
+              <span className="tname">{t.name}</span>
+              <span style={{
+                fontSize: 10, fontWeight: 700, color: t.color,
+                letterSpacing:'-0.01em',
+              }}>Lv.{t.lv}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="yogurt-tier">
+        <p className="eyebrow">Yogurt Tier · custom SVG</p>
+        <h2>플라스틱 컵에서 크리스탈 고블릿까지.<br/>그리고 중간엔 "나의 맛".</h2>
+        <p className="lede">
+          Lucide 일반 아이콘이 아닌 <b>제품 정체성</b>을 그린 SVG 5종. 시작은 단조롭게(플라스틱 컵)→
+          중간에 맛 변형(프루티·그래놀라 3종씩)→끝은 다시 단일 디자인(파르페·시그니처)으로 희소성 부여.
+          모두 64×64 viewBox, 카페 메뉴판 톤 (저채도·따뜻함).
+        </p>
+
+        <div className="yg-gallery">
+          {YOGURT_TIERS.map(t => (
+            <div key={t.key} className="ygcell">
+              <div className="yg-art-bg"><t.Art size={96}/></div>
+              <div className="yg-name">{t.name}</div>
+              <div className="yg-levels">{t.levels}</div>
+              <div className="yg-desc">{t.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="ctx-label">레벨별 컬러 — 5개 티어 전부 동일 5-색 시스템</div>
+        {YOGURT_TIERS.map(t => (
+          <div key={t.key} className="flavor-row">
+            <span className="flavor-title">{t.name}</span>
+            {RANK_LEVELS.map(l => (
+              <div key={l.key} className="flavor-chip">
+                <div className="art-mini"><t.Art size={44} color={l.key}/></div>
+                <div className="fmeta">
+                  <span className="fname">{l.name}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        <div className="ctx-label">Variant B 적용 — 검정 블록에 SVG + Lv</div>
+        <div className="yg-gallery compact">
+          {YOGURT_TIERS.map(t => (
+            <div key={t.key} className="ygcell">
+              <div className="tier-block-dark">
+                <div className="art-slot"><t.Art size={36}/></div>
+                <span className="lv-label">Lv.{t.lv}</span>
+              </div>
+              <div className="yg-name">{t.name}</div>
+            </div>
+          ))}
+        </div>
+
+        <p className="note">
+          <b>다음 단계</b> — OK면 <code>levelSystemData.js</code>의 <code>emoji</code> 필드를 지우고
+          <code>art: 'plain' | 'fruity' | 'granola' | 'parfait' | 'signature'</code> 키로 교체,
+          SVG는 <code>src/components/identity/YogurtTierArt.vue</code>(또는 유사)로 분리해서
+          <code>&lt;YogurtTierArt :tier="..."&gt;</code>로 재사용. 맛 변형(flavorKey)은 별도 필드로.
+        </p>
+      </section>
+
+      <p className="note">
+        <b>접근성</b> — tier 코인/크라운에는 <code>aria-label="GOLD, Lv.15"</code>를 붙이세요.
+        이모지 뱃지에는 뱃지 이름 aria-label이 필요합니다 (<code>aria-label="스트릭 마스터"</code>).
+        색으로만 tier를 구분하지 말고, 항상 숫자나 라벨이 함께 있어야 합니다. (색약 대응)
+      </p>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
