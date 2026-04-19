@@ -13,7 +13,7 @@
           <router-link :to="{ name: 'FeedHome' }" class="dash-kpi">
             <span class="dash-kpi-num">{{ dashboardSummary.popularFeedCount }}</span>
             <span class="dash-kpi-label">인기 피드</span>
-            <div v-if="dashboardSummary.activeBattleCount > 0" class="live-dot"></div>
+            <div v-if="dashboardSummary.popularFeedCount > 0" class="live-dot"></div>
           </router-link>
           <div class="dash-kpi-divider"></div>
           <router-link :to="{ name: 'BattleList' }" class="dash-kpi">
@@ -31,18 +31,23 @@
 
       <!-- 실시간 요거 봄 섹션 -->
       <section class="yogurt-bom-section">
-        <div class="yb-left">
-          <div class="yb-status-badge">
-            <span class="pulse-dot"></span>
-            LIVE
-          </div>
-          <div class="yb-title-group">
-            <h2 class="yb-main-title">실시간<br/>요거 봄</h2>
+        <div class="yb-header">
+          <div class="yb-header-left">
+            <div class="yb-status-badge">
+              <span class="pulse-dot"></span>
+              LIVE
+            </div>
+            <h2 class="yb-main-title">실시간 요거 봄</h2>
+            <span class="yb-header-divider">|</span>
             <span class="yb-update-time">{{ lastUpdateTime }}</span>
+          </div>
+          <div class="yb-pagination">
+            <button class="yb-page-btn" :class="{ active: ybCurrentPage === 0 }" @click="setYbPage(0)"></button>
+            <button class="yb-page-btn" :class="{ active: ybCurrentPage === 1 }" @click="setYbPage(1)"></button>
           </div>
         </div>
 
-        <div class="yb-right">
+        <div class="yb-body">
           <div v-if="yogurtBomLoading" class="yb-list">
             <div v-for="i in 6" :key="i" class="yb-item skeleton-item">
               <div class="skeleton yb-sk-rank"></div>
@@ -81,18 +86,6 @@
           </div>
         </div>
 
-        <div class="yb-pagination">
-          <button
-            class="yb-page-btn"
-            :class="{ active: ybCurrentPage === 0 }"
-            @click="setYbPage(0)"
-          ></button>
-          <button
-            class="yb-page-btn"
-            :class="{ active: ybCurrentPage === 1 }"
-            @click="setYbPage(1)"
-          ></button>
-        </div>
       </section>
 
       <div class="dashboard-content">
@@ -1208,7 +1201,7 @@ onUnmounted(() => {
 /* ===== 실시간 요거 봄 섹션 ===== */
 .yogurt-bom-section {
   display: flex;
-  align-items: stretch;
+  flex-direction: column;
   background: #fff;
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
@@ -1216,19 +1209,30 @@ onUnmounted(() => {
   border: 1px solid #efefef;
   position: relative;
   overflow: hidden;
-  gap: 1.25rem;
+  gap: 1rem;
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 
-/* ===== LEFT ===== */
-.yb-left {
+/* ===== HEADER ===== */
+.yb-header {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.yb-header-left {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
-  min-width: 110px;
-  padding: 0.75rem 1.25rem 0.75rem 0;
-  border-right: 1px solid #f0f0f0;
+  min-width: 0;
+}
+
+.yb-header-divider {
+  color: #CBD5E1;
+  font-weight: 300;
+  font-size: 0.875rem;
+  flex-shrink: 0;
 }
 
 .yb-status-badge {
@@ -1259,27 +1263,23 @@ onUnmounted(() => {
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
-.yb-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
 .yb-main-title {
-  font-size: 1rem;
-  font-weight: 650;
-  color: #1a1a1e;
-  line-height: 1.25;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0A0E1A;
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .yb-update-time {
-  font-size: 0.625rem;
-  color: #999;
+  font-size: 0.8125rem;
+  color: #64748B;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-/* ===== RIGHT ===== */
-.yb-right {
+/* ===== BODY ===== */
+.yb-body {
   flex: 1;
   min-width: 0;
 }
@@ -1307,15 +1307,15 @@ onUnmounted(() => {
 .yb-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.25rem 0.75rem;
+  gap: 0.125rem 0.75rem;
 }
 
 .yb-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.375rem 0.5rem;
-  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
   text-decoration: none;
   transition: all 0.15s ease;
   min-width: 0;
@@ -2936,7 +2936,7 @@ onUnmounted(() => {
   }
 
   .yb-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0 0.5rem;
   }
 
