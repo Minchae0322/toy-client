@@ -1,0 +1,92 @@
+name: Rollback Frontend
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: '롤백할 커밋 SHA (예: b88f418)'
+        required: true
+        type: string
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (production)
+        run: npm run build:prod
+
+      - name: Deploy to S3 + CloudFront invalidation
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          CF_DIST_ID: ${{ secrets.CF_DISTRIBUTION_ID }}
+        run: |
+          # HTML (캐시 없음)
+          aws s3 cp dist/index.html "s3://$S3_BUCKET/index.html" \
+            --content-type "text/html; charset=utf-8" \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+          # SEO 파일
+          aws s3 cp dist/sitemap.xml "s3://$S3_BUCKET/sitemap.xml" \
+            --content-type "application/xml; charset=utf-8" \
+            --cache-control "public, max-age=3600"
+
+          aws s3 cp dist/robots.txt "s3://$S3_BUCKET/robots.txt" \
+            --content-type "text/plain; charset=utf-8" \
+            --cache-control "public, max-age=3600"
+
+          # 폰트 (1년 캐시, Content-Type 명시)
+          if [ -d "dist/fonts" ]; then
+            aws s3 sync dist/fonts/ "s3://$S3_BUCKET/fonts/" \
+              --exclude "*" --include "*.woff2" \
+              --content-type "font/woff2" \
+              --cache-control "public, max-age=31536000, immutable"
+
+            aws s3 sync dist/fonts/ "s3://$S3_BUCKET/fonts/" \
+              --exclude "*" --include "*.woff" \
+              --content-type "font/woff" \
+              --cache-control "public, max-age=31536000, immutable"
+          fi
+
+          # 나머지 정적 파일 (JS, CSS, 이미지 등)
+          aws s3 sync dist/ "s3://$S3_BUCKET/" \
+            --exclude "index.html" \
+            --exclude "sitemap.xml" \
+            --exclude "robots.txt" \
+            --exclude "fonts/*.woff2" \
+            --exclude "fonts/*.woff" \
+            --cache-control "public, max-age=31536000, immutable" \
+            --delete
+
+          # CloudFront 캐시 무효화
+          if [ -n "$CF_DIST_ID" ]; then
+            aws cloudfront create-invalidation \
+              --distribution-id "$CF_DIST_ID" \
+              --paths "/*"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## 🔄 롤백 완료" >> $GITHUB_STEP_SUMMARY
+          echo "- **타겟 SHA**: \`${{ inputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **S3 배포**: 완료" >> $GITHUB_STEP_SUMMARY
+          echo "- **CloudFront 무효화**: 완료" >> $GITHUB_STEP_SUMMARY

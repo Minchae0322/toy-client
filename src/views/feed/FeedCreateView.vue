@@ -7,7 +7,16 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
       </button>
-      <h1 class="header-title">인증 올리기</h1>
+      <div class="header-center">
+        <h1 class="header-title">인증 올리기</h1>
+        <div class="progress-dots">
+          <span class="progress-dot" :class="{ filled: selectedPhotos.length > 0 }"></span>
+          <span class="progress-dot" :class="{ filled: formData.review.trim() }"></span>
+          <span class="progress-dot" :class="{ filled: formData.productNameCustom.trim() }"></span>
+          <span class="progress-dot" :class="{ filled: formData.subCategoryId }"></span>
+          <span class="progress-dot" :class="{ filled: formData.store.trim() }"></span>
+        </div>
+      </div>
       <div class="header-spacer"></div>
     </header>
 
@@ -80,15 +89,15 @@
           </label>
         </div>
         <p class="hint-text">사진을 드래그하여 순서를 변경할 수 있습니다 (최대 1920px로 자동 최적화)</p>
-      </section>
 
-      <!-- 한줄평 -->
-      <section class="card">
-        <label class="form-label required">
-          한줄평
-          <span class="char-count" :class="{ error: formData.review.length > 100 }">{{ formData.review.length }}/100</span>
-        </label>
-        <textarea class="form-textarea" placeholder="제품에 대한 솔직한 리뷰를 작성해주세요" v-model="formData.review" rows="3" maxlength="100"></textarea>
+        <!-- 한줄평 (사진 카드에 통합) -->
+        <div class="review-inline">
+          <label class="form-label required">
+            한줄평
+            <span class="char-count" :class="{ error: formData.review.length > 100 }">{{ formData.review.length }}/100</span>
+          </label>
+          <textarea class="form-textarea" placeholder="제품에 대한 솔직한 리뷰를 작성해주세요" v-model="formData.review" rows="2" maxlength="100"></textarea>
+        </div>
       </section>
 
       <!-- 제품 + 카테고리 -->
@@ -171,10 +180,10 @@
             @select="handleCategorySelect"
           />
         </div>
-      </section>
 
-      <!-- 평가 + 구매처 -->
-      <section class="card additional-info">
+        <!-- 평가 + 구매처 (같은 카드에 통합) -->
+        <div class="section-divider"></div>
+
         <div class="form-group">
           <label class="form-label required">
             <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,11 +247,11 @@
             </svg>
             구매 가격
             <span class="price-toggle-group">
-              <button type="button" class="btn-toggle" :class="{ active: formData.priceFree }" @click="togglePriceFree">무료</button>
+              <button type="button" class="btn-toggle" :class="{ active: formData.priceGift }" @click="togglePriceGift">선물받음</button>
               <button type="button" class="btn-toggle" :class="{ active: formData.priceHidden }" @click="togglePriceHidden">비공개</button>
             </span>
           </label>
-          <div v-if="!formData.priceHidden && !formData.priceFree" class="feed-price-wrap">
+          <div v-if="!formData.priceHidden && !formData.priceGift" class="feed-price-wrap">
             <div class="feed-price-line" :class="{ valued: formData.buyPrice }">
               <input
                 type="text"
@@ -259,8 +268,8 @@
           <p v-if="formData.priceHidden" class="price-hidden-notice">
             가격이 비공개로 설정됩니다
           </p>
-          <p v-if="formData.priceFree" class="price-hidden-notice">
-            무료로 설정됩니다
+          <p v-if="formData.priceGift" class="price-hidden-notice">
+            선물받은 제품으로 표시됩니다
           </p>
         </div>
         <div class="form-group">
@@ -410,7 +419,7 @@ const formData = ref({
   storeUnknown: false,
   buyPrice: null,
   priceHidden: false,
-  priceFree: false,
+  priceGift: false,
   evaluation: 'BEST',
   hashtags: []
 })
@@ -465,14 +474,14 @@ const handlePriceInput = (e) => {
 const togglePriceHidden = () => {
   formData.value.priceHidden = !formData.value.priceHidden
   if (formData.value.priceHidden) {
-    formData.value.priceFree = false
+    formData.value.priceGift = false
     formData.value.buyPrice = null
   }
 }
 
-const togglePriceFree = () => {
-  formData.value.priceFree = !formData.value.priceFree
-  if (formData.value.priceFree) {
+const togglePriceGift = () => {
+  formData.value.priceGift = !formData.value.priceGift
+  if (formData.value.priceGift) {
     formData.value.priceHidden = false
     formData.value.buyPrice = 0
   } else {
@@ -919,7 +928,7 @@ const handleSubmit = async () => {
       subCategoryId: formData.value.subCategoryId,
       review: formData.value.review.trim(),
       buyPlace: formData.value.store.trim(),
-      buyPrice: formData.value.priceFree ? 0 : (formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null),
+      buyPrice: formData.value.priceGift ? 0 : (formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null),
       evaluation: formData.value.evaluation,
       hashtags: formData.value.hashtags,
       thumbnailAttachmentInfo,
@@ -975,12 +984,12 @@ onBeforeUnmount(() => {
 
 <style>
 :root {
-  --primary: #111827;
-  --secondary: #6b7280;
+  --primary: #0A0E1A;
+  --secondary: #8B95A1;
   --accent: #9333ea;
-  --border: #e5e7eb;
+  --border: #E5E8EB;
   --bg: #ffffff;
-  --hover: #f9fafb;
+  --hover: #F7F8FA;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1021,10 +1030,10 @@ onBeforeUnmount(() => {
   position: sticky;
   top: 66px;
   z-index: 50;
-  background: rgba(255,255,255,0.98);
-  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  padding: 12px 16px;
+  padding: 14px 20px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1048,10 +1057,36 @@ onBeforeUnmount(() => {
   background: var(--hover);
 }
 
-.header-title {
+.header-center {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.header-title {
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--primary);
+}
+
+.progress-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.progress-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #E5E8EB;
+  transition: all 0.25s ease;
+}
+
+.progress-dot.filled {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.15);
 }
 
 .header-spacer {
@@ -1072,16 +1107,17 @@ onBeforeUnmount(() => {
 .card {
   background: white;
   border-radius: 16px;
-  padding: 20px;
+  padding: 24px;
   border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
   min-width: 0;
   overflow: hidden;
 }
 
-.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
 .section-icon { width: 20px; height: 20px; color: var(--accent); }
-.card-title { font-size: 16px; font-weight: 700; flex: 1; }
-.photo-count { font-size: 14px; color: var(--secondary); }
+.card-title { font-size: 16px; font-weight: 800; flex: 1; color: var(--primary); letter-spacing: -0.2px; }
+.photo-count { font-size: 13px; font-weight: 700; color: var(--secondary); }
 
 /* Processing Indicator */
 .processing-indicator {
@@ -1191,18 +1227,35 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   padding: 20px;
-  background: white;
-  border: 2px dashed var(--border);
+  background: #F7F8FA;
+  border: 2px dashed #D1D6DB;
   border-radius: 12px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #4E5968;
   cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
 }
-.btn-photo-action:hover:not(:disabled) { border-color: var(--accent); background: #faf5ff; }
+.btn-photo-action:hover:not(:disabled) { border-color: var(--accent); background: #FAF5FF; }
 .btn-photo-action:disabled, .btn-photo-action.disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-photo-action .icon { width: 24px; height: 24px; color: var(--accent); }
 
 .hint-text { font-size: 12px; color: var(--secondary); text-align: center; margin-top: 8px; }
+
+/* Review inline in photo card */
+.review-inline {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* Section divider inside merged card */
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
 
 /* Form */
 .form-label {
@@ -1210,34 +1263,43 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: 700;
+  color: #333D4B;
+  margin-bottom: 10px;
+  letter-spacing: -0.1px;
 }
-.form-label.required::after, .card-title.required::after { content: '*'; color: #ef4444; margin-left: 2px; }
+.form-label.required::after, .card-title.required::after { content: '*'; color: #9333EA; margin-left: 2px; }
 
 .inline-icon { width: 16px; height: 16px; color: var(--secondary); }
 .optional-badge {
   padding: 2px 8px;
-  background: #f1f5f9;
-  color: #94a3b8;
-  border-radius: 4px;
+  background: #F7F8FA;
+  color: #8B95A1;
+  border-radius: 6px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
 }
-.char-count { margin-left: auto; font-size: 12px; color: var(--secondary); }
+.char-count { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--secondary); }
 .char-count.error { color: #ef4444; }
 
 .form-input, .form-textarea, .form-select {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid var(--border);
+  border: 1.5px solid #E5E8EB;
   border-radius: 10px;
   font-size: 14px;
+  font-weight: 500;
   font-family: inherit;
+  background: #F7F8FA;
+  color: var(--primary);
+  transition: all 0.15s ease;
 }
+.form-input::placeholder, .form-textarea::placeholder { color: #B0B8C1; font-weight: 400; }
 .form-input:focus, .form-textarea:focus, .form-select:focus {
   outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
+  background: #fff;
 }
 .form-textarea { resize: vertical; min-height: 100px; }
 .mt-2 { margin-top: 8px; }
@@ -1262,19 +1324,19 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 12px;
   padding: 20px 16px;
-  background: white;
-  border: 2px solid var(--border);
+  background: #F7F8FA;
+  border: 1.5px solid #E5E8EB;
   border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   text-align: center;
 }
 
 .mode-card:hover {
   border-color: var(--accent);
-  background: #faf5ff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.1);
+  background: #FAF5FF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.08);
 }
 
 .mode-card-icon {
@@ -1292,12 +1354,12 @@ onBeforeUnmount(() => {
 }
 
 .mode-card-icon.search {
-  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  background: #F3EAFD;
   color: var(--accent);
 }
 
 .mode-card-icon.custom {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: #DBEAFE;
   color: #3b82f6;
 }
 
@@ -1309,14 +1371,16 @@ onBeforeUnmount(() => {
 
 .mode-card-title {
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--primary);
   margin: 0;
+  letter-spacing: -0.2px;
 }
 
 .mode-card-desc {
   font-size: 12px;
-  color: var(--secondary);
+  font-weight: 500;
+  color: #8B95A1;
   margin: 0;
 }
 
@@ -1544,20 +1608,21 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 .category-chip {
-  padding: 8px 14px;
+  padding: 8px 16px;
   background: var(--hover);
-  color: var(--secondary);
-  border: 1px solid var(--border);
+  color: #4E5968;
+  border: 1.5px solid #E5E8EB;
   border-radius: 20px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   font-family: inherit;
+  letter-spacing: -0.1px;
 }
 .category-chip:hover {
-  border-color: #d8b4fe;
-  background: #faf5ff;
+  border-color: #D8B4FE;
+  background: #FAF5FF;
   color: var(--accent);
 }
 .category-chip.active {
@@ -1740,18 +1805,19 @@ onBeforeUnmount(() => {
 
 .status-btn {
   padding: 12px 8px;
-  background: white;
-  border: 2px solid var(--border);
+  background: #F7F8FA;
+  border: 1.5px solid #E5E8EB;
   border-radius: 10px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   font-family: inherit;
+  letter-spacing: -0.1px;
 }
 
 .status-btn:hover {
-  border-color: var(--secondary);
+  border-color: #D1D6DB;
 }
 
 .status-btn.best { border-color: #f97316; color: #f97316; }
@@ -2005,26 +2071,29 @@ onBeforeUnmount(() => {
   text-align: center;
   margin-bottom: 8px;
   font-size: 13px;
-  color: #94a3b8;
-  font-weight: 500;
+  color: #8B95A1;
+  font-weight: 600;
 }
 .btn-submit-large {
   width: 100%;
   padding: 16px;
-  background: var(--accent);
+  background: #0A0E1A;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+  transition: background 0.15s ease;
 }
-.btn-submit-large:hover:not(:disabled) { background: #7c22ce; }
-.btn-submit-large:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-submit-large:hover:not(:disabled) { background: #1E293B; }
+.btn-submit-large:disabled { background: #F2F4F6; color: #B0B8C1; cursor: not-allowed; opacity: 1; }
 
 .spinner { width: 20px; height: 20px; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

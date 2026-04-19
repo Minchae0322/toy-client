@@ -109,11 +109,7 @@
             <p class="group-desc">레벨을 올리고 등급별 혜택을 확인해 보세요</p>
 
             <div v-show="guideExpanded" class="secondary-body">
-              <TierRoadmap :user-level="currentUser.level" />
-              <div class="two-col">
-                <TierDetail :user-level="currentUser.level" />
-                <ExpGuide />
-              </div>
+              <ExpGuide />
               <ExpHistory :history="currentUser.recentExpHistory" />
             </div>
           </section>
@@ -154,8 +150,6 @@ import { rewardsService } from '@/services/RewardsService.js'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import LevelCard from '@/components/collection/LevelCard.vue'
-import TierRoadmap from '@/components/collection/TierRoadmap.vue'
-import TierDetail from '@/components/collection/TierDetail.vue'
 import BadgeCollection from '@/components/collection/BadgeCollection.vue'
 import ExpGuide from '@/components/collection/ExpGuide.vue'
 import ExpHistory from '@/components/collection/ExpHistory.vue'
@@ -637,9 +631,6 @@ onMounted(loadRewardData)
 .toggle-btn .arrow.open { transform: rotate(180deg); }
 
 .secondary-body { display: flex; flex-direction: column; gap: 16px; }
-
-.two-col { display: grid; gap: 16px; grid-template-columns: 1fr; }
-@media (min-width: 960px) { .two-col { grid-template-columns: 1fr 1fr; gap: 16px; } }
 
 /* ===== 카드 공통 오버라이드 (Neo-Brutalism) ===== */
 .tab-panel :deep(.section-card),
