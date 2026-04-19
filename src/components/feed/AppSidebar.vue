@@ -128,7 +128,7 @@ const handleProtectedRoute = async (routeName) => {
         router.push({name: 'BattleCreate'});
         break;
       case 'collections':
-        await open({ type: 'alert', title: '안내', message: '준비중인 메뉴입니다.' });
+        router.push({ name: 'Collection' });
         break;
     }
     return;
@@ -154,10 +154,11 @@ const handleProtectedRoute = async (routeName) => {
   height: calc(100vh - 66px);
   top: 66px;
   background: #ffffff;
-  border-right: 1px solid #ede9f8;
-  padding: 28px 16px;
+  border-right: 1px solid #F1F3F6;
+  padding: 24px 14px;
   display: none;
   flex-direction: column;
+  gap: 24px;
   overflow-y: auto;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   position: sticky;
@@ -172,23 +173,19 @@ const handleProtectedRoute = async (routeName) => {
   }
 }
 
+/* ===== 네비게이션 ===== */
 .nav-menu {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding: 12px;
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #ede9f8;
+  gap: 0;
 }
 
 .nav-section {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px 0;
-  border-bottom: 1px solid #ede9f8;
+  padding: 10px 0;
+  border-bottom: 1px solid #F1F3F6;
 }
 
 .nav-section:last-child {
@@ -208,214 +205,200 @@ const handleProtectedRoute = async (routeName) => {
   padding: 10px 12px;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   text-decoration: none;
   font-family: inherit;
 }
 
 .nav-item:hover {
-  background: #faf7ff;
+  background: #F7F8FA;
 }
 
 .nav-item.active {
-  background: #faf7ff;
+  background: #F3EAFD;
 }
 
 .nav-item .icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: #B0B8C1;
+  color: #8B95A1;
+  transition: color 0.15s ease;
+}
+
+.nav-item:hover .icon {
+  color: #4E5968;
 }
 
 .nav-item.active .icon {
-  color: #9333ea;
+  color: #9333EA;
 }
 
 .nav-text {
   font-size: 14px;
-  font-weight: 500;
-  color: #8B95A1;
+  font-weight: 600;
+  color: #4E5968;
+  letter-spacing: -0.2px;
+  transition: color 0.15s ease;
+}
+
+.nav-item:hover .nav-text {
+  color: #333D4B;
 }
 
 .nav-item.active .nav-text {
-  color: #9333EA;
-  font-weight: 600;
-  border-bottom: 2px solid #9333EA;
-  padding-bottom: 2px;
+  color: #7C3AED;
+  font-weight: 700;
 }
 
 .badge {
   margin-left: auto;
-  padding: 2px 6px;
-  background: #ffffff;
-  color: #8B95A1;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 5px;
+  padding: 2px 7px;
+  background: #F7F8FA;
+  color: #6B7684;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
   min-width: 20px;
   text-align: center;
-  border: 1px solid #ede9f8;
 }
 
 .badge-red {
-  background: #fef2f2;
-  color: #dc2626;
-  border-color: #fecaca;
+  background: #FEF2F2;
+  color: #DC2626;
 }
 
-/* 액션 버튼 영역 */
+/* ===== 액션 버튼 ===== */
 .action-buttons {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* 구분선 */
 .action-divider {
   height: 1px;
-  background: #ede9f8;
+  background: #F1F3F6;
   margin: 4px 0;
 }
 
-/* 서브틀 컬러 버튼 공통 스타일 */
 .btn-subtle {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   font-family: inherit;
 }
 
-/* 보라색 버튼 */
+/* 보라 */
 .btn-purple {
-  background: rgba(147, 51, 234, 0.04);
-  border: 1px solid rgba(147, 51, 234, 0.1);
+  background: #FAF5FF;
+  border: 1px solid #EDE5F7;
 }
 
 .btn-purple:hover {
-  background: rgba(147, 51, 234, 0.08);
-  border-color: rgba(147, 51, 234, 0.2);
+  background: #F3EAFD;
+  border-color: #D8B4FE;
 }
 
 .btn-purple .btn-text {
-  color: rgba(88, 28, 135, 0.7);
+  color: #7C3AED;
 }
 
-.btn-purple:hover .btn-text {
-  color: rgb(88, 28, 135);
-}
-
-/* 주황색 버튼 */
+/* 주황 */
 .btn-orange {
-  background: rgba(249, 115, 22, 0.04);
-  border: 1px solid rgba(249, 115, 22, 0.1);
+  background: #FFF7ED;
+  border: 1px solid #FEE4C8;
 }
 
 .btn-orange:hover {
-  background: rgba(249, 115, 22, 0.08);
-  border-color: rgba(249, 115, 22, 0.2);
+  background: #FFEDD5;
+  border-color: #FDBA74;
 }
 
 .btn-orange .btn-text {
-  color: rgba(154, 52, 18, 0.7);
+  color: #C2410C;
 }
 
-.btn-orange:hover .btn-text {
-  color: rgb(154, 52, 18);
-}
-
-/* 다크 버튼 */
+/* 다크 */
 .btn-dark {
-  background: rgba(51, 65, 85, 0.04);
-  border: 1px solid rgba(51, 65, 85, 0.1);
+  background: #F7F8FA;
+  border: 1px solid #E5E8EB;
 }
 
 .btn-dark:hover {
-  background: rgba(51, 65, 85, 0.08);
-  border-color: rgba(51, 65, 85, 0.2);
+  background: #F2F4F6;
+  border-color: #D1D6DB;
 }
 
 .btn-dark .btn-text {
-  color: rgba(51, 65, 85, 0.7);
+  color: #333D4B;
 }
 
-.btn-dark:hover .btn-text {
-  color: rgb(30, 41, 59);
-}
-
-/* 버튼 콘텐츠 */
+/* 버튼 내부 */
 .btn-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 3px;
 }
 
-/* 버튼 텍스트 */
 .btn-text {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
-  transition: color 0.2s;
+  letter-spacing: -0.2px;
+  transition: color 0.15s ease;
 }
 
-/* 버튼 설명 */
 .btn-desc {
   font-size: 11px;
-  font-weight: 400;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  font-weight: 500;
+  color: #8B95A1;
+  letter-spacing: -0.1px;
 }
 
 .btn-subtle:hover .btn-desc {
-  opacity: 0.8;
+  color: #6B7684;
 }
 
-.btn-purple .btn-desc {
-  color: rgba(88, 28, 135, 0.8);
-}
-
-.btn-orange .btn-desc {
-  color: rgba(154, 52, 18, 0.8);
-}
-
-.btn-dark .btn-desc {
-  color: rgba(51, 65, 85, 0.8);
-}
-
-/* 아이콘 원형 */
+/* + 아이콘 */
 .btn-icon-circle {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.btn-subtle:hover .btn-icon-circle {
+  transform: scale(1.08);
 }
 
 .btn-icon-purple {
-  background: #9333ea;
+  background: #9333EA;
 }
 
 .btn-icon-orange {
-  background: #f97316;
+  background: #F97316;
 }
 
 .btn-icon-dark {
-  background: #1e293b;
+  background: #333D4B;
 }
 
 .btn-icon {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   color: #ffffff;
+  stroke-width: 2.5;
 }
 </style>

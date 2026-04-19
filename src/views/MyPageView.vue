@@ -65,6 +65,37 @@
               </div>
             </div>
 
+            <!-- Tier Identity Card -->
+            <div v-if="tierArt" class="tier-card" :style="{ background: tier.bgColor }">
+              <div class="tier-card-deco">
+                <YogurtTierArt :tier="tierArt" :color="tierColor" :size="120" />
+              </div>
+              <div class="tier-card-body">
+                <div class="tier-identity">
+                  <div class="tier-art-wrap">
+                    <YogurtTierArt :tier="tierArt" :color="tierColor" :size="48" />
+                  </div>
+                  <div class="tier-identity-text">
+                    <span class="tier-label" :style="{ color: tier.color }">{{ tierName }}</span>
+                    <span class="tier-level">Lv.{{ userLevel }}</span>
+                  </div>
+                </div>
+                <div class="tier-tags-row">
+                  <UserLevelTag :level="userLevel" size="sm" variant="dark" />
+                  <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="sm" />
+                </div>
+                <div class="tier-exp">
+                  <div class="exp-bar">
+                    <div class="exp-fill" :style="{ width: expProgress + '%', background: tier.color }"></div>
+                  </div>
+                  <span v-if="expToNext != null" class="exp-text">
+                    다음 레벨까지 <strong>{{ expToNext.toLocaleString() }} EXP</strong>
+                  </span>
+                  <span v-else class="exp-text">최고 레벨 달성</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Edit Mode -->
             <div v-if="isEditing" class="edit-form">
               <div class="form-group">
@@ -173,6 +204,11 @@ import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useUser, userUtils } from '@/services/UserService.js'
 import { useFile } from '@/services/FileService.js'
 import { getUserInfo, logout as authLogout } from '@/utils/auth.js'
+import { rewardsService } from '@/services/RewardsService.js'
+import { getTierByLevel, getTierColor, getNextLevelExp, getLevelProgress } from '@/data/levelSystemData.js'
+import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
+import UserLevelTag from '@/components/identity/UserLevelTag.vue'
+import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 
 const router = useRouter()
 const userService = useUser()
@@ -206,6 +242,43 @@ const editForm = reactive({
   nickname: '',
   description: ''
 })
+
+// ==================== 보상 데이터 (레벨/뱃지) ====================
+const userLevel = ref(null)
+const userBadges = ref([])
+const currentExp = ref(0)
+const tier = computed(() => userLevel.value != null ? getTierByLevel(userLevel.value) : null)
+const tierArt = computed(() => tier.value?.art ?? null)
+const tierColor = computed(() => userLevel.value != null ? getTierColor(userLevel.value) : 'white')
+const tierName = computed(() => tier.value?.name ?? '')
+const expToNext = computed(() => {
+  if (userLevel.value == null) return null
+  const next = getNextLevelExp(userLevel.value)
+  if (!next) return null
+  return Math.max(next - currentExp.value, 0)
+})
+const expProgress = computed(() => {
+  if (userLevel.value == null) return 0
+  return getLevelProgress(userLevel.value, currentExp.value)
+})
+const primaryBadgeId = computed(() => {
+  const pinned = userBadges.value.find(b => b.pinned)
+  return pinned?.badgeId || pinned?.id || userBadges.value[0]?.badgeId || userBadges.value[0]?.id || null
+})
+
+async function loadRewards() {
+  try {
+    const [rewardsRes, badgesRes] = await Promise.all([
+      rewardsService.getMyRewards(),
+      rewardsService.getMyBadges(),
+    ])
+    userLevel.value = rewardsRes?.data?.level ?? null
+    currentExp.value = rewardsRes?.data?.currentExp ?? 0
+    userBadges.value = Array.isArray(badgesRes?.data) ? badgesRes.data : []
+  } catch (e) {
+    console.warn('[MyPage] 보상 데이터 로딩 실패:', e)
+  }
+}
 
 // ==================== Computed ====================
 const currentUser = computed(() => getUserInfo())
@@ -434,6 +507,7 @@ const formatDate = (dateString) => userUtils.formatDate(dateString)
 // ==================== Lifecycle ====================
 onMounted(() => {
   loadProfile()
+  loadRewards()
 })
 </script>
 
@@ -647,6 +721,113 @@ onMounted(() => {
   font-size: 13px;
   color: var(--secondary);
   margin-top: 2px;
+}
+
+/* Tier Identity Card */
+.tier-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  margin-top: -1px;
+  border: 1px solid var(--border);
+}
+
+.tier-card-deco {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+.tier-card-body {
+  position: relative;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tier-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tier-art-wrap {
+  width: 52px;
+  height: 52px;
+  background: white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.tier-identity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tier-label {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  line-height: 1;
+}
+
+.tier-level {
+  font-size: 24px;
+  font-weight: 900;
+  color: #0A0E1A;
+  letter-spacing: -0.8px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.tier-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tier-exp {
+  background: white;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exp-bar {
+  height: 6px;
+  background: #F1F3F6;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.exp-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.exp-text {
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+.exp-text strong {
+  color: #0A0E1A;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .btn-edit {
