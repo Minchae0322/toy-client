@@ -150,25 +150,26 @@ const handleSubmit = () => {
   width: 100%;
 }
 
-/* Linear 스타일의 상태 배너 */
+/* 상태 배너 */
 .status-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
   font-size: 13px;
+  font-weight: 600;
   margin-bottom: 20px;
-  font-weight: 500;
+  letter-spacing: -0.1px;
 }
 
 .status-banner.success {
-  background-color: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #dcfce7;
+  background-color: #DCFCE7;
+  color: #16A34A;
+  border: 1px solid #BBF7D0;
 }
 
-/* 입력 그룹 공통 스타일 */
+/* 입력 그룹 */
 .input-group {
   margin-bottom: 20px;
 }
@@ -176,9 +177,10 @@ const handleSubmit = () => {
 .input-label {
   display: block;
   font-size: 13px;
-  font-weight: 500;
-  color: #27272a;
-  margin-bottom: 6px;
+  font-weight: 700;
+  color: #333D4B;
+  margin-bottom: 8px;
+  letter-spacing: -0.1px;
 }
 
 .input-wrapper {
@@ -187,46 +189,54 @@ const handleSubmit = () => {
 
 input {
   width: 100%;
-  padding: 10px 12px 10px 40px;
+  padding: 12px 14px 12px 42px;
   font-size: 14px;
-  border: 1px solid #e4e4e7;
-  border-radius: 6px;
-  background-color: #ffffff;
-  transition: all 0.2s ease;
+  font-weight: 500;
+  border: 1.5px solid #E5E8EB;
+  border-radius: 10px;
+  background-color: #F7F8FA;
+  transition: all 0.15s ease;
   outline: none;
+  color: #0A0E1A;
+  font-family: inherit;
 }
 
+input::placeholder { color: #B0B8C1; font-weight: 400; }
+
 input:focus {
-  border-color: #18181b;
-  box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.05);
+  border-color: #9333EA;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
+  background: #fff;
 }
 
 input.error {
-  border-color: #ef4444;
+  border-color: #EF4444;
+  background: #FEF2F2;
 }
 
 .input-icon {
   position: absolute;
-  left: 12px;
+  left: 13px;
   top: 50%;
   transform: translateY(-50%);
-  color: #a1a1aa;
+  color: #B0B8C1;
 }
 
 .error-msg {
   font-size: 12px;
-  color: #ef4444;
-  margin-top: 4px;
+  font-weight: 600;
+  color: #EF4444;
+  margin-top: 6px;
   display: block;
 }
 
-/* 약관 동의 섹션: 정갈한 박스 형태 */
+/* 약관 동의 */
 .terms-container {
   margin-bottom: 24px;
-  padding: 14px;
-  background-color: #fafafa;
-  border: 1px solid #f4f4f5;
-  border-radius: 8px;
+  padding: 16px;
+  background-color: #F7F8FA;
+  border: 1.5px solid #E5E8EB;
+  border-radius: 12px;
 }
 
 .custom-checkbox {
@@ -235,8 +245,9 @@ input.error {
   cursor: pointer;
   gap: 10px;
   font-size: 13px;
-  color: #52525b;
-  line-height: 1.4;
+  color: #4E5968;
+  line-height: 1.5;
+  font-weight: 500;
 }
 
 .custom-checkbox input {
@@ -244,35 +255,40 @@ input.error {
 }
 
 .checkmark {
-  width: 18px;
-  height: 18px;
-  border: 1px solid #d4d4d8;
-  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #D1D6DB;
+  border-radius: 6px;
   background: white;
   flex-shrink: 0;
   position: relative;
-  transition: all 0.2s;
+  transition: all 0.15s;
+  margin-top: 1px;
 }
 
 .custom-checkbox input:checked + .checkmark {
-  background-color: #9333ea;
-  border-color: #9333ea;
+  background-color: #9333EA;
+  border-color: #9333EA;
 }
 
 .custom-checkbox input:checked + .checkmark::after {
   content: '';
   position: absolute;
   left: 6px;
-  top: 2px;
-  width: 4px;
-  height: 8px;
+  top: 3px;
+  width: 5px;
+  height: 9px;
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
 .link {
-  color: #9333ea;
+  color: #9333EA;
+  font-weight: 700;
+  text-decoration: none;
+}
+.link:hover {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -280,28 +296,30 @@ input.error {
 /* 제출 버튼 */
 .submit-btn {
   width: 100%;
-  padding: 12px;
-  background-color: #18181b; /* Linear 특유의 블랙 버튼 */
+  padding: 14px;
+  background-color: #0A0E1A;
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: opacity 0.2s;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+  transition: background 0.15s ease;
 }
 
 .submit-btn:hover:not(:disabled) {
-  opacity: 0.9;
+  background: #1E293B;
 }
 
 .submit-btn:disabled {
-  background-color: #f4f4f5;
-  color: #a1a1aa;
+  background-color: #F2F4F6;
+  color: #B0B8C1;
   cursor: not-allowed;
 }
 
@@ -312,9 +330,9 @@ input.error {
   justify-content: center;
   gap: 6px;
   margin-top: 16px;
-  color: #ef4444;
+  color: #EF4444;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* 로딩 스피너 */

@@ -133,65 +133,64 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ffffff;
+  background-color: #F7F8FA;
   padding: 20px;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
 
 .auth-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   background: white;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04), 0 8px 32px rgba(15, 23, 42, 0.06);
 }
 
 .logo-area {
-  padding: 40px 20px 24px;
+  padding: 44px 20px 28px;
   text-align: center;
 }
 
 .logo-image {
-  max-width: 120px;
+  max-width: 110px;
   height: auto;
 }
 
 .tab-header {
   display: flex;
-  border-bottom: 1px solid #f4f4f5;
-  margin: 0 24px;
+  margin: 0 28px;
+  background: #F2F4F6;
+  border-radius: 10px;
+  padding: 4px;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 12px 0;
+  padding: 10px 0;
   border: none;
-  background: none;
+  background: transparent;
   font-size: 14px;
-  font-weight: 500;
-  color: #a1a1aa;
+  font-weight: 600;
+  color: #8B95A1;
   cursor: pointer;
-  position: relative;
-  transition: color 0.2s;
+  border-radius: 8px;
+  transition: all 0.18s ease;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+}
+
+.tab-btn:hover:not(.active) {
+  color: #4E5968;
 }
 
 .tab-btn.active {
-  color: #18181b;
-}
-
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: #9333ea;
+  color: #0A0E1A;
+  background: white;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
 .tab-content {
-  padding: 32px 24px 40px;
+  padding: 32px 28px 40px;
 }
 
 /* 전환 애니메이션 */
@@ -202,7 +201,10 @@ onMounted(() => {
 .fade-slide-leave-to { opacity: 0; transform: translateY(-5px); }
 
 @media (max-width: 480px) {
-  .auth-wrapper { background: white; padding: 0; }
-  .auth-container { border: none; box-shadow: none; max-width: 100%; }
+  .auth-wrapper { background: #F7F8FA; padding: 16px; }
+  .auth-container { border-radius: 16px; }
+  .tab-header { margin: 0 20px; }
+  .tab-content { padding: 28px 20px 36px; }
+  .logo-area { padding: 36px 20px 24px; }
 }
 </style>

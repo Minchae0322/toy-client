@@ -123,82 +123,167 @@ const handleSubmit = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px;
-  background-color: #fffbeb;
-  border: 1px solid #fef3c7;
-  border-radius: 6px;
-  color: #92400e;
+  padding: 12px 14px;
+  background-color: #FEF9C3;
+  border: 1px solid #FDE68A;
+  border-radius: 10px;
+  color: #92400E;
   font-size: 13px;
+  font-weight: 600;
   margin-bottom: 24px;
+  letter-spacing: -0.1px;
 }
 
 /* 입력창 공통 */
 .input-group { margin-bottom: 20px; }
 .label-row { display: flex; justify-content: space-between; align-items: center; }
-.input-label { font-size: 13px; font-weight: 500; color: #3f3f46; margin-bottom: 6px; display: block; }
-.link-btn { font-size: 12px; color: #71717a; background: none; border: none; cursor: pointer; text-decoration: underline; }
+.input-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333D4B;
+  margin-bottom: 8px;
+  display: block;
+  letter-spacing: -0.1px;
+}
+.link-btn {
+  font-size: 12px;
+  color: #8B95A1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.link-btn:hover { color: #6B7684; }
 
 .input-wrapper { position: relative; }
 input {
   width: 100%;
-  padding: 10px 12px 10px 40px;
-  font-size: 14px;
-  border: 1px solid #e4e4e7;
-  border-radius: 6px;
-  transition: all 0.2s;
-  outline: none;
-}
-input:focus { border-color: #18181b; box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.05); }
-input.error { border-color: #ef4444; }
-
-.input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #a1a1aa; }
-.eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: none; background: none; font-size: 11px; font-weight: 600; color: #71717a; cursor: pointer; }
-.error-msg { color: #ef4444; font-size: 12px; margin-top: 4px; display: block; }
-
-/* 버튼 */
-.submit-btn {
-  width: 100%;
-  padding: 12px;
-  background: #18181b;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 12px 14px 12px 42px;
   font-size: 14px;
   font-weight: 500;
+  border: 1.5px solid #E5E8EB;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  outline: none;
+  color: #0A0E1A;
+  background: #F7F8FA;
+  font-family: inherit;
+}
+input::placeholder { color: #B0B8C1; font-weight: 400; }
+input:focus {
+  border-color: #9333EA;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
+  background: #fff;
+}
+input.error { border-color: #EF4444; background: #FEF2F2; }
+
+.input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #B0B8C1; }
+.eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8B95A1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.eye-btn:hover { background: #F2F4F6; color: #4E5968; }
+.error-msg { color: #EF4444; font-size: 12px; font-weight: 600; margin-top: 6px; display: block; }
+
+/* 제출 버튼 */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: #0A0E1A;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+  transition: background 0.15s ease;
 }
-.submit-btn:disabled { background: #f4f4f5; color: #a1a1aa; cursor: not-allowed; }
+.submit-btn:hover:not(:disabled) { background: #1E293B; }
+.submit-btn:disabled {
+  background: #F2F4F6;
+  color: #B0B8C1;
+  cursor: not-allowed;
+}
 
-.error-text { text-align: center; color: #ef4444; font-size: 13px; margin-top: 16px; }
+.error-text {
+  text-align: center;
+  color: #EF4444;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 16px;
+}
 
 /* 소셜 */
-.social-area { margin-top: 24px; }
-.divider { display: flex; align-items: center; margin-bottom: 16px; }
-.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #f4f4f5; }
-.divider span { padding: 0 12px; font-size: 12px; color: #a1a1aa; }
+.social-area { margin-top: 28px; }
+.divider { display: flex; align-items: center; margin-bottom: 18px; }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #E5E8EB; }
+.divider span {
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8B95A1;
+  white-space: nowrap;
+}
 
 .social-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .social-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px;
-  border: 1px solid #e4e4e7;
-  border-radius: 6px;
+  gap: 6px;
+  padding: 11px 8px;
+  border: 1.5px solid #E5E8EB;
+  border-radius: 10px;
   background: white;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #333D4B;
   cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
 }
+.social-btn:hover { border-color: #D1D6DB; background: #F7F8FA; }
 .social-btn img { width: 16px; }
-.social-btn.naver { background: #03C75A; border-color: #03C75A; color: white; }
-.social-btn.github { background: #24292e; border-color: #24292e; color: white; }
+.social-btn.naver {
+  background: #03C75A;
+  border-color: #03C75A;
+  color: white;
+}
+.social-btn.naver:hover { background: #02b351; }
+.social-btn.github {
+  background: #24292E;
+  border-color: #24292E;
+  color: white;
+}
+.social-btn.github:hover { background: #1b1f23; }
 
-.spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
