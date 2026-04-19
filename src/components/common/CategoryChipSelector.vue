@@ -241,39 +241,39 @@ onMounted(() => {
 
 /* 선택된 카테고리 표시 */
 .selected-category-display {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
-  border-radius: 10px;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f2f2f7;
+  border: none;
+  border-radius: 6px;
   margin-bottom: 12px;
 }
 
 .selected-category-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #7c3aed;
+  color: #3a3a3c;
 }
 
 .selected-category-clear {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   background: transparent;
   border: none;
   border-radius: 50%;
-  color: #9ca3af;
+  color: #8e8e93;
   cursor: pointer;
   transition: all 0.15s;
+  margin-left: 4px;
 }
 
 .selected-category-clear:hover {
-  background: #f3e8ff;
-  color: #7c3aed;
+  color: #3a3a3c;
 }
 
 /* 1뎁스 카테고리 칩 */
@@ -286,91 +286,88 @@ onMounted(() => {
 .category-chips-title {
   font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: #8e8e93;
   margin: 0;
 }
 
 .category-chips-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .category-chip {
   padding: 8px 14px;
-  background: #f9fafb;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
-  border-radius: 20px;
+  background: #f2f2f7;
+  color: #3a3a3c;
+  border: none;
+  border-radius: 6px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .category-chip:hover {
-  border-color: #d8b4fe;
-  background: #faf5ff;
-  color: #7c3aed;
+  background: #e5e5ea;
 }
 
 .category-chip.active {
-  background: #7c3aed;
-  color: white;
-  border-color: #7c3aed;
+  background: #9933EA;
+  color: #ffffff;
 }
 
 .category-chip.more-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #7c3aed;
-  border-color: #e9d5ff;
-  background: #faf5ff;
+  padding: 8px 10px;
+  background: transparent;
+  color: #8e8e93;
   font-weight: 600;
 }
 
 .category-chip.more-btn:hover {
-  background: #f3e8ff;
-  border-color: #d8b4fe;
+  background: #f2f2f7;
+  color: #3a3a3c;
 }
 
 /* 2뎁스 하위 카테고리 */
 .sub-category-section {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f2f2f7;
 }
 
 .sub-category-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .sub-category-chip {
   padding: 6px 12px;
-  background: white;
-  color: #888;
-  border: 1px solid #e5e5e5;
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 500;
+  background: transparent;
+  color: #8e8e93;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .sub-category-chip:hover {
-  background: #faf5ff;
-  border-color: #d8b4fe;
-  color: #7c3aed;
+  background: #f2f2f7;
+  color: #3a3a3c;
 }
 
 .sub-category-chip.active {
-  background: #f3e8ff;
-  border-color: #7c3aed;
-  color: #7c3aed;
+  background: #3a3a3c;
+  color: #ffffff;
 }
 </style>

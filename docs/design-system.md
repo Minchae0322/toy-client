@@ -47,13 +47,13 @@
 
 `LEVEL_TIERS` in `src/data/levelSystemData.js` 참조. 수정 시 이 표도 같이 갱신.
 
-| Tier | Name | Key | Color | BgColor |
-|---|---|---|---|---|
-| 1 | 뉴비 | `newbie` | `#22c55e` | `#f0fdf4` |
-| 2 | 레귤러 | `regular` | `#3b82f6` | `#eff6ff` |
-| 3 | 컬렉터 | `collector` | `#a855f7` | `#faf5ff` |
-| 4 | 마니아 | `maniac` | `#f97316` | `#fff7ed` |
-| 5 | 레전드 | `legend` | `#06b6d4` | `#ecfeff` |
+| Tier | Name | Key | Levels | Color | BgColor |
+|---|---|---|---|---|---|
+| 1 | Plain | `plain` | 1-5 | `#94a3b8` | `#f8fafc` |
+| 2 | Fruity | `fruity` | 6-15 | `#3b82f6` | `#eff6ff` |
+| 3 | Granola | `granola` | 16-25 | `#a855f7` | `#faf5ff` |
+| 4 | Parfait | `parfait` | 26-35 | `#f97316` | `#fff7ed` |
+| 5 | Signature | `signature` | 36+ | `#06b6d4` | `#ecfeff` |
 
 ### 1.4 뱃지 컬러
 
@@ -254,8 +254,8 @@ border-radius: 16px;
 
 ```vue
 <UserIdentity
-  nickname="이컬렉터"
-  :level="13"
+  nickname="이그래놀라"
+  :level="18"
   :badge-ids="['first_post', 'photographer', 'vote_king']"
   size="md"
   :max-badges="3"
@@ -305,13 +305,13 @@ streak, 메달, 토스트, 배너, 버튼, 레이블, 구분자, 인라인 tier 
 
 큰 tier 블록은 **`src/components/identity/YogurtTierArt.vue`** 사용. 5개 티어 × 5개 rank 컬러 = 25개 조합. 요거트 제품 정체성(컵/글라스/볼/파르페/고블릿)을 그대로 반영.
 
-| Tier (데이터 key) | art (YogurtTierArt `:tier` prop) | 오브젝트 |
-|---|---|---|
-| newbie | plain | 플라스틱 컵 |
-| regular | fruity | 유리컵 + 딸기 3개 |
-| collector | granola | 도자기 볼 + 그래놀라 + 드리즐 |
-| maniac | parfait | 파르페 잔 + 레이어 + 휘핑 + 체리 |
-| legend | signature | 크리스탈 고블릿 + 금박 + 플라워 |
+| Tier key | Levels | art (YogurtTierArt `:tier` prop) | 오브젝트 |
+|---|---|---|---|
+| plain | 1-5 | plain | 플라스틱 컵 |
+| fruity | 6-15 | fruity | 유리컵 + 딸기 3개 |
+| granola | 16-25 | granola | 도자기 볼 + 그래놀라 + 드리즐 |
+| parfait | 26-35 | parfait | 파르페 잔 + 레이어 + 휘핑 + 체리 |
+| signature | 36+ | signature | 크리스탈 고블릿 + 금박 + 플라워 |
 
 **레벨 → 컬러** 매핑: `getTierColor(level)`. 티어 내 위치에 따라 `white → red → blue → violet → gold` 순. 예) Lv.1=white, Lv.5=gold. Lv.6=white, Lv.10=gold.
 
