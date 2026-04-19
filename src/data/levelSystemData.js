@@ -795,6 +795,17 @@ export function getTierByLevel(level) {
 }
 
 /**
+ * 백엔드 UserTier.code (대문자 'PLAIN') → 프론트 LEVEL_TIERS 엔트리.
+ * 백엔드가 { code, description, minLevel, maxLevel } 형태의 enum 객체로 직렬화되는 경우 사용.
+ * 문자열('PLAIN') 과 객체({code: 'PLAIN'}) 둘 다 허용.
+ */
+export function getTierByCode(code) {
+  if (!code) return null
+  const key = (typeof code === 'string' ? code : code.code || '').toLowerCase()
+  return LEVEL_TIERS.find((t) => t.tier === key) || null
+}
+
+/**
  * 레벨로 rank 컬러 키 반환. YogurtTierArt의 color prop에 사용.
  * 티어 안에서 레벨 위치에 따라 white → red → blue → violet → gold 순으로 순환.
  * legend 티어(21-99)는 5단계로 비례 분할.

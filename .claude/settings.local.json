@@ -80,7 +80,8 @@
       "Bash(git add src/views/feed/FeedCreateView.vue src/views/CollectionView.vue .github/workflows/rollback.yml && git commit -m \"$\\(cat <<'EOF'\nfeat: 피드 작성 UX 개선 + 프론트엔드 롤백 워크플로우 추가\n\n- 피드 작성 카드 통합 \\(5→3\\): 사진+한줄평, 제품+카테고리+평가+구매처, 추가정보\n- 헤더 진행 dots로 필수 항목 완료 상태 시각화\n- 무료 → 선물받음 토글 변경\n- GitHub Actions 롤백 워크플로우 \\(SHA 기반 S3 재배포\\)\n- CollectionView 미사용 컴포넌트 정리\nEOF\n\\)\")",
       "Bash(claude --version)",
       "Bash(npm show @anthropic-ai/claude-code version 2>/dev/null || echo \"check failed\")",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(npx vue-tsc *)"
     ]
   }
 }
