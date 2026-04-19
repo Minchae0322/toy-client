@@ -133,7 +133,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #F7F8FA;
+  background-color: #ffffff;
   padding: 20px;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
@@ -201,7 +201,7 @@ onMounted(() => {
 .fade-slide-leave-to { opacity: 0; transform: translateY(-5px); }
 
 @media (max-width: 480px) {
-  .auth-wrapper { background: #F7F8FA; padding: 16px; }
+  .auth-wrapper { background: #ffffff; padding: 16px; }
   .auth-container { border-radius: 16px; }
   .tab-header { margin: 0 20px; }
   .tab-content { padding: 28px 20px 36px; }
