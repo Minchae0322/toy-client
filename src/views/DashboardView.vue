@@ -518,7 +518,7 @@ const bubbleTooltipProduct = computed(() => {
 
 const bubbleTooltipStyle = computed(() => {
   if (!bubbleTooltipProduct.value) return {}
-  const W = 240
+  const W = bubbleDims.value.w < 480 ? 190 : 240
   let left = bubbleMousePos.value.x - W / 2
   let top = bubbleMousePos.value.y - 140
   if (top < 0) top = bubbleMousePos.value.y + 10
@@ -558,10 +558,16 @@ function handleBubbleMouseMove(e) {
   bubbleMousePos.value = { x: e.clientX - rect.left, y: e.clientY - rect.top }
 }
 
+function computeBubbleHeight(w) {
+  if (w < 480) return Math.max(320, Math.min(420, w * 1.05))
+  if (w < 768) return Math.max(380, Math.min(520, w * 0.9))
+  return Math.max(500, Math.min(700, w * 0.75))
+}
+
 function initBubbleContainer() {
   if (!bubbleContainerRef.value) return
   const rect = bubbleContainerRef.value.getBoundingClientRect()
-  bubbleDims.value = { w: rect.width, h: Math.max(500, Math.min(700, rect.width * 0.75)) }
+  bubbleDims.value = { w: rect.width, h: computeBubbleHeight(rect.width) }
 
   let resizeTimer = null
   bubbleResizeObserver = new ResizeObserver(entries => {
@@ -570,7 +576,7 @@ function initBubbleContainer() {
       const entry = entries[0]
       if (entry) {
         const w = entry.contentRect.width
-        bubbleDims.value = { w, h: Math.max(500, Math.min(700, w * 0.75)) }
+        bubbleDims.value = { w, h: computeBubbleHeight(w) }
       }
     }, 150)
   })
@@ -2789,9 +2795,46 @@ onUnmounted(() => {
 }
 
 /* 버블 차트 모바일 대응 */
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .dash-bubble-area {
-    min-height: 260px;
+    min-height: 320px;
+    border-radius: 12px;
+  }
+
+  .ranking-section .section-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ranking-section .sub-title-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ranking-section .sort-indicator {
+    padding: 2px 8px;
+  }
+
+  .ranking-section .header-right-group {
+    margin-left: auto;
+  }
+
+  .dash-bubble-tooltip {
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  .dash-tooltip-name {
+    font-size: 13px;
+  }
+
+  .dash-tooltip-metrics {
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .dash-metric-value {
+    font-size: 12px;
   }
 }
 
@@ -2891,105 +2934,83 @@ onUnmounted(() => {
 @media (max-width: 767px) {
   /* 실시간 요거 봄 모바일 */
   .yogurt-bom-section {
-    flex-direction: column;
-    padding: 0;
-    gap: 0;
-    border-radius: 16px;
-    overflow: hidden;
+    padding: 0.875rem 0.875rem 0.75rem;
+    gap: 0.75rem;
+    border-radius: 14px;
     margin-bottom: 0.75rem;
   }
 
-  .yb-left {
-    border-right: none;
-    border-bottom: 1px solid #f0f0f0;
-    padding: 0.75rem 0.875rem;
-    flex-direction: row;
-    align-items: center;
-    min-width: auto;
+  .yb-header {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.5rem;
   }
 
-  .yb-right {
-    padding: 0.875rem;
+  .yb-header-left {
+    gap: 0.375rem;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
-  .yb-title-group {
-    flex: 1;
-    margin-left: 0.5rem;
-  }
-
-  .yb-main-title {
-    font-size: 0.875rem;
-    margin: 0;
-  }
-
-  .yb-main-title br {
+  .yb-header-divider {
     display: none;
   }
 
+  .yb-main-title {
+    font-size: 0.9375rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .yb-update-time {
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
+    flex-basis: 100%;
+    order: 3;
   }
 
   .yb-status-badge {
-    font-size: 0.6rem;
-    padding: 3px 8px;
+    font-size: 0.5625rem;
+    padding: 2px 7px;
+    flex-shrink: 0;
   }
 
   .yb-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.125rem 0.375rem;
   }
 
   .yb-item {
     padding: 0.3rem 0.375rem;
-    gap: 0.4rem;
-    border-radius: 8px;
+    gap: 0.375rem;
+    border-radius: 6px;
   }
 
   .yb-rank-badge {
     width: 20px;
     height: 20px;
     border-radius: 6px;
-    font-size: 0.65rem;
-  }
-
-  .yb-info {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.25rem;
+    font-size: 0.6875rem;
   }
 
   .yb-product {
-    font-size: 0.75rem;
-    flex: 1;
-    min-width: 0;
+    font-size: 0.8125rem;
   }
 
   .yb-author-name {
     font-size: 0.625rem;
-    margin-top: 0;
-    flex-shrink: 0;
-    max-width: 40%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .yb-tag {
-    font-size: 0.55rem;
+    font-size: 0.5rem;
     padding: 1px 4px;
   }
 
   .yb-pagination {
-    flex-direction: row;
-    margin-top: 0;
-    padding: 0.5rem 0.875rem 0.75rem;
-    justify-content: center;
+    padding-top: 0.25rem;
   }
 
   .yb-page-btn.active {
-    width: 20px;
-    height: 6px;
+    width: 18px;
   }
 
   .yb-sk-rank {
