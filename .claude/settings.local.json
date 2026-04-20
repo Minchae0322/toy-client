@@ -83,7 +83,12 @@
       "Bash(git commit -m ' *)",
       "Bash(npx vue-tsc *)",
       "Bash(git commit -m 'design: 아이템 등록 모달 대기업 톤으로 리디자인 *)",
-      "Bash(git commit -m 'refactor: 대시보드 요거 봄 섹션 헤더/바디 구조로 리팩토링 *)"
+      "Bash(git commit -m 'refactor: 대시보드 요거 봄 섹션 헤더/바디 구조로 리팩토링 *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git stash *)"
     ]
   }
 }
