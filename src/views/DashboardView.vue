@@ -2957,9 +2957,6 @@ onUnmounted(() => {
 
   .yb-main-title {
     font-size: 0.9375rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .yb-update-time {
