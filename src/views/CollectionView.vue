@@ -147,6 +147,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth.js'
 import { rewardsService } from '@/services/RewardsService.js'
+import { showExpGrant } from '@/composables/useExpToast'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import LevelCard from '@/components/collection/LevelCard.vue'
@@ -160,7 +161,6 @@ import PredictionHistory from '@/components/collection/PredictionHistory.vue'
 import {
   Gift,
   Ticket,
-  Sparkles,
   Pin,
   AlertCircle,
   Award,
@@ -275,7 +275,7 @@ async function onClaimMission(mission) {
     const claimed = result?.data
     const found = missions.value.find((m) => m.id === claimed?.id)
     if (found) found.status = 'CLAIMED'
-    showToast(Sparkles, `+${claimed?.mission?.rewardExp ?? 0} EXP 획득!`)
+    showExpGrant(claimed?.expGrant, { mode: 'full' })
   } catch (e) {
     showToast(AlertCircle, '보상을 받을 수 없습니다')
   }

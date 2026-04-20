@@ -98,6 +98,7 @@ import { feedService } from '@/services/FeedService.js'
 import { chatService } from '@/services/ChatService.js'
 import { userService } from '@/services/UserService.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { showExpGrant } from '@/composables/useExpToast'
 import { useAuth } from '@/composables/useAuth'
 
 import FeedDetailHeader from '@/components/feed/detail/FeedDetailHeader.vue'
@@ -213,6 +214,7 @@ const submitComment = async (content) => {
   try {
     const response = await feedService.createComment(route.params.id, content)
     if (response.success) {
+      showExpGrant(response.data?.expGrant, { mode: 'burst-only' })
       await loadComments(0)
       if (feed.value) {
         feed.value.commentCount = (feed.value.commentCount || 0) + 1

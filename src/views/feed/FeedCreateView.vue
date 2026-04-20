@@ -383,6 +383,7 @@ import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useFile } from '@/services/FileService.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { showExpGrant } from '@/composables/useExpToast'
 import { getUserId } from '@/utils/auth.js'
 import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
 import CategoryChipSelector from '@/components/common/CategoryChipSelector.vue'
@@ -947,6 +948,7 @@ const handleSubmit = async () => {
           URL.revokeObjectURL(p.preview)
         }
       })
+      showExpGrant(result.data?.expGrant, { mode: 'full' })
       showSuccessToast.value = true
       setTimeout(() => router.push('/feed'), 1500)
     } else {

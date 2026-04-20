@@ -7,6 +7,7 @@ import GlobalConfirmDialog from '@/components/common/GlobalConfirmDialog.vue'
 import {useConfirmDialog} from '@/composables/useConfirmDialog'
 import NotificationDropdown from '@/components/notification/NotificationDropdown.vue'
 import NotificationToast from '@/components/notification/NotificationToast.vue'
+import ExpFeedback from '@/components/exp/ExpFeedback.vue'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
@@ -283,6 +284,9 @@ onUnmounted(() => {
 
   <!-- 알림 토스트 -->
   <NotificationToast v-if="isLoggedIn" />
+
+  <!-- EXP 지급 피드백 (burst + pill) -->
+  <ExpFeedback />
 </template>
 
 <style scoped>

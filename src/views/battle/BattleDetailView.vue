@@ -273,6 +273,7 @@ import { battleService } from '@/services/BattleService.js'
 import { fileService } from '@/services/FileService.js'
 import { getUserId } from '@/utils/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { showExpGrant } from '@/composables/useExpToast'
 import ShareModal from '@/components/common/ShareModal.vue'
 import BattleInfoCard from '@/components/battle/detail/BattleInfoCard.vue'
 import VoteSelectionBar from '@/components/battle/detail/VoteSelectionBar.vue'
@@ -639,6 +640,8 @@ export default {
         const response = await battleService.voteBattleItem(this.battleId, { votes, comment })
 
         if (response.success) {
+          // POST /battles/{battleId}/vote 응답 data가 ExpGrantInfo로 변경됨 (breaking)
+          showExpGrant(response.data, { mode: 'burst-only' })
           await this.open({ type: 'alert', title: '요거픽 완료', message: '요거픽이 완료되었습니다!' })
           this.hasVoted = true
           this.selectedRanks = { 1: null, 2: null, 3: null }
