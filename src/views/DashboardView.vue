@@ -2960,9 +2960,8 @@ onUnmounted(() => {
   }
 
   .yb-update-time {
-    font-size: 0.6875rem;
-    flex-basis: 100%;
-    order: 3;
+    font-size: 0.625rem;
+    white-space: nowrap;
   }
 
   .yb-status-badge {
