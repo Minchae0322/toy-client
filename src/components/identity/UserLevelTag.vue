@@ -1,7 +1,7 @@
 <template>
-  <span class="user-level-tag" :class="size" :style="tagStyle">
+  <span class="user-level-tag" :class="[size, { 'icon-only': !showLevel }]" :style="tagStyle">
     <YogurtTierArt :tier="tier.art" :color="tierColor" :size="artSize" />
-    <span class="lv-text">Lv.{{ level }}</span>
+    <span v-if="showLevel" class="lv-text">Lv.{{ level }}</span>
   </span>
 </template>
 
@@ -14,6 +14,7 @@ const props = defineProps({
   level: { type: Number, required: true },
   size: { type: String, default: 'md', validator: (v) => ['xs', 'sm', 'md'].includes(v) },
   variant: { type: String, default: 'soft', validator: (v) => ['filled', 'soft', 'outline', 'dark'].includes(v) },
+  showLevel: { type: Boolean, default: true },
 })
 
 const tier = computed(() => getTierByLevel(props.level))
@@ -79,4 +80,10 @@ const tagStyle = computed(() => {
 }
 
 .lv-text { font-variant-numeric: tabular-nums; }
+
+/* 아이콘만 표시할 때: 가로/세로 패딩을 동일하게 맞춰 동그란 칩 형태로 */
+.user-level-tag.icon-only { gap: 0; }
+.user-level-tag.icon-only.xs { padding: 3px; border-radius: 999px; }
+.user-level-tag.icon-only.sm { padding: 4px; border-radius: 999px; }
+.user-level-tag.icon-only.md { padding: 5px; border-radius: 999px; }
 </style>

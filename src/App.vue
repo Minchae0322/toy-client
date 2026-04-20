@@ -250,9 +250,12 @@ onUnmounted(() => {
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
           </svg>
         </button>
-        <div v-if="isLoggedIn" class="mobile-avatar" :class="{ connected: wsConnected }" @click="goToProfile">
-          <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
-          <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
+        <div v-if="isLoggedIn" class="mobile-avatar-wrap" @click="goToProfile">
+          <div class="mobile-avatar" :class="{ connected: wsConnected }">
+            <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
+            <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
+          </div>
+          <span v-if="userLevel != null" class="mobile-level-badge">{{ userLevel }}</span>
         </div>
       </div>
     </div>
@@ -668,7 +671,42 @@ onUnmounted(() => {
 .nav-mobile {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
+}
+
+.nav-mobile .mobile-msg-btn,
+.nav-mobile :deep(.notification-trigger) {
+  width: 30px;
+  height: 30px;
+}
+
+.mobile-avatar-wrap {
+  position: relative;
+  margin-left: 4px;
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.mobile-level-badge {
+  position: absolute;
+  bottom: -3px;
+  right: -5px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #0A0E1A;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #ffffff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  pointer-events: none;
 }
 
 .mobile-avatar {
@@ -789,7 +827,7 @@ onUnmounted(() => {
     margin-left: 0;
   }
   .nav-mobile {
-    gap: 4px;
+    gap: 0;
   }
   .mobile-carrier-btn {
     padding: 4px 8px;
@@ -800,7 +838,8 @@ onUnmounted(() => {
     width: 12px;
     height: 12px;
   }
-  .mobile-msg-btn {
+  .nav-mobile .mobile-msg-btn,
+  .nav-mobile :deep(.notification-trigger) {
     width: 28px;
     height: 28px;
   }
