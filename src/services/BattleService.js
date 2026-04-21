@@ -179,6 +179,44 @@ class BattleService extends BaseApiService {
     return response
   }
 
+  /**
+   * 배틀 수정 (부분 수정, null 필드는 변경되지 않음)
+   * PATCH /api/battles/{battleId}
+   *
+   * 항상 수정 가능: title, description
+   * 참여자 0명일 때만 수정 가능: subCategoryId, itemAddPermissionType,
+   *   startDate, endDate, participationStartDate, voteType
+   */
+  async updateBattle(battleId, request) {
+    if (!battleId) {
+      throw new Error('배틀 ID가 필요합니다.')
+    }
+    if (!request || typeof request !== 'object') {
+      throw new Error('수정할 데이터가 필요합니다.')
+    }
+
+    const payload = {}
+    const allowed = [
+      'title', 'description', 'subCategoryId', 'itemAddPermissionType',
+      'startDate', 'endDate', 'participationStartDate', 'voteType'
+    ]
+    allowed.forEach(key => {
+      const v = request[key]
+      if (v !== undefined && v !== null && v !== '') payload[key] = v
+    })
+
+    if (Object.keys(payload).length === 0) {
+      throw new Error('변경된 항목이 없습니다.')
+    }
+
+    if (payload.title) payload.title = payload.title.trim()
+    if (payload.description) payload.description = payload.description.trim()
+    if (payload.subCategoryId) payload.subCategoryId = parseInt(payload.subCategoryId)
+
+    console.log(`✏️ [BATTLE_SERVICE] 배틀 수정: battleId=${battleId}`, payload)
+    return await this.patch(`/battles/${battleId}`, payload)
+  }
+
   // ==================== 배틀 아이템 메서드 ====================
 
   /**
@@ -919,8 +957,9 @@ export function useBattle() {
     createBattleWithFiles: (data, thumbnail) => service.createBattleWithFiles(data, thumbnail),
     createBattle: (data) => service.createBattle(data),
 
-    // 배틀 조회
+    // 배틀 조회 / 수정
     getBattle: (id) => service.getBattle(id),
+    updateBattle: (id, request) => service.updateBattle(id, request),
     getBattles: (condition, pageable) => service.getBattles(condition, pageable),
     getHotBattleList: () => service.getHotBattleList(),
     getBattlesByCategory: (subCategoryId, pageable) => service.getBattlesByCategory(subCategoryId, pageable),

@@ -213,7 +213,6 @@
                       <div class="manage-title">배틀 상세 수정</div>
                       <div class="manage-desc">제목, 설명, 기간을 변경해요</div>
                     </div>
-                    <span class="pill-soon">준비 중</span>
                     <svg class="manage-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="9 18 15 12 9 6"/>
                     </svg>
@@ -268,6 +267,15 @@
         </div>
       </section>
     </Transition>
+
+    <!-- Edit Modal -->
+    <BattleEditModal
+      :visible="showEditModal"
+      :battle="battle"
+      :battle-id="resolvedBattleId"
+      @close="showEditModal = false"
+      @updated="onBattleUpdated"
+    />
   </div>
 </template>
 
@@ -275,6 +283,7 @@
 import { computed, ref, watch } from 'vue'
 import { battleService } from '@/services/BattleService.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import BattleEditModal from '@/components/battle/detail/BattleEditModal.vue'
 
 const props = defineProps({
   battle: { type: Object, required: true },
@@ -288,6 +297,7 @@ const { open } = useConfirmDialog()
 const isOpen = ref(false)
 const processingIds = ref(new Set())
 const activeTab = ref('approval')
+const showEditModal = ref(false)
 
 const resolvedBattleId = computed(() => props.battleId ?? props.battle?.id ?? props.battle?.battleId)
 
@@ -417,11 +427,17 @@ async function onReject(item) {
   }
 }
 
-async function onEditBattle() {
-  await open({ type: 'alert', title: '준비 중', message: '배틀 상세 수정 기능은 곧 제공돼요.' })
+function onEditBattle() {
+  isOpen.value = false
+  showEditModal.value = true
 }
 async function onEditItems() {
   await open({ type: 'alert', title: '준비 중', message: '아이템 수정 기능은 곧 제공돼요.' })
+}
+
+async function onBattleUpdated() {
+  await open({ type: 'alert', title: '저장 완료', message: '배틀 정보가 수정되었어요.' })
+  emit('refresh')
 }
 </script>
 
