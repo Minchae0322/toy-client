@@ -1,44 +1,45 @@
 <template>
-  <section class="profile-section">
-    <!-- 로딩 중 스켈레톤 -->
-    <div v-if="!isProfileLoaded" class="profile-container">
+  <section class="profile">
+    <!-- 로딩 스켈레톤 -->
+    <div v-if="!isProfileLoaded" class="profile-wrap">
       <!-- 모바일 스켈레톤 -->
-      <div class="mobile-layout">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-text skeleton-name"></div>
-        <div class="skeleton-text skeleton-btn"></div>
-        <div class="skeleton-stats">
-          <div class="skeleton-text skeleton-stat"></div>
-          <div class="skeleton-text skeleton-stat"></div>
+      <div class="mobile">
+        <div class="sk sk-avatar"></div>
+        <div class="sk sk-name"></div>
+        <div class="sk-stats">
+          <div class="sk sk-stat"></div>
+          <div class="sk sk-stat"></div>
+          <div class="sk sk-stat"></div>
         </div>
-        <div class="skeleton-text skeleton-bio"></div>
+        <div class="sk sk-bio"></div>
       </div>
       <!-- PC 스켈레톤 -->
-      <div class="desktop-layout">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-info">
-          <div class="skeleton-text skeleton-name"></div>
-          <div class="skeleton-stats">
-            <div class="skeleton-text skeleton-stat"></div>
-            <div class="skeleton-text skeleton-stat"></div>
+      <div class="desktop">
+        <div class="sk sk-avatar"></div>
+        <div class="sk-info">
+          <div class="sk sk-name"></div>
+          <div class="sk-stats">
+            <div class="sk sk-stat"></div>
+            <div class="sk sk-stat"></div>
+            <div class="sk sk-stat"></div>
           </div>
-          <div class="skeleton-text skeleton-bio"></div>
+          <div class="sk sk-bio"></div>
         </div>
       </div>
     </div>
 
-    <!-- 로드 완료 후 실제 컨텐츠 -->
-    <div v-else class="profile-container">
-      <!-- 모바일 레이아웃: 세로 중앙 정렬 -->
-      <div class="mobile-layout">
-        <div class="avatar-wrapper">
+    <!-- 컨텐츠 -->
+    <div v-else class="profile-wrap">
+      <!-- 모바일: 세로 중앙 정렬 -->
+      <div class="mobile">
+        <div class="avatar-wrap">
           <img
               v-if="profileData.profilePicture?.fileUrl"
               :src="profileData.profilePicture.fileUrl"
               :alt="profileData.nickname"
               class="avatar"
           />
-          <div v-else class="avatar avatar-placeholder">
+          <div v-else class="avatar avatar-empty">
             <svg fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
             </svg>
@@ -47,25 +48,58 @@
 
         <h1 class="username">{{ profileData.nickname || '사용자' }}</h1>
 
-        <button
-            v-if="!isOwnProfile"
-            class="follow-btn"
-            :class="{ active: profileData.isFollowing }"
-            @click="handleFollow"
-            :disabled="isFollowLoading"
-        >
-          {{ profileData.isFollowing ? '팔로잉' : '팔로우' }}
-        </button>
+        <div v-if="userLevel != null" class="identity-row">
+          <div class="tier-chip" :style="{ color: tierMeta?.color }">
+            <YogurtTierArt :tier="tierArt" :color="tierColor" :size="14" />
+            <span class="tier-name">{{ tierName }}</span>
+            <span class="tier-sep">·</span>
+            <span class="tier-level">Lv.{{ userLevel }}</span>
+          </div>
+          <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="sm" />
+        </div>
 
-        <div class="stats-bar">
-          <button class="stat" @click="goToFollowList('followers')">
-            <span class="stat-value">{{ formatNumber(profileData.followerCount) }}</span>
-            <span class="stat-label">팔로워</span>
+        <div class="action-row">
+          <template v-if="isOwnProfile">
+            <button class="btn btn-soft" @click="handleEditProfile">프로필 편집</button>
+          </template>
+          <template v-else>
+            <button
+                class="btn"
+                :class="profileData.isFollowing ? 'btn-soft' : 'btn-dark'"
+                @click="handleFollow"
+                :disabled="isFollowLoading"
+            >
+              {{ profileData.isFollowing ? '팔로잉' : '팔로우' }}
+            </button>
+            <button class="btn btn-soft btn-icon" @click="handleSendMessage" aria-label="메시지">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </button>
+          </template>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat">
+            <strong>{{ formatNumber(postCount) }}</strong>
+            <span>게시물</span>
+          </div>
+          <button class="stat stat-btn" @click="goToFollowList('followers')">
+            <strong>{{ formatNumber(profileData.followerCount) }}</strong>
+            <span>팔로워</span>
           </button>
-          <button class="stat" @click="goToFollowList('followings')">
-            <span class="stat-value">{{ formatNumber(profileData.followingCount) }}</span>
-            <span class="stat-label">팔로잉</span>
+          <button class="stat stat-btn" @click="goToFollowList('followings')">
+            <strong>{{ formatNumber(profileData.followingCount) }}</strong>
+            <span>팔로잉</span>
           </button>
+        </div>
+
+        <div v-if="isOwnProfile && expToNext != null" class="exp-row">
+          <div class="exp-head">
+            <span class="exp-label">다음 레벨까지</span>
+            <strong class="exp-value">{{ expToNext }}<em>EXP</em></strong>
+          </div>
+          <div class="exp-bar"><div class="exp-fill" :style="{ width: expPercent + '%' }"></div></div>
         </div>
 
         <p v-if="profileData.description" class="bio">{{ profileData.description }}</p>
@@ -78,48 +112,81 @@
         </div>
       </div>
 
-      <!-- PC/태블릿 레이아웃: 가로 왼쪽 정렬 -->
-      <div class="desktop-layout">
-        <div class="avatar-wrapper">
+      <!-- PC/태블릿: 아바타 | 인포 (카드·그림자·컬러 바 없음) -->
+      <div class="desktop">
+        <div class="avatar-wrap">
           <img
               v-if="profileData.profilePicture?.fileUrl"
               :src="profileData.profilePicture.fileUrl"
               :alt="profileData.nickname"
               class="avatar"
           />
-          <div v-else class="avatar avatar-placeholder">
+          <div v-else class="avatar avatar-empty">
             <svg fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
             </svg>
           </div>
         </div>
 
-        <div class="profile-info">
-          <div class="profile-header">
+        <div class="info">
+          <div class="row-top">
             <h1 class="username">{{ profileData.nickname || '사용자' }}</h1>
-            <button
-                v-if="!isOwnProfile"
-                class="follow-btn"
-                :class="{ active: profileData.isFollowing }"
-                @click="handleFollow"
-                :disabled="isFollowLoading"
-            >
-              {{ profileData.isFollowing ? '팔로잉' : '팔로우' }}
+            <div class="action-row">
+              <template v-if="isOwnProfile">
+                <button class="btn btn-soft" @click="handleEditProfile">프로필 편집</button>
+              </template>
+              <template v-else>
+                <button
+                    class="btn"
+                    :class="profileData.isFollowing ? 'btn-soft' : 'btn-dark'"
+                    @click="handleFollow"
+                    :disabled="isFollowLoading"
+                >
+                  {{ profileData.isFollowing ? '팔로잉' : '팔로우' }}
+                </button>
+                <button class="btn btn-soft btn-icon" @click="handleSendMessage" aria-label="메시지">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat">
+              <strong>{{ formatNumber(postCount) }}</strong>
+              <span>게시물</span>
+            </div>
+            <button class="stat stat-btn" @click="goToFollowList('followers')">
+              <strong>{{ formatNumber(profileData.followerCount) }}</strong>
+              <span>팔로워</span>
+            </button>
+            <button class="stat stat-btn" @click="goToFollowList('followings')">
+              <strong>{{ formatNumber(profileData.followingCount) }}</strong>
+              <span>팔로잉</span>
             </button>
           </div>
 
-          <div class="stats-bar">
-            <button class="stat" @click="goToFollowList('followers')">
-              <span class="stat-value">{{ formatNumber(profileData.followerCount) }}</span>
-              <span class="stat-label">팔로워</span>
-            </button>
-            <button class="stat" @click="goToFollowList('followings')">
-              <span class="stat-value">{{ formatNumber(profileData.followingCount) }}</span>
-              <span class="stat-label">팔로잉</span>
-            </button>
+          <div v-if="userLevel != null" class="identity-row">
+            <div class="tier-chip" :style="{ color: tierMeta?.color }">
+              <YogurtTierArt :tier="tierArt" :color="tierColor" :size="14" />
+              <span class="tier-name">{{ tierName }}</span>
+              <span class="tier-sep">·</span>
+              <span class="tier-level">Lv.{{ userLevel }}</span>
+            </div>
+            <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="sm" />
           </div>
 
           <p v-if="profileData.description" class="bio">{{ profileData.description }}</p>
+
+          <div v-if="isOwnProfile && expToNext != null" class="exp-row">
+            <div class="exp-head">
+              <span class="exp-label">다음 레벨까지</span>
+              <strong class="exp-value">{{ expToNext }}<em>EXP</em></strong>
+            </div>
+            <div class="exp-bar"><div class="exp-fill" :style="{ width: expPercent + '%' }"></div></div>
+          </div>
 
           <div class="meta-info">
             <svg class="meta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,17 +197,20 @@
         </div>
       </div>
     </div>
-
-    <div class="divider" />
   </section>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { userService, userUtils } from '@/services/UserService'
+import { chatService } from '@/services/ChatService.js'
+import { rewardsService } from '@/services/RewardsService.js'
 import { useAuth } from '@/composables/useAuth'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
+import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
+import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -153,18 +223,71 @@ const profileData = ref({
   description: '',
   followerCount: 0,
   followingCount: 0,
+  feedCount: 0,
   isFollowing: false,
   profilePicture: null,
   createdAt: null,
   updatedAt: null
 })
 
+const postCount = computed(() => {
+  const p = profileData.value
+  return p?.feedCount ?? p?.postCount ?? p?.contentCount ?? 0
+})
+
 const isFollowLoading = ref(false)
 const isProfileLoaded = ref(false)
+
+// ── 보상 데이터 (자기 프로필일 때 보강) ──
+const myRewards = ref(null)
+const myBadges = ref([])
 
 const isOwnProfile = computed(() => {
   if (!profileData.value.userId) return true
   return isLoggedIn.value && String(userId.value) === String(profileData.value.userId)
+})
+
+// ── Tier / 레벨 / 뱃지 ──
+const userLevel = computed(() => {
+  if (profileData.value?.level != null) return profileData.value.level
+  if (isOwnProfile.value && myRewards.value?.level != null) return myRewards.value.level
+  return null
+})
+
+const tierMeta = computed(() => {
+  if (userLevel.value == null) return null
+  return getTierByLevel(userLevel.value)
+})
+
+const tierColor = computed(() => {
+  if (userLevel.value == null) return 'white'
+  return getTierColor(userLevel.value)
+})
+
+const tierArt = computed(() => tierMeta.value?.art ?? 'plain')
+const tierName = computed(() => tierMeta.value?.name ?? '')
+
+const primaryBadgeId = computed(() => {
+  const u = profileData.value
+  const pick = u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
+  if (pick) return pick
+  if (isOwnProfile.value) {
+    const pinned = myBadges.value.find(b => b.pinned)
+    return pinned?.badgeId || pinned?.id || myBadges.value[0]?.badgeId || myBadges.value[0]?.id || null
+  }
+  return null
+})
+
+const expToNext = computed(() => {
+  const r = myRewards.value
+  if (!r || r.nextLevelExp == null || r.currentExp == null) return null
+  return Math.max(0, r.nextLevelExp - r.currentExp)
+})
+
+const expPercent = computed(() => {
+  const r = myRewards.value
+  if (!r || !r.nextLevelExp) return 0
+  return Math.min(100, Math.round((r.currentExp / r.nextLevelExp) * 100))
 })
 
 const loadProfile = async () => {
@@ -182,6 +305,20 @@ const loadProfile = async () => {
     console.error('프로필 로드 실패:', error)
   } finally {
     isProfileLoaded.value = true
+    if (isOwnProfile.value) loadOwnRewards()
+  }
+}
+
+const loadOwnRewards = async () => {
+  try {
+    const [rewardsRes, badgesRes] = await Promise.all([
+      rewardsService.getMyRewards(),
+      rewardsService.getMyBadges(),
+    ])
+    myRewards.value = rewardsRes?.data ?? null
+    myBadges.value = Array.isArray(badgesRes?.data) ? badgesRes.data : []
+  } catch (e) {
+    console.warn('내 보상 데이터 로딩 실패:', e)
   }
 }
 
@@ -219,6 +356,40 @@ const handleFollow = async () => {
   }
 }
 
+const handleSendMessage = async () => {
+  if (!profileData.value?.userId) return
+  if (!isLoggedIn.value) {
+    const confirmed = await openLoginRequired('메시지를 보내려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?')
+    if (confirmed) {
+      await router.push({ name: 'Login', query: { redirect: route.fullPath } })
+    }
+    return
+  }
+  if (String(userId.value) === String(profileData.value.userId)) {
+    await open({ type: 'alert', title: '알림', message: '본인에게는 메시지를 보낼 수 없습니다.' })
+    return
+  }
+  try {
+    const response = await chatService.startChat({
+      chatContext: 'DIRECT',
+      creatorId: profileData.value.userId,
+      participantIds: [Number(userId.value), Number(profileData.value.userId)],
+    })
+    if (response.success && response.data?.roomId) {
+      router.push({ name: 'ChatWithRoom', params: { roomId: response.data.roomId } })
+    } else {
+      throw new Error(response.message || '채팅방 생성 실패')
+    }
+  } catch (err) {
+    console.error('메시지 시작 실패:', err)
+    await open({ type: 'alert', title: '오류', message: err.message || '메시지를 시작할 수 없습니다.' })
+  }
+}
+
+const handleEditProfile = () => {
+  router.push({ name: 'MyPage' })
+}
+
 const formatNumber = (num) => userUtils.formatFollowCount(num)
 
 const formatJoinDate = (dateString) => {
@@ -233,415 +404,417 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.profile-section {
+/* 토큰: Ink 900 #0A0E1A / Text 600 #475569 / Text 500 #64748B / Text 400 #94A3B8 / Border #F1F3F6
+   대원칙 — 흰 캔버스. 카드/그림자/컬러 바/회색 구분 박스 없이 타이포·여백으로 위계. */
+
+.profile {
   background: #ffffff;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
 
-.profile-container {
-  padding: 24px 20px;
+.profile-wrap {
+  padding: 24px 0 20px;
 }
 
 @media (min-width: 768px) {
-  .profile-container {
-    padding: 32px;
+  .profile-wrap {
+    padding: 40px 0 28px;
   }
 }
 
-/* 모바일 레이아웃: 세로 중앙 정렬 */
-.mobile-layout {
+/* ============ 모바일: 세로 중앙 ============ */
+.mobile {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  gap: 14px;
 }
 
 @media (min-width: 768px) {
-  .mobile-layout {
-    display: none;
-  }
+  .mobile { display: none; }
 }
 
-/* PC/태블릿 레이아웃: 가로 배치 */
-.desktop-layout {
-  display: none;
-}
+/* ============ 데스크톱: 아바타 | 인포 ============ */
+.desktop { display: none; }
 
 @media (min-width: 768px) {
-  .desktop-layout {
+  .desktop {
     display: flex;
     align-items: flex-start;
-    gap: 24px;
+    gap: 56px;
   }
 }
 
 @media (min-width: 1024px) {
-  .desktop-layout {
-    gap: 32px;
-  }
+  .desktop { gap: 80px; }
 }
 
-/* 아바타 */
-.avatar-wrapper {
-  flex-shrink: 0;
-  margin-bottom: 16px;
+.info {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
 }
 
-@media (min-width: 768px) {
-  .avatar-wrapper {
-    margin-bottom: 0;
-  }
+.row-top {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
 }
+
+/* ============ 아바타 (링/그림자 없음) ============ */
+.avatar-wrap { flex-shrink: 0; }
 
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   object-fit: cover;
-  background: #f3f4f6;
-  border: 3px solid #e5e7eb;
+  background: #F7F8FA;
+  box-shadow: inset 0 0 0 1px #F1F3F6;
+  display: block;
 }
 
 @media (min-width: 768px) {
-  .avatar {
-    width: 96px;
-    height: 96px;
-  }
+  .avatar { width: 150px; height: 150px; }
 }
 
-@media (min-width: 1024px) {
-  .avatar {
-    width: 112px;
-    height: 112px;
-  }
-}
-
-.avatar-placeholder {
+.avatar-empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f9fafb;
 }
 
-.avatar-placeholder svg {
+.avatar-empty svg {
   width: 36px;
   height: 36px;
-  color: #d1d5db;
+  color: #CBD5E1;
 }
 
 @media (min-width: 768px) {
-  .avatar-placeholder svg {
-    width: 44px;
-    height: 44px;
-  }
+  .avatar-empty svg { width: 56px; height: 56px; }
 }
 
-@media (min-width: 1024px) {
-  .avatar-placeholder svg {
-    width: 52px;
-    height: 52px;
-  }
-}
-
-/* 프로필 정보 (PC) */
-.profile-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.profile-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-@media (min-width: 1024px) {
-  .profile-header {
-    gap: 20px;
-    margin-bottom: 16px;
-  }
-}
-
-/* 닉네임 */
+/* ============ 닉네임 ============ */
 .username {
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 700;
-  color: #111827;
-  margin: 0 0 6px 0;
-  letter-spacing: -0.02em;
+  color: #0A0E1A;
+  margin: 0;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
 }
 
 @media (min-width: 768px) {
   .username {
-    font-size: 18px;
-    margin: 0;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.6px;
   }
 }
 
-@media (min-width: 1024px) {
-  .username {
-    font-size: 20px;
-  }
-}
-
-/* 팔로우 버튼 */
-.follow-btn {
-  padding: 7px 20px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  background: #111827;
-  color: #ffffff;
-  white-space: nowrap;
-  margin-bottom: 16px;
-  letter-spacing: -0.01em;
-}
-
-@media (min-width: 768px) {
-  .follow-btn {
-    padding: 6px 18px;
-    margin-bottom: 0;
-  }
-}
-
-.follow-btn:hover:not(:disabled) {
-  background: #1f2937;
-}
-
-.follow-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.follow-btn.active {
-  background: transparent;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-}
-
-.follow-btn.active:hover:not(:disabled) {
-  background: #f9fafb;
-  color: #374151;
-}
-
-/* 통계 */
-.stats-bar {
+/* ============ 스탯 행 — 인라인 텍스트, 배경 없음 ============ */
+.stats-row {
   display: flex;
   align-items: center;
-  gap: 32px;
-  margin-bottom: 16px;
 }
 
-@media (min-width: 768px) {
-  .stats-bar {
-    gap: 24px;
-    margin-bottom: 12px;
-  }
+.mobile .stats-row {
+  gap: 28px;
+  padding: 2px 0;
+}
+
+.desktop .stats-row {
+  gap: 36px;
+  margin-bottom: 18px;
 }
 
 .stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
   background: transparent;
   border: none;
+  padding: 0;
+  font-family: inherit;
+  color: #0A0E1A;
+  font-size: 15px;
+  letter-spacing: -0.2px;
+}
+
+.mobile .stat {
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+}
+
+.stat.stat-btn {
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background 0.15s;
+  transition: opacity 0.15s ease;
 }
+.stat.stat-btn:hover { opacity: 0.65; }
+.stat.stat-btn:active { opacity: 0.5; }
 
-@media (min-width: 768px) {
-  .stat {
-    flex-direction: row;
-    gap: 5px;
-  }
-}
-
-.stat:hover {
-  background: #f3f4f6;
-}
-
-.stat:hover .stat-value,
-.stat:hover .stat-label {
-  color: #111827;
-}
-
-.stat-value {
-  font-size: 16px;
+.stat strong {
   font-weight: 700;
-  color: #111827;
-  transition: color 0.15s;
-  letter-spacing: -0.01em;
+  color: #0A0E1A;
+  font-variant-numeric: tabular-nums;
 }
 
-@media (min-width: 768px) {
-  .stat-value {
-    font-size: 15px;
-    font-weight: 600;
-  }
+.stat span {
+  font-weight: 500;
+  color: #475569;
 }
 
-.stat-label {
-  font-size: 12px;
-  color: #9ca3af;
-  transition: color 0.15s;
-}
+.mobile .stat strong { font-size: 16px; }
+.mobile .stat span { font-size: 12px; color: #64748B; }
 
-@media (min-width: 768px) {
-  .stat-label {
-    font-size: 13px;
-  }
-}
-
-/* 자기소개 */
-.bio {
-  font-size: 13px;
-  color: #4b5563;
-  line-height: 1.6;
-  margin: 0 0 10px 0;
-  word-break: break-word;
-  padding: 0 8px;
-}
-
-@media (min-width: 768px) {
-  .bio {
-    font-size: 14px;
-    padding: 0;
-    margin: 0 0 8px 0;
-    max-width: 360px;
-  }
-}
-
-/* 메타 정보 */
-.meta-info {
+/* ============ Tier 정체성 ============ */
+.identity-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  color: #9ca3af;
+  flex-wrap: wrap;
 }
 
-@media (min-width: 768px) {
-  .meta-info {
-    font-size: 13px;
-  }
-}
-
-.meta-icon {
-  width: 14px;
-  height: 14px;
-}
-
-@media (min-width: 768px) {
-  .meta-icon {
-    width: 14px;
-    height: 14px;
-  }
-}
-
-/* 구분선 */
-.divider {
-  border-top: 1px solid #e5e7eb;
-}
-
-/* 스켈레톤 로딩 */
-.skeleton-avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: #f3f4f6;
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
-  margin-bottom: 16px;
-}
-
-@media (min-width: 768px) {
-  .skeleton-avatar {
-    width: 96px;
-    height: 96px;
-    margin-bottom: 0;
-    flex-shrink: 0;
-  }
-}
-
-@media (min-width: 1024px) {
-  .skeleton-avatar {
-    width: 112px;
-    height: 112px;
-  }
-}
-
-.skeleton-info {
-  flex: 1;
-}
-
-.skeleton-text {
-  background: #f3f4f6;
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
-  border-radius: 4px;
-}
-
-.skeleton-name {
-  width: 120px;
-  height: 24px;
-  margin-bottom: 12px;
-}
-
-.mobile-layout .skeleton-name {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.skeleton-btn {
-  width: 80px;
-  height: 36px;
-  border-radius: 9999px;
-  margin-bottom: 16px;
-}
-
-.skeleton-stats {
-  display: flex;
-  gap: 32px;
-  margin-bottom: 16px;
-}
-
-.mobile-layout .skeleton-stats {
+.mobile .identity-row {
   justify-content: center;
 }
 
+.desktop .identity-row {
+  margin-bottom: 12px;
+}
+
+.tier-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 6px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px #F1F3F6;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  line-height: 1;
+}
+
+.tier-chip .tier-name { color: inherit; }
+.tier-chip .tier-sep { color: #CBD5E1; font-weight: 500; }
+.tier-chip .tier-level {
+  color: #0A0E1A;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============ 액션 버튼 ============ */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 16px;
+  background: transparent;
+  color: #0A0E1A;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:active:not(:disabled) { opacity: 0.8; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-dark {
+  background: #0A0E1A;
+  color: #ffffff;
+}
+.btn-dark:hover:not(:disabled) { background: #1E293B; }
+
+.btn-soft {
+  background: #F2F4F6;
+  color: #0A0E1A;
+}
+.btn-soft:hover:not(:disabled) { background: #E5E8EB; }
+
+.btn-icon {
+  width: 32px;
+  padding: 0;
+  color: #475569;
+}
+
+/* ============ EXP — 얇은 인라인 프로그레스 ============ */
+.exp-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.desktop .exp-row {
+  margin-bottom: 12px;
+  max-width: 360px;
+}
+
+.exp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.mobile .exp-head {
+  justify-content: center;
+  gap: 6px;
+}
+
+.exp-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #94A3B8;
+  letter-spacing: -0.1px;
+}
+
+.exp-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0A0E1A;
+  letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.exp-value em {
+  font-style: normal;
+  font-weight: 700;
+  color: #94A3B8;
+  font-size: 10.5px;
+  margin-left: 3px;
+}
+
+.exp-bar {
+  width: 100%;
+  height: 3px;
+  background: #F2F4F6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.exp-fill {
+  height: 100%;
+  background: #0A0E1A;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* ============ 자기소개 ============ */
+.bio {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0A0E1A;
+  line-height: 1.55;
+  letter-spacing: -0.2px;
+  margin: 0;
+  word-break: break-word;
+}
+
+.mobile .bio { max-width: 360px; }
+
+.desktop .bio {
+  margin-bottom: 8px;
+  max-width: 560px;
+}
+
+/* ============ 메타 ============ */
+.meta-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94A3B8;
+  letter-spacing: -0.1px;
+}
+
+.meta-icon { width: 13px; height: 13px; }
+
+/* ============ 스켈레톤 ============ */
+.sk {
+  background: #F2F4F6;
+  animation: sk-pulse 1.6s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.sk-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+}
+
 @media (min-width: 768px) {
-  .skeleton-stats {
-    gap: 24px;
-    margin-bottom: 12px;
-  }
+  .sk-avatar { width: 150px; height: 150px; flex-shrink: 0; }
 }
 
-.skeleton-stat {
-  width: 60px;
-  height: 18px;
+.mobile .sk-avatar { margin-bottom: 14px; }
+
+.sk-name {
+  width: 140px;
+  height: 24px;
 }
 
-.skeleton-bio {
-  width: 200px;
+.mobile .sk-name { margin: 0 auto 16px; }
+
+@media (min-width: 768px) {
+  .sk-name { width: 200px; height: 30px; margin-bottom: 20px; }
+}
+
+.sk-stats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.mobile .sk-stats { justify-content: center; }
+
+@media (min-width: 768px) {
+  .sk-stats { margin-bottom: 20px; }
+}
+
+.sk-stat {
+  width: 64px;
+  height: 28px;
+}
+
+@media (min-width: 768px) {
+  .sk-stat { width: 80px; height: 22px; }
+}
+
+.sk-bio {
+  width: 240px;
   height: 16px;
 }
 
-.mobile-layout .skeleton-bio {
-  margin-left: auto;
-  margin-right: auto;
-}
+.mobile .sk-bio { margin: 0 auto; }
 
 @media (min-width: 768px) {
-  .skeleton-bio {
-    width: 280px;
-  }
+  .sk-bio { width: 320px; }
 }
 
-@keyframes skeleton-pulse {
+.sk-info { flex: 1; min-width: 0; padding-top: 4px; }
+
+@keyframes sk-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }

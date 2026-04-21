@@ -3,32 +3,37 @@
     <AppSidebar />
 
     <main class="main-content">
-      <!-- 프로필 헤더 컴포넌트 (자체 로드) -->
-      <UserProfileHeader />
+      <div class="profile-shell">
+        <!-- 프로필 헤더 컴포넌트 (자체 로드) -->
+        <UserProfileHeader />
 
-      <!-- 탭 네비게이션 컴포넌트 -->
-      <UserTabNavigation
-          v-model="activeMenu"
-          :menu-items="menuItems"
-          class="tab-nav"
-      />
+        <!-- 탭 네비게이션 컴포넌트 (sticky underline) -->
+        <UserTabNavigation
+            v-model="activeMenu"
+            :menu-items="menuItems"
+            class="tab-nav"
+        />
 
-      <!-- 피드 리스트 -->
-      <FeedList
-          ref="feedListRef"
-          :feeds="feeds"
-          :loading="loading"
-          :has-next="hasNext"
-          :view-mode="viewMode"
-          :liked-posts="likedPosts"
-          :hot-posts="hotPosts"
-          :saved-posts="savedPosts"
-          @update="handleReactionUpdate"
-          @save="handleSave"
-          @comment="handleComment"
-          @post-click="openPost"
-          @view-mode-change="viewMode = $event"
-      />
+        <!-- 피드 리스트 -->
+        <section class="feed-shell">
+          <FeedList
+              ref="feedListRef"
+              :feeds="feeds"
+              :loading="loading"
+              :has-next="hasNext"
+              :view-mode="viewMode"
+              :liked-posts="likedPosts"
+              :hot-posts="hotPosts"
+              :saved-posts="savedPosts"
+              hide-title
+              @update="handleReactionUpdate"
+              @save="handleSave"
+              @comment="handleComment"
+              @post-click="openPost"
+              @view-mode-change="viewMode = $event"
+          />
+        </section>
+      </div>
     </main>
 
     <!-- Bottom Navigation - Mobile Only -->
@@ -92,11 +97,17 @@ watch(viewMode, (newMode) => {
 });
 
 // Methods
+const feedIdSet = new Set();
+
 const loadUserFeeds = async () => {
+  // 방어 — userId 없으면 즉시 중단 (전체 피드 폭주 방지)
+  if (!userId.value) { hasNext.value = false; return; }
   if (loading.value || !hasNext.value) return;
 
   try {
     loading.value = true;
+
+    const prevCursor = cursor.value;
 
     const searchCondition = {
       creatorId: userId.value,
@@ -107,22 +118,41 @@ const loadUserFeeds = async () => {
 
     const response = await feedService.getFeedsWithCursor(searchCondition);
 
-    if (response.success && response.data) {
-      feeds.value = [...feeds.value, ...response.data.feeds];
-      cursor.value = response.data.nextCursor;
-      hasNext.value = response.data.hasNext;
-
-      response.data.feeds.forEach(feed => {
-        if (feed.userReactions?.hasLike) likedPosts.value.add(feed.feedId);
-        if (feed.userReactions?.hasHot) hotPosts.value.add(feed.feedId);
-      });
-    } else {
-      // API 실패 시 더 이상 호출하지 않도록 설정
+    // 응답 스키마 방어
+    if (!response?.success || !response.data || !Array.isArray(response.data.feeds)) {
       hasNext.value = false;
+      return;
     }
+
+    // 동일 cursor 반복 반환 방어 (무한 루프)
+    if (response.data.nextCursor != null && response.data.nextCursor === prevCursor) {
+      hasNext.value = false;
+      return;
+    }
+
+    // feedId 중복 제거
+    const newFeeds = response.data.feeds.filter(f => {
+      if (!f || f.feedId == null || feedIdSet.has(f.feedId)) return false;
+      feedIdSet.add(f.feedId);
+      return true;
+    });
+
+    // 서버는 다음 있다는데 신규 0개 → 루프 의심, 중단
+    if (newFeeds.length === 0 && response.data.hasNext) {
+      hasNext.value = false;
+      return;
+    }
+
+    feeds.value = [...feeds.value, ...newFeeds];
+    cursor.value = response.data.nextCursor;
+    hasNext.value = !!response.data.hasNext;
+
+    newFeeds.forEach(feed => {
+      if (feed.userReactions?.hasLike) likedPosts.value.add(feed.feedId);
+      if (feed.userReactions?.hasHot) hotPosts.value.add(feed.feedId);
+    });
   } catch (error) {
     console.error('❌ 사용자 피드 로드 실패:', error);
-    // 에러 발생 시 무한 스크롤 중단
     hasNext.value = false;
   } finally {
     loading.value = false;
@@ -169,10 +199,20 @@ const openPost = (feedId) => {
 
 // Lifecycle
 let observer = null;
+let unmounted = false;
+let observedEl = null;
+
+const attachObserver = (el) => {
+  if (!observer || !el || unmounted) return;
+  if (observedEl === el) return;
+  if (observedEl) observer.unobserve(observedEl);
+  observer.observe(el);
+  observedEl = el;
+};
 
 onMounted(async () => {
-  console.log('✅ UserFeedListView 마운트');
   await loadUserFeeds();
+  if (unmounted) return;
 
   observer = new IntersectionObserver(
       (entries) => {
@@ -183,15 +223,22 @@ onMounted(async () => {
       { threshold: 0.5, rootMargin: '100px' }
   );
 
-  setTimeout(() => {
-    if (feedListRef.value?.observerTarget) {
-      observer.observe(feedListRef.value.observerTarget);
-    }
-  }, 100);
+  // viewMode 전환으로 observerTarget DOM이 바뀌면 재관찰
+  watch(
+      () => feedListRef.value?.observerTarget,
+      (el) => attachObserver(el),
+      { flush: 'post' }
+  );
+
+  // 초기 부착 (마운트 직후 ref가 바인딩되어 있지 않을 수 있어 nextTick 대신 microtask)
+  Promise.resolve().then(() => attachObserver(feedListRef.value?.observerTarget));
 });
 
 onUnmounted(() => {
+  unmounted = true;
   if (observer) observer.disconnect();
+  observedEl = null;
+  feedIdSet.clear();
 });
 </script>
 
@@ -199,8 +246,8 @@ onUnmounted(() => {
 .app-container {
   background: #ffffff;
   min-height: 100vh;
-  color: #111827;
-  font-family: 'SUIT', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0A0E1A;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
   max-width: 100%;
   overflow-x: clip;
@@ -228,31 +275,84 @@ onUnmounted(() => {
   }
 }
 
+/* ============ 메인 컬럼 ============ */
 .main-content {
   flex: 1;
   min-width: 0;
   min-height: 100vh;
-  padding-top: 0.5rem;
   padding-bottom: 5rem;
   padding-left: 1.5rem;
-  max-width: 680px;
 }
 
 @media (max-width: 767px) {
   .main-content {
     padding-left: 0;
-    max-width: 100%;
   }
 }
 
 @media (min-width: 768px) {
   .main-content {
-    padding-top: 1rem;
     padding-bottom: 2.5rem;
   }
 }
 
-.tab-nav {
-  margin-bottom: 0;
+/* ============ 프로필 쉘: FeedHomeView와 동일하게 가로 제약 없음 ============ */
+.profile-shell {
+  width: 100%;
+  padding-top: 4px;
+}
+
+@media (min-width: 768px) {
+  .profile-shell {
+    padding-top: 16px;
+  }
+}
+
+/* ============ 탭 네비게이션 ============
+   프로필 하단 divider가 바로 위에 있으므로 탭은 자체 top border 없이
+   sticky 시 bottom border(`#F1F3F6`)만 유지 */
+.tab-nav { }
+
+/* ============ 피드 영역 ============
+   인스타 프로필처럼 탭과 피드 사이는 최소 여백 */
+.feed-shell {
+  padding-top: 12px;
+}
+
+@media (min-width: 768px) {
+  .feed-shell {
+    padding-top: 20px;
+  }
+}
+
+/* 프로필 피드 그리드 — 데스크톱 2열, 모바일 1열 */
+.feed-shell :deep(.modern-grid) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (min-width: 1280px) {
+  .feed-shell :deep(.modern-grid) {
+    gap: 24px;
+  }
+}
+
+@media (max-width: 767px) {
+  .feed-shell :deep(.modern-grid) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+/* FeedList 헤더(뷰 스위처) 우측 정렬 다듬기 */
+.feed-shell :deep(.feed-header) {
+  padding: 0 0 12px;
+  border-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .feed-shell :deep(.feed-header) {
+    padding: 0 0 16px;
+  }
 }
 </style>
