@@ -578,8 +578,7 @@ defineExpose({ observerTarget });
   border-top: 1px solid #F2F4F6;
 }
 
-.list-author { display: flex; align-items: center; gap: 8px; cursor: pointer; border-radius: 6px; padding: 2px; margin: -2px; }
-.list-author:hover { background: rgba(15, 23, 42, 0.04); }
+.list-author { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .list-avatar-wrap { position: relative; flex-shrink: 0; }
 .list-author-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .list-nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }

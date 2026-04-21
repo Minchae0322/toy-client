@@ -299,8 +299,7 @@ const handleSendMessage = () => {
 
 /* 작성자 */
 .author-section { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-.author-click-zone { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; border-radius: 8px; padding: 4px; margin: -4px; transition: background 0.15s ease; }
-.author-click-zone:hover { background: rgba(15, 23, 42, 0.04); }
+.author-click-zone { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; }
 .author-avatar {
   width: 44px; height: 44px; border-radius: 50%;
   object-fit: cover; border: 1px solid #F2F4F6;

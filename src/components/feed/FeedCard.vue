@@ -282,8 +282,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   display: flex; justify-content: space-between; align-items: center;
   padding-top: 14px; border-top: 1px solid #F2F4F6; margin-top: auto;
 }
-.user-block { display: flex; align-items: center; gap: 8px; cursor: pointer; border-radius: 6px; padding: 2px; margin: -2px; }
-.user-block:hover { background: rgba(15, 23, 42, 0.04); }
+.user-block { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .avatar-wrap { position: relative; flex-shrink: 0; }
 .user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; }
 .tier-coin {
