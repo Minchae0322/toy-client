@@ -265,6 +265,33 @@ watch(() => route.query.tab, (newTab) => {
   }
 }, { immediate: true })
 
+// 같은 라우트로 다른 userId 진입 시 이전 유저의 리스트/cursor 잔존 방지
+const resetFollowState = () => {
+  followers.value = []
+  followings.value = []
+  followerCursor.value = null
+  followingCursor.value = null
+  followerHasNext.value = true
+  followingHasNext.value = true
+  followState.value = {}
+  profileNickname.value = ''
+  followerCount.value = 0
+  followingCount.value = 0
+  searchQuery.value = ''
+  loading.value = false
+}
+
+watch(userId, async (newId, oldId) => {
+  if (!newId || newId === oldId) return
+  resetFollowState()
+  await loadProfile()
+  if (activeTab.value === 'followers') {
+    await loadFollowers()
+  } else {
+    await loadFollowings()
+  }
+})
+
 // Lifecycle
 onMounted(async () => {
   await loadProfile()

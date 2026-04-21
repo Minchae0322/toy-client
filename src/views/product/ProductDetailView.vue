@@ -541,8 +541,25 @@ const goBack = () => { router.go(-1) }
 
 onMounted(() => { fetchProductData() })
 
+// 같은 라우트로 다른 productId 진입 시 이전 state 잔존 방지
+const resetProductState = () => {
+  product.value = null
+  feeds.value = []
+  battles.value = []
+  feedsCursor.value = null
+  battlesCursor.value = null
+  hasMoreFeeds.value = true
+  hasMoreBattles.value = true
+  feedsLoading.value = false
+  battlesLoading.value = false
+  userReaction.value = { hasLike: false, hasBookmark: false }
+  showHeaderMenu.value = false
+}
+
 watch(() => route.params.id, (newId, oldId) => {
-  if (newId && newId !== oldId) fetchProductData()
+  if (!newId || newId === oldId) return
+  resetProductState()
+  fetchProductData()
 })
 
 watch(isLoggedIn, (val) => {

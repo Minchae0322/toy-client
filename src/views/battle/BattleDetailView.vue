@@ -462,6 +462,13 @@ export default {
       if (this.commentsLoaded) {
         this.loadAllComments(true)
       }
+    },
+    // 같은 라우트로 다른 battleId 진입 시 이전 state 잔존 방지
+    '$route.params.id'(newId, oldId) {
+      if (!newId || newId === oldId) return
+      this.resetBattleState()
+      this.battleId = newId
+      this.loadBattle()
     }
   },
   created() {
@@ -474,6 +481,34 @@ export default {
     }
   },
   methods: {
+    resetBattleState() {
+      this.battle = null
+      this.error = null
+      this.loading = true
+      this.selectedRanks = { 1: null, 2: null, 3: null }
+      this.hasVoted = false
+      this.submitting = false
+      this.showAddModal = false
+      this.newProduct = {
+        name: '', brand: '', imageFile: null, imagePreview: null,
+        imageUploading: false, uploadFailed: false, uploadedImageUrl: null
+      }
+      this.showShareModal = false
+      this.showCommentModal = false
+      this.selectedCommentItem = null
+      this.commentSortType = 'likeCount'
+      this.failedProfileImages = {}
+      this.selectedItemFilter = null
+      this.productCardRefs = {}
+      this.allLoadedComments = []
+      this.commentsLoading = false
+      this.commentsPage = 0
+      this.commentsHasNext = false
+      this.commentsLoaded = false
+      this.showYoutubePlayer = false
+      this.currentYoutubeItem = null
+      this.currentYoutubeEmbedUrl = null
+    },
     async loadBattle() {
       this.loading = true
       this.error = null
