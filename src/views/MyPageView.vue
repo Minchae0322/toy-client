@@ -244,22 +244,38 @@ const editForm = reactive({
 })
 
 // ==================== 보상 데이터 (레벨/뱃지) ====================
+// 백엔드 응답 규약:
+//  - currentLevelExp: 현재 레벨 구간에서 쌓은 EXP
+//  - nextLevelExp: 다음 레벨까지 "남은" EXP (threshold가 아님)
+//  - maxLevel: 최고 레벨 여부
 const userLevel = ref(null)
 const userBadges = ref([])
-const currentExp = ref(0)
+const currentLevelExp = ref(0)
+const nextLevelExp = ref(null)
+const maxLevel = ref(false)
 const tier = computed(() => userLevel.value != null ? getTierByLevel(userLevel.value) : null)
 const tierArt = computed(() => tier.value?.art ?? null)
 const tierColor = computed(() => userLevel.value != null ? getTierColor(userLevel.value) : 'white')
 const tierName = computed(() => tier.value?.name ?? '')
+
 const expToNext = computed(() => {
-  if (userLevel.value == null) return null
-  const next = getNextLevelExp(userLevel.value)
-  if (!next) return null
-  return Math.max(next - currentExp.value, 0)
+  if (userLevel.value == null || maxLevel.value) return null
+  const v = Number(nextLevelExp.value)
+  if (Number.isFinite(v) && v >= 0) return v
+  const localNext = getNextLevelExp(userLevel.value)
+  if (!localNext) return null
+  return Math.max(localNext - currentLevelExp.value, 0)
 })
 const expProgress = computed(() => {
   if (userLevel.value == null) return 0
-  return getLevelProgress(userLevel.value, currentExp.value)
+  if (maxLevel.value) return 100
+  const v = Number(nextLevelExp.value)
+  if (Number.isFinite(v) && v >= 0) {
+    const threshold = currentLevelExp.value + v
+    if (!threshold) return 100
+    return Math.min(Math.round((currentLevelExp.value / threshold) * 100), 100)
+  }
+  return getLevelProgress(userLevel.value, currentLevelExp.value)
 })
 const primaryBadgeId = computed(() => {
   const pinned = userBadges.value.find(b => b.pinned)
@@ -272,8 +288,13 @@ async function loadRewards() {
       rewardsService.getMyRewards(),
       rewardsService.getMyBadges(),
     ])
-    userLevel.value = rewardsRes?.data?.level ?? null
-    currentExp.value = rewardsRes?.data?.currentExp ?? 0
+    const r = rewardsRes?.data
+    if (r) {
+      userLevel.value = r.level ?? null
+      currentLevelExp.value = r.currentLevelExp ?? 0
+      nextLevelExp.value = r.nextLevelExp ?? null
+      maxLevel.value = r.maxLevel === true
+    }
     userBadges.value = Array.isArray(badgesRes?.data) ? badgesRes.data : []
   } catch (e) {
     console.warn('[MyPage] 보상 데이터 로딩 실패:', e)
