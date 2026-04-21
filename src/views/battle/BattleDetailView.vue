@@ -210,6 +210,14 @@
           @submit-youtube="submitYoutubeProduct"
       />
 
+      <!-- Creator Floating Panel -->
+      <BattleCreatorPanel
+          :battle="battle"
+          :battle-id="battleId"
+          :is-creator="isCreator"
+          @refresh="loadBattle"
+      />
+
       <!-- Share Modal -->
       <ShareModal
           :visible="showShareModal"
@@ -280,6 +288,7 @@ import VoteSelectionBar from '@/components/battle/detail/VoteSelectionBar.vue'
 import ProductCard from '@/components/battle/detail/ProductCard.vue'
 import AddProductModal from '@/components/battle/detail/AddProductModal.vue'
 import BattleCommentModal from '@/components/battle/detail/BattleCommentModal.vue'
+import BattleCreatorPanel from '@/components/battle/detail/BattleCreatorPanel.vue'
 
 export default {
   name: 'BattleDetail',
@@ -289,7 +298,8 @@ export default {
     VoteSelectionBar,
     ProductCard,
     AddProductModal,
-    BattleCommentModal
+    BattleCommentModal,
+    BattleCreatorPanel
   },
   setup() {
     const { open, openLoginRequired } = useConfirmDialog()
@@ -337,6 +347,11 @@ export default {
     isWeightedVote() {
       const voteType = this.battle?.voteType?.title || this.battle?.voteType
       return voteType === 'MULTIPLE'
+    },
+    isCreator() {
+      if (!this.battle) return false
+      const userId = getUserId()
+      return !!userId && this.battle.creatorUserInfo?.userId === userId
     },
     canVote() {
       if (!this.battle) return false
