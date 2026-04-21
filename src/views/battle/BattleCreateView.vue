@@ -560,19 +560,20 @@ const createBattle = async () => {
 const checkCreationPermission = async () => {
   try {
     const response = await battleService.validateCreation();
-
-    if (!response.success) {
-      await open({ type: 'alert', title: '권한 없음', message: '배틀을 생성할 권한이 없습니다.' });
-      router.push({ name: 'BattleList' });
-    }
+    if (response?.success) return true;
+    await open({ type: 'alert', title: '권한 없음', message: response?.message || '요거픽을 생성할 수 없습니다.' });
   } catch (error) {
     console.error('권한 체크 실패:', error);
+    await open({ type: 'alert', title: '생성 불가', message: error?.message || '요거픽을 생성할 수 없습니다.' });
   }
+  router.replace({ name: 'BattleList' });
+  return false;
 };
 
 // ==================== Lifecycle ====================
 onMounted(async () => {
-  await checkCreationPermission();
+  const ok = await checkCreationPermission();
+  if (!ok) return;
 
   // 기본 날짜 설정 (임시저장 로드 전에 설정)
   if (!battleForm.value.startDate) {

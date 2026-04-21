@@ -155,22 +155,6 @@ onUnmounted(() => {
 
       <!-- 데스크톱 네비게이션 -->
       <nav class="nav-desktop">
-        <!-- 캐리어 꾸미기 버튼 (항상 표시) -->
-        <component
-          :is="isLoggedIn ? 'RouterLink' : 'button'"
-          :to="isLoggedIn ? '/carrier' : undefined"
-          class="carrier-btn"
-          title="캐리어 꾸미기"
-          @click="!isLoggedIn && handleCarrierClick()"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2"/>
-            <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
-            <circle cx="12" cy="15" r="2"/>
-          </svg>
-          <span>캐리어 꾸미기</span>
-        </component>
-
         <!-- 알림 버튼 (로그인 시에만 표시) -->
         <NotificationDropdown v-if="isLoggedIn" />
 
@@ -486,36 +470,6 @@ onUnmounted(() => {
 }
 
 /* ===================== 캐리어 버튼 ===================== */
-.carrier-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 16px;
-  margin-right: auto;
-  border: 1.5px solid #7c3aed;
-  background: transparent;
-  border-radius: 8px;
-  color: #7c3aed;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.carrier-btn:hover {
-  color: #ffffff;
-  background: #7c3aed;
-  border-color: #7c3aed;
-}
-
-.carrier-btn.router-link-active {
-  color: #ffffff;
-  background: #7c3aed;
-  border-color: #7c3aed;
-}
-
 .mobile-carrier-btn {
   display: flex;
   align-items: center;

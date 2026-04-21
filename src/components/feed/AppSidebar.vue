@@ -31,6 +31,21 @@
           </svg>
           <span class="nav-text">핫 아이템</span>
         </router-link>
+
+        <component
+          :is="isLoggedIn ? 'router-link' : 'button'"
+          :to="isLoggedIn ? '/carrier' : undefined"
+          class="nav-item"
+          active-class="active"
+          @click="!isLoggedIn && handleProtectedRoute('carrier')"
+        >
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
+            <circle cx="12" cy="15" r="2"/>
+          </svg>
+          <span class="nav-text">캐리어 꾸미기</span>
+        </component>
       </div>
 
       <!-- 커뮤니케이션 섹션 -->
@@ -129,6 +144,9 @@ const handleProtectedRoute = async (routeName) => {
         break;
       case 'collections':
         router.push({ name: 'Collection' });
+        break;
+      case 'carrier':
+        router.push('/carrier');
         break;
     }
     return;

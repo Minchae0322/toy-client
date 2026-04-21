@@ -120,7 +120,6 @@ import { useRouter } from 'vue-router'
 import { battleService } from '@/services/BattleService.js'
 import { useCategoryCache } from '@/composables/useCategoryCache.js'
 import { useAuthStore } from '@/stores/auth.js'
-import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 // Components
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'
@@ -132,7 +131,6 @@ import BottomNavigation from '@/components/common/BottomNavigation.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache()
-const { open } = useConfirmDialog()
 
 // State
 const allTabs = ref([
@@ -330,16 +328,8 @@ const openBattle = (battleId) => {
   router.push({ name: 'BattleDetail', params: { id: battleId } })
 }
 
-const handleCreateBattle = async () => {
-  try {
-    const response = await battleService.validateCreation()
-    if (response.success) {
-      router.push({ name: 'BattleCreate' })
-    }
-  } catch (error) {
-    console.error('배틀 생성 권한 체크 실패:', error)
-    await open({ type: 'alert', title: '오류', message: error.message || '요거픽을 생성할 수 없습니다.' })
-  }
+const handleCreateBattle = () => {
+  router.push({ name: 'BattleCreate' })
 }
 
 const handleViewAllHot = () => {
