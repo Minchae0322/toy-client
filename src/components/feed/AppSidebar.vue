@@ -18,13 +18,15 @@
         </router-link>
 
         <router-link to="/battle" class="nav-item" active-class="active">
-          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <!-- 시상대: 2등 / 1등(가운데 최고) / 3등 -->
-            <path d="M3 11h4v6H3z"/>
-            <path d="M8 7h4v10H8z"/>
-            <path d="M13 13h4v4h-4z"/>
-            <!-- 1등 위 메달 -->
-            <circle cx="10" cy="4" r="1.8" fill="currentColor"/>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <!-- 1등 위의 별 -->
+            <path d="M12 3l1.3 2.7 3 .4-2.2 2.1.5 3L12 9.8l-2.6 1.4.5-3L7.7 6.1l3-.4z" fill="currentColor" stroke="none"/>
+            <!-- 시상대: 2등(좌), 1등(가운데 최고), 3등(우) — 동일 베이스라인 y=21 -->
+            <rect x="9" y="12" width="6" height="9" rx="0.5"/>
+            <rect x="3" y="15" width="6" height="6" rx="0.5"/>
+            <rect x="15" y="17" width="6" height="4" rx="0.5"/>
+            <!-- 바닥 라인 -->
+            <path d="M2 21h20"/>
           </svg>
           <span class="nav-text">요거픽</span>
         </router-link>
