@@ -55,7 +55,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { LEVEL_TIERS, getTierByLevel } from '@/data/levelSystemData.js'
 import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
 
-const RANKS = ['white', 'red', 'blue', 'violet', 'gold']
+const RANKS = ['white', 'blue', 'violet', 'red', 'gold']
 
 const props = defineProps({
   userLevel: { type: Number, required: true },

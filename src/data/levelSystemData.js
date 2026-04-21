@@ -807,11 +807,11 @@ export function getTierByCode(code) {
 
 /**
  * 레벨로 rank 컬러 키 반환. YogurtTierArt의 color prop에 사용.
- * 티어 안에서 레벨 위치에 따라 white → red → blue → violet → gold 순으로 순환.
+ * 티어 안에서 레벨 위치에 따라 white → blue → violet → red → gold 순으로 순환.
  * legend 티어(21-99)는 5단계로 비례 분할.
  */
 export function getTierColor(level) {
-  const RANK = ['white', 'red', 'blue', 'violet', 'gold']
+  const RANK = ['white', 'blue', 'violet', 'red', 'gold']
   const tier = getTierByLevel(level)
   if (!tier) return 'white'
   const [min, max] = tier.levelRange

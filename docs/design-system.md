@@ -313,7 +313,7 @@ streak, 메달, 토스트, 배너, 버튼, 레이블, 구분자, 인라인 tier 
 | parfait | 26-35 | parfait | 파르페 잔 + 레이어 + 휘핑 + 체리 |
 | signature | 36+ | signature | 크리스탈 고블릿 + 금박 + 플라워 |
 
-**레벨 → 컬러** 매핑: `getTierColor(level)`. 티어 내 위치에 따라 `white → red → blue → violet → gold` 순. 예) Lv.1=white, Lv.5=gold. Lv.6=white, Lv.10=gold.
+**레벨 → 컬러** 매핑: `getTierColor(level)`. 티어 내 위치에 따라 `white → blue → violet → red → gold` 순. 예) Lv.1=white, Lv.5=gold. Lv.6=white, Lv.10=gold.
 
 사용 예:
 ```vue
