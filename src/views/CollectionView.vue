@@ -309,11 +309,14 @@ onMounted(loadRewardData)
   color: #0A0E1A;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
+  max-width: 100%;
+  overflow-x: clip;
   padding: 0 1rem;
 }
 
 @media (min-width: 768px) { .app-container { padding: 0 2rem; } }
-@media (min-width: 1280px) { .app-container { padding: 0 3rem; max-width: 1920px; margin: 0 auto; } }
+@media (min-width: 1280px) { .app-container { padding: 0 3rem; max-width: 1920px; margin-left: auto; margin-right: auto; } }
+@media (min-width: 1920px) { .app-container { padding: 0 4rem; } }
 
 .main-content {
   flex: 1;
