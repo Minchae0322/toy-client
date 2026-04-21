@@ -361,6 +361,10 @@ const handleProtectedRoute = async (routeName) => {
   font-weight: 500;
   color: #8B95A1;
   letter-spacing: -0.1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .btn-subtle:hover .btn-desc {
