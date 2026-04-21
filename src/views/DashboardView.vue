@@ -302,7 +302,7 @@
 
           <div v-else class="dash-bubble-wrapper">
             <div
-              :ref="setBubbleContainerRef"
+              ref="bubbleContainerRef"
               class="dash-bubble-area"
               :style="{ height: bubbleDims.h + 'px' }"
               @mousemove="handleBubbleMouseMove"
@@ -379,7 +379,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { feedService } from '@/services/FeedService'
@@ -453,7 +453,7 @@ function computeBubbleLayout(nodeList, W, H) {
 
   const gap = n <= 5 ? 4 : 6
   const centerPull = n <= 5 ? 0.015 : 0.01
-  const maxTicks = n <= 10 ? 80 : 120
+  const maxTicks = 150
 
   for (let tick = 0; tick < maxTicks; tick++) {
     const alpha = Math.max(0.001, 1 - tick / maxTicks)
@@ -500,38 +500,16 @@ const dashBubbleNodes = computed(() => {
   return dashBubbleProducts.value.map(p => ({ id: p.id, r: getDashRadius(getProductPopularityScore(p), dashMaxScore.value, min, max) }))
 })
 
-// 비동기 계산 — 150-tick O(n²) 물리 시뮬레이션을 idle/rAF에 deferred 실행해
-// 메인 스레드 블로킹으로 인한 화면 멈춤 방지. 초기 배치 전까지는 빈 배열 → 버블 숨김.
 const dashBubblePositions = ref([])
+let bubbleRafId = null
 
-let posComputeHandle = null
-const cancelPosCompute = () => {
-  if (posComputeHandle == null) return
-  if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(posComputeHandle)
-  else cancelAnimationFrame(posComputeHandle)
-  posComputeHandle = null
-}
-
-const runComputePositions = () => {
-  posComputeHandle = null
-  const nodes = dashBubbleNodes.value
-  const { w, h } = bubbleDims.value
-  if (!nodes.length || !w || !h) { dashBubblePositions.value = []; return }
-  dashBubblePositions.value = computeBubbleLayout(nodes, w, h)
-}
-
-const scheduleComputePositions = () => {
-  cancelPosCompute()
-  posComputeHandle = (typeof requestIdleCallback !== 'undefined')
-    ? requestIdleCallback(runComputePositions, { timeout: 200 })
-    : requestAnimationFrame(runComputePositions)
-}
-
-watch(
-  [dashBubbleNodes, () => bubbleDims.value.w, () => bubbleDims.value.h],
-  scheduleComputePositions,
-  { immediate: true, flush: 'post' }
-)
+watch([dashBubbleNodes, bubbleDims], ([nodes, dims]) => {
+  if (bubbleRafId) cancelAnimationFrame(bubbleRafId)
+  bubbleRafId = requestAnimationFrame(() => {
+    dashBubblePositions.value = computeBubbleLayout(nodes, dims.w, dims.h)
+    bubbleRafId = null
+  })
+}, { immediate: true })
 
 const bubbleTooltipProduct = computed(() => {
   if (!bubbleHovered.value) return null
@@ -586,35 +564,30 @@ function computeBubbleHeight(w) {
   return Math.max(500, Math.min(700, w * 0.75))
 }
 
-let bubbleResizeTimer = null
+function initBubbleContainer() {
+  if (!bubbleContainerRef.value) return
+  const rect = bubbleContainerRef.value.getBoundingClientRect()
+  bubbleDims.value = { w: rect.width, h: computeBubbleHeight(rect.width) }
 
-// functional ref — DOM 마운트 즉시 측정해서 한 사이클 당겨 positions 계산 가능
-function setBubbleContainerRef(el) {
-  bubbleContainerRef.value = el
-  if (!el) return
-
-  // 최초 측정 (getBoundingClientRect가 layout 강제 — 마운트 직후 올바른 width 반환)
-  const rect = el.getBoundingClientRect()
-  if (rect.width > 0) {
-    bubbleDims.value = { w: rect.width, h: computeBubbleHeight(rect.width) }
-  }
-
-  // ResizeObserver는 한 번만 등록
-  if (bubbleResizeObserver) return
+  let resizeTimer = null
   bubbleResizeObserver = new ResizeObserver(entries => {
-    if (bubbleResizeTimer) clearTimeout(bubbleResizeTimer)
-    bubbleResizeTimer = setTimeout(() => {
+    if (resizeTimer) clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(() => {
       const entry = entries[0]
       if (entry) {
         const w = entry.contentRect.width
-        if (w !== bubbleDims.value.w) {
-          bubbleDims.value = { w, h: computeBubbleHeight(w) }
-        }
+        bubbleDims.value = { w, h: computeBubbleHeight(w) }
       }
     }, 150)
   })
-  bubbleResizeObserver.observe(el)
+  bubbleResizeObserver.observe(bubbleContainerRef.value)
 }
+
+watch(() => hotProducts.value.length, (len) => {
+  if (len > 0) {
+    nextTick(() => initBubbleContainer())
+  }
+})
 
 const yogurtBomFeeds = ref([])
 const lastUpdateTime = ref('')
@@ -919,11 +892,10 @@ onUnmounted(() => {
     bubbleResizeObserver.disconnect()
     bubbleResizeObserver = null
   }
-  if (bubbleResizeTimer) {
-    clearTimeout(bubbleResizeTimer)
-    bubbleResizeTimer = null
+  if (bubbleRafId) {
+    cancelAnimationFrame(bubbleRafId)
+    bubbleRafId = null
   }
-  cancelPosCompute()
 })
 </script>
 
