@@ -401,6 +401,27 @@ const formatJoinDate = (dateString) => {
 onMounted(() => {
   loadProfile()
 })
+
+// 같은 뷰에서 다른 유저로 이동하면 프로필·보상 다시 로드
+watch(() => route.params.userId, (newId, oldId) => {
+  if (newId === oldId) return
+  isProfileLoaded.value = false
+  profileData.value = {
+    userId: null,
+    nickname: '',
+    description: '',
+    followerCount: 0,
+    followingCount: 0,
+    feedCount: 0,
+    isFollowing: false,
+    profilePicture: null,
+    createdAt: null,
+    updatedAt: null,
+  }
+  myRewards.value = null
+  myBadges.value = []
+  loadProfile()
+})
 </script>
 
 <style scoped>

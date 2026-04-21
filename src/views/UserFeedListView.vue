@@ -99,6 +99,24 @@ watch(viewMode, (newMode) => {
 // Methods
 const feedIdSet = new Set();
 
+// 유저 전환(같은 라우트 이름, 다른 userId) 시 전체 state 리셋
+const resetFeedState = () => {
+  feeds.value = [];
+  cursor.value = null;
+  hasNext.value = true;
+  loading.value = false;
+  likedPosts.value = new Set();
+  hotPosts.value = new Set();
+  savedPosts.value = new Set();
+  feedIdSet.clear();
+};
+
+watch(userId, (newId, oldId) => {
+  if (newId === oldId) return;
+  resetFeedState();
+  if (newId) loadUserFeeds();
+});
+
 const loadUserFeeds = async () => {
   // 방어 — userId 없으면 즉시 중단 (전체 피드 폭주 방지)
   if (!userId.value) { hasNext.value = false; return; }
