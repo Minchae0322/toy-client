@@ -85,7 +85,7 @@
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { getTierByLevel, getNextLevelExp, getLevelProgress, getTierColor } from '@/data/levelSystemData.js'
+import { getTierByLevel, getNextLevelExp, getTierColor } from '@/data/levelSystemData.js'
 import { Ticket, Flame } from '@/utils/collectionIcons.js'
 import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
 
@@ -98,8 +98,15 @@ defineEmits(['use-ticket'])
 
 const tier = computed(() => getTierByLevel(props.user.level) ?? getTierByLevel(1))
 const tierColor = computed(() => getTierColor(props.user.level))
-const nextExp = computed(() => getNextLevelExp(props.user.level))
-const progress = computed(() => getLevelProgress(props.user.level, props.user.currentExp))
+const nextExp = computed(() => {
+  const apiNext = Number(props.user.nextLevelExp)
+  if (Number.isFinite(apiNext) && apiNext > 0) return apiNext
+  return getNextLevelExp(props.user.level)
+})
+const progress = computed(() => {
+  if (!nextExp.value) return 100
+  return Math.min(Math.round((props.user.currentExp / nextExp.value) * 100), 100)
+})
 
 const vw = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
 const onResize = () => (vw.value = window.innerWidth)
