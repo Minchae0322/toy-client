@@ -4,33 +4,21 @@
 
     <main class="main-content">
       <!-- 대시보드 요약 -->
-      <div class="dash-summary">
-        <div class="dash-summary-left">
-          <h1 class="dash-greeting">트렌드 <span class="dash-greeting-accent">한눈에</span></h1>
-          <p class="dash-greeting-sub">{{ topTrendName }} 외 실시간 인기 데이터</p>
-        </div>
-        <div class="dash-summary-right">
-          <router-link :to="{ name: 'FeedHome' }" class="dash-kpi">
-            <span class="dash-kpi-num">{{ dashboardSummary.popularFeedCount }}</span>
-            <span class="dash-kpi-label">인기 피드</span>
-            <div v-if="dashboardSummary.popularFeedCount > 0" class="live-dot"></div>
-          </router-link>
-          <div class="dash-kpi-divider"></div>
-          <router-link :to="{ name: 'BattleList' }" class="dash-kpi">
-            <span class="dash-kpi-num">{{ dashboardSummary.activeBattleCount }}</span>
-            <span class="dash-kpi-label">요거픽</span>
-            <div v-if="dashboardSummary.activeBattleCount > 0" class="live-dot"></div>
-          </router-link>
-          <div class="dash-kpi-divider"></div>
-          <router-link :to="{ name: 'ProductRanking' }" class="dash-kpi">
-            <span class="dash-kpi-num">{{ dashboardSummary.totalItemCount }}</span>
-            <span class="dash-kpi-label">아이템</span>
-          </router-link>
-        </div>
-      </div>
+      <div class="dash-top-area">
+        <div class="dash-top-main">
+          <div class="dash-summary">
+            <div class="dash-summary-left">
+              <h1 class="dash-greeting">트렌드 <span class="dash-greeting-accent">한눈에</span></h1>
+              <p class="dash-greeting-sub">{{ topTrendName }} 외 실시간 인기 데이터</p>
+            </div>
+            <router-link :to="{ name: 'FeedHome', query: { keyword: '우베라떼' } }" class="dash-trend-banner">
+              <img src="/images/trend-banner.svg?v=3" alt="트렌드 배너" class="dash-trend-img" />
+              <span class="dash-trend-cta">지금 보러가기 →</span>
+            </router-link>
+          </div>
 
-      <!-- 실시간 요거 봄 섹션 -->
-      <section class="yogurt-bom-section">
+          <!-- 실시간 요거 봄 섹션 -->
+          <section class="yogurt-bom-section">
         <div class="yb-header">
           <div class="yb-header-left">
             <div class="yb-status-badge">
@@ -87,6 +75,22 @@
         </div>
 
       </section>
+        </div>
+
+        <!-- 우측 광고 배너 -->
+        <div class="dash-ad-column">
+          <div class="dash-ad-banner">
+            <div class="ad-tag">AD</div>
+            <div class="ad-body">
+              <p class="ad-headline">요즘 뜨는 한잔은?</p>
+              <p class="ad-sub">우베라떼</p>
+              <p class="ad-desc">카페 인증러시 &middot; 지금 가장 핫한 메뉴</p>
+            </div>
+            <div class="ad-cta">자세히 보기 →</div>
+            <img src="/images/ad-ube.svg" alt="우베라떼 트렌드" class="ad-image" />
+          </div>
+        </div>
+      </div>
 
       <div class="dashboard-content">
         <!-- 핫 피드 섹션 -->
@@ -385,20 +389,10 @@ import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { feedService } from '@/services/FeedService'
 import { battleService } from '@/services/BattleService'
 import { productService } from '@/services/ProductService'
-import { dashboardService } from '@/services/DashboardService'
 
 const hotFeeds = ref([])
 const hotBattles = ref([])
 const hotProducts = ref([])
-
-
-// 대시보드 요약 통계
-const dashboardSummary = ref({
-  activeBattleCount: 0,
-  totalItemCount: 0,
-  popularFeedCount: 0,
-})
-const summaryLoading = ref(true)
 
 
 // ==================== 버블 차트 관련 ====================
@@ -661,24 +655,6 @@ const battlesLoading = ref(true)
 const productsLoading = ref(true)
 
 
-const loadDashboardSummary = async () => {
-  summaryLoading.value = true
-  try {
-    const response = await dashboardService.getSummary()
-    if (response.success && response.data) {
-      dashboardSummary.value = {
-        activeBattleCount: response.data.activeBattleCount ?? 0,
-        totalItemCount: response.data.totalItemCount ?? 0,
-        popularFeedCount: response.data.popularFeedCount ?? 0,
-      }
-    }
-  } catch (error) {
-    console.error('대시보드 요약 로드 실패:', error)
-  } finally {
-    summaryLoading.value = false
-  }
-}
-
 const loadHotFeeds = async () => {
   feedsLoading.value = true
   try {
@@ -860,7 +836,6 @@ const topTrendName = computed(() => {
 
 
 onMounted(() => {
-  loadDashboardSummary()
   loadHotFeeds()
   loadHotBattles()
   loadHotProducts()
@@ -992,66 +967,149 @@ onUnmounted(() => {
   letter-spacing: -0.01em;
 }
 
-.dash-summary-right {
+/* 상단 2컬럼 레이아웃 */
+.dash-top-area {
   display: flex;
-  align-items: center;
-  gap: 0;
-  background: #f8f8f9;
-  border-radius: 100px;
-  padding: 0.5rem 0.375rem;
-  flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  align-items: stretch;
+  gap: 1.25rem;
 }
 
-.dash-kpi {
+.dash-top-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-ad-column {
+  width: 220px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 0.25rem 1.25rem;
-  text-decoration: none;
-  position: relative;
-  transition: opacity 0.15s;
+  padding: 1rem 0;
 }
 
-.dash-kpi:hover {
-  opacity: 0.7;
+.dash-ad-banner {
+  background: #fff;
+  border: 1px solid #efefef;
+  border-radius: 14px;
+  padding: 1.125rem 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  flex: 1;
 }
 
-.dash-kpi-num {
-  font-size: 1.375rem;
+.ad-tag {
+  font-size: 9px;
   font-weight: 700;
-  color: #18181b;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  color: #B0B8C1;
+  letter-spacing: 0.08em;
+  border: 1px solid #E5E8EB;
+  border-radius: 3px;
+  padding: 1px 5px;
+  width: fit-content;
 }
 
-.dash-kpi-label {
-  font-size: 0.6875rem;
-  color: #a1a1aa;
-  font-weight: 500;
+.ad-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ad-headline {
+  font-size: 13px;
+  font-weight: 700;
+  color: #191F28;
+  line-height: 1.3;
+}
+
+.ad-sub {
+  font-size: 15px;
+  font-weight: 800;
+  color: #9333EA;
+  line-height: 1.3;
+}
+
+.ad-x {
+  color: #191F28;
+  font-weight: 700;
+}
+
+.ad-desc {
+  font-size: 12px;
+  color: #4E5968;
+  line-height: 1.4;
   margin-top: 2px;
 }
 
-.dash-kpi-divider {
-  width: 1px;
-  height: 28px;
-  background: #e4e4e7;
+.ad-cta {
+  font-size: 11px;
+  font-weight: 600;
+  color: #191F28;
+  margin-top: 0.25rem;
+  cursor: pointer;
+}
+
+.ad-image {
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+  .dash-ad-column { display: none; }
+}
+
+/* 트렌드 알림 배너 */
+.dash-trend-banner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 10px;
+  padding: 1rem;
+  flex: 1;
+  text-decoration: none;
+  min-height: 100px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dash-trend-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.dash-trend-cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: #191F28;
   flex-shrink: 0;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.75);
+  border: none;
+  border-radius: 20px;
+  padding: 0.375rem 0.875rem;
 }
 
 @media (max-width: 767px) {
+  .dash-top-area {
+    flex-direction: column;
+  }
   .dash-summary {
     flex-direction: column;
     align-items: flex-start;
     padding: 1rem 0 0.75rem;
     gap: 0.75rem;
-  }
-  .dash-summary-right {
-    width: 100%;
-    justify-content: space-around;
-  }
-  .dash-kpi {
-    padding: 0.25rem 0.75rem;
   }
   .dash-greeting {
     font-size: 1.25rem;
