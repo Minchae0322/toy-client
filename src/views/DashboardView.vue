@@ -302,7 +302,7 @@
 
           <div v-else class="dash-bubble-wrapper">
             <div
-              ref="bubbleContainerRef"
+              :ref="setBubbleContainerRef"
               class="dash-bubble-area"
               :style="{ height: bubbleDims.h + 'px' }"
               @mousemove="handleBubbleMouseMove"
@@ -379,7 +379,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { feedService } from '@/services/FeedService'
@@ -500,16 +500,13 @@ const dashBubbleNodes = computed(() => {
   return dashBubbleProducts.value.map(p => ({ id: p.id, r: getDashRadius(getProductPopularityScore(p), dashMaxScore.value, min, max) }))
 })
 
-const dashBubblePositions = ref([])
-let bubbleRafId = null
-
-watch([dashBubbleNodes, bubbleDims], ([nodes, dims]) => {
-  if (bubbleRafId) cancelAnimationFrame(bubbleRafId)
-  bubbleRafId = requestAnimationFrame(() => {
-    dashBubblePositions.value = computeBubbleLayout(nodes, dims.w, dims.h)
-    bubbleRafId = null
-  })
-}, { immediate: true })
+// 동기 computed로 계산 — watch+rAF 대비 한 프레임 제거됨
+const dashBubblePositions = computed(() => {
+  const nodes = dashBubbleNodes.value
+  const { w, h } = bubbleDims.value
+  if (!nodes.length || !w || !h) return []
+  return computeBubbleLayout(nodes, w, h)
+})
 
 const bubbleTooltipProduct = computed(() => {
   if (!bubbleHovered.value) return null
@@ -564,30 +561,35 @@ function computeBubbleHeight(w) {
   return Math.max(500, Math.min(700, w * 0.75))
 }
 
-function initBubbleContainer() {
-  if (!bubbleContainerRef.value) return
-  const rect = bubbleContainerRef.value.getBoundingClientRect()
-  bubbleDims.value = { w: rect.width, h: computeBubbleHeight(rect.width) }
+let bubbleResizeTimer = null
 
-  let resizeTimer = null
+// functional ref — DOM 마운트 즉시 측정해서 한 사이클 당겨 positions 계산 가능
+function setBubbleContainerRef(el) {
+  bubbleContainerRef.value = el
+  if (!el) return
+
+  // 최초 측정 (getBoundingClientRect가 layout 강제 — 마운트 직후 올바른 width 반환)
+  const rect = el.getBoundingClientRect()
+  if (rect.width > 0) {
+    bubbleDims.value = { w: rect.width, h: computeBubbleHeight(rect.width) }
+  }
+
+  // ResizeObserver는 한 번만 등록
+  if (bubbleResizeObserver) return
   bubbleResizeObserver = new ResizeObserver(entries => {
-    if (resizeTimer) clearTimeout(resizeTimer)
-    resizeTimer = setTimeout(() => {
+    if (bubbleResizeTimer) clearTimeout(bubbleResizeTimer)
+    bubbleResizeTimer = setTimeout(() => {
       const entry = entries[0]
       if (entry) {
         const w = entry.contentRect.width
-        bubbleDims.value = { w, h: computeBubbleHeight(w) }
+        if (w !== bubbleDims.value.w) {
+          bubbleDims.value = { w, h: computeBubbleHeight(w) }
+        }
       }
     }, 150)
   })
-  bubbleResizeObserver.observe(bubbleContainerRef.value)
+  bubbleResizeObserver.observe(el)
 }
-
-watch(() => hotProducts.value.length, (len) => {
-  if (len > 0) {
-    nextTick(() => initBubbleContainer())
-  }
-})
 
 const yogurtBomFeeds = ref([])
 const lastUpdateTime = ref('')
@@ -892,9 +894,9 @@ onUnmounted(() => {
     bubbleResizeObserver.disconnect()
     bubbleResizeObserver = null
   }
-  if (bubbleRafId) {
-    cancelAnimationFrame(bubbleRafId)
-    bubbleRafId = null
+  if (bubbleResizeTimer) {
+    clearTimeout(bubbleResizeTimer)
+    bubbleResizeTimer = null
   }
 })
 </script>
