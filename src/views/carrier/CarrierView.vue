@@ -212,6 +212,8 @@
 
         <!-- 네임택 사진 업로드용 hidden input -->
         <input ref="nameTagInputRef" type="file" accept="image/*" style="display: none" @change="onNameTagImgChange"/>
+
+        <BottomNavigation />
   </div>
 </template>
 
@@ -233,6 +235,7 @@ import CarrierCanvas from './components/CarrierCanvas.vue'
 import CarrierItemList from './components/CarrierItemList.vue'
 import MobileStickerTray from './components/MobileStickerTray.vue'
 import ShareModal from './components/ShareModal.vue'
+import BottomNavigation from '@/components/common/BottomNavigation.vue'
 
 const router = useRouter()
 const { open: openConfirm } = useConfirmDialog()
@@ -1772,7 +1775,7 @@ onBeforeRouteLeave(async () => {
 @media (max-width: 768px) {
   .carrier-page {
     background: #fff;
-    padding-bottom: 0;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
 
   .center-panel .carrier-slot-tabs {
@@ -1998,7 +2001,7 @@ onBeforeRouteLeave(async () => {
   }
 
   .fab-group {
-    bottom: 20px;
+    bottom: calc(100px + env(safe-area-inset-bottom));
     right: 16px;
   }
   .save-fab {
