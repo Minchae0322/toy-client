@@ -88,9 +88,11 @@
       <div class="divider" />
 
       <section class="author-section">
-        <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
-        <div class="author-meta">
-          <span class="author-name">{{ getAuthorNickname }}</span>
+        <div class="author-click-zone" role="link" tabindex="0" @click="goToUser" @keydown.enter="goToUser">
+          <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
+          <div class="author-meta">
+            <span class="author-name">{{ getAuthorNickname }}</span>
+          </div>
         </div>
         <div class="author-actions">
           <button
@@ -115,6 +117,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   feed: { type: Object, required: true },
@@ -131,6 +134,12 @@ const getProductName = computed(() => props.feed?.product?.name || props.feed?.p
 const getCategoryName = computed(() => props.feed?.subCategoryDetail?.subCategoryName || props.feed?.subCategoryDetail?.categoryName || '카테고리')
 const getAuthorProfileImage = computed(() => props.feed?.userInfo?.profileImageFile?.fileUrl || props.feed?.userInfo?.profileImageUrl || 'https://i.pravatar.cc/150')
 const getAuthorNickname = computed(() => props.feed?.userInfo?.nickname || '사용자')
+
+const router = useRouter()
+const goToUser = () => {
+  const userId = props.feed?.userInfo?.userId
+  if (userId != null) router.push({ name: 'UserFeedList', params: { userId: String(userId) } })
+}
 
 const formatDate = (date) => date ? new Date(date).toLocaleDateString('ko-KR') : ''
 const formatPrice = (price) => {
@@ -290,6 +299,8 @@ const handleSendMessage = () => {
 
 /* 작성자 */
 .author-section { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.author-click-zone { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; border-radius: 8px; padding: 4px; margin: -4px; transition: background 0.15s ease; }
+.author-click-zone:hover { background: rgba(15, 23, 42, 0.04); }
 .author-avatar {
   width: 44px; height: 44px; border-radius: 50%;
   object-fit: cover; border: 1px solid #F2F4F6;

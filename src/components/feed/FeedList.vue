@@ -1,7 +1,7 @@
 <template>
   <section class="feed-container">
-    <header class="feed-header">
-      <div class="title-with-badge">
+    <header class="feed-header" :class="{ 'header-compact': hideTitle }">
+      <div v-if="!hideTitle" class="title-with-badge">
         <h2 class="section-title">최신 피드</h2>
         <span class="sub-title">사용자들이 올린 솔직한 리뷰</span>
       </div>
@@ -171,7 +171,7 @@
 
             <!-- 푸터: 작성자 + 조회수/좋아요/댓글 -->
             <div class="list-footer">
-              <div class="list-author">
+              <div class="list-author" role="link" tabindex="0" @click.stop.prevent="goToUser(feed)" @keydown.enter.prevent="goToUser(feed)">
                 <div class="list-avatar-wrap">
                   <img :src="getProfileImageUrl(feed) || '/default-avatar.png'" class="list-avatar" />
                   <div v-if="getUserTierArt(feed)" class="list-tier-coin">
@@ -216,6 +216,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import FeedCard from './FeedCard.vue';
 import feedService, { feedUtils } from '@/services/FeedService';
 import UserLevelTag from '@/components/identity/UserLevelTag.vue';
@@ -226,11 +227,18 @@ import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js';
 const props = defineProps({
   feeds: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
-  viewMode: { type: String, default: 'feed' }
+  viewMode: { type: String, default: 'feed' },
+  hideTitle: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['update', 'post-click', 'view-mode-change']);
 const observerTarget = ref(null);
+const router = useRouter();
+
+const goToUser = (feed) => {
+  const userId = feed?.userInfo?.userId;
+  if (userId != null) router.push({ name: 'UserFeedList', params: { userId: String(userId) } });
+};
 
 const getProfileImageUrl = (feed) => feed.userInfo?.profileImageFile?.fileUrl || feed.userInfo?.profileImgUrl || null;
 const getDisplayNickname = (feed) => feed.userInfo?.nickname || feed.userInfo?.nickName || '익명';
@@ -285,82 +293,92 @@ defineExpose({ observerTarget });
 </script>
 
 <style scoped>
-.feed-container { max-width: 1200px; margin: 0 auto; padding: 12px 0; width: 100%; }
+.feed-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 0 12px;
+  width: 100%;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+}
 
 .feed-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  align-items: flex-end;
+  margin-bottom: 20px;
   width: 100%;
+}
+
+.feed-header.header-compact {
+  justify-content: flex-end;
+  margin-bottom: 12px;
 }
 
 .title-with-badge {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 2px;
 }
 
 .section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0A0E1A;
   margin: 0;
-  padding-left: 10px;
-  border-left: 3px solid #9333ea;
-}
-
-@media (min-width: 768px) {
-  .section-title {
-    font-size: 1.125rem;
-  }
+  letter-spacing: -0.4px;
+  line-height: 1.2;
 }
 
 @media (min-width: 1280px) {
   .section-title {
-    font-size: 1.3125rem;
+    font-size: 1.25rem;
   }
 }
 
 .sub-title {
   font-size: 12px;
-  font-weight: 400;
-  color: #999;
-  padding-left: 13px;
+  font-weight: 500;
+  color: #8B95A1;
+  letter-spacing: -0.1px;
 }
 
-/* 뷰 모드 스위처 */
+/* 뷰 모드 스위처 — Toss 스타일 pill toggle */
 .view-switcher {
   display: flex;
-  gap: 0.125rem;
+  gap: 2px;
+  background: #F2F4F6;
+  border-radius: 10px;
+  padding: 3px;
 }
 
 .view-btn {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 30px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: none;
-  border-radius: 0.375rem;
-  color: #B0B8C1;
+  border-radius: 7px;
+  color: #8B95A1;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
-.view-btn:hover {
-  color: #8B95A1;
+.view-btn:hover:not(.active) {
+  color: #4E5968;
 }
 
 .view-btn.active {
-  color: #4E5968;
+  color: #0A0E1A;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
 /* Grid View */
 .modern-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 20px;
 }
 
@@ -374,18 +392,23 @@ defineExpose({ observerTarget });
 .list-item {
   display: flex;
   gap: 0;
-  background: white;
-  border: 1px solid #F2F4F6;
-  border-radius: 16px;
+  background: #ffffff;
+  border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.04),
+    0 4px 16px rgba(15, 23, 42, 0.04);
 }
 
 .list-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-  border-color: #E5E8EB;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
 .list-image {
@@ -555,7 +578,8 @@ defineExpose({ observerTarget });
   border-top: 1px solid #F2F4F6;
 }
 
-.list-author { display: flex; align-items: center; gap: 8px; }
+.list-author { display: flex; align-items: center; gap: 8px; cursor: pointer; border-radius: 6px; padding: 2px; margin: -2px; }
+.list-author:hover { background: rgba(15, 23, 42, 0.04); }
 .list-avatar-wrap { position: relative; flex-shrink: 0; }
 .list-author-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .list-nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
@@ -592,7 +616,7 @@ defineExpose({ observerTarget });
 
 /* Scroll Status */
 .scroll-status { height: 80px; display: flex; align-items: center; justify-content: center; }
-.loader { width: 24px; height: 24px; border: 3px solid #F2F4F6; border-top-color: #9333EA; border-radius: 50%; animation: spin 0.6s linear infinite; }
+.loader { width: 26px; height: 26px; border: 2.5px solid #F2F4F6; border-top-color: #0A0E1A; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ===== 스켈레톤 애니메이션 ===== */
@@ -605,10 +629,10 @@ defineExpose({ observerTarget });
 .skeleton-card {
   width: 100%;
   pointer-events: none;
-  background: white;
-  border-radius: 16px;
-  border: 1px solid #F2F4F6;
+  background: #ffffff;
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
 /* 이미지 영역 - FeedCard .post-image-container와 동일 */
@@ -837,21 +861,21 @@ defineExpose({ observerTarget });
 .feed-empty-state .circle-1 {
   width: 140px;
   height: 140px;
-  background: rgba(147, 51, 234, 0.12);
+  background: #F7F8FA;
   animation-delay: 0s;
 }
 
 .feed-empty-state .circle-2 {
   width: 100px;
   height: 100px;
-  background: rgba(147, 51, 234, 0.15);
+  background: #F2F4F6;
   animation-delay: 0.5s;
 }
 
 .feed-empty-state .illustration-icon {
-  width: 56px;
-  height: 56px;
-  color: #9333EA;
+  width: 52px;
+  height: 52px;
+  color: #4E5968;
   z-index: 1;
 }
 
@@ -871,17 +895,19 @@ defineExpose({ observerTarget });
 }
 
 .feed-empty-state .empty-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #191F28;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.02em;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0A0E1A;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.4px;
 }
 
 .feed-empty-state .empty-description {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   color: #8B95A1;
   line-height: 1.5;
+  letter-spacing: -0.2px;
   margin: 0;
 }
 
@@ -941,14 +967,13 @@ defineExpose({ observerTarget });
 
   .list-item {
     border-radius: 0;
-    border: none;
-    border-bottom: 1px solid #F2F4F6;
     background: transparent;
+    box-shadow: none;
+    border-bottom: 1px solid #F2F4F6;
   }
   .list-item:hover {
     transform: none;
     box-shadow: none;
-    border-color: #F2F4F6;
   }
   .list-item:active {
     background: #F7F8FA;
@@ -986,8 +1011,8 @@ defineExpose({ observerTarget });
   /* 모바일 스켈레톤: 그리드 뷰 - FeedCard 모바일과 동일 */
   .skeleton-card {
     border-radius: 0;
-    border: none;
     background: transparent;
+    box-shadow: none;
     padding-bottom: 0;
     margin-bottom: 0;
     border-bottom: 1px solid #F2F4F6;

@@ -49,7 +49,7 @@
       </div>
 
       <div class="post-footer">
-        <div class="user-block">
+        <div class="user-block" role="link" tabindex="0" @click.stop.prevent="goToUser" @keydown.enter.prevent="goToUser">
           <div class="avatar-wrap">
             <img :src="profileImageUrl || '/default-avatar.png'" class="user-avatar" />
             <div v-if="tierArt" class="tier-coin">
@@ -94,6 +94,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { feedService, feedUtils } from '@/services/FeedService';
 import UserLevelTag from '@/components/identity/UserLevelTag.vue';
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
@@ -102,6 +103,12 @@ import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js';
 
 const props = defineProps({ feed: { type: Object, required: true } });
 const emit = defineEmits(['update']);
+const router = useRouter();
+
+const goToUser = () => {
+  const userId = props.feed.userInfo?.userId;
+  if (userId != null) router.push({ name: 'UserFeedList', params: { userId: String(userId) } });
+};
 
 const localIsLiked = ref(props.feed.userReactions?.hasLike === true);
 const localLikeCount = ref(props.feed.likeCount || 0);
@@ -146,19 +153,25 @@ const formatDate = (date) => feedUtils.formatDate(date);
 /* 간격: 4px 그리드 (4, 8, 12, 16, 20, 24) */
 
 .post-card {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid #F2F4F6;
+  background: #ffffff;
+  border-radius: 20px;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.04),
+    0 4px 16px rgba(15, 23, 42, 0.04);
 }
 .post-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-  border-color: #E5E8EB;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
 /* 이미지 영역 */
@@ -175,28 +188,30 @@ const formatDate = (date) => feedUtils.formatDate(date);
   display: flex; align-items: center; gap: 4px;
 }
 .evaluation-badge {
-  display: flex; align-items: center; gap: 4px;
-  padding: 5px 10px; border-radius: 100px;
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 10px; border-radius: 999px;
   font-size: 11px; font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  backdrop-filter: blur(4px);
+  letter-spacing: -0.2px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
-.eval-dot { width: 6px; height: 6px; border-radius: 50%; }
+.eval-dot { width: 5px; height: 5px; border-radius: 50%; }
 
-.eb-best { background-color: rgba(254,243,199,0.92); color: #92400e; }
+.eb-best { background-color: #FEF3C7; color: #92400e; }
 .eb-best .eval-dot { background-color: #f59e0b; }
-.eb-good { background-color: rgba(220,252,231,0.92); color: #166534; }
-.eb-good .eval-dot { background-color: #10b981; }
-.eb-okay { background-color: rgba(243,232,255,0.92); color: #6b21a8; }
+.eb-good { background-color: #DCFCE7; color: #166534; }
+.eb-good .eval-dot { background-color: #16a34a; }
+.eb-okay { background-color: #F3E8FF; color: #6b21a8; }
 .eb-okay .eval-dot { background-color: #9333ea; }
-.eval-bad { background-color: rgba(254,226,226,0.92); color: #991b1b; }
+.eval-bad { background-color: #FEE2E2; color: #991b1b; }
 .eval-bad .eval-dot { background-color: #ef4444; }
 
 .trend-badge {
   display: flex; align-items: center; gap: 3px;
-  padding: 5px 8px; border-radius: 100px;
-  background: linear-gradient(135deg, #f43f5e, #ec4899);
-  font-size: 11px; font-weight: 700; color: white;
+  padding: 5px 9px; border-radius: 999px;
+  background: #EF4444;
+  font-size: 11px; font-weight: 700; color: #ffffff;
+  letter-spacing: -0.2px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
 /* 멀티 사진 인디케이터 */
@@ -222,24 +237,24 @@ const formatDate = (date) => feedUtils.formatDate(date);
 
 /* 콘텐츠 영역 */
 .post-content {
-  padding: 12px 16px 16px;
+  padding: 14px 18px 18px;
   display: flex; flex-direction: column; flex: 1;
 }
 
 .category-label {
   font-size: 11px; font-weight: 600; color: #8B95A1;
-  display: block; margin-bottom: 4px; letter-spacing: -0.01em;
+  display: block; margin-bottom: 6px; letter-spacing: -0.2px;
 }
-.category-arrow { margin: 0 1px; color: #B0B8C1; }
+.category-arrow { margin: 0 2px; color: #CBD5E1; }
 
 .primary-review {
-  font-size: 16px; font-weight: 600; color: #191F28;
-  line-height: 1.5; margin-bottom: 12px;
+  font-size: 15px; font-weight: 700; color: #0A0E1A;
+  line-height: 1.5; margin-bottom: 14px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   min-height: calc(1.5em * 2);
-  letter-spacing: -0.02em; word-break: keep-all;
+  letter-spacing: -0.3px; word-break: keep-all;
 }
-.quote { color: #C4B5FD; font-size: 16px; font-family: 'SUIT', sans-serif; margin-right: 1px; }
+.quote { color: #C4B5FD; font-size: 15px; font-family: 'SUIT', sans-serif; margin-right: 1px; }
 
 /* 제품 정보 박스 */
 .product-info-box {
@@ -265,9 +280,10 @@ const formatDate = (date) => feedUtils.formatDate(date);
 /* 푸터 */
 .post-footer {
   display: flex; justify-content: space-between; align-items: center;
-  padding-top: 12px; border-top: 1px solid #F2F4F6; margin-top: auto;
+  padding-top: 14px; border-top: 1px solid #F2F4F6; margin-top: auto;
 }
-.user-block { display: flex; align-items: center; gap: 8px; }
+.user-block { display: flex; align-items: center; gap: 8px; cursor: pointer; border-radius: 6px; padding: 2px; margin: -2px; }
+.user-block:hover { background: rgba(15, 23, 42, 0.04); }
 .avatar-wrap { position: relative; flex-shrink: 0; }
 .user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; }
 .tier-coin {
@@ -281,19 +297,20 @@ const formatDate = (date) => feedUtils.formatDate(date);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 .user-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.user-nickname { font-size: 13px; font-weight: 600; color: #191F28; letter-spacing: -0.01em; }
-.post-date { font-size: 12px; color: #B0B8C1; font-weight: 400; }
+.user-nickname { font-size: 13px; font-weight: 600; color: #4E5968; letter-spacing: -0.2px; }
+.post-date { font-size: 11px; color: #B0B8C1; font-weight: 500; letter-spacing: -0.1px; }
 
 .interaction-group { display: flex; gap: 4px; }
 .stat-pill {
-  display: flex; align-items: center; gap: 3px; padding: 4px 8px;
-  background: #F2F4F6; border-radius: 100px;
-  font-size: 11px; font-weight: 500; color: #8B95A1;
-  transition: all 0.15s ease;
+  display: flex; align-items: center; gap: 4px; padding: 5px 9px;
+  background: #F2F4F6; border-radius: 999px;
+  font-size: 11px; font-weight: 600; color: #8B95A1;
+  letter-spacing: -0.1px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 .stat-pill.active { background: #F3E8FF; color: #9333EA; }
 .stat-pill.active:hover { background: #E9D5FF; }
@@ -302,7 +319,9 @@ const formatDate = (date) => feedUtils.formatDate(date);
 /* 모바일 */
 @media (max-width: 768px) {
   .post-card {
-    border-radius: 0; border: none; background: transparent;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     padding-bottom: 0; margin-bottom: 0;
     border-bottom: 1px solid #F2F4F6;
   }
