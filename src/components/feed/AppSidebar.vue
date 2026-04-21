@@ -18,9 +18,24 @@
         </router-link>
 
         <router-link to="/battle" class="nav-item" active-class="active">
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.5 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-5-2a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
+          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <!-- 좌측 4개 시드 -->
+            <path d="M2 4h3"/>
+            <path d="M2 8h3"/>
+            <path d="M2 12h3"/>
+            <path d="M2 16h3"/>
+            <!-- 1라운드 브래킷 -->
+            <path d="M5 4v4"/>
+            <path d="M5 12v4"/>
+            <path d="M5 6h3"/>
+            <path d="M5 14h3"/>
+            <!-- 결승 브래킷 + 우승 라인 -->
+            <path d="M8 6v8"/>
+            <path d="M8 10h3"/>
+            <!-- 트로피 -->
+            <path d="M13 8h4v2a2 2 0 0 1-4 0V8z"/>
+            <path d="M15 12v2"/>
+            <path d="M13.5 14h3"/>
           </svg>
           <span class="nav-text">요거픽</span>
         </router-link>
