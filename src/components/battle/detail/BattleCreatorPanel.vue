@@ -75,10 +75,9 @@
           </div>
         </header>
 
-        <!-- Tabs -->
-        <nav class="panel-tabs">
+        <!-- Tabs — 승인 탭이 필요한 PUBLIC_APPROVAL일 때만 노출 -->
+        <nav v-if="supportsApproval" class="panel-tabs">
           <button
-            v-if="supportsApproval"
             class="tab-btn"
             :class="{ active: activeTab === 'approval' }"
             @click="activeTab = 'approval'"
