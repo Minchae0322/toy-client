@@ -453,7 +453,7 @@ function computeBubbleLayout(nodeList, W, H) {
 
   const gap = n <= 5 ? 4 : 6
   const centerPull = n <= 5 ? 0.015 : 0.01
-  const maxTicks = 150
+  const maxTicks = n <= 10 ? 80 : 120
 
   for (let tick = 0; tick < maxTicks; tick++) {
     const alpha = Math.max(0.001, 1 - tick / maxTicks)
@@ -500,13 +500,38 @@ const dashBubbleNodes = computed(() => {
   return dashBubbleProducts.value.map(p => ({ id: p.id, r: getDashRadius(getProductPopularityScore(p), dashMaxScore.value, min, max) }))
 })
 
-// 동기 computed로 계산 — watch+rAF 대비 한 프레임 제거됨
-const dashBubblePositions = computed(() => {
+// 비동기 계산 — 150-tick O(n²) 물리 시뮬레이션을 idle/rAF에 deferred 실행해
+// 메인 스레드 블로킹으로 인한 화면 멈춤 방지. 초기 배치 전까지는 빈 배열 → 버블 숨김.
+const dashBubblePositions = ref([])
+
+let posComputeHandle = null
+const cancelPosCompute = () => {
+  if (posComputeHandle == null) return
+  if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(posComputeHandle)
+  else cancelAnimationFrame(posComputeHandle)
+  posComputeHandle = null
+}
+
+const runComputePositions = () => {
+  posComputeHandle = null
   const nodes = dashBubbleNodes.value
   const { w, h } = bubbleDims.value
-  if (!nodes.length || !w || !h) return []
-  return computeBubbleLayout(nodes, w, h)
-})
+  if (!nodes.length || !w || !h) { dashBubblePositions.value = []; return }
+  dashBubblePositions.value = computeBubbleLayout(nodes, w, h)
+}
+
+const scheduleComputePositions = () => {
+  cancelPosCompute()
+  posComputeHandle = (typeof requestIdleCallback !== 'undefined')
+    ? requestIdleCallback(runComputePositions, { timeout: 200 })
+    : requestAnimationFrame(runComputePositions)
+}
+
+watch(
+  [dashBubbleNodes, () => bubbleDims.value.w, () => bubbleDims.value.h],
+  scheduleComputePositions,
+  { immediate: true, flush: 'post' }
+)
 
 const bubbleTooltipProduct = computed(() => {
   if (!bubbleHovered.value) return null
@@ -898,6 +923,7 @@ onUnmounted(() => {
     clearTimeout(bubbleResizeTimer)
     bubbleResizeTimer = null
   }
+  cancelPosCompute()
 })
 </script>
 
