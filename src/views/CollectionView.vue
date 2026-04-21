@@ -181,6 +181,8 @@ const currentUser = reactive({
   level: 1,
   currentExp: 0,
   totalExp: 0,
+  nextLevelExp: 0,
+  maxLevel: false,
   certificationCount: 0,
   fireCount: 0,
   followerCount: 0,
@@ -234,6 +236,7 @@ async function loadRewardData() {
       currentUser.currentExp = rewards.currentLevelExp ?? 0
       currentUser.totalExp = rewards.totalExp ?? 0
       currentUser.nextLevelExp = rewards.nextLevelExp ?? 0
+      currentUser.maxLevel = rewards.maxLevel === true
       currentUser.seasonExp = rewards.seasonExp ?? 0
       currentUser.seasonCode = rewards.seasonCode ?? ''
     }

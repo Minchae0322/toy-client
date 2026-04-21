@@ -98,14 +98,25 @@ defineEmits(['use-ticket'])
 
 const tier = computed(() => getTierByLevel(props.user.level) ?? getTierByLevel(1))
 const tierColor = computed(() => getTierColor(props.user.level))
-const nextExp = computed(() => {
-  const apiNext = Number(props.user.nextLevelExp)
-  if (Number.isFinite(apiNext) && apiNext > 0) return apiNext
+
+// 백엔드 응답 규약:
+//  - currentLevelExp: 현재 레벨 구간에서 쌓은 EXP
+//  - nextLevelExp: 다음 레벨까지 "남은" EXP (threshold가 아님)
+//  - maxLevel: 최고 레벨 여부
+const expRemaining = computed(() => {
+  const v = Number(props.user.nextLevelExp)
+  return Number.isFinite(v) && v >= 0 ? v : null
+})
+const levelThreshold = computed(() => {
+  if (props.user.maxLevel) return null
+  if (expRemaining.value != null) {
+    return Number(props.user.currentExp || 0) + expRemaining.value
+  }
   return getNextLevelExp(props.user.level)
 })
 const progress = computed(() => {
-  if (!nextExp.value) return 100
-  return Math.min(Math.round((props.user.currentExp / nextExp.value) * 100), 100)
+  if (props.user.maxLevel || !levelThreshold.value) return 100
+  return Math.min(Math.round((props.user.currentExp / levelThreshold.value) * 100), 100)
 })
 
 const vw = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
@@ -115,8 +126,10 @@ onUnmounted(() => window.removeEventListener('resize', onResize))
 const heroArtSize = computed(() => (vw.value >= 768 ? 54 : 48))
 
 const expToNext = computed(() => {
-  if (!nextExp.value) return null
-  return Math.max(nextExp.value - props.user.currentExp, 0)
+  if (props.user.maxLevel) return null
+  if (expRemaining.value != null) return expRemaining.value
+  if (!levelThreshold.value) return null
+  return Math.max(levelThreshold.value - props.user.currentExp, 0)
 })
 
 const encouragement = computed(() => {
