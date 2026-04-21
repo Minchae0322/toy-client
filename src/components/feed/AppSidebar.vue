@@ -18,12 +18,13 @@
         </router-link>
 
         <router-link to="/battle" class="nav-item" active-class="active">
-          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 5h4"/>
-            <path d="M3 15h4"/>
-            <path d="M7 5v10"/>
-            <path d="M7 10h6"/>
-            <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <!-- 시상대: 2등 / 1등(가운데 최고) / 3등 -->
+            <path d="M3 11h4v6H3z"/>
+            <path d="M8 7h4v10H8z"/>
+            <path d="M13 13h4v4h-4z"/>
+            <!-- 1등 위 메달 -->
+            <circle cx="10" cy="4" r="1.8" fill="currentColor"/>
           </svg>
           <span class="nav-text">요거픽</span>
         </router-link>
