@@ -92,7 +92,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { feedService } from '@/services/FeedService.js'
 import { chatService } from '@/services/ChatService.js'
@@ -443,16 +443,38 @@ const handleSendMessage = async (feedData) => {
   }
 }
 
+// 같은 라우트로 다른 feedId 진입 시 이전 피드 state 잔존 방지
+const resetFeedState = () => {
+  feed.value = null
+  comments.value = []
+  commentLoading.value = false
+  commentPagination.value = { page: 0, size: 20, totalElements: 0, totalPages: 0, hasNext: false }
+  isSaved.value = false
+  isFollowing.value = false
+  showShareModal.value = false
+  showEditModal.value = false
+  error.value = null
+  loading.value = true
+}
+
+watch(() => route.params.id, (newId, oldId) => {
+  if (!newId || newId === oldId) return
+  resetFeedState()
+  loadFeedDetail()
+})
+
 onMounted(() => loadFeedDetail())
 </script>
 
 <style scoped>
-/* 색상: #191F28 / #4E5968 / #8B95A1 / #B0B8C1 */
+/* 색상: #0A0E1A / #191F28 / #4E5968 / #8B95A1 / #B0B8C1 / #F2F4F6 / #F7F8FA */
 
 .detail-container {
-  background: #fff;
+  background: #ffffff;
   min-height: 100vh;
   color: #191F28;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+  letter-spacing: -0.2px;
 }
 
 .loading-container,
@@ -462,16 +484,17 @@ onMounted(() => loadFeedDetail())
   align-items: center;
   justify-content: center;
   min-height: 60vh;
-  background: #fff;
+  background: #ffffff;
+  gap: 16px;
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #F2F4F6;
-  border-top-color: #191F28;
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid #F2F4F6;
+  border-top-color: #0A0E1A;
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -479,27 +502,30 @@ onMounted(() => loadFeedDetail())
 .error-text {
   color: #4E5968;
   font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
 .btn-retry {
-  padding: 10px 20px;
-  background: #191F28;
-  color: #fff;
+  padding: 11px 22px;
+  background: #0A0E1A;
+  color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.2px;
   cursor: pointer;
-  transition: background 0.15s ease;
+  font-family: inherit;
+  transition: background 0.18s ease, transform 0.1s ease;
 }
-.btn-retry:active { background: #333D4B; }
+.btn-retry:hover { background: #191F28; }
+.btn-retry:active { background: #333D4B; transform: scale(0.98); }
 
 .detail-main {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px 20px 40px;
 }
 
 .content-wrapper {
@@ -510,11 +536,12 @@ onMounted(() => loadFeedDetail())
 .main-card {
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border-radius: 16px;
+  background: #ffffff;
+  border-radius: 20px;
   overflow: hidden;
-  border: 1px solid #F2F4F6;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow:
+      0 0 0 1px rgba(15, 23, 42, 0.04),
+      0 8px 32px rgba(15, 23, 42, 0.06);
 }
 
 .image-area {
@@ -523,7 +550,7 @@ onMounted(() => loadFeedDetail())
 }
 
 .info-area {
-  background: #fff;
+  background: #ffffff;
   overflow: hidden;
 }
 
@@ -554,25 +581,24 @@ onMounted(() => loadFeedDetail())
 
   .main-card {
     border-radius: 0;
-    border: none;
     box-shadow: none;
   }
 }
 
 .comment-section-wrapper {
-  margin-top: 8px;
-  background: #fff;
-  border-radius: 16px;
+  margin-top: 16px;
+  background: #ffffff;
+  border-radius: 20px;
   overflow: hidden;
-  border: 1px solid #F2F4F6;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow:
+      0 0 0 1px rgba(15, 23, 42, 0.04),
+      0 8px 32px rgba(15, 23, 42, 0.06);
 }
 
 @media (max-width: 1023px) {
   .comment-section-wrapper {
     margin-top: 8px;
     border-radius: 0;
-    border: none;
     border-top: 1px solid #F2F4F6;
     box-shadow: none;
   }
