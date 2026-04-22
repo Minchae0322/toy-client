@@ -29,8 +29,7 @@
         </div>
 
         <!-- 로딩 스켈레톤 -->
-        <Transition name="view-fade" mode="out-in">
-        <div v-if="loading && !products.length" key="loading" class="skeleton-wrapper">
+        <div v-if="loading && !products.length" class="skeleton-wrapper">
           <!-- 버블 차트 스켈레톤 -->
           <div class="skeleton-bubble-area">
             <div class="skeleton-bubble skeleton-bubble-1"></div>
@@ -64,11 +63,11 @@
         </div>
 
         <!-- 빈 상태 -->
-        <div v-else-if="!filtered.length && !loading" key="empty" class="empty-state">
+        <div v-else-if="!filtered.length && !loading" class="empty-state">
           <p>{{ searchKeyword ? '검색 결과가 없습니다' : '등록된 아이템이 없습니다' }}</p>
         </div>
 
-        <div v-else-if="filtered.length" key="content">
+        <div v-else-if="filtered.length">
           <!-- 버블 차트 -->
           <div class="bubble-wrapper">
             <div
@@ -224,7 +223,6 @@
             </button>
           </div>
         </div>
-        </Transition>
       </div>
     </main>
 
@@ -303,9 +301,11 @@ function computeLayout(nodeList, W, H) {
 
   const gap = n <= 5 ? 4 : 6
   const centerPull = n <= 5 ? 0.015 : 0.01
+  const maxTicks = 150
 
-  for (let tick = 0; tick < 300; tick++) {
-    const alpha = Math.max(0.001, 1 - tick / 300)
+  for (let tick = 0; tick < maxTicks; tick++) {
+    const alpha = Math.max(0.001, 1 - tick / maxTicks)
+    let settled = true
     for (let i = 0; i < pos.length; i++) {
       const dx = cx - pos[i].x, dy = cy - pos[i].y
       const pull = centerPull * alpha * (i < 3 ? 1.8 : 0.3)
@@ -325,7 +325,9 @@ function computeLayout(nodeList, W, H) {
       const pad = pos[i].r + 2
       pos[i].x = Math.max(pad, Math.min(W - pad, pos[i].x))
       pos[i].y = Math.max(pad, Math.min(H - pad, pos[i].y))
+      if (Math.abs(pos[i].vx) > 0.5 || Math.abs(pos[i].vy) > 0.5) settled = false
     }
+    if (settled && tick > 60) break
   }
   return pos.map(p => ({ x: p.x, y: p.y }))
 }
@@ -394,7 +396,16 @@ const nodes = computed(() => {
   return bubbleProducts.value.map(p => ({ id: p.id, r: getRadius(getPopularityScore(p), maxScore.value, min, max) }))
 })
 
-const positions = computed(() => computeLayout(nodes.value, dims.value.w, dims.value.h))
+// positions: 동기 computed 대신 RAF 지연으로 메인 스레드 블로킹 방지
+const positions = ref([])
+let layoutRafId = null
+watch([nodes, dims], ([n, d]) => {
+  if (layoutRafId) cancelAnimationFrame(layoutRafId)
+  layoutRafId = requestAnimationFrame(() => {
+    positions.value = computeLayout(n, d.w, d.h)
+    layoutRafId = null
+  })
+}, { immediate: true })
 
 const tooltipProduct = computed(() => {
   if (!hovered.value) return null
@@ -738,6 +749,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   resizeObserver?.disconnect()
+  if (layoutRafId) cancelAnimationFrame(layoutRafId)
   window.removeEventListener('mousemove', onGlobalMove)
   window.removeEventListener('mouseup', onGlobalUp)
   window.removeEventListener('touchmove', onGlobalMove)
@@ -1081,12 +1093,6 @@ onUnmounted(() => {
 .panel-fade-enter-active { animation: fadeIn 0.2s ease; }
 .panel-fade-leave-active { transition: opacity 0.15s; }
 .panel-fade-leave-to { opacity: 0; }
-
-/* 로딩/빈/콘텐츠 상태 전환 */
-.view-fade-enter-active { transition: opacity 0.25s ease, transform 0.25s ease; }
-.view-fade-leave-active { transition: opacity 0.15s ease; }
-.view-fade-enter-from { opacity: 0; transform: translateY(8px); }
-.view-fade-leave-to { opacity: 0; }
 
 /* 모바일 */
 @media (max-width: 640px) {
