@@ -120,56 +120,181 @@
               </svg>
             </button>
           </div>
-          <div v-else class="product-input-wrapper">
-            <div v-if="productInputMode === 'select'" class="product-mode-cards">
-              <button type="button" class="mode-card" @click="openProductModal">
-                <div class="mode-card-icon search">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                  </svg>
-                </div>
-                <div class="mode-card-content">
-                  <h4 class="mode-card-title">제품 연동</h4>
-                  <p class="mode-card-desc">등록된 제품 정보 연결</p>
-                </div>
-              </button>
-              <button type="button" class="mode-card" @click="productInputMode = 'custom'">
-                <div class="mode-card-icon custom">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                  </svg>
-                </div>
-                <div class="mode-card-content">
-                  <h4 class="mode-card-title">직접 작성</h4>
-                  <p class="mode-card-desc">제품명만 간단히 입력</p>
-                </div>
-              </button>
-            </div>
-            <div v-else class="custom-mode-content">
-              <div class="custom-input-header">
-                <span class="custom-input-label">직접 작성</span>
-                <button type="button" class="btn-back-to-select" @click="resetProductInput">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                </button>
-              </div>
-              <div class="autocomplete-wrapper">
+          <div v-else class="product-search-wrapper">
+            <div class="product-search-row">
+              <div class="product-search-bar">
+                <svg class="product-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 <input
                   type="text"
-                  class="form-input custom-input"
-                  placeholder="브랜드 + 제품명 (예: 나이키 조던 4 레트로)"
+                  class="product-search-input"
+                  placeholder="제품명을 검색하세요 (예: 나이키 조던 4)"
                   v-model="formData.productNameCustom"
                   @input="handleProductNameInput"
                   ref="customInputRef"
                 />
-                <div v-if="productSuggestions.length > 0" class="suggestions">
-                  <button v-for="suggestion in productSuggestions" :key="suggestion" class="suggestion-item" @click="selectSuggestion(suggestion)">
-                    {{ suggestion }}
-                  </button>
+                <div v-if="isSearchingProducts" class="product-search-spinner">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                  </svg>
                 </div>
               </div>
+              <label
+                v-if="showRegisterToggle"
+                class="register-toggle"
+                :class="{ active: registerAsProduct }"
+              >
+                <input type="checkbox" v-model="registerAsProduct" class="register-toggle-input" />
+                <svg v-if="registerAsProduct" class="register-toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                </svg>
+                <svg v-else class="register-toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span class="register-toggle-text">새 제품 등록</span>
+              </label>
             </div>
+
+            <!-- 검색 결과 -->
+            <div v-if="productSuggestions.length > 0" class="product-suggestions">
+              <button
+                v-for="p in productSuggestions"
+                :key="p.productId"
+                type="button"
+                class="product-suggestion-item"
+                @click="handleProductSelect(p)"
+              >
+                <img
+                  :src="p.thumbnailUrl || '/default-product.png'"
+                  :alt="p.name"
+                  class="product-suggestion-thumb"
+                />
+                <div class="product-suggestion-info">
+                  <p class="product-suggestion-name">{{ p.name }}</p>
+                  <p class="product-suggestion-brand">{{ p.brand }}</p>
+                </div>
+                <svg class="product-suggestion-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- 제품 등록 토글 ON: 브랜드 + 제품 대표 이미지 -->
+            <div v-if="registerAsProduct" class="brand-input-block">
+              <div class="register-block-header">
+                <span class="register-block-title">새 제품 정보</span>
+                <button type="button" class="register-help" aria-label="새 제품 등록 안내">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span class="register-help-tooltip" role="tooltip">
+                    <span class="register-help-row">• 새 제품은 관리자 승인 후 공개됩니다</span>
+                    <span class="register-help-row">• 중복된 제품은 삭제될 수 있습니다</span>
+                  </span>
+                </button>
+              </div>
+
+              <div class="register-field">
+                <label class="register-field-label">브랜드</label>
+                <input
+                  type="text"
+                  class="form-input brand-input"
+                  placeholder="브랜드명 (예: 나이키)"
+                  v-model="productBrandCustom"
+                />
+              </div>
+
+              <div class="register-field">
+                <label class="register-field-label">제품 대표 이미지</label>
+                <div class="product-image-options">
+                  <button
+                    type="button"
+                    class="product-image-option"
+                    :class="{ active: productImageMode === 'feed', disabled: !feedThumbnailAvailable }"
+                    :disabled="!feedThumbnailAvailable"
+                    @click="productImageMode = 'feed'"
+                  >
+                    <div class="product-image-thumb">
+                      <img
+                        v-if="feedThumbnailAvailable"
+                        :src="selectedPhotos[0].preview"
+                        alt="피드 대표 이미지"
+                      />
+                      <div v-else class="product-image-empty">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="product-image-option-meta">
+                      <span class="product-image-radio" :class="{ checked: productImageMode === 'feed' && feedThumbnailAvailable }">
+                        <svg v-if="productImageMode === 'feed' && feedThumbnailAvailable" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                        </svg>
+                      </span>
+                      <span class="product-image-option-text">피드 대표 이미지 사용</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="product-image-option"
+                    :class="{ active: productImageMode === 'custom' }"
+                    @click="triggerProductImagePick"
+                  >
+                    <div class="product-image-thumb">
+                      <img
+                        v-if="customProductImage?.preview"
+                        :src="customProductImage.preview"
+                        alt="직접 업로드"
+                      />
+                      <div v-else class="product-image-empty plus">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                      </div>
+                      <div v-if="customProductImage?.uploading" class="product-image-upload-overlay">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="product-image-option-meta">
+                      <span class="product-image-radio" :class="{ checked: productImageMode === 'custom' }">
+                        <svg v-if="productImageMode === 'custom'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                        </svg>
+                      </span>
+                      <span class="product-image-option-text">
+                        {{ customProductImage?.preview ? '다른 이미지 변경' : '다른 이미지 업로드' }}
+                      </span>
+                    </div>
+                  </button>
+                </div>
+                <input
+                  ref="productImageInputRef"
+                  type="file"
+                  accept="image/*"
+                  class="product-image-hidden-input"
+                  @change="handleProductImageSelect"
+                />
+              </div>
+
+            </div>
+
+            <!-- 검색 전 안내 -->
+            <p
+              v-if="!formData.productNameCustom.trim() && !isSearchingProducts"
+              class="product-search-hint"
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              제품명을 입력하면 등록된 제품을 자동으로 찾아드려요
+            </p>
           </div>
         </div>
         <div class="form-group">
@@ -367,25 +492,18 @@
       </div>
     </Transition>
 
-    <!-- Product Select Modal -->
-    <ProductSelectModal
-      v-if="showProductModal"
-      @select="handleProductSelect"
-      @close="closeProductModal"
-    />
-
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useFile } from '@/services/FileService.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { showExpGrant } from '@/composables/useExpToast'
 import { getUserId } from '@/utils/auth.js'
-import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
+import { productService } from '@/services/ProductService.js'
 import CategoryChipSelector from '@/components/common/CategoryChipSelector.vue'
 
 const FEED_DRAFT_KEY = 'feed_draft'
@@ -405,10 +523,17 @@ const hashtagInput = ref('')
 const productSuggestions = ref([])
 const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
-const showProductModal = ref(false)
 const selectedProduct = ref(null)
-const productInputMode = ref('select') // 'select' | 'custom'
 const customInputRef = ref(null)
+const isSearchingProducts = ref(false)
+const hasSearchedProducts = ref(false)
+const registerAsProduct = ref(false)
+const productBrandCustom = ref('')
+const productImageMode = ref('feed') // 'feed' | 'custom'
+const customProductImage = ref(null) // { preview, attachmentInfo, uploading, uploadFailed, file }
+const productImageInputRef = ref(null)
+let productSearchTimer = null
+let productSearchReqId = 0
 
 const formData = ref({
   userId: getUserId(),
@@ -492,7 +617,16 @@ const togglePriceGift = () => {
 
 const popularHashtags = ['조던4', '에어팟맥스', '디올립글로우', '나이키', '스니커즈', '데일리룩', 'OOTD', '커피스타그램', '테크', '뷰티']
 
-const mockProductNames = ['조던 4 레트로 브레드', '조던 4 화이트 시멘트', '조던 4 유니버시티 블루']
+const showRegisterToggle = computed(() =>
+  !selectedProduct.value &&
+  formData.value.productNameCustom.trim().length >= 2 &&
+  hasSearchedProducts.value &&
+  !isSearchingProducts.value
+)
+
+const feedThumbnailAvailable = computed(() =>
+  selectedPhotos.value.length > 0 && !!selectedPhotos.value[0]?.preview
+)
 
 const canSubmit = computed(() => {
   const hasUploadingPhotos = selectedPhotos.value.some(p => p.uploading)
@@ -685,37 +819,139 @@ const removePhoto = (index) => {
 }
 
 
-// Product Name
+// Product Name — debounced API search (race-guarded)
 const handleProductNameInput = () => {
-  if (formData.value.productNameCustom.length >= 2) {
-    productSuggestions.value = mockProductNames.filter(n => n.toLowerCase().includes(formData.value.productNameCustom.toLowerCase()))
-  } else {
-    productSuggestions.value = []
-  }
-}
-const selectSuggestion = (s) => { formData.value.productNameCustom = s; productSuggestions.value = [] }
+  const keyword = formData.value.productNameCustom.trim()
+  if (productSearchTimer) clearTimeout(productSearchTimer)
 
-// Product Modal
-const openProductModal = () => { showProductModal.value = true }
-const closeProductModal = () => { showProductModal.value = false }
+  if (keyword.length < 1) {
+    productSuggestions.value = []
+    hasSearchedProducts.value = false
+    isSearchingProducts.value = false
+    return
+  }
+
+  isSearchingProducts.value = true
+  productSearchTimer = setTimeout(async () => {
+    const currentKeyword = formData.value.productNameCustom.trim()
+    if (currentKeyword.length < 1) {
+      isSearchingProducts.value = false
+      return
+    }
+    const reqId = ++productSearchReqId
+    try {
+      const response = await productService.getProducts(
+        { keyword: currentKeyword, status: 'APPROVED' },
+        { page: 0, size: 8, sort: 'popularityScore,DESC' }
+      )
+      // 오래된 응답은 버림 (최신 요청만 반영)
+      if (reqId !== productSearchReqId) return
+      if (response.success && response.data) {
+        productSuggestions.value = response.data.content || response.data || []
+      } else {
+        productSuggestions.value = []
+      }
+    } catch (error) {
+      if (reqId !== productSearchReqId) return
+      console.error('제품 검색 실패:', error)
+      productSuggestions.value = []
+    } finally {
+      if (reqId === productSearchReqId) {
+        isSearchingProducts.value = false
+        hasSearchedProducts.value = true
+      }
+    }
+  }, 200)
+}
+
 const handleProductSelect = (product) => {
   selectedProduct.value = product
   formData.value.productId = product.productId
   formData.value.productNameCustom = product.name
-  showProductModal.value = false
   productSuggestions.value = []
+  registerAsProduct.value = false
+  productBrandCustom.value = ''
+  hasSearchedProducts.value = false
+  resetCustomProductImage()
+  productImageMode.value = 'feed'
 }
+
 const clearSelectedProduct = () => {
   selectedProduct.value = null
   formData.value.productId = null
   formData.value.productNameCustom = ''
-  productInputMode.value = 'select'
+  productSuggestions.value = []
+  hasSearchedProducts.value = false
+  registerAsProduct.value = false
+  productBrandCustom.value = ''
+  resetCustomProductImage()
+  productImageMode.value = 'feed'
 }
 
-const resetProductInput = () => {
-  formData.value.productNameCustom = ''
-  productSuggestions.value = []
-  productInputMode.value = 'select'
+const resetCustomProductImage = () => {
+  if (customProductImage.value?.preview && customProductImage.value.preview.startsWith('blob:')) {
+    URL.revokeObjectURL(customProductImage.value.preview)
+  }
+  customProductImage.value = null
+}
+
+const triggerProductImagePick = () => {
+  if (customProductImage.value?.preview) {
+    // 이미 업로드된 이미지가 있으면 모드만 custom으로 전환하면서 파일피커를 다시 열 수 있도록
+    productImageMode.value = 'custom'
+  }
+  productImageInputRef.value?.click()
+}
+
+const handleProductImageSelect = async (e) => {
+  const file = e.target.files?.[0]
+  e.target.value = ''
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    showError('이미지 파일만 업로드 가능합니다.')
+    return
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showError('파일 크기는 5MB 이하만 가능합니다.')
+    return
+  }
+
+  try {
+    const resized = await resizeImage(file, 1920, 0.85)
+    const previewUrl = URL.createObjectURL(resized)
+
+    // 이전 이미지 정리
+    resetCustomProductImage()
+
+    customProductImage.value = {
+      file: resized,
+      preview: previewUrl,
+      uploading: true,
+      uploadFailed: false,
+      attachmentInfo: null
+    }
+    productImageMode.value = 'custom'
+
+    const uploadResult = await fileService.upload(resized, { fileCode: 'PRODUCT' })
+    if (uploadResult.success && uploadResult.data) {
+      customProductImage.value.attachmentInfo = feedService.convertToAttachmentInfo(uploadResult.data)
+      customProductImage.value.uploading = false
+      const serverUrl = uploadResult.data.fileUrl || uploadResult.data.storedPath
+      if (serverUrl) {
+        URL.revokeObjectURL(customProductImage.value.preview)
+        customProductImage.value.preview = serverUrl
+      }
+    } else {
+      throw new Error(uploadResult.error || '업로드 실패')
+    }
+  } catch (err) {
+    console.error('❌ 제품 이미지 업로드 실패:', err)
+    if (customProductImage.value) {
+      customProductImage.value.uploading = false
+      customProductImage.value.uploadFailed = true
+    }
+    showError('제품 이미지 업로드에 실패했습니다. 다시 시도해주세요.')
+  }
 }
 
 // Hashtags
@@ -745,7 +981,9 @@ const saveDraft = () => {
         categoryId: selectedParentCategory.value.categoryId,
         categoryName: selectedParentCategory.value.categoryName
       } : null,
-      productInputMode: productInputMode.value,
+      registerAsProduct: registerAsProduct.value,
+      productBrandCustom: productBrandCustom.value,
+      productImageMode: productImageMode.value,
       savedAt: new Date().toISOString()
     }
     localStorage.setItem(FEED_DRAFT_KEY, JSON.stringify(draftData))
@@ -775,7 +1013,9 @@ const loadDraft = async () => {
       formData.value = { ...formData.value, ...draftData.formData }
       selectedProduct.value = draftData.selectedProduct
       selectedCategoryInfo.value = draftData.selectedCategoryInfo
-      productInputMode.value = draftData.productInputMode || 'select'
+      registerAsProduct.value = !!draftData.registerAsProduct
+      productBrandCustom.value = draftData.productBrandCustom || ''
+      productImageMode.value = draftData.productImageMode || 'feed'
 
       // 부모 카테고리 복원
       if (draftData.selectedParentCategory) {
@@ -922,9 +1162,54 @@ const handleSubmit = async () => {
       .filter(p => p.attachmentInfo)
       .map(p => p.attachmentInfo)
 
+    // 제품으로 등록 체크 시 먼저 제품 생성
+    let finalProductId = formData.value.productId
+    if (!finalProductId && registerAsProduct.value) {
+      if (!productBrandCustom.value.trim()) {
+        showError('브랜드명을 입력해주세요.')
+        isSubmitting.value = false
+        return
+      }
+
+      // 제품 썸네일 결정
+      let productThumbnail = null
+      if (productImageMode.value === 'custom') {
+        if (customProductImage.value?.uploading) {
+          showError('제품 이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.')
+          isSubmitting.value = false
+          return
+        }
+        if (!customProductImage.value?.attachmentInfo) {
+          showError('제품 이미지 업로드에 실패했어요. 다시 업로드해주세요.')
+          isSubmitting.value = false
+          return
+        }
+        productThumbnail = customProductImage.value.attachmentInfo
+      } else {
+        // feed 대표 이미지 사용
+        productThumbnail = thumbnail?.attachmentInfo || null
+      }
+
+      try {
+        const productResult = await productService.createProduct({
+          name: formData.value.productNameCustom.trim(),
+          brand: productBrandCustom.value.trim(),
+          categoryId: formData.value.subCategoryId,
+          thumbnailAttachmentInfo: productThumbnail
+        })
+        if (productResult.success && productResult.data) {
+          finalProductId = productResult.data.productId || productResult.data.id || null
+          console.log('✅ 제품 등록 완료:', finalProductId)
+        }
+      } catch (error) {
+        console.error('제품 등록 실패:', error)
+        showError('제품 등록에 실패했어요. 제품명만으로 게시글을 등록합니다.')
+      }
+    }
+
     const feedData = {
       userId: formData.value.userId,
-      productId: formData.value.productId,
+      productId: finalProductId,
       productNameCustom: formData.value.productNameCustom.trim(),
       subCategoryId: formData.value.subCategoryId,
       review: formData.value.review.trim(),
@@ -966,21 +1251,13 @@ const showError = (msg) => {
   setTimeout(() => { errorMessage.value = '' }, 3000)
 }
 
-// 직접 입력 모드 전환 시 자동 포커스
-watch(productInputMode, (newMode) => {
-  if (newMode === 'custom') {
-    nextTick(() => {
-      customInputRef.value?.focus()
-    })
-  }
-})
-
 onMounted(async () => {
   await loadDraft()
 })
 
 onBeforeUnmount(() => {
   selectedPhotos.value.forEach(p => URL.revokeObjectURL(p.preview))
+  resetCustomProductImage()
 })
 </script>
 
@@ -1306,171 +1583,480 @@ onBeforeUnmount(() => {
 .form-textarea { resize: vertical; min-height: 100px; }
 .mt-2 { margin-top: 8px; }
 
-/* Product Input */
-.product-input-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* 카드 선택 모드 */
-.product-mode-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.mode-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 20px 16px;
-  background: #F7F8FA;
-  border: 1.5px solid #E5E8EB;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: center;
-}
-
-.mode-card:hover {
-  border-color: var(--accent);
-  background: #FAF5FF;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.08);
-}
-
-.mode-card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mode-card-icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-.mode-card-icon.search {
-  background: #F3EAFD;
-  color: var(--accent);
-}
-
-.mode-card-icon.custom {
-  background: #DBEAFE;
-  color: #3b82f6;
-}
-
-.mode-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.mode-card-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--primary);
-  margin: 0;
-  letter-spacing: -0.2px;
-}
-
-.mode-card-desc {
-  font-size: 12px;
-  font-weight: 500;
-  color: #8B95A1;
-  margin: 0;
-}
-
-/* 직접 입력 모드 */
-.custom-mode-content {
+/* Product Search */
+.product-search-wrapper {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.custom-input-header {
+.product-search-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.product-search-bar {
+  flex: 1;
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  background: #F7F8FA;
+  border: 1.5px solid #E5E8EB;
+  border-radius: 12px;
+  transition: all 0.15s ease;
+  min-width: 0;
 }
 
-.custom-input-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
+.product-search-bar:focus-within {
+  background: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
 }
 
-.btn-back-to-select {
+.product-search-icon {
+  width: 18px;
+  height: 18px;
+  color: #8B95A1;
+  margin-left: 14px;
+  flex-shrink: 0;
+}
+
+.product-search-input {
+  flex: 1;
+  padding: 13px 14px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--primary);
+  min-width: 0;
+}
+
+.product-search-input::placeholder {
+  color: #B0B8C1;
+  font-weight: 400;
+}
+
+.product-search-spinner {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--hover);
-  border: none;
-  border-radius: 8px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.product-search-spinner svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+
+.register-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  background: #F7F8FA;
+  border: 1.5px solid #E5E8EB;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.btn-back-to-select:hover {
-  background: #fee2e2;
+.register-toggle:hover {
+  border-color: var(--accent);
+  background: #FAF5FF;
 }
 
-.btn-back-to-select svg {
+.register-toggle.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.register-toggle-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.register-toggle-icon {
   width: 16px;
   height: 16px;
+  color: #8B95A1;
+}
+
+.register-toggle.active .register-toggle-icon {
+  color: #fff;
+}
+
+.register-toggle-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4E5968;
+  letter-spacing: -0.1px;
+}
+
+.register-toggle.active .register-toggle-text {
+  color: #fff;
+}
+
+/* Suggestions list (inline, non-absolute) */
+.product-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.product-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.product-suggestion-item:hover {
+  border-color: var(--accent);
+  background: #FAF5FF;
+}
+
+.product-suggestion-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #F7F8FA;
+  flex-shrink: 0;
+}
+
+.product-suggestion-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-suggestion-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0 0 2px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-suggestion-brand {
+  font-size: 12px;
+  color: var(--secondary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-suggestion-arrow {
+  width: 16px;
+  height: 16px;
+  color: #B0B8C1;
+  flex-shrink: 0;
+}
+
+.product-suggestion-item:hover .product-suggestion-arrow {
+  color: var(--accent);
+}
+
+/* Brand + image block (when register toggle ON) */
+.brand-input-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  background: #FAF5FF;
+  border: 1px solid #E9D5FF;
+  border-radius: 12px;
+}
+
+.register-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.register-block-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.1px;
+}
+
+.register-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: #8B95A1;
+  cursor: help;
+  transition: all 0.15s ease;
+}
+
+.register-help:hover,
+.register-help:focus-visible {
+  background: #fff;
+  color: var(--accent);
+  outline: none;
+}
+
+.register-help svg {
+  width: 16px;
+  height: 16px;
+}
+
+.register-help-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: max-content;
+  max-width: 260px;
+  padding: 10px 12px;
+  background: #0A0E1A;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.register-help-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #0A0E1A;
+  transform: rotate(45deg);
+  border-radius: 1px;
+}
+
+.register-help:hover .register-help-tooltip,
+.register-help:focus-visible .register-help-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.register-help-row {
+  display: block;
+}
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.register-field-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4E5968;
+  letter-spacing: -0.1px;
+}
+
+.brand-input {
+  padding: 11px 14px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.product-image-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.product-image-option {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px;
+  background: #fff;
+  border: 1.5px solid #E5E8EB;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-align: left;
+}
+
+.product-image-option:hover:not(.disabled) {
+  border-color: var(--accent);
+}
+
+.product-image-option.active {
+  border-color: var(--accent);
+  background: #F3EAFD;
+}
+
+.product-image-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.product-image-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #F7F8FA;
+}
+
+.product-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.product-image-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #B0B8C1;
+}
+
+.product-image-empty svg {
+  width: 28px;
+  height: 28px;
+}
+
+.product-image-empty.plus {
+  background: #F7F8FA;
+  color: var(--accent);
+}
+
+.product-image-upload-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image-upload-overlay svg {
+  width: 24px;
+  height: 24px;
+  color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+.product-image-option-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.product-image-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid #C7CDD5;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.product-image-radio.checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.product-image-radio svg {
+  width: 10px;
+  height: 10px;
+  color: #fff;
+}
+
+.product-image-option-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4E5968;
+  letter-spacing: -0.1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-image-option.active .product-image-option-text {
+  color: var(--accent);
+}
+
+.product-image-hidden-input {
+  display: none;
+}
+
+.product-search-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0 0 2px;
+  font-size: 12px;
   color: var(--secondary);
 }
 
-.btn-back-to-select:hover svg {
-  color: #ef4444;
+.product-search-hint svg {
+  color: var(--secondary);
+  flex-shrink: 0;
 }
 
-.custom-input {
-  padding: 14px 16px !important;
-  font-size: 15px !important;
-  border-radius: 12px !important;
-}
-
-.custom-input:focus {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
-}
-
-/* 모바일 카드 */
 @media (max-width: 480px) {
-  .product-mode-cards {
-    gap: 10px;
+  .product-search-row {
+    flex-direction: column;
   }
-
-  .mode-card {
-    padding: 16px 12px;
-    gap: 10px;
-  }
-
-  .mode-card-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-  }
-
-  .mode-card-icon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .mode-card-title {
-    font-size: 14px;
-  }
-
-  .mode-card-desc {
-    font-size: 11px;
+  .register-toggle {
+    justify-content: center;
+    padding: 10px 14px;
   }
 }
 
@@ -1535,30 +2121,6 @@ onBeforeUnmount(() => {
 .btn-clear-product:hover .icon {
   color: #ef4444;
 }
-
-/* Autocomplete */
-.autocomplete-wrapper { position: relative; max-width: 100%; }
-.suggestions {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 4px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 10;
-}
-.suggestion-item {
-  width: 100%;
-  padding: 12px 14px;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-}
-.suggestion-item:hover { background: var(--hover); }
 
 /* Category Inline Selection — iOS tone (CommonCategoryFilter 동기화) */
 .selected-category-display {
