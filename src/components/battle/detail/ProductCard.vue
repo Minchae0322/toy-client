@@ -37,7 +37,10 @@
     <div class="info-box">
       <div class="info-content">
         <p v-if="itemBrand" class="brand">{{ itemBrand }}</p>
-        <h3 class="name">{{ itemName }}</h3>
+        <div class="name-row">
+          <h3 :class="['name', { unavailable: productUnavailable }]">{{ itemName }}</h3>
+          <ProductStatusBadge :status="productStatus" size="sm" />
+        </div>
       </div>
 
       <!-- Vote Actions -->
@@ -80,6 +83,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import BattleCommentSummary from './BattleCommentSummary.vue'
+import ProductStatusBadge from '@/components/product/ProductStatusBadge.vue'
 
 const props = defineProps({
   item: {
@@ -125,15 +129,35 @@ const isYoutube = computed(() => {
   return itemType === 'YOUTUBE'
 })
 
+const productStatus = computed(() => {
+  const raw = props.item.battleItemProduct?.productStatus
+  return (typeof raw === 'string' ? raw : raw?.title || raw?.code || '')?.toUpperCase() || null
+})
+
+const productApproved = computed(() => !productStatus.value || productStatus.value === 'APPROVED')
+const productUnavailable = computed(() => ['REJECTED', 'DELETED'].includes(productStatus.value))
+
 const itemName = computed(() => {
+  // REJECTED/DELETED 시 커스텀 이름으로 폴백
+  if (productUnavailable.value) {
+    return props.item.customName || props.item.battleItemProduct?.name || '제품명 없음'
+  }
   return props.item.battleItemProduct?.name || props.item.customName || '제품명 없음'
 })
 
 const itemBrand = computed(() => {
+  if (productUnavailable.value) {
+    return props.item.customBrand || props.item.battleItemProduct?.brand || ''
+  }
   return props.item.battleItemProduct?.brand || props.item.customBrand || ''
 })
 
 const itemImage = computed(() => {
+  if (productUnavailable.value) {
+    return props.item.customImageUrl ||
+        props.item.battleItemProduct?.thumbnailDto?.fileUrl ||
+        'https://placehold.co/400x400?text=No+Image'
+  }
   return props.item.battleItemProduct?.thumbnailDto?.fileUrl ||
       props.item.customImageUrl ||
       'https://placehold.co/400x400?text=No+Image'
@@ -437,6 +461,13 @@ defineExpose({ setCommentSubmitting })
   margin: 0 0 2px;
 }
 
+.name-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .name {
   font-size: 18px;
   font-weight: 700;
@@ -447,6 +478,13 @@ defineExpose({ setCommentSubmitting })
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+.name.unavailable {
+  color: #6B7280;
+  text-decoration: line-through;
 }
 
 .vote-actions {

@@ -27,7 +27,13 @@
         </div>
       </section>
 
-      <section class="product-info-banner" @click="$emit('search-store', getProductName)">
+      <section
+          :class="['product-info-banner', { 'is-unavailable': productUnavailable, 'is-clickable': productLinkable }]"
+          :role="productLinkable ? 'link' : null"
+          :tabindex="productLinkable ? 0 : null"
+          @click="handleProductBannerClick"
+          @keydown.enter="handleProductBannerClick"
+      >
         <div class="product-main">
           <span class="buy-place">
             <svg class="place-icon" viewBox="0 0 24 24">
@@ -35,7 +41,10 @@
             </svg>
             {{ feed.buyPlace || '미등록' }}
           </span>
-          <h1 class="product-title">{{ getProductName }}</h1>
+          <div class="product-title-row">
+            <h1 class="product-title">{{ getProductName }}</h1>
+            <ProductStatusBadge :status="productStatus" size="md" />
+          </div>
         </div>
         <div class="price-area">
           <span class="price-label">구매가</span>
@@ -118,6 +127,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import ProductStatusBadge from '@/components/product/ProductStatusBadge.vue'
 
 const props = defineProps({
   feed: { type: Object, required: true },
@@ -130,12 +140,38 @@ const emit = defineEmits(['follow', 'unfollow', 'like', 'save', 'search-store', 
 const isCreatingChatRoom = ref(false)
 
 /* 헬퍼 함수 및 계산된 속성 */
-const getProductName = computed(() => props.feed?.product?.name || props.feed?.productNameCustom || props.feed?.productName || '상품 정보')
+const productStatus = computed(() => {
+  const raw = props.feed?.product?.productStatus
+  return (typeof raw === 'string' ? raw : raw?.title || raw?.code || '')?.toUpperCase() || null
+})
+
+const productApproved = computed(() => !productStatus.value || productStatus.value === 'APPROVED')
+const productUnavailable = computed(() => ['REJECTED', 'DELETED'].includes(productStatus.value))
+const productLinkable = computed(() => !!props.feed?.product?.id && productApproved.value)
+
+const getProductName = computed(() => {
+  // REJECTED/DELETED 상태의 제품은 작성자가 입력한 productNameCustom으로 폴백 (캐노니컬 정보 신뢰 불가)
+  if (productUnavailable.value) {
+    return props.feed?.productNameCustom || props.feed?.productName || props.feed?.product?.name || '상품 정보'
+  }
+  return props.feed?.product?.name || props.feed?.productNameCustom || props.feed?.productName || '상품 정보'
+})
+
 const getCategoryName = computed(() => props.feed?.subCategoryDetail?.subCategoryName || props.feed?.subCategoryDetail?.categoryName || '카테고리')
+
+const router = useRouter()
+
+const handleProductBannerClick = () => {
+  if (productLinkable.value) {
+    router.push({ name: 'ProductDetail', params: { id: props.feed.product.id } })
+  } else {
+    // 미연동/PENDING/REJECTED/DELETED: 구매처 검색으로 폴백
+    emit('search-store', getProductName.value)
+  }
+}
 const getAuthorProfileImage = computed(() => props.feed?.userInfo?.profileImageFile?.fileUrl || props.feed?.userInfo?.profileImageUrl || 'https://i.pravatar.cc/150')
 const getAuthorNickname = computed(() => props.feed?.userInfo?.nickname || '사용자')
 
-const router = useRouter()
 const goToUser = () => {
   const userId = props.feed?.userInfo?.userId
   if (userId != null) router.push({ name: 'UserFeedList', params: { userId: String(userId) } })
@@ -240,17 +276,29 @@ const handleSendMessage = () => {
   margin-bottom: 16px; border: none;
   cursor: pointer; transition: all 0.15s ease;
 }
-.product-info-banner:active { transform: scale(0.98); background: #F2F4F6; }
+.product-info-banner.is-clickable:hover { background: #F2F4F6; }
+.product-info-banner.is-clickable:active { transform: scale(0.98); background: #F2F4F6; }
+.product-info-banner.is-unavailable {
+  background: #F9FAFB;
+  opacity: 0.9;
+}
+.product-info-banner.is-unavailable .product-title {
+  color: #6B7280;
+  text-decoration: line-through;
+}
 .product-main { min-width: 0; flex: 1; }
 .buy-place {
   display: flex; align-items: center; gap: 4px;
   font-size: 12px; font-weight: 600; color: #9333EA; margin-bottom: 4px;
 }
 .place-icon { width: 13px; height: 13px; flex-shrink: 0; }
+.product-title-row {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
 .product-title {
   font-size: 16px; font-weight: 700; color: #191F28;
   margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.02em; min-width: 0;
 }
 .price-area { text-align: right; flex-shrink: 0; margin-left: 16px; }
 .price-label { display: block; font-size: 11px; color: #8B95A1; margin-bottom: 2px; font-weight: 500; }
