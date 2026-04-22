@@ -207,6 +207,18 @@
               </div>
 
               <div class="register-field">
+                <label class="register-field-label">제품 정가 <span class="register-field-hint">(선택, 원 단위)</span></label>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  class="form-input brand-input"
+                  placeholder="예: 4500"
+                  v-model="productPriceCustom"
+                  @input="productPriceCustom = productPriceCustom.replace(/[^0-9]/g, '')"
+                />
+              </div>
+
+              <div class="register-field">
                 <label class="register-field-label">제품 대표 이미지</label>
                 <div class="product-image-options">
                   <button
@@ -529,6 +541,7 @@ const isSearchingProducts = ref(false)
 const hasSearchedProducts = ref(false)
 const registerAsProduct = ref(false)
 const productBrandCustom = ref('')
+const productPriceCustom = ref('')
 const productImageMode = ref('feed') // 'feed' | 'custom'
 const customProductImage = ref(null) // { preview, attachmentInfo, uploading, uploadFailed, file }
 const productImageInputRef = ref(null)
@@ -871,6 +884,7 @@ const handleProductSelect = (product) => {
   productSuggestions.value = []
   registerAsProduct.value = false
   productBrandCustom.value = ''
+  productPriceCustom.value = ''
   hasSearchedProducts.value = false
   resetCustomProductImage()
   productImageMode.value = 'feed'
@@ -884,6 +898,7 @@ const clearSelectedProduct = () => {
   hasSearchedProducts.value = false
   registerAsProduct.value = false
   productBrandCustom.value = ''
+  productPriceCustom.value = ''
   resetCustomProductImage()
   productImageMode.value = 'feed'
 }
@@ -1195,6 +1210,7 @@ const handleSubmit = async () => {
           name: formData.value.productNameCustom.trim(),
           brand: productBrandCustom.value.trim(),
           categoryId: formData.value.subCategoryId,
+          price: productPriceCustom.value.trim() || '0',
           thumbnailAttachmentInfo: productThumbnail
         })
         if (productResult.success && productResult.data) {
@@ -1894,6 +1910,13 @@ onBeforeUnmount(() => {
   font-weight: 700;
   color: #4E5968;
   letter-spacing: -0.1px;
+}
+
+.register-field-hint {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94A3B8;
+  margin-left: 4px;
 }
 
 .brand-input {
