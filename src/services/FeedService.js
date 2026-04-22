@@ -214,12 +214,14 @@ class FeedService extends BaseApiService {
     return response
   }
 
-  async createComment(feedId, content) {
+  async createComment(feedId, content, parentCommentId = null) {
     if (!feedId) throw new Error('피드 ID가 필요합니다.')
     const validation = this.validateCommentData({ content })
     if (!validation.isValid) throw new Error(validation.errors.join(', '))
-    console.log('✍️ [FEED_SERVICE] 댓글 생성:', { feedId, contentLength: content.length })
-    const response = await this.post(`/feeds/${feedId}/comments`, { content: content.trim() })
+    const payload = { content: content.trim() }
+    if (parentCommentId != null) payload.parentCommentId = parentCommentId
+    console.log('✍️ [FEED_SERVICE] 댓글 생성:', { feedId, contentLength: content.length, parentCommentId: parentCommentId ?? null })
+    const response = await this.post(`/feeds/${feedId}/comments`, payload)
     if (response.success) {
       console.log('✅ [FEED_SERVICE] 댓글 생성 완료')
     }
@@ -718,7 +720,7 @@ export function useFeed() {
     deleteFeed: (id) => service.deleteFeed(id),
     // 댓글
     getComments: (feedId, pageable) => service.getComments(feedId, pageable),
-    createComment: (feedId, content) => service.createComment(feedId, content),
+    createComment: (feedId, content, parentCommentId) => service.createComment(feedId, content, parentCommentId),
     updateComment: (feedId, commentId, content) => service.updateComment(feedId, commentId, content),
     deleteComment: (feedId, commentId) => service.deleteComment(feedId, commentId),
     // 리액션

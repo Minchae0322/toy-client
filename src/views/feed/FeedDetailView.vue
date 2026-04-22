@@ -201,7 +201,7 @@ const loadMoreComments = () => {
   }
 }
 
-const submitComment = async (content) => {
+const submitComment = async (payload) => {
   // 로그인 체크
   if (!isLoggedIn.value) {
     const confirmed = await openLoginRequired('댓글을 작성하려면 로그인이 필요합니다.')
@@ -211,8 +211,14 @@ const submitComment = async (content) => {
     return
   }
 
+  // 이전 시그니처(content 문자열) 호환
+  const { content, parentCommentId = null } =
+      typeof payload === 'string' ? { content: payload } : (payload || {})
+
+  if (!content?.trim()) return
+
   try {
-    const response = await feedService.createComment(route.params.id, content)
+    const response = await feedService.createComment(route.params.id, content, parentCommentId)
     if (response.success) {
       showExpGrant(response.data?.expGrant, { mode: 'burst-only' })
       await loadComments(0)
@@ -230,10 +236,21 @@ const updateComment = async ({ commentId, content }) => {
   try {
     const response = await feedService.updateComment(route.params.id, commentId, content)
     if (response.success) {
-      const index = comments.value.findIndex(c => c.commentId === commentId)
-      if (index !== -1) {
-        comments.value[index].content = content
-        comments.value[index].updatedAt = new Date().toISOString()
+      // 부모/답글 양쪽에서 탐색
+      const now = new Date().toISOString()
+      const parentIdx = comments.value.findIndex(c => c.commentId === commentId)
+      if (parentIdx !== -1) {
+        comments.value[parentIdx].content = content
+        comments.value[parentIdx].updatedAt = now
+      } else {
+        for (const c of comments.value) {
+          const reply = c.replies?.find(r => r.commentId === commentId)
+          if (reply) {
+            reply.content = content
+            reply.updatedAt = now
+            break
+          }
+        }
       }
     }
   } catch (err) {
@@ -248,7 +265,8 @@ const deleteComment = async (commentId) => {
   try {
     const response = await feedService.deleteComment(route.params.id, commentId)
     if (response.success) {
-      comments.value = comments.value.filter(c => c.commentId !== commentId)
+      // 서버에서 부모의 deleted 플래그 전이가 있을 수 있으므로 목록 재조회가 가장 안전
+      await loadComments(0)
       if (feed.value && feed.value.commentCount > 0) {
         feed.value.commentCount -= 1
       }

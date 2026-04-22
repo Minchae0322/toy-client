@@ -40,45 +40,139 @@
 
       <ul v-else class="list">
         <li v-for="comment in comments" :key="comment.commentId" class="item">
-          <img
-              :src="comment.creatorProfileUrl || 'https://i.pravatar.cc/150'"
-              class="avatar"
-          />
-          <div class="body">
-            <div v-if="editingId === comment.commentId" class="edit-mode">
-              <textarea
-                  v-model="editingContent"
-                  @keyup.esc="cancelEdit"
-                  class="edit-input"
-                  rows="2"
-              ></textarea>
-              <div class="edit-actions">
-                <button @click="cancelEdit" class="btn-text">취소</button>
-                <button
-                    @click="saveEdit(comment.commentId)"
-                    :disabled="!editingContent.trim()"
-                    class="btn-text primary"
-                >
-                  저장
-                </button>
-              </div>
-            </div>
+          <!-- 부모 댓글 -->
+          <div class="comment-row">
+            <img
+                :src="comment.deleted ? deletedAvatar : (comment.creatorProfileUrl || 'https://i.pravatar.cc/150')"
+                class="avatar"
+            />
+            <div class="body">
+              <!-- 삭제된 부모 (답글만 남음) -->
+              <template v-if="comment.deleted">
+                <div class="comment-top">
+                  <span class="author deleted-label">삭제된 댓글</span>
+                  <span class="dot">·</span>
+                  <span class="time">{{ formatDate(comment.createdAt) }}</span>
+                </div>
+                <p class="text deleted-text">{{ comment.content || '삭제된 댓글입니다.' }}</p>
+              </template>
 
-            <template v-else>
-              <div class="comment-top">
-                <span class="author">{{ comment.creatorNickname || '사용자' }}</span>
-                <span v-if="comment.creatorId === feedCreatorId" class="badge">작성자</span>
-                <span class="dot">·</span>
-                <span class="time">{{ formatDate(comment.createdAt) }}</span>
-                <span v-if="isEdited(comment)" class="edited">(수정됨)</span>
+              <!-- 수정 모드 -->
+              <div v-else-if="editingId === comment.commentId" class="edit-mode">
+                <textarea
+                    v-model="editingContent"
+                    @keyup.esc="cancelEdit"
+                    class="edit-input"
+                    rows="2"
+                ></textarea>
+                <div class="edit-actions">
+                  <button @click="cancelEdit" class="btn-text">취소</button>
+                  <button
+                      @click="saveEdit(comment.commentId)"
+                      :disabled="!editingContent.trim()"
+                      class="btn-text primary"
+                  >
+                    저장
+                  </button>
+                </div>
               </div>
-              <p class="text">{{ comment.content }}</p>
-              <div v-if="isMyComment(comment.creatorId)" class="meta">
-                <button @click="startEdit(comment)" class="meta-btn">수정</button>
-                <button @click="handleDelete(comment.commentId)" class="meta-btn delete">삭제</button>
-              </div>
-            </template>
+
+              <!-- 일반 표시 -->
+              <template v-else>
+                <div class="comment-top">
+                  <span class="author">{{ comment.creatorNickname || '사용자' }}</span>
+                  <span v-if="comment.creatorId === feedCreatorId" class="badge">작성자</span>
+                  <span class="dot">·</span>
+                  <span class="time">{{ formatDate(comment.createdAt) }}</span>
+                  <span v-if="isEdited(comment)" class="edited">(수정됨)</span>
+                </div>
+                <p class="text">{{ comment.content }}</p>
+                <div class="meta">
+                  <button @click="toggleReply(comment.commentId)" class="meta-btn">
+                    {{ replyingTo === comment.commentId ? '답글 취소' : '답글' }}
+                  </button>
+                  <template v-if="isMyComment(comment.creatorId)">
+                    <button @click="startEdit(comment)" class="meta-btn">수정</button>
+                    <button @click="handleDelete(comment.commentId)" class="meta-btn delete">삭제</button>
+                  </template>
+                </div>
+              </template>
+            </div>
           </div>
+
+          <!-- 답글 입력 -->
+          <div v-if="replyingTo === comment.commentId" class="reply-input-wrapper">
+            <div class="input-bar reply" :class="{ focused: replyFocused }">
+              <input
+                  ref="replyInputRef"
+                  type="text"
+                  v-model="replyContent"
+                  @keyup.enter="submitReply(comment.commentId)"
+                  @keyup.esc="cancelReply"
+                  @focus="replyFocused = true"
+                  @blur="replyFocused = false"
+                  :placeholder="`@${comment.creatorNickname || '사용자'} 에게 답글 달기...`"
+                  class="input"
+              />
+              <button
+                  @click="submitReply(comment.commentId)"
+                  :disabled="!replyContent.trim()"
+                  :class="['btn-post', { active: replyContent.trim() }]"
+              >
+                <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 답글 목록 -->
+          <ul v-if="comment.replies?.length" class="reply-list">
+            <li v-for="reply in comment.replies" :key="reply.commentId" class="reply-item">
+              <img
+                  :src="reply.creatorProfileUrl || 'https://i.pravatar.cc/150'"
+                  class="avatar reply-avatar"
+              />
+              <div class="body">
+                <div v-if="editingId === reply.commentId" class="edit-mode">
+                  <textarea
+                      v-model="editingContent"
+                      @keyup.esc="cancelEdit"
+                      class="edit-input"
+                      rows="2"
+                  ></textarea>
+                  <div class="edit-actions">
+                    <button @click="cancelEdit" class="btn-text">취소</button>
+                    <button
+                        @click="saveEdit(reply.commentId)"
+                        :disabled="!editingContent.trim()"
+                        class="btn-text primary"
+                    >
+                      저장
+                    </button>
+                  </div>
+                </div>
+
+                <template v-else>
+                  <div class="comment-top">
+                    <svg class="reply-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 10l-5 5 5 5M4 15h12a4 4 0 004-4V5"/>
+                    </svg>
+                    <span class="author">{{ reply.creatorNickname || '사용자' }}</span>
+                    <span v-if="reply.creatorId === feedCreatorId" class="badge">작성자</span>
+                    <span class="dot">·</span>
+                    <span class="time">{{ formatDate(reply.createdAt) }}</span>
+                    <span v-if="isEdited(reply)" class="edited">(수정됨)</span>
+                  </div>
+                  <p class="text">{{ reply.content }}</p>
+                  <div v-if="isMyComment(reply.creatorId)" class="meta">
+                    <button @click="startEdit(reply)" class="meta-btn">수정</button>
+                    <button @click="handleDelete(reply.commentId)" class="meta-btn delete">삭제</button>
+                  </div>
+                </template>
+              </div>
+            </li>
+          </ul>
         </li>
       </ul>
 
@@ -94,7 +188,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { feedUtils } from '@/services/FeedService'
 import { getUserId } from '@/utils/auth.js'
@@ -124,6 +218,13 @@ const inputFocused = ref(false)
 const editingId = ref(null)
 const editingContent = ref('')
 
+const replyingTo = ref(null)
+const replyContent = ref('')
+const replyFocused = ref(false)
+const replyInputRef = ref(null)
+
+const deletedAvatar = 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%2216%22 fill=%22%23E5E8EB%22/><path d=%22M16 10c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 10c-3.3 0-6 1.8-6 4v2h12v-2c0-2.2-2.7-4-6-4z%22 fill=%22%23B0B8C1%22/></svg>'
+
 const getCurrentUserId = () => {
   try {
     const token = localStorage.getItem('access_token')
@@ -141,20 +242,48 @@ const isMyComment = (creatorId) => {
 const isEdited = (comment) => comment.updatedAt && comment.updatedAt !== comment.createdAt
 const formatDate = (date) => feedUtils.formatCommentDate(date)
 
-const submitComment = async () => {
-  // 로그인 체크
-  if (!getUserId()) {
-    const confirmed = await openLoginRequired('댓글을 작성하려면 로그인이 필요합니다.')
-    if (confirmed) {
-      router.push({ name: 'Login', query: { redirect: route.fullPath } })
-    }
-    return
+const ensureLoggedIn = async (message) => {
+  if (getUserId()) return true
+  const confirmed = await openLoginRequired(message)
+  if (confirmed) {
+    router.push({ name: 'Login', query: { redirect: route.fullPath } })
   }
+  return false
+}
 
+const submitComment = async () => {
+  if (!(await ensureLoggedIn('댓글을 작성하려면 로그인이 필요합니다.'))) return
   if (newComment.value.trim()) {
-    emit('submit', newComment.value.trim())
+    emit('submit', { content: newComment.value.trim(), parentCommentId: null })
     newComment.value = ''
   }
+}
+
+const toggleReply = async (commentId) => {
+  if (!(await ensureLoggedIn('답글을 작성하려면 로그인이 필요합니다.'))) return
+  if (replyingTo.value === commentId) {
+    cancelReply()
+    return
+  }
+  replyingTo.value = commentId
+  replyContent.value = ''
+  // reply ref는 v-for 내부라 배열로 들어올 수 있음
+  await nextTick()
+  const target = Array.isArray(replyInputRef.value) ? replyInputRef.value[0] : replyInputRef.value
+  target?.focus?.()
+}
+
+const cancelReply = () => {
+  replyingTo.value = null
+  replyContent.value = ''
+}
+
+const submitReply = async (parentCommentId) => {
+  if (!(await ensureLoggedIn('답글을 작성하려면 로그인이 필요합니다.'))) return
+  const content = replyContent.value.trim()
+  if (!content) return
+  emit('submit', { content, parentCommentId })
+  cancelReply()
 }
 
 const startEdit = (comment) => {
@@ -223,6 +352,9 @@ const handleDelete = (commentId) => {
   background: #fff;
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.06);
 }
+.input-bar.reply {
+  margin-bottom: 8px;
+}
 
 .input {
   flex: 1;
@@ -262,11 +394,14 @@ const handleDelete = (commentId) => {
 .list { list-style: none; padding: 0; margin: 0; }
 
 .item {
-  display: flex;
-  gap: 12px;
   padding: 14px 0;
 }
 .item + .item { border-top: 1px solid #F2F4F6; }
+
+.comment-row {
+  display: flex;
+  gap: 12px;
+}
 
 .avatar {
   width: 32px;
@@ -274,6 +409,7 @@ const handleDelete = (commentId) => {
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  background: #F2F4F6;
 }
 
 .body { flex: 1; min-width: 0; }
@@ -285,11 +421,23 @@ const handleDelete = (commentId) => {
   margin-bottom: 4px;
 }
 
+.reply-arrow {
+  width: 12px;
+  height: 12px;
+  color: #B0B8C1;
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
 .author {
   font-size: 13px;
   font-weight: 600;
   color: #191F28;
   letter-spacing: -0.01em;
+}
+.author.deleted-label {
+  color: #B0B8C1;
+  font-weight: 500;
 }
 
 .badge {
@@ -316,6 +464,10 @@ const handleDelete = (commentId) => {
   word-break: break-word;
   letter-spacing: -0.01em;
 }
+.text.deleted-text {
+  color: #B0B8C1;
+  font-style: italic;
+}
 
 .meta {
   display: flex;
@@ -329,8 +481,37 @@ const handleDelete = (commentId) => {
   font-size: 12px; font-weight: 500; color: #8B95A1;
   cursor: pointer; transition: color 0.15s ease;
 }
+.meta-btn:hover { color: #4E5968; }
 .meta-btn:active { color: #4E5968; }
+.meta-btn.delete:hover { color: #E53935; }
 .meta-btn.delete:active { color: #E53935; }
+
+/* 답글 입력 */
+.reply-input-wrapper {
+  margin: 8px 0 4px 44px;
+}
+
+/* 답글 목록 */
+.reply-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reply-item {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #F2F4F6;
+}
+
+.reply-avatar {
+  width: 26px;
+  height: 26px;
+}
 
 /* 수정 */
 .edit-mode { width: 100%; }
