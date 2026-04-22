@@ -249,6 +249,19 @@ class BattleService extends BaseApiService {
   }
 
   /**
+   * 배틀 아이템 조회 (상태 필터 가능, 생성자/관리자 전용 필터)
+   * GET /api/battles/{battleId}/items?status={status}
+   */
+  async getBattleItems(battleId, { status } = {}) {
+    if (!battleId) {
+      throw new Error('배틀 ID가 필요합니다.')
+    }
+    const params = status ? { status } : {}
+    console.log(`📋 [BATTLE_SERVICE] 배틀 아이템 조회: battleId=${battleId}`, params)
+    return await this.get(`/battles/${battleId}/items`, params)
+  }
+
+  /**
    * 배틀 아이템 승인 (검토 중 → 활성)
    * PATCH /api/battles/{battleId}/items/{itemId}/approve
    */
@@ -969,6 +982,7 @@ export function useBattle() {
 
     // 배틀 아이템
     addBattleItems: (battleId, data) => service.addBattleItems(battleId, data),
+    getBattleItems: (battleId, params) => service.getBattleItems(battleId, params),
     approveBattleItem: (battleId, itemId) => service.approveBattleItem(battleId, itemId),
     excludeBattleItem: (battleId, itemId) => service.excludeBattleItem(battleId, itemId),
     voteBattleItem: (battleId, data) => service.voteBattleItem(battleId, data),

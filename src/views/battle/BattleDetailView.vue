@@ -210,11 +210,12 @@
           @submit-youtube="submitYoutubeProduct"
       />
 
-      <!-- Creator Floating Panel -->
+      <!-- Creator/Admin Floating Panel -->
       <BattleCreatorPanel
           :battle="battle"
           :battle-id="battleId"
           :is-creator="isCreator"
+          :is-admin="isAdmin"
           @refresh="loadBattle"
       />
 
@@ -279,7 +280,7 @@
 <script>
 import { battleService } from '@/services/BattleService.js'
 import { fileService } from '@/services/FileService.js'
-import { getUserId } from '@/utils/auth.js'
+import { getUserId, getCurrentUser } from '@/utils/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { showExpGrant } from '@/composables/useExpToast'
 import ShareModal from '@/components/common/ShareModal.vue'
@@ -352,6 +353,10 @@ export default {
       if (!this.battle) return false
       const userId = getUserId()
       return !!userId && this.battle.creatorUserInfo?.userId === userId
+    },
+    isAdmin() {
+      const user = getCurrentUser()
+      return user?.role === 'ADMIN'
     },
     canVote() {
       if (!this.battle) return false

@@ -39,11 +39,14 @@
               </div>
               <div class="header-text">
                 <div class="header-eyebrow">
-                  <span class="creator-pill">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <span class="creator-pill" :class="{ 'is-admin': !isCreator && isAdmin }">
+                    <svg v-if="isCreator" width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2l2.39 7.36H22l-6.19 4.5 2.36 7.28L12 16.9l-6.17 4.24 2.36-7.28L2 9.36h7.61z"/>
                     </svg>
-                    생성자
+                    <svg v-else width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    {{ roleLabel }}
                   </span>
                 </div>
                 <div class="header-title">배틀 관리</div>
@@ -106,7 +109,12 @@
         <div class="panel-body">
           <!-- 승인 탭 -->
           <template v-if="activeTab === 'approval' && supportsApproval">
-            <div v-if="pendingItems.length === 0" class="empty-state">
+            <div v-if="pendingLoading && pendingItems.length === 0" class="loading-state">
+              <span class="btn-spinner dark"></span>
+              <span class="loading-text">승인 대기 아이템을 불러오는 중…</span>
+            </div>
+
+            <div v-else-if="pendingItems.length === 0" class="empty-state">
               <div class="empty-icon">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
@@ -194,74 +202,154 @@
 
           <!-- 관리 탭 -->
           <template v-else>
-            <div class="manage-section">
-              <div class="list-header">
-                <div class="list-header-title">배틀 관리</div>
-                <div class="list-header-caption">배틀 정보와 아이템을 관리해요</div>
+            <!-- 메뉴 화면 -->
+            <template v-if="manageView === 'menu'">
+              <div class="manage-section">
+                <div class="list-header">
+                  <div class="list-header-title">배틀 관리</div>
+                  <div class="list-header-caption">배틀 정보와 아이템을 관리해요</div>
+                </div>
+                <ul class="manage-list">
+                  <li>
+                    <button class="manage-item" @click="onEditBattle">
+                      <div class="manage-icon manage-icon-ink">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 20h9"/>
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                      </div>
+                      <div class="manage-text">
+                        <div class="manage-title">배틀 상세 수정</div>
+                        <div class="manage-desc">제목, 설명, 기간을 변경해요</div>
+                      </div>
+                      <svg class="manage-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="manage-item" @click="manageView = 'items'">
+                      <div class="manage-icon manage-icon-ink">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                        </svg>
+                      </div>
+                      <div class="manage-text">
+                        <div class="manage-title">아이템 관리</div>
+                        <div class="manage-desc">등록된 아이템 {{ activeItemsCount }}개를 관리해요</div>
+                      </div>
+                      <svg class="manage-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  </li>
+                </ul>
               </div>
-              <ul class="manage-list">
-                <li>
-                  <button class="manage-item" @click="onEditBattle">
-                    <div class="manage-icon manage-icon-ink">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 20h9"/>
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                      </svg>
+
+              <div class="manage-section">
+                <div class="list-header">
+                  <div class="list-header-title">배틀 정보</div>
+                </div>
+                <div class="info-grid">
+                  <div class="info-row">
+                    <span class="info-label">상태</span>
+                    <span class="info-value">
+                      <span class="status-dot" :class="statusClass"></span>
+                      {{ statusLabel }}
+                    </span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">아이템 등록</span>
+                    <span class="info-value">{{ permissionLabel }}</span>
+                  </div>
+                  <div v-if="battle?.endDate" class="info-row">
+                    <span class="info-label">종료일</span>
+                    <span class="info-value">{{ formatDate(battle.endDate) }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- 아이템 관리 화면 -->
+            <template v-else-if="manageView === 'items'">
+              <div class="subview-header">
+                <button class="back-btn" aria-label="뒤로" @click="manageView = 'menu'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+                <div class="subview-title">
+                  <div class="subview-title-main">아이템 관리</div>
+                  <div class="subview-title-sub">제외하면 배틀에서 숨겨져요</div>
+                </div>
+              </div>
+
+              <div v-if="activeItems.length === 0" class="empty-state">
+                <div class="empty-icon">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                  </svg>
+                </div>
+                <div class="empty-title">활성 아이템이 없어요</div>
+                <div class="empty-desc">등록된 활성 아이템이 있어야 관리할 수 있어요.</div>
+              </div>
+
+              <ul v-else class="pending-list">
+                <li
+                  v-for="(item, idx) in activeItems"
+                  :key="item.id"
+                  class="pending-item"
+                  :style="{ '--i': idx }"
+                >
+                  <div class="pending-top">
+                    <div class="pending-thumb">
+                      <img v-if="getItemImage(item)" :src="getItemImage(item)" :alt="getItemName(item)" @error="onImgError($event)" />
+                      <div v-else class="pending-thumb-fallback">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2"/>
+                          <circle cx="9" cy="9" r="2"/>
+                          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                        </svg>
+                      </div>
                     </div>
-                    <div class="manage-text">
-                      <div class="manage-title">배틀 상세 수정</div>
-                      <div class="manage-desc">제목, 설명, 기간을 변경해요</div>
+                    <div class="pending-info">
+                      <div class="pending-name">{{ getItemName(item) }}</div>
+                      <div v-if="getItemBrand(item)" class="pending-brand">{{ getItemBrand(item) }}</div>
+                      <div class="pending-meta">
+                        <span class="pending-submitter">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                          </svg>
+                          투표 {{ item.voteCount || 0 }}
+                        </span>
+                      </div>
                     </div>
-                    <svg class="manage-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                  </button>
-                </li>
-                <li>
-                  <button class="manage-item" @click="onEditItems">
-                    <div class="manage-icon manage-icon-ink">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                      </svg>
-                    </div>
-                    <div class="manage-text">
-                      <div class="manage-title">아이템 수정</div>
-                      <div class="manage-desc">등록된 아이템 {{ activeItemsCount }}개를 관리해요</div>
-                    </div>
-                    <span class="pill-soon">준비 중</span>
-                    <svg class="manage-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                  </button>
+                  </div>
+                  <div class="pending-actions">
+                    <button
+                      class="action-btn reject"
+                      :disabled="processingIds.has(item.id)"
+                      @click="onExclude(item)"
+                    >
+                      <span v-if="processingIds.has(item.id)" class="btn-spinner dark"></span>
+                      <template v-else>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        제외
+                      </template>
+                    </button>
+                  </div>
                 </li>
               </ul>
-            </div>
-
-            <div class="manage-section">
-              <div class="list-header">
-                <div class="list-header-title">배틀 정보</div>
-              </div>
-              <div class="info-grid">
-                <div class="info-row">
-                  <span class="info-label">상태</span>
-                  <span class="info-value">
-                    <span class="status-dot" :class="statusClass"></span>
-                    {{ statusLabel }}
-                  </span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">아이템 등록</span>
-                  <span class="info-value">{{ permissionLabel }}</span>
-                </div>
-                <div v-if="battle?.endDate" class="info-row">
-                  <span class="info-label">종료일</span>
-                  <span class="info-value">{{ formatDate(battle.endDate) }}</span>
-                </div>
-              </div>
-            </div>
+            </template>
           </template>
         </div>
       </section>
@@ -288,6 +376,7 @@ const props = defineProps({
   battle: { type: Object, required: true },
   battleId: { type: [String, Number], default: null },
   isCreator: { type: Boolean, default: false },
+  isAdmin: { type: Boolean, default: false },
 })
 const emit = defineEmits(['refresh'])
 
@@ -297,6 +386,9 @@ const isOpen = ref(false)
 const processingIds = ref(new Set())
 const activeTab = ref('approval')
 const showEditModal = ref(false)
+const manageView = ref('menu')
+const pendingItems = ref([])
+const pendingLoading = ref(false)
 
 const resolvedBattleId = computed(() => props.battleId ?? props.battle?.id ?? props.battle?.battleId)
 
@@ -307,13 +399,15 @@ const permissionType = computed(() => {
 
 const supportsApproval = computed(() => permissionType.value === 'PUBLIC_APPROVAL')
 
-const visible = computed(() => props.isCreator && !!props.battle)
+const visible = computed(() => (props.isCreator || props.isAdmin) && !!props.battle)
+
+const roleLabel = computed(() => (props.isCreator ? '생성자' : props.isAdmin ? '관리자' : ''))
 
 const allItems = computed(() => Array.isArray(props.battle?.items) ? props.battle.items : [])
 
-const pendingItems = computed(() => allItems.value.filter(it => {
+const activeItems = computed(() => allItems.value.filter(it => {
   const s = it.status?.title || it.status
-  return s === 'UNDER_REVIEW'
+  return s === 'ACTIVE'
 }))
 
 const activeItemsCount = computed(() => allItems.value.filter(it => {
@@ -345,6 +439,42 @@ const permissionLabel = computed(() => {
 watch(supportsApproval, (v) => {
   if (!v && activeTab.value === 'approval') activeTab.value = 'manage'
 }, { immediate: true })
+
+watch(activeTab, () => {
+  manageView.value = 'menu'
+})
+
+watch(isOpen, (open) => {
+  if (!open) manageView.value = 'menu'
+})
+
+async function loadPendingItems() {
+  if (!resolvedBattleId.value) return
+  if (!supportsApproval.value || !visible.value) {
+    pendingItems.value = []
+    return
+  }
+  pendingLoading.value = true
+  try {
+    const res = await battleService.getBattleItems(resolvedBattleId.value, { status: 'UNDER_REVIEW' })
+    if (res?.success) {
+      pendingItems.value = Array.isArray(res.data) ? res.data : []
+    }
+  } catch (e) {
+    console.error('승인 대기 아이템 로드 실패:', e)
+  } finally {
+    pendingLoading.value = false
+  }
+}
+
+watch(
+  () => [visible.value, supportsApproval.value, resolvedBattleId.value],
+  ([v, s, id]) => {
+    if (v && s && id) loadPendingItems()
+    else pendingItems.value = []
+  },
+  { immediate: true }
+)
 
 function getItemName(item) {
   if (!item) return '아이템'
@@ -396,6 +526,7 @@ async function onApprove(item) {
   try {
     const res = await battleService.approveBattleItem(resolvedBattleId.value, item.id)
     if (!res?.success) throw new Error(res?.message || '승인 실패')
+    await loadPendingItems()
     emit('refresh')
   } catch (e) {
     await open({ type: 'alert', title: '오류', message: e?.message || '승인에 실패했어요.' })
@@ -418,6 +549,7 @@ async function onReject(item) {
   try {
     const res = await battleService.excludeBattleItem(resolvedBattleId.value, item.id)
     if (!res?.success) throw new Error(res?.message || '거절 실패')
+    await loadPendingItems()
     emit('refresh')
   } catch (e) {
     await open({ type: 'alert', title: '오류', message: e?.message || '거절에 실패했어요.' })
@@ -430,8 +562,27 @@ function onEditBattle() {
   isOpen.value = false
   showEditModal.value = true
 }
-async function onEditItems() {
-  await open({ type: 'alert', title: '준비 중', message: '아이템 수정 기능은 곧 제공돼요.' })
+
+async function onExclude(item) {
+  if (processingIds.value.has(item.id)) return
+  const ok = await open({
+    type: 'danger',
+    title: '아이템 제외',
+    message: `"${getItemName(item)}" 을(를) 배틀에서 제외할까요?\n제외하면 투표 대상에서 사라져요.`,
+    confirmText: '제외하기',
+    cancelText: '취소',
+  })
+  if (!ok) return
+  processingIds.value.add(item.id)
+  try {
+    const res = await battleService.excludeBattleItem(resolvedBattleId.value, item.id)
+    if (!res?.success) throw new Error(res?.message || '제외 실패')
+    emit('refresh')
+  } catch (e) {
+    await open({ type: 'alert', title: '오류', message: e?.message || '아이템 제외에 실패했어요.' })
+  } finally {
+    processingIds.value.delete(item.id)
+  }
 }
 
 async function onBattleUpdated() {
@@ -604,6 +755,10 @@ async function onBattleUpdated() {
   font-weight: 800;
   letter-spacing: -0.2px;
 }
+.creator-pill.is-admin {
+  background: #E8F1FE;
+  color: #1D63D1;
+}
 .header-title {
   font-size: 19px;
   font-weight: 900;
@@ -744,6 +899,25 @@ async function onBattleUpdated() {
   color: #8B95A1;
   letter-spacing: -0.2px;
   margin-top: 3px;
+}
+
+/* ===================== Loading state ===================== */
+.loading-state {
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.loading-state .btn-spinner {
+  width: 22px;
+  height: 22px;
+}
+.loading-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8B95A1;
+  letter-spacing: -0.2px;
 }
 
 /* ===================== Empty state ===================== */
@@ -934,7 +1108,48 @@ async function onBattleUpdated() {
   border-radius: 50%;
   animation: btn-spin 0.8s linear infinite;
 }
+.btn-spinner.dark {
+  border: 2px solid rgba(10, 14, 26, 0.18);
+  border-top-color: #4E5968;
+}
 @keyframes btn-spin { to { transform: rotate(360deg); } }
+
+/* ===================== Sub-view header ===================== */
+.subview-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px 16px;
+}
+.back-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #F7F8FA;
+  border-radius: 10px;
+  color: #4E5968;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.14s ease, color 0.14s ease;
+  flex-shrink: 0;
+}
+.back-btn:hover { background: #EDF0F3; color: #0A0E1A; }
+.subview-title { line-height: 1.25; }
+.subview-title-main {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0A0E1A;
+  letter-spacing: -0.3px;
+}
+.subview-title-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #8B95A1;
+  letter-spacing: -0.2px;
+  margin-top: 2px;
+}
 
 /* ===================== Manage ===================== */
 .manage-section + .manage-section {
