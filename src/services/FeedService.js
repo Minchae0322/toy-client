@@ -496,12 +496,17 @@ class FeedService extends BaseApiService {
     if (!comment) return null
     return {
       commentId: comment.commentId,
+      parentCommentId: comment.parentCommentId ?? null,
       creatorId: comment.creatorId,
       creatorNickname: comment.creatorNickname || '알 수 없음',
       creatorProfileUrl: comment.creatorProfileUrl || null,
       content: comment.content || '',
+      deleted: comment.deleted === true,
       createdAt: comment.createdAt,
-      updatedAt: comment.updatedAt
+      updatedAt: comment.updatedAt,
+      replies: Array.isArray(comment.replies)
+        ? comment.replies.map(r => this.normalizeCommentItem(r)).filter(Boolean)
+        : []
     }
   }
 
