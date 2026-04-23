@@ -547,23 +547,31 @@ watch(actualRoomId, (newVal, oldVal) => {
 .chat-detail-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* 앱 헤더(66px) 제외한 뷰포트 높이에 딱 맞춰 채팅창이 한 화면에 담김 */
+  height: calc(100vh - 66px);
   background: #FFFFFF;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: #0A0E1A;
-  /* 다른 메뉴와 동일: 720 → 820 → 900 mobile-first */
-  max-width: 720px;
-  margin: 0 auto;
+  /* AppSidebar와 붙어 시작 (left-align) — ChatRoomView와 동일 */
+  max-width: 100%;
+  margin: 0;
   width: 100%;
   padding: 0 16px;
 }
 
 @media (min-width: 768px) {
-  .chat-detail-container { max-width: 820px; padding: 0; }
+  .chat-detail-container { max-width: 720px; padding: 0; }
 }
 
 @media (min-width: 1280px) {
-  .chat-detail-container { max-width: 900px; }
+  .chat-detail-container { max-width: 820px; }
+}
+
+/* 모바일: BottomNavigation 공간 확보 */
+@media (max-width: 767px) {
+  .chat-detail-container {
+    height: calc(100vh - 66px - 64px - env(safe-area-inset-bottom));
+  }
 }
 
 /* Header */

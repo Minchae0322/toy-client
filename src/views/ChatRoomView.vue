@@ -1,24 +1,7 @@
 <template>
   <div class="chat-container">
     <div class="content-inner">
-      <!-- Hero 헤더 -->
-      <header class="page-hero">
-        <div class="hero-main">
-          <span class="hero-eyebrow">
-            <span class="eyebrow-dot"></span>
-            MESSAGES
-          </span>
-          <h1 class="hero-title">메시지</h1>
-          <p class="hero-sub">피드에서 시작된 대화를 이어가세요</p>
-        </div>
-        <div class="hero-actions">
-          <button @click="toggleSearch" class="icon-btn" :class="{ active: showSearch }" aria-label="검색">
-            <Search :size="18" />
-          </button>
-        </div>
-      </header>
-
-      <!-- 컨트롤: 탭 + 검색 -->
+      <!-- 컨트롤: 탭 + 검색 버튼 -->
       <section class="control-bar">
         <nav class="tabs">
           <button
@@ -32,24 +15,27 @@
             <span v-if="tab.count > 0" class="tab-badge">{{ tab.count }}</span>
           </button>
         </nav>
-
-        <Transition name="search-expand">
-          <div v-if="showSearch" class="search-wrapper">
-            <div class="search-box">
-              <Search :size="18" class="search-icon" />
-              <input
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="닉네임, 메시지, 상품으로 검색"
-                  class="search-input"
-              />
-              <button v-if="searchQuery" @click="searchQuery = ''" class="clear-btn">
-                <X :size="16" />
-              </button>
-            </div>
-          </div>
-        </Transition>
+        <button @click="toggleSearch" class="icon-btn" :class="{ active: showSearch }" aria-label="검색">
+          <Search :size="18" />
+        </button>
       </section>
+
+      <Transition name="search-expand">
+        <div v-if="showSearch" class="search-wrapper">
+          <div class="search-box">
+            <Search :size="18" class="search-icon" />
+            <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="닉네임, 메시지, 상품으로 검색"
+                class="search-input"
+            />
+            <button v-if="searchQuery" @click="searchQuery = ''" class="clear-btn">
+              <X :size="16" />
+            </button>
+          </div>
+        </div>
+      </Transition>
 
       <!-- 채팅방 목록 -->
       <main class="chat-list">
@@ -341,73 +327,25 @@ onMounted(() => {
   padding-bottom: 48px;
 }
 
-/* content-inner — 다른 메뉴(CollectionView/MyPage)와 동일 mobile-first */
+/* content-inner — AppSidebar와 붙어 시작하도록 left-align */
 .content-inner {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 0 16px;
+  max-width: 100%;
+  margin: 0;
+  padding: 24px 16px 0;
 }
 
 @media (min-width: 768px) {
-  .content-inner { max-width: 820px; padding: 0; }
+  .content-inner { max-width: 720px; padding: 28px 0 0; }
 }
 
 @media (min-width: 1280px) {
-  .content-inner { max-width: 900px; }
+  .content-inner { max-width: 820px; padding: 32px 0 0; }
 }
-
-/* ============ Hero 헤더 (PC 기준) ============ */
-.page-hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 44px 0 28px;
-}
-
-.hero-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-
-.hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 800;
-  color: #9333EA;
-  letter-spacing: 0.12em;
-  width: fit-content;
-}
-
-.eyebrow-dot {
-  width: 6px;
-  height: 22px;
-  background: #9333EA;
-  border-radius: 2px;
-}
-
-.hero-title {
-  font-size: 34px;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: -0.04em;
-  color: #0A0E1A;
-  line-height: 1.1;
-}
-
-.hero-sub {
-  font-size: 14px;
-  color: #64748B;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  margin: 0;
-}
-
-.hero-actions { display: flex; gap: 10px; flex-shrink: 0; }
 
 .icon-btn {
   width: 44px;
   height: 44px;
-  border: none;
+  border: 1px solid #E5E7EB;
   background: #FFFFFF;
   border-radius: 12px;
   cursor: pointer;
@@ -416,7 +354,7 @@ onMounted(() => {
   justify-content: center;
   color: #4E5968;
   transition: all 0.15s ease;
-  border: 1px solid #E5E7EB;
+  flex-shrink: 0;
 }
 
 .icon-btn:hover {
@@ -431,30 +369,34 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(147, 51, 234, 0.28);
 }
 
-/* ============ 컨트롤 바: 탭 + 검색 ============ */
+/* ============ 컨트롤 바: 탭 + 검색 버튼 (가로 배치) ============ */
 .control-bar {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
+
+.search-wrapper { margin-bottom: 14px; }
 
 .tabs {
   display: flex;
   background: #F2F4F6;
-  border-radius: 14px;
-  padding: 5px;
+  border-radius: 12px;
+  padding: 4px;
   gap: 2px;
-  width: fit-content;
-  min-width: 240px;
+  flex: 1;
+  min-width: 0;
 }
 
 .tab {
+  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 10px 16px;
   border: none;
   background: transparent;
   font-size: 13.5px;
@@ -462,7 +404,7 @@ onMounted(() => {
   color: #8B95A1;
   cursor: pointer;
   font-family: inherit;
-  border-radius: 10px;
+  border-radius: 8px;
   transition: all 0.18s ease;
   letter-spacing: -0.02em;
 }
@@ -497,16 +439,14 @@ onMounted(() => {
 }
 
 /* 검색바 */
-.search-wrapper { width: 100%; }
-
 .search-box {
   display: flex;
   align-items: center;
   background: #FFFFFF;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-  padding: 0 16px;
-  height: 48px;
+  padding: 0 14px;
+  height: 44px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -891,11 +831,8 @@ onMounted(() => {
 .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 16px); }
 
-/* ============ 모바일/태블릿 adaptation ============ */
+/* ============ 모바일 adaptation ============ */
 @media (max-width: 1023px) {
-  .page-hero { padding: 32px 0 20px; }
-  .hero-title { font-size: 28px; }
-  .hero-sub { font-size: 13px; }
   .room-list { border-radius: 16px; }
   .list-header { padding: 14px 20px; }
   .room-item { padding: 16px 20px; gap: 14px; }
@@ -905,16 +842,8 @@ onMounted(() => {
 }
 
 @media (max-width: 480px) {
-  .page-hero { padding: 24px 0 16px; gap: 16px; }
-  .hero-eyebrow { font-size: 10px; }
-  .eyebrow-dot { width: 5px; height: 18px; }
-  .hero-title { font-size: 24px; }
-  .hero-sub { font-size: 12.5px; }
   .icon-btn { width: 40px; height: 40px; }
-  .search-box { height: 44px; padding: 0 14px; }
-  .search-input { font-size: 14px; }
-  .tabs { padding: 4px; border-radius: 12px; min-width: 0; width: 100%; }
-  .tab { flex: 1; padding: 10px 12px; font-size: 13px; }
+  .tab { padding: 10px 12px; font-size: 13px; }
   .room-list { border-radius: 14px; }
   .list-header { padding: 12px 16px; }
   .list-header-title { font-size: 11.5px; }
