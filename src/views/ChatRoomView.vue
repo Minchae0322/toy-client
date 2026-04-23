@@ -313,58 +313,58 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 전체 컨테이너 */
+/* 전체 컨테이너 — PC 기준 (디자인 시스템: 배경은 흰색, 카드가 자체 컬러) */
 .chat-container {
   width: 100%;
   min-height: 100vh;
-  background: #F7F8FA;
+  background: #FFFFFF;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: #0A0E1A;
   -webkit-font-smoothing: antialiased;
 }
 
 .chat-container > * {
-  max-width: 640px;
+  max-width: 900px;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* 헤더 */
+/* 헤더 — PC 기준 */
 .header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 32px 24px 20px;
-  background: #F7F8FA;
+  padding: 44px 0 24px;
+  background: #FFFFFF;
 }
 
 .header-left {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .header-title {
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 800;
   margin: 0;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
   color: #0A0E1A;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .header-sub {
-  font-size: 12.5px;
+  font-size: 13px;
   color: #8B95A1;
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
-.header-actions { display: flex; gap: 8px; }
+.header-actions { display: flex; gap: 10px; }
 
 .icon-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
   background: #ffffff;
   border-radius: 12px;
@@ -387,10 +387,10 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(147, 51, 234, 0.28);
 }
 
-/* 검색바 */
+/* 검색바 — PC 기준 */
 .search-wrapper {
-  padding: 0 24px 12px;
-  background: #F7F8FA;
+  padding: 0 0 16px;
+  background: #FFFFFF;
 }
 
 .search-box {
@@ -398,9 +398,9 @@ onMounted(() => {
   align-items: center;
   background: #ffffff;
   border: none;
-  border-radius: 12px;
-  padding: 0 14px;
-  height: 44px;
+  border-radius: 14px;
+  padding: 0 18px;
+  height: 52px;
   transition: box-shadow 0.15s ease;
   box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.05);
 }
@@ -408,13 +408,13 @@ onMounted(() => {
 .search-box:focus-within {
   box-shadow: 0 0 0 2px #9333EA;
 }
-.search-icon { color: #8B95A1; margin-right: 10px; flex-shrink: 0; }
+.search-icon { color: #8B95A1; margin-right: 12px; flex-shrink: 0; }
 
 .search-input {
   flex: 1;
   border: none;
   background: none;
-  font-size: 14px;
+  font-size: 15px;
   color: #0A0E1A;
   outline: none;
   font-family: inherit;
@@ -435,13 +435,13 @@ onMounted(() => {
 
 .clear-btn:hover { color: #4E5968; background: #F2F4F6; }
 
-/* 탭 — Login 스타일 segmented pill */
+/* 탭 — Login 스타일 segmented pill (PC 기준) */
 .tabs {
   display: flex;
-  margin: 0 24px 16px;
+  margin: 0 0 20px;
   background: #F2F4F6;
-  border-radius: 12px;
-  padding: 4px;
+  border-radius: 14px;
+  padding: 5px;
   gap: 2px;
 }
 
@@ -450,8 +450,8 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 12px 16px;
   border: none;
   background: transparent;
   font-size: 14px;
@@ -474,14 +474,14 @@ onMounted(() => {
 }
 
 .tab-badge {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 7px;
   background: #E5E7EB;
   color: #8B95A1;
   font-size: 11px;
   font-weight: 800;
-  border-radius: 9px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -493,25 +493,26 @@ onMounted(() => {
   color: #ffffff;
 }
 
-/* 채팅 리스트 */
+/* 채팅 리스트 — PC 기준 */
 .chat-list {
-  padding: 0 24px 32px;
+  padding: 0 0 48px;
 }
 
 .room-list {
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04);
+  border: 1px solid #F1F3F6;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
 }
 
 .room-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 20px;
+  gap: 18px;
+  padding: 20px 28px;
   cursor: pointer;
   background: #ffffff;
   transition: background 0.15s ease;
@@ -522,8 +523,8 @@ onMounted(() => {
   content: '';
   position: absolute;
   top: 0;
-  left: 86px;
-  right: 20px;
+  left: 102px;
+  right: 28px;
   height: 1px;
   background: #F1F3F6;
 }
@@ -536,11 +537,11 @@ onMounted(() => {
   background: #F3E8FF;
 }
 
-/* 썸네일 */
+/* 썸네일 — PC 기준 */
 .room-thumb {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
   overflow: hidden;
   flex-shrink: 0;
   background: #F7F8FA;
@@ -584,7 +585,7 @@ onMounted(() => {
 }
 
 .room-name {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: #0A0E1A;
   margin: 0;
@@ -596,7 +597,7 @@ onMounted(() => {
 }
 
 .room-time {
-  font-size: 11px;
+  font-size: 12px;
   color: #94A3B8;
   font-weight: 500;
   flex-shrink: 0;
@@ -613,7 +614,7 @@ onMounted(() => {
 }
 
 .room-message {
-  font-size: 13.5px;
+  font-size: 14px;
   color: #64748B;
   margin: 0;
   white-space: nowrap;
@@ -673,17 +674,17 @@ onMounted(() => {
 
 .unread-badge {
   flex-shrink: 0;
-  min-width: 20px;
-  height: 20px;
+  min-width: 22px;
+  height: 22px;
   background: #9333EA;
   color: #ffffff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
-  border-radius: 10px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 7px;
+  padding: 0 8px;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   box-shadow: 0 2px 6px rgba(147, 51, 234, 0.25);
@@ -695,11 +696,12 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 40px;
+  padding: 120px 40px;
   text-align: center;
   background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04);
+  border-radius: 20px;
+  border: 1px solid #F1F3F6;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
 }
 
 .loader {
@@ -789,15 +791,35 @@ onMounted(() => {
 .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 16px); }
 
-/* 모바일 대응 */
+/* 모바일/태블릿 adaptation (PC 기준을 좁힘) */
+@media (max-width: 1023px) {
+  .chat-container > * { padding-left: 20px; padding-right: 20px; }
+  .header { padding: 32px 0 20px; }
+  .header-title { font-size: 26px; }
+  .room-list { border-radius: 16px; }
+  .room-item { padding: 16px 20px; gap: 14px; }
+  .room-item + .room-item::before { left: 88px; right: 20px; }
+  .room-thumb { width: 52px; height: 52px; border-radius: 14px; }
+  .state-container { padding: 80px 32px; border-radius: 16px; }
+}
+
 @media (max-width: 480px) {
-  .header { padding: 24px 16px 16px; }
+  .chat-container > * { padding-left: 16px; padding-right: 16px; }
+  .header { padding: 24px 0 16px; }
   .header-title { font-size: 22px; }
-  .search-wrapper { padding: 0 16px 10px; }
-  .tabs { margin: 0 16px 14px; }
-  .chat-list { padding: 0 16px 32px; }
-  .room-item { padding: 14px 16px; }
-  .room-item + .room-item::before { left: 78px; right: 16px; }
+  .header-sub { font-size: 12px; }
+  .icon-btn { width: 40px; height: 40px; }
+  .search-box { height: 44px; padding: 0 14px; border-radius: 12px; }
+  .search-input { font-size: 14px; }
+  .tabs { margin: 0 0 14px; border-radius: 12px; padding: 4px; }
+  .tab { font-size: 13px; padding: 10px 12px; }
+  .chat-list { padding: 0 0 32px; }
+  .room-list { border-radius: 14px; }
+  .room-item { padding: 14px 16px; gap: 12px; }
+  .room-item + .room-item::before { left: 76px; right: 16px; }
   .room-thumb { width: 48px; height: 48px; border-radius: 12px; }
+  .room-name { font-size: 15px; }
+  .room-message { font-size: 13px; }
+  .state-container { padding: 60px 24px; }
 }
 </style>
