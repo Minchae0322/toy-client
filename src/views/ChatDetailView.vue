@@ -287,7 +287,9 @@ const canSend = computed(() => newMessage.value.trim() && connectionState.value.
 
 const goBack = () => {
   emit('back-to-list')
-  router.back()
+  // router.back()은 브라우저 히스토리상 이전 페이지(메뉴 등)로 돌아갈 수 있어
+  // 명시적으로 채팅방 목록 URL로 이동
+  router.push({ name: 'Chat' })
 }
 
 const goToFeed = () => { if (feedInfo.value.id) router.push(`/feed/${feedInfo.value.id}`) }
@@ -449,7 +451,7 @@ const handleMenuAction = async (action) => {
     const confirmed = await open({ type: 'danger', title: '채팅방 나가기', message: '채팅방을 나가시겠습니까?' })
     if (confirmed) {
       emit('back-to-list')
-      router.back()
+      router.push({ name: 'Chat' })
     }
   }
 }
@@ -549,9 +551,19 @@ watch(actualRoomId, (newVal, oldVal) => {
   background: #FFFFFF;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: #0A0E1A;
-  max-width: 900px;
+  /* 다른 메뉴와 동일: 720 → 820 → 900 mobile-first */
+  max-width: 720px;
   margin: 0 auto;
   width: 100%;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .chat-detail-container { max-width: 820px; padding: 0; }
+}
+
+@media (min-width: 1280px) {
+  .chat-detail-container { max-width: 900px; }
 }
 
 /* Header */

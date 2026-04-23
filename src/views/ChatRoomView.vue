@@ -330,7 +330,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 전체 컨테이너 — PC 기준 (디자인 시스템: 배경은 흰색, 카드가 자체 컬러) */
+/* 전체 컨테이너 (디자인 시스템: 배경은 흰색, 카드가 자체 컬러) */
 .chat-container {
   width: 100%;
   min-height: 100vh;
@@ -341,10 +341,19 @@ onMounted(() => {
   padding-bottom: 48px;
 }
 
+/* content-inner — 다른 메뉴(CollectionView/MyPage)와 동일 mobile-first */
 .content-inner {
-  max-width: 900px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 0 0;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .content-inner { max-width: 820px; padding: 0; }
+}
+
+@media (min-width: 1280px) {
+  .content-inner { max-width: 900px; }
 }
 
 /* ============ Hero 헤더 (PC 기준) ============ */
@@ -884,7 +893,6 @@ onMounted(() => {
 
 /* ============ 모바일/태블릿 adaptation ============ */
 @media (max-width: 1023px) {
-  .content-inner { padding: 0 20px; }
   .page-hero { padding: 32px 0 20px; }
   .hero-title { font-size: 28px; }
   .hero-sub { font-size: 13px; }
@@ -897,7 +905,6 @@ onMounted(() => {
 }
 
 @media (max-width: 480px) {
-  .content-inner { padding: 0 16px; }
   .page-hero { padding: 24px 0 16px; gap: 16px; }
   .hero-eyebrow { font-size: 10px; }
   .eyebrow-dot { width: 5px; height: 18px; }
