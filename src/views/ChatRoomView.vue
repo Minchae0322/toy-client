@@ -73,34 +73,35 @@
               class="room-item"
               :class="{ unread: room.unreadCount > 0 }"
           >
-            <!-- 피드 썸네일 (왼쪽) -->
-            <div class="feed-thumb">
+            <!-- 썸네일 (피드 또는 fallback) -->
+            <div class="room-thumb">
               <img
                   v-if="room.feed?.thumbnail"
                   :src="room.feed.thumbnail"
                   :alt="room.feed?.title"
               />
-              <div v-else class="feed-thumb-placeholder">
-                <ImageIcon :size="18" />
+              <div v-else class="room-thumb-fallback">
+                <MessageCircle :size="22" />
               </div>
             </div>
 
             <!-- 채팅 내용 -->
             <div class="room-info">
-              <div class="room-header">
+              <div class="room-top">
                 <h3 class="room-name">{{ room.name }}</h3>
                 <span class="room-time">{{ formatTime(room.lastMessageAt) }}</span>
               </div>
-              <p v-if="room.feed?.title" class="feed-title">
-                <span class="feed-title-text">{{ room.feed.title }}</span>
-                <span v-if="room.feed?.price" class="feed-price">{{ formatPrice(room.feed.price) }}</span>
-              </p>
-              <div class="room-footer">
-                <p class="room-message">{{ room.lastMessage || '메시지가 없습니다' }}</p>
+              <div class="room-bottom">
+                <p class="room-message">{{ room.lastMessage || '대화를 시작해보세요' }}</p>
                 <span v-if="room.unreadCount > 0" class="unread-badge">
                   {{ room.unreadCount > 99 ? '99+' : room.unreadCount }}
                 </span>
               </div>
+              <p v-if="room.feed?.title" class="feed-context">
+                <span class="feed-label">관련 상품</span>
+                <span class="feed-dot">·</span>
+                <span class="feed-title-text">{{ room.feed.title }}</span>
+              </p>
             </div>
           </div>
         </TransitionGroup>
@@ -282,11 +283,6 @@ const getSampleChatRooms = () => [
   }
 ]
 
-const formatPrice = (price) => {
-  if (!price) return ''
-  return new Intl.NumberFormat('ko-KR').format(price) + '원'
-}
-
 const formatTime = (date) => {
   if (!date) return ''
   const d = new Date(date)
@@ -378,9 +374,8 @@ onMounted(() => {
 
 .icon-btn:hover { background: #e5e5ea; }
 .icon-btn.active {
-  background: #1a1a1c;
+  background: #9333EA;
   color: #ffffff;
-  border-radius: 12px;
 }
 
 /* 검색바 */
@@ -403,7 +398,7 @@ onMounted(() => {
 
 .search-box:focus-within {
   background: #ffffff;
-  box-shadow: 0 0 0 2px #1a1a1c;
+  box-shadow: 0 0 0 2px #9333EA;
 }
 .search-icon { color: #8e8e93; margin-right: 10px; flex-shrink: 0; }
 
@@ -454,7 +449,7 @@ onMounted(() => {
 }
 
 .tab:hover { color: #3a3a3c; }
-.tab.active { color: #1a1a1c; font-weight: 700; }
+.tab.active { color: #9333EA; font-weight: 700; }
 
 .tab.active::after {
   content: '';
@@ -463,7 +458,7 @@ onMounted(() => {
   left: 14px;
   right: 14px;
   height: 2px;
-  background: #1a1a1c;
+  background: #9333EA;
   border-radius: 1px;
 }
 
@@ -471,78 +466,89 @@ onMounted(() => {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  background: #1a1a1c;
-  color: #ffffff;
+  background: #F3E8FF;
+  color: #9333EA;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.tab.active .tab-badge {
+  background: #9333EA;
+  color: #ffffff;
+}
+
 /* 채팅 리스트 */
 .chat-list {
-  padding: 14px 14px 28px;
+  padding: 4px 0 28px;
 }
 
 .room-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
 .room-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
-  padding: 14px 16px;
+  padding: 14px 20px;
   cursor: pointer;
   background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #f2f2f7;
-  transition: all 0.15s;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.room-item + .room-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 86px;
+  right: 20px;
+  height: 1px;
+  background: #F1F3F6;
 }
 
 .room-item:hover {
-  background: #f9f9fb;
-  border-color: #e5e5ea;
+  background: #FAF5FF;
 }
 
-.room-item.unread {
-  background: #ffffff;
-  border-color: #e5e5ea;
-  box-shadow: inset 3px 0 0 #1a1a1c;
+.room-item:active {
+  background: #F3E8FF;
 }
 
-.room-item.unread:hover {
-  background: #f9f9fb;
-}
-
-/* 피드 썸네일 */
-.feed-thumb {
-  width: 60px;
-  height: 60px;
-  border-radius: 10px;
+/* 썸네일 */
+.room-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #f2f2f7;
+  background: #F7F8FA;
+  position: relative;
 }
 
-.feed-thumb img {
+.room-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.feed-thumb-placeholder {
+.room-thumb-fallback {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f2f2f7;
-  color: #8e8e93;
+  background: #FAF5FF;
+  color: #9333EA;
+}
+
+.room-item.unread .room-thumb {
+  box-shadow: 0 0 0 2px #9333EA;
 }
 
 /* 채팅 내용 */
@@ -552,12 +558,11 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding-top: 1px;
 }
 
-.room-header {
+.room-top {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
@@ -565,88 +570,107 @@ onMounted(() => {
 .room-name {
   font-size: 15px;
   font-weight: 700;
-  color: #1a1a1c;
+  color: #0A0E1A;
   margin: 0;
+  letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .room-time {
   font-size: 11px;
-  color: #8e8e93;
+  color: #94A3B8;
   font-weight: 500;
-  flex-shrink: 0;
-}
-
-.feed-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  min-width: 0;
-}
-
-.feed-title-text {
-  font-size: 12px;
-  color: #8e8e93;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: 500;
-}
-
-.feed-price {
-  font-size: 11px;
-  background: #f2f2f7;
-  color: #1a1a1c;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-weight: 700;
   flex-shrink: 0;
   letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
 
-.room-footer {
+.room-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-top: 1px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .room-message {
-  font-size: 13px;
-  color: #8e8e93;
+  font-size: 13.5px;
+  color: #64748B;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
   min-width: 0;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
 }
 
-.room-item.unread .room-name { color: #1a1a1c; }
-.room-item.unread .room-time { color: #1a1a1c; font-weight: 700; }
+.feed-context {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 4px 0 0;
+  min-width: 0;
+}
 
+.feed-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #9333EA;
+  background: #FAF5FF;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+
+.feed-dot {
+  color: #CBD5E1;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.feed-title-text {
+  font-size: 11.5px;
+  color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* 안읽음 상태 — 메시지·시간 진하게 */
 .room-item.unread .room-message {
-  color: #1a1a1c;
+  color: #0A0E1A;
   font-weight: 600;
+}
+
+.room-item.unread .room-time {
+  color: #9333EA;
+  font-weight: 700;
 }
 
 .unread-badge {
   flex-shrink: 0;
   min-width: 20px;
   height: 20px;
-  background: #1a1a1c;
+  background: #9333EA;
   color: #ffffff;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 6px;
+  padding: 0 7px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.25);
 }
 
 /* 상태 컨테이너 */
@@ -686,9 +710,9 @@ onMounted(() => {
 .empty-icon-wrapper {
   width: 56px;
   height: 56px;
-  border-radius: 14px;
-  background: #f2f2f7;
-  color: #8e8e93;
+  border-radius: 18px;
+  background: #FAF5FF;
+  color: #9333EA;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -700,18 +724,19 @@ onMounted(() => {
 
 .btn-primary {
   padding: 10px 24px;
-  background: #1a1a1c;
+  background: #9333EA;
   color: #ffffff;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
   font-family: inherit;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.28);
 }
 
-.btn-primary:hover { background: #3a3a3c; }
+.btn-primary:hover { background: #7C3AED; }
 
 /* 토스트 */
 .toast {
