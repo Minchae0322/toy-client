@@ -98,12 +98,7 @@
 
       <section class="author-section">
         <div class="author-click-zone" role="link" tabindex="0" @click="goToUser" @keydown.enter="goToUser">
-          <div class="author-avatar-wrap">
-            <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
-            <div v-if="tierArt" class="tier-coin">
-              <YogurtTierArt :tier="tierArt" :color="tierColor" :size="18" />
-            </div>
-          </div>
+          <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
           <div class="author-meta">
             <div class="nickname-row">
               <span class="author-name">{{ getAuthorNickname }}</span>
@@ -150,8 +145,7 @@ import { useRouter } from 'vue-router'
 import ProductStatusBadge from '@/components/product/ProductStatusBadge.vue'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
-import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
-import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js'
+import { getTierByLevel } from '@/data/levelSystemData.js'
 
 const props = defineProps({
   feed: { type: Object, required: true },
@@ -202,8 +196,6 @@ const getAuthorNickname = computed(() => props.feed?.userInfo?.nickname || '사�
 const userLevel = computed(() => props.feed?.userRewardInfo?.level ?? null)
 
 const tierMeta = computed(() => userLevel.value != null ? getTierByLevel(userLevel.value) : null)
-const tierArt = computed(() => tierMeta.value?.art ?? null)
-const tierColor = computed(() => userLevel.value != null ? getTierColor(userLevel.value) : 'white')
 const tierName = computed(() => tierMeta.value?.name ?? '')
 
 const primaryBadgeId = computed(() => {
@@ -398,24 +390,11 @@ const handleSendMessage = () => {
 /* 작성자 */
 .author-section { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .author-click-zone { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; }
-.author-avatar-wrap { position: relative; flex-shrink: 0; }
 .author-avatar {
   width: 44px; height: 44px; border-radius: 50%;
   object-fit: cover; border: 1px solid #F2F4F6;
   display: block;
-}
-.tier-coin {
-  position: absolute;
-  bottom: -3px;
-  right: -4px;
-  width: 22px;
-  height: 22px;
-  background: #fff;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(15, 23, 42, 0.12);
+  flex-shrink: 0;
 }
 .author-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .nickname-row { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }

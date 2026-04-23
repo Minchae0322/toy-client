@@ -50,12 +50,7 @@
 
       <div class="post-footer">
         <div class="user-block" role="link" tabindex="0" @click.stop.prevent="goToUser" @keydown.enter.prevent="goToUser">
-          <div class="avatar-wrap">
-            <img :src="profileImageUrl || '/default-avatar.png'" class="user-avatar" />
-            <div v-if="tierArt" class="tier-coin">
-              <YogurtTierArt :tier="tierArt" :color="tierColor" :size="16" />
-            </div>
-          </div>
+          <img :src="profileImageUrl || '/default-avatar.png'" class="user-avatar" />
           <div class="user-meta">
             <div class="nickname-row">
               <span class="user-nickname">{{ displayNickname }}</span>
@@ -98,8 +93,6 @@ import { useRouter } from 'vue-router';
 import { feedService, feedUtils } from '@/services/FeedService';
 import UserLevelTag from '@/components/identity/UserLevelTag.vue';
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
-import YogurtTierArt from '@/components/identity/YogurtTierArt.vue';
-import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js';
 
 const props = defineProps({ feed: { type: Object, required: true } });
 const emit = defineEmits(['update']);
@@ -117,8 +110,6 @@ const localLikeCount = ref(props.feed.likeCount || 0);
 const profileImageUrl = computed(() => props.feed.userInfo?.profileImageFile?.fileUrl || props.feed.userInfo?.profileImgUrl);
 const displayNickname = computed(() => props.feed.userInfo?.nickname || '익명');
 const userLevel = computed(() => props.feed.userRewardInfo?.level ?? null);
-const tierArt = computed(() => userLevel.value != null ? (getTierByLevel(userLevel.value)?.art ?? 'plain') : null);
-const tierColor = computed(() => userLevel.value != null ? getTierColor(userLevel.value) : 'white');
 const primaryBadgeId = computed(() => {
   const u = props.feed.userInfo;
   return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null);
@@ -284,21 +275,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   padding-top: 14px; border-top: 1px solid #F2F4F6; margin-top: auto;
 }
 .user-block { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.avatar-wrap { position: relative; flex-shrink: 0; }
-.user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; }
-.tier-coin {
-  position: absolute;
-  bottom: -3px;
-  right: -5px;
-  width: 18px;
-  height: 18px;
-  background: #fff;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(15, 23, 42, 0.1);
-}
+.user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; }
 .user-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .user-nickname { font-size: 13px; font-weight: 600; color: #4E5968; letter-spacing: -0.2px; }
