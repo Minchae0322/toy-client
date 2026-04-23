@@ -215,7 +215,7 @@ watch(() => props.initialCategoryId, (newId) => {
   color: var(--secondary, #666);
   border: none;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -229,6 +229,7 @@ watch(() => props.initialCategoryId, (newId) => {
 .category-tab.active {
   background: #fff;
   color: var(--primary, #111);
+  font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -257,7 +258,7 @@ watch(() => props.initialCategoryId, (newId) => {
   border: none;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--secondary, #666);
   cursor: pointer;
   transition: all 0.2s;

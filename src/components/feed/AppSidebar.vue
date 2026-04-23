@@ -262,7 +262,7 @@ const handleProtectedRoute = async (routeName) => {
 
 .nav-text {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: #4E5968;
   letter-spacing: -0.2px;
   transition: color 0.15s ease;
@@ -274,7 +274,7 @@ const handleProtectedRoute = async (routeName) => {
 
 .nav-item.active .nav-text {
   color: #7C3AED;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .badge {
@@ -283,7 +283,7 @@ const handleProtectedRoute = async (routeName) => {
   background: #F7F8FA;
   color: #6B7684;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   border-radius: 6px;
   min-width: 20px;
   text-align: center;
