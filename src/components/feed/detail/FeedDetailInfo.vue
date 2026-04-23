@@ -98,9 +98,29 @@
 
       <section class="author-section">
         <div class="author-click-zone" role="link" tabindex="0" @click="goToUser" @keydown.enter="goToUser">
-          <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
+          <div class="author-avatar-wrap">
+            <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
+            <div v-if="tierArt" class="tier-coin">
+              <YogurtTierArt :tier="tierArt" :color="tierColor" :size="18" />
+            </div>
+          </div>
           <div class="author-meta">
-            <span class="author-name">{{ getAuthorNickname }}</span>
+            <div class="nickname-row">
+              <span class="author-name">{{ getAuthorNickname }}</span>
+              <UserLevelTag v-if="userLevel != null" :level="userLevel" size="xs" variant="dark" />
+              <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="xs" />
+            </div>
+            <div v-if="tierName" class="tier-meta">
+              <span class="tier-name" :style="{ color: tierMeta?.color }">{{ tierName }}</span>
+              <template v-if="isMaxLevel">
+                <span class="meta-sep">·</span>
+                <span class="exp-remaining">MAX LEVEL</span>
+              </template>
+              <template v-else-if="expToNext != null">
+                <span class="meta-sep">·</span>
+                <span class="exp-remaining">다음 레벨까지 {{ formatNumber(expToNext) }} EXP</span>
+              </template>
+            </div>
           </div>
         </div>
         <div class="author-actions">
@@ -128,6 +148,10 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ProductStatusBadge from '@/components/product/ProductStatusBadge.vue'
+import UserLevelTag from '@/components/identity/UserLevelTag.vue'
+import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
+import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
+import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js'
 
 const props = defineProps({
   feed: { type: Object, required: true },
@@ -171,6 +195,36 @@ const handleProductBannerClick = () => {
 }
 const getAuthorProfileImage = computed(() => props.feed?.userInfo?.profileImageFile?.fileUrl || props.feed?.userInfo?.profileImageUrl || 'https://i.pravatar.cc/150')
 const getAuthorNickname = computed(() => props.feed?.userInfo?.nickname || '사용자')
+
+// userRewardInfo 필드 규약 (백엔드 RewardResponse.UserRewardInfo):
+//  - level / tier / totalExp / currentLevelExp / nextLevelExp / maxLevel / seasonExp / seasonCode
+//  - nextLevelExp 는 "다음 레벨까지 남은" EXP (threshold 아님)
+const userLevel = computed(() => {
+  const r = props.feed?.userRewardInfo
+  if (r?.level != null) return r.level
+  return props.feed?.userInfo?.level ?? null
+})
+
+const tierMeta = computed(() => userLevel.value != null ? getTierByLevel(userLevel.value) : null)
+const tierArt = computed(() => tierMeta.value?.art ?? null)
+const tierColor = computed(() => userLevel.value != null ? getTierColor(userLevel.value) : 'white')
+const tierName = computed(() => tierMeta.value?.name ?? '')
+
+const primaryBadgeId = computed(() => {
+  const u = props.feed?.userInfo
+  return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
+})
+
+const isMaxLevel = computed(() => props.feed?.userRewardInfo?.maxLevel === true)
+
+const expToNext = computed(() => {
+  const r = props.feed?.userRewardInfo
+  if (!r || isMaxLevel.value) return null
+  const v = Number(r.nextLevelExp)
+  return Number.isFinite(v) && v >= 0 ? v : null
+})
+
+const formatNumber = (n) => (n == null ? '' : Number(n).toLocaleString())
 
 const goToUser = () => {
   const userId = props.feed?.userInfo?.userId
@@ -348,15 +402,39 @@ const handleSendMessage = () => {
 /* 작성자 */
 .author-section { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .author-click-zone { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; }
+.author-avatar-wrap { position: relative; flex-shrink: 0; }
 .author-avatar {
   width: 44px; height: 44px; border-radius: 50%;
   object-fit: cover; border: 1px solid #F2F4F6;
+  display: block;
 }
-.author-meta { flex: 1; }
+.tier-coin {
+  position: absolute;
+  bottom: -3px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  background: #fff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+.author-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.nickname-row { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
 .author-name {
-  display: block; font-size: 15px; font-weight: 600;
+  font-size: 15px; font-weight: 700;
   color: #191F28; letter-spacing: -0.01em;
 }
+.tier-meta {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11.5px; font-weight: 600;
+  letter-spacing: -0.1px; line-height: 1;
+}
+.tier-meta .tier-name { font-weight: 700; }
+.tier-meta .meta-sep { color: #CBD5E1; font-weight: 500; }
+.tier-meta .exp-remaining { color: #8B95A1; font-weight: 500; font-variant-numeric: tabular-nums; }
 .author-actions { display: flex; gap: 8px; }
 .follow-btn {
   padding: 8px 16px; border-radius: 8px;
