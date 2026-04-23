@@ -195,7 +195,8 @@ class CategoryService extends BaseApiService {
       endDate,
       page,
       size,
-      sort
+      sort,
+      isActive: true
     }
 
     return await this.get('/categories/popular', queryParams)
