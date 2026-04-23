@@ -1,121 +1,156 @@
 <template>
   <div class="chat-container">
-    <!-- 헤더 -->
-    <header class="header">
-      <div class="header-left">
-        <h1 class="header-title">메시지</h1>
-        <span class="header-sub">{{ allChatRooms.length }}개의 대화</span>
-      </div>
-      <div class="header-actions">
-        <button @click="toggleSearch" class="icon-btn" :class="{ active: showSearch }">
-          <Search :size="20" />
-        </button>
-      </div>
-    </header>
-
-    <!-- 검색바 -->
-    <Transition name="slide">
-      <div v-if="showSearch" class="search-wrapper">
-        <div class="search-box">
-          <Search :size="18" class="search-icon" />
-          <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="채팅 검색..."
-              class="search-input"
-          />
-          <button v-if="searchQuery" @click="searchQuery = ''" class="clear-btn">
-            <X :size="16" />
+    <div class="content-inner">
+      <!-- Hero 헤더 -->
+      <header class="page-hero">
+        <div class="hero-main">
+          <span class="hero-eyebrow">
+            <span class="eyebrow-dot"></span>
+            MESSAGES
+          </span>
+          <h1 class="hero-title">메시지</h1>
+          <p class="hero-sub">피드에서 시작된 대화를 이어가세요</p>
+        </div>
+        <div class="hero-actions">
+          <button @click="toggleSearch" class="icon-btn" :class="{ active: showSearch }" aria-label="검색">
+            <Search :size="18" />
           </button>
         </div>
-      </div>
-    </Transition>
+      </header>
 
-    <!-- 탭 -->
-    <nav class="tabs">
-      <button
-          v-for="tab in visibleTabs"
-          :key="tab.key"
-          @click="activeTab = tab.key"
-          class="tab"
-          :class="{ active: activeTab === tab.key }"
-      >
-        <span class="tab-label">{{ tab.label }}</span>
-        <span v-if="tab.count > 0" class="tab-badge">{{ tab.count }}</span>
-      </button>
-    </nav>
-
-    <!-- 채팅방 목록 -->
-    <main class="chat-list">
-      <!-- 로딩 -->
-      <div v-if="loading" class="state-container">
-        <div class="loader"></div>
-        <p class="state-text">불러오는 중...</p>
-      </div>
-
-      <!-- 에러 -->
-      <div v-else-if="error" class="state-container">
-        <div class="error-circle">
-          <AlertCircle :size="24" />
+      <!-- 통계 스트립 -->
+      <section class="stats-strip">
+        <div class="stat-cell">
+          <span class="stat-value">{{ allChatRooms.length }}</span>
+          <span class="stat-label">전체 대화</span>
         </div>
-        <p class="state-title">연결할 수 없습니다</p>
-        <p class="state-text">{{ error }}</p>
-        <button @click="loadChatRooms" class="btn-primary">다시 시도</button>
-      </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <span class="stat-value accent">{{ unreadTotal }}</span>
+          <span class="stat-label">안읽음</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <span class="stat-value">{{ todayCount }}</span>
+          <span class="stat-label">오늘 활동</span>
+        </div>
+      </section>
 
-      <!-- 채팅방 리스트 -->
-      <div v-else-if="filteredRooms.length > 0" class="room-list">
-        <TransitionGroup name="list">
-          <div
-              v-for="room in filteredRooms"
-              :key="room.id"
-              @click="goToChatDetail(room.id)"
-              class="room-item"
-              :class="{ unread: room.unreadCount > 0 }"
+      <!-- 컨트롤: 탭 + 검색 -->
+      <section class="control-bar">
+        <nav class="tabs">
+          <button
+              v-for="tab in visibleTabs"
+              :key="tab.key"
+              @click="activeTab = tab.key"
+              class="tab"
+              :class="{ active: activeTab === tab.key }"
           >
-            <!-- 썸네일 (피드 또는 fallback) -->
-            <div class="room-thumb">
-              <img
-                  v-if="room.feed?.thumbnail"
-                  :src="room.feed.thumbnail"
-                  :alt="room.feed?.title"
-              />
-              <div v-else class="room-thumb-fallback">
-                <MessageCircle :size="22" />
-              </div>
-            </div>
+            <span class="tab-label">{{ tab.label }}</span>
+            <span v-if="tab.count > 0" class="tab-badge">{{ tab.count }}</span>
+          </button>
+        </nav>
 
-            <!-- 채팅 내용 -->
-            <div class="room-info">
-              <div class="room-top">
-                <h3 class="room-name">{{ room.name }}</h3>
-                <span class="room-time">{{ formatTime(room.lastMessageAt) }}</span>
-              </div>
-              <div class="room-bottom">
-                <p class="room-message">{{ room.lastMessage || '대화를 시작해보세요' }}</p>
-                <span v-if="room.unreadCount > 0" class="unread-badge">
-                  {{ room.unreadCount > 99 ? '99+' : room.unreadCount }}
-                </span>
-              </div>
-              <p v-if="room.feed?.title" class="feed-context">
-                <span class="feed-label">관련 상품</span>
-                <span class="feed-dot">·</span>
-                <span class="feed-title-text">{{ room.feed.title }}</span>
-              </p>
+        <Transition name="search-expand">
+          <div v-if="showSearch" class="search-wrapper">
+            <div class="search-box">
+              <Search :size="18" class="search-icon" />
+              <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="닉네임, 메시지, 상품으로 검색"
+                  class="search-input"
+              />
+              <button v-if="searchQuery" @click="searchQuery = ''" class="clear-btn">
+                <X :size="16" />
+              </button>
             </div>
           </div>
-        </TransitionGroup>
-      </div>
+        </Transition>
+      </section>
 
-      <!-- 빈 상태 -->
-      <div v-else class="state-container">
-        <div class="empty-icon-wrapper">
-          <component :is="getEmptyIcon()" :size="32" />
+      <!-- 채팅방 목록 -->
+      <main class="chat-list">
+        <!-- 로딩 -->
+        <div v-if="loading" class="state-container">
+          <div class="loader"></div>
+          <p class="state-text">불러오는 중...</p>
         </div>
-        <p class="state-title">{{ getEmptyTitle() }}</p>
-        <p class="state-text">{{ getEmptyMessage() }}</p>
-      </div>
-    </main>
+
+        <!-- 에러 -->
+        <div v-else-if="error" class="state-container">
+          <div class="error-circle">
+            <AlertCircle :size="24" />
+          </div>
+          <p class="state-title">연결할 수 없습니다</p>
+          <p class="state-text">{{ error }}</p>
+          <button @click="loadChatRooms" class="btn-primary">다시 시도</button>
+        </div>
+
+        <!-- 채팅방 리스트 -->
+        <div v-else-if="filteredRooms.length > 0" class="room-list">
+          <div class="list-header">
+            <span class="list-header-title">{{ activeTab === 'unread' ? '안읽은 대화' : '대화 목록' }}</span>
+            <span class="list-header-count">{{ filteredRooms.length }}</span>
+          </div>
+
+          <TransitionGroup name="list" tag="div" class="room-list-body">
+            <div
+                v-for="room in filteredRooms"
+                :key="room.id"
+                @click="goToChatDetail(room.id)"
+                class="room-item"
+                :class="{ unread: room.unreadCount > 0 }"
+            >
+              <!-- 썸네일 + 온라인 인디케이터 -->
+              <div class="room-thumb-wrap">
+                <div class="room-thumb">
+                  <img
+                      v-if="room.feed?.thumbnail"
+                      :src="room.feed.thumbnail"
+                      :alt="room.feed?.title"
+                  />
+                  <div v-else class="room-thumb-fallback">
+                    <MessageCircle :size="22" />
+                  </div>
+                </div>
+                <span v-if="room.unreadCount > 0" class="unread-dot" aria-hidden="true"></span>
+              </div>
+
+              <!-- 채팅 내용 -->
+              <div class="room-info">
+                <div class="room-top">
+                  <h3 class="room-name">{{ room.name }}</h3>
+                  <span class="room-time">{{ formatTime(room.lastMessageAt) }}</span>
+                </div>
+                <div class="room-bottom">
+                  <p class="room-message">{{ room.lastMessage || '대화를 시작해보세요' }}</p>
+                  <span v-if="room.unreadCount > 0" class="unread-badge">
+                    {{ room.unreadCount > 99 ? '99+' : room.unreadCount }}
+                  </span>
+                </div>
+                <p v-if="room.feed?.title" class="feed-context">
+                  <span class="feed-label">관련 상품</span>
+                  <span class="feed-title-text">{{ room.feed.title }}</span>
+                </p>
+              </div>
+
+              <!-- 우측 chevron -->
+              <ChevronRight :size="18" class="room-chevron" />
+            </div>
+          </TransitionGroup>
+        </div>
+
+        <!-- 빈 상태 -->
+        <div v-else class="state-container">
+          <div class="empty-icon-wrapper">
+            <component :is="getEmptyIcon()" :size="32" />
+          </div>
+          <p class="state-title">{{ getEmptyTitle() }}</p>
+          <p class="state-text">{{ getEmptyMessage() }}</p>
+        </div>
+      </main>
+    </div>
 
     <!-- 토스트 -->
     <Transition name="toast">
@@ -131,7 +166,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, X, AlertCircle, Check, ImageIcon, MessageCircle, CheckCircle } from 'lucide-vue-next'
+import { Search, X, AlertCircle, Check, MessageCircle, CheckCircle, ChevronRight } from 'lucide-vue-next'
 import { chatService } from '@/services/ChatService.js'
 
 const router = useRouter()
@@ -152,6 +187,19 @@ const visibleTabs = computed(() => [
   { key: 'all', label: '전체', count: allChatRooms.value.length },
   { key: 'unread', label: '안읽음', count: allChatRooms.value.filter(r => r.unreadCount > 0).length },
 ])
+
+// 통계
+const unreadTotal = computed(() =>
+  allChatRooms.value.reduce((sum, r) => sum + (r.unreadCount || 0), 0)
+)
+const todayCount = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return allChatRooms.value.filter(r => {
+    if (!r.lastMessageAt) return false
+    return new Date(r.lastMessageAt) >= today
+  }).length
+})
 
 // 필터링
 const filteredRooms = computed(() => {
@@ -321,52 +369,68 @@ onMounted(() => {
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: #0A0E1A;
   -webkit-font-smoothing: antialiased;
+  padding-bottom: 48px;
 }
 
-.chat-container > * {
+.content-inner {
   max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
+  padding: 0 0;
 }
 
-/* 헤더 — PC 기준 */
-.header {
+/* ============ Hero 헤더 (PC 기준) ============ */
+.page-hero {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 44px 0 24px;
-  background: #FFFFFF;
+  gap: 24px;
+  padding: 44px 0 28px;
 }
 
-.header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.hero-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #9333EA;
+  letter-spacing: 0.12em;
+  width: fit-content;
 }
 
-.header-title {
-  font-size: 30px;
+.eyebrow-dot {
+  width: 6px;
+  height: 22px;
+  background: #9333EA;
+  border-radius: 2px;
+}
+
+.hero-title {
+  font-size: 34px;
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.04em;
   color: #0A0E1A;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
-.header-sub {
-  font-size: 13px;
-  color: #8B95A1;
+.hero-sub {
+  font-size: 14px;
+  color: #64748B;
   font-weight: 500;
   letter-spacing: -0.01em;
+  margin: 0;
 }
 
-.header-actions { display: flex; gap: 10px; }
+.hero-actions { display: flex; gap: 10px; flex-shrink: 0; }
 
 .icon-btn {
   width: 44px;
   height: 44px;
   border: none;
-  background: #ffffff;
+  background: #FFFFFF;
   border-radius: 12px;
   cursor: pointer;
   display: flex;
@@ -374,87 +438,94 @@ onMounted(() => {
   justify-content: center;
   color: #4E5968;
   transition: all 0.15s ease;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.04);
+  border: 1px solid #E5E7EB;
 }
 
 .icon-btn:hover {
   color: #0A0E1A;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.06);
+  border-color: #CBD5E1;
+  background: #FAFAFB;
 }
 .icon-btn.active {
   background: #9333EA;
   color: #ffffff;
+  border-color: #9333EA;
   box-shadow: 0 4px 12px rgba(147, 51, 234, 0.28);
 }
 
-/* 검색바 — PC 기준 */
-.search-wrapper {
-  padding: 0 0 16px;
+/* ============ 통계 스트립 ============ */
+.stats-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 24px;
+  padding: 20px 28px;
   background: #FFFFFF;
+  border: 1px solid #F1F3F6;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  background: #ffffff;
-  border: none;
-  border-radius: 14px;
-  padding: 0 18px;
-  height: 52px;
-  transition: box-shadow 0.15s ease;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.05);
-}
-
-.search-box:focus-within {
-  box-shadow: 0 0 0 2px #9333EA;
-}
-.search-icon { color: #8B95A1; margin-right: 12px; flex-shrink: 0; }
-
-.search-input {
+.stat-cell {
   flex: 1;
-  border: none;
-  background: none;
-  font-size: 15px;
-  color: #0A0E1A;
-  outline: none;
-  font-family: inherit;
-  letter-spacing: -0.01em;
-}
-
-.search-input::placeholder { color: #8B95A1; }
-
-.clear-btn {
-  border: none;
-  background: none;
-  color: #8B95A1;
-  cursor: pointer;
-  padding: 4px;
   display: flex;
-  border-radius: 6px;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
 }
 
-.clear-btn:hover { color: #4E5968; background: #F2F4F6; }
+.stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0A0E1A;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
 
-/* 탭 — Login 스타일 segmented pill (PC 기준) */
+.stat-value.accent { color: #9333EA; }
+
+.stat-label {
+  font-size: 12px;
+  color: #8B95A1;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.stat-divider {
+  width: 1px;
+  background: #F1F3F6;
+  margin: 4px 24px;
+}
+
+/* ============ 컨트롤 바: 탭 + 검색 ============ */
+.control-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 .tabs {
   display: flex;
-  margin: 0 0 20px;
   background: #F2F4F6;
   border-radius: 14px;
   padding: 5px;
   gap: 2px;
+  width: fit-content;
+  min-width: 240px;
 }
 
 .tab {
-  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 10px 20px;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #8B95A1;
   cursor: pointer;
@@ -468,7 +539,7 @@ onMounted(() => {
 
 .tab.active {
   color: #0A0E1A;
-  background: #ffffff;
+  background: #FFFFFF;
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
@@ -493,20 +564,106 @@ onMounted(() => {
   color: #ffffff;
 }
 
-/* 채팅 리스트 — PC 기준 */
-.chat-list {
-  padding: 0 0 48px;
+/* 검색바 */
+.search-wrapper { width: 100%; }
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 0 16px;
+  height: 48px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+
+.search-box:focus-within {
+  border-color: #9333EA;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+}
+.search-icon { color: #8B95A1; margin-right: 10px; flex-shrink: 0; }
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 14px;
+  color: #0A0E1A;
+  outline: none;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+}
+
+.search-input::placeholder { color: #8B95A1; }
+
+.clear-btn {
+  border: none;
+  background: none;
+  color: #8B95A1;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  border-radius: 6px;
+}
+
+.clear-btn:hover { color: #4E5968; background: #F2F4F6; }
+
+/* 검색 expand 트랜지션 */
+.search-expand-enter-active, .search-expand-leave-active {
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+.search-expand-enter-from, .search-expand-leave-to { opacity: 0; max-height: 0; transform: translateY(-4px); }
+.search-expand-enter-to, .search-expand-leave-from { opacity: 1; max-height: 60px; transform: translateY(0); }
+
+/* ============ 채팅 리스트 ============ */
+.chat-list { padding: 0; }
 
 .room-list {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: #FFFFFF;
   border-radius: 20px;
   overflow: hidden;
   border: 1px solid #F1F3F6;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
 }
+
+.list-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 28px;
+  background: #FAFAFB;
+  border-bottom: 1px solid #F1F3F6;
+}
+
+.list-header-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #4E5968;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.list-header-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 7px;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  color: #4E5968;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-list-body { display: flex; flex-direction: column; }
 
 .room-item {
   display: flex;
@@ -514,7 +671,7 @@ onMounted(() => {
   gap: 18px;
   padding: 20px 28px;
   cursor: pointer;
-  background: #ffffff;
+  background: #FFFFFF;
   transition: background 0.15s ease;
   position: relative;
 }
@@ -529,12 +686,32 @@ onMounted(() => {
   background: #F1F3F6;
 }
 
-.room-item:hover {
-  background: #FAFAFB;
+.room-item:hover { background: #FAFAFB; }
+.room-item:hover .room-chevron { color: #9333EA; transform: translateX(2px); }
+.room-item:active { background: #F3E8FF; }
+
+.room-chevron {
+  color: #CBD5E1;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
-.room-item:active {
-  background: #F3E8FF;
+/* 썸네일 wrap (+ unread dot) */
+.room-thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.unread-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: #9333EA;
+  border: 2.5px solid #FFFFFF;
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 /* 썸네일 — PC 기준 */
@@ -543,7 +720,6 @@ onMounted(() => {
   height: 56px;
   border-radius: 16px;
   overflow: hidden;
-  flex-shrink: 0;
   background: #F7F8FA;
   position: relative;
 }
@@ -564,9 +740,6 @@ onMounted(() => {
   color: #9333EA;
 }
 
-.room-item.unread .room-thumb {
-  box-shadow: 0 0 0 2px #9333EA;
-}
 
 /* 채팅 내용 */
 .room-info {
@@ -629,31 +802,26 @@ onMounted(() => {
 .feed-context {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin: 4px 0 0;
+  gap: 8px;
+  margin: 8px 0 0;
   min-width: 0;
 }
 
 .feed-label {
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 800;
   color: #9333EA;
   background: #FAF5FF;
-  padding: 2px 7px;
-  border-radius: 4px;
-  letter-spacing: -0.01em;
-  flex-shrink: 0;
-}
-
-.feed-dot {
-  color: #CBD5E1;
-  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   flex-shrink: 0;
 }
 
 .feed-title-text {
-  font-size: 11.5px;
-  color: #94A3B8;
+  font-size: 12px;
+  color: #64748B;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -791,12 +959,17 @@ onMounted(() => {
 .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 16px); }
 
-/* 모바일/태블릿 adaptation (PC 기준을 좁힘) */
+/* ============ 모바일/태블릿 adaptation ============ */
 @media (max-width: 1023px) {
-  .chat-container > * { padding-left: 20px; padding-right: 20px; }
-  .header { padding: 32px 0 20px; }
-  .header-title { font-size: 26px; }
+  .content-inner { padding: 0 20px; }
+  .page-hero { padding: 32px 0 20px; }
+  .hero-title { font-size: 28px; }
+  .hero-sub { font-size: 13px; }
+  .stats-strip { padding: 18px 20px; margin-bottom: 18px; }
+  .stat-value { font-size: 22px; }
+  .stat-divider { margin: 4px 18px; }
   .room-list { border-radius: 16px; }
+  .list-header { padding: 14px 20px; }
   .room-item { padding: 16px 20px; gap: 14px; }
   .room-item + .room-item::before { left: 88px; right: 20px; }
   .room-thumb { width: 52px; height: 52px; border-radius: 14px; }
@@ -804,22 +977,30 @@ onMounted(() => {
 }
 
 @media (max-width: 480px) {
-  .chat-container > * { padding-left: 16px; padding-right: 16px; }
-  .header { padding: 24px 0 16px; }
-  .header-title { font-size: 22px; }
-  .header-sub { font-size: 12px; }
+  .content-inner { padding: 0 16px; }
+  .page-hero { padding: 24px 0 16px; gap: 16px; }
+  .hero-eyebrow { font-size: 10px; }
+  .eyebrow-dot { width: 5px; height: 18px; }
+  .hero-title { font-size: 24px; }
+  .hero-sub { font-size: 12.5px; }
   .icon-btn { width: 40px; height: 40px; }
-  .search-box { height: 44px; padding: 0 14px; border-radius: 12px; }
+  .stats-strip { padding: 16px; margin-bottom: 14px; border-radius: 14px; }
+  .stat-value { font-size: 20px; }
+  .stat-label { font-size: 11px; }
+  .stat-divider { margin: 4px 12px; }
+  .search-box { height: 44px; padding: 0 14px; }
   .search-input { font-size: 14px; }
-  .tabs { margin: 0 0 14px; border-radius: 12px; padding: 4px; }
-  .tab { font-size: 13px; padding: 10px 12px; }
-  .chat-list { padding: 0 0 32px; }
+  .tabs { padding: 4px; border-radius: 12px; min-width: 0; width: 100%; }
+  .tab { flex: 1; padding: 10px 12px; font-size: 13px; }
   .room-list { border-radius: 14px; }
+  .list-header { padding: 12px 16px; }
+  .list-header-title { font-size: 11.5px; }
   .room-item { padding: 14px 16px; gap: 12px; }
   .room-item + .room-item::before { left: 76px; right: 16px; }
   .room-thumb { width: 48px; height: 48px; border-radius: 12px; }
   .room-name { font-size: 15px; }
   .room-message { font-size: 13px; }
+  .room-chevron { display: none; }
   .state-container { padding: 60px 24px; }
 }
 </style>
