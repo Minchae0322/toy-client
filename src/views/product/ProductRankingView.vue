@@ -29,7 +29,7 @@
         </div>
 
         <!-- 로딩 스켈레톤 -->
-        <div v-if="loading && !products.length" class="skeleton-wrapper">
+        <div v-if="showBubbleSkeleton" class="skeleton-wrapper">
           <!-- 버블 차트 스켈레톤 -->
           <div class="skeleton-bubble-area">
             <div class="skeleton-bubble skeleton-bubble-1"></div>
@@ -406,6 +406,14 @@ watch([nodes, dims], ([n, d]) => {
     layoutRafId = null
   })
 }, { immediate: true })
+
+// 최초 레이아웃 계산 완료 여부 — 그 전까지 스켈레톤 유지해서 빈 그리드 플리커 방지
+const layoutHasRendered = ref(false)
+watch(positions, (p) => { if (p.length > 0 && !layoutHasRendered.value) layoutHasRendered.value = true })
+const showBubbleSkeleton = computed(() =>
+  (loading.value && !products.value.length) ||
+  (!loading.value && filtered.value.length > 0 && !layoutHasRendered.value)
+)
 
 const tooltipProduct = computed(() => {
   if (!hovered.value) return null

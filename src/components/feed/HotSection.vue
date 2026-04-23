@@ -169,6 +169,7 @@ onUnmounted(() => {
 .hot-section {
   padding: 12px 0;
   margin-bottom: 0.5rem;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
 
 /* 헤더 */

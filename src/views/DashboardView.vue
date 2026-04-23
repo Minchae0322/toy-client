@@ -286,7 +286,7 @@
             </div>
           </div>
 
-          <div v-if="productsLoading" class="dash-bubble-wrapper">
+          <div v-if="showDashBubbleSkeleton" class="dash-bubble-wrapper">
             <div class="skeleton" style="width:100%;height:320px;border-radius:12px;"></div>
           </div>
 
@@ -504,6 +504,14 @@ watch([dashBubbleNodes, bubbleDims], ([nodes, dims]) => {
     bubbleRafId = null
   })
 }, { immediate: true })
+
+// 최초 레이아웃 계산 완료 여부 — 그 전까지 스켈레톤 유지해서 빈 그리드 플리커 방지
+const bubbleLayoutRendered = ref(false)
+watch(dashBubblePositions, (p) => { if (p.length > 0 && !bubbleLayoutRendered.value) bubbleLayoutRendered.value = true })
+const showDashBubbleSkeleton = computed(() =>
+  productsLoading.value ||
+  (hotProducts.value.length > 0 && !bubbleLayoutRendered.value)
+)
 
 const bubbleTooltipProduct = computed(() => {
   if (!bubbleHovered.value) return null
