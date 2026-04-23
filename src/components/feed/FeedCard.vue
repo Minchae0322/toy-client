@@ -115,7 +115,7 @@ const localLikeCount = ref(props.feed.likeCount || 0);
 
 const profileImageUrl = computed(() => props.feed.userInfo?.profileImageFile?.fileUrl || props.feed.userInfo?.profileImgUrl);
 const displayNickname = computed(() => props.feed.userInfo?.nickname || '익명');
-const userLevel = computed(() => props.feed.userInfo?.level ?? null);
+const userLevel = computed(() => props.feed.userRewardInfo?.level ?? props.feed.userInfo?.level ?? null);
 const tierArt = computed(() => userLevel.value != null ? (getTierByLevel(userLevel.value)?.art ?? 'plain') : null);
 const tierColor = computed(() => userLevel.value != null ? getTierColor(userLevel.value) : 'white');
 const primaryBadgeId = computed(() => {
