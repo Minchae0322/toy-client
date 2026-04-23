@@ -171,18 +171,75 @@
       </div>
     </div>
 
-    <!-- 기존 제품 검색 -->
+    <!-- 기존 제품 검색 (피드 등록과 동일한 인라인 UI) -->
     <div v-if="activeTab === 'search'" class="input-panel">
-      <div class="search-section">
-        <button class="search-trigger" @click="showModal = true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      <div class="product-search-wrapper">
+        <div class="product-search-bar">
+          <svg class="product-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <span>요거뜨 아이템 검색하기</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"/>
+          <input
+              type="text"
+              class="product-search-input"
+              placeholder="제품명을 검색하세요 (예: 나이키 조던 4)"
+              v-model="productSearchQuery"
+              @input="handleProductSearchInput"
+          />
+          <div v-if="isSearchingProducts" class="product-search-spinner">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 검색 결과 -->
+        <div v-if="productSuggestions.length > 0" class="product-suggestions">
+          <button
+              v-for="p in productSuggestions"
+              :key="p.productId"
+              type="button"
+              class="product-suggestion-item"
+              :class="{ 'is-disabled': isProductAdded(p.productId) }"
+              :disabled="isProductAdded(p.productId)"
+              @click="handleProductAdd(p)"
+          >
+            <img
+                :src="p.thumbnailUrl || '/default-product.png'"
+                :alt="p.name"
+                class="product-suggestion-thumb"
+                @error="handleImageError"
+            />
+            <div class="product-suggestion-info">
+              <p class="product-suggestion-name">{{ p.name }}</p>
+              <p class="product-suggestion-brand">{{ p.brand }}</p>
+            </div>
+            <span v-if="isProductAdded(p.productId)" class="product-suggestion-badge">추가됨</span>
+            <svg v-else class="product-suggestion-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 검색 전 안내 -->
+        <p
+            v-if="!productSearchQuery.trim() && !isSearchingProducts"
+            class="product-search-hint"
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-        </button>
+          제품명을 입력하면 등록된 아이템을 자동으로 찾아드려요
+        </p>
+        <p
+            v-else-if="productSearchQuery.trim() && !isSearchingProducts && productSuggestions.length === 0 && hasSearchedProducts"
+            class="product-search-hint"
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          검색 결과가 없어요. "이미지 업로드" 탭에서 새 아이템을 만들 수 있어요
+        </p>
       </div>
     </div>
 
@@ -244,14 +301,6 @@
       </div>
     </div>
 
-    <!-- Item Selection Modal (기존 제품 검색용) -->
-    <ItemSelectionModal
-        v-model="showModal"
-        :current-items="selectedItems"
-        :max-items="20"
-        @confirm="handleItemsConfirm"
-    />
-
     <!-- YouTube Player Modal -->
     <Teleport to="body">
       <Transition name="modal">
@@ -280,9 +329,9 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import ItemSelectionModal from './ItemSelectionModal.vue';
 import { useFile } from '@/services/FileService';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
+import productService from '@/services/ProductService';
 
 const props = defineProps({
   battleForm: {
@@ -320,7 +369,14 @@ const tabs = [
 ];
 
 const activeTab = ref('youtube');
-const showModal = ref(false);
+
+// 요거뜨 아이템 검색 (피드 등록과 동일 방식)
+const productSearchQuery = ref('');
+const productSuggestions = ref([]);
+const isSearchingProducts = ref(false);
+const hasSearchedProducts = ref(false);
+let productSearchTimer = null;
+let productSearchReqId = 0;
 
 // YouTube 관련
 const youtubeUrl = ref('');
@@ -568,22 +624,78 @@ const displayItems = computed(() => {
   });
 });
 
-// 제품 검색 모달에서 확인
-const handleItemsConfirm = (newItems) => {
-  // 각 아이템에 itemType 추가
-  const itemsWithType = newItems.map(item => {
-    if (item.productId) {
-      // 기존 제품
-      return { ...item, itemType: 'PRODUCT' };
-    } else {
-      // 커스텀 입력
-      return { ...item, itemType: 'CUSTOM' };
-    }
-  });
+// 제품 검색 (debounce + race-guard)
+const handleProductSearchInput = () => {
+  const keyword = productSearchQuery.value.trim();
+  if (productSearchTimer) clearTimeout(productSearchTimer);
 
-  const updatedItems = [...props.selectedItems, ...itemsWithType];
-  emit('update:selectedItems', updatedItems);
+  if (keyword.length < 1) {
+    productSuggestions.value = [];
+    hasSearchedProducts.value = false;
+    isSearchingProducts.value = false;
+    return;
+  }
+
+  isSearchingProducts.value = true;
+  productSearchTimer = setTimeout(async () => {
+    const currentKeyword = productSearchQuery.value.trim();
+    if (currentKeyword.length < 1) {
+      isSearchingProducts.value = false;
+      return;
+    }
+    const reqId = ++productSearchReqId;
+    try {
+      const response = await productService.getProducts(
+          { keyword: currentKeyword, status: 'APPROVED' },
+          { page: 0, size: 8, sort: 'popularityScore,DESC' }
+      );
+      if (reqId !== productSearchReqId) return;
+      if (response.success && response.data) {
+        productSuggestions.value = response.data.content || response.data || [];
+      } else {
+        productSuggestions.value = [];
+      }
+    } catch (error) {
+      if (reqId !== productSearchReqId) return;
+      console.error('아이템 검색 실패:', error);
+      productSuggestions.value = [];
+    } finally {
+      if (reqId === productSearchReqId) {
+        isSearchingProducts.value = false;
+        hasSearchedProducts.value = true;
+      }
+    }
+  }, 200);
+};
+
+const isProductAdded = (productId) => {
+  return props.selectedItems.some(item => item.productId === productId);
+};
+
+const handleProductAdd = async (product) => {
+  if (isProductAdded(product.productId)) return;
+
+  if (props.selectedItems.length >= 20) {
+    await open({ type: 'alert', title: '알림', message: '최대 20개까지만 추가할 수 있습니다.' });
+    return;
+  }
+
+  const newItem = {
+    itemType: 'PRODUCT',
+    productId: product.productId,
+    name: product.name,
+    brand: product.brand,
+    imageUrl: product.thumbnailUrl || null,
+    thumbnailDto: product.thumbnailDto || null
+  };
+
+  emit('update:selectedItems', [...props.selectedItems, newItem]);
   emit('update:battleForm', { ...props.battleForm });
+
+  // 검색어/결과 초기화 → 이어서 바로 다른 제품 검색 가능
+  productSearchQuery.value = '';
+  productSuggestions.value = [];
+  hasSearchedProducts.value = false;
 };
 
 // 아이템 삭제
@@ -1053,36 +1165,167 @@ const handleImageError = (event) => {
   cursor: not-allowed;
 }
 
-/* ===== 제품 검색 ===== */
-.search-section {
+/* ===== 제품 검색 (피드 등록과 동일) ===== */
+.product-search-wrapper {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
-.search-trigger {
+.product-search-bar {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
-  background: white;
-  border: 2px solid #E5E7EB;
+  background: #F7F8FA;
+  border: 1.5px solid #E5E8EB;
   border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
-.search-trigger:hover {
+.product-search-bar:focus-within {
+  background: #fff;
+  border-color: #9333EA;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
+}
+
+.product-search-icon {
+  width: 18px;
+  height: 18px;
+  color: #8B95A1;
+  margin-left: 14px;
+  flex-shrink: 0;
+}
+
+.product-search-input {
+  flex: 1;
+  padding: 13px 14px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #1A1A1A;
+}
+
+.product-search-input::placeholder {
+  color: #B0B8C1;
+  font-weight: 400;
+}
+
+.product-search-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.product-search-spinner svg {
+  width: 18px;
+  height: 18px;
+  color: #9333EA;
+  animation: spin 0.8s linear infinite;
+}
+
+.product-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.product-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.product-suggestion-item:hover:not(:disabled) {
   border-color: #9333EA;
   background: #FAF5FF;
 }
 
-.search-trigger span {
+.product-suggestion-item.is-disabled,
+.product-suggestion-item:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.product-suggestion-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #F7F8FA;
+  flex-shrink: 0;
+}
+
+.product-suggestion-info {
   flex: 1;
-  text-align: left;
+  min-width: 0;
+}
+
+.product-suggestion-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0 0 2px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-suggestion-brand {
+  font-size: 12px;
+  color: #6B7280;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-suggestion-arrow {
+  width: 18px;
+  height: 18px;
+  color: #B0B8C1;
+  flex-shrink: 0;
+}
+
+.product-suggestion-item:hover:not(:disabled) .product-suggestion-arrow {
+  color: #9333EA;
+}
+
+.product-suggestion-badge {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  background: #F3F4F6;
+  color: #6B7280;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.product-search-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0 0 2px;
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.product-search-hint svg {
+  color: #9CA3AF;
+  flex-shrink: 0;
 }
 
 /* ===== 선택된 아이템 섹션 ===== */
