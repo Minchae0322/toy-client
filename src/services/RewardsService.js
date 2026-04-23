@@ -27,6 +27,12 @@ class RewardsService extends BaseApiService {
     return res
   }
 
+  async getUserRewards(targetUserId) {
+    const res = await this.get(`/rewards/users/${targetUserId}`)
+    if (res?.data) res.data = { ...res.data, tier: normalizeTier(res.data.tier) }
+    return res
+  }
+
   // ── 유저: 뱃지 ──
   getMyBadges() { return this.get('/rewards/me/badges') }
   pinBadge(badgeId) { return this.post(`/rewards/me/badges/${badgeId}/pin`) }
