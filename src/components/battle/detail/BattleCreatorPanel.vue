@@ -650,7 +650,7 @@ async function onBattleUpdated() {
 .fab-icon { flex-shrink: 0; }
 .fab-label {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.3px;
 }
 
@@ -665,7 +665,7 @@ async function onBattleUpdated() {
   color: #fff;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -752,7 +752,7 @@ async function onBattleUpdated() {
   color: #7C3AED;
   border-radius: 999px;
   font-size: 10.5px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.2px;
 }
 .creator-pill.is-admin {
@@ -761,9 +761,9 @@ async function onBattleUpdated() {
 }
 .header-title {
   font-size: 19px;
-  font-weight: 900;
+  font-weight: 800;
   color: #0A0E1A;
-  letter-spacing: -0.6px;
+  letter-spacing: -0.4px;
 }
 .icon-btn {
   width: 34px;
@@ -799,15 +799,15 @@ async function onBattleUpdated() {
 }
 .stat-value {
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 800;
   color: #0A0E1A;
-  letter-spacing: -0.6px;
+  letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 .stat-label {
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 600;
   color: #8B95A1;
   letter-spacing: -0.2px;
 }
@@ -836,7 +836,7 @@ async function onBattleUpdated() {
   background: transparent;
   border-radius: 11px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: #8B95A1;
   cursor: pointer;
   transition: all 0.14s ease;
@@ -858,7 +858,7 @@ async function onBattleUpdated() {
   color: #fff;
   border-radius: 999px;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -889,9 +889,9 @@ async function onBattleUpdated() {
 }
 .list-header-title {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: #0A0E1A;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 .list-header-caption {
   font-size: 11.5px;
@@ -915,7 +915,7 @@ async function onBattleUpdated() {
 }
 .loading-text {
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 500;
   color: #8B95A1;
   letter-spacing: -0.2px;
 }
@@ -938,9 +938,9 @@ async function onBattleUpdated() {
 }
 .empty-title {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
   color: #0A0E1A;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.3px;
   margin-bottom: 6px;
 }
 .empty-desc {
@@ -1008,7 +1008,7 @@ async function onBattleUpdated() {
   background: rgba(245, 158, 11, 0.95);
   color: #ffffff;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 700;
   border-radius: 5px;
   letter-spacing: -0.2px;
   line-height: 1.2;
@@ -1023,9 +1023,9 @@ async function onBattleUpdated() {
 }
 .pending-name {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   color: #0A0E1A;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -1033,7 +1033,7 @@ async function onBattleUpdated() {
 }
 .pending-brand {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: #4E5968;
   letter-spacing: -0.2px;
   white-space: nowrap;
@@ -1046,7 +1046,7 @@ async function onBattleUpdated() {
   gap: 10px;
   margin-top: 3px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   color: #8B95A1;
   letter-spacing: -0.2px;
 }
@@ -1068,7 +1068,7 @@ async function onBattleUpdated() {
   padding: 0 14px;
   border-radius: 11px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   border: 1px solid transparent;
   display: inline-flex;
@@ -1139,9 +1139,9 @@ async function onBattleUpdated() {
 .subview-title { line-height: 1.25; }
 .subview-title-main {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   color: #0A0E1A;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 .subview-title-sub {
   font-size: 11.5px;
@@ -1199,9 +1199,9 @@ async function onBattleUpdated() {
 .manage-text { flex: 1; min-width: 0; }
 .manage-title {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   color: #0A0E1A;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 .manage-desc {
   font-size: 12px;
@@ -1216,7 +1216,7 @@ async function onBattleUpdated() {
   background: #FFF7ED;
   color: #C2410C;
   font-size: 10.5px;
-  font-weight: 800;
+  font-weight: 700;
   border-radius: 6px;
   letter-spacing: -0.2px;
   flex-shrink: 0;
@@ -1235,7 +1235,7 @@ async function onBattleUpdated() {
   justify-content: space-between;
   padding: 13px 16px;
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 600;
   border-bottom: 1px solid #F1F3F6;
 }
 .info-row:last-child { border-bottom: none; }
