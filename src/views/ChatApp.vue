@@ -365,7 +365,14 @@ onBeforeUnmount(async () => {
   min-width: 0;
   min-height: 100vh;
   padding-bottom: 5rem;
+  padding-left: 1.5rem;
   position: relative;
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    padding-left: 0;
+  }
 }
 
 @media (min-width: 768px) {
