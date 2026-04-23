@@ -1,16 +1,17 @@
 /* @font-face는 index.html <style>에서 정의 (JS 의존 없이 즉시 로드) */
 
-body {
+html, body {
   margin: 0;
   padding: 0;
-  font-family: 'SUIT', -apple-system, "system-ui", "Segoe UI", "Malgun Gothic", "맑은 고딕", sans-serif;
+  font-family: 'SUIT', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", "맑은 고딕", sans-serif;
   background-color: #ffffff;
   color: #222;
 }
 
-/* 전역 폰트 강제 적용 */
+/* 모든 요소에 font-family 상속 강제 + 렌더링 옵션
+   font-family 는 universal 이 아닌 body 에 두고 상속. inherit 로만 연결 */
 *, *::before, *::after {
-  font-family: 'SUIT', -apple-system, "system-ui", "Segoe UI", "Malgun Gothic", "맑은 고딕", sans-serif !important;
+  font-family: inherit;
   /* 가짜 볼드/이탤릭 합성 방지 - 실제 폰트 파일 사용 강제 */
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;

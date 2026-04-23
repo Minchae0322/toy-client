@@ -1283,6 +1283,7 @@ onUnmounted(() => {
   overflow: hidden;
   gap: 1rem;
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
 
 /* ===== HEADER ===== */

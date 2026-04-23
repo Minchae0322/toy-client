@@ -278,9 +278,7 @@ onUnmounted(() => {
 
 <style scoped>
 /* ===================== 기본 설정 ===================== */
-* {
-  font-family: 'SUIT', -apple-system, "system-ui", "Segoe UI", "Malgun Gothic", "맑은 고딕", sans-serif !important;
-}
+/* font-family 는 main.css / index.html 의 html,body 에서 상속 */
 
 /* ===================== 헤더 ===================== */
 .header {
