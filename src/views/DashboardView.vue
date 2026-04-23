@@ -286,7 +286,7 @@
             </div>
           </div>
 
-          <div v-if="showDashBubbleSkeleton" class="dash-bubble-wrapper">
+          <div v-if="productsLoading" class="dash-bubble-wrapper">
             <div class="skeleton" style="width:100%;height:320px;border-radius:12px;"></div>
           </div>
 
@@ -312,6 +312,10 @@
               @mousemove="handleBubbleMouseMove"
               @mouseleave="bubbleHovered = null"
             >
+              <!-- 레이아웃 계산 중 overlay -->
+              <div v-if="!bubbleLayoutRendered" class="dash-bubble-layout-overlay">
+                <div class="skeleton" style="width:100%;height:100%;border-radius:12px;"></div>
+              </div>
               <!-- 그리드 배경 -->
               <svg class="dash-grid-bg">
                 <defs>
@@ -505,13 +509,9 @@ watch([dashBubbleNodes, bubbleDims], ([nodes, dims]) => {
   })
 }, { immediate: true })
 
-// 최초 레이아웃 계산 완료 여부 — 그 전까지 스켈레톤 유지해서 빈 그리드 플리커 방지
+// 최초 레이아웃 계산 완료 여부 — 그 전까지 overlay 유지해서 빈 그리드 플리커 방지
 const bubbleLayoutRendered = ref(false)
 watch(dashBubblePositions, (p) => { if (p.length > 0 && !bubbleLayoutRendered.value) bubbleLayoutRendered.value = true })
-const showDashBubbleSkeleton = computed(() =>
-  productsLoading.value ||
-  (hotProducts.value.length > 0 && !bubbleLayoutRendered.value)
-)
 
 const bubbleTooltipProduct = computed(() => {
   if (!bubbleHovered.value) return null
@@ -2649,6 +2649,14 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   opacity: 0.2;
+}
+
+/* 레이아웃 계산 중 overlay — 빈 그리드 플리커 방지 */
+.dash-bubble-layout-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 0;
 }
 
 /* 버블 */

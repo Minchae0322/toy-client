@@ -29,7 +29,7 @@
         </div>
 
         <!-- 로딩 스켈레톤 -->
-        <div v-if="showBubbleSkeleton" class="skeleton-wrapper">
+        <div v-if="loading && !products.length" class="skeleton-wrapper">
           <!-- 버블 차트 스켈레톤 -->
           <div class="skeleton-bubble-area">
             <div class="skeleton-bubble skeleton-bubble-1"></div>
@@ -77,6 +77,16 @@
               @mousemove="handleMouseMove"
               @mouseleave="onAreaLeave"
             >
+              <!-- 레이아웃 계산 중 overlay (빈 그리드 플리커 방지) -->
+              <div v-if="!layoutHasRendered" class="bubble-layout-overlay">
+                <div class="skeleton-bubble skeleton-bubble-1"></div>
+                <div class="skeleton-bubble skeleton-bubble-2"></div>
+                <div class="skeleton-bubble skeleton-bubble-3"></div>
+                <div class="skeleton-bubble skeleton-bubble-4"></div>
+                <div class="skeleton-bubble skeleton-bubble-5"></div>
+                <div class="skeleton-bubble skeleton-bubble-6"></div>
+              </div>
+
               <!-- 그리드 배경 -->
               <svg class="grid-bg">
                 <defs>
@@ -407,13 +417,9 @@ watch([nodes, dims], ([n, d]) => {
   })
 }, { immediate: true })
 
-// 최초 레이아웃 계산 완료 여부 — 그 전까지 스켈레톤 유지해서 빈 그리드 플리커 방지
+// 최초 레이아웃 계산 완료 여부 — 그 전까지 overlay 유지해서 빈 그리드 플리커 방지
 const layoutHasRendered = ref(false)
 watch(positions, (p) => { if (p.length > 0 && !layoutHasRendered.value) layoutHasRendered.value = true })
-const showBubbleSkeleton = computed(() =>
-  (loading.value && !products.value.length) ||
-  (!loading.value && filtered.value.length > 0 && !layoutHasRendered.value)
-)
 
 const tooltipProduct = computed(() => {
   if (!hovered.value) return null
@@ -921,6 +927,30 @@ onUnmounted(() => {
 }
 
 .grid-bg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.3; }
+
+/* 레이아웃 계산 중 overlay — 빈 그리드 플리커 방지 */
+.bubble-layout-overlay {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bubble-layout-overlay .skeleton-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  opacity: 0.7;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+.bubble-layout-overlay .skeleton-bubble-1 { width: 160px; height: 160px; top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: 0s; }
+.bubble-layout-overlay .skeleton-bubble-2 { width: 120px; height: 120px; top: 18%; left: 28%; animation-delay: 0.15s; }
+.bubble-layout-overlay .skeleton-bubble-3 { width: 110px; height: 110px; top: 22%; right: 18%; animation-delay: 0.3s; }
+.bubble-layout-overlay .skeleton-bubble-4 { width: 80px; height: 80px; bottom: 18%; left: 15%; animation-delay: 0.1s; }
+.bubble-layout-overlay .skeleton-bubble-5 { width: 70px; height: 70px; bottom: 22%; right: 14%; animation-delay: 0.25s; }
+.bubble-layout-overlay .skeleton-bubble-6 { width: 56px; height: 56px; top: 12%; left: 58%; animation-delay: 0.35s; }
 
 /* 버블 */
 .bubble {
