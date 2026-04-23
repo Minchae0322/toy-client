@@ -66,7 +66,7 @@
             <span class="yb-header-divider">|</span>
             <span class="yb-update-time">{{ lastUpdateTime }}</span>
           </div>
-          <div class="yb-pagination">
+          <div v-if="ybPages.length > 1" class="yb-pagination">
             <button class="yb-page-btn" :class="{ active: ybCurrentPage === 0 }" @click="setYbPage(0)"></button>
             <button class="yb-page-btn" :class="{ active: ybCurrentPage === 1 }" @click="setYbPage(1)"></button>
           </div>
@@ -96,7 +96,7 @@
                   :to="{ name: 'FeedDetail', params: { id: feed.feedId } }"
                   class="yb-item"
                 >
-                  <span class="yb-rank-badge" :class="'rank-' + (pageIdx * 6 + index + 1)">{{ pageIdx * 6 + index + 1 }}</span>
+                  <span class="yb-rank-badge" :class="'rank-' + (pageIdx * (isYbMobile ? 4 : 6) + index + 1)">{{ pageIdx * (isYbMobile ? 4 : 6) + index + 1 }}</span>
                   <div class="yb-info">
                     <span class="yb-product">{{ feed.productName }}</span>
                     <span class="yb-author-name">{{ feed.buyPlace || '' }}</span>
@@ -682,12 +682,26 @@ let yogurtBomCache = {
   updateTime: ''
 }
 
+// 뷰포트 너비 (모바일/데스크톱 분기)
+const ybVw = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
+const onYbResize = () => { ybVw.value = window.innerWidth }
+const isYbMobile = computed(() => ybVw.value < 768)
+
 const currentYogurtBomFeeds = computed(() => {
   const start = ybCurrentPage.value * 6
   return yogurtBomFeeds.value.slice(start, start + 6)
 })
 
 const ybPages = computed(() => {
+  // 모바일: 페이지당 4개씩 2페이지 (2 row × 2 col, 총 8개)
+  if (isYbMobile.value) {
+    const src = yogurtBomFeeds.value.slice(0, 8)
+    const pages = []
+    for (let i = 0; i < src.length; i += 4) {
+      pages.push(src.slice(i, i + 4))
+    }
+    return pages
+  }
   const pages = []
   for (let i = 0; i < yogurtBomFeeds.value.length; i += 6) {
     pages.push(yogurtBomFeeds.value.slice(i, i + 6))
@@ -723,6 +737,7 @@ const onYbSwipe = () => {
 const resetYbAutoSlide = () => {
   if (ybAutoSlideTimer) {
     clearInterval(ybAutoSlideTimer)
+    ybAutoSlideTimer = null
   }
   ybAutoSlideTimer = setInterval(() => {
     const nextPage = ybCurrentPage.value === 0 ? 1 : 0
@@ -926,6 +941,8 @@ onMounted(() => {
   loadHotProducts()
   loadYogurtBomFeeds()
 
+  window.addEventListener('resize', onYbResize)
+
   // 요거 봄 자동 슬라이드 시작
   resetYbAutoSlide()
 
@@ -936,6 +953,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', onYbResize)
   if (refreshTimer) {
     clearInterval(refreshTimer)
     refreshTimer = null
@@ -1192,12 +1210,20 @@ onUnmounted(() => {
   }
   .dash-summary {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     padding: 1rem 0 0.75rem;
     gap: 0.75rem;
   }
   .dash-greeting {
     font-size: 1.25rem;
+  }
+  .dash-summary-left {
+    align-self: flex-start;
+  }
+  /* 트렌드 배너 전체 너비 */
+  .dash-trend-banner {
+    width: 100%;
+    min-height: 120px;
   }
 }
 
