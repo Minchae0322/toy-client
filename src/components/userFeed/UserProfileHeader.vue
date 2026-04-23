@@ -238,8 +238,10 @@ const postCount = computed(() => {
 const isFollowLoading = ref(false)
 const isProfileLoaded = ref(false)
 
-// ── 보상 데이터 (자기 프로필일 때 보강) ──
-const myRewards = ref(null)
+// ── 보상 데이터 ──
+// rewards: 모든 유저 (다른 유저 프로필에서도 레벨/tier 노출)
+// badges: 자기 프로필일 때만 (핀 표시용 /rewards/me/badges)
+const userRewards = ref(null)
 const myBadges = ref([])
 
 const isOwnProfile = computed(() => {
@@ -250,7 +252,7 @@ const isOwnProfile = computed(() => {
 // ── Tier / 레벨 / 뱃지 ──
 const userLevel = computed(() => {
   if (profileData.value?.level != null) return profileData.value.level
-  if (isOwnProfile.value && myRewards.value?.level != null) return myRewards.value.level
+  if (userRewards.value?.level != null) return userRewards.value.level
   return null
 })
 
@@ -279,13 +281,13 @@ const primaryBadgeId = computed(() => {
 })
 
 const expToNext = computed(() => {
-  const r = myRewards.value
+  const r = userRewards.value
   if (!r || r.nextLevelExp == null || r.currentExp == null) return null
   return Math.max(0, r.nextLevelExp - r.currentExp)
 })
 
 const expPercent = computed(() => {
-  const r = myRewards.value
+  const r = userRewards.value
   if (!r || !r.nextLevelExp) return 0
   return Math.min(100, Math.round((r.currentExp / r.nextLevelExp) * 100))
 })
@@ -305,20 +307,28 @@ const loadProfile = async () => {
     console.error('프로필 로드 실패:', error)
   } finally {
     isProfileLoaded.value = true
-    if (isOwnProfile.value) loadOwnRewards()
+    loadRewards()
+    if (isOwnProfile.value) loadOwnBadges()
   }
 }
 
-const loadOwnRewards = async () => {
+const loadRewards = async () => {
   try {
-    const [rewardsRes, badgesRes] = await Promise.all([
-      rewardsService.getMyRewards(),
-      rewardsService.getMyBadges(),
-    ])
-    myRewards.value = rewardsRes?.data ?? null
+    const targetUserId = route.params.userId || userId.value
+    if (!targetUserId) return
+    const rewardsRes = await rewardsService.getUserRewards(targetUserId)
+    userRewards.value = rewardsRes?.data ?? null
+  } catch (e) {
+    console.warn('유저 보상 데이터 로딩 실패:', e)
+  }
+}
+
+const loadOwnBadges = async () => {
+  try {
+    const badgesRes = await rewardsService.getMyBadges()
     myBadges.value = Array.isArray(badgesRes?.data) ? badgesRes.data : []
   } catch (e) {
-    console.warn('내 보상 데이터 로딩 실패:', e)
+    console.warn('내 뱃지 로딩 실패:', e)
   }
 }
 
@@ -418,7 +428,7 @@ watch(() => route.params.userId, (newId, oldId) => {
     createdAt: null,
     updatedAt: null,
   }
-  myRewards.value = null
+  userRewards.value = null
   myBadges.value = []
   loadProfile()
 })
