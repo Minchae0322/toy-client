@@ -487,4 +487,20 @@ watch(() => props.contentType, () => {
   background: #3a3a3c;
   color: #ffffff;
 }
+
+@media (max-width: 767px) {
+  .filter-container {
+    padding: 6px 0 8px;
+  }
+  .category-tabs {
+    padding: 6px 16px 0;
+  }
+  .selected-chip-wrapper {
+    margin-top: 6px;
+  }
+  .sub-category-tabs {
+    margin: 6px 16px 0;
+    padding-top: 6px;
+  }
+}
 </style>
