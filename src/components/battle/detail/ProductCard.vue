@@ -45,24 +45,41 @@
 
       <!-- Vote Actions -->
       <div v-if="canVote" class="vote-actions">
-        <div v-if="isWeightedVote" class="rank-selector">
-          <button
-              v-for="r in [1, 2, 3]"
-              :key="r"
-              @click="onVote(r)"
-              :disabled="submitting"
-              :class="['rank-chip', `rank-${r}`, { active: productRank === r }]"
-          >
-            {{ r }}위
-          </button>
-        </div>
+        <template v-if="isWeightedVote">
+          <div class="rank-selector">
+            <button
+                v-for="r in [1, 2, 3]"
+                :key="r"
+                @click="onVote(r)"
+                :disabled="submitting"
+                :class="['rank-chip', `rank-${r}`, { active: productRank === r }]"
+            >
+              {{ r }}위
+            </button>
+          </div>
+          <div class="vote-rate-bar" :style="{ '--vote-fill': voteFillWidth }">
+            <span class="vote-rate-label">투표율</span>
+            <span class="vote-rate-pct">{{ percentage }}%</span>
+          </div>
+        </template>
         <button
             v-else
             @click="onVote(1)"
             :disabled="submitting"
             :class="['vote-btn', { active: productRank !== null }]"
+            :style="{ '--vote-fill': voteFillWidth }"
         >
-          {{ productRank !== null ? '선택됨' : '요거 픽하기' }}
+          <svg class="vote-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <template v-if="productRank !== null">
+              <path d="M20 6L9 17l-5-5"/>
+            </template>
+            <template v-else>
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </template>
+          </svg>
+          <span class="vote-btn-label">{{ productRank !== null ? '내가 뽑은 픽' : '투표하기' }}</span>
+          <span class="vote-btn-pct">{{ percentage }}%</span>
         </button>
       </div>
     </div>
@@ -127,6 +144,12 @@ const commentSubmitting = ref(false)
 const isYoutube = computed(() => {
   const itemType = props.item.battleItemType?.title || props.item.battleItemType
   return itemType === 'YOUTUBE'
+})
+
+const voteFillWidth = computed(() => {
+  const v = Number(props.percentage)
+  if (!Number.isFinite(v)) return '0%'
+  return Math.max(0, Math.min(100, v)) + '%'
 })
 
 const productStatus = computed(() => {
@@ -569,6 +592,7 @@ defineExpose({ setCommentSubmitting })
 
 /* 요거 픽 버튼 */
 .vote-btn {
+  position: relative;
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
@@ -579,23 +603,116 @@ defineExpose({ setCommentSubmitting })
   font-size: 13px;
   font-weight: 700;
   color: #9333ea;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 투표율만큼 채워지는 fill 바 */
+.vote-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--vote-fill, 0%);
+  background: #e9d5ff;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
+  z-index: 0;
+}
+
+.vote-btn > * {
+  position: relative;
+  z-index: 1;
+}
+
+.vote-btn-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.vote-btn-label {
+  flex: 1;
+  text-align: left;
+}
+
+.vote-btn-pct {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  font-weight: 800;
+}
+
+/* 가중치 투표 모드용 투표율 바 */
+.vote-rate-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #faf5ff;
+  border: 1px solid #f3e8ff;
+  overflow: hidden;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.vote-rate-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--vote-fill, 0%);
+  background: #e9d5ff;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.vote-rate-bar > * {
+  position: relative;
+  z-index: 1;
+}
+
+.vote-rate-label {
+  color: #7e22ce;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.vote-rate-pct {
+  color: #6b21a8;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .vote-btn:hover:not(:disabled) {
-  background: #f3e8ff;
   border-color: #d8b4fe;
+}
+.vote-btn:hover:not(:disabled)::before {
+  background: #d8b4fe;
 }
 
 .vote-btn.active {
-  background: #9333ea;
+  background: #faf5ff;
   border-color: #9333ea;
-  color: #fff;
+  color: #9333ea;
+}
+
+.vote-btn.active::before {
+  background: #c4b5fd;
 }
 
 .vote-btn.active:hover:not(:disabled) {
-  background: #7e22ce;
   border-color: #7e22ce;
+}
+.vote-btn.active:hover:not(:disabled)::before {
+  background: #a78bfa;
 }
 
 .vote-btn:disabled {
