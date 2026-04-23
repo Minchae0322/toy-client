@@ -18,24 +18,6 @@
         </div>
       </header>
 
-      <!-- 통계 스트립 -->
-      <section class="stats-strip">
-        <div class="stat-cell">
-          <span class="stat-value">{{ allChatRooms.length }}</span>
-          <span class="stat-label">전체 대화</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-cell">
-          <span class="stat-value accent">{{ unreadTotal }}</span>
-          <span class="stat-label">안읽음</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-cell">
-          <span class="stat-value">{{ todayCount }}</span>
-          <span class="stat-label">오늘 활동</span>
-        </div>
-      </section>
-
       <!-- 컨트롤: 탭 + 검색 -->
       <section class="control-bar">
         <nav class="tabs">
@@ -187,19 +169,6 @@ const visibleTabs = computed(() => [
   { key: 'all', label: '전체', count: allChatRooms.value.length },
   { key: 'unread', label: '안읽음', count: allChatRooms.value.filter(r => r.unreadCount > 0).length },
 ])
-
-// 통계
-const unreadTotal = computed(() =>
-  allChatRooms.value.reduce((sum, r) => sum + (r.unreadCount || 0), 0)
-)
-const todayCount = computed(() => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return allChatRooms.value.filter(r => {
-    if (!r.lastMessageAt) return false
-    return new Date(r.lastMessageAt) >= today
-  }).length
-})
 
 // 필터링
 const filteredRooms = computed(() => {
@@ -451,52 +420,6 @@ onMounted(() => {
   color: #ffffff;
   border-color: #9333EA;
   box-shadow: 0 4px 12px rgba(147, 51, 234, 0.28);
-}
-
-/* ============ 통계 스트립 ============ */
-.stats-strip {
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  margin-bottom: 24px;
-  padding: 20px 28px;
-  background: #FFFFFF;
-  border: 1px solid #F1F3F6;
-  border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
-}
-
-.stat-cell {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-start;
-}
-
-.stat-value {
-  font-size: 26px;
-  font-weight: 800;
-  color: #0A0E1A;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-
-.stat-value.accent { color: #9333EA; }
-
-.stat-label {
-  font-size: 12px;
-  color: #8B95A1;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.stat-divider {
-  width: 1px;
-  background: #F1F3F6;
-  margin: 4px 24px;
 }
 
 /* ============ 컨트롤 바: 탭 + 검색 ============ */
@@ -965,9 +888,6 @@ onMounted(() => {
   .page-hero { padding: 32px 0 20px; }
   .hero-title { font-size: 28px; }
   .hero-sub { font-size: 13px; }
-  .stats-strip { padding: 18px 20px; margin-bottom: 18px; }
-  .stat-value { font-size: 22px; }
-  .stat-divider { margin: 4px 18px; }
   .room-list { border-radius: 16px; }
   .list-header { padding: 14px 20px; }
   .room-item { padding: 16px 20px; gap: 14px; }
@@ -984,10 +904,6 @@ onMounted(() => {
   .hero-title { font-size: 24px; }
   .hero-sub { font-size: 12.5px; }
   .icon-btn { width: 40px; height: 40px; }
-  .stats-strip { padding: 16px; margin-bottom: 14px; border-radius: 14px; }
-  .stat-value { font-size: 20px; }
-  .stat-label { font-size: 11px; }
-  .stat-divider { margin: 4px 12px; }
   .search-box { height: 44px; padding: 0 14px; }
   .search-input { font-size: 14px; }
   .tabs { padding: 4px; border-radius: 12px; min-width: 0; width: 100%; }

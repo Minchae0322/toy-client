@@ -374,18 +374,6 @@ onBeforeUnmount(async () => {
   }
 }
 
-@media (min-width: 1024px) {
-  .main-content {
-    padding-left: 1.5rem;
-  }
-}
-
-@media (max-width: 767px) {
-  .main-content {
-    padding-left: 0;
-  }
-}
-
 /* 연결 배너 */
 .connection-banner {
   position: sticky;
