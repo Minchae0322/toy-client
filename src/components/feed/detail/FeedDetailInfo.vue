@@ -199,11 +199,7 @@ const getAuthorNickname = computed(() => props.feed?.userInfo?.nickname || '사�
 // userRewardInfo 필드 규약 (백엔드 RewardResponse.UserRewardInfo):
 //  - level / tier / totalExp / currentLevelExp / nextLevelExp / maxLevel / seasonExp / seasonCode
 //  - nextLevelExp 는 "다음 레벨까지 남은" EXP (threshold 아님)
-const userLevel = computed(() => {
-  const r = props.feed?.userRewardInfo
-  if (r?.level != null) return r.level
-  return props.feed?.userInfo?.level ?? null
-})
+const userLevel = computed(() => props.feed?.userRewardInfo?.level ?? null)
 
 const tierMeta = computed(() => userLevel.value != null ? getTierByLevel(userLevel.value) : null)
 const tierArt = computed(() => tierMeta.value?.art ?? null)

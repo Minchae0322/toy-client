@@ -240,9 +240,10 @@ const goToUser = (feed) => {
   if (userId != null) router.push({ name: 'UserFeedList', params: { userId: String(userId) } });
 };
 
+// userInfo: 프로필(닉네임/사진/뱃지) · userRewardInfo: 레벨/tier
 const getProfileImageUrl = (feed) => feed.userInfo?.profileImageFile?.fileUrl || feed.userInfo?.profileImgUrl || null;
 const getDisplayNickname = (feed) => feed.userInfo?.nickname || feed.userInfo?.nickName || '익명';
-const getUserLevel = (feed) => feed.userRewardInfo?.level ?? feed.userInfo?.level ?? null;
+const getUserLevel = (feed) => feed.userRewardInfo?.level ?? null;
 const getUserTierArt = (feed) => {
   const lv = getUserLevel(feed);
   return lv != null ? (getTierByLevel(lv)?.art ?? 'plain') : null;
