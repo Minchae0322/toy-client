@@ -12,7 +12,44 @@
               <p class="dash-greeting-sub">{{ topTrendName }} 외 실시간 인기 데이터</p>
             </div>
             <router-link :to="{ name: 'FeedHome', query: { keyword: '우베라떼' } }" class="dash-trend-banner">
-              <img src="/images/trend-banner.svg?v=3" alt="트렌드 배너" class="dash-trend-img" />
+              <svg class="dash-trend-img" viewBox="0 0 720 160" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                <rect width="720" height="160" fill="#FFFBFF"/>
+                <rect x="420" y="0" width="300" height="160" fill="#F3E8FF"/>
+                <rect x="640" y="0" width="80" height="160" fill="#E9D5FF"/>
+                <path d="M420 0 Q 390 80 420 160 L 440 160 Q 410 80 440 0 Z" fill="#F3E8FF"/>
+                <text x="48" y="72" font-size="14" font-weight="800" fill="#7C3AED" letter-spacing="2">THIS WEEK</text>
+                <text x="48" y="112" font-size="40" font-weight="900" fill="#18181B" letter-spacing="-1.8">우베라떼</text>
+                <g fill="#FDE047">
+                  <path d="M412 36 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/>
+                  <path d="M664 112 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/>
+                </g>
+                <g opacity="0.45">
+                  <circle cx="640" cy="36" r="20" fill="#C084FC"/>
+                  <circle cx="640" cy="36" r="12" fill="#A855F7"/>
+                </g>
+                <g transform="translate(478, 22)">
+                  <ellipse cx="62" cy="74" rx="70" ry="58" fill="#FFFFFF" opacity="0.6"/>
+                  <ellipse cx="62" cy="126" rx="48" ry="6" fill="#7C3AED" opacity="0.25"/>
+                  <path d="M14 10 L110 10 L100 120 Q 62 128 24 120 Z" fill="#FFFFFF" stroke="#4C1D95" stroke-width="3"/>
+                  <rect x="10" y="4" width="104" height="10" rx="3" fill="#4C1D95"/>
+                  <rect x="14" y="6" width="96" height="3" rx="1" fill="#A78BFA"/>
+                  <path d="M22 28 L102 28 L98 64 Q 62 74 26 64 Z" fill="#C084FC"/>
+                  <path d="M26 64 Q 62 74 98 64 L94 100 Q 62 108 30 100 Z" fill="#A855F7"/>
+                  <circle cx="36" cy="90" r="4" fill="#3B0764"/>
+                  <circle cx="50" cy="96" r="4" fill="#3B0764"/>
+                  <circle cx="66" cy="94" r="4" fill="#3B0764"/>
+                  <circle cx="80" cy="88" r="4" fill="#3B0764"/>
+                  <circle cx="56" cy="102" r="3.5" fill="#3B0764"/>
+                  <ellipse cx="62" cy="22" rx="36" ry="8" fill="#FFFFFF"/>
+                  <ellipse cx="62" cy="16" rx="28" ry="7" fill="#FEF9C3"/>
+                  <circle cx="62" cy="6" r="6" fill="#FFFFFF"/>
+                  <circle cx="62" cy="-4" r="6" fill="#EF4444"/>
+                  <path d="M62 -10 Q 68 -18 76 -18" stroke="#15803D" stroke-width="2" fill="none"/>
+                  <rect x="74" y="-22" width="9" height="46" fill="#EF4444"/>
+                  <rect x="74" y="-22" width="9" height="6" fill="#FCA5A5"/>
+                  <path d="M20 78 L106 78 L102 104 L24 104 Z" fill="#F3E8FF"/>
+                </g>
+              </svg>
               <span class="dash-trend-cta">지금 보러가기 →</span>
             </router-link>
           </div>
@@ -87,7 +124,47 @@
               <p class="ad-desc">카페 인증러시 &middot; 지금 가장 핫한 메뉴</p>
             </div>
             <div class="ad-cta">자세히 보기 →</div>
-            <img src="/images/ad-ube.svg" alt="우베라떼 트렌드" class="ad-image" />
+            <svg class="ad-image" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="260" fill="#F5EBFF"/>
+              <rect y="0" width="400" height="60" fill="#EDE0FF"/>
+              <rect y="200" width="400" height="60" fill="#E9D5FF"/>
+              <g fill="#C084FC" opacity="0.35">
+                <circle cx="36" cy="30" r="3"/>
+                <circle cx="84" cy="18" r="2.5"/>
+                <circle cx="134" cy="34" r="3"/>
+                <circle cx="296" cy="24" r="3"/>
+                <circle cx="348" cy="46" r="2.5"/>
+                <circle cx="374" cy="22" r="3"/>
+                <circle cx="30" cy="220" r="3"/>
+                <circle cx="356" cy="238" r="3"/>
+              </g>
+              <g fill="#FDE047">
+                <path d="M58 94 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/>
+                <path d="M340 120 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/>
+              </g>
+              <text x="24" y="128" font-size="28" font-weight="900" fill="#4C1D95" letter-spacing="-1.2">보라빛 한잔</text>
+              <g transform="translate(238, 56)">
+                <ellipse cx="58" cy="160" rx="52" ry="6" fill="#C4B5FD" opacity="0.55"/>
+                <path d="M14 4 L102 4 L92 152 Q 58 160 24 152 Z" fill="#FFFFFF" stroke="#4C1D95" stroke-width="2.5"/>
+                <rect x="10" y="0" width="96" height="6" rx="2" fill="#4C1D95"/>
+                <path d="M20 18 L96 18 L92 58 Q 58 68 24 58 Z" fill="#C084FC"/>
+                <path d="M24 58 Q 58 68 92 58 L88 108 Q 58 116 28 108 Z" fill="#A855F7"/>
+                <circle cx="36" cy="98" r="4" fill="#3B0764"/>
+                <circle cx="50" cy="104" r="4" fill="#3B0764"/>
+                <circle cx="66" cy="102" r="4" fill="#3B0764"/>
+                <circle cx="80" cy="96" r="4" fill="#3B0764"/>
+                <circle cx="58" cy="110" r="3.5" fill="#3B0764"/>
+                <circle cx="42" cy="112" r="3" fill="#3B0764"/>
+                <ellipse cx="58" cy="16" rx="34" ry="7" fill="#FFFFFF"/>
+                <ellipse cx="58" cy="11" rx="26" ry="6" fill="#FEF9C3"/>
+                <circle cx="58" cy="4" r="5" fill="#FFFFFF"/>
+                <circle cx="58" cy="-4" r="5" fill="#EF4444"/>
+                <path d="M58 -8 Q 62 -14 68 -14" stroke="#15803D" stroke-width="1.8" fill="none"/>
+                <rect x="68" y="-20" width="8" height="46" fill="#EF4444"/>
+                <rect x="68" y="-20" width="8" height="6" fill="#FCA5A5"/>
+                <path d="M18 92 L98 92 L96 120 L20 120 Z" fill="#F3E8FF"/>
+              </g>
+            </svg>
           </div>
         </div>
       </div>
@@ -1009,7 +1086,7 @@ onUnmounted(() => {
 
 .ad-tag {
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 600;
   color: #B0B8C1;
   letter-spacing: 0.08em;
   border: 1px solid #E5E8EB;
@@ -1026,14 +1103,14 @@ onUnmounted(() => {
 
 .ad-headline {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: #191F28;
   line-height: 1.3;
 }
 
 .ad-sub {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
   color: #9333EA;
   line-height: 1.3;
 }
@@ -2075,7 +2152,7 @@ onUnmounted(() => {
 .header-info .nickname {
   display: block;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #1a1a1a;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2191,7 +2268,7 @@ onUnmounted(() => {
 .category-tag {
   display: inline-block;
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 600;
   color: #9333ea;
   text-transform: uppercase;
   margin-bottom: 1px;
@@ -2224,7 +2301,7 @@ onUnmounted(() => {
 
 .author-name {
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 400;
   color: #999;
 }
 
@@ -2239,7 +2316,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 2px;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   color: #b0b0b0;
 }
 
@@ -2446,7 +2523,7 @@ onUnmounted(() => {
 .battle-hot-category {
   font-size: 10.5px;
   color: #c0c4d8;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.8px;
   text-transform: uppercase;
 }
@@ -2465,7 +2542,7 @@ onUnmounted(() => {
 .battle-hot-stat svg { stroke: #c8cce0; }
 .battle-hot-title {
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   color: #1a1a1e;
   margin-bottom: 5px;
   line-height: 1.4;
@@ -2493,7 +2570,7 @@ onUnmounted(() => {
 }
 .battle-label {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 1.2px;
   color: #b8bdd6;
   white-space: nowrap;
@@ -2539,7 +2616,7 @@ onUnmounted(() => {
 }
 .rank-name {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: #9098b8;
   white-space: nowrap;
   overflow: hidden;
@@ -2594,7 +2671,7 @@ onUnmounted(() => {
 }
 .gauge-label {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   color: #c8cce0;
   white-space: nowrap;
   overflow: hidden;
