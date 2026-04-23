@@ -214,8 +214,11 @@ const loadChatRooms = async () => {
 const transformRoom = (room) => ({
   id: room.chatRoomId || room.roomId || room.id,
   name: room.title || room.participantName || '알 수 없음',
-  lastMessage: room.lastMessage?.content || room.lastMessageContent,
-  lastMessageAt: room.lastMessage?.createdAt || room.lastMessageAt,
+  // 백엔드가 lastMessage를 문자열(신규) 또는 {content, createdAt}(구)로 보낼 수 있음
+  lastMessage: typeof room.lastMessage === 'string'
+    ? room.lastMessage
+    : (room.lastMessage?.content || room.lastMessageContent),
+  lastMessageAt: (typeof room.lastMessage === 'object' ? room.lastMessage?.createdAt : null) || room.lastMessageAt,
   unreadCount: room.unreadCount || 0,
   userInfo: {
     profileImage: room.participantProfileImage,
