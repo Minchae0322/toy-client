@@ -114,58 +114,13 @@
       </section>
         </div>
 
-        <!-- 우측 광고 배너 -->
-        <div class="dash-ad-column">
-          <div class="dash-ad-banner">
-            <div class="ad-tag">AD</div>
-            <div class="ad-body">
-              <p class="ad-headline">요즘 뜨는 한잔은?</p>
-              <p class="ad-sub">우베라떼</p>
-              <p class="ad-desc">카페 인증러시 &middot; 지금 가장 핫한 메뉴</p>
-            </div>
-            <div class="ad-cta">자세히 보기 →</div>
-            <svg class="ad-image" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-              <rect width="400" height="260" fill="#F5EBFF"/>
-              <rect y="0" width="400" height="60" fill="#EDE0FF"/>
-              <rect y="200" width="400" height="60" fill="#E9D5FF"/>
-              <g fill="#C084FC" opacity="0.35">
-                <circle cx="36" cy="30" r="3"/>
-                <circle cx="84" cy="18" r="2.5"/>
-                <circle cx="134" cy="34" r="3"/>
-                <circle cx="296" cy="24" r="3"/>
-                <circle cx="348" cy="46" r="2.5"/>
-                <circle cx="374" cy="22" r="3"/>
-                <circle cx="30" cy="220" r="3"/>
-                <circle cx="356" cy="238" r="3"/>
-              </g>
-              <g fill="#FDE047">
-                <path d="M58 94 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/>
-                <path d="M340 120 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/>
-              </g>
-              <text x="24" y="128" font-size="28" font-weight="900" fill="#4C1D95" letter-spacing="-1.2">보라빛 한잔</text>
-              <g transform="translate(238, 56)">
-                <ellipse cx="58" cy="160" rx="52" ry="6" fill="#C4B5FD" opacity="0.55"/>
-                <path d="M14 4 L102 4 L92 152 Q 58 160 24 152 Z" fill="#FFFFFF" stroke="#4C1D95" stroke-width="2.5"/>
-                <rect x="10" y="0" width="96" height="6" rx="2" fill="#4C1D95"/>
-                <path d="M20 18 L96 18 L92 58 Q 58 68 24 58 Z" fill="#C084FC"/>
-                <path d="M24 58 Q 58 68 92 58 L88 108 Q 58 116 28 108 Z" fill="#A855F7"/>
-                <circle cx="36" cy="98" r="4" fill="#3B0764"/>
-                <circle cx="50" cy="104" r="4" fill="#3B0764"/>
-                <circle cx="66" cy="102" r="4" fill="#3B0764"/>
-                <circle cx="80" cy="96" r="4" fill="#3B0764"/>
-                <circle cx="58" cy="110" r="3.5" fill="#3B0764"/>
-                <circle cx="42" cy="112" r="3" fill="#3B0764"/>
-                <ellipse cx="58" cy="16" rx="34" ry="7" fill="#FFFFFF"/>
-                <ellipse cx="58" cy="11" rx="26" ry="6" fill="#FEF9C3"/>
-                <circle cx="58" cy="4" r="5" fill="#FFFFFF"/>
-                <circle cx="58" cy="-4" r="5" fill="#EF4444"/>
-                <path d="M58 -8 Q 62 -14 68 -14" stroke="#15803D" stroke-width="1.8" fill="none"/>
-                <rect x="68" y="-20" width="8" height="46" fill="#EF4444"/>
-                <rect x="68" y="-20" width="8" height="6" fill="#FCA5A5"/>
-                <path d="M18 92 L98 92 L96 120 L20 120 Z" fill="#F3E8FF"/>
-              </g>
-            </svg>
-          </div>
+        <!-- 우측 광고 (AdSense 승인 후 노출) -->
+        <div v-if="ADS_ENABLED" class="dash-ad-column">
+          <AdSlot
+            :slot-id="AD_SLOTS.DASHBOARD_RIGHT"
+            :min-height="320"
+            bordered
+          />
         </div>
       </div>
 
@@ -467,6 +422,8 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
+import AdSlot from '@/components/common/AdSlot.vue'
+import { ADS_ENABLED, AD_SLOTS } from '@/config/ads'
 import { feedService } from '@/services/FeedService'
 import { battleService } from '@/services/BattleService'
 import { productService } from '@/services/ProductService'
@@ -1088,76 +1045,6 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   padding: 1rem 0;
-}
-
-.dash-ad-banner {
-  background: #fff;
-  border: 1px solid #efefef;
-  border-radius: 14px;
-  padding: 1.125rem 1rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  flex: 1;
-}
-
-.ad-tag {
-  font-size: 9px;
-  font-weight: 600;
-  color: #B0B8C1;
-  letter-spacing: 0.08em;
-  border: 1px solid #E5E8EB;
-  border-radius: 3px;
-  padding: 1px 5px;
-  width: fit-content;
-}
-
-.ad-body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.ad-headline {
-  font-size: 13px;
-  font-weight: 600;
-  color: #191F28;
-  line-height: 1.3;
-}
-
-.ad-sub {
-  font-size: 15px;
-  font-weight: 700;
-  color: #9333EA;
-  line-height: 1.3;
-}
-
-.ad-x {
-  color: #191F28;
-  font-weight: 700;
-}
-
-.ad-desc {
-  font-size: 12px;
-  color: #4E5968;
-  line-height: 1.4;
-  margin-top: 2px;
-}
-
-.ad-cta {
-  font-size: 11px;
-  font-weight: 600;
-  color: #191F28;
-  margin-top: 0.25rem;
-  cursor: pointer;
-}
-
-.ad-image {
-  width: 100%;
-  border-radius: 10px;
-  object-fit: cover;
-  margin-top: 0.75rem;
 }
 
 @media (max-width: 1024px) {
