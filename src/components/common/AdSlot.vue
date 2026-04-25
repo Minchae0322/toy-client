@@ -11,6 +11,18 @@
       :data-full-width-responsive="fullWidthResponsive ? 'true' : 'false'"
     />
   </div>
+  <div
+    v-else-if="isDev"
+    class="ad-slot ad-slot--placeholder"
+    :class="{ 'ad-slot--bordered': bordered }"
+    :style="insStyle"
+  >
+    <span class="ad-slot__label">AD</span>
+    <div class="ad-slot__placeholder">
+      <div class="ad-slot__placeholder-title">광고 영역 (개발용)</div>
+      <div class="ad-slot__placeholder-sub">AdSense 승인 후 실제 광고 노출</div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -32,6 +44,8 @@ const isValidSlot = computed(() => {
   if (id.startsWith('REPLACE_')) return false
   return /^\d+$/.test(id)
 })
+
+const isDev = import.meta.env.DEV
 
 const insStyle = computed(() => ({
   display: 'block',
@@ -79,5 +93,35 @@ onMounted(() => {
 
 .adsbygoogle {
   width: 100%;
+}
+
+.ad-slot--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-linear-gradient(
+    135deg,
+    #fafafa 0,
+    #fafafa 10px,
+    #f4f4f5 10px,
+    #f4f4f5 20px
+  );
+  border: 1px dashed #d4d4d8;
+}
+.ad-slot__placeholder {
+  text-align: center;
+  padding: 16px;
+}
+.ad-slot__placeholder-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #71717a;
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+.ad-slot__placeholder-sub {
+  font-size: 11px;
+  color: #a1a1aa;
+  letter-spacing: -0.1px;
 }
 </style>

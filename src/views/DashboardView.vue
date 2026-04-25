@@ -114,8 +114,8 @@
       </section>
         </div>
 
-        <!-- 우측 광고 (AdSense 승인 후 노출) -->
-        <div v-if="ADS_ENABLED" class="dash-ad-column">
+        <!-- 우측 광고 (AdSense 승인 후 노출, dev에서는 placeholder) -->
+        <div v-if="ADS_ENABLED || isDev" class="dash-ad-column">
           <AdSlot
             :slot-id="AD_SLOTS.DASHBOARD_RIGHT"
             :min-height="320"
@@ -427,6 +427,8 @@ import { ADS_ENABLED, AD_SLOTS } from '@/config/ads'
 import { feedService } from '@/services/FeedService'
 import { battleService } from '@/services/BattleService'
 import { productService } from '@/services/ProductService'
+
+const isDev = import.meta.env.DEV
 
 const hotFeeds = ref([])
 const hotBattles = ref([])
