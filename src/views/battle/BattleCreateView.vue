@@ -84,6 +84,7 @@ import { useBattle } from '@/services/BattleService.js';
 import { useFile } from '@/services/FileService.js';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import { useBattleDraft } from '@/composables/useBattleDraft';
+import { showExpGrant } from '@/composables/useExpToast';
 import BattleCreateHeader from '@/components/battle/create/BattleCreateHeader.vue';
 import BattleCreatePreview from '@/components/battle/create/BattleCreatePreview.vue';
 import Step1BasicInfo from '@/components/battle/create/Step1BasicInfo.vue';
@@ -541,6 +542,7 @@ const createBattle = async () => {
     if (response.success) {
       clearDraft(); // 임시저장 삭제
       await open({ type: 'alert', title: '배틀 생성 완료', message: '배틀이 성공적으로 생성되었습니다!' });
+      showExpGrant(response.data?.expGrant, { mode: 'full' });
       router.push({
         name: 'BattleDetail',
         params: { id: response.data.id }
