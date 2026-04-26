@@ -107,14 +107,6 @@
             </div>
             <div v-if="tierName" class="tier-meta">
               <span class="tier-name" :style="{ color: tierMeta?.color }">{{ tierName }}</span>
-              <template v-if="isMaxLevel">
-                <span class="meta-sep">·</span>
-                <span class="exp-remaining">MAX LEVEL</span>
-              </template>
-              <template v-else-if="expToNext != null">
-                <span class="meta-sep">·</span>
-                <span class="exp-remaining">다음 레벨까지 {{ formatNumber(expToNext) }} EXP</span>
-              </template>
             </div>
           </div>
         </div>
@@ -202,17 +194,6 @@ const primaryBadgeId = computed(() => {
   const u = props.feed?.userInfo
   return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
 })
-
-const isMaxLevel = computed(() => props.feed?.userRewardInfo?.maxLevel === true)
-
-const expToNext = computed(() => {
-  const r = props.feed?.userRewardInfo
-  if (!r || isMaxLevel.value) return null
-  const v = Number(r.nextLevelExp)
-  return Number.isFinite(v) && v >= 0 ? v : null
-})
-
-const formatNumber = (n) => (n == null ? '' : Number(n).toLocaleString())
 
 const goToUser = () => {
   const userId = props.feed?.userInfo?.userId
@@ -408,8 +389,6 @@ const handleSendMessage = () => {
   letter-spacing: -0.1px; line-height: 1;
 }
 .tier-meta .tier-name { font-weight: 700; }
-.tier-meta .meta-sep { color: #CBD5E1; font-weight: 500; }
-.tier-meta .exp-remaining { color: #8B95A1; font-weight: 500; font-variant-numeric: tabular-nums; }
 .author-actions { display: flex; gap: 8px; }
 .follow-btn {
   padding: 8px 16px; border-radius: 8px;
