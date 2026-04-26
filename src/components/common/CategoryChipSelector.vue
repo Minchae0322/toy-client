@@ -81,7 +81,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'select'])
 
-const { loadPopularCategories, loadAllCategories, findCategoryById } = useCategoryCache()
+const { loadPopularCategories, loadAllCategories, findCategoryById, allCategories } = useCategoryCache()
 
 const popularCategories = ref([])
 const selectedParentCategory = ref(null)
@@ -221,12 +221,17 @@ const handleCategorySelect = ({ categoryId, category, parent }) => {
   showCategoryModal.value = false
 }
 
-// 외부에서 modelValue가 변경되면 내부 상태 초기화
-watch(() => props.modelValue, (newValue) => {
+// 외부에서 modelValue가 변경되면 내부 상태 동기화
+// (수정 화면에서 비동기로 로드된 categoryId가 뒤늦게 들어오는 케이스 포함)
+watch(() => props.modelValue, async (newValue) => {
   if (!newValue) {
     selectedCategoryInfo.value = null
     selectedParentCategory.value = null
+    return
   }
+  if (selectedCategoryInfo.value?.category?.categoryId === newValue) return
+  if (allCategories.value.length === 0) await loadAllCategories()
+  restoreSelectionFromModelValue(newValue)
 })
 
 onMounted(() => {

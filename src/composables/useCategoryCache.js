@@ -119,14 +119,17 @@ export function useCategoryCache() {
     lastFetchTime.value = null
   }
 
-  // 카테고리 ID로 카테고리 찾기
+  // 카테고리 ID로 카테고리 찾기 (string/number 타입 모두 허용)
   const findCategoryById = (categoryId) => {
+    if (categoryId === null || categoryId === undefined) return null
+    const targetId = Number(categoryId)
+    if (Number.isNaN(targetId)) return null
     for (const parent of allCategories.value) {
-      if (parent.categoryId === categoryId) {
+      if (Number(parent.categoryId) === targetId) {
         return { category: parent, parent: null }
       }
       if (parent.children) {
-        const sub = parent.children.find(c => c.categoryId === categoryId)
+        const sub = parent.children.find(c => Number(c.categoryId) === targetId)
         if (sub) {
           return { category: sub, parent }
         }
