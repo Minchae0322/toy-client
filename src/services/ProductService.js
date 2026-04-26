@@ -111,7 +111,8 @@ class ProductService extends BaseApiService {
     const validation = this.validateProductData(productData)
     if (!validation.isValid) throw new Error(validation.errors.join(', '))
 
-    // 백엔드 ProductUpdate DTO: tags는 String (세미콜론 구분)
+    // 백엔드 ProductUpdate DTO 필드만 전송 (name, brand, description, distributor,
+    // price, feature, tags(String;세미콜론), releaseDate, categoryId)
     const tagsString = Array.isArray(productData.tags)
       ? (productData.tags.length > 0 ? productData.tags.join(';') : null)
       : (productData.tags || null)
@@ -119,15 +120,13 @@ class ProductService extends BaseApiService {
     const requestData = {
       name: productData.name.trim(),
       brand: productData.brand.trim(),
-      categoryId: parseInt(productData.categoryId),
-      price: productData.price || null,
       description: productData.description?.trim() || null,
       distributor: productData.distributor?.trim() || null,
-      releaseDate: productData.releaseDate || null,
+      price: productData.price || null,
       feature: productData.feature?.trim() || null,
       tags: tagsString,
-      thumbnailAttachmentInfo: productData.thumbnailAttachmentInfo || null,
-      attachmentFileInfos: productData.attachmentFileInfos || []
+      releaseDate: productData.releaseDate || null,
+      categoryId: parseInt(productData.categoryId)
     }
     return await this.put(`/products/${productId}`, requestData)
   }
