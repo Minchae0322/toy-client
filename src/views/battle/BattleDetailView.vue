@@ -748,6 +748,7 @@ export default {
         const response = await battleService.addBattleItems(this.battleId, itemData)
 
         if (response.success) {
+          showExpGrant(response.data, { mode: 'full' })
           await this.open({ type: 'alert', title: '등록 완료', message: '아이템이 등록되었습니다!' })
           this.closeAddModal()
           await this.loadBattle()
@@ -778,6 +779,7 @@ export default {
         const response = await battleService.addBattleItems(this.battleId, itemData)
 
         if (response.success) {
+          showExpGrant(response.data, { mode: 'full' })
           await this.open({ type: 'alert', title: '등록 완료', message: '아이템이 등록되었습니다!' })
           this.closeAddModal()
           await this.loadBattle()
@@ -811,6 +813,7 @@ export default {
         const response = await battleService.addBattleItems(this.battleId, itemData)
 
         if (response.success) {
+          showExpGrant(response.data, { mode: 'full' })
           await this.open({ type: 'alert', title: '등록 완료', message: '아이템이 등록되었습니다!' })
           this.closeAddModal()
           await this.loadBattle()
