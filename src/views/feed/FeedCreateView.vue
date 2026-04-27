@@ -104,213 +104,13 @@
       <section class="card additional-info">
         <div class="form-group">
           <label class="form-label required">어떤 제품인가요?</label>
-          <div v-if="selectedProduct" class="selected-product-card">
-            <img
-              :src="selectedProduct.thumbnailUrl || '/default-product.png'"
-              :alt="selectedProduct.name"
-              class="selected-product-image"
-            />
-            <div class="selected-product-info">
-              <p class="selected-product-name">{{ selectedProduct.name }}</p>
-              <p class="selected-product-brand">{{ selectedProduct.brand }}</p>
-            </div>
-            <button type="button" class="btn-clear-product" @click="clearSelectedProduct">
-              <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
-              </svg>
-            </button>
-          </div>
-          <div v-else class="product-search-wrapper">
-            <div class="product-search-row">
-              <div class="product-search-bar">
-                <svg class="product-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  class="product-search-input"
-                  placeholder="제품명을 검색하세요 (예: 나이키 조던 4)"
-                  v-model="formData.productNameCustom"
-                  @input="handleProductNameInput"
-                  maxlength="40"
-                  ref="customInputRef"
-                />
-                <div v-if="isSearchingProducts" class="product-search-spinner">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
-                    <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                  </svg>
-                </div>
-              </div>
-              <label
-                v-if="showRegisterToggle"
-                class="register-toggle"
-                :class="{ active: registerAsProduct }"
-              >
-                <input type="checkbox" v-model="registerAsProduct" class="register-toggle-input" />
-                <svg v-if="registerAsProduct" class="register-toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                </svg>
-                <svg v-else class="register-toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span class="register-toggle-text">새 제품 등록</span>
-              </label>
-            </div>
-
-            <!-- 검색 결과 -->
-            <div v-if="productSuggestions.length > 0" class="product-suggestions">
-              <button
-                v-for="p in productSuggestions"
-                :key="p.productId"
-                type="button"
-                class="product-suggestion-item"
-                @click="handleProductSelect(p)"
-              >
-                <img
-                  :src="p.thumbnailUrl || '/default-product.png'"
-                  :alt="p.name"
-                  class="product-suggestion-thumb"
-                />
-                <div class="product-suggestion-info">
-                  <p class="product-suggestion-name">{{ p.name }}</p>
-                  <p class="product-suggestion-brand">{{ p.brand }}</p>
-                </div>
-                <svg class="product-suggestion-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- 제품 등록 토글 ON: 브랜드 + 제품 대표 이미지 -->
-            <div v-if="registerAsProduct" class="brand-input-block">
-              <div class="register-block-header">
-                <span class="register-block-title">새 제품 정보</span>
-                <button type="button" class="register-help" aria-label="새 제품 등록 안내">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  <span class="register-help-tooltip" role="tooltip">
-                    <span class="register-help-row">• 새 제품은 관리자 승인 후 공개됩니다</span>
-                    <span class="register-help-row">• 중복된 제품은 삭제될 수 있습니다</span>
-                  </span>
-                </button>
-              </div>
-
-              <div class="register-field">
-                <label class="register-field-label">브랜드</label>
-                <input
-                  type="text"
-                  class="form-input brand-input"
-                  placeholder="브랜드명 (예: 나이키)"
-                  v-model="productBrandCustom"
-                  maxlength="40"
-                />
-              </div>
-
-              <div class="register-field">
-                <label class="register-field-label">제품 정가 <span class="register-field-hint">(선택, 원 단위)</span></label>
-                <input
-                  type="text"
-                  inputmode="numeric"
-                  class="form-input brand-input"
-                  placeholder="예: 4500"
-                  maxlength="9"
-                  v-model="productPriceCustom"
-                  @input="handleProductPriceInput"
-                />
-              </div>
-
-              <div class="register-field">
-                <label class="register-field-label">제품 대표 이미지</label>
-                <div class="product-image-options">
-                  <button
-                    type="button"
-                    class="product-image-option"
-                    :class="{ active: productImageMode === 'feed', disabled: !feedThumbnailAvailable }"
-                    :disabled="!feedThumbnailAvailable"
-                    @click="productImageMode = 'feed'"
-                  >
-                    <div class="product-image-thumb">
-                      <img
-                        v-if="feedThumbnailAvailable"
-                        :src="selectedPhotos[0].preview"
-                        alt="피드 대표 이미지"
-                      />
-                      <div v-else class="product-image-empty">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <div class="product-image-option-meta">
-                      <span class="product-image-radio" :class="{ checked: productImageMode === 'feed' && feedThumbnailAvailable }">
-                        <svg v-if="productImageMode === 'feed' && feedThumbnailAvailable" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                        </svg>
-                      </span>
-                      <span class="product-image-option-text">피드 대표 이미지 사용</span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    class="product-image-option"
-                    :class="{ active: productImageMode === 'custom' }"
-                    @click="triggerProductImagePick"
-                  >
-                    <div class="product-image-thumb">
-                      <img
-                        v-if="customProductImage?.preview"
-                        :src="customProductImage.preview"
-                        alt="직접 업로드"
-                      />
-                      <div v-else class="product-image-empty plus">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                      </div>
-                      <div v-if="customProductImage?.uploading" class="product-image-upload-overlay">
-                        <svg viewBox="0 0 24 24" fill="none">
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
-                          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <div class="product-image-option-meta">
-                      <span class="product-image-radio" :class="{ checked: productImageMode === 'custom' }">
-                        <svg v-if="productImageMode === 'custom'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                        </svg>
-                      </span>
-                      <span class="product-image-option-text">
-                        {{ customProductImage?.preview ? '다른 이미지 변경' : '다른 이미지 업로드' }}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-                <input
-                  ref="productImageInputRef"
-                  type="file"
-                  accept="image/*"
-                  class="product-image-hidden-input"
-                  @change="handleProductImageSelect"
-                />
-              </div>
-
-            </div>
-
-            <!-- 검색 전 안내 -->
-            <p
-              v-if="!formData.productNameCustom.trim() && !isSearchingProducts"
-              class="product-search-hint"
-            >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              제품명을 입력하면 등록된 제품을 자동으로 찾아드려요
-            </p>
-          </div>
+          <FeedProductSection
+            ref="productSectionRef"
+            v-model:productNameCustom="formData.productNameCustom"
+            v-model:productId="formData.productId"
+            :feed-thumbnail-url="selectedPhotos[0]?.preview ?? null"
+            @error="showError"
+          />
         </div>
         <div class="form-group">
           <label class="form-label required">카테고리</label>
@@ -521,6 +321,7 @@ import { showExpGrant } from '@/composables/useExpToast'
 import { getUserId } from '@/utils/auth.js'
 import { productService } from '@/services/ProductService.js'
 import CategoryChipSelector from '@/components/common/CategoryChipSelector.vue'
+import FeedProductSection from '@/components/feed/FeedProductSection.vue'
 
 const FEED_DRAFT_KEY = 'feed_draft'
 
@@ -536,21 +337,9 @@ const isSubmitting = ref(false)
 const isProcessingImage = ref(false)
 const errorMessage = ref('')
 const hashtagInput = ref('')
-const productSuggestions = ref([])
 const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
-const selectedProduct = ref(null)
-const customInputRef = ref(null)
-const isSearchingProducts = ref(false)
-const hasSearchedProducts = ref(false)
-const registerAsProduct = ref(false)
-const productBrandCustom = ref('')
-const productPriceCustom = ref('')
-const productImageMode = ref('feed') // 'feed' | 'custom'
-const customProductImage = ref(null) // { preview, attachmentInfo, uploading, uploadFailed, file }
-const productImageInputRef = ref(null)
-let productSearchTimer = null
-let productSearchReqId = 0
+const productSectionRef = ref(null)
 
 const formData = ref({
   userId: getUserId(),
@@ -619,12 +408,6 @@ const handlePriceInput = (e) => {
   if (e.target.value !== display) e.target.value = display
 }
 
-const handleProductPriceInput = () => {
-  let v = productPriceCustom.value.replace(/[^0-9]/g, '')
-  if (v && parseInt(v, 10) > MAX_PRICE) v = String(MAX_PRICE)
-  productPriceCustom.value = v
-}
-
 const togglePriceHidden = () => {
   formData.value.priceHidden = !formData.value.priceHidden
   if (formData.value.priceHidden) {
@@ -644,17 +427,6 @@ const togglePriceGift = () => {
 }
 
 const popularHashtags = ['조던4', '에어팟맥스', '디올립글로우', '나이키', '스니커즈', '데일리룩', 'OOTD', '커피스타그램', '테크', '뷰티']
-
-const showRegisterToggle = computed(() =>
-  !selectedProduct.value &&
-  formData.value.productNameCustom.trim().length >= 2 &&
-  hasSearchedProducts.value &&
-  !isSearchingProducts.value
-)
-
-const feedThumbnailAvailable = computed(() =>
-  selectedPhotos.value.length > 0 && !!selectedPhotos.value[0]?.preview
-)
 
 const canSubmit = computed(() => {
   const hasUploadingPhotos = selectedPhotos.value.some(p => p.uploading)
@@ -847,143 +619,6 @@ const removePhoto = (index) => {
 }
 
 
-// Product Name — debounced API search (race-guarded)
-const handleProductNameInput = () => {
-  const keyword = formData.value.productNameCustom.trim()
-  if (productSearchTimer) clearTimeout(productSearchTimer)
-
-  if (keyword.length < 1) {
-    productSuggestions.value = []
-    hasSearchedProducts.value = false
-    isSearchingProducts.value = false
-    return
-  }
-
-  isSearchingProducts.value = true
-  productSearchTimer = setTimeout(async () => {
-    const currentKeyword = formData.value.productNameCustom.trim()
-    if (currentKeyword.length < 1) {
-      isSearchingProducts.value = false
-      return
-    }
-    const reqId = ++productSearchReqId
-    try {
-      const response = await productService.getProducts(
-        { keyword: currentKeyword, status: 'APPROVED' },
-        { page: 0, size: 8, sort: 'popularityScore,DESC' }
-      )
-      // 오래된 응답은 버림 (최신 요청만 반영)
-      if (reqId !== productSearchReqId) return
-      if (response.success && response.data) {
-        productSuggestions.value = response.data.content || response.data || []
-      } else {
-        productSuggestions.value = []
-      }
-    } catch (error) {
-      if (reqId !== productSearchReqId) return
-      console.error('제품 검색 실패:', error)
-      productSuggestions.value = []
-    } finally {
-      if (reqId === productSearchReqId) {
-        isSearchingProducts.value = false
-        hasSearchedProducts.value = true
-      }
-    }
-  }, 200)
-}
-
-const handleProductSelect = (product) => {
-  selectedProduct.value = product
-  formData.value.productId = product.productId
-  formData.value.productNameCustom = product.name
-  productSuggestions.value = []
-  registerAsProduct.value = false
-  productBrandCustom.value = ''
-  productPriceCustom.value = ''
-  hasSearchedProducts.value = false
-  resetCustomProductImage()
-  productImageMode.value = 'feed'
-}
-
-const clearSelectedProduct = () => {
-  selectedProduct.value = null
-  formData.value.productId = null
-  formData.value.productNameCustom = ''
-  productSuggestions.value = []
-  hasSearchedProducts.value = false
-  registerAsProduct.value = false
-  productBrandCustom.value = ''
-  productPriceCustom.value = ''
-  resetCustomProductImage()
-  productImageMode.value = 'feed'
-}
-
-const resetCustomProductImage = () => {
-  if (customProductImage.value?.preview && customProductImage.value.preview.startsWith('blob:')) {
-    URL.revokeObjectURL(customProductImage.value.preview)
-  }
-  customProductImage.value = null
-}
-
-const triggerProductImagePick = () => {
-  if (customProductImage.value?.preview) {
-    // 이미 업로드된 이미지가 있으면 모드만 custom으로 전환하면서 파일피커를 다시 열 수 있도록
-    productImageMode.value = 'custom'
-  }
-  productImageInputRef.value?.click()
-}
-
-const handleProductImageSelect = async (e) => {
-  const file = e.target.files?.[0]
-  e.target.value = ''
-  if (!file) return
-  if (!file.type.startsWith('image/')) {
-    showError('이미지 파일만 업로드 가능합니다.')
-    return
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    showError('파일 크기는 5MB 이하만 가능합니다.')
-    return
-  }
-
-  try {
-    const resized = await resizeImage(file, 1920, 0.85)
-    const previewUrl = URL.createObjectURL(resized)
-
-    // 이전 이미지 정리
-    resetCustomProductImage()
-
-    customProductImage.value = {
-      file: resized,
-      preview: previewUrl,
-      uploading: true,
-      uploadFailed: false,
-      attachmentInfo: null
-    }
-    productImageMode.value = 'custom'
-
-    const uploadResult = await fileService.upload(resized, { fileCode: 'PRODUCT' })
-    if (uploadResult.success && uploadResult.data) {
-      customProductImage.value.attachmentInfo = feedService.convertToAttachmentInfo(uploadResult.data)
-      customProductImage.value.uploading = false
-      const serverUrl = uploadResult.data.fileUrl || uploadResult.data.storedPath
-      if (serverUrl) {
-        URL.revokeObjectURL(customProductImage.value.preview)
-        customProductImage.value.preview = serverUrl
-      }
-    } else {
-      throw new Error(uploadResult.error || '업로드 실패')
-    }
-  } catch (err) {
-    console.error('❌ 제품 이미지 업로드 실패:', err)
-    if (customProductImage.value) {
-      customProductImage.value.uploading = false
-      customProductImage.value.uploadFailed = true
-    }
-    showError('제품 이미지 업로드에 실패했습니다. 다시 시도해주세요.')
-  }
-}
-
 // Hashtags
 const addHashtag = () => {
   if (!hashtagInput.value.trim() || formData.value.hashtags.length >= 5) return
@@ -1000,20 +635,18 @@ const addPopularHashtag = (tag) => {
 // Draft Functions
 const saveDraft = () => {
   try {
+    const productDraft = productSectionRef.value?.getDraftPayload() || {}
     const draftData = {
       formData: {
         ...formData.value,
         // File 객체는 저장 불가, productId와 텍스트 데이터만
       },
-      selectedProduct: selectedProduct.value,
       selectedCategoryInfo: selectedCategoryInfo.value,
       selectedParentCategory: selectedParentCategory.value ? {
         categoryId: selectedParentCategory.value.categoryId,
         categoryName: selectedParentCategory.value.categoryName
       } : null,
-      registerAsProduct: registerAsProduct.value,
-      productBrandCustom: productBrandCustom.value,
-      productImageMode: productImageMode.value,
+      ...productDraft,
       savedAt: new Date().toISOString()
     }
     localStorage.setItem(FEED_DRAFT_KEY, JSON.stringify(draftData))
@@ -1041,11 +674,8 @@ const loadDraft = async () => {
     if (confirmed) {
       // 폼 데이터 복원
       formData.value = { ...formData.value, ...draftData.formData }
-      selectedProduct.value = draftData.selectedProduct
       selectedCategoryInfo.value = draftData.selectedCategoryInfo
-      registerAsProduct.value = !!draftData.registerAsProduct
-      productBrandCustom.value = draftData.productBrandCustom || ''
-      productImageMode.value = draftData.productImageMode || 'feed'
+      productSectionRef.value?.restoreFromDraft(draftData)
 
       // 부모 카테고리 복원
       if (draftData.selectedParentCategory) {
@@ -1193,9 +823,10 @@ const handleSubmit = async () => {
       .map(p => p.attachmentInfo)
 
     // 제품으로 등록 체크 시 먼저 제품 생성
+    const productState = productSectionRef.value?.getSubmitState() || {}
     let finalProductId = formData.value.productId
-    if (!finalProductId && registerAsProduct.value) {
-      if (!productBrandCustom.value.trim()) {
+    if (!finalProductId && productState.registerAsProduct) {
+      if (!productState.productBrandCustom?.trim()) {
         showError('브랜드명을 입력해주세요.')
         isSubmitting.value = false
         return
@@ -1203,18 +834,18 @@ const handleSubmit = async () => {
 
       // 제품 썸네일 결정
       let productThumbnail = null
-      if (productImageMode.value === 'custom') {
-        if (customProductImage.value?.uploading) {
+      if (productState.productImageMode === 'custom') {
+        if (productState.customUploading) {
           showError('제품 이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.')
           isSubmitting.value = false
           return
         }
-        if (!customProductImage.value?.attachmentInfo) {
+        if (!productState.customAttachmentInfo) {
           showError('제품 이미지 업로드에 실패했어요. 다시 업로드해주세요.')
           isSubmitting.value = false
           return
         }
-        productThumbnail = customProductImage.value.attachmentInfo
+        productThumbnail = productState.customAttachmentInfo
       } else {
         // feed 대표 이미지 사용
         productThumbnail = thumbnail?.attachmentInfo || null
@@ -1223,9 +854,9 @@ const handleSubmit = async () => {
       try {
         const productResult = await productService.createProduct({
           name: formData.value.productNameCustom.trim(),
-          brand: productBrandCustom.value.trim(),
+          brand: productState.productBrandCustom.trim(),
           categoryId: formData.value.subCategoryId,
-          price: productPriceCustom.value.trim() || '0',
+          price: productState.productPriceCustom?.trim() || '0',
           thumbnailAttachmentInfo: productThumbnail
         })
         if (productResult.success && productResult.data) {
@@ -1288,7 +919,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   selectedPhotos.value.forEach(p => URL.revokeObjectURL(p.preview))
-  resetCustomProductImage()
 })
 </script>
 
@@ -1614,551 +1244,6 @@ onBeforeUnmount(() => {
 .form-textarea { resize: vertical; min-height: 100px; }
 .mt-2 { margin-top: 8px; }
 
-/* Product Search */
-.product-search-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.product-search-row {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-}
-
-.product-search-bar {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: #F7F8FA;
-  border: 1.5px solid #E5E8EB;
-  border-radius: 12px;
-  transition: all 0.15s ease;
-  min-width: 0;
-}
-
-.product-search-bar:focus-within {
-  background: #fff;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
-}
-
-.product-search-icon {
-  width: 18px;
-  height: 18px;
-  color: #8B95A1;
-  margin-left: 14px;
-  flex-shrink: 0;
-}
-
-.product-search-input {
-  flex: 1;
-  padding: 13px 14px;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: 15px;
-  font-weight: 500;
-  font-family: inherit;
-  color: var(--primary);
-  min-width: 0;
-}
-
-.product-search-input::placeholder {
-  color: #B0B8C1;
-  font-weight: 400;
-}
-
-.product-search-spinner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  flex-shrink: 0;
-}
-
-.product-search-spinner svg {
-  width: 18px;
-  height: 18px;
-  color: var(--accent);
-  animation: spin 0.8s linear infinite;
-}
-
-.register-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 14px;
-  background: #F7F8FA;
-  border: 1.5px solid #E5E8EB;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.register-toggle:hover {
-  border-color: var(--accent);
-  background: #FAF5FF;
-}
-
-.register-toggle.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-.register-toggle-input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-  width: 0;
-  height: 0;
-}
-
-.register-toggle-icon {
-  width: 16px;
-  height: 16px;
-  color: #8B95A1;
-}
-
-.register-toggle.active .register-toggle-icon {
-  color: #fff;
-}
-
-.register-toggle-text {
-  font-size: 13px;
-  font-weight: 700;
-  color: #4E5968;
-  letter-spacing: -0.1px;
-}
-
-.register-toggle.active .register-toggle-text {
-  color: #fff;
-}
-
-/* Suggestions list (inline, non-absolute) */
-.product-suggestions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 2px;
-}
-
-.product-suggestion-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: left;
-  font-family: inherit;
-}
-
-.product-suggestion-item:hover {
-  border-color: var(--accent);
-  background: #FAF5FF;
-}
-
-.product-suggestion-thumb {
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  border-radius: 8px;
-  background: #F7F8FA;
-  flex-shrink: 0;
-}
-
-.product-suggestion-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.product-suggestion-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary);
-  margin: 0 0 2px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.product-suggestion-brand {
-  font-size: 12px;
-  color: var(--secondary);
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.product-suggestion-arrow {
-  width: 16px;
-  height: 16px;
-  color: #B0B8C1;
-  flex-shrink: 0;
-}
-
-.product-suggestion-item:hover .product-suggestion-arrow {
-  color: var(--accent);
-}
-
-/* Brand + image block (when register toggle ON) */
-.brand-input-block {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 14px;
-  background: #FAF5FF;
-  border: 1px solid #E9D5FF;
-  border-radius: 12px;
-}
-
-.register-block-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.register-block-title {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--accent);
-  letter-spacing: -0.1px;
-}
-
-.register-help {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: 50%;
-  color: #8B95A1;
-  cursor: help;
-  transition: all 0.15s ease;
-}
-
-.register-help:hover,
-.register-help:focus-visible {
-  background: #fff;
-  color: var(--accent);
-  outline: none;
-}
-
-.register-help svg {
-  width: 16px;
-  height: 16px;
-}
-
-.register-help-tooltip {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: max-content;
-  max-width: 260px;
-  padding: 10px 12px;
-  background: #0A0E1A;
-  color: #fff;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-  text-align: left;
-  white-space: normal;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-4px);
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
-  z-index: 20;
-  pointer-events: none;
-}
-
-.register-help-tooltip::before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  background: #0A0E1A;
-  transform: rotate(45deg);
-  border-radius: 1px;
-}
-
-.register-help:hover .register-help-tooltip,
-.register-help:focus-visible .register-help-tooltip {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.register-help-row {
-  display: block;
-}
-
-.register-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.register-field-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #4E5968;
-  letter-spacing: -0.1px;
-}
-
-.register-field-hint {
-  font-size: 11px;
-  font-weight: 500;
-  color: #94A3B8;
-  margin-left: 4px;
-}
-
-.brand-input {
-  padding: 11px 14px;
-  font-size: 14px;
-  background: #fff;
-}
-
-.product-image-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.product-image-option {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-  padding: 10px;
-  background: #fff;
-  border: 1.5px solid #E5E8EB;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: inherit;
-  text-align: left;
-}
-
-.product-image-option:hover:not(.disabled) {
-  border-color: var(--accent);
-}
-
-.product-image-option.active {
-  border-color: var(--accent);
-  background: #F3EAFD;
-}
-
-.product-image-option.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.product-image-thumb {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #F7F8FA;
-}
-
-.product-image-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.product-image-empty {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #B0B8C1;
-}
-
-.product-image-empty svg {
-  width: 28px;
-  height: 28px;
-}
-
-.product-image-empty.plus {
-  background: #F7F8FA;
-  color: var(--accent);
-}
-
-.product-image-upload-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.product-image-upload-overlay svg {
-  width: 24px;
-  height: 24px;
-  color: #fff;
-  animation: spin 0.8s linear infinite;
-}
-
-.product-image-option-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.product-image-radio {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1.5px solid #C7CDD5;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
-}
-
-.product-image-radio.checked {
-  border-color: var(--accent);
-  background: var(--accent);
-}
-
-.product-image-radio svg {
-  width: 10px;
-  height: 10px;
-  color: #fff;
-}
-
-.product-image-option-text {
-  font-size: 12px;
-  font-weight: 600;
-  color: #4E5968;
-  letter-spacing: -0.1px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.product-image-option.active .product-image-option-text {
-  color: var(--accent);
-}
-
-.product-image-hidden-input {
-  display: none;
-}
-
-.product-search-hint {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 2px 0 0 2px;
-  font-size: 12px;
-  color: var(--secondary);
-}
-
-.product-search-hint svg {
-  color: var(--secondary);
-  flex-shrink: 0;
-}
-
-@media (max-width: 480px) {
-  .product-search-row {
-    flex-direction: column;
-  }
-  .register-toggle {
-    justify-content: center;
-    padding: 10px 14px;
-  }
-}
-
-/* Selected Product Card */
-.selected-product-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #f9fafb;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-.selected-product-image {
-  width: 56px;
-  height: 56px;
-  object-fit: cover;
-  border-radius: 8px;
-  flex-shrink: 0;
-  background: #e5e7eb;
-}
-.selected-product-info {
-  flex: 1;
-  min-width: 0;
-}
-.selected-product-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--primary);
-  margin: 0 0 4px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.selected-product-brand {
-  font-size: 13px;
-  color: var(--secondary);
-  margin: 0;
-}
-.btn-clear-product {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-.btn-clear-product:hover {
-  background: #fee2e2;
-  border-color: #ef4444;
-}
-.btn-clear-product .icon {
-  width: 16px;
-  height: 16px;
-  color: var(--secondary);
-}
-.btn-clear-product:hover .icon {
-  color: #ef4444;
-}
 
 /* Category Inline Selection — iOS tone (CommonCategoryFilter 동기화) */
 .selected-category-display {
