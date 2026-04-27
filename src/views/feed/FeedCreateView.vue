@@ -215,6 +215,7 @@
                   inputmode="numeric"
                   class="form-input brand-input"
                   placeholder="예: 4500"
+                  maxlength="9"
                   v-model="productPriceCustom"
                   @input="handleProductPriceInput"
                 />
@@ -397,6 +398,7 @@
                 inputmode="numeric"
                 class="feed-price-input"
                 placeholder="0"
+                maxlength="11"
                 :value="formattedPrice"
                 @input="handlePriceInput"
               />
@@ -609,15 +611,17 @@ const feedPriceKoreanHint = computed(() => {
 const MAX_PRICE = 999999999
 
 const handlePriceInput = (e) => {
-  const value = e.target.value.replace(/[^0-9]/g, '')
-  let parsed = value ? parseInt(value) : null
-  if (parsed !== null && parsed > MAX_PRICE) parsed = MAX_PRICE
-  formData.value.buyPrice = parsed === 0 ? null : parsed
+  const raw = e.target.value.replace(/[^0-9]/g, '')
+  let num = raw ? parseInt(raw, 10) : 0
+  if (num > MAX_PRICE) num = MAX_PRICE
+  formData.value.buyPrice = num === 0 ? null : num
+  const display = num > 0 ? num.toLocaleString() : ''
+  if (e.target.value !== display) e.target.value = display
 }
 
 const handleProductPriceInput = () => {
   let v = productPriceCustom.value.replace(/[^0-9]/g, '')
-  if (v && parseInt(v) > MAX_PRICE) v = String(MAX_PRICE)
+  if (v && parseInt(v, 10) > MAX_PRICE) v = String(MAX_PRICE)
   productPriceCustom.value = v
 }
 

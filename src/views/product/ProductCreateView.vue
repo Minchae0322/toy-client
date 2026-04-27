@@ -143,6 +143,7 @@
                       v-model="priceSingle"
                       class="price-big"
                       :placeholder="showRange ? '최소' : '0'"
+                      maxlength="11"
                       @input="formatPriceSingle"
                   />
                   <span class="price-won">원</span>
@@ -157,6 +158,7 @@
                         v-model="priceMax"
                         class="price-big"
                         placeholder="최대"
+                        maxlength="11"
                         @input="formatPriceMax"
                     />
                     <span class="price-won">원</span>
