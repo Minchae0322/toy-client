@@ -906,9 +906,10 @@ const getProductPopularityScore = (product) => {
 }
 
 const topTrendName = computed(() => {
-  if (hotFeeds.value.length > 0) return hotFeeds.value[0].productName || '인기 피드'
-  if (hotProducts.value.length > 0) return hotProducts.value[0].name || '인기 제품'
-  return '트렌드'
+  let name = '트렌드'
+  if (hotFeeds.value.length > 0) name = hotFeeds.value[0].productName || '인기 피드'
+  else if (hotProducts.value.length > 0) name = hotProducts.value[0].name || '인기 제품'
+  return name.length > 12 ? name.slice(0, 12) + '…' : name
 })
 
 
