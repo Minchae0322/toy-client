@@ -23,24 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Capacitor — iOS
-ios/App/Pods/
-ios/App/App/public/
-ios/App/build/
-ios/DerivedData/
-ios/App/App/capacitor.config.json
-ios/App/App/Info.plist.bak
-
-# Capacitor — Android
-android/.gradle/
-android/.idea/
-android/app/build/
-android/build/
-android/captures/
-android/app/src/main/assets/public/
-android/app/src/main/assets/capacitor.config.json
-android/app/src/main/assets/capacitor.plugins.json
-android/local.properties
-android/app/release/
+# Capacitor 서명 키 (앱 배포용 keystore는 절대 커밋 금지)
 *.keystore
-!debug.keystore
+!android/app/debug.keystore
