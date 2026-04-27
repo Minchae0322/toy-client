@@ -27,8 +27,10 @@
         </div>
       </section>
 
+      <!-- 제품 연동 O: 캐노니컬 정보 + 상태별 스타일 -->
       <section
-          :class="['product-info-banner', { 'is-unavailable': productUnavailable, 'is-clickable': productLinkable }]"
+          v-if="hasProduct"
+          :class="['product-info-banner', `status-${productStatusLower}`, { 'is-clickable': productLinkable }]"
           :role="productLinkable ? 'link' : null"
           :tabindex="productLinkable ? 0 : null"
           @click="handleProductBannerClick"
@@ -48,7 +50,78 @@
         </div>
         <div class="price-area">
           <span class="price-label">구매가</span>
-          <span class="price-value">{{ feed.buyPrice == null ? '가격정보 없음' : feed.buyPrice === 0 ? '무료' : formatPrice(feed.buyPrice) }}</span>
+          <span class="price-value">{{ formattedBuyPrice }}</span>
+        </div>
+      </section>
+
+      <!-- 연동 제품 상세 정보 (product 있을 때만, 배너 아래) -->
+      <section v-if="hasProduct" :class="['linked-product-card', `status-${productStatusLower}`]">
+        <div class="linked-product-header">
+          <span class="linked-product-label">연동 제품</span>
+          <button
+              v-if="productLinkable"
+              type="button"
+              class="linked-product-detail-btn"
+              @click="goToProductDetail"
+          >
+            상세보기
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+        <div class="linked-product-body">
+          <img
+              v-if="productThumbnailUrl"
+              :src="productThumbnailUrl"
+              :alt="feed.product?.name"
+              class="linked-product-thumb"
+              @click="productLinkable && goToProductDetail()"
+              :class="{ 'is-clickable': productLinkable }"
+          />
+          <div v-else class="linked-product-thumb linked-product-thumb-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="9" cy="9" r="2"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+          </div>
+          <div class="linked-product-meta">
+            <span v-if="feed.product?.brand" class="linked-product-brand">{{ feed.product.brand }}</span>
+            <span class="linked-product-name">{{ feed.product?.name }}</span>
+            <span v-if="formattedOfficialPrice" class="linked-product-price">
+              <span class="linked-product-price-label">정가</span>
+              {{ formattedOfficialPrice }}
+            </span>
+          </div>
+        </div>
+        <p v-if="statusHelpText" class="linked-product-status-help">{{ statusHelpText }}</p>
+      </section>
+
+      <!-- 제품 연동 X: 사용자가 직접 입력한 상품명만 노출 -->
+      <section
+          v-else
+          class="product-info-banner is-custom is-clickable"
+          role="button"
+          tabindex="0"
+          @click="handleProductBannerClick"
+          @keydown.enter="handleProductBannerClick"
+      >
+        <div class="product-main">
+          <span class="buy-place">
+            <svg class="place-icon" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            {{ feed.buyPlace || '미등록' }}
+          </span>
+          <div class="product-title-row">
+            <h1 class="product-title">{{ feed.productNameCustom || '상품명 미등록' }}</h1>
+            <span class="custom-tag">직접 입력</span>
+          </div>
+        </div>
+        <div class="price-area">
+          <span class="price-label">구매가</span>
+          <span class="price-value">{{ formattedBuyPrice }}</span>
         </div>
       </section>
 
@@ -150,22 +223,45 @@ const emit = defineEmits(['follow', 'unfollow', 'like', 'save', 'search-store', 
 const isCreatingChatRoom = ref(false)
 
 /* 헬퍼 함수 및 계산된 속성 */
+const hasProduct = computed(() => !!props.feed?.product?.id)
+
 const productStatus = computed(() => {
   const raw = props.feed?.product?.productStatus
   return (typeof raw === 'string' ? raw : raw?.title || raw?.code || '')?.toUpperCase() || null
 })
 
+const productStatusLower = computed(() => (productStatus.value || 'unknown').toLowerCase())
 const productApproved = computed(() => !productStatus.value || productStatus.value === 'APPROVED')
-const productUnavailable = computed(() => ['REJECTED', 'DELETED'].includes(productStatus.value))
-const productLinkable = computed(() => !!props.feed?.product?.id && productApproved.value)
+const productLinkable = computed(() => hasProduct.value && productApproved.value)
 
-const getProductName = computed(() => {
-  // REJECTED/DELETED 상태의 제품은 작성자가 입력한 productNameCustom으로 폴백 (캐노니컬 정보 신뢰 불가)
-  if (productUnavailable.value) {
-    return props.feed?.productNameCustom || props.feed?.productName || props.feed?.product?.name || '상품 정보'
-  }
-  return props.feed?.product?.name || props.feed?.productNameCustom || props.feed?.productName || '상품 정보'
+// 제품 연동 O 케이스 전용. 캐노니컬 이름을 우선 노출 (REJECTED/DELETED는 strikethrough로 시각 표현)
+const getProductName = computed(() =>
+  props.feed?.product?.name || props.feed?.productNameCustom || '상품 정보'
+)
+
+const statusHelpText = computed(() => ({
+  PENDING: '관리자 승인 대기 중인 제품입니다.',
+  REJECTED: '반려된 제품이라 상세 페이지로 이동할 수 없습니다.',
+  DELETED: '삭제된 제품이라 상세 페이지로 이동할 수 없습니다.'
+}[productStatus.value] || ''))
+
+const formattedBuyPrice = computed(() => {
+  const p = props.feed?.buyPrice
+  if (p == null) return '가격정보 없음'
+  if (p === 0) return '무료'
+  return formatPrice(p)
 })
+
+const formattedOfficialPrice = computed(() => {
+  const p = props.feed?.product?.price
+  if (p == null || p === '') return ''
+  const n = Number(String(p).replace(/,/g, ''))
+  return Number.isFinite(n) ? n.toLocaleString() + '원' : String(p)
+})
+
+const productThumbnailUrl = computed(() =>
+  props.feed?.product?.thumbnailDto?.fileUrl || ''
+)
 
 const getCategoryName = computed(() => props.feed?.subCategoryDetail?.subCategoryName || props.feed?.subCategoryDetail?.categoryName || '카테고리')
 
@@ -177,6 +273,12 @@ const handleProductBannerClick = () => {
   } else {
     // 미연동/PENDING/REJECTED/DELETED: 구매처 검색으로 폴백
     emit('search-store', getProductName.value)
+  }
+}
+
+const goToProductDetail = () => {
+  if (props.feed?.product?.id) {
+    router.push({ name: 'ProductDetail', params: { id: props.feed.product.id } })
   }
 }
 const getAuthorProfileImage = computed(() => props.feed?.userInfo?.profileImageFile?.fileUrl || props.feed?.userInfo?.profileImageUrl || 'https://i.pravatar.cc/150')
@@ -301,11 +403,121 @@ const handleSendMessage = () => {
 }
 .product-info-banner.is-clickable:hover { background: #F2F4F6; }
 .product-info-banner.is-clickable:active { transform: scale(0.98); background: #F2F4F6; }
-.product-info-banner.is-unavailable {
-  background: #F9FAFB;
-  opacity: 0.9;
+
+/* 상태별 스타일 */
+.product-info-banner.status-pending {
+  background: #FFFBEB;
+  box-shadow: inset 0 0 0 1px #FDE68A;
 }
-.product-info-banner.is-unavailable .product-title {
+.product-info-banner.status-pending .product-title { color: #92400E; }
+
+.product-info-banner.status-rejected,
+.product-info-banner.status-deleted {
+  background: #F9FAFB;
+}
+.product-info-banner.status-rejected .product-title,
+.product-info-banner.status-deleted .product-title {
+  color: #6B7280;
+  text-decoration: line-through;
+}
+
+.product-info-banner.is-custom { background: #F7F8FA; }
+.custom-tag {
+  display: inline-flex; align-items: center;
+  padding: 3px 8px; border-radius: 6px;
+  background: #E5E8EB; color: #4E5968;
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: -0.1px; flex-shrink: 0; white-space: nowrap;
+}
+
+/* 연동 제품 카드 (배너 아래) */
+.linked-product-card {
+  margin-top: -8px; /* 배너와의 간격 살짝 좁게 */
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #F2F4F6;
+  border-radius: 12px;
+}
+.linked-product-card.status-pending {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+}
+.linked-product-card.status-rejected,
+.linked-product-card.status-deleted {
+  background: #F9FAFB;
+  border-color: #E5E8EB;
+}
+
+.linked-product-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+.linked-product-label {
+  font-size: 11px; font-weight: 700;
+  color: #8B95A1; letter-spacing: -0.1px;
+  text-transform: uppercase;
+}
+.linked-product-detail-btn {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 4px 8px 4px 10px; border: none; border-radius: 6px;
+  background: transparent; color: #9333EA;
+  font-size: 12px; font-weight: 700; letter-spacing: -0.1px;
+  cursor: pointer; transition: background 0.15s ease;
+}
+.linked-product-detail-btn:hover { background: #F3E8FF; }
+.linked-product-detail-btn .arrow-icon { width: 14px; height: 14px; }
+
+.linked-product-body {
+  display: flex; align-items: center; gap: 12px;
+}
+.linked-product-thumb {
+  width: 60px; height: 60px;
+  border-radius: 10px; object-fit: cover;
+  background: #F2F4F6; flex-shrink: 0;
+  border: 1px solid #F2F4F6;
+}
+.linked-product-thumb.is-clickable { cursor: pointer; }
+.linked-product-thumb.is-clickable:hover { opacity: 0.92; }
+.linked-product-thumb-empty {
+  display: flex; align-items: center; justify-content: center;
+  color: #B0B8C1;
+}
+.linked-product-thumb-empty svg { width: 24px; height: 24px; }
+
+.linked-product-meta {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.linked-product-brand {
+  font-size: 11.5px; font-weight: 600;
+  color: #8B95A1; letter-spacing: -0.1px;
+}
+.linked-product-name {
+  font-size: 14px; font-weight: 700;
+  color: #191F28; letter-spacing: -0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.linked-product-price {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13px; font-weight: 700;
+  color: #191F28; letter-spacing: -0.01em;
+  margin-top: 2px;
+}
+.linked-product-price-label {
+  font-size: 10.5px; font-weight: 600;
+  color: #8B95A1; letter-spacing: -0.1px;
+}
+
+.linked-product-status-help {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed #E5E8EB;
+  font-size: 11.5px; font-weight: 500;
+  color: #6B7280; letter-spacing: -0.01em;
+}
+.linked-product-card.status-rejected .linked-product-name,
+.linked-product-card.status-deleted .linked-product-name {
   color: #6B7280;
   text-decoration: line-through;
 }
