@@ -83,13 +83,6 @@ const handleLogout = async () => {
   isLoggingOut.value = false
 }
 
-const handleCarrierClick = async () => {
-  const confirmed = await openLoginRequired('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?')
-  if (confirmed) {
-    router.push({ name: 'Login', query: { redirect: '/carrier' } })
-  }
-}
-
 const handleChatClick = async () => {
   if (isLoggedIn.value) {
     router.push({ name: 'Chat' })
@@ -211,21 +204,6 @@ onUnmounted(() => {
 
       <!-- 모바일 우측 영역 -->
       <div class="nav-mobile">
-        <component
-          :is="isLoggedIn ? 'RouterLink' : 'button'"
-          :to="isLoggedIn ? '/carrier' : undefined"
-          class="mobile-carrier-btn"
-          title="캐리어 꾸미기"
-          @click="!isLoggedIn && handleCarrierClick()"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2"/>
-            <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
-            <circle cx="12" cy="15" r="2"/>
-          </svg>
-          <span>캐꾸</span>
-        </component>
-
         <!-- 알림 버튼 (로그인 시에만 표시) -->
         <NotificationDropdown v-if="isLoggedIn" />
 
@@ -465,37 +443,6 @@ onUnmounted(() => {
   font-size: 9px !important;
   top: -3px !important;
   right: -3px !important;
-}
-
-/* ===================== 캐리어 버튼 ===================== */
-.mobile-carrier-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  margin-right: auto;
-  border: 1.5px solid #7c3aed;
-  background: transparent;
-  border-radius: 8px;
-  color: #7c3aed;
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.mobile-carrier-btn:hover {
-  color: #ffffff;
-  background: #7c3aed;
-  border-color: #7c3aed;
-}
-
-.mobile-carrier-btn.router-link-active {
-  color: #ffffff;
-  background: #7c3aed;
-  border-color: #7c3aed;
 }
 
 /* ===================== 메시지 버튼 ===================== */
@@ -780,15 +727,6 @@ onUnmounted(() => {
   }
   .nav-mobile {
     gap: 0;
-  }
-  .mobile-carrier-btn {
-    padding: 4px 8px;
-    font-size: 11px;
-    gap: 2px;
-  }
-  .mobile-carrier-btn svg {
-    width: 12px;
-    height: 12px;
   }
   .nav-mobile .mobile-msg-btn,
   .nav-mobile :deep(.notification-trigger) {
