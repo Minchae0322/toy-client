@@ -144,7 +144,7 @@ const currentUser = reactive({
 
 const currentTab = ref('rewards')
 const guideExpanded = ref(false)
-const historyExpanded = ref(true)
+const historyExpanded = ref(false)
 
 const streak = ref(null)
 
