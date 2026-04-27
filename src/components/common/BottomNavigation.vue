@@ -13,10 +13,7 @@
       <!-- 피드 -->
       <router-link to="/feed" class="nav-tab" :class="{ active: isActive('/feed') }">
         <span class="icon-slot">
-          <svg v-if="!isActive('/feed')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-          </svg>
-          <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
             <path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clip-rule="evenodd"/>
             <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z"/>
           </svg>
@@ -27,10 +24,7 @@
       <!-- 요거픽 -->
       <router-link to="/battle" class="nav-tab" :class="{ active: isActive('/battle') }">
         <span class="icon-slot">
-          <svg v-if="!isActive('/battle')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-          </svg>
-          <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
             <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd"/>
           </svg>
         </span>
@@ -40,10 +34,7 @@
       <!-- 핫 아이템 -->
       <router-link to="/products" class="nav-tab" :class="{ active: isActive('/products') }">
         <span class="icon-slot">
-          <svg v-if="!isActive('/products')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
-          </svg>
-          <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
           </svg>
         </span>
@@ -53,12 +44,7 @@
       <!-- 캐꾸 (캐리어 꾸미기) -->
       <button class="nav-tab" :class="{ active: isActive('/carrier') }" @click="handleCarrier">
         <span class="icon-slot">
-          <svg v-if="!isActive('/carrier')" class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <rect x="3" y="8" width="18" height="13" rx="2" stroke-width="1.8"/>
-            <path stroke-linecap="round" stroke-width="1.8" d="M16 8V6a4 4 0 00-8 0v2"/>
-            <circle cx="12" cy="14.5" r="1.8" stroke-width="1.8"/>
-          </svg>
-          <svg v-else class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
             <path fill-rule="evenodd" d="M8 6a4 4 0 118 0v2h1a3 3 0 013 3v9a2 2 0 01-2 2H6a2 2 0 01-2-2v-9a3 3 0 013-3h1V6zm6 2V6a2 2 0 10-4 0v2h4zm-2 4.7a2 2 0 100 4 2 2 0 000-4z" clip-rule="evenodd"/>
           </svg>
         </span>
@@ -68,8 +54,10 @@
       <!-- 더보기 -->
       <button class="nav-tab" :class="{ active: isMoreMenuOpen || isActive('/mypage') || isActive('/chat') }" @click="toggleMoreMenu">
         <span class="icon-slot">
-          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/>
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="12" r="2"/>
+            <circle cx="12" cy="12" r="2"/>
+            <circle cx="19" cy="12" r="2"/>
           </svg>
         </span>
         <span class="nav-label">더보기</span>
