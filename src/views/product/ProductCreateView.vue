@@ -594,9 +594,11 @@ const handleCategorySelect = ({ subCategoryId }) => {
 }
 
 // Price
+const MAX_PRICE = 999999999
 const formatNumber = (val) => {
-  const num = val.replace(/[^\d]/g, '')
-  return num ? Number(num).toLocaleString('ko-KR') : ''
+  let digits = val.replace(/[^\d]/g, '')
+  if (digits && parseInt(digits, 10) > MAX_PRICE) digits = String(MAX_PRICE)
+  return digits ? Number(digits).toLocaleString('ko-KR') : ''
 }
 const formatPriceSingle = () => { priceSingle.value = formatNumber(priceSingle.value) }
 const formatPriceMax = () => { priceMax.value = formatNumber(priceMax.value) }
@@ -609,14 +611,14 @@ const closeRange = () => {
 const toKoreanUnit = (str) => {
   const num = parseInt((str || '').replace(/[^\d]/g, ''), 10)
   if (!num || num < 10000) return ''
-  const man = Math.floor(num / 10000)
-  const rest = num % 10000
-  const cheon = Math.floor(rest / 1000)
-  let r = `${man.toLocaleString()}만`
-  if (cheon > 0) r += ` ${cheon}천`
-  const remainder = rest % 1000
-  if (remainder > 0) r += ` ${remainder.toLocaleString()}`
-  return r + '원'
+  const eok = Math.floor(num / 100000000)
+  const manPart = Math.floor((num % 100000000) / 10000)
+  const subMan = num % 10000
+  const parts = []
+  if (eok > 0) parts.push(`${eok.toLocaleString()}억`)
+  if (manPart > 0) parts.push(`${manPart.toLocaleString()}만`)
+  if (subMan > 0) parts.push(`${subMan.toLocaleString()}`)
+  return parts.join(' ') + '원'
 }
 const priceKoreanHint = computed(() => toKoreanUnit(priceSingle.value))
 

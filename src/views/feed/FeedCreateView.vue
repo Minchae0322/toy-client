@@ -596,14 +596,14 @@ const formattedPrice = computed(() => {
 const feedPriceKoreanHint = computed(() => {
   const num = formData.value.buyPrice
   if (!num || num < 10000) return ''
-  const man = Math.floor(num / 10000)
-  const rest = num % 10000
-  const cheon = Math.floor(rest / 1000)
-  let r = `${man.toLocaleString()}만`
-  if (cheon > 0) r += ` ${cheon}천`
-  const remainder = rest % 1000
-  if (remainder > 0) r += ` ${remainder.toLocaleString()}`
-  return r + '원'
+  const eok = Math.floor(num / 100000000)
+  const manPart = Math.floor((num % 100000000) / 10000)
+  const subMan = num % 10000
+  const parts = []
+  if (eok > 0) parts.push(`${eok.toLocaleString()}억`)
+  if (manPart > 0) parts.push(`${manPart.toLocaleString()}만`)
+  if (subMan > 0) parts.push(`${subMan.toLocaleString()}`)
+  return parts.join(' ') + '원'
 })
 
 const MAX_PRICE = 999999999
