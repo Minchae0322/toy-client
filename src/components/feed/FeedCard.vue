@@ -262,9 +262,9 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .primary-review {
   font-size: 15px; font-weight: 700; color: #0A0E1A;
   line-height: 1.5; margin-bottom: 14px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   min-height: calc(1.5em * 2);
   letter-spacing: -0.3px; word-break: keep-all;
+  white-space: pre-line;
 }
 .quote { color: #C4B5FD; font-size: 15px; font-family: 'SUIT', sans-serif; margin-right: 1px; }
 
