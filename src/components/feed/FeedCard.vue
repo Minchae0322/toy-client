@@ -89,14 +89,19 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { feedService, feedUtils } from '@/services/FeedService';
+import { useAuth } from '@/composables/useAuth';
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import UserLevelTag from '@/components/identity/UserLevelTag.vue';
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
 
 const props = defineProps({ feed: { type: Object, required: true } });
 const emit = defineEmits(['update']);
 const router = useRouter();
+const route = useRoute();
+const { isLoggedIn } = useAuth();
+const { openLoginRequired } = useConfirmDialog();
 
 const goToUser = () => {
   const userId = props.feed.userInfo?.userId;
@@ -116,16 +121,31 @@ const primaryBadgeId = computed(() => {
 });
 
 const handleLike = async () => {
+  if (!isLoggedIn.value) {
+    const confirmed = await openLoginRequired('좋아요를 누르려면 로그인이 필요합니다.');
+    if (confirmed) {
+      router.push({ name: 'Login', query: { redirect: route.fullPath } });
+    }
+    return;
+  }
+
   const prevLiked = localIsLiked.value;
   localIsLiked.value = !localIsLiked.value;
   localLikeCount.value += localIsLiked.value ? 1 : -1;
   try {
     const response = await feedService.toggleLike(props.feed.feedId);
     if (!response.success) throw new Error();
-  } catch (e) { localIsLiked.value = prevLiked; }
+  } catch (e) {
+    localIsLiked.value = prevLiked;
+    localLikeCount.value += prevLiked ? 1 : -1;
+  }
 };
 
 const handleDoubleTapLike = () => {
+  if (!isLoggedIn.value) {
+    handleLike();
+    return;
+  }
   if (!localIsLiked.value) {
     handleLike();
   }

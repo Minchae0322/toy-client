@@ -211,9 +211,11 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import FeedCard from './FeedCard.vue';
 import feedService, { feedUtils } from '@/services/FeedService';
+import { useAuth } from '@/composables/useAuth';
+import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import UserLevelTag from '@/components/identity/UserLevelTag.vue';
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
 
@@ -227,6 +229,9 @@ const props = defineProps({
 const emit = defineEmits(['update', 'post-click', 'view-mode-change']);
 const observerTarget = ref(null);
 const router = useRouter();
+const route = useRoute();
+const { isLoggedIn } = useAuth();
+const { openLoginRequired } = useConfirmDialog();
 
 const goToUser = (feed) => {
   const userId = feed?.userInfo?.userId;
@@ -251,6 +256,14 @@ const formatPrice = (price) => feedUtils.formatPrice(price);
 const formatCount = (count) => feedUtils.formatCount(count);
 
 const handleLike = async (feed) => {
+  if (!isLoggedIn.value) {
+    const confirmed = await openLoginRequired('좋아요를 누르려면 로그인이 필요합니다.');
+    if (confirmed) {
+      router.push({ name: 'Login', query: { redirect: route.fullPath } });
+    }
+    return;
+  }
+
   const prevLiked = feed.userReactions?.hasLike;
   const prevCount = feed.likeCount || 0;
 
