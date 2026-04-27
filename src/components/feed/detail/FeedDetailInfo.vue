@@ -392,6 +392,7 @@ const handleSendMessage = () => {
   font-size: 16px; line-height: 1.7; color: #191F28;
   font-weight: 600; white-space: pre-line; margin: 0;
   letter-spacing: -0.02em; word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 /* 제품 배너 */

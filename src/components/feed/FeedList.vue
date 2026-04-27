@@ -538,6 +538,8 @@ defineExpose({ observerTarget });
   color: #191F28;
   line-height: 1.5;
   letter-spacing: -0.02em;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -973,7 +975,7 @@ defineExpose({ observerTarget });
   .list-price-overlay { bottom: 6px; right: 6px; font-size: 10px; padding: 2px 6px; }
 
   .list-content { padding: 10px 12px; gap: 6px; }
-  .list-review { font-size: 12px; -webkit-line-clamp: 2; }
+  .list-review { font-size: 12px; }
   .list-quote { font-size: 13px; }
   .list-hashtags { gap: 5px; }
   .list-tag { font-size: 10px; }
