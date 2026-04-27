@@ -135,8 +135,8 @@
       <div class="notice-content">
         <div class="notice-title">요거픽 생성 후 주의사항</div>
         <ul class="notice-list">
-          <li>요거픽 시작 후에는 <strong>제목, 카테고리, 기간, 투표 방식</strong>을 수정할 수 없습니다.</li>
-          <li>요거픽 설명과 아이템은 진행 중에도 수정 가능합니다.</li>
+          <li>첫 투표가 등록된 이후에는 <strong>카테고리, 기간, 투표 방식</strong>을 수정할 수 없습니다.</li>
+          <li>제목, 설명, 아이템은 투표가 시작된 후에도 수정할 수 있습니다.</li>
         </ul>
       </div>
     </div>
