@@ -47,7 +47,7 @@
 
             <div v-show="guideExpanded" class="secondary-body">
               <ExpGuide />
-              <ExpHistory :history="currentUser.recentExpHistory" />
+              <ExpHistory />
             </div>
           </section>
         </div>
@@ -122,7 +122,6 @@ const currentUser = reactive({
   certificationCount: 0,
   fireCount: 0,
   followerCount: 0,
-  recentExpHistory: [],
 })
 
 const currentTab = ref('rewards')

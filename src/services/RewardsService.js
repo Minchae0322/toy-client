@@ -42,6 +42,11 @@ class RewardsService extends BaseApiService {
   getMyStreak() { return this.get('/rewards/me/streak') }
   useRecoveryTicket() { return this.post('/rewards/me/streak/recovery') }
 
+  // ── 유저: EXP 이력 ──
+  getMyExpHistory({ page = 0, size = 20 } = {}) {
+    return this.get('/rewards/me/exp-history', { page, size })
+  }
+
   // ── 유저: 미션 ──
   getDailyMissions() { return this.get('/rewards/me/missions/today') }
   claimMission(assignmentId) { return this.post(`/rewards/me/missions/${assignmentId}/claim`) }
