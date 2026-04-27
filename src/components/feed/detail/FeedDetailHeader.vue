@@ -65,6 +65,15 @@
               </svg>
               신고하기
             </button>
+            <template v-if="isAdmin">
+              <div class="menu-divider" />
+              <button class="menu-item menu-item--danger" @click="handleAction('delete')">
+                <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                삭제하기 <span class="menu-tag">관리자</span>
+              </button>
+            </template>
           </template>
         </div>
       </div>
@@ -76,7 +85,8 @@
 import { ref } from 'vue'
 
 defineProps({
-  isOwner: { type: Boolean, default: false }
+  isOwner: { type: Boolean, default: false },
+  isAdmin: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['back', 'share', 'copy-link', 'report', 'edit', 'delete'])
@@ -194,6 +204,17 @@ const handleAction = (action) => {
 .menu-item:active { background: #F2F4F6; }
 .menu-item--danger { color: #E53935; }
 .menu-item--danger:active { background: #FFF5F5; }
+
+.menu-tag {
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #FEE2E2;
+  color: #B91C1C;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
 
 .menu-icon { width: 18px; height: 18px; flex-shrink: 0; }
 

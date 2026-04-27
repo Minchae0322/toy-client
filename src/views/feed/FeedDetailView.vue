@@ -15,6 +15,7 @@
     <template v-else-if="feed">
       <FeedDetailHeader
           :is-owner="isOwner"
+          :is-admin="isAdmin"
           @back="goBack"
           @share="handleShare"
           @copy-link="handleCopyLink"
@@ -111,7 +112,7 @@ import FeedEditModal from '@/components/feed/detail/FeedEditModal.vue'
 const router = useRouter()
 const route = useRoute()
 const { open, openLoginRequired } = useConfirmDialog()
-const { userId: currentUserId, isLoggedIn } = useAuth()
+const { userId: currentUserId, isLoggedIn, isAdmin } = useAuth()
 
 const loading = ref(true)
 const error = ref(null)
