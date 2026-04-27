@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">요거뜨</string>
+    <string name="title_activity_main">요거뜨</string>
+    <string name="package_name">com.jmcabc0322.yogurt</string>
+    <string name="custom_url_scheme">com.jmcabc0322.yogurt</string>
+</resources>
