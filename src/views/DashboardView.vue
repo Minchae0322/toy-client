@@ -12,7 +12,7 @@
               <p class="dash-greeting-sub">{{ topTrendName }} 외 실시간 인기 데이터</p>
             </div>
             <router-link :to="{ name: 'FeedHome' }" class="dash-trend-banner">
-              <svg class="dash-trend-img" viewBox="0 0 720 160" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+              <svg class="dash-trend-img" viewBox="0 0 720 160" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
                 <!-- 배경 -->
                 <rect width="720" height="160" fill="#FAF5FF"/>
                 <rect x="440" y="0" width="280" height="160" fill="#F3E8FF"/>
@@ -1073,39 +1073,32 @@ onUnmounted(() => {
 
 /* 트렌드 알림 배너 */
 .dash-trend-banner {
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  gap: 10px;
+  display: block;
   background: #faf5ff;
   border: 1px solid #e9d5ff;
   border-radius: 10px;
-  padding: 1rem;
   flex: 1;
   text-decoration: none;
-  min-height: 100px;
   overflow: hidden;
   position: relative;
 }
 
 .dash-trend-img {
-  position: absolute;
-  inset: 0;
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+  height: auto;
 }
 
 .dash-trend-cta {
   font-size: 13px;
   font-weight: 700;
   color: #191F28;
-  flex-shrink: 0;
   white-space: nowrap;
-  position: relative;
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
   z-index: 1;
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   border: none;
   border-radius: 20px;
   padding: 0.375rem 0.875rem;
@@ -1130,7 +1123,6 @@ onUnmounted(() => {
   /* 트렌드 배너 전체 너비 */
   .dash-trend-banner {
     width: 100%;
-    min-height: 120px;
   }
 }
 
