@@ -47,6 +47,24 @@
 
             <div v-show="guideExpanded" class="secondary-body">
               <ExpGuide />
+            </div>
+          </section>
+
+          <!-- EXP 획득 이력 -->
+          <section class="section-group secondary accent-gray">
+            <header class="section-heading">
+              <div class="heading-main">
+                <span class="accent-dot"></span>
+                <h2 class="group-title">EXP 획득 이력</h2>
+              </div>
+              <button class="toggle-btn" @click="historyExpanded = !historyExpanded">
+                {{ historyExpanded ? '접기' : '펼치기' }}
+                <span class="arrow" :class="{ open: historyExpanded }">▾</span>
+              </button>
+            </header>
+            <p class="group-desc">최근 경험치 획득 내역을 확인해 보세요</p>
+
+            <div v-show="historyExpanded" class="secondary-body">
               <ExpHistory />
             </div>
           </section>
@@ -126,6 +144,7 @@ const currentUser = reactive({
 
 const currentTab = ref('rewards')
 const guideExpanded = ref(false)
+const historyExpanded = ref(true)
 
 const streak = ref(null)
 
