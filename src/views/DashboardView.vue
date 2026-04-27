@@ -11,46 +11,64 @@
               <h1 class="dash-greeting">트렌드 <span class="dash-greeting-accent">한눈에</span></h1>
               <p class="dash-greeting-sub">{{ topTrendName }} 외 실시간 인기 데이터</p>
             </div>
-            <router-link :to="{ name: 'FeedHome', query: { keyword: '우베라떼' } }" class="dash-trend-banner">
+            <router-link :to="{ name: 'FeedHome' }" class="dash-trend-banner">
               <svg class="dash-trend-img" viewBox="0 0 720 160" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-                <rect width="720" height="160" fill="#FFFBFF"/>
-                <rect x="420" y="0" width="300" height="160" fill="#F3E8FF"/>
-                <rect x="640" y="0" width="80" height="160" fill="#E9D5FF"/>
-                <path d="M420 0 Q 390 80 420 160 L 440 160 Q 410 80 440 0 Z" fill="#F3E8FF"/>
-                <text x="48" y="72" font-size="14" font-weight="800" fill="#7C3AED" letter-spacing="2">THIS WEEK</text>
-                <text x="48" y="112" font-size="40" font-weight="900" fill="#18181B" letter-spacing="-1.8">우베라떼</text>
+                <!-- 배경 -->
+                <rect width="720" height="160" fill="#FAF5FF"/>
+                <rect x="440" y="0" width="280" height="160" fill="#F3E8FF"/>
+                <rect x="660" y="0" width="60" height="160" fill="#E9D5FF"/>
+
+                <!-- 컨페티 (작은 사각형) -->
+                <g opacity="0.7">
+                  <rect x="496" y="22" width="14" height="6" rx="1.5" fill="#A855F7" transform="rotate(-18 503 25)"/>
+                  <rect x="612" y="44" width="14" height="6" rx="1.5" fill="#FDE047" transform="rotate(22 619 47)"/>
+                  <rect x="676" y="118" width="14" height="6" rx="1.5" fill="#7C3AED" transform="rotate(-32 683 121)"/>
+                  <rect x="544" y="134" width="14" height="6" rx="1.5" fill="#C084FC" transform="rotate(34 551 137)"/>
+                  <rect x="430" y="58" width="12" height="5" rx="1.5" fill="#FDE047" transform="rotate(-12 436 60)"/>
+                </g>
+
+                <!-- 별/스파클 -->
                 <g fill="#FDE047">
-                  <path d="M412 36 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/>
-                  <path d="M664 112 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 z"/>
+                  <path d="M414 28 l2.5 5.5 l5.5 2.5 l-5.5 2.5 l-2.5 5.5 l-2.5 -5.5 l-5.5 -2.5 l5.5 -2.5 z"/>
+                  <path d="M696 92 l2.5 5.5 l5.5 2.5 l-5.5 2.5 l-2.5 5.5 l-2.5 -5.5 l-5.5 -2.5 l5.5 -2.5 z"/>
                 </g>
-                <g opacity="0.45">
-                  <circle cx="640" cy="36" r="20" fill="#C084FC"/>
-                  <circle cx="640" cy="36" r="12" fill="#A855F7"/>
+                <circle cx="708" cy="44" r="4" fill="#A855F7" opacity="0.5"/>
+                <circle cx="404" cy="124" r="4" fill="#7C3AED" opacity="0.4"/>
+
+                <!-- GRAND OPEN 태그 -->
+                <g transform="translate(48, 26)">
+                  <rect x="0" y="0" width="124" height="26" rx="13" fill="#0A0E1A"/>
+                  <text x="62" y="17.5" font-size="12" font-weight="900" fill="#B4FF39" text-anchor="middle" letter-spacing="1.4" font-family="SUIT, sans-serif">GRAND OPEN</text>
                 </g>
-                <g transform="translate(478, 22)">
-                  <ellipse cx="62" cy="74" rx="70" ry="58" fill="#FFFFFF" opacity="0.6"/>
-                  <ellipse cx="62" cy="126" rx="48" ry="6" fill="#7C3AED" opacity="0.25"/>
-                  <path d="M14 10 L110 10 L100 120 Q 62 128 24 120 Z" fill="#FFFFFF" stroke="#4C1D95" stroke-width="3"/>
-                  <rect x="10" y="4" width="104" height="10" rx="3" fill="#4C1D95"/>
-                  <rect x="14" y="6" width="96" height="3" rx="1" fill="#A78BFA"/>
-                  <path d="M22 28 L102 28 L98 64 Q 62 74 26 64 Z" fill="#C084FC"/>
-                  <path d="M26 64 Q 62 74 98 64 L94 100 Q 62 108 30 100 Z" fill="#A855F7"/>
-                  <circle cx="36" cy="90" r="4" fill="#3B0764"/>
-                  <circle cx="50" cy="96" r="4" fill="#3B0764"/>
-                  <circle cx="66" cy="94" r="4" fill="#3B0764"/>
-                  <circle cx="80" cy="88" r="4" fill="#3B0764"/>
-                  <circle cx="56" cy="102" r="3.5" fill="#3B0764"/>
-                  <ellipse cx="62" cy="22" rx="36" ry="8" fill="#FFFFFF"/>
-                  <ellipse cx="62" cy="16" rx="28" ry="7" fill="#FEF9C3"/>
-                  <circle cx="62" cy="6" r="6" fill="#FFFFFF"/>
-                  <circle cx="62" cy="-4" r="6" fill="#EF4444"/>
-                  <path d="M62 -10 Q 68 -18 76 -18" stroke="#15803D" stroke-width="2" fill="none"/>
-                  <rect x="74" y="-22" width="9" height="46" fill="#EF4444"/>
-                  <rect x="74" y="-22" width="9" height="6" fill="#FCA5A5"/>
-                  <path d="M20 78 L106 78 L102 104 L24 104 Z" fill="#F3E8FF"/>
+
+                <!-- 메인 카피 -->
+                <text x="48" y="92" font-size="32" font-weight="900" fill="#18181B" letter-spacing="-1.4" font-family="SUIT, sans-serif">요거뜨, 오픈했어요</text>
+
+                <!-- 서브 카피 -->
+                <text x="48" y="120" font-size="13" font-weight="700" fill="#7C3AED" letter-spacing="-0.2" font-family="SUIT, sans-serif">맛 · 사람 · 트렌드를 한 잔에 담았어요</text>
+
+                <!-- OPEN 라벨 단 요거트 컵 -->
+                <g transform="translate(540, 16)">
+                  <!-- 그림자 -->
+                  <ellipse cx="60" cy="128" rx="50" ry="6" fill="#0A0E1A" opacity="0.18"/>
+                  <!-- 컵 본체 -->
+                  <path d="M14 32 L106 32 L98 124 Q 60 132 22 124 Z" fill="#FFFFFF" stroke="#0A0E1A" stroke-width="3"/>
+                  <!-- 뚜껑 -->
+                  <rect x="8" y="16" width="104" height="18" rx="3" fill="#7C3AED" stroke="#0A0E1A" stroke-width="3"/>
+                  <rect x="12" y="20" width="96" height="4" rx="2" fill="#C084FC"/>
+                  <!-- 요거트 표면 -->
+                  <ellipse cx="60" cy="36" rx="40" ry="5" fill="#FAFAFA"/>
+                  <!-- 체리 -->
+                  <circle cx="60" cy="22" r="6" fill="#EF4444" stroke="#0A0E1A" stroke-width="2"/>
+                  <path d="M60 16 Q 66 8 74 8" stroke="#15803D" stroke-width="2" fill="none" stroke-linecap="round"/>
+                  <!-- OPEN 라벨 -->
+                  <rect x="22" y="60" width="76" height="40" rx="3" fill="#FDE047" stroke="#0A0E1A" stroke-width="2.5"/>
+                  <text x="60" y="88" font-size="22" font-weight="900" fill="#0A0E1A" text-anchor="middle" letter-spacing="0.5" font-family="SUIT, sans-serif">OPEN</text>
+                  <!-- 하단 띠 -->
+                  <path d="M22 108 L98 108 L96 118 L24 118 Z" fill="#F3E8FF"/>
                 </g>
               </svg>
-              <span class="dash-trend-cta">지금 보러가기 →</span>
+              <span class="dash-trend-cta">둘러보기 →</span>
             </router-link>
           </div>
 
