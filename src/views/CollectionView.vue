@@ -26,72 +26,9 @@
 
         <!-- 보상 탭 -->
         <div v-if="currentTab === 'rewards'" class="tab-panel">
-          <!-- 받을 수 있는 보상 배너 -->
-          <div v-if="readyMissionCount > 0" class="claim-banner">
-            <div class="banner-text">
-              <div class="banner-icon">
-                <Gift :size="20" :stroke-width="2.2" />
-              </div>
-              <div>
-                <div class="banner-title">받을 수 있는 보상이 {{ readyMissionCount }}개 있어요</div>
-                <div class="banner-sub">지금 바로 받고 EXP를 쌓아보세요</div>
-              </div>
-            </div>
-            <button class="banner-btn" @click="scrollToMissions">보상 받으러 가기</button>
-          </div>
-
           <!-- 지금의 나 -->
           <section class="section-group hero-group">
             <LevelCard :user="currentUser" :streak="streak" @use-ticket="onUseTicket" />
-          </section>
-
-          <!-- 오늘 할 일 -->
-          <section id="missions-section" class="section-group accent-purple">
-            <header class="section-heading">
-              <div class="heading-main">
-                <span class="accent-dot"></span>
-                <h2 class="group-title">오늘의 미션</h2>
-              </div>
-            </header>
-            <p class="group-desc">
-              <template v-if="readyMissionCount > 0">
-                <strong class="emphasize">{{ readyMissionCount }}개</strong>를 받을 수 있어요
-              </template>
-              <template v-else-if="missions.length - claimedMissionCount > 0">
-                {{ missions.length - claimedMissionCount }}개가 남았어요. 조금만 더!
-              </template>
-              <template v-else>
-                오늘 미션을 모두 완료했어요.
-              </template>
-            </p>
-            <DailyMissions :missions="sortedMissions" @claim="onClaimMission" />
-          </section>
-
-          <!-- 뱃지 -->
-          <section class="section-group accent-gold">
-            <header class="section-heading">
-              <div class="heading-main">
-                <span class="accent-dot"></span>
-                <h2 class="group-title">내가 모은 뱃지</h2>
-              </div>
-            </header>
-            <p class="group-desc">
-              <template v-if="earnedBadges.length > 0">
-                지금까지 <strong class="emphasize">{{ earnedBadges.length }}개</strong>를 모았어요
-                <span v-if="nearCompleteBadges.length > 0"> · 곧 {{ nearCompleteBadges.length }}개 더 얻을 수 있어요</span>
-              </template>
-              <template v-else>
-                첫 뱃지를 목표로 인증을 시작해 보세요
-              </template>
-            </p>
-            <BadgeCollection
-              :earned="earnedBadges"
-              :unearned="unearnedBadges"
-              :total-count="totalBadgeCount"
-              :pinned-ids="pinnedIds"
-              @select="badgeDetail = $event"
-              @toggle-pin="onTogglePin"
-            />
           </section>
 
           <!-- 성장 가이드 (세컨더리) -->
@@ -117,18 +54,25 @@
 
         <!-- 숙련도 탭 -->
         <div v-else-if="currentTab === 'proficiency'" class="tab-panel">
-          <ProficiencySection :user-id="authStore.userId" />
+          <div class="coming-soon">
+            <div class="coming-soon-icon">
+              <Award :size="32" :stroke-width="2.2" />
+            </div>
+            <h3 class="coming-soon-title">준비중인 메뉴예요</h3>
+            <p class="coming-soon-desc">곧 만나보실 수 있도록 준비하고 있어요</p>
+          </div>
         </div>
 
         <!-- 예측 탭 -->
         <div v-else-if="currentTab === 'prediction'" class="tab-panel">
-          <PredictionHistory :user-id="authStore.userId" />
+          <div class="coming-soon">
+            <div class="coming-soon-icon">
+              <Target :size="32" :stroke-width="2.2" />
+            </div>
+            <h3 class="coming-soon-title">준비중인 메뉴예요</h3>
+            <p class="coming-soon-desc">곧 만나보실 수 있도록 준비하고 있어요</p>
+          </div>
         </div>
-
-        <BadgeDetailModal
-          :badge="badgeDetail"
-          @close="badgeDetail = null"
-        />
 
         <Transition name="toast">
           <div v-if="toast" class="toast">
@@ -144,28 +88,20 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth.js'
 import { rewardsService } from '@/services/RewardsService.js'
-import { showExpGrant } from '@/composables/useExpToast'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import LevelCard from '@/components/collection/LevelCard.vue'
-import BadgeCollection from '@/components/collection/BadgeCollection.vue'
 import ExpGuide from '@/components/collection/ExpGuide.vue'
 import ExpHistory from '@/components/collection/ExpHistory.vue'
-import BadgeDetailModal from '@/components/collection/BadgeDetailModal.vue'
-import DailyMissions from '@/components/collection/DailyMissions.vue'
-import ProficiencySection from '@/components/collection/ProficiencySection.vue'
-import PredictionHistory from '@/components/collection/PredictionHistory.vue'
 import {
   Gift,
   Ticket,
-  Pin,
   AlertCircle,
   Award,
   Target,
-  CheckCircle2,
 } from '@/utils/collectionIcons.js'
 
 const authStore = useAuthStore()
@@ -189,44 +125,19 @@ const currentUser = reactive({
   recentExpHistory: [],
 })
 
-const badgeDetail = ref(null)
 const currentTab = ref('rewards')
 const guideExpanded = ref(false)
 
 const streak = ref(null)
-const missions = ref([])
-const pinnedIds = ref([])
-const earnedBadges = ref([])
-const unearnedBadges = ref([])
-const totalBadgeCount = ref(0)
 
 const toast = ref(null)
 let toastTimer = null
 
-const claimedMissionCount = computed(() => missions.value.filter((m) => m.status === 'CLAIMED').length)
-const readyMissionCount = computed(() => missions.value.filter((m) => m.status === 'COMPLETED').length)
-
-const sortedMissions = computed(() => {
-  const order = { COMPLETED: 0, IN_PROGRESS: 1, CLAIMED: 2 }
-  return [...missions.value].sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9))
-})
-
-const nearCompleteBadges = computed(() =>
-  unearnedBadges.value.filter((b) => b.progress && (b.progress.current / b.progress.target) >= 0.7)
-)
-
-function scrollToMissions() {
-  const el = document.getElementById('missions-section')
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
 async function loadRewardData() {
   try {
-    const [rewardsRes, streakRes, missionsRes, badgesRes] = await Promise.all([
+    const [rewardsRes, streakRes] = await Promise.all([
       rewardsService.getMyRewards(),
       rewardsService.getMyStreak(),
-      rewardsService.getDailyMissions(),
-      rewardsService.getMyBadges(),
     ])
 
     // 유저 레벨/경험치 반영
@@ -242,15 +153,6 @@ async function loadRewardData() {
     }
 
     streak.value = streakRes?.data ?? null
-    const missionData = missionsRes?.data
-    missions.value = Array.isArray(missionData) ? missionData : []
-
-    // 뱃지 (서버는 List<UserBadgeInfo> 플랫 리스트 반환)
-    const badgeList = Array.isArray(badgesRes?.data) ? badgesRes.data : []
-    earnedBadges.value = badgeList
-    unearnedBadges.value = []
-    totalBadgeCount.value = badgeList.length
-    pinnedIds.value = badgeList.filter(b => b.pinned).map(b => b.id)
   } catch (e) {
     console.error('[CollectionView] 데이터 로딩 실패:', e)
   }
@@ -269,35 +171,6 @@ async function onUseTicket() {
     showToast(Ticket, '복구 티켓 사용! 스트릭이 유지됐어요')
   } catch (e) {
     showToast(AlertCircle, e.message === 'NO_TICKETS' ? '티켓이 없습니다' : '오류가 발생했어요')
-  }
-}
-
-async function onClaimMission(mission) {
-  try {
-    const result = await rewardsService.claimMission(mission.missionId)
-    const claimed = result?.data
-    const found = missions.value.find((m) => m.id === claimed?.id)
-    if (found) found.status = 'CLAIMED'
-    showExpGrant(claimed?.expGrant, { mode: 'full' })
-  } catch (e) {
-    showToast(AlertCircle, '보상을 받을 수 없습니다')
-  }
-}
-
-async function onTogglePin(badge) {
-  try {
-    const isPinned = pinnedIds.value.includes(badge.id)
-    if (isPinned) {
-      await rewardsService.unpinBadge(badge.id)
-    } else {
-      await rewardsService.pinBadge(badge.id)
-    }
-    const updatedRes = await rewardsService.getMyBadges()
-    const list = Array.isArray(updatedRes?.data) ? updatedRes.data : []
-    pinnedIds.value = list.filter(b => b.pinned).map(b => b.id)
-    showToast(Pin, isPinned ? '고정이 해제됐어요' : '프로필에 고정됐어요')
-  } catch (e) {
-    showToast(AlertCircle, '오류가 발생했어요')
   }
 }
 
@@ -680,6 +553,57 @@ onMounted(loadRewardData)
 .section-group.secondary :deep(.section-title) {
   font-size: 14px !important;
   color: #334155 !important;
+}
+
+/* ===== 준비중 placeholder ===== */
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 56px 24px;
+  background: #FFFFFF;
+  border: 2px solid #0A0E1A;
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 #0A0E1A;
+  text-align: center;
+}
+
+.coming-soon-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #B4FF39;
+  color: #0A0E1A;
+  border: 2px solid #0A0E1A;
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 #0A0E1A;
+}
+
+.coming-soon-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #0A0E1A;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  margin: 4px 0 0;
+}
+
+.coming-soon-desc {
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .coming-soon { padding: 72px 32px; }
+  .coming-soon-title { font-size: 20px; }
+  .coming-soon-desc { font-size: 14px; }
 }
 
 /* ===== 토스트 (Neo-Brutalism) ===== */
