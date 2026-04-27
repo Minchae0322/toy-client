@@ -133,22 +133,6 @@
             maxlength="500"
           ></textarea>
           <div class="textarea-footer">
-            <div class="char-status" :class="charStatusClass">
-              <svg v-if="descriptionCharCount === 0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-              <svg v-else-if="descriptionCharCount >= 120" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-              <span>{{ charStatusText }}</span>
-            </div>
             <div class="char-count">{{ descriptionCharCount }} / 500</div>
           </div>
         </div>
@@ -201,18 +185,6 @@ const handleDescriptionBlur = () => {
 
 const descriptionCharCount = computed(() => {
   return localDescription.value?.length || 0;
-});
-
-const charStatusClass = computed(() => {
-  if (descriptionCharCount.value === 0) return 'empty';
-  if (descriptionCharCount.value < 120) return 'warning';
-  return 'valid';
-});
-
-const charStatusText = computed(() => {
-  if (descriptionCharCount.value === 0) return '작성 시 최소 120자 이상';
-  if (descriptionCharCount.value < 120) return `${120 - descriptionCharCount.value}자 더 필요`;
-  return '조건 충족';
 });
 </script>
 
@@ -595,31 +567,11 @@ const charStatusText = computed(() => {
 
 .textarea-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 10px 16px;
   background: #f9fafb;
   border-top: 1px solid #f3f4f6;
-}
-
-.char-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.char-status.empty {
-  color: #9ca3af;
-}
-
-.char-status.warning {
-  color: #ca8a04;
-}
-
-.char-status.valid {
-  color: #16a34a;
 }
 
 .char-count {
