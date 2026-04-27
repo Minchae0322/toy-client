@@ -50,6 +50,8 @@
           </div>
           <div v-else class="creator-avatar placeholder"></div>
           <span class="creator-name">{{ creatorNickname }}</span>
+          <UserLevelTag v-if="creatorLevel != null" :level="creatorLevel" size="xs" variant="dark" />
+          <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="xs" />
         </div>
         <span class="action-hint">
           참여하기
@@ -62,6 +64,8 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import UserLevelTag from '@/components/identity/UserLevelTag.vue'
+import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 
 const props = defineProps({
   battle: {
@@ -158,6 +162,13 @@ const creatorNickname = computed(() => {
   return props.battle?.creatorUserInfo?.nickname
       || props.battle?.createdBy?.nickname
       || '알 수 없음'
+})
+
+// userRewardInfo (레벨/tier) · creatorUserInfo (뱃지)
+const creatorLevel = computed(() => props.battle?.userRewardInfo?.level ?? null)
+const primaryBadgeId = computed(() => {
+  const u = props.battle?.creatorUserInfo
+  return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
 })
 
 const dDay = computed(() => {

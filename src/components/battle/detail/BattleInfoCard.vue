@@ -21,6 +21,20 @@
     <h1 class="main-title">{{ battle.title }}</h1>
     <p v-if="battle.description" class="sub-desc">{{ battle.description }}</p>
 
+    <div v-if="creatorNickname" class="creator-row">
+      <img
+        v-if="creatorProfileImage"
+        :src="creatorProfileImage"
+        :alt="creatorNickname"
+        class="creator-avatar"
+      />
+      <div v-else class="creator-avatar placeholder">{{ creatorInitial }}</div>
+      <span class="creator-label">만든이</span>
+      <span class="creator-name">{{ creatorNickname }}</span>
+      <UserLevelTag v-if="creatorLevel != null" :level="creatorLevel" size="xs" variant="dark" />
+      <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="xs" />
+    </div>
+
     <div class="stats-dashboard">
       <div class="stat-box">
         <span class="lab">남은 시간</span>
@@ -67,6 +81,8 @@
 <script setup>
 import { computed } from 'vue'
 import { battleUtils } from '@/services/BattleService.js'
+import UserLevelTag from '@/components/identity/UserLevelTag.vue'
+import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 
 const props = defineProps({
   battle: {
@@ -87,6 +103,16 @@ defineEmits(['add-product', 'back', 'share'])
 
 const categoryName = computed(() => {
   return props.battle.subCategoryDetail?.subCategoryName || '카테고리'
+})
+
+// 만든이 정보 (creatorUserInfo: 닉네임/프로필/뱃지 · userRewardInfo: 레벨/tier)
+const creatorNickname = computed(() => props.battle?.creatorUserInfo?.nickname || null)
+const creatorProfileImage = computed(() => props.battle?.creatorUserInfo?.profileImageFile?.fileUrl || null)
+const creatorInitial = computed(() => (creatorNickname.value || '?').charAt(0).toUpperCase())
+const creatorLevel = computed(() => props.battle?.userRewardInfo?.level ?? null)
+const primaryBadgeId = computed(() => {
+  const u = props.battle?.creatorUserInfo
+  return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
 })
 
 const formattedDaysLeft = computed(() => {
@@ -231,6 +257,49 @@ const permissionType = computed(() => {
   line-height: 1.6;
   max-width: 500px;
   margin: 0 auto 0;
+}
+
+.creator-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px auto 0;
+  padding: 6px 14px 6px 6px;
+  background: #F7F8FA;
+  border: 1px solid #EEF0F3;
+  border-radius: 999px;
+}
+.creator-row .creator-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e5e7eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+.creator-row .creator-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.creator-row .creator-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: -0.1px;
+}
+.creator-row .creator-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #18181b;
+  letter-spacing: -0.2px;
 }
 
 /* 통계 대시보드 */
