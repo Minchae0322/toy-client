@@ -198,9 +198,12 @@
 
           <!-- 전체 순위 리스트 -->
           <div class="rank-list">
-            <div class="rank-list-header">전체 순위</div>
+            <div class="rank-list-header">
+              <span class="rank-list-title">전체 순위</span>
+              <span class="rank-list-count">총 {{ filtered.length }}개</span>
+            </div>
             <div
-              v-for="(product, i) in rankListVisible"
+              v-for="(product, i) in filtered"
               :key="product.id"
               class="rank-item"
               @click="goToDetail(product)"
@@ -218,18 +221,15 @@
                 <div class="rank-bar-fill" :style="{ width: getScorePercent(product) + '%' }"></div>
               </div>
             </div>
-            <button v-if="filtered.length > 3" class="rank-toggle-btn" @click="rankExpanded = !rankExpanded">
-              {{ rankExpanded ? '접기' : `4위부터 보기 (${filtered.length - 3}개)` }}
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" :style="{ transform: rankExpanded ? 'rotate(180deg)' : 'none' }">
-                <path d="M3 4.5L6 7.5L9 4.5" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
           </div>
 
           <!-- 더보기 -->
           <div v-if="hasNext" class="load-more">
             <button class="load-more-btn" :disabled="loading" @click="loadMore">
               {{ loading ? '불러오는 중...' : '더 보기' }}
+              <svg v-if="!loading" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -366,7 +366,6 @@ const isOverPanel = ref(false)
 const bagged = ref([])
 const bagOpen = ref(false)
 const bounceKey = ref(0)
-const rankExpanded = ref(false)
 const defaultCarrierId = ref(null)
 const carrierItemMap = ref({}) // productId → carrierItemId
 
@@ -436,8 +435,6 @@ const tooltipStyle = computed(() => {
   if (left + W > dims.value.w) left = dims.value.w - W - 4
   return { left: left + 'px', top: top + 'px', width: W + 'px' }
 })
-
-const rankListVisible = computed(() => rankExpanded.value ? filtered.value : filtered.value.slice(0, 3))
 
 const carrierColor = computed(() => (isOverBag.value || bagged.value.length > 0) ? '#7c3aed' : '#9ca3af')
 const carrierBg = computed(() => (isOverBag.value || bagged.value.length > 0) ? '#ede9fe' : '#f5f3ff')
@@ -1079,7 +1076,12 @@ onUnmounted(() => {
 
 /* ==================== 순위 리스트 ==================== */
 .rank-list { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 16px; }
-.rank-list-header { padding: 12px 20px; border-bottom: 1px solid #f3f4f6; font-size: 13px; font-weight: 600; color: #666; }
+.rank-list-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid #f3f4f6;
+}
+.rank-list-title { font-size: 14px; font-weight: 700; color: #18181b; letter-spacing: -0.2px; }
+.rank-list-count { font-size: 12px; font-weight: 600; color: #9ca3af; letter-spacing: -0.1px; }
 
 .rank-item {
   display: flex; align-items: center; gap: 12px; padding: 10px 20px;
@@ -1108,18 +1110,15 @@ onUnmounted(() => {
 .rank-bar { width: 50px; height: 4px; background: #f3f4f6; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
 .rank-bar-fill { height: 100%; border-radius: 2px; background: #9b7be8; transition: width 0.3s; }
 
-.rank-toggle-btn {
-  width: 100%; padding: 12px 0; border: none; background: none; cursor: pointer;
-  font-size: 13px; font-weight: 600; color: #7c3aed; font-family: inherit;
-  display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s;
-}
-.rank-toggle-btn:hover { background: #faf5ff; }
-.rank-toggle-btn svg { transition: transform 0.2s; }
-
 /* 더보기 */
 .load-more { text-align: center; padding: 8px 0 32px; }
-.load-more-btn { padding: 12px 32px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; font-weight: 500; color: #666; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-.load-more-btn:hover:not(:disabled) { border-color: #7c3aed; color: #7c3aed; }
+.load-more-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 13px 36px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  font-size: 14px; font-weight: 600; color: #4b5563; cursor: pointer; font-family: inherit;
+  letter-spacing: -0.2px; transition: all 0.15s;
+}
+.load-more-btn:hover:not(:disabled) { border-color: #7c3aed; color: #7c3aed; background: #faf5ff; }
 .load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ==================== 애니메이션 ==================== */
