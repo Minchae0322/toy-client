@@ -1081,12 +1081,16 @@ onUnmounted(() => {
   text-decoration: none;
   overflow: hidden;
   position: relative;
+  min-height: 100px;
 }
 
 .dash-trend-img {
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .dash-trend-cta {
@@ -1123,6 +1127,7 @@ onUnmounted(() => {
   /* 트렌드 배너 전체 너비 */
   .dash-trend-banner {
     width: 100%;
+    min-height: 120px;
   }
 }
 
