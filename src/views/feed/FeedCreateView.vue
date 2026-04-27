@@ -132,6 +132,7 @@
                   placeholder="제품명을 검색하세요 (예: 나이키 조던 4)"
                   v-model="formData.productNameCustom"
                   @input="handleProductNameInput"
+                  maxlength="40"
                   ref="customInputRef"
                 />
                 <div v-if="isSearchingProducts" class="product-search-spinner">
@@ -203,6 +204,7 @@
                   class="form-input brand-input"
                   placeholder="브랜드명 (예: 나이키)"
                   v-model="productBrandCustom"
+                  maxlength="40"
                 />
               </div>
 
@@ -214,7 +216,7 @@
                   class="form-input brand-input"
                   placeholder="예: 4500"
                   v-model="productPriceCustom"
-                  @input="productPriceCustom = productPriceCustom.replace(/[^0-9]/g, '')"
+                  @input="handleProductPriceInput"
                 />
               </div>
 
@@ -604,10 +606,19 @@ const feedPriceKoreanHint = computed(() => {
   return r + '원'
 })
 
+const MAX_PRICE = 999999999
+
 const handlePriceInput = (e) => {
   const value = e.target.value.replace(/[^0-9]/g, '')
-  const parsed = value ? parseInt(value) : null
+  let parsed = value ? parseInt(value) : null
+  if (parsed !== null && parsed > MAX_PRICE) parsed = MAX_PRICE
   formData.value.buyPrice = parsed === 0 ? null : parsed
+}
+
+const handleProductPriceInput = () => {
+  let v = productPriceCustom.value.replace(/[^0-9]/g, '')
+  if (v && parseInt(v) > MAX_PRICE) v = String(MAX_PRICE)
+  productPriceCustom.value = v
 }
 
 const togglePriceHidden = () => {

@@ -212,8 +212,8 @@ const today = computed(() => {
 
 const validatePrice = () => {
   localForm.value.price = localForm.value.price.replace(/[^0-9]/g, '')
-  if (localForm.value.price && localForm.value.price.length > 10) {
-    localForm.value.price = localForm.value.price.substring(0, 10)
+  if (localForm.value.price && localForm.value.price.length > 9) {
+    localForm.value.price = localForm.value.price.substring(0, 9)
   }
 }
 </script>
