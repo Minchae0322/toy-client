@@ -532,12 +532,13 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (typingTimer.value) clearTimeout(typingTimer.value)
-  webSocketService.unsubscribeFromChatRoom?.(actualRoomId.value)
+  const roomId = actualRoomId.value
+  if (roomId) webSocketService.leaveChatRoom?.(roomId)
 })
 
 watch(actualRoomId, (newVal, oldVal) => {
   if (newVal && newVal !== oldVal) {
-    if (oldVal) webSocketService.unsubscribeFromChatRoom?.(oldVal)
+    if (oldVal) webSocketService.leaveChatRoom?.(oldVal)
     messages.value = []
     initializeChatRoom()
   }
