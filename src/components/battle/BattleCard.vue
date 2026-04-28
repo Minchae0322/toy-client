@@ -380,6 +380,7 @@ const daysLeftText = computed(() => {
   -webkit-box-orient: vertical;
   overflow: hidden;
   letter-spacing: -0.02em;
+  min-height: calc(1.5em * 2);
 }
 
 .stats {
@@ -496,6 +497,7 @@ const daysLeftText = computed(() => {
     line-height: 1.4;
     margin-bottom: 6px;
     -webkit-line-clamp: 2;
+    min-height: calc(1.4em * 2);
   }
 
   .stats {

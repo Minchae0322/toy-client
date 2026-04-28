@@ -25,15 +25,17 @@
       <div class="card-body">
         <input
             :value="battleForm.title"
-            @input="$emit('update:battleForm', { ...battleForm, title: $event.target.value })"
+            @input="onTitleInput"
+            @compositionend="onTitleInput"
             type="text"
+            maxlength="20"
             class="form-input title-input"
             :class="{ filled: battleForm.title.trim().length > 0 }"
-            placeholder="예: 2025년 최고의 무선 이어폰은?"
+            placeholder="예: 2025 최고의 무선 이어폰은?"
         >
         <div class="input-footer">
-          <span class="char-count" :class="{ warning: battleForm.title.length > 40 }">
-            {{ battleForm.title.length }}/50
+          <span class="char-count" :class="{ warning: battleForm.title.length >= 20 }">
+            {{ battleForm.title.length }}/20
           </span>
         </div>
       </div>
@@ -287,6 +289,21 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:battleForm']);
+
+const TITLE_MAX = 20;
+const onTitleInput = (e) => {
+  const raw = e.target.value;
+  const chars = Array.from(raw);
+  if (chars.length > TITLE_MAX) {
+    const truncated = chars.slice(0, TITLE_MAX).join('');
+    e.target.value = truncated;
+    emit('update:battleForm', { ...props.battleForm, title: truncated });
+    return;
+  }
+  if (raw !== props.battleForm.title) {
+    emit('update:battleForm', { ...props.battleForm, title: raw });
+  }
+};
 
 const fileService = useFile();
 const { open } = useConfirmDialog();

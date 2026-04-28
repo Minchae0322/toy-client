@@ -1,7 +1,7 @@
 <template>
   <nav class="bottom-nav">
     <!-- 플로팅 등록 버튼 (알약 위 우측) -->
-    <div v-if="!isMoreMenuOpen" class="fab-wrap">
+    <div v-if="!isMoreMenuOpen && !isOnCarrier" class="fab-wrap">
       <button class="fab" :class="{ open: isCreateMenuOpen }" @click="toggleCreateMenu" aria-label="등록">
         <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
@@ -189,7 +189,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
@@ -204,6 +204,8 @@ const isMoreMenuOpen = ref(false);
 const isActive = (path) => {
   return route.path.startsWith(path);
 };
+
+const isOnCarrier = computed(() => route.path.startsWith('/carrier'));
 
 const toggleCreateMenu = () => {
   isMoreMenuOpen.value = false;

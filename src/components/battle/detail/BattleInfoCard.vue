@@ -36,17 +36,44 @@
     </div>
 
     <div class="stats-dashboard">
-      <div class="stat-box">
-        <span class="lab">남은 시간</span>
-        <span class="val highlight">{{ formattedDaysLeft }}</span>
+      <div class="stat-item time">
+        <span class="stat-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <polyline points="12 7 12 12 15 14"/>
+          </svg>
+        </span>
+        <span class="stat-text">
+          <span class="stat-label">남은 시간</span>
+          <span class="stat-value highlight">
+            <span class="live-dot" aria-hidden="true"></span>
+            {{ formattedDaysLeft }}
+          </span>
+        </span>
       </div>
-      <div class="stat-box">
-        <span class="lab">참여자</span>
-        <span class="val">{{ formattedParticipants }}</span>
+      <div class="stat-item people">
+        <span class="stat-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/>
+            <circle cx="11" cy="7" r="4"/>
+          </svg>
+        </span>
+        <span class="stat-text">
+          <span class="stat-label">참여자</span>
+          <span class="stat-value">{{ formattedParticipants }}</span>
+        </span>
       </div>
-      <div class="stat-box">
-        <span class="lab">총 투표수</span>
-        <span class="val">{{ formattedVotes }}</span>
+      <div class="stat-item votes">
+        <span class="stat-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </span>
+        <span class="stat-text">
+          <span class="stat-label">총 투표수</span>
+          <span class="stat-value">{{ formattedVotes }}</span>
+        </span>
       </div>
     </div>
 
@@ -136,7 +163,7 @@ const permissionType = computed(() => {
 /* 전체 레이아웃 */
 .hero-section {
   text-align: center;
-  padding: 48px 40px 56px;
+  padding: 24px 40px 36px;
   width: 100%;
   box-sizing: border-box;
   background: #ffffff;
@@ -164,7 +191,7 @@ const permissionType = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 22px;
 }
 
 .nav-btn {
@@ -204,7 +231,7 @@ const permissionType = computed(() => {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .pill {
@@ -243,18 +270,18 @@ const permissionType = computed(() => {
 
 /* 타이틀 섹션 */
 .main-title {
-  font-size: 38px;
-  font-weight: 700;
-  color: #111827;
-  letter-spacing: -0.03em;
-  margin: 0 auto 12px;
-  line-height: 1.3;
+  font-size: 46px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.035em;
+  margin: 0 auto 10px;
+  line-height: 1.18;
 }
 
 .sub-desc {
-  font-size: 17px;
+  font-size: 16px;
   color: #6b7280;
-  line-height: 1.6;
+  line-height: 1.5;
   max-width: 500px;
   margin: 0 auto 0;
 }
@@ -263,7 +290,7 @@ const permissionType = computed(() => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin: 20px auto 0;
+  margin: 12px auto 0;
   padding: 6px 14px 6px 6px;
   background: #F7F8FA;
   border: 1px solid #EEF0F3;
@@ -302,49 +329,120 @@ const permissionType = computed(() => {
   letter-spacing: -0.2px;
 }
 
-/* 통계 대시보드 */
+/* 통계 대시보드 — tile cards with accent chips */
 .stats-dashboard {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 24px;
-  margin-top: 36px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-top: 18px;
+  box-shadow: none;
 }
 
-.stat-box {
+.stat-item {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  position: relative;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: #ffffff;
+  border: 1px solid #eceff3;
+  border-radius: 16px;
+  min-width: 0;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.stat-box:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 15%;
-  height: 70%;
-  width: 1px;
-  background: #e5e7eb;
+.stat-item:hover {
+  border-color: #d8dde5;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
 }
 
-.stat-box .lab {
-  font-size: 13px;
-  font-weight: 600;
-  color: #9ca3af;
+.stat-item.time {
+  background: #f5f8ff;
+  border-color: #e0e8ff;
 }
 
-.stat-box .val {
-  font-size: 26px;
-  font-weight: 700;
-  color: #1f2937;
+.stat-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  flex-shrink: 0;
 }
 
-.val.highlight {
+.stat-item.time .stat-icon-wrap {
+  background: #e0e8ff;
   color: #4a6cf7;
+}
+
+.stat-item.people .stat-icon-wrap {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.stat-item.votes .stat-icon-wrap {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.stat-icon-wrap svg {
+  width: 18px;
+  height: 18px;
+}
+
+.stat-text {
+  display: inline-flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a92a3;
+  letter-spacing: -0.1px;
+  line-height: 1;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.04em;
+  font-feature-settings: 'tnum' 1;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-value.highlight {
+  color: #4a6cf7;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4a6cf7;
+  box-shadow: 0 0 0 0 rgba(74, 108, 247, 0.5);
+  animation: livepulse 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  flex-shrink: 0;
+}
+
+@keyframes livepulse {
+  0% { box-shadow: 0 0 0 0 rgba(74, 108, 247, 0.45); transform: scale(1); }
+  70% { box-shadow: 0 0 0 8px rgba(74, 108, 247, 0); transform: scale(1.05); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 108, 247, 0); transform: scale(1); }
 }
 
 /* 아이템 추가 버튼 */
@@ -505,73 +603,115 @@ const permissionType = computed(() => {
 /* 반응형 처리 */
 @media (max-width: 768px) {
   .hero-section {
-    padding: 28px 20px 36px;
+    padding: 14px 20px 28px;
+  }
+
+  .nav-bar {
+    margin-bottom: 18px;
+  }
+
+  .badge-wrapper {
+    margin-bottom: 12px;
   }
 
   .main-title {
-    font-size: 26px;
-    letter-spacing: -0.025em;
+    font-size: 30px;
+    letter-spacing: -0.03em;
+    margin: 0 auto 10px;
+    line-height: 1.22;
   }
 
   .sub-desc {
-    font-size: 15px;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
-  .stats-dashboard {
-    margin-top: 28px;
-    padding: 20px;
+  .creator-row {
+    margin: 12px auto 0;
+    padding: 5px 12px 5px 5px;
   }
+  .creator-row .creator-avatar { width: 22px; height: 22px; }
+  .creator-row .creator-label { font-size: 10px; }
+  .creator-row .creator-name { font-size: 12px; }
+
+  .stats-dashboard {
+    margin-top: 16px;
+    gap: 8px;
+  }
+  .stat-item { gap: 10px; padding: 12px 12px; border-radius: 14px; }
+  .stat-icon-wrap { width: 34px; height: 34px; border-radius: 10px; }
+  .stat-icon-wrap svg { width: 16px; height: 16px; }
+  .stat-label { font-size: 11px; }
+  .stat-value { font-size: 18px; gap: 5px; }
+  .live-dot { width: 6px; height: 6px; }
 }
 
 @media (max-width: 480px) {
   .hero-section {
-    padding: 20px 14px 28px;
+    padding: 10px 14px 22px;
   }
 
   .nav-bar {
-    margin-bottom: 32px;
+    margin-bottom: 12px;
   }
 
   .back-btn {
-    padding: 8px 14px 8px 10px;
+    padding: 7px 13px 7px 9px;
     font-size: 13px;
   }
 
   .share-btn {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
   }
 
   .badge-wrapper {
-    margin-bottom: 14px;
+    margin-bottom: 10px;
+    gap: 6px;
   }
 
   .pill {
-    padding: 5px 12px;
-    font-size: 12px;
+    padding: 4px 10px;
+    font-size: 11px;
   }
 
   .main-title {
-    font-size: 22px;
+    font-size: 26px;
+    letter-spacing: -0.03em;
+    margin: 0 auto 8px;
+    line-height: 1.2;
   }
 
   .sub-desc {
     font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .creator-row {
+    margin: 10px auto 0;
   }
 
   .stats-dashboard {
-    padding: 16px;
-    border-radius: 16px;
-    margin-top: 24px;
+    margin-top: 14px;
+    gap: 6px;
   }
-
-  .stat-box .lab {
-    font-size: 10px;
+  .stat-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 10px;
+    border-radius: 12px;
   }
-
-  .stat-box .val {
-    font-size: 18px;
+  .stat-icon-wrap {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
   }
+  .stat-icon-wrap svg { width: 14px; height: 14px; }
+  .stat-text { gap: 3px; }
+  .stat-label { font-size: 10px; }
+  .stat-value { font-size: 15px; gap: 5px; }
+  .live-dot { width: 5px; height: 5px; }
 
   .add-product-btn {
     padding: 14px;

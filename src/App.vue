@@ -109,6 +109,14 @@ const goToProfile = async () => {
   }
 }
 
+const goToCollection = async () => {
+  try {
+    await router.push({ name: 'Collection' })
+  } catch (error) {
+    console.error('❌ 컬렉션 이동 실패:', error)
+  }
+}
+
 onMounted(() => {
   if (isLoggedIn.value) {
     webSocketService.connect().catch(console.error)
@@ -191,7 +199,14 @@ onUnmounted(() => {
               </div>
               <div class="user-name-row">
                 <span class="user-name">{{ user?.nickname || user?.username }}</span>
-                <UserLevelTag v-if="userLevel != null" :level="userLevel" size="sm" variant="dark" />
+                <span
+                  v-if="userLevel != null"
+                  class="tier-click"
+                  title="컬렉션으로 이동"
+                  @click.stop="goToCollection"
+                >
+                  <UserLevelTag :level="userLevel" size="sm" variant="dark" />
+                </span>
                 <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="sm" />
               </div>
             </div>
@@ -564,6 +579,23 @@ onUnmounted(() => {
   font-weight: 800;
   color: #0A0E1A;
   letter-spacing: -0.02em;
+}
+
+.tier-click {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.tier-click:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.tier-click:active {
+  transform: translateY(0);
 }
 
 /* ===================== 모바일 헤더 우측 ===================== */
