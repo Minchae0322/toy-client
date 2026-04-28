@@ -1,20 +1,5 @@
 <template>
   <div class="carrier-page" :class="{ 'no-select': !!dragId }">
-        <!-- 헤더 -->
-        <header class="carrier-top-header">
-          <div class="header-container">
-            <button class="back-btn" @click="router.back()">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12.5 15L7.5 10L12.5 5"/>
-              </svg>
-            </button>
-            <div class="header-title-area">
-              <h1 class="header-page-title">내 캐리어</h1>
-              <span class="header-item-count">{{ items.length }}개 아이템</span>
-            </div>
-          </div>
-        </header>
-
         <!-- 모바일 탭 바 -->
         <div class="mobile-tab-bar">
           <button
@@ -219,7 +204,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter, onBeforeRouteLeave } from 'vue-router'
+import { onBeforeRouteLeave } from 'vue-router'
 import { useCarrier } from '@/composables/useCarrier.js'
 import { CARRIER_TYPE } from '@/services/CarrierService.js'
 import { fileService } from '@/services/FileService.js'
@@ -237,7 +222,6 @@ import MobileStickerTray from './components/MobileStickerTray.vue'
 import ShareModal from './components/ShareModal.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 
-const router = useRouter()
 const { open: openConfirm } = useConfirmDialog()
 
 // ==================== API Composable ====================
@@ -759,60 +743,6 @@ onBeforeRouteLeave(async () => {
   color: #1a1a1a;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
-
-/* ==================== 헤더 ==================== */
-.carrier-top-header {
-  background: #fff;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.carrier-top-header .header-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 16px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.carrier-top-header .back-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: none;
-  background: #f5f3ff;
-  color: #7c3aed;
-  cursor: pointer;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-.carrier-top-header .back-btn:hover { background: #ede9fe; }
-.header-title-area {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.header-page-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: #111;
-  margin: 0;
-  white-space: nowrap;
-}
-.header-item-count {
-  font-size: 12px;
-  color: #9ca3af;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
 
 /* ==================== 모바일 탭 바 ==================== */
 .mobile-tab-bar {
@@ -1783,7 +1713,7 @@ onBeforeRouteLeave(async () => {
 @media (max-width: 768px) {
   .carrier-page {
     background: #fff;
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
   }
 
   .center-panel .carrier-slot-tabs {
@@ -1830,7 +1760,7 @@ onBeforeRouteLeave(async () => {
     background: #fff;
     border-bottom: 1px solid #eee;
     position: sticky;
-    top: 52px;
+    top: 0;
     z-index: 99;
     padding: 0;
   }
@@ -1865,7 +1795,7 @@ onBeforeRouteLeave(async () => {
   }
 
   .carrier-content {
-    padding: 12px 12px 24px;
+    padding: 8px 12px 8px;
   }
 
   .carrier-layout {
@@ -1889,7 +1819,8 @@ onBeforeRouteLeave(async () => {
   }
 
   .center-panel.mobile-active {
-    height: calc(100dvh - 94px);
+    /* tab(50) + content padding(16) + page bottom(88) + safe-area = 한 화면에 fit */
+    height: calc(100dvh - 154px - env(safe-area-inset-bottom));
     overflow: hidden;
     gap: 0;
     padding: 4px 0 0;
@@ -2040,14 +1971,8 @@ onBeforeRouteLeave(async () => {
 
 /* ==================== 작은 모바일 (480px 이하) ==================== */
 @media (max-width: 480px) {
-  .header-page-title {
-    font-size: 15px;
-  }
-  .header-item-count {
-    font-size: 11px;
-  }
   .carrier-content {
-    padding: 8px 8px 20px;
+    padding: 6px 8px 6px;
   }
   .shop-card {
     border-radius: 14px;
