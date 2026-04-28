@@ -190,9 +190,21 @@ const handleNewNotification = (data) => {
 
 let isSetup = false
 
+const handleHeadsUp = (data) => {
+  if (!data) return
+  addToast({
+    type: 'CHAT',
+    title: data.senderName || '새 메시지',
+    content: data.content || '',
+    referenceType: 'CHAT_ROOM',
+    referenceId: data.chatRoomId,
+  })
+}
+
 onMounted(() => {
   if (!isSetup) {
     webSocketService.onMessage('notification-toast', handleNewNotification)
+    webSocketService.onMessage('headsup', handleHeadsUp)
     window.addEventListener('new-notification', (e) => {
       addToast(e.detail)
     })
@@ -202,6 +214,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   webSocketService.offMessage('notification-toast')
+  webSocketService.offMessage('headsup')
   isSetup = false
 })
 

@@ -155,17 +155,7 @@ const setupGlobalMessageHandlers = () => {
     showSystemToast(notification)
   })
 
-  // 채팅방에 접속하지 않은 온라인 사용자용 헤드업 알림
-  webSocketService.onMessage('headsup', (data) => {
-    const normalized = {
-      roomId: data.chatRoomId,
-      senderName: data.senderName,
-      content: data.content,
-      type: 'TEXT',
-    }
-    const duration = (data.config?.displayDuration ?? 5) * 1000
-    showMessageToast(normalized, duration)
-  })
+  // 헤드업 알림은 NotificationToast(전역)에서 처리
 }
 
 // 앱 초기화
