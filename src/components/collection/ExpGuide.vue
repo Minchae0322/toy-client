@@ -31,7 +31,7 @@ const expRules = [
   { code: 'BATTLE_CREATE',         label: '배틀 생성',          exp: 20,  icon: Swords },
   { code: 'BATTLE_ITEM_ADD',       label: '배틀 아이템 추가',    exp: 15,  icon: PackagePlus },
   { code: 'BATTLE_PREDICTION_HIT', label: '배틀 예측 적중',      exp: 100, icon: Sparkles },
-  { code: 'FEED_REACTION',         label: '피드 리액션 수신',    exp: 5,   icon: Heart },
+  { code: 'FEED_REACTION',         label: '피드 하트 획득',      exp: 5,   icon: Heart },
 ]
 </script>
 
