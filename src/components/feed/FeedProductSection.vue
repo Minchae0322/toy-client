@@ -54,12 +54,26 @@
           <svg v-else class="register-toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
-          <span class="register-toggle-text">새 제품 등록</span>
+          <span class="register-toggle-text">{{ registerAsProduct ? '새 아이템으로 등록 중' : '새 아이템으로 등록' }}</span>
+          <span v-if="registerAsProduct" class="register-toggle-close" aria-hidden="true">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            <span class="register-toggle-close-text">끄기</span>
+          </span>
         </label>
       </div>
 
-      <!-- 검색 결과 -->
-      <div v-if="productSuggestions.length > 0" class="product-suggestions">
+      <!-- 새 아이템 등록 안내 (토글 OFF일 때만, 가벼운 한 줄) -->
+      <p
+        v-if="showRegisterToggle && !registerAsProduct"
+        class="register-toggle-hint"
+      >
+        찾는 아이템이 없나요? 새 아이템으로 등록하면 요거픽·핫아이템에 연동돼요
+      </p>
+
+      <!-- 검색 결과 (등록 모드에서는 숨김) -->
+      <div v-if="productSuggestions.length > 0 && !registerAsProduct" class="product-suggestions">
         <button
           v-for="p in productSuggestions"
           :key="p.productId"
@@ -86,14 +100,15 @@
       <!-- 새 제품 등록 ON: 브랜드 + 정가 + 대표 이미지 -->
       <div v-if="registerAsProduct" class="brand-input-block">
         <div class="register-block-header">
-          <span class="register-block-title">새 제품 정보</span>
-          <button type="button" class="register-help" aria-label="새 제품 등록 안내">
+          <span class="register-block-title">새 아이템 정보 입력</span>
+          <button type="button" class="register-help" aria-label="새 아이템 등록 안내">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <span class="register-help-tooltip" role="tooltip">
-              <span class="register-help-row">• 새 제품은 관리자 승인 후 공개됩니다</span>
-              <span class="register-help-row">• 중복된 제품은 삭제될 수 있습니다</span>
+              <span class="register-help-row">• 다른 분들도 검색해서 쓸 수 있게 돼요</span>
+              <span class="register-help-row">• 요거픽, 핫아이템에도 연동돼요</span>
+              <span class="register-help-row">• 관리자 승인 후 공개 · 중복 시 삭제될 수 있어요</span>
             </span>
           </button>
         </div>
@@ -661,6 +676,47 @@ defineExpose({
   letter-spacing: -0.1px;
 }
 .register-toggle.active .register-toggle-text { color: #fff; }
+
+/* 끄기 칩 (active 상태에서 우측 표시) */
+.register-toggle-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px 3px 5px;
+  margin-left: 4px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  border-radius: 999px;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+.register-toggle-close svg {
+  width: 11px;
+  height: 11px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.register-toggle-close-text {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+}
+.register-toggle:hover .register-toggle-close {
+  background: rgba(255, 255, 255, 0.34);
+}
+
+/* 새 아이템 등록 안내 (가벼운 보조 텍스트) */
+.register-toggle-hint {
+  margin: 2px 2px 0;
+  padding: 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #94A3B8;
+  line-height: 1.5;
+  letter-spacing: -0.1px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
 
 /* 자동완성 */
 .product-suggestions { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
