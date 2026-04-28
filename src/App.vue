@@ -27,6 +27,8 @@ const isAuthPage = computed(() =>
     ['/login', '/register', '/oauth/callback'].includes(route.path)
 )
 
+const isChatRoute = computed(() => route.path.startsWith('/chat'))
+
 const profileImageUrl = computed(() => {
   return user.value?.profilePicture?.fileUrl || null
 })
@@ -245,7 +247,7 @@ onUnmounted(() => {
   </main>
 
   <!-- 푸터 -->
-  <footer v-if="!isAuthPage" class="site-footer">
+  <footer v-if="!isAuthPage" class="site-footer" :class="{ 'hide-on-mobile-chat': isChatRoute }">
     <div class="footer-inner">
       <div class="footer-top">
         <RouterLink to="/" class="footer-logo">요거뜨</RouterLink>
@@ -747,6 +749,9 @@ onUnmounted(() => {
   }
   .site-footer {
     padding-bottom: 100px;
+  }
+  .site-footer.hide-on-mobile-chat {
+    display: none;
   }
 }
 

@@ -532,11 +532,21 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (typingTimer.value) clearTimeout(typingTimer.value)
-  webSocketService.unsubscribeFromChatRoom?.(actualRoomId.value)
+  const roomId = actualRoomId.value
+  webSocketService.unsubscribeFromChatRoom?.(roomId)
+  if (roomId) {
+    chatService.exitChatRoom(roomId).catch(err =>
+        console.warn('[ChatDetail] exit 실패:', err))
+  }
 })
 
 watch(actualRoomId, (newVal, oldVal) => {
   if (newVal && newVal !== oldVal) {
+    if (oldVal) {
+      webSocketService.unsubscribeFromChatRoom?.(oldVal)
+      chatService.exitChatRoom(oldVal).catch(err =>
+          console.warn('[ChatDetail] exit 실패:', err))
+    }
     messages.value = []
     initializeChatRoom()
   }
@@ -567,10 +577,11 @@ watch(actualRoomId, (newVal, oldVal) => {
   .chat-detail-container { max-width: 820px; }
 }
 
-/* 모바일: BottomNavigation 공간 확보 */
+/* 모바일: 부모(.main-content)가 한 화면 높이를 보장하므로 그대로 채움 */
 @media (max-width: 767px) {
   .chat-detail-container {
-    height: calc(100vh - 66px - 64px - env(safe-area-inset-bottom));
+    height: 100%;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
   }
 }
 

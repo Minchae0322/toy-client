@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" :class="{ 'chat-detail-mode': !!selectedRoom }">
     <AppSidebar />
 
     <main class="main-content">
@@ -372,6 +372,19 @@ onBeforeUnmount(async () => {
 @media (max-width: 767px) {
   .main-content {
     padding-left: 0;
+  }
+
+  /* 모바일 채팅방 진입 시: 한 화면으로 잠가 페이지 스크롤 제거 */
+  .app-container.chat-detail-mode {
+    min-height: 0;
+    height: calc(100dvh - 66px);
+    padding: 0;
+    overflow: hidden;
+  }
+  .app-container.chat-detail-mode .main-content {
+    min-height: 0;
+    height: 100%;
+    padding: 0;
   }
 }
 

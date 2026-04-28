@@ -401,7 +401,7 @@ onBeforeUnmount(() => {
 /* ===================== Floating FAB ===================== */
 .fab-wrap {
   position: absolute;
-  bottom: calc(100% + 14px + env(safe-area-inset-bottom));
+  bottom: calc(100% + 14px);
   left: 50%;
   transform: translateX(-50%);
   width: 100%;

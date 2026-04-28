@@ -114,6 +114,15 @@ class ChatService extends BaseApiService {
   }
 
   /**
+   * 채팅방 화면 이탈 (온라인 유지, 헤드업 수신 대상으로 전환)
+   */
+  async exitChatRoom(roomId) {
+    const deviceId = authUtils.getDeviceId()
+    console.log(`🚪 [CHAT] 채팅방 화면 이탈: roomId=${roomId}`)
+    return await this.post(`/v1/chat/rooms/${roomId}/exit?deviceId=${encodeURIComponent(deviceId)}`)
+  }
+
+  /**
    * 채팅방 삭제
    */
   async deleteChatRoom(roomId) {
