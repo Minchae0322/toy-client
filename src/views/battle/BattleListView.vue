@@ -5,14 +5,6 @@
 
     <!-- 메인 컨텐츠 -->
     <main class="main-content">
-      <!-- 카테고리 필터 (최상단) -->
-      <CommonCategoryFilter
-          :categories="categories"
-          :initial-selected="selectedCategoryId"
-          content-type="BATTLE"
-          @category-change="handleCategoryChange"
-      />
-
       <!-- 컨텐츠 영역 -->
       <div class="content-wrapper">
         <!-- HOT 배틀 섹션 -->
@@ -26,6 +18,21 @@
 
         <!-- 배틀 리스트 섹션 -->
         <section class="battles-section">
+          <header class="battle-list-title">
+            <div class="title-with-badge">
+              <h2 class="section-title">전체 <span class="title-accent">요거픽</span></h2>
+              <span class="sub-title">사용자들이 직접 고르는 승부</span>
+            </div>
+          </header>
+
+          <!-- 카테고리 필터 (제목 아래) -->
+          <CommonCategoryFilter
+              :categories="categories"
+              :initial-selected="selectedCategoryId"
+              content-type="BATTLE"
+              @category-change="handleCategoryChange"
+          />
+
           <div class="section-header">
             <div class="filter-chips">
               <button
@@ -473,6 +480,70 @@ onUnmounted(() => {
 @media (min-width: 768px) {
   .battles-section {
     padding: 24px 0;
+  }
+}
+
+/* 배틀 리스트 제목 (대시보드 톤 일치) */
+.battle-list-title {
+  margin-bottom: 12px;
+}
+
+.title-with-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid #a1a1aa;
+}
+
+.section-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #18181b;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.section-title .title-accent {
+  color: #9333ea;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .section-title {
+    font-size: 1.3125rem;
+  }
+}
+
+.sub-title {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  letter-spacing: -0.1px;
+}
+
+/* 제목 아래 카테고리 필터 — 여백 살짝 */
+.battles-section :deep(.filter-container) {
+  padding: 0 0 12px;
+  border-bottom: none;
+}
+
+.battles-section :deep(.category-tabs) {
+  padding: 4px 0 0;
+}
+
+@media (max-width: 767px) {
+  .battles-section :deep(.filter-container) {
+    padding: 0 0 10px;
+  }
+  .battles-section :deep(.category-tabs) {
+    padding: 2px 0 0;
   }
 }
 
