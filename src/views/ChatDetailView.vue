@@ -577,11 +577,12 @@ watch(actualRoomId, (newVal, oldVal) => {
   .chat-detail-container { max-width: 820px; }
 }
 
-/* 모바일: 부모(.main-content)가 한 화면 높이를 보장하므로 그대로 채움 */
+/* 모바일: 부모(.main-content)가 한 화면 높이를 보장하므로 그대로 채움
+   (BottomNavigation은 채팅 상세에서 숨겨지므로 safe-area만 보정) */
 @media (max-width: 767px) {
   .chat-detail-container {
     height: 100%;
-    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 

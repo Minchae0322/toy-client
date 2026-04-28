@@ -44,8 +44,8 @@
       />
     </main>
 
-    <!-- Bottom Navigation - Mobile Only -->
-    <BottomNavigation :unread-count="unreadCount" />
+    <!-- Bottom Navigation - Mobile Only (채팅 상세에서는 숨김) -->
+    <BottomNavigation v-if="!selectedRoom" :unread-count="unreadCount" />
 
     <!-- 알림 토스트 -->
     <Transition name="toast">
