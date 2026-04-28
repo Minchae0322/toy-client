@@ -91,7 +91,15 @@
       "Bash(git stash *)",
       "Bash(git restore *)",
       "Bash(npm run *)",
-      "Bash(powershell *)"
+      "Bash(powershell *)",
+      "Bash(xxd)",
+      "Bash(npm audit *)",
+      "Bash(git rm *)",
+      "Bash(npm ls *)",
+      "Bash(git revert *)",
+      "Bash(npx cap *)",
+      "Bash(npm uninstall *)",
+      "Bash(git branch *)"
     ]
   }
 }

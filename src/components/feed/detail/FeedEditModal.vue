@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="feed-edit-modal">
-      <div v-if="visible" class="feed-edit-overlay" @click="handleClose">
+      <div v-if="visible" class="feed-edit-overlay" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
         <div class="feed-edit-container" @click.stop>
           <header class="feed-edit-header">
             <button class="feed-edit-back" @click="handleClose">
@@ -33,43 +33,15 @@
             <!-- 제품 정보 -->
             <section class="feed-edit-card">
               <label class="feed-edit-label feed-edit-required">어떤 제품인가요?</label>
-              <div v-if="selectedProduct" class="feed-edit-selected-product">
-                <img :src="selectedProduct.thumbnailUrl || '/default-product.png'" :alt="selectedProduct.name" class="feed-edit-product-img" />
-                <div class="feed-edit-product-info">
-                  <p class="feed-edit-product-name">{{ selectedProduct.name }}</p>
-                  <p class="feed-edit-product-brand">{{ selectedProduct.brand }}</p>
-                </div>
-                <button type="button" class="feed-edit-product-clear" @click="clearSelectedProduct">
-                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg>
-                </button>
-              </div>
-              <div v-else>
-                <div v-if="productInputMode === 'select'" class="feed-edit-mode-cards">
-                  <button type="button" class="feed-edit-mode-card" @click="openProductModal">
-                    <div class="feed-edit-mode-icon" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#9333ea">
-                      <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                    </div>
-                    <h4 class="feed-edit-mode-title">제품 연동</h4>
-                    <p class="feed-edit-mode-desc">등록된 제품 정보 연결</p>
-                  </button>
-                  <button type="button" class="feed-edit-mode-card" @click="productInputMode = 'custom'">
-                    <div class="feed-edit-mode-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#3b82f6">
-                      <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </div>
-                    <h4 class="feed-edit-mode-title">직접 작성</h4>
-                    <p class="feed-edit-mode-desc">제품명만 간단히 입력</p>
-                  </button>
-                </div>
-                <div v-else class="feed-edit-custom-input">
-                  <div class="feed-edit-custom-header">
-                    <span style="font-size:13px;font-weight:600;color:#9333ea">직접 작성</span>
-                    <button type="button" class="feed-edit-custom-close" @click="resetProductInput">
-                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                  </div>
-                  <input type="text" class="feed-edit-input" placeholder="브랜드 + 제품명 (예: 나이키 조던 4 레트로)" v-model="editData.productNameCustom" ref="customInputRef" />
-                </div>
-              </div>
+              <FeedProductSection
+                ref="productSectionRef"
+                v-model:productNameCustom="editData.productNameCustom"
+                v-model:productId="editData.productId"
+                :feed-thumbnail-url="feedThumbnailUrl"
+                :initial-product="initialProductForSection"
+                :allow-custom-product-image="false"
+                @error="handleSectionError"
+              />
             </section>
 
             <!-- 카테고리 -->
@@ -165,16 +137,16 @@
       </div>
     </Transition>
 
-    <ProductSelectModal v-if="showProductModal" @select="handleProductSelect" @close="closeProductModal" />
   </Teleport>
 </template>
 
 <script setup>
-import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { feedService } from '@/services/FeedService.js'
+import { productService } from '@/services/ProductService.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
-import ProductSelectModal from '@/components/oneMouth/create/ProductSelectModal.vue'
 import CategoryChipSelector from '@/components/common/CategoryChipSelector.vue'
+import FeedProductSection from '@/components/feed/FeedProductSection.vue'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -186,11 +158,8 @@ const { open } = useConfirmDialog()
 
 const saving = ref(false)
 const hashtagInput = ref('')
-const customInputRef = ref(null)
 const categoryKey = ref(0)
-const showProductModal = ref(false)
-const selectedProduct = ref(null)
-const productInputMode = ref('select')
+const productSectionRef = ref(null)
 
 const editData = ref({
   productId: null,
@@ -204,6 +173,21 @@ const editData = ref({
 })
 
 const images = computed(() => props.feed?.attachmentFiles || [])
+
+// FeedProductSection에 넘길 피드 첫 사진 URL (제품 대표 이미지로 자동 사용)
+const feedThumbnailUrl = computed(() => props.feed?.attachmentFiles?.[0]?.fileUrl || null)
+
+// 기존 연동 제품을 컴포넌트 초기값으로 전달
+const initialProductForSection = computed(() => {
+  const p = props.feed?.product
+  if (!p) return null
+  return {
+    productId: p.id || p.productId,
+    name: p.name || '',
+    brand: p.brand || '',
+    thumbnailUrl: p.thumbnailUrl || p.thumbnailDto?.fileUrl || null
+  }
+})
 const quickStores = ['무신사', '쿠팡', '네이버', '올리브영', '29CM', 'SSG']
 const evaluations = [
   { value: 'BEST', label: '강추' },
@@ -238,19 +222,6 @@ watch(() => props.visible, (visible) => {
     const hashtags = (feed.hashtags || []).map(h => typeof h === 'object' ? (h.name || '') : h).filter(Boolean)
     const subCategoryId = feed.subCategoryDetail?.subCategoryId || feed.subCategoryDetail?.categoryId || feed.subCategoryId || feed.categoryId || null
 
-    if (feed.product) {
-      selectedProduct.value = {
-        productId: feed.product.id || feed.product.productId,
-        name: feed.product.name || '상품명 없음',
-        brand: feed.product.brand || '',
-        thumbnailUrl: feed.product.thumbnailUrl || feed.product.thumbnailDto?.fileUrl || null
-      }
-      productInputMode.value = 'select'
-    } else {
-      selectedProduct.value = null
-      productInputMode.value = feed.productNameCustom ? 'custom' : 'select'
-    }
-
     editData.value = {
       productId: feed.product?.id || feed.product?.productId || null,
       productNameCustom: feed.productNameCustom || feed.product?.name || '',
@@ -264,11 +235,9 @@ watch(() => props.visible, (visible) => {
 
     categoryKey.value++
     hashtagInput.value = ''
-    showProductModal.value = false
     saving.value = false
   } else {
     document.body.style.overflow = ''
-    showProductModal.value = false
     hashtagInput.value = ''
     saving.value = false
   }
@@ -276,23 +245,8 @@ watch(() => props.visible, (visible) => {
 
 onBeforeUnmount(() => { document.body.style.overflow = '' })
 
-const openProductModal = () => { showProductModal.value = true }
-const closeProductModal = () => { showProductModal.value = false }
-const handleProductSelect = (product) => {
-  selectedProduct.value = product
-  editData.value.productId = product.productId || product.id
-  editData.value.productNameCustom = product.name
-  showProductModal.value = false
-}
-const clearSelectedProduct = () => {
-  selectedProduct.value = null
-  editData.value.productId = null
-  editData.value.productNameCustom = ''
-  productInputMode.value = 'select'
-}
-const resetProductInput = () => {
-  editData.value.productNameCustom = ''
-  productInputMode.value = 'select'
+const handleSectionError = async (msg) => {
+  await open({ type: 'alert', title: '오류', message: msg })
 }
 const handleCategorySelect = ({ subCategoryId }) => {
   editData.value.subCategoryId = subCategoryId
@@ -316,10 +270,56 @@ const addPopularHashtag = (tag) => {
 const removeHashtag = (index) => { editData.value.hashtags.splice(index, 1) }
 const handleClose = () => { emit('close') }
 
+// 텍스트 드래그가 모달 밖으로 나가서 닫히는 문제 방지:
+// mousedown과 click 모두 overlay 자체에서 일어났을 때만 닫음
+let overlayMouseDownOnSelf = false
+const onOverlayMouseDown = (e) => {
+  overlayMouseDownOnSelf = e.target === e.currentTarget
+}
+const onOverlayClick = (e) => {
+  if (overlayMouseDownOnSelf && e.target === e.currentTarget) handleClose()
+  overlayMouseDownOnSelf = false
+}
+
 const handleSave = async () => {
   if (!canSave.value || saving.value) return
   saving.value = true
   try {
+    // 새 제품 등록 옵션 처리 (수정 모달은 이미지 변경 불가 → 피드 첫 사진 자동 사용)
+    const productState = productSectionRef.value?.getSubmitState() || {}
+    let finalProductId = editData.value.productId
+    if (!finalProductId && productState.registerAsProduct) {
+      if (!productState.productBrandCustom?.trim()) {
+        await open({ type: 'alert', title: '입력 필요', message: '브랜드명을 입력해주세요.' })
+        saving.value = false
+        return
+      }
+      const firstImage = props.feed?.attachmentFiles?.[0]
+      const productThumbnail = firstImage ? {
+        fileId: firstImage.id || firstImage.fileId,
+        storedPath: firstImage.fileUrl || firstImage.storedPath,
+        originName: firstImage.orgFileNm || firstImage.originName,
+        fileSize: firstImage.fileSize,
+        contentType: firstImage.contentType || (firstImage.fileExt ? `image/${firstImage.fileExt}` : 'image/jpeg'),
+        fileExplain: '제품 대표 이미지'
+      } : null
+      try {
+        const productResult = await productService.createProduct({
+          name: editData.value.productNameCustom.trim(),
+          brand: productState.productBrandCustom.trim(),
+          categoryId: editData.value.subCategoryId,
+          price: productState.productPriceCustom?.trim() || '0',
+          thumbnailAttachmentInfo: productThumbnail
+        })
+        if (productResult.success && productResult.data) {
+          finalProductId = productResult.data.productId || productResult.data.id || null
+        }
+      } catch (error) {
+        console.error('제품 등록 실패:', error)
+        await open({ type: 'alert', title: '오류', message: '제품 등록에 실패했어요. 제품명만으로 수정합니다.' })
+      }
+    }
+
     const updateData = {
       userId: props.feed.userInfo?.userId,
       categoryId: editData.value.subCategoryId,
@@ -329,8 +329,8 @@ const handleSave = async () => {
       evaluation: editData.value.evaluation,
       hashtags: editData.value.hashtags
     }
-    if (editData.value.productId) {
-      updateData.productId = editData.value.productId
+    if (finalProductId) {
+      updateData.productId = finalProductId
     } else {
       updateData.productNameCustom = editData.value.productNameCustom.trim()
     }
@@ -350,9 +350,6 @@ const handleSave = async () => {
   }
 }
 
-watch(productInputMode, (newMode) => {
-  if (newMode === 'custom') nextTick(() => { customInputRef.value?.focus() })
-})
 </script>
 
 <style>
@@ -463,27 +460,6 @@ watch(productInputMode, (newMode) => {
 .feed-edit-input:focus, .feed-edit-textarea:focus { outline: none; border-color: #9333ea; }
 .feed-edit-textarea { resize: vertical; min-height: 80px; }
 
-/* Product */
-.feed-edit-selected-product { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; }
-.feed-edit-product-img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #e5e7eb; }
-.feed-edit-product-info { flex: 1; min-width: 0; }
-.feed-edit-product-name { font-size: 15px; font-weight: 600; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.feed-edit-product-brand { font-size: 13px; color: #6b7280; margin: 0; }
-.feed-edit-product-clear { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #fff; border: 1px solid #e5e7eb; border-radius: 50%; cursor: pointer; flex-shrink: 0; color: #6b7280; }
-.feed-edit-product-clear:hover { background: #fee2e2; border-color: #ef4444; color: #ef4444; }
-
-.feed-edit-mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.feed-edit-mode-card { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px 16px; background: #fff; border: 2px solid #e5e7eb; border-radius: 16px; cursor: pointer; text-align: center; transition: all 0.2s; }
-.feed-edit-mode-card:hover { border-color: #9333ea; background: #faf5ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(147,51,234,0.1); }
-.feed-edit-mode-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
-.feed-edit-mode-title { font-size: 15px; font-weight: 700; color: #111827; margin: 0; }
-.feed-edit-mode-desc { font-size: 12px; color: #6b7280; margin: 0; }
-
-.feed-edit-custom-input { display: flex; flex-direction: column; gap: 10px; }
-.feed-edit-custom-header { display: flex; align-items: center; justify-content: space-between; }
-.feed-edit-custom-close { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #f9fafb; border: none; border-radius: 8px; cursor: pointer; color: #6b7280; }
-.feed-edit-custom-close:hover { background: #fee2e2; color: #ef4444; }
-
 /* Store */
 .feed-edit-store-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .feed-edit-store-btn { padding: 8px 14px; background: #fff; color: #6b7280; border: 1px solid #e5e7eb; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
@@ -552,11 +528,4 @@ watch(productInputMode, (newMode) => {
   .feed-edit-modal-leave-to .feed-edit-container { transform: translateY(20px) scale(0.98); }
 }
 
-@media (max-width: 480px) {
-  .feed-edit-mode-cards { gap: 10px; }
-  .feed-edit-mode-card { padding: 16px 12px; gap: 10px; }
-  .feed-edit-mode-icon { width: 40px; height: 40px; border-radius: 12px; }
-  .feed-edit-mode-title { font-size: 14px; }
-  .feed-edit-mode-desc { font-size: 11px; }
-}
 </style>

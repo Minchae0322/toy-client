@@ -99,14 +99,11 @@ class AuthService extends BaseApiService {
    */
   async logout() {
     try {
-      const refreshTokenValue = authUtils.getRefreshToken()
-
-      if (refreshTokenValue) {
-        await this.post('/auth/logout', {
-          refreshToken: refreshTokenValue
-        })
-        console.log('✅ [AUTH] 백엔드 로그아웃 완료')
-      }
+      // refreshToken은 HttpOnly 쿠키라 JS로 읽을 수 없음 → getRefreshToken()은 항상 null
+      // 백엔드 /auth/logout이 쿠키를 직접 읽고 Set-Cookie로 만료시키도록 항상 호출
+      // (withCredentials: true는 전역 axios client에 설정되어 쿠키 자동 전송)
+      await this.post('/auth/logout', {})
+      console.log('✅ [AUTH] 백엔드 로그아웃 완료')
     } catch (error) {
       console.warn('⚠️ [AUTH] 백엔드 로그아웃 실패:', error.message)
     } finally {
