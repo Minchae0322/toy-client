@@ -125,12 +125,14 @@
       <div class="card-body">
         <div class="textarea-wrapper" :class="{ focused: isTextareaFocused, filled: localDescription.length > 0 }">
           <textarea
-            v-model="localDescription"
+            :value="localDescription"
+            @input="onDescriptionInput"
+            @compositionend="onDescriptionInput"
             @focus="isTextareaFocused = true"
             @blur="handleDescriptionBlur"
             class="description-textarea"
             placeholder="예: 이 요거픽은 2024년에 출시된 무선 이어폰 중 가성비가 좋은 제품을 선정하기 위한 투표입니다. 가격 대비 음질, 착용감, 배터리 등을 종합적으로 고려해주세요."
-            maxlength="500"
+            maxlength="200"
           ></textarea>
           <div class="textarea-footer">
             <div class="char-status" :class="charStatusClass">
@@ -149,7 +151,7 @@
               </svg>
               <span>{{ charStatusText }}</span>
             </div>
-            <div class="char-count">{{ descriptionCharCount }} / 500</div>
+            <div class="char-count">{{ descriptionCharCount }} / 200</div>
           </div>
         </div>
         <p class="field-hint">
@@ -193,6 +195,18 @@ watch(() => props.battleForm.description, (newVal) => {
     localDescription.value = newVal || '';
   }
 });
+
+const DESCRIPTION_MAX = 200;
+const onDescriptionInput = (e) => {
+  const raw = e.target.value;
+  const chars = Array.from(raw);
+  let next = raw;
+  if (chars.length > DESCRIPTION_MAX) {
+    next = chars.slice(0, DESCRIPTION_MAX).join('');
+    e.target.value = next;
+  }
+  localDescription.value = next;
+};
 
 const handleDescriptionBlur = () => {
   isTextareaFocused.value = false;
