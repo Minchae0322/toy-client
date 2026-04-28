@@ -234,7 +234,7 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        제품명을 입력하면 등록된 제품을 자동으로 찾아드려요
+        제품명을 자유롭게 적어주세요. 등록된 제품이 있으면 추천해드릴게요
       </p>
     </div>
   </div>
