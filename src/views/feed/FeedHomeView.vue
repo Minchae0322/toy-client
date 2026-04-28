@@ -3,14 +3,6 @@
     <AppSidebar />
 
     <main class="main-content">
-      <!-- 카테고리 필터 -->
-      <CommonCategoryFilter
-          :categories="rootCategories"
-          :initial-category-id="selectedCategoryId"
-          content-type="FEED"
-          @category-change="handleCategoryChange"
-      />
-
       <HotSection
           :limit="10"
           @feed-click="openPost"
@@ -32,7 +24,17 @@
             @comment="handleComment"
             @post-click="openPost"
             @view-mode-change="viewMode = $event"
-        />
+        >
+          <template #after-header>
+            <!-- 카테고리 필터 (최신 피드 제목 아래) -->
+            <CommonCategoryFilter
+                :categories="rootCategories"
+                :initial-category-id="selectedCategoryId"
+                content-type="FEED"
+                @category-change="handleCategoryChange"
+            />
+          </template>
+        </FeedList>
 
         <RightSidebar
             :popular-hashtags="popularHashtags"
@@ -373,5 +375,31 @@ onUnmounted(() => {
 .content-layout :deep(.feed-section) {
   flex: 1;
   min-width: 0;
+}
+
+/* 제목 바로 아래 들어가는 카테고리 필터 — 여백 살짝 */
+.content-layout :deep(.feed-header) {
+  margin-bottom: 12px;
+}
+
+.content-layout :deep(.filter-container) {
+  padding: 0 0 12px;
+  border-bottom: none;
+}
+
+.content-layout :deep(.category-tabs) {
+  padding: 4px 0 0;
+}
+
+@media (max-width: 767px) {
+  .content-layout :deep(.feed-header) {
+    margin-bottom: 10px;
+  }
+  .content-layout :deep(.filter-container) {
+    padding: 0 0 10px;
+  }
+  .content-layout :deep(.category-tabs) {
+    padding: 2px 0 0;
+  }
 }
 </style>

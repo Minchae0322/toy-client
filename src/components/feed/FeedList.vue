@@ -35,6 +35,8 @@
       </div>
     </header>
 
+    <slot name="after-header" />
+
     <!-- Empty State -->
     <div v-if="!loading && feeds.length === 0" class="feed-empty-state">
       <div class="empty-illustration">
@@ -316,28 +318,36 @@ defineExpose({ observerTarget });
 .title-with-badge {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0.25rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid #a1a1aa;
 }
 
 .section-title {
-  font-size: 1.125rem;
-  font-weight: 800;
-  color: #0A0E1A;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #18181b;
   margin: 0;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.02em;
   line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.125rem;
+  }
 }
 
 @media (min-width: 1280px) {
   .section-title {
-    font-size: 1.25rem;
+    font-size: 1.3125rem;
   }
 }
 
 .sub-title {
   font-size: 12px;
-  font-weight: 500;
-  color: #8B95A1;
+  font-weight: 400;
+  color: #999;
   letter-spacing: -0.1px;
 }
 
