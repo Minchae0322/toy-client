@@ -280,6 +280,8 @@ onUnmounted(() => {
   background: #ffffff;
   border-bottom: 1px solid #ede9f8;
   z-index: 1000;
+  /* iOS 노치/다이내믹 아일랜드 회피 — 일반 브라우저에서는 0이라 영향 없음 */
+  padding-top: env(safe-area-inset-top);
 }
 
 
