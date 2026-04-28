@@ -249,6 +249,9 @@ const activeSlotIdx = ref(0)
 const slotCarrierIds = ref([null, null])
 const slotSwitching = ref(false)
 
+// 아이템(상품 버블)은 모든 슬롯이 공유 — 항상 슬롯 0(기본 캐리어)을 사용
+const itemsCarrierId = computed(() => slotCarrierIds.value[0] || carrierId.value)
+
 // ==================== 상태 ====================
 const isOpen = ref(false)
 const items = ref([])
@@ -359,8 +362,9 @@ function toggleSelect(id) {
 }
 
 async function removeItemFromCarrier(id) {
-  if (carrierId.value) {
-    const success = await apiRemoveItem(carrierId.value, id)
+  const cid = itemsCarrierId.value
+  if (cid) {
+    const success = await apiRemoveItem(cid, id)
     if (!success) return
   }
   items.value = items.value.filter(i => i.id !== id)
@@ -577,9 +581,9 @@ async function saveAllChanges() {
       }
     }
 
-    // Phase 5: 버블 위치 저장
+    // Phase 5: 버블 위치 저장 (아이템은 슬롯 0 캐리어가 보유)
     const canvas = canvasRef.value
-    if (dirtyBubbles.value && canvas?.posRef?.current?.length) {
+    if (dirtyBubbles.value && canvas?.posRef?.current?.length && itemsCarrierId.value) {
       const cDims = canvas.dims
       const b = getBounds(cDims.w, cDims.h)
       const bw = b.right - b.left, bh = b.bottom - b.top
@@ -590,7 +594,7 @@ async function saveAllChanges() {
           positionY: Math.max(0, Math.min(1, (p.y - b.top) / bh)),
           zIndex: 0
         }))
-        updatePromises.push(updatePositions(carrierId.value, itemPositions))
+        updatePromises.push(updatePositions(itemsCarrierId.value, itemPositions))
       }
     }
 
@@ -642,7 +646,7 @@ async function loadSlot(idx) {
     if (detail) {
       carrierId.value = cid
       activeSlotIdx.value = idx
-      applyCarrierData(detail)
+      applyCarrierData(detail, { loadItems: idx === 0 })
     }
   } finally {
     slotSwitching.value = false
@@ -664,12 +668,14 @@ async function selectSlot(idx) {
   await loadSlot(idx)
 }
 
-function applyCarrierData(carrier) {
+function applyCarrierData(carrier, options = {}) {
+  const loadItems = options.loadItems !== false
+
   pendingAdds.value = []
   pendingDeletes.value = []
   dirtySkin.value = false
   dirtyDecos.value = new Set()
-  dirtyBubbles.value = false
+  if (loadItems) dirtyBubbles.value = false
 
   const skinId = SKIN_TYPE_MAP[carrier.skinType] || 'default'
   activeSkin.value = skinId
@@ -678,16 +684,18 @@ function applyCarrierData(carrier) {
     defaultColor.value = skinColorToColorId(carrier.skinColor)
   }
 
-  items.value = (carrier.items || []).map(item => ({
-    id: item.id,
-    productId: item.productId,
-    name: item.productName || '상품',
-    brand: item.brandName || '',
-    imageUrl: item.productImageUrl || null,
-    positionX: item.positionX ?? 0.5,
-    positionY: item.positionY ?? 0.5,
-    zIndex: item.zIndex ?? 0
-  }))
+  if (loadItems) {
+    items.value = (carrier.items || []).map(item => ({
+      id: item.id,
+      productId: item.productId,
+      name: item.productName || '상품',
+      brand: item.brandName || '',
+      imageUrl: item.productImageUrl || null,
+      positionX: item.positionX ?? 0.5,
+      positionY: item.positionY ?? 0.5,
+      zIndex: item.zIndex ?? 0
+    }))
+  }
 
   const apiStickers = carrier.stickers || []
   nameTagImg.value = null
