@@ -936,7 +936,8 @@ class BattleService extends BaseApiService {
       'totalViews,DESC', 'totalViews,ASC',
       'totalParticipants,DESC', 'totalParticipants,ASC',
       'startDate,DESC', 'startDate,ASC',
-      'endDate,DESC', 'endDate,ASC'
+      'endDate,DESC', 'endDate,ASC',
+      'hotScore,DESC', 'hotScore,ASC'
     ]
 
     const validated = {

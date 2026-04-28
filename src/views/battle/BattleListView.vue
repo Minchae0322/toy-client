@@ -88,11 +88,34 @@
                 </button>
               </div>
 
-              <select class="sort-select">
-                <option value="latest">최신순</option>
-                <option value="popular">인기순</option>
-                <option value="ending">마감임박순</option>
-              </select>
+              <div ref="sortDropdownRef" class="sort-dropdown" :class="{ open: sortOpen }">
+                <button
+                    type="button"
+                    class="sort-trigger"
+                    :class="{ active: sortOpen }"
+                    @click="sortOpen = !sortOpen"
+                >
+                  <span class="sort-trigger-label">{{ currentSortLabel }}</span>
+                  <ChevronDown class="sort-chevron" :class="{ open: sortOpen }" />
+                </button>
+                <transition name="sort-fade">
+                  <div v-if="sortOpen" class="sort-menu" role="listbox">
+                    <button
+                        v-for="opt in sortOptions"
+                        :key="opt.id"
+                        type="button"
+                        class="sort-option"
+                        :class="{ active: sortKey === opt.id }"
+                        role="option"
+                        :aria-selected="sortKey === opt.id"
+                        @click="selectSort(opt.id)"
+                    >
+                      <span class="sort-option-label">{{ opt.label }}</span>
+                      <Check v-if="sortKey === opt.id" class="sort-option-check" />
+                    </button>
+                  </div>
+                </transition>
+              </div>
 
               <button class="create-battle-btn" @click="handleCreateBattle">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -124,6 +147,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { ChevronDown, Check } from 'lucide-vue-next'
 import { battleService } from '@/services/BattleService.js'
 import { useCategoryCache } from '@/composables/useCategoryCache.js'
 import { useAuthStore } from '@/stores/auth.js'
@@ -153,6 +177,19 @@ const tabs = computed(() => {
 
 const activeTab = ref('ongoing')
 const viewMode = ref('grid')
+
+// 정렬
+const sortOptions = [
+  { id: 'popular', label: '인기순', value: 'hotScore,DESC' },
+  { id: 'deadline', label: '마감일순', value: 'endDate,DESC' },
+  { id: 'latest', label: '최신순', value: 'createdAt,DESC' }
+]
+const sortKey = ref('latest')
+const sortOpen = ref(false)
+const sortDropdownRef = ref(null)
+const currentSortLabel = computed(() => sortOptions.find(o => o.id === sortKey.value)?.label || '최신순')
+const currentSortValue = computed(() => sortOptions.find(o => o.id === sortKey.value)?.value || 'createdAt,DESC')
+
 const battles = ref([])
 const hotBattles = ref([])
 const currentPage = ref(0)
@@ -248,7 +285,7 @@ const loadBattles = async (reset = false) => {
 
     const response = await battleService.getBattles(
         searchCondition,
-        { page: currentPage.value, size: 20, sort: 'createdAt,DESC' }
+        { page: currentPage.value, size: 20, sort: currentSortValue.value }
     )
 
     if (response.success && response.data) {
@@ -347,8 +384,34 @@ const handleViewAllHot = () => {
   }
 }
 
+const selectSort = (id) => {
+  if (sortKey.value === id) {
+    sortOpen.value = false
+    return
+  }
+  sortKey.value = id
+  sortOpen.value = false
+}
+
+const handleClickOutsideSort = (e) => {
+  if (!sortOpen.value) return
+  if (sortDropdownRef.value && !sortDropdownRef.value.contains(e.target)) {
+    sortOpen.value = false
+  }
+}
+
+const handleKeydownSort = (e) => {
+  if (e.key === 'Escape' && sortOpen.value) {
+    sortOpen.value = false
+  }
+}
+
 // Watchers
 watch(activeTab, () => {
+  resetAndLoadBattles()
+})
+
+watch(sortKey, () => {
   resetAndLoadBattles()
 })
 
@@ -378,12 +441,17 @@ onMounted(async () => {
       observer.observe(battleListRef.value.observerTarget)
     }
   }, 100)
+
+  document.addEventListener('mousedown', handleClickOutsideSort)
+  document.addEventListener('keydown', handleKeydownSort)
 })
 
 onUnmounted(() => {
   if (observer) {
     observer.disconnect()
   }
+  document.removeEventListener('mousedown', handleClickOutsideSort)
+  document.removeEventListener('keydown', handleKeydownSort)
 })
 </script>
 
@@ -528,7 +596,7 @@ onUnmounted(() => {
   border-bottom: none;
 }
 
-.battles-section :deep(.category-tabs) {
+.battles-section :deep(.category-tabs-wrapper) {
   padding: 4px 0 0;
 }
 
@@ -536,7 +604,7 @@ onUnmounted(() => {
   .battles-section :deep(.filter-container) {
     padding: 0 0 10px;
   }
-  .battles-section :deep(.category-tabs) {
+  .battles-section :deep(.category-tabs-wrapper) {
     padding: 2px 0 0;
   }
 }
@@ -647,24 +715,126 @@ onUnmounted(() => {
   color: #0F172A;
 }
 
-/* 정렬 */
-.sort-select {
-  padding: 0.375rem 1.5rem 0.375rem 0;
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0 center;
-  font-family: inherit;
+/* 정렬 드롭다운 */
+.sort-dropdown {
+  position: relative;
 }
 
-.sort-select:focus {
+.sort-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.sort-trigger:hover {
+  background: #F7F8FA;
+  color: #0F172A;
+}
+
+.sort-trigger.active {
+  background: #F2F4F6;
+  color: #0F172A;
+}
+
+.sort-trigger:focus-visible {
   outline: none;
+  border-color: #CBD5E1;
+}
+
+.sort-trigger-label {
+  line-height: 1;
+}
+
+.sort-chevron {
+  width: 14px;
+  height: 14px;
+  color: #94A3B8;
+  transition: transform 0.18s ease;
+}
+
+.sort-chevron.open {
+  transform: rotate(180deg);
+  color: #0F172A;
+}
+
+.sort-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 144px;
+  background: #FFFFFF;
+  border: 1px solid #F1F3F6;
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04);
+  padding: 4px;
+  z-index: 30;
+}
+
+.sort-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  font-family: inherit;
+  text-align: left;
+}
+
+.sort-option:hover {
+  background: #F7F8FA;
+  color: #0F172A;
+}
+
+.sort-option.active {
+  background: #FAF5FF;
+  color: #9333EA;
+}
+
+.sort-option-label {
+  flex: 1;
+  line-height: 1;
+}
+
+.sort-option-check {
+  width: 14px;
+  height: 14px;
+  color: #9333EA;
+  flex-shrink: 0;
+}
+
+/* 드롭다운 트랜지션 */
+.sort-fade-enter-active,
+.sort-fade-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform-origin: top right;
+}
+
+.sort-fade-enter-from,
+.sort-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
 }
 
 /* 만들기 버튼 */

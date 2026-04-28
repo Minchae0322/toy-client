@@ -1,32 +1,34 @@
 <template>
   <div class="filter-container">
-    <div :class="['category-tabs', { 'mobile-expanded': isMobile && mobileExpanded }]">
-      <button
-          v-if="showAllButton"
-          @click="handleAllClick"
-          :class="['category-tab', { active: selectedCategory === null }]"
-      >
-        전체
-      </button>
+    <div :class="['category-tabs-wrapper', { 'mobile-expanded': isMobile && mobileExpanded }]">
+      <div class="category-scroll">
+        <button
+            v-if="showAllButton"
+            @click="handleAllClick"
+            :class="['category-tab', { active: selectedCategory === null }]"
+        >
+          전체
+        </button>
 
-      <!-- 인기 카테고리 -->
-      <button
-          v-for="category in displayCategories"
-          :key="category.categoryId"
-          @click="handleCategoryClick(category)"
-          :class="['category-tab', { active: selectedCategory?.categoryId === category.categoryId }]"
-      >
-        {{ category.categoryName }}
-      </button>
+        <!-- 인기 카테고리 -->
+        <button
+            v-for="category in displayCategories"
+            :key="category.categoryId"
+            @click="handleCategoryClick(category)"
+            :class="['category-tab', { active: selectedCategory?.categoryId === category.categoryId }]"
+        >
+          {{ category.categoryName }}
+        </button>
 
-      <!-- 로딩 중 -->
-      <div v-if="loading" class="loading-placeholder">
-        <span class="loading-dot"></span>
-        <span class="loading-dot"></span>
-        <span class="loading-dot"></span>
+        <!-- 로딩 중 -->
+        <div v-if="loading" class="loading-placeholder">
+          <span class="loading-dot"></span>
+          <span class="loading-dot"></span>
+          <span class="loading-dot"></span>
+        </div>
       </div>
 
-      <!-- 더보기 버튼 -->
+      <!-- 더보기 버튼 (스크롤 영역 밖, 항상 보이도록) -->
       <button
           v-if="hasMoreCategories"
           @click="handleMoreClick"
@@ -381,17 +383,31 @@ watch(() => props.contentType, () => {
   border-bottom: 1px solid #f2f2f7;
 }
 
-/* 1뎁스: 캡슐형 탭 */
-.category-tabs {
+/* 1뎁스 컨테이너: 스크롤 영역 + 항상 보이는 더보기 버튼 */
+.category-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px 0;
+}
+
+/* 스크롤 가능한 카테고리 탭 영역 */
+.category-scroll {
   display: flex;
   gap: 6px;
   align-items: center;
+  flex: 1;
+  min-width: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 12px 20px 0;
 }
-.category-tabs::-webkit-scrollbar { display: none; }
+.category-scroll::-webkit-scrollbar { display: none; }
+
+/* 더보기 버튼은 절대 줄어들지 않음 */
+.more-btn {
+  flex-shrink: 0;
+}
 
 .category-tab {
   padding: 8px 14px;
@@ -551,11 +567,16 @@ watch(() => props.contentType, () => {
   .filter-container {
     padding: 6px 0 8px;
   }
-  .category-tabs {
+  .category-tabs-wrapper {
     padding: 6px 16px 0;
   }
-  /* 모바일 확장 모드: 2줄까지 wrap */
-  .category-tabs.mobile-expanded {
+  /* 모바일 확장 모드: 카테고리는 wrap, 더보기 버튼은 별도 줄로 */
+  .category-tabs-wrapper.mobile-expanded {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .category-tabs-wrapper.mobile-expanded .category-scroll {
+    flex: 1 1 100%;
     flex-wrap: wrap;
     overflow-x: visible;
     row-gap: 6px;

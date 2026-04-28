@@ -387,7 +387,7 @@ onUnmounted(() => {
   border-bottom: none;
 }
 
-.content-layout :deep(.category-tabs) {
+.content-layout :deep(.category-tabs-wrapper) {
   padding: 4px 0 0;
 }
 
@@ -398,7 +398,7 @@ onUnmounted(() => {
   .content-layout :deep(.filter-container) {
     padding: 0 0 10px;
   }
-  .content-layout :deep(.category-tabs) {
+  .content-layout :deep(.category-tabs-wrapper) {
     padding: 2px 0 0;
   }
 }
