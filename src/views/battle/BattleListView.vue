@@ -528,7 +528,7 @@ onUnmounted(() => {
   border-bottom: none;
 }
 
-.battles-section :deep(.category-tabs) {
+.battles-section :deep(.category-tabs-wrapper) {
   padding: 4px 0 0;
 }
 
@@ -536,7 +536,7 @@ onUnmounted(() => {
   .battles-section :deep(.filter-container) {
     padding: 0 0 10px;
   }
-  .battles-section :deep(.category-tabs) {
+  .battles-section :deep(.category-tabs-wrapper) {
     padding: 2px 0 0;
   }
 }
