@@ -90,19 +90,7 @@ class ChatService extends BaseApiService {
   }
 
   /**
-   * 채팅방 입장
-   */
-  async joinChatRoom(roomId) {
-    const requestData = {
-      deviceId: authUtils.getDeviceId()
-    }
-
-    console.log(`🚪 [CHAT] 채팅방 입장: roomId=${roomId}`)
-    return await this.post(`/v1/chat/rooms/${roomId}/join`, requestData)
-  }
-
-  /**
-   * 채팅방 나가기
+   * 채팅방 나가기 (참여자 탈퇴)
    */
   async leaveChatRoom(roomId) {
     const requestData = {
@@ -111,15 +99,6 @@ class ChatService extends BaseApiService {
 
     console.log(`🚪 [CHAT] 채팅방 나가기: roomId=${roomId}`)
     return await this.post(`/v1/chat/rooms/${roomId}/leave`, requestData)
-  }
-
-  /**
-   * 채팅방 화면 이탈 (온라인 유지, 헤드업 수신 대상으로 전환)
-   */
-  async exitChatRoom(roomId) {
-    const deviceId = authUtils.getDeviceId()
-    console.log(`🚪 [CHAT] 채팅방 화면 이탈: roomId=${roomId}`)
-    return await this.post(`/v1/chat/rooms/${roomId}/exit?deviceId=${encodeURIComponent(deviceId)}`)
   }
 
   /**
@@ -575,7 +554,6 @@ export function useChat() {
     getRooms,
     createRoom,
     getRoomDetail: (roomId) => service.getChatRoomDetail(roomId),
-    joinRoom: (roomId) => service.joinChatRoom(roomId),
     leaveRoom: (roomId) => service.leaveChatRoom(roomId),
     getMessages: (roomId, params) => service.getChatMessages(roomId, params),
     sendMessage,

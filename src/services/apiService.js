@@ -338,12 +338,6 @@ class IntegratedApiService {
     return this.get(url)
   }
 
-  // 채팅방 입장
-  async joinChatRoom(roomId) {
-    const url = `${this.chatServerURL}/api/v1/chat/rooms/${roomId}/join`
-    return this.post(url, { deviceId: this.getDeviceId() })
-  }
-
   // 채팅방 나가기
   async leaveChatRoom(roomId) {
     const url = `${this.chatServerURL}/api/v1/chat/rooms/${roomId}/leave`
@@ -515,7 +509,6 @@ export const chatAPI = {
   getRooms: (searchCondition) => apiService.getChatRooms(searchCondition),
   createRoom: (roomData) => apiService.createChatRoom(roomData),
   getRoomDetail: (roomId) => apiService.getChatRoomDetail(roomId),
-  joinRoom: (roomId) => apiService.joinChatRoom(roomId),
   leaveRoom: (roomId) => apiService.leaveChatRoom(roomId),
   getMessages: (roomId, params) => apiService.getChatMessages(roomId, params),
   sendMessage: (roomId, messageData) => apiService.sendMessage(roomId, messageData),
@@ -659,7 +652,6 @@ export function useChat() {
     createRoom,
     sendMessage,
     getRoomDetail: chatAPI.getRoomDetail,
-    joinRoom: chatAPI.joinRoom,
     leaveRoom: chatAPI.leaveRoom,
     getMessages: chatAPI.getMessages
   }

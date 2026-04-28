@@ -532,21 +532,12 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (typingTimer.value) clearTimeout(typingTimer.value)
-  const roomId = actualRoomId.value
-  webSocketService.unsubscribeFromChatRoom?.(roomId)
-  if (roomId) {
-    chatService.exitChatRoom(roomId).catch(err =>
-        console.warn('[ChatDetail] exit 실패:', err))
-  }
+  webSocketService.unsubscribeFromChatRoom?.(actualRoomId.value)
 })
 
 watch(actualRoomId, (newVal, oldVal) => {
   if (newVal && newVal !== oldVal) {
-    if (oldVal) {
-      webSocketService.unsubscribeFromChatRoom?.(oldVal)
-      chatService.exitChatRoom(oldVal).catch(err =>
-          console.warn('[ChatDetail] exit 실패:', err))
-    }
+    if (oldVal) webSocketService.unsubscribeFromChatRoom?.(oldVal)
     messages.value = []
     initializeChatRoom()
   }
@@ -567,6 +558,9 @@ watch(actualRoomId, (newVal, oldVal) => {
   margin: 0;
   width: 100%;
   padding: 0 16px;
+  /* 페이지 자체 스크롤 차단 — 메시지 영역만 내부 스크롤 */
+  overflow: hidden;
+  min-height: 0;
 }
 
 @media (min-width: 768px) {
@@ -582,7 +576,7 @@ watch(actualRoomId, (newVal, oldVal) => {
 @media (max-width: 767px) {
   .chat-detail-container {
     height: 100%;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding: 0 12px env(safe-area-inset-bottom);
   }
 }
 
@@ -597,6 +591,25 @@ watch(actualRoomId, (newVal, oldVal) => {
   position: sticky;
   top: 0;
   z-index: 100;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .detail-header {
+    gap: 10px;
+    padding: 12px 0;
+  }
+  .detail-header .back-btn,
+  .detail-header .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .detail-header .header-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  .detail-header .header-title { font-size: 15px; }
+  .detail-header .header-status { font-size: 11px; }
 }
 
 .back-btn {
@@ -760,6 +773,7 @@ watch(actualRoomId, (newVal, oldVal) => {
 /* Messages Area */
 .messages-area {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 20px 0;
   background: #FAFAFB;
@@ -985,6 +999,7 @@ watch(actualRoomId, (newVal, oldVal) => {
   border: 1px solid #F1F3F6;
   border-top: none;
   border-radius: 0 0 16px 16px;
+  flex-shrink: 0;
 }
 
 .attach-btn {
