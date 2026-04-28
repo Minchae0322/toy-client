@@ -497,7 +497,7 @@ onUnmounted(() => {
 }
 
 .section-title {
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #18181b;
   margin: 0;
@@ -507,12 +507,6 @@ onUnmounted(() => {
 
 .section-title .title-accent {
   color: #9333ea;
-}
-
-@media (min-width: 768px) {
-  .section-title {
-    font-size: 1.125rem;
-  }
 }
 
 @media (min-width: 1280px) {

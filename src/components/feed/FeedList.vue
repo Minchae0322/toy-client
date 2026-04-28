@@ -324,18 +324,12 @@ defineExpose({ observerTarget });
 }
 
 .section-title {
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #18181b;
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.2;
-}
-
-@media (min-width: 768px) {
-  .section-title {
-    font-size: 1.125rem;
-  }
 }
 
 @media (min-width: 1280px) {
@@ -917,8 +911,6 @@ defineExpose({ observerTarget });
   .feed-header {
     margin-bottom: 12px;
   }
-
-  .section-title { font-size: 1rem; }
 
   /* 모바일 Empty State */
   .feed-empty-state {
