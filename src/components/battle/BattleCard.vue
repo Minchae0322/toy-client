@@ -493,7 +493,7 @@ const daysLeftText = computed(() => {
   }
 
   .title {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.4;
     margin-bottom: 6px;
     -webkit-line-clamp: 2;
