@@ -1,6 +1,6 @@
 <template>
   <div class="filter-container">
-    <div class="category-tabs">
+    <div :class="['category-tabs', { 'mobile-expanded': isMobile && mobileExpanded }]">
       <button
           v-if="showAllButton"
           @click="handleAllClick"
@@ -29,11 +29,17 @@
       <!-- 더보기 버튼 -->
       <button
           v-if="hasMoreCategories"
-          @click="showCategoryModal = true"
-          class="category-tab more-btn"
-          title="더보기"
+          @click="handleMoreClick"
+          :class="['category-tab', 'more-btn', { 'more-btn-text': isMobile && mobileExpanded }]"
+          :title="isMobile && !mobileExpanded ? '펼치기' : '전체 카테고리 보기'"
       >
-        <svg viewBox="0 0 24 24" fill="currentColor">
+        <template v-if="isMobile && mobileExpanded">
+          <span>전체 카테고리</span>
+          <svg class="more-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </template>
+        <svg v-else viewBox="0 0 24 24" fill="currentColor">
           <circle cx="5" cy="12" r="2"/>
           <circle cx="12" cy="12" r="2"/>
           <circle cx="19" cy="12" r="2"/>
@@ -114,14 +120,31 @@ const popularCategories = ref([]);
 const loading = ref(false);
 const showCategoryModal = ref(false);
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024);
+const mobileExpanded = ref(false);
 
-// 화면 크기에 따른 카테고리 개수
+const isMobile = computed(() => windowWidth.value < 768);
+
+// 모바일 확장(2줄) 모드에서 보여줄 최대 개수
+const MOBILE_EXPANDED_MAX = 10;
+
+// 화면 크기에 따른 카테고리 개수 (한 줄을 꽉 채우는 반응형)
 const maxCategories = computed(() => {
   if (windowWidth.value >= 1280) return 8;
   if (windowWidth.value >= 1024) return 6;
   if (windowWidth.value >= 768) return 5;
+  if (windowWidth.value >= 480) return 5;
+  if (windowWidth.value >= 380) return 4;
   return 3;
 });
+
+// 실제로 화면에 보일 개수 (모바일 확장 시 더 많이)
+const visibleCount = computed(() => {
+  if (isMobile.value && mobileExpanded.value) return MOBILE_EXPANDED_MAX;
+  return maxCategories.value;
+});
+
+// 캐시에서 가져올 개수 (확장 모드에서도 충분하도록 여유 있게)
+const fetchCount = computed(() => Math.max(maxCategories.value + 2, MOBILE_EXPANDED_MAX + 2));
 
 // 표시할 카테고리 (인기 카테고리 우선, 없으면 props.categories 사용)
 const displayCategories = computed(() => {
@@ -129,7 +152,7 @@ const displayCategories = computed(() => {
     ? popularCategories.value
     : props.categories;
 
-  const visible = source.slice(0, maxCategories.value);
+  const visible = source.slice(0, visibleCount.value);
 
   // 선택된 카테고리가 visible에 없으면 추가
   if (selectedCategory.value) {
@@ -146,8 +169,17 @@ const hasMoreCategories = computed(() => {
   const total = popularCategories.value.length > 0
     ? popularCategories.value.length
     : props.categories.length;
-  return total > maxCategories.value;
+  return total > visibleCount.value;
 });
+
+// "..." / "더보기" 버튼 클릭
+const handleMoreClick = () => {
+  if (isMobile.value && !mobileExpanded.value) {
+    mobileExpanded.value = true;
+  } else {
+    showCategoryModal.value = true;
+  }
+};
 
 // 선택된 카테고리가 표시 목록에 없을 경우 칩으로 표시
 const showSelectedChip = computed(() => {
@@ -165,13 +197,17 @@ const subCategories = computed(() => {
 // 윈도우 리사이즈 핸들러
 const handleResize = () => {
   windowWidth.value = window.innerWidth;
+  // 데스크톱으로 전환되면 모바일 확장 상태 해제
+  if (!isMobile.value) {
+    mobileExpanded.value = false;
+  }
 };
 
 // 인기 카테고리 조회 (캐시 사용)
 const fetchPopularCategories = async () => {
   loading.value = true;
   try {
-    const data = await loadPopularFromCache(props.contentType, maxCategories.value + 2);
+    const data = await loadPopularFromCache(props.contentType, fetchCount.value);
     popularCategories.value = data;
   } catch (error) {
     console.warn('[CategoryFilter] 인기 카테고리 조회 실패, 기본 카테고리 사용:', error.message);
@@ -395,6 +431,29 @@ watch(() => props.contentType, () => {
   height: 20px;
 }
 
+.category-tab.more-btn.more-btn-text {
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #9333ea;
+  border: 1px dashed #c084fc;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.category-tab.more-btn.more-btn-text:hover {
+  background: #faf5ff;
+  border-color: #9333ea;
+}
+
+.more-chevron {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
 /* 로딩 애니메이션: 은은하게 */
 .loading-placeholder {
   display: flex;
@@ -494,6 +553,12 @@ watch(() => props.contentType, () => {
   }
   .category-tabs {
     padding: 6px 16px 0;
+  }
+  /* 모바일 확장 모드: 2줄까지 wrap */
+  .category-tabs.mobile-expanded {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    row-gap: 6px;
   }
   .selected-chip-wrapper {
     margin-top: 6px;
