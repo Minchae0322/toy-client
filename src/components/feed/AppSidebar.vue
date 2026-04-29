@@ -118,17 +118,31 @@
         </div>
       </button>
     </div>
+
+    <!-- 사이드바 최하단: 의견 보내기 (저시각 비중) -->
+    <button type="button" class="feedback-link" @click="showFeedback = true">
+      <svg class="feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+      </svg>
+      <span>의견 보내기 <span class="feedback-anon">(익명)</span></span>
+    </button>
+
+    <FeedbackModal :visible="showFeedback" @close="showFeedback = false" />
   </aside>
 </template>
 
 <script setup>
+import {ref} from 'vue';
 import {useRouter} from 'vue-router';
 import {useAuth} from '@/composables/useAuth';
 import {useConfirmDialog} from '@/composables/useConfirmDialog';
+import FeedbackModal from '@/components/common/FeedbackModal.vue';
 
 const router = useRouter();
 const {isLoggedIn, userId} = useAuth();
 const {open, openLoginRequired} = useConfirmDialog();
+
+const showFeedback = ref(false);
 
 const handleProtectedRoute = async (routeName) => {
   console.log(`=== ${routeName} 클릭 ===`);
@@ -429,4 +443,26 @@ const handleProtectedRoute = async (routeName) => {
   color: #ffffff;
   stroke-width: 2.5;
 }
+
+/* ===== 사이드바 최하단: 의견 보내기 ===== */
+.feedback-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding: 8px 4px 0;
+  background: transparent;
+  border: none;
+  border-top: 1px solid #F1F3F6;
+  font-size: 12px;
+  font-weight: 500;
+  color: #8B95A1;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.1px;
+  transition: color 0.15s ease;
+}
+.feedback-link:hover { color: #4E5968; }
+.feedback-icon { width: 13px; height: 13px; flex-shrink: 0; }
+.feedback-anon { color: #B0B8C1; font-weight: 400; margin-left: 2px; }
 </style>
