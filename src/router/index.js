@@ -353,8 +353,28 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition
     if (to.path.startsWith('/chat')) return false
+
+    if (savedPosition) {
+      // 비동기 데이터 로드로 콘텐츠 높이가 자라기 전에 복원하면 엉뚱한 위치로 가므로,
+      // 페이지 높이가 savedPosition 까지 도달할 때까지 폴링
+      return new Promise((resolve) => {
+        const targetY = savedPosition.top || 0
+        const maxAttempts = 30   // 30 * 50ms = 1.5s 한도
+        let attempt = 0
+        const check = () => {
+          const reachable = document.documentElement.scrollHeight - window.innerHeight
+          if (reachable >= targetY || attempt >= maxAttempts) {
+            resolve(savedPosition)
+            return
+          }
+          attempt += 1
+          setTimeout(check, 50)
+        }
+        setTimeout(check, 50)
+      })
+    }
+
     return { top: 0 }
   }
 })
