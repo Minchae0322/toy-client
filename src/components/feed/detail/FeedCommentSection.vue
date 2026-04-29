@@ -326,7 +326,8 @@ const handleDelete = (commentId) => {
 
 .comment-section {
   background: #fff;
-  padding: 0 20px 32px;
+  /* iOS 홈 인디케이터 회피: env()는 PC에서 0 */
+  padding: 0 20px calc(32px + env(safe-area-inset-bottom));
 }
 
 /* 헤더 */

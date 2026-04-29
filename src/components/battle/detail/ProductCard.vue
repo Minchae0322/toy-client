@@ -844,4 +844,14 @@ defineExpose({ setCommentSubmitting })
     border-radius: 6px;
   }
 }
+
+/* 모바일/터치: sticky hover 차단 */
+@media (hover: none) {
+  .product-card-v1:hover {
+    transform: none;
+  }
+  .product-card-v1:hover .img-box img {
+    transform: none;
+  }
+}
 </style>

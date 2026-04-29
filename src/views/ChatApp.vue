@@ -354,7 +354,8 @@ onBeforeUnmount(async () => {
   flex: 1;
   min-width: 0;
   min-height: 100vh;
-  padding-bottom: 5rem;
+  /* BottomNavigation + iOS 홈 인디케이터 */
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   padding-left: 1.5rem;
   position: relative;
 }

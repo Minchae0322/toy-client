@@ -1282,4 +1282,11 @@ async function onBattleUpdated() {
   .header-title { font-size: 17px; }
   .stat-value { font-size: 18px; }
 }
+
+/* 모바일/터치: sticky hover 차단 */
+@media (hover: none) {
+  .fab:hover {
+    transform: none;
+  }
+}
 </style>

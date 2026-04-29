@@ -788,7 +788,7 @@ onUnmounted(() => {
 @media (min-width: 1280px) { .app-container { padding: 0 3rem; max-width: 1920px; margin: 0 auto; } }
 @media (min-width: 1920px) { .app-container { padding: 0 4rem; } }
 
-.main-content { flex: 1; min-width: 0; padding-bottom: 80px; padding-left: 1.5rem; }
+.main-content { flex: 1; min-width: 0; padding-bottom: calc(80px + env(safe-area-inset-bottom)); padding-left: 1.5rem; }
 @media (max-width: 767px) { .main-content { padding-left: 0; } }
 @media (min-width: 768px) { .main-content { padding-bottom: 0; } }
 
@@ -1136,7 +1136,7 @@ onUnmounted(() => {
   .page-header h1 { font-size: 0.875rem; padding-left: 8px; border-left-width: 2.5px; }
   .sub-title { font-size: 10px; }
   .carrier-panel {
-    position: fixed; bottom: 140px; right: auto; left: 50%; z-index: 200;
+    position: fixed; bottom: calc(140px + env(safe-area-inset-bottom)); right: auto; left: 50%; z-index: 200;
     transform: translateX(-50%);
     max-width: calc(400px + 32px); width: 100%; padding-right: 24px; box-sizing: border-box;
     pointer-events: none;

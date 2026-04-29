@@ -135,7 +135,8 @@ const handleRemove = (rank) => {
 <style scoped>
 .vote-bar {
   position: fixed;
-  bottom: 24px;
+  /* iOS 홈 인디케이터 회피 */
+  bottom: calc(24px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   background: #111;

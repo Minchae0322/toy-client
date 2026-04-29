@@ -800,7 +800,8 @@ const beforeUnloadHandler = (event) => {
   background: #ffffff;
   min-height: 100vh;
   color: #1a1a1a;
-  padding-bottom: 96px;
+  /* iOS 홈 인디케이터 회피 */
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
 }
 
 /* ── Header ── */
@@ -1196,7 +1197,8 @@ const beforeUnloadHandler = (event) => {
   background: rgba(255,255,255,0.97);
   backdrop-filter: blur(12px);
   border-top: 1px solid #ebedf0;
-  padding: 12px 16px;
+  /* iOS 홈 인디케이터 회피 */
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   z-index: 40;
 }
 .bottom-inner { max-width: 720px; margin: 0 auto; }

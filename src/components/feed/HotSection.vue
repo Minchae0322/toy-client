@@ -289,6 +289,7 @@ onUnmounted(() => {
   padding: 10px 4px 20px 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dashboard-feed-scroll::-webkit-scrollbar {
@@ -305,6 +306,18 @@ onUnmounted(() => {
   box-shadow: 0 10px 20px rgba(0,0,0,0.1);
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   cursor: pointer;
+}
+
+/* 모바일 한정: scroll-snap (PC는 자유 스크롤 유지) */
+@media (max-width: 767px) {
+  .dashboard-feed-scroll {
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 4px;
+    overscroll-behavior-x: contain;
+  }
+  .dash-feed-card {
+    scroll-snap-align: start;
+  }
 }
 
 @media (min-width: 640px) {

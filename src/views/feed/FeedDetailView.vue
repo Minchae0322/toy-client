@@ -594,7 +594,7 @@ onMounted(() => loadFeedDetail())
 .detail-main {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 20px 40px;
+  padding: 24px 20px calc(40px + env(safe-area-inset-bottom));
 }
 
 .content-wrapper {

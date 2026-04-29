@@ -215,7 +215,8 @@ onMounted(loadRewardData)
 .main-content {
   flex: 1;
   min-width: 0;
-  padding-bottom: 5rem;
+  /* BottomNavigation + iOS 홈 인디케이터 */
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 768px) { .main-content { padding-bottom: 3rem; } }
@@ -627,7 +628,8 @@ onMounted(loadRewardData)
 /* ===== 토스트 (Neo-Brutalism) ===== */
 .toast {
   position: fixed;
-  bottom: 88px;
+  /* BottomNav 88 + iOS 홈 인디케이터 */
+  bottom: calc(88px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   background: #0A0E1A;
@@ -653,4 +655,10 @@ onMounted(loadRewardData)
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 20px); }
+
+/* 모바일/터치: sticky hover 차단 */
+@media (hover: none) {
+  .banner-btn:hover { transform: none; box-shadow: 4px 4px 0 #FFFFFF; }
+  .tab-panel :deep(.hero-card):hover { transform: none; }
+}
 </style>

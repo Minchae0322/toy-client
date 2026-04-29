@@ -939,7 +939,8 @@ onBeforeUnmount(() => {
   background: var(--bg);
   min-height: 100vh;
   color: var(--primary);
-  padding-bottom: 100px;
+  /* iOS 홈 인디케이터 회피 */
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
 /* Smooth scroll & custom scrollbar */
@@ -1746,7 +1747,8 @@ onBeforeUnmount(() => {
   right: 0;
   background: white;
   border-top: 1px solid var(--border);
-  padding: 16px;
+  /* iOS 홈 인디케이터: 하단 패딩 16 + safe area */
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
   z-index: 40;
 }
 .fixed-bottom-content { max-width: 640px; margin: 0 auto; }

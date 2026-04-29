@@ -772,4 +772,15 @@ const permissionType = computed(() => {
     transform: translateX(-50%);
   }
 }
+
+/* 모바일/터치: sticky hover 차단 */
+@media (hover: none) {
+  .nav-btn:hover,
+  .add-product-btn:hover {
+    transform: none;
+  }
+  .add-product-btn:hover .plus-circle {
+    transform: none;
+  }
+}
 </style>

@@ -188,10 +188,23 @@ const handleImageError = (battleId) => {
   padding-bottom: 4px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .hot-scroll::-webkit-scrollbar {
   display: none;
+}
+
+/* 모바일 한정: scroll-snap (PC는 자유 스크롤 유지) */
+@media (max-width: 767px) {
+  .hot-scroll {
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 4px;
+    overscroll-behavior-x: contain;
+  }
+  .hot-card {
+    scroll-snap-align: start;
+  }
 }
 
 /* 카드 */

@@ -1246,7 +1246,8 @@ export default {
 .soft-modern-v1 {
   background: #fdfeff;
   min-height: 100vh;
-  padding-bottom: 100px;
+  /* iOS 홈 인디케이터 회피 */
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
 /* Loading & Error */
@@ -1853,11 +1854,11 @@ export default {
   }
 
   .pc-arguments-section {
-    padding: 0 12px 120px;
+    padding: 0 12px calc(120px + env(safe-area-inset-bottom));
   }
 
   .soft-modern-v1 {
-    padding-bottom: 120px;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
   }
 }
 
@@ -1983,6 +1984,13 @@ export default {
   .youtube-original-link {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* 모바일/터치: sticky hover 차단 */
+@media (hover: none) {
+  .load-comments-btn:hover {
+    transform: none;
   }
 }
 </style>

@@ -389,7 +389,8 @@ onMounted(() => {
 .review-write-page {
   min-height: 100vh;
   background: #FAFAFA;
-  padding-bottom: 80px;
+  /* iOS 홈 인디케이터 회피 */
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
 .page-header {
@@ -796,5 +797,11 @@ onMounted(() => {
   .rating-selector {
     gap: 4px;
   }
+}
+
+/* 모바일/터치: sticky hover 차단 */
+@media (hover: none) {
+  .star-button:hover { transform: none; }
+  .btn-submit:hover:not(:disabled) { transform: none; }
 }
 </style>

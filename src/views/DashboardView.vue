@@ -996,7 +996,8 @@ onUnmounted(() => {
   flex: 1;
   min-width: 0;
   min-height: 100vh;
-  padding-bottom: 5rem;
+  /* 모바일: 하단 BottomNavigation(60px) + 여유 + iOS 홈 인디케이터 회피 */
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   padding-left: 1.5rem;
 }
 
@@ -1372,6 +1373,13 @@ onUnmounted(() => {
   -webkit-overflow-scrolling: touch;
 }
 
+/* 모바일 한정: 부모 스크롤 체이닝 차단 */
+@media (max-width: 767px) {
+  .yb-swipe-container {
+    overscroll-behavior-x: contain;
+  }
+}
+
 .yb-swipe-container::-webkit-scrollbar {
   display: none;
 }
@@ -1529,6 +1537,14 @@ onUnmounted(() => {
   transition: all 0.2s ease;
   cursor: pointer;
   padding: 0;
+  /* 시각 크기는 6px 유지, 터치 hit area 44px 확보 */
+  position: relative;
+}
+.yb-page-btn::before {
+  content: '';
+  position: absolute;
+  inset: -19px;
+  /* 44px = 6 + 19*2 */
 }
 
 .yb-page-btn:hover {
@@ -1726,6 +1742,8 @@ onUnmounted(() => {
   padding: 6px 4px 14px 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* iOS 모멘텀 스크롤 (PC 영향 없음) */
+  -webkit-overflow-scrolling: touch;
 }
 
 .dashboard-feed-scroll::-webkit-scrollbar {
@@ -1742,6 +1760,18 @@ onUnmounted(() => {
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   cursor: pointer;
+}
+
+/* 모바일 한정: scroll-snap (PC는 자유 스크롤 유지) */
+@media (max-width: 767px) {
+  .dashboard-feed-scroll {
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 4px;
+    overscroll-behavior-x: contain;
+  }
+  .dash-feed-card {
+    scroll-snap-align: start;
+  }
 }
 
 @media (min-width: 640px) {
@@ -3219,6 +3249,41 @@ onUnmounted(() => {
 
   .empty-text {
     font-size: 0.8125rem;
+  }
+}
+
+/* ===== 모바일 한정: 탭 가능한 카드 텍스트 선택 방지 (PC 드래그 선택 유지) ===== */
+@media (max-width: 767px) {
+  .glass-banner,
+  .dash-feed-card,
+  .feed-card,
+  .battle-hot-card,
+  .dash-trend-banner,
+  .yb-item,
+  .dash-bubble {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* ===== 터치(비호버) 디바이스에서 sticky hover 무력화 ===== */
+@media (hover: none) {
+  .glass-banner:hover,
+  .yb-item:hover,
+  .dash-feed-card:hover,
+  .feed-card:hover,
+  .battle-hot-card:hover,
+  .dash-bubble:hover {
+    transform: none;
+    box-shadow: inherit;
+  }
+  .dash-feed-card:hover .card-visual-wrapper img,
+  .feed-card:hover .feed-card-image img {
+    transform: none;
+  }
+  .glass-banner:hover .banner-inner,
+  .glass-banner:hover .banner-action {
+    transform: none;
   }
 }
 </style>

@@ -324,7 +324,8 @@ onMounted(() => {
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: #0A0E1A;
   -webkit-font-smoothing: antialiased;
-  padding-bottom: 48px;
+  /* iOS 홈 인디케이터 회피 */
+  padding-bottom: calc(48px + env(safe-area-inset-bottom));
 }
 
 /* content-inner — AppSidebar와 붙어 시작하도록 left-align */
@@ -802,7 +803,8 @@ onMounted(() => {
 /* 토스트 */
 .toast {
   position: fixed;
-  bottom: 40px;
+  /* iOS 홈 인디케이터 회피 */
+  bottom: calc(40px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   display: flex;

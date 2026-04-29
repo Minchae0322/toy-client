@@ -48,7 +48,8 @@ defineEmits(['previous', 'next']);
 .action-footer {
   background: white;
   border-top: 1px solid #F0F0F3;
-  padding: 24px 40px;
+  /* iOS 홈 인디케이터 회피 */
+  padding: 24px 40px calc(24px + env(safe-area-inset-bottom));
   position: sticky;
   bottom: 0;
   z-index: 20;
@@ -105,6 +106,12 @@ defineEmits(['previous', 'next']);
   background: #000000;
   transform: translateY(-1px);
 }
+/* 모바일 sticky hover 차단 */
+@media (hover: none) {
+  .btn-primary:hover {
+    transform: none;
+  }
+}
 
 .btn-primary:disabled {
   background: #E5E7EB;
@@ -143,7 +150,7 @@ defineEmits(['previous', 'next']);
 /* ===== 모바일 반응형 ===== */
 @media (max-width: 768px) {
   .action-footer {
-    padding: 16px 20px;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
   }
 
   .action-container {
@@ -179,7 +186,7 @@ defineEmits(['previous', 'next']);
 
 @media (max-width: 640px) {
   .action-footer {
-    padding: 14px 16px;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
   }
 
   .step-info {
