@@ -255,7 +255,8 @@ const toggleFollow = async (targetUserId) => {
 }
 
 const goToProfile = (targetUserId) => {
-  router.push({ name: 'UserFeed', params: { userId: targetUserId } })
+  if (targetUserId == null) return
+  router.push({ name: 'UserFeedList', params: { userId: String(targetUserId) } })
 }
 
 // Watchers
