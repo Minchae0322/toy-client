@@ -247,7 +247,11 @@ onUnmounted(() => {
 
   <!-- 메인 컨텐츠 -->
   <main :class="['main', { 'auth-page': isAuthPage }]">
-    <RouterView/>
+    <RouterView v-slot="{ Component }">
+      <KeepAlive :include="['FeedHomeView']">
+        <component :is="Component" />
+      </KeepAlive>
+    </RouterView>
   </main>
 
   <!-- 푸터 -->

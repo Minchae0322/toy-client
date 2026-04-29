@@ -52,6 +52,10 @@
   </div>
 </template>
 
+<script>
+export default { name: 'FeedHomeView' }
+</script>
+
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
