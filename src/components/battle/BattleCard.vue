@@ -396,9 +396,6 @@ const daysLeftText = computed(() => {
   gap: 8px;
   font-size: 12px;
   color: #8B95A1;
-  padding: 8px 0;
-  border-top: 1px solid #F2F4F6;
-  border-bottom: 1px solid #F2F4F6;
   letter-spacing: -0.01em;
 }
 
@@ -413,6 +410,7 @@ const daysLeftText = computed(() => {
   font-weight: 700;
   color: #191F28;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 .stats .stat-label {
@@ -536,8 +534,7 @@ const daysLeftText = computed(() => {
   }
 
   .stats {
-    gap: 5px;
-    padding: 6px 0;
+    gap: 6px;
     font-size: 11px;
     flex-wrap: nowrap;
     overflow: hidden;

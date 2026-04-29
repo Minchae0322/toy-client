@@ -253,19 +253,7 @@
               </div>
               <!-- 바디 -->
               <div class="battle-hot-body">
-                <div class="battle-hot-category-row">
-                  <span class="battle-hot-category">{{ battle.status?.description || '진행중' }}</span>
-                  <div class="battle-hot-stats">
-                    <span class="battle-hot-stat">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      {{ formatNumber(battle.totalViews || 0) }}
-                    </span>
-                    <span class="battle-hot-stat">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                      {{ battle.totalCommentCount || 0 }}
-                    </span>
-                  </div>
-                </div>
+                <span class="battle-hot-category">{{ battle.status?.description || '진행중' }}</span>
                 <h3 class="battle-hot-title">{{ battle.title }}</h3>
                 <p class="battle-hot-meta">
                   <span class="meta-stat">
@@ -2452,53 +2440,37 @@ onUnmounted(() => {
 
 /* 바디 */
 .battle-hot-body {
-  padding: 14px 18px 20px;
+  padding: 16px 18px 20px;
   overflow: hidden;
 }
-.battle-hot-category-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 5px;
-}
 .battle-hot-category {
-  font-size: 10.5px;
-  color: #c0c4d8;
-  font-weight: 500;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-}
-.battle-hot-stats {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.battle-hot-stat {
-  display: flex;
-  align-items: center;
-  gap: 3px;
+  display: inline-block;
   font-size: 11px;
-  color: #c8cce0;
-}
-.battle-hot-stat svg { stroke: #c8cce0; }
-.battle-hot-title {
-  font-size: 15px;
+  color: #8B95A1;
   font-weight: 600;
-  color: #1a1a1e;
-  margin-bottom: 5px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.battle-hot-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #191F28;
+  margin: 0 0 12px;
   line-height: 1.4;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .battle-hot-meta {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 10px;
   font-size: 12px;
   color: #8B95A1;
-  margin: 0 0 15px;
-  padding: 8px 0;
-  border-top: 1px solid #F2F4F6;
-  border-bottom: 1px solid #F2F4F6;
+  margin: 0 0 18px;
   letter-spacing: -0.01em;
 }
 .battle-hot-meta .meta-stat {
@@ -2511,6 +2483,7 @@ onUnmounted(() => {
   font-weight: 700;
   color: #191F28;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 .battle-hot-meta .meta-label {
   font-weight: 500;
@@ -2532,19 +2505,19 @@ onUnmounted(() => {
   content: '';
   flex: 1;
   height: 1px;
-  background: #eff0f8;
+  background: #F2F4F6;
 }
 .battle-label {
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 1.2px;
-  color: #b8bdd6;
+  color: #8B95A1;
   white-space: nowrap;
   text-transform: uppercase;
 }
 
 /* 순위 */
-.rank-item { margin-bottom: 14px; }
+.rank-item { margin-bottom: 12px; }
 .rank-row {
   display: flex;
   align-items: center;
@@ -2573,46 +2546,48 @@ onUnmounted(() => {
   position: relative;
 }
 .rank-badge.r1 {
-  background: #fbbf24;
+  background: #FBBF24;
   color: #fff;
 }
 .rank-badge.r2 {
-  background: #f3f4f8;
-  color: #9098b8;
+  background: #F2F4F6;
+  color: #4E5968;
 }
 .rank-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: #9098b8;
+  color: #4E5968;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
   min-width: 0;
   margin-left: 4px;
+  letter-spacing: -0.01em;
 }
 .rank-item.r1-item .rank-name {
-  color: #3d4270;
+  color: #191F28;
   font-weight: 700;
 }
 .rank-pct {
   font-size: 13px;
   font-weight: 700;
   flex-shrink: 0;
-  letter-spacing: 0.2px;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
-.rank-pct.p1 { color: #7c6ef5; }
-.rank-pct.p2 { color: #c8cce0; }
+.rank-pct.p1 { color: #9333EA; }
+.rank-pct.p2 { color: #8B95A1; }
 
 /* 게이지 바 */
-.battle-gauge-wrap { margin-top: 13px; }
+.battle-gauge-wrap { margin-top: 14px; }
 .battle-gauge-track {
   display: flex;
   width: 100%;
-  height: 7px;
+  height: 8px;
   border-radius: 99px;
   overflow: hidden;
-  background: #f3f4f8;
+  background: #F2F4F6;
   gap: 2px;
 }
 .gauge-seg {
@@ -2621,24 +2596,24 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 .gauge-seg.s1 {
-  background: #a78bfa;
+  background: #9333EA;
   border-radius: 99px 0 0 99px;
 }
-.gauge-seg.s2 { background: #fb7185; }
+.gauge-seg.s2 { background: #C4B5FD; }
 .gauge-seg.s3 {
-  background: #e2e5f0;
+  background: #E5E8EB;
   border-radius: 0 99px 99px 0;
 }
 .gauge-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 6px;
+  margin-top: 8px;
   gap: 4px;
 }
 .gauge-label {
   font-size: 10px;
   font-weight: 500;
-  color: #c8cce0;
+  color: #8B95A1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2647,17 +2622,17 @@ onUnmounted(() => {
   gap: 4px;
 }
 .gauge-label .dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 .gauge-label.gl1 { flex: 1; }
-.gauge-label.gl1 .dot { background: #a78bfa; }
+.gauge-label.gl1 .dot { background: #9333EA; }
 .gauge-label.gl2 { flex: 1; justify-content: center; }
-.gauge-label.gl2 .dot { background: #fb7185; }
+.gauge-label.gl2 .dot { background: #C4B5FD; }
 .gauge-label.gl3 { flex: 1; justify-content: flex-end; }
-.gauge-label.gl3 .dot { background: #d0d4e8; }
+.gauge-label.gl3 .dot { background: #D1D6DB; }
 
 /* 스켈레톤 */
 .battle-hot-card.skeleton-card .battle-hot-thumb {
