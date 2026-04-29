@@ -267,7 +267,12 @@
                   </div>
                 </div>
                 <h3 class="battle-hot-title">{{ battle.title }}</h3>
-                <p class="battle-hot-meta">{{ battle.totalParticipants || 0 }}개 참여 · {{ battle.totalVotes || 0 }} 투표</p>
+                <p class="battle-hot-meta">
+                  <strong class="meta-count">{{ formatNumber(battle.totalParticipants || 0) }}명</strong>
+                  <span class="meta-label">참여</span>
+                  <span class="meta-dot">·</span>
+                  <span class="meta-sub">{{ formatNumber(battle.totalVotes || 0) }} 투표</span>
+                </p>
 
                 <div class="battle-divider"><span class="battle-label">Pick Rank</span></div>
 
@@ -2480,9 +2485,29 @@ onUnmounted(() => {
   letter-spacing: -0.015em;
 }
 .battle-hot-meta {
-  font-size: 11px;
-  color: #d0d4e8;
+  font-size: 12px;
+  color: #8B95A1;
   margin-bottom: 15px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  letter-spacing: -0.01em;
+}
+.battle-hot-meta .meta-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: #191F28;
+}
+.battle-hot-meta .meta-label {
+  font-weight: 600;
+  color: #4E5968;
+}
+.battle-hot-meta .meta-dot {
+  color: #D1D6DB;
+  margin: 0 2px;
+}
+.battle-hot-meta .meta-sub {
+  color: #8B95A1;
 }
 
 /* 디바이더 */
