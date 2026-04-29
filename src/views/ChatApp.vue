@@ -307,12 +307,28 @@ watch(
     { immediate: false }
 )
 
+// 모바일 채팅 디테일 진입 시 페이지 자체 스크롤 잠금 (메시지 영역만 스크롤)
+const setBodyScrollLock = (lock) => {
+  if (typeof window === 'undefined') return
+  if (!window.matchMedia('(max-width: 767px)').matches) return
+  document.body.style.overflow = lock ? 'hidden' : ''
+  document.documentElement.style.overflow = lock ? 'hidden' : ''
+}
+
+watch(
+    () => !!selectedRoom.value,
+    (isDetail) => setBodyScrollLock(isDetail)
+)
+
 onMounted(async () => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
   await initializeApp()
+  // 초기 진입이 디테일 라우트일 수 있어 한 번 더 동기화
+  if (selectedRoom.value) setBodyScrollLock(true)
 })
 
 onBeforeUnmount(async () => {
+  setBodyScrollLock(false)
   dismissToast()
   await handleBackToList()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
