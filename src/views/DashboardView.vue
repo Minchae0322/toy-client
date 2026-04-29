@@ -268,10 +268,15 @@
                 </div>
                 <h3 class="battle-hot-title">{{ battle.title }}</h3>
                 <p class="battle-hot-meta">
-                  <strong class="meta-count">{{ formatNumber(battle.totalParticipants || 0) }}명</strong>
-                  <span class="meta-label">참여</span>
+                  <span class="meta-stat">
+                    <strong class="meta-num">{{ formatNumber(battle.totalVotes || 0) }}</strong>
+                    <span class="meta-label">투표</span>
+                  </span>
                   <span class="meta-dot">·</span>
-                  <span class="meta-sub">{{ formatNumber(battle.totalVotes || 0) }} 투표</span>
+                  <span class="meta-stat">
+                    <strong class="meta-num">{{ formatNumber(battle.totalViews || 0) }}</strong>
+                    <span class="meta-label">조회</span>
+                  </span>
                 </p>
 
                 <div class="battle-divider"><span class="battle-label">Pick Rank</span></div>
@@ -2485,29 +2490,34 @@ onUnmounted(() => {
   letter-spacing: -0.015em;
 }
 .battle-hot-meta {
-  font-size: 12px;
-  color: #8B95A1;
-  margin-bottom: 15px;
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 8px;
+  font-size: 12px;
+  color: #8B95A1;
+  margin: 0 0 15px;
+  padding: 8px 0;
+  border-top: 1px solid #F2F4F6;
+  border-bottom: 1px solid #F2F4F6;
   letter-spacing: -0.01em;
 }
-.battle-hot-meta .meta-count {
-  font-size: 14px;
+.battle-hot-meta .meta-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.battle-hot-meta .meta-num {
+  font-size: 15px;
   font-weight: 700;
   color: #191F28;
+  letter-spacing: -0.02em;
 }
 .battle-hot-meta .meta-label {
-  font-weight: 600;
+  font-weight: 500;
   color: #4E5968;
 }
 .battle-hot-meta .meta-dot {
   color: #D1D6DB;
-  margin: 0 2px;
-}
-.battle-hot-meta .meta-sub {
-  color: #8B95A1;
 }
 
 /* 디바이더 */

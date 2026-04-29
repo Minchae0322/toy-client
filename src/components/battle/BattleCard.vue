@@ -38,8 +38,15 @@
       <h3 class="title">{{ battle.title }}</h3>
 
       <div class="stats">
-        <span>{{ formatNumber(battle.totalVotes) }} 투표</span>
-        <span>조회 {{ formatNumber(battle.totalViews || 0) }}</span>
+        <span class="stat">
+          <strong class="stat-num">{{ formatNumber(battle.totalVotes) }}</strong>
+          <span class="stat-label">투표</span>
+        </span>
+        <span class="stat-dot">·</span>
+        <span class="stat">
+          <strong class="stat-num">{{ formatNumber(battle.totalViews || 0) }}</strong>
+          <span class="stat-label">조회</span>
+        </span>
         <span v-if="isActive && daysLeftText" class="days-left">{{ daysLeftText }}</span>
       </div>
 
@@ -385,14 +392,42 @@ const daysLeftText = computed(() => {
 
 .stats {
   display: flex;
-  gap: 12px;
+  align-items: baseline;
+  gap: 8px;
   font-size: 12px;
-  color: #B0B8C1;
+  color: #8B95A1;
+  padding: 8px 0;
+  border-top: 1px solid #F2F4F6;
+  border-bottom: 1px solid #F2F4F6;
+  letter-spacing: -0.01em;
+}
+
+.stats .stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.stats .stat-num {
+  font-size: 14px;
+  font-weight: 700;
+  color: #191F28;
+  letter-spacing: -0.02em;
+}
+
+.stats .stat-label {
+  font-weight: 500;
+  color: #4E5968;
+}
+
+.stats .stat-dot {
+  color: #D1D6DB;
 }
 
 .stats .days-left {
+  margin-left: auto;
   color: #9333EA;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* 푸터 */
@@ -501,14 +536,21 @@ const daysLeftText = computed(() => {
   }
 
   .stats {
-    gap: 6px;
-    font-size: 10px;
+    gap: 5px;
+    padding: 6px 0;
+    font-size: 11px;
     flex-wrap: nowrap;
     overflow: hidden;
   }
 
-  .stats span {
+  .stats .stat,
+  .stats .stat-dot,
+  .stats .days-left {
     white-space: nowrap;
+  }
+
+  .stats .stat-num {
+    font-size: 12px;
   }
 
   .card-footer {
@@ -572,6 +614,10 @@ const daysLeftText = computed(() => {
 
   .stats {
     font-size: 13px;
+  }
+
+  .stats .stat-num {
+    font-size: 16px;
   }
 
   .card-footer {
