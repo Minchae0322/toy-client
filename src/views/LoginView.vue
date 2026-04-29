@@ -7,7 +7,7 @@
         </RouterLink>
       </div>
 
-      <div class="tab-header">
+      <div v-if="activeTab !== 'reset'" class="tab-header">
         <button
             class="tab-btn"
             :class="{ active: activeTab === 'login' }"
@@ -34,13 +34,22 @@
               :error-message="loginError"
               @submit="handleLogin"
               @social-login="handleSocialLogin"
+              @forgot-password="switchTab('reset')"
           />
           <RegisterForm
-              v-else
+              v-else-if="activeTab === 'register'"
               key="register"
               :loading="loading"
               :error-message="registerError"
               @submit="handleRegister"
+          />
+          <PasswordResetForm
+              v-else
+              key="reset"
+              :loading="loading"
+              :error-message="resetError"
+              @submit="handleResetPassword"
+              @back="switchTab('login')"
           />
         </transition>
       </div>
@@ -57,6 +66,7 @@ import * as authUtils from '@/utils/auth.js'
 import { authService } from '@/services/AuthService.js'
 import LoginForm from '@/components/login/LoginForm.vue'
 import RegisterForm from '@/components/login/RegisterForm.vue'
+import PasswordResetForm from '@/components/login/PasswordResetForm.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -67,6 +77,7 @@ const activeTab = ref('login')
 const loading = ref(false)
 const loginError = ref('')
 const registerError = ref('')
+const resetError = ref('')
 
 const redirectPath = computed(() => route.query.redirect || '/feed')
 const sessionExpired = computed(() => route.query.reason === 'session_expired')
@@ -75,6 +86,7 @@ const switchTab = (tab) => {
   activeTab.value = tab
   loginError.value = ''
   registerError.value = ''
+  resetError.value = ''
 }
 
 const handleLogin = async (formData) => {
@@ -117,6 +129,31 @@ const handleSocialLogin = (provider) => {
   sessionStorage.setItem('oauth_provider', provider)
   const authBaseUrl = import.meta.env.VITE_AUTH_BASE_URL
   window.location.href = `${authBaseUrl}/oauth2/authorization/${provider}`
+}
+
+const handleResetPassword = async ({ email, token, newPassword }) => {
+  loading.value = true
+  resetError.value = ''
+  try {
+    await authService.resetPassword({ email, token, newPassword })
+    await open({
+      type: 'alert',
+      title: '비밀번호 변경 완료',
+      message: '새 비밀번호로 다시 로그인해 주세요.'
+    })
+    activeTab.value = 'login'
+  } catch (error) {
+    // 백엔드 PASSWORD_RESET_TOKEN_INVALID(400) / USER_NOT_FOUND(404) 등
+    const status = error?.status
+    const msg = error?.message || ''
+    if (status === 400 && (msg.includes('토큰') || msg.includes('만료'))) {
+      resetError.value = '인증 정보가 만료되었습니다. 처음부터 다시 시도해 주세요.'
+    } else {
+      resetError.value = msg || '비밀번호 변경에 실패했습니다.'
+    }
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {

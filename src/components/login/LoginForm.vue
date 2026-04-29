@@ -29,7 +29,7 @@
     <div class="input-group">
       <div class="label-row">
         <label class="input-label">비밀번호</label>
-        <button type="button" class="link-btn" @click="$emit('forgot-password')">비밀번호 재설정</button>
+        <button type="button" class="link-btn" @click="$emit('forgot-password')">비밀번호 찾기</button>
       </div>
       <div class="input-wrapper">
         <div class="input-icon">

@@ -26,12 +26,13 @@
         <button
             type="button"
             class="action-btn"
-            :class="{ verified: verified }"
-            :disabled="!email || emailError || verified || disabled || sendingCode"
+            :class="{ verified: verified, sent: verificationSent && !verified }"
+            :disabled="!email || emailError || verified || disabled || sendingCode || verificationSent"
             @click="sendVerificationCode"
         >
           <div v-if="sendingCode" class="spinner-small"></div>
           <span v-else-if="verified">인증 완료</span>
+          <span v-else-if="verificationSent">전송됨</span>
           <span v-else>인증번호 전송</span>
         </button>
       </div>
@@ -76,8 +77,13 @@
             <div v-if="verifyingCode" class="spinner-small"></div>
             <span>{{ verifyingCode ? '확인 중' : '인증 확인' }}</span>
           </button>
-          <button type="button" class="resend-btn" :disabled="disabled || sendingCode" @click="sendVerificationCode">
-            재발송
+          <button
+              type="button"
+              class="resend-btn"
+              :disabled="disabled || sendingCode || resendCooldown > 0"
+              @click="sendVerificationCode"
+          >
+            {{ resendCooldown > 0 ? `재시도 ${resendCooldown}초` : '재시도' }}
           </button>
         </div>
         <span v-if="verificationError" class="error-msg text-center">{{ verificationError }}</span>
@@ -87,15 +93,32 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, watch } from 'vue'
 import { authService } from '@/services/AuthService.js'
+
+// 백엔드 정책 (sendVerificationCode 참조)
+//  - Redis 코드 TTL: 5분
+//  - 재발송 쿨다운: 60초
+//  - 1시간 내 5회 발송 제한
+const CODE_TTL_SECONDS = 300
+const RESEND_COOLDOWN_SECONDS = 60
 
 const props = defineProps({
   email: String,
   verified: Boolean,
   verificationToken: String,
-  disabled: Boolean
+  disabled: Boolean,
+  // 'signup' | 'reset' — 백엔드 엔드포인트 분기 (회원가입 vs 비밀번호 재설정)
+  mode: { type: String, default: 'signup' }
 })
+
+// mode 별 API 분기 — 두 흐름이 동일한 UX(60초 쿨다운, 5분 TTL, 5회 제한)이라 컴포넌트 재사용
+const sendApi = (email) => props.mode === 'reset'
+    ? authService.sendPasswordResetCode(email)
+    : authService.sendVerificationCode(email)
+const verifyApi = (email, code) => props.mode === 'reset'
+    ? authService.verifyPasswordResetCode(email, code)
+    : authService.verifyEmailCode(email, code)
 
 const emit = defineEmits(['update:email', 'update:verified', 'update:verificationToken'])
 
@@ -104,11 +127,13 @@ const verificationSent = ref(false)
 const verificationError = ref('')
 const verificationInput = ref(null)
 const verificationCode = ref('')
-const timer = ref(180)
+const timer = ref(CODE_TTL_SECONDS)
 const timerInterval = ref(null)
 const sendingCode = ref(false)
 const verifyingCode = ref(false)
 const codeSentSuccess = ref(false)
+const resendCooldown = ref(0)
+const cooldownInterval = ref(null)
 
 const validateEmail = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -117,34 +142,83 @@ const validateEmail = () => {
   }
 }
 
+const startResendCooldown = (seconds = RESEND_COOLDOWN_SECONDS) => {
+  resendCooldown.value = seconds
+  if (cooldownInterval.value) clearInterval(cooldownInterval.value)
+  cooldownInterval.value = setInterval(() => {
+    if (resendCooldown.value > 0) resendCooldown.value--
+    else clearInterval(cooldownInterval.value)
+  }, 1000)
+}
+
+// 백엔드 UserErrorCode 메시지 매핑 (sendVerificationCode 흐름)
+//  409 EMAIL_ALREADY_EXISTS, 429 SEND_COOLDOWN_NOT_EXPIRED / SEND_LIMIT_EXCEEDED
+const mapSendError = (error) => {
+  const status = error?.status
+  const msg = error?.message || ''
+  if (status === 409) return '이미 가입된 이메일입니다. 로그인해주세요.'
+  if (status === 429 && msg.includes('횟수')) {
+    // SEND_LIMIT_EXCEEDED: 1시간 락
+    return '인증 코드 발송 횟수를 초과했습니다. 1시간 후 다시 시도해주세요.'
+  }
+  if (status === 429) {
+    // SEND_COOLDOWN_NOT_EXPIRED: 클라가 보통 먼저 막지만 클럭 드리프트 시 가능
+    return '잠시 후 다시 시도해주세요. (60초 쿨다운)'
+  }
+  return msg || '인증 코드 발송 중 오류가 발생했습니다'
+}
+
 const sendVerificationCode = async () => {
-  if (emailError.value || !props.email || sendingCode.value) return
+  // 클라이언트 측 가드: 쿨다운 중이면 호출 안 함 (백엔드 60초 쿨다운과 일치)
+  if (emailError.value || !props.email || sendingCode.value || resendCooldown.value > 0) return
   verificationError.value = ''
   sendingCode.value = true
   try {
-    const response = await authService.sendVerificationCode(props.email)
+    const response = await sendApi(props.email)
     if (response.success) {
       verificationSent.value = true
       codeSentSuccess.value = true
       setTimeout(() => { codeSentSuccess.value = false }, 3000)
-      timer.value = 180
+
+      // Redis 코드 TTL과 동일 (5분)
+      timer.value = CODE_TTL_SECONDS
       if (timerInterval.value) clearInterval(timerInterval.value)
       timerInterval.value = setInterval(() => {
         if (timer.value > 0) timer.value--
         else {
           clearInterval(timerInterval.value)
           verificationSent.value = false
-          verificationError.value = '인증 시간이 만료되었습니다.'
+          verificationError.value = '인증 시간이 만료되었습니다. 다시 발송해주세요.'
         }
       }, 1000)
+
+      // 재발송 60초 쿨다운 시작
+      startResendCooldown()
+
       setTimeout(() => { verificationInput.value?.focus() }, 100)
     }
   } catch (error) {
-    verificationError.value = error.message || '인증 코드 발송 중 오류가 발생했습니다'
+    verificationError.value = mapSendError(error)
+    // SEND_LIMIT_EXCEEDED 시 클라이언트 쿨다운 길게 잡아 "재시도" 버튼 무력화
+    // (정확한 잔여 시간은 모르지만 1시간 = 3600초로 보수적 설정 — 사용자가 페이지 떠날 때까지 막힘)
+    if (error?.status === 429 && (error?.message || '').includes('횟수')) {
+      startResendCooldown(3600)
+    }
   } finally {
     sendingCode.value = false
   }
 }
+
+// 이메일이 바뀌면 발송 상태 리셋 — 다른 이메일로 다시 받으려면 상단 버튼이 다시 활성화돼야 함
+watch(() => props.email, (newEmail, oldEmail) => {
+  if (newEmail === oldEmail || props.verified) return
+  verificationSent.value = false
+  verificationCode.value = ''
+  verificationError.value = ''
+  if (timerInterval.value) clearInterval(timerInterval.value)
+  if (cooldownInterval.value) clearInterval(cooldownInterval.value)
+  resendCooldown.value = 0
+})
 
 const handlePaste = (event) => {
   const pastedData = event.clipboardData.getData('text').trim().replace(/\D/g, '')
@@ -155,12 +229,29 @@ const handleVerificationInput = (event) => {
   verificationCode.value = event.target.value.replace(/\D/g, '')
 }
 
+// 백엔드 verifyCode 흐름의 에러를 분류:
+//  - codeInvalidated: true 면 백엔드 측에서 code/attempt가 삭제되어 재발송이 필요한 상태
+const classifyVerifyError = (error) => {
+  const status = error?.status
+  const msg = error?.message || ''
+  if (status === 429 && msg.includes('시도 횟수')) {
+    // VERIFY_ATTEMPT_EXCEEDED — 백엔드가 code도 같이 삭제함
+    return { codeInvalidated: true, message: '인증 시도 횟수를 초과했습니다. 인증번호를 다시 발송해주세요.' }
+  }
+  if (status === 400 && msg.includes('만료')) {
+    // VERIFICATION_CODE_EXPIRED
+    return { codeInvalidated: true, message: '인증 코드가 만료되었습니다. 다시 발송해주세요.' }
+  }
+  // VERIFICATION_CODE_MISMATCH 등 — 코드 박스 유지하고 재시도 허용
+  return { codeInvalidated: false, message: msg || '인증번호를 다시 확인해주세요.' }
+}
+
 const verifyCode = async () => {
   if (verificationCode.value.length !== 6 || verifyingCode.value) return
   verificationError.value = ''
   verifyingCode.value = true
   try {
-    const response = await authService.verifyEmailCode(props.email, verificationCode.value)
+    const response = await verifyApi(props.email, verificationCode.value)
     if (response.success && response.data) {
       emit('update:verified', true)
       emit('update:verificationToken', response.data)
@@ -168,8 +259,14 @@ const verifyCode = async () => {
       clearInterval(timerInterval.value)
     }
   } catch (error) {
-    verificationError.value = error.message || '인증번호를 다시 확인해주세요.'
+    const { codeInvalidated, message } = classifyVerifyError(error)
+    verificationError.value = message
     verificationCode.value = ''
+    // 백엔드가 코드를 삭제한 경우: verify-box를 닫아 사용자가 재발송 흐름으로 가도록
+    if (codeInvalidated) {
+      verificationSent.value = false
+      if (timerInterval.value) clearInterval(timerInterval.value)
+    }
   } finally {
     verifyingCode.value = false
   }
@@ -181,7 +278,10 @@ const formatTimer = (seconds) => {
   return `${min}:${sec.toString().padStart(2, '0')}`
 }
 
-onUnmounted(() => { if (timerInterval.value) clearInterval(timerInterval.value) })
+onUnmounted(() => {
+  if (timerInterval.value) clearInterval(timerInterval.value)
+  if (cooldownInterval.value) clearInterval(cooldownInterval.value)
+})
 </script>
 
 <style scoped>
@@ -240,7 +340,9 @@ input.success { border-color: #16A34A; background-color: #F0FDF4; }
 }
 .action-btn:hover:not(:disabled) { background: #1E293B; }
 .action-btn:disabled { background-color: #F2F4F6; color: #B0B8C1; cursor: not-allowed; }
-.action-btn.verified { background-color: #16A34A; cursor: default; }
+.action-btn.verified { background-color: #16A34A; color: #fff; cursor: default; }
+/* 전송됨: 비활성이지만 시각적으로 "완료된 액션"임을 알림 */
+.action-btn.sent:disabled { background-color: #F3E8FF; color: #9333EA; cursor: default; }
 
 /* 인증 박스 */
 .verify-box {

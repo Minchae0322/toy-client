@@ -131,17 +131,26 @@ class AuthService extends BaseApiService {
   }
 
   /**
-   * 비밀번호 재설정 요청
+   * 비밀번호 재설정 — 1단계: 인증 코드 발송
+   * 가입 여부와 무관하게 200 OK (이메일 enumeration 방지)
    */
-  async forgotPassword(email) {
-    return await this.post('/auth/forgot-password', { email })
+  async sendPasswordResetCode(email) {
+    return await this.post('/user/auth/password/send-code', { email })
   }
 
   /**
-   * 비밀번호 재설정
+   * 비밀번호 재설정 — 2단계: 인증 코드 검증
+   * @returns {Promise<{success: boolean, data: string}>} 일회용 reset 토큰 (10분 TTL)
    */
-  async resetPassword(token, password) {
-    return await this.post('/auth/reset-password', { token, password })
+  async verifyPasswordResetCode(email, code) {
+    return await this.post('/user/auth/password/verify-code', { email, code })
+  }
+
+  /**
+   * 비밀번호 재설정 — 3단계: 토큰으로 비밀번호 변경
+   */
+  async resetPassword({ email, token, newPassword }) {
+    return await this.post('/user/auth/password/reset', { email, token, newPassword })
   }
 
   /**
