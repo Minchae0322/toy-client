@@ -152,6 +152,18 @@
             <span class="sheet-desc">레벨과 뱃지를 모아봐요</span>
           </div>
         </button>
+        <div class="sheet-divider"></div>
+        <button class="sheet-item" @click="openFeedback">
+          <span class="sheet-icon feedback">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+          </span>
+          <div class="sheet-content">
+            <span class="sheet-text">의견 보내기</span>
+            <span class="sheet-desc">익명으로 자유롭게 남겨주세요</span>
+          </div>
+        </button>
         <template v-if="isAdmin">
           <div class="sheet-divider"></div>
           <button class="sheet-item" @click="handleMoreNav('admin')">
@@ -185,6 +197,9 @@
 
     <!-- Overlay (투명) -->
     <div v-if="isCreateMenuOpen || isMoreMenuOpen" class="overlay" @click="closeAllMenus"></div>
+
+    <!-- 의견 보내기 모달 -->
+    <FeedbackModal :visible="showFeedback" @close="showFeedback = false" />
   </nav>
 </template>
 
@@ -193,6 +208,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
+import FeedbackModal from '@/components/common/FeedbackModal.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -200,6 +216,12 @@ const { isLoggedIn, isAdmin, logout } = useAuth();
 const { openLoginRequired, open } = useConfirmDialog();
 const isCreateMenuOpen = ref(false);
 const isMoreMenuOpen = ref(false);
+const showFeedback = ref(false);
+
+const openFeedback = () => {
+  closeAllMenus();
+  showFeedback.value = true;
+};
 
 const isActive = (path) => {
   return route.path.startsWith(path);
@@ -521,6 +543,7 @@ onBeforeUnmount(() => {
 .sheet-icon.mypage { background: #E0E7FF; color: #4f46e5; }
 .sheet-icon.collection { background: #FEF9C3; color: #EAB308; }
 .sheet-icon.admin { background: #FFF7ED; color: #ea580c; }
+.sheet-icon.feedback { background: #F1F5F9; color: #475569; }
 .sheet-icon.logout-icon { background: #FEF2F2; color: #dc2626; }
 
 .sheet-content {
