@@ -241,7 +241,7 @@ const router = useRouter()
 const { open: openConfirm } = useConfirmDialog()
 
 // ==================== API Composable ====================
-const { loading: apiLoading, error: apiError, carriers, currentCarrier, fetchMyCarriers, fetchCarrier, createCarrier, updateSkin, deleteCarrier, addItem: apiAddItem, removeItem: apiRemoveItem, bulkSaveStickers: apiBulkSaveStickers, removeSticker: apiRemoveSticker, bulkDeleteStickers: apiBulkDeleteStickers, updatePositions } = useCarrier()
+const { loading: apiLoading, error: apiError, carriers, currentCarrier, fetchMyCarriers, fetchCarrier, createCarrier, updateSkin, deleteCarrier, addItem: apiAddItem, removeItem: apiRemoveItem, bulkSaveStickers: apiBulkSaveStickers, updatePositions } = useCarrier()
 
 const canvasRef = ref(null)
 const carrierId = ref(null)
@@ -521,65 +521,40 @@ async function saveAllChanges() {
       await updateSkin(carrierId.value, { skinType, skinColor })
     }
 
-    // Phase 2: 스티커 삭제
-    if (pendingDeletes.value.length > 0) {
-      const deleteIds = pendingDeletes.value.map(d => d.id)
-      const stickerTypes = pendingDeletes.value.map(d => d.stickerType)
-      if (deleteIds.length > 1) {
-        await apiBulkDeleteStickers(carrierId.value, deleteIds, stickerTypes)
-      } else {
-        await apiRemoveSticker(carrierId.value, deleteIds[0], stickerTypes[0])
-      }
-    }
+    // Phase 2: 스티커 reconcile — 현재 decos 전체 상태를 한 번에 PUT
+    // (백엔드가 신규/수정/삭제를 reconcile 처리. 빈 배열이면 전체 삭제)
+    const stickersChanged =
+      dirtyDecos.value.size > 0 ||
+      pendingAdds.value.length > 0 ||
+      pendingDeletes.value.length > 0
 
-    // Phase 3+4: 새 스티커 추가 + 변경된 스티커 일괄 저장
-    const upsertStickers = []
-    const newDecoUids = []
-
-    for (const uid of pendingAdds.value) {
-      const deco = decos.value.find(v => v.uid === uid)
-      if (!deco) continue
-      newDecoUids.push(uid)
-      upsertStickers.push({
-        stickerId: null,
+    let stickerSaveResult = null
+    if (stickersChanged) {
+      const upsertStickers = decos.value.map(deco => ({
+        stickerId: deco.apiId ?? null,
         stickerType: deco.type === 'phototag' ? 'PHOTO_TAG' : 'EMOJI',
         content: deco.emoji || null,
         imageUrl: deco.imageUrl || null,
         positionX: deco.x / 100,
         positionY: deco.y / 100,
-        zIndex: 0,
+        zIndex: deco.apiId ? null : 0,
         rotation: deco.rotation ?? 0,
         scaleRatio: deco.scale ?? 1.0
-      })
-    }
+      }))
 
-    for (const uid of dirtyDecos.value) {
-      const deco = decos.value.find(v => v.uid === uid)
-      if (deco?.apiId) {
-        upsertStickers.push({
-          stickerId: deco.apiId,
-          stickerType: deco.type === 'phototag' ? 'PHOTO_TAG' : 'EMOJI',
-          content: deco.emoji || null,
-          imageUrl: deco.imageUrl || null,
-          positionX: deco.x / 100,
-          positionY: deco.y / 100,
-          zIndex: null,
-          rotation: deco.rotation ?? 0,
-          scaleRatio: deco.scale ?? 1.0
-        })
+      stickerSaveResult = await apiBulkSaveStickers(carrierId.value, upsertStickers)
+
+      // STICKER_OUT_OF_SYNC(409): 다른 곳에서 변경됨 → 강제 재로드 후 종료
+      if (!stickerSaveResult.success && stickerSaveResult.status === 409) {
+        const detail = await fetchCarrier(carrierId.value)
+        if (detail) applyCarrierData(detail, { loadItems: activeSlotIdx.value === 0 })
+        alert('스티커가 다른 곳에서 변경되어 최신 상태로 새로고침했습니다. 다시 시도해주세요.')
+        return
       }
+      if (!stickerSaveResult.success) return
     }
 
     const updatePromises = []
-    if (upsertStickers.length > 0) {
-      const result = await apiBulkSaveStickers(carrierId.value, upsertStickers)
-      if (result.success && Array.isArray(result.data)) {
-        result.data.slice(0, newDecoUids.length).forEach((saved, i) => {
-          const deco = decos.value.find(v => v.uid === newDecoUids[i])
-          if (deco && saved?.id) deco.apiId = saved.id
-        })
-      }
-    }
 
     // Phase 5: 버블 위치 저장 (아이템은 슬롯 0 캐리어가 보유)
     const canvas = canvasRef.value
@@ -600,13 +575,18 @@ async function saveAllChanges() {
 
     await Promise.all(updatePromises)
 
-    // Phase 6: dirty 상태 초기화
+    // Phase 6: 스티커 저장이 있었으면 신규 apiId 매핑을 위해 캐리어 재로드
+    if (stickerSaveResult?.success) {
+      const detail = await fetchCarrier(carrierId.value)
+      if (detail) applyCarrierData(detail, { loadItems: activeSlotIdx.value === 0 })
+    }
+
+    // Phase 7: dirty 상태 초기화 (재로드가 일부 초기화하지만 명시적으로 보장)
     dirtyDecos.value = new Set()
     dirtyBubbles.value = false
     pendingAdds.value = []
     pendingDeletes.value = []
     dirtySkin.value = false
-    decos.value = [...decos.value]
   } finally {
     saving.value = false
   }
