@@ -119,28 +119,14 @@ class CarrierService extends BaseApiService {
   }
 
   // ==================== 캐리어 스티커 ====================
+  // PUT /carriers/{id}/stickers — 캐리어의 스티커 최종 상태를 한번에 전달(reconcile).
+  // 빈 배열을 보내면 모든 스티커 삭제. 개별 DELETE 엔드포인트는 제거됨.
 
   async bulkSaveStickers(carrierId, stickers) {
     if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
-    if (!Array.isArray(stickers) || stickers.length === 0) throw new Error('스티커 목록이 필요합니다.')
+    if (!Array.isArray(stickers)) throw new Error('스티커 목록이 필요합니다.')
 
     return await this.put(`/carriers/${carrierId}/stickers`, { stickers })
-  }
-
-  async removeSticker(carrierId, stickerId, stickerType) {
-    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
-    if (!stickerId) throw new Error('스티커 ID가 필요합니다.')
-
-    const query = stickerType ? `?stickerType=${stickerType}` : ''
-    return await this.delete(`/carriers/${carrierId}/stickers/${stickerId}${query}`)
-  }
-
-  async bulkDeleteStickers(carrierId, stickerIds, stickerTypes) {
-    if (!carrierId) throw new Error('캐리어 ID가 필요합니다.')
-    if (!Array.isArray(stickerIds) || stickerIds.length === 0) throw new Error('삭제할 스티커 ID 목록이 필요합니다.')
-    if (stickerIds.length > 50) throw new Error('일괄 삭제는 최대 50개까지 가능합니다.')
-
-    return await this.post(`/carriers/${carrierId}/stickers/delete`, { stickerIds, stickerTypes })
   }
 
   // ==================== 정규화 ====================

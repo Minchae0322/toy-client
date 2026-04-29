@@ -141,46 +141,12 @@ export function useCarrier() {
       throw new Error(response.error || '스티커 저장에 실패했습니다.')
     } catch (err) {
       handleError(err, '스티커 저장')
-      return { success: false, error: err.message }
-    }
-  }
-
-  const removeSticker = async (carrierId, stickerId) => {
-    try {
-      const response = await carrierService.removeSticker(carrierId, stickerId)
-      if (response.success) {
-        if (currentCarrier.value?.id === carrierId) {
-          currentCarrier.value = {
-            ...currentCarrier.value,
-            stickers: currentCarrier.value.stickers.filter(s => s.id !== stickerId)
-          }
-        }
-        return true
+      return {
+        success: false,
+        error: err.message,
+        status: err.status ?? null,
+        errorCode: err.data?.code || err.data?.errorCode || null
       }
-      throw new Error(response.error || '스티커 제거에 실패했습니다.')
-    } catch (err) {
-      handleError(err, '스티커 제거')
-      return false
-    }
-  }
-
-  const bulkDeleteStickers = async (carrierId, stickerIds) => {
-    try {
-      const response = await carrierService.bulkDeleteStickers(carrierId, stickerIds)
-      if (response.success) {
-        if (currentCarrier.value?.id === carrierId) {
-          const deletedSet = new Set(stickerIds)
-          currentCarrier.value = {
-            ...currentCarrier.value,
-            stickers: currentCarrier.value.stickers.filter(s => !deletedSet.has(s.id))
-          }
-        }
-        return true
-      }
-      throw new Error(response.error || '스티커 일괄 삭제에 실패했습니다.')
-    } catch (err) {
-      handleError(err, '스티커 일괄 삭제')
-      return false
     }
   }
 
@@ -215,8 +181,6 @@ export function useCarrier() {
     addItem,
     removeItem,
     bulkSaveStickers,
-    removeSticker,
-    bulkDeleteStickers,
     updatePositions,
     clearError,
     reset
