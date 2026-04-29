@@ -19,6 +19,7 @@
           :battle="battle"
           :is-weighted-vote="isWeightedVote"
           :can-user-add-item="showAddItemButton"
+          :is-creator="isCreator"
           @add-product="handleAddProduct"
           @back="goBack"
           @share="shareBattle"
@@ -362,7 +363,21 @@ export default {
       if (!this.battle) return false
 
       const status = this.battle.status?.title || this.battle.status
-      // ACTIVE 또는 NORMAL 상태일 때 투표 가능 (다시 투표도 가능)
+
+      // 종료/중단/조기종료/취소 상태는 투표 불가
+      if (status === 'CLOSED' || status === 'ENDED' || status === 'EARLY_CLOSED' || status === 'SUSPENDED') {
+        return false
+      }
+
+      // isActive 필드가 명시적으로 false면 투표 불가
+      if (this.battle.isActive === false) return false
+
+      // endDate가 지났으면 투표 불가
+      if (this.battle.endDate && new Date(this.battle.endDate) <= new Date()) {
+        return false
+      }
+
+      // ACTIVE 또는 NORMAL 상태이고 위 조건 모두 통과 시 투표 가능
       return status === 'ACTIVE' || status === 'NORMAL'
     },
     canUserAddItem() {

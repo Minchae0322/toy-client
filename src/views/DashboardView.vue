@@ -2497,30 +2497,31 @@ onUnmounted(() => {
 .battle-hot-meta {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
   font-size: 12px;
   color: #8B95A1;
   margin: 0 0 18px;
   letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
 .battle-hot-meta .meta-stat {
   display: inline-flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 3px;
 }
 .battle-hot-meta .meta-num {
-  font-size: 15px;
-  font-weight: 700;
-  color: #191F28;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #6B7684;
   letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
 }
 .battle-hot-meta .meta-label {
-  font-weight: 500;
-  color: #4E5968;
+  font-weight: 400;
+  color: #8B95A1;
 }
 .battle-hot-meta .meta-dot {
-  color: #D1D6DB;
+  color: #E5E8EB;
+  font-weight: 600;
 }
 
 /* 디바이더 */

@@ -28,10 +28,6 @@
         </div>
         <span class="youtube-label">YouTube</span>
       </div>
-      <div class="score-overlay">
-        <span class="score-percent">{{ percentage }}%</span>
-        <span class="score-count">{{ voteCount }}명 투표</span>
-      </div>
     </div>
 
     <div class="info-box">
@@ -442,32 +438,6 @@ defineExpose({ setCommentSubmitting })
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
-.score-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.15) 40%, rgba(0, 0, 0, 0.6) 100%);
-  color: #fff;
-  padding: 24px 10px 8px;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.score-percent {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-}
-
-.score-count {
-  font-size: 11px;
-  font-weight: 600;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-}
-
 .info-box {
   padding: 12px;
   display: flex;
@@ -793,19 +763,6 @@ defineExpose({ setCommentSubmitting })
     padding: 3px 6px;
     font-size: 8px;
     border-radius: 4px;
-  }
-
-  .score-overlay {
-    padding: 12px 6px 4px;
-    gap: 3px;
-  }
-
-  .score-percent {
-    font-size: 14px;
-  }
-
-  .score-count {
-    font-size: 9px;
   }
 
   .info-box {

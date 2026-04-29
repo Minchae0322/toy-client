@@ -2,7 +2,7 @@
   <section class="feed-container">
     <header class="feed-header" :class="{ 'header-compact': hideTitle }">
       <div v-if="!hideTitle" class="title-with-badge">
-        <h2 class="section-title">최신 피드</h2>
+        <h2 class="section-title">최신 <span class="title-accent">피드</span></h2>
         <span class="sub-title">사용자들이 올린 솔직한 리뷰</span>
       </div>
 
@@ -324,12 +324,22 @@ defineExpose({ observerTarget });
 }
 
 .section-title {
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   font-weight: 700;
   color: #18181b;
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.2;
+}
+
+.section-title .title-accent {
+  color: #9333ea;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.125rem;
+  }
 }
 
 @media (min-width: 1280px) {

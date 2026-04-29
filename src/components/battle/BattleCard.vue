@@ -39,13 +39,12 @@
 
       <div class="stats">
         <span class="stat">
-          <strong class="stat-num">{{ formatNumber(battle.totalVotes) }}</strong>
-          <span class="stat-label">투표</span>
+          <Vote class="stat-icon" :size="14" :stroke-width="2" />
+          <span class="stat-num">{{ formatNumber(battle.totalVotes) }}</span>
         </span>
-        <span class="stat-dot">·</span>
         <span class="stat">
-          <strong class="stat-num">{{ formatNumber(battle.totalViews || 0) }}</strong>
-          <span class="stat-label">조회</span>
+          <Eye class="stat-icon" :size="14" :stroke-width="2" />
+          <span class="stat-num">{{ formatNumber(battle.totalViews || 0) }}</span>
         </span>
         <span v-if="isActive && daysLeftText" class="days-left">{{ daysLeftText }}</span>
       </div>
@@ -71,6 +70,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { Vote, Eye } from 'lucide-vue-next'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 
@@ -392,40 +392,38 @@ const daysLeftText = computed(() => {
 
 .stats {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
   font-size: 12px;
-  color: #8B95A1;
+  color: #6B7684;
   letter-spacing: -0.01em;
 }
 
 .stats .stat {
   display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
+  align-items: center;
+  gap: 4px;
+}
+
+.stats .stat-icon {
+  color: #B0B8C1;
+  flex-shrink: 0;
 }
 
 .stats .stat-num {
-  font-size: 14px;
-  font-weight: 700;
-  color: #191F28;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4E5968;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 
-.stats .stat-label {
-  font-weight: 500;
-  color: #4E5968;
-}
-
-.stats .stat-dot {
-  color: #D1D6DB;
-}
-
 .stats .days-left {
   margin-left: auto;
+  font-size: 12px;
   color: #9333EA;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 /* 푸터 */
@@ -534,16 +532,20 @@ const daysLeftText = computed(() => {
   }
 
   .stats {
-    gap: 6px;
+    gap: 10px;
     font-size: 11px;
     flex-wrap: nowrap;
     overflow: hidden;
   }
 
   .stats .stat,
-  .stats .stat-dot,
   .stats .days-left {
     white-space: nowrap;
+  }
+
+  .stats .stat-icon {
+    width: 12px;
+    height: 12px;
   }
 
   .stats .stat-num {
@@ -610,11 +612,17 @@ const daysLeftText = computed(() => {
   }
 
   .stats {
+    gap: 14px;
     font-size: 13px;
   }
 
+  .stats .stat-icon {
+    width: 15px;
+    height: 15px;
+  }
+
   .stats .stat-num {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .card-footer {

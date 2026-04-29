@@ -2,7 +2,7 @@
   <section class="hot-section">
     <div class="section-header">
       <div class="title-with-badge">
-        <h2 class="section-title">지금 뜨는 핫-기록</h2>
+        <h2 class="section-title">지금 뜨는 <span class="title-accent">핫-기록</span></h2>
         <span class="sub-title">실시간 인기 리뷰</span>
       </div>
       <button class="view-all-link" @click="handleSeeAll">
@@ -187,12 +187,16 @@ onUnmounted(() => {
 }
 
 .section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #18181b;
   margin: 0;
-  padding-left: 10px;
-  border-left: 3px solid #9333ea;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.section-title .title-accent {
+  color: #9333ea;
 }
 
 @media (min-width: 768px) {
@@ -211,7 +215,7 @@ onUnmounted(() => {
   font-size: 12px;
   font-weight: 400;
   color: #999;
-  padding-left: 13px;
+  padding-left: 0;
 }
 
 

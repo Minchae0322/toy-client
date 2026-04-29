@@ -3,7 +3,7 @@
     <!-- 헤더 -->
     <div class="section-header">
       <div class="title-with-badge">
-        <h2 class="section-title">실시간 HOT</h2>
+        <h2 class="section-title">실시간 <span class="title-accent">HOT</span></h2>
         <span class="sub-title">유저들이 직접 고르는 승부</span>
       </div>
       <button class="view-all-btn" @click="$emit('view-all')">더보기</button>
@@ -139,19 +139,23 @@ const handleImageError = (battleId) => {
 }
 
 .section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #18181b;
   margin: 0;
-  padding-left: 10px;
-  border-left: 3px solid #9333ea;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.section-title .title-accent {
+  color: #9333ea;
 }
 
 .sub-title {
   font-size: 12px;
   font-weight: 400;
   color: #999;
-  padding-left: 13px;
+  padding-left: 0;
 }
 
 @media (min-width: 768px) {

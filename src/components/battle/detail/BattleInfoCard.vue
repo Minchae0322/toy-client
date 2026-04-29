@@ -123,6 +123,10 @@ const props = defineProps({
   canUserAddItem: {
     type: Boolean,
     required: true
+  },
+  isCreator: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -155,7 +159,13 @@ const formattedVotes = computed(() => {
 })
 
 const permissionType = computed(() => {
-  return props.battle.itemAddPermissionType || null
+  const type = props.battle.itemAddPermissionType
+  if (!type) return null
+  // CREATOR_ONLY는 생성자 본인에게만 숨김 (자기 설정이라 알 필요 X).
+  // 다른 유저에게는 "큐레이션 배틀" 맥락 전달 위해 그대로 노출.
+  const code = type.code || type
+  if (code === 'CREATOR_ONLY' && props.isCreator) return null
+  return type
 })
 </script>
 
