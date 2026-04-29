@@ -3,14 +3,14 @@
 // 의견(피드백) 등록 — 누구나 가능, 인증 헤더 불필요
 // (목록 조회는 관리자 전용이지만 현재 클라에서 미사용)
 //
-// 백엔드 라우팅: USER 서버 가정. 다른 서버라면 getServiceUrl 인자만 변경.
+// 백엔드 라우팅: CONTENT 서버 (prod URL: /api/content/feedbacks)
 
 import { BaseApiService } from './BaseApiService.js'
 import { getServiceUrl } from '@/config/env.js'
 
 class FeedbackService extends BaseApiService {
   constructor() {
-    const baseURL = getServiceUrl('USER')
+    const baseURL = getServiceUrl('CONTENT')
     super(baseURL, 'FEEDBACK')
   }
 
