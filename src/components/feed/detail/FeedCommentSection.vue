@@ -44,7 +44,8 @@
           <div class="comment-row">
             <img
                 :src="comment.deleted ? deletedAvatar : (comment.creatorProfileUrl || 'https://i.pravatar.cc/150')"
-                class="avatar"
+                :class="['avatar', { clickable: !comment.deleted && comment.creatorId }]"
+                @click="!comment.deleted && goToUser(comment.creatorId)"
             />
             <div class="body">
               <!-- 삭제된 부모 (답글만 남음) -->
@@ -80,7 +81,10 @@
               <!-- 일반 표시 -->
               <template v-else>
                 <div class="comment-top">
-                  <span class="author">{{ comment.creatorNickname || '사용자' }}</span>
+                  <span
+                      :class="['author', { clickable: !!comment.creatorId }]"
+                      @click="goToUser(comment.creatorId)"
+                  >{{ comment.creatorNickname || '사용자' }}</span>
                   <span v-if="comment.creatorId === feedCreatorId" class="badge">작성자</span>
                   <span class="dot">·</span>
                   <span class="time">{{ formatDate(comment.createdAt) }}</span>
@@ -131,7 +135,8 @@
             <li v-for="reply in comment.replies" :key="reply.commentId" class="reply-item">
               <img
                   :src="reply.creatorProfileUrl || 'https://i.pravatar.cc/150'"
-                  class="avatar reply-avatar"
+                  :class="['avatar', 'reply-avatar', { clickable: !!reply.creatorId }]"
+                  @click="goToUser(reply.creatorId)"
               />
               <div class="body">
                 <div v-if="editingId === reply.commentId" class="edit-mode">
@@ -158,7 +163,10 @@
                     <svg class="reply-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M9 10l-5 5 5 5M4 15h12a4 4 0 004-4V5"/>
                     </svg>
-                    <span class="author">{{ reply.creatorNickname || '사용자' }}</span>
+                    <span
+                        :class="['author', { clickable: !!reply.creatorId }]"
+                        @click="goToUser(reply.creatorId)"
+                    >{{ reply.creatorNickname || '사용자' }}</span>
                     <span v-if="reply.creatorId === feedCreatorId" class="badge">작성자</span>
                     <span class="dot">·</span>
                     <span class="time">{{ formatDate(reply.createdAt) }}</span>
@@ -241,6 +249,11 @@ const isMyComment = (creatorId) => {
 
 const isEdited = (comment) => comment.updatedAt && comment.updatedAt !== comment.createdAt
 const formatDate = (date) => feedUtils.formatCommentDate(date)
+
+const goToUser = (userId) => {
+  if (userId == null) return
+  router.push({ name: 'UserFeedList', params: { userId: String(userId) } })
+}
 
 const ensureLoggedIn = async (message) => {
   if (getUserId()) return true
@@ -411,6 +424,8 @@ const handleDelete = (commentId) => {
   flex-shrink: 0;
   background: #F2F4F6;
 }
+.avatar.clickable { cursor: pointer; transition: opacity 0.15s ease; }
+.avatar.clickable:hover { opacity: 0.85; }
 
 .body { flex: 1; min-width: 0; }
 
@@ -435,6 +450,8 @@ const handleDelete = (commentId) => {
   color: #191F28;
   letter-spacing: -0.01em;
 }
+.author.clickable { cursor: pointer; transition: color 0.15s ease; }
+.author.clickable:hover { color: #9333EA; }
 .author.deleted-label {
   color: #B0B8C1;
   font-weight: 500;

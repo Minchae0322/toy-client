@@ -159,7 +159,7 @@ const loadFeedDetail = async () => {
     console.log('Feed response:', response) // 디버깅용
     if (response.success && response.data) {
       feed.value = response.data
-      await loadComments()
+      await Promise.all([loadComments(), loadFollowStatus()])
     } else {
       throw new Error(response.message || '피드를 불러오는데 실패했습니다.')
     }
@@ -168,6 +168,20 @@ const loadFeedDetail = async () => {
     error.value = err.message || '피드를 불러오는데 실패했습니다.'
   } finally {
     loading.value = false
+  }
+}
+
+const loadFollowStatus = async () => {
+  const targetUserId = feed.value?.userInfo?.userId
+  if (!targetUserId || !isLoggedIn.value) return
+  if (isOwner.value) return
+  try {
+    const response = await userService.getFollowStatus(targetUserId)
+    if (response.success && response.data) {
+      isFollowing.value = !!response.data.isFollowing
+    }
+  } catch (err) {
+    console.error('팔로우 상태 조회 실패:', err)
   }
 }
 
@@ -365,8 +379,44 @@ const handleHot = async () => {
 }
 
 const handleSave = () => { isSaved.value = !isSaved.value }
-const handleFollow = () => { isFollowing.value = true }
-const handleUnfollow = () => { isFollowing.value = false }
+
+const followLoading = ref(false)
+const toggleFollow = async () => {
+  if (!feed.value?.userInfo?.userId || followLoading.value) return
+
+  if (!isLoggedIn.value) {
+    const confirmed = await openLoginRequired('팔로우하려면 로그인이 필요합니다.')
+    if (confirmed) {
+      router.push({ name: 'Login', query: { redirect: route.fullPath } })
+    }
+    return
+  }
+
+  if (isOwner.value) {
+    await open({ type: 'alert', title: '알림', message: '본인은 팔로우할 수 없습니다.' })
+    return
+  }
+
+  const previous = isFollowing.value
+  isFollowing.value = !previous
+  followLoading.value = true
+  try {
+    const response = await userService.toggleFollow(feed.value.userInfo.userId)
+    if (response.success && response.data) {
+      isFollowing.value = !!response.data.isFollowing
+    } else {
+      isFollowing.value = previous
+    }
+  } catch (err) {
+    console.error('팔로우 토글 실패:', err)
+    isFollowing.value = previous
+    await open({ type: 'alert', title: '오류', message: err.message || '팔로우 처리 중 오류가 발생했습니다.' })
+  } finally {
+    followLoading.value = false
+  }
+}
+const handleFollow = () => toggleFollow()
+const handleUnfollow = () => toggleFollow()
 
 const handleShare = () => {
   showShareModal.value = true
