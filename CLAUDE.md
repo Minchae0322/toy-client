@@ -70,3 +70,8 @@
 - `fix: 설명`
 - `refactor: 설명`
 - 한국어 허용
+
+**중요 — 커밋 메시지에 Claude 워터마크 절대 포함 금지:**
+- `Co-Authored-By: Claude ...` 라인 넣지 말 것
+- `🤖 Generated with [Claude Code](...)` 라인 넣지 말 것
+- 메시지는 변경 내용만 간결하게 작성

@@ -61,7 +61,7 @@
 
       <!-- 성공: 바로 리다이렉트 (별도 화면 없음) -->
       <div v-else class="loading-state">
-        <div class="provider-badge" :class="provider">
+        <div class="provider-badge success">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <h2>로그인 완료</h2>
@@ -342,6 +342,8 @@ onMounted(handleOAuthCallback)
 .provider-badge.google { background: #fff; border: 1px solid #e4e4e7; }
 .provider-badge.naver { background: #03C75A; }
 .provider-badge.github { background: #24292e; }
+/* 로그인 완료 상태: provider 무관, 체크마크가 흰색이므로 어두운 배경 필요 */
+.provider-badge.success { background: #1DCD9F; }
 .provider-img { width: 28px; height: 28px; }
 
 /* ===== 로딩 ===== */
