@@ -13,6 +13,7 @@ import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
 import {rewardsService} from '@/services/RewardsService.js'
 import {getTierByLevel, getTierColor} from '@/data/levelSystemData.js'
+import {registerFcm, unregisterFcm} from '@/services/fcmService.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -123,6 +124,7 @@ onMounted(() => {
   if (isLoggedIn.value) {
     webSocketService.connect().catch(console.error)
     loadHeaderRewards()
+    registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
   }
   monitorWebSocketStatus()
 })
@@ -131,10 +133,12 @@ watch(isLoggedIn, (newVal) => {
   if (newVal) {
     loadHeaderRewards()
     webSocketService.connect().catch(console.error)
+    registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
   } else {
     userLevel.value = null
     userBadges.value = []
     webSocketService.disconnect()
+    unregisterFcm().catch(e => console.warn('[FCM] 해제 실패:', e))
   }
   monitorWebSocketStatus()
 })
