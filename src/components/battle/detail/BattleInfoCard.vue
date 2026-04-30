@@ -48,7 +48,23 @@
       <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="xs" />
     </div>
 
-    <div class="stats-dashboard" :class="{ 'time-only': !showDetails }">
+    <!-- 접힌 상태: 단일 시간 pill -->
+    <div v-if="!showDetails" class="time-pill">
+      <span class="time-pill-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <polyline points="12 7 12 12 15 14"/>
+        </svg>
+      </span>
+      <span class="time-pill-label">남은 시간</span>
+      <span class="time-pill-value">
+        <span class="live-dot" aria-hidden="true"></span>
+        {{ formattedDaysLeft }}
+      </span>
+    </div>
+
+    <!-- 펼친 상태: 3-col stats-dashboard (원래 디자인) -->
+    <div v-else class="stats-dashboard">
       <div class="stat-item time">
         <span class="stat-icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -64,7 +80,7 @@
           </span>
         </span>
       </div>
-      <div v-if="showDetails" class="stat-item people">
+      <div class="stat-item people">
         <span class="stat-icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/>
@@ -76,7 +92,7 @@
           <span class="stat-value">{{ formattedParticipants }}</span>
         </span>
       </div>
-      <div v-if="showDetails" class="stat-item votes">
+      <div class="stat-item votes">
         <span class="stat-icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 11 12 14 22 4"/>
@@ -452,9 +468,60 @@ const permissionType = computed(() => {
   box-shadow: none;
 }
 
-.stats-dashboard.time-only {
-  grid-template-columns: 1fr;
-  max-width: 320px;
+/* 접힌 상태: 시간 단독 pill */
+.time-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin: 18px auto 0;
+  padding: 9px 18px 9px 9px;
+  background: #f5f8ff;
+  border: 1px solid #e0e8ff;
+  border-radius: 999px;
+}
+
+.time-pill-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e0e8ff;
+  color: #4a6cf7;
+  flex-shrink: 0;
+}
+
+.time-pill-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.time-pill-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a92a3;
+  letter-spacing: -0.1px;
+}
+
+.time-pill-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #4a6cf7;
+  letter-spacing: -0.02em;
+  font-feature-settings: 'tnum' 1;
+}
+
+.time-pill .live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4a6cf7;
+  flex-shrink: 0;
 }
 
 /* 자세히 보기 토글 */
@@ -762,6 +829,32 @@ const permissionType = computed(() => {
     height: 5px;
     animation: none;
     box-shadow: none;
+  }
+
+  /* 접힌 상태 시간 pill: 모바일 사이즈 다운 */
+  .time-pill {
+    margin-top: 14px;
+    gap: 8px;
+    padding: 7px 14px 7px 7px;
+  }
+  .time-pill-icon {
+    width: 26px;
+    height: 26px;
+  }
+  .time-pill-icon svg {
+    width: 13px;
+    height: 13px;
+  }
+  .time-pill-label {
+    font-size: 11px;
+  }
+  .time-pill-value {
+    font-size: 14px;
+    gap: 5px;
+  }
+  .time-pill .live-dot {
+    width: 5px;
+    height: 5px;
   }
 }
 
