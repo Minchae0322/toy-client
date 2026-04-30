@@ -13,59 +13,36 @@
             </div>
             <router-link :to="{ name: 'FeedHome' }" class="dash-trend-banner">
               <svg class="dash-trend-img" viewBox="0 0 720 160" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
-                <!-- 배경 -->
-                <rect width="720" height="160" fill="#FAF5FF"/>
-                <rect x="440" y="0" width="280" height="160" fill="#F3E8FF"/>
-                <rect x="660" y="0" width="60" height="160" fill="#E9D5FF"/>
+                <!-- 배경: 흰색 + 우측 다크 네이비 솔리드 블록 -->
+                <rect width="720" height="160" fill="#FFFFFF"/>
+                <rect x="448" y="0" width="272" height="160" fill="#0A0E1A"/>
 
-                <!-- 컨페티 (작은 사각형) -->
-                <g opacity="0.7">
-                  <rect x="496" y="22" width="14" height="6" rx="1.5" fill="#A855F7" transform="rotate(-18 503 25)"/>
-                  <rect x="612" y="44" width="14" height="6" rx="1.5" fill="#FDE047" transform="rotate(22 619 47)"/>
-                  <rect x="676" y="118" width="14" height="6" rx="1.5" fill="#7C3AED" transform="rotate(-32 683 121)"/>
-                  <rect x="544" y="134" width="14" height="6" rx="1.5" fill="#C084FC" transform="rotate(34 551 137)"/>
-                  <rect x="430" y="58" width="12" height="5" rx="1.5" fill="#FDE047" transform="rotate(-12 436 60)"/>
+                <!-- 좌측: GRAND OPEN 태그 -->
+                <g transform="translate(40, 22)">
+                  <rect x="0" y="0" width="118" height="26" rx="4" fill="#0A0E1A"/>
+                  <text x="59" y="17.5" font-size="12" font-weight="900" fill="#B4FF39" text-anchor="middle" letter-spacing="1.4" font-family="SUIT, sans-serif">GRAND OPEN</text>
                 </g>
 
-                <!-- 별/스파클 -->
-                <g fill="#FDE047">
-                  <path d="M414 28 l2.5 5.5 l5.5 2.5 l-5.5 2.5 l-2.5 5.5 l-2.5 -5.5 l-5.5 -2.5 l5.5 -2.5 z"/>
-                  <path d="M696 92 l2.5 5.5 l5.5 2.5 l-5.5 2.5 l-2.5 5.5 l-2.5 -5.5 l-5.5 -2.5 l5.5 -2.5 z"/>
-                </g>
-                <circle cx="708" cy="44" r="4" fill="#A855F7" opacity="0.5"/>
-                <circle cx="404" cy="124" r="4" fill="#7C3AED" opacity="0.4"/>
+                <!-- 좌측: 메인 헤드라인 -->
+                <text x="40" y="92" font-size="32" font-weight="900" fill="#0A0E1A" letter-spacing="-1.5" font-family="SUIT, sans-serif">매일 갱신되는</text>
+                <text x="40" y="124" font-size="32" font-weight="900" fill="#7C3AED" letter-spacing="-1.5" font-family="SUIT, sans-serif">진짜 트렌드 큐레이션</text>
 
-                <!-- GRAND OPEN 태그 -->
-                <g transform="translate(48, 26)">
-                  <rect x="0" y="0" width="124" height="26" rx="13" fill="#0A0E1A"/>
-                  <text x="62" y="17.5" font-size="12" font-weight="900" fill="#B4FF39" text-anchor="middle" letter-spacing="1.4" font-family="SUIT, sans-serif">GRAND OPEN</text>
-                </g>
+                <!-- 좌측: 서브 라인 (차별점) -->
+                <text x="40" y="146" font-size="11" font-weight="700" fill="#71717A" letter-spacing="-0.1" font-family="SUIT, sans-serif">광고·협찬 없이, 산 사람의 투표로</text>
 
-                <!-- 메인 카피 -->
-                <text x="48" y="92" font-size="32" font-weight="900" fill="#18181B" letter-spacing="-1.4" font-family="SUIT, sans-serif">요거뜨, 오픈했어요</text>
+                <!-- 우측 다크 블록: 브랜드 워드마크 -->
+                <g transform="translate(490, 0)">
+                  <!-- 작은 캡션 (라임 컬러 small caps) -->
+                  <text x="0" y="50" font-size="10" font-weight="800" fill="#B4FF39" letter-spacing="2.6" font-family="SUIT, sans-serif">YOGURT REVIEW</text>
 
-                <!-- 서브 카피 -->
-                <text x="48" y="120" font-size="13" font-weight="700" fill="#7C3AED" letter-spacing="-0.2" font-family="SUIT, sans-serif">맛 · 사람 · 트렌드를 한 잔에 담았어요</text>
+                  <!-- 워드마크 "요거뜨" -->
+                  <text x="0" y="100" font-size="44" font-weight="900" fill="#FFFFFF" letter-spacing="-2.2" font-family="SUIT, sans-serif">요거뜨</text>
+                  <!-- 라임 마침표 액센트 -->
+                  <circle cx="138" cy="96" r="5" fill="#B4FF39"/>
 
-                <!-- OPEN 라벨 단 요거트 컵 -->
-                <g transform="translate(540, 16)">
-                  <!-- 그림자 -->
-                  <ellipse cx="60" cy="128" rx="50" ry="6" fill="#0A0E1A" opacity="0.18"/>
-                  <!-- 컵 본체 -->
-                  <path d="M14 32 L106 32 L98 124 Q 60 132 22 124 Z" fill="#FFFFFF" stroke="#0A0E1A" stroke-width="3"/>
-                  <!-- 뚜껑 -->
-                  <rect x="8" y="16" width="104" height="18" rx="3" fill="#7C3AED" stroke="#0A0E1A" stroke-width="3"/>
-                  <rect x="12" y="20" width="96" height="4" rx="2" fill="#C084FC"/>
-                  <!-- 요거트 표면 -->
-                  <ellipse cx="60" cy="36" rx="40" ry="5" fill="#FAFAFA"/>
-                  <!-- 체리 -->
-                  <circle cx="60" cy="22" r="6" fill="#EF4444" stroke="#0A0E1A" stroke-width="2"/>
-                  <path d="M60 16 Q 66 8 74 8" stroke="#15803D" stroke-width="2" fill="none" stroke-linecap="round"/>
-                  <!-- OPEN 라벨 -->
-                  <rect x="22" y="60" width="76" height="40" rx="3" fill="#FDE047" stroke="#0A0E1A" stroke-width="2.5"/>
-                  <text x="60" y="88" font-size="22" font-weight="900" fill="#0A0E1A" text-anchor="middle" letter-spacing="0.5" font-family="SUIT, sans-serif">OPEN</text>
-                  <!-- 하단 띠 -->
-                  <path d="M22 108 L98 108 L96 118 L24 118 Z" fill="#F3E8FF"/>
+                  <!-- 라임 디바이더 + 서브 카피 -->
+                  <rect x="0" y="116" width="32" height="3" rx="1" fill="#B4FF39"/>
+                  <text x="0" y="138" font-size="10" font-weight="600" fill="#A1A1AA" letter-spacing="0.4" font-family="SUIT, sans-serif">since 2026 · GRAND OPEN</text>
                 </g>
               </svg>
               <span class="dash-trend-cta">둘러보기 →</span>
@@ -198,8 +175,97 @@
           </div>
         </section>
 
+        <!-- 핫 피드 섹션 (모바일 전용) -->
+        <section class="content-section mhot-section">
+          <div class="mhot-header">
+            <div class="mhot-header-main">
+              <h2 class="mhot-title">
+                지금 뜨는 <span class="mhot-accent">핫-기록</span>
+                <span class="mhot-live">
+                  <span class="mhot-live-dot"></span>LIVE
+                </span>
+              </h2>
+              <p class="mhot-sub">실시간으로 가장 많이 본 인기 리뷰</p>
+            </div>
+            <router-link :to="{ name: 'FeedHome' }" class="mhot-more">
+              <span>전체보기</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </router-link>
+          </div>
+
+          <div v-if="feedsLoading" class="mhot-scroll">
+            <div v-for="i in 4" :key="i" class="skeleton mhot-sk"></div>
+          </div>
+
+          <div v-else-if="hotFeeds.length === 0" class="mhot-empty">
+            <div class="mhot-empty-content">
+              <div class="mhot-empty-icon">🔥</div>
+              <p class="mhot-empty-text">현재 집계 중인 인기 피드가 없어요</p>
+            </div>
+          </div>
+
+          <div v-else class="mhot-scroll">
+            <router-link
+              v-for="(feed, index) in hotFeeds"
+              :key="'mhot-' + feed.feedId"
+              :to="{ name: 'FeedDetail', params: { id: feed.feedId } }"
+              class="mhot-card"
+            >
+              <div class="mhot-visual">
+                <img
+                  :src="feed.hotFeedThumbnailDto?.fileUrl"
+                  :alt="feed.productName"
+                  loading="lazy"
+                  @error="handleImageError"
+                />
+
+                <div class="mhot-overlay-top">
+                  <div class="mhot-rank">{{ index + 1 }}</div>
+                  <span v-if="feed.isTrending" class="mhot-trending">HOT</span>
+                </div>
+
+                <div class="mhot-overlay">
+                  <div class="mhot-tag-group">
+                    <span
+                      v-if="feed.feedEvaluation?.code"
+                      :class="['mhot-eval', feed.feedEvaluation.code.toLowerCase()]"
+                    >
+                      {{ feed.feedEvaluation.description }}
+                    </span>
+                  </div>
+                  <h3 v-if="feed.reviewSummary" class="mhot-review">
+                    {{ feed.reviewSummary }}
+                  </h3>
+                  <span class="mhot-product">{{ feed.productName }}</span>
+                </div>
+              </div>
+            </router-link>
+          </div>
+        </section>
+
         <!-- 실시간 배틀 섹션 -->
-        <section class="content-section">
+        <section class="content-section battle-section">
+          <!-- 모바일 전용 헤더 (mhot 톤 동일) -->
+          <div class="mpick-header">
+            <div class="mpick-header-main">
+              <h2 class="mpick-title">
+                실시간 <span class="mpick-accent">요거픽</span>
+                <span class="mpick-live">
+                  <span class="mpick-live-dot"></span>LIVE
+                </span>
+              </h2>
+              <p class="mpick-sub">유저들이 직접 고르는 인기 승부</p>
+            </div>
+            <router-link :to="{ name: 'BattleList' }" class="mpick-more">
+              <span>전체보기</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </router-link>
+          </div>
+
           <div class="section-header">
             <div class="title-with-badge">
               <h2 class="section-title">실시간 <span class="title-accent">요거픽</span></h2>
@@ -1074,8 +1140,8 @@ onUnmounted(() => {
 /* 트렌드 알림 배너 */
 .dash-trend-banner {
   display: block;
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   flex: 1;
   text-decoration: none;
@@ -3056,12 +3122,9 @@ onUnmounted(() => {
 
 /* ===== 모바일 컴팩트 레이아웃 ===== */
 @media (max-width: 767px) {
-  /* 실시간 요거 봄 모바일 */
+  /* 실시간 요거 봄: 모바일에서는 숨김 */
   .yogurt-bom-section {
-    padding: 0.875rem 0.875rem 0.75rem;
-    gap: 0.75rem;
-    border-radius: 14px;
-    margin-bottom: 0.75rem;
+    display: none !important;
   }
 
   .yb-header {
@@ -3285,6 +3348,345 @@ onUnmounted(() => {
   .glass-banner:hover .banner-inner,
   .glass-banner:hover .banner-action {
     transform: none;
+  }
+}
+
+/* ============================================================ */
+/* ===== 핫-기록 / 요거픽 섹션 모바일 전용 재설계 ===== */
+/* PC에서는 .mhot-section / .mpick-section 숨김 */
+/* 모바일에서는 기존 .hot-feeds-section / 데스크톱 배틀 그리드 숨김 */
+/* ============================================================ */
+
+.mhot-section,
+.mpick-header {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* 데스크톱 핫피드 섹션 숨김 (모바일 mhot-section 사용) */
+  .hot-feeds-section {
+    display: none !important;
+  }
+
+  /* 모바일 신규 섹션: .content-section 의 박스/그림자/라운드 상속 제거.
+     섹션 사이 구분감을 위해 얇은 하단 구분선만 유지 (토스/네이버 톤).
+     좌우 패딩은 컴팩트하게 0.625rem (10px) */
+  .mhot-section,
+  .battle-section {
+    background: #ffffff;
+    border: none !important;
+    border-bottom: 1px solid #f1f3f6 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 22px 0.625rem 24px 0.625rem !important;
+    margin: 0 !important;
+  }
+
+  /* 모바일 핫피드 노출 */
+  .mhot-section {
+    display: block;
+  }
+
+  /* 배틀 섹션: 데스크톱 헤더 숨기고 mpick-header 노출 (카드는 그대로) */
+  .battle-section .section-header {
+    display: none !important;
+  }
+
+  .battle-section .mpick-header {
+    display: flex;
+  }
+
+  .mhot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+  }
+
+  .mhot-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: -0.03em;
+    margin: 0;
+  }
+
+  .mhot-accent {
+    color: #7c3aed;
+  }
+
+  .mhot-live {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #ef4444;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+
+  .mhot-live-dot {
+    width: 5px;
+    height: 5px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    animation: mhot-pulse 1.5s infinite;
+  }
+
+  @keyframes mhot-pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.2); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .mhot-sub {
+    font-size: 13px;
+    color: #71717a;
+    margin: 4px 0 0;
+  }
+
+  .mhot-more {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a1a1aa;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .mhot-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mhot-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mhot-card {
+    flex: 0 0 160px;
+    aspect-ratio: 3 / 4.2;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    text-decoration: none;
+    background: #f4f4f5;
+    isolation: isolate;
+  }
+
+  .mhot-visual {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .mhot-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mhot-card:hover .mhot-visual img {
+    transform: scale(1.1);
+  }
+
+  .mhot-overlay-top {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+  }
+
+  .mhot-rank {
+    font-size: 20px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-style: italic;
+  }
+
+  .mhot-trending {
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #111;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 4px;
+  }
+
+  .mhot-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 40px 14px 16px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+    color: #fff;
+    z-index: 1;
+  }
+
+  .mhot-tag-group {
+    margin-bottom: 8px;
+  }
+
+  .mhot-eval {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  .mhot-eval.best { background: #f59e0b; }
+  .mhot-eval.good { background: #10b981; }
+  .mhot-eval.okay { background: #6366f1; }
+  .mhot-eval.bad { background: #ef4444; }
+
+  .mhot-review {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 0 0 4px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    color: #fff;
+  }
+
+  .mhot-product {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mhot-sk {
+    flex: 0 0 160px;
+    aspect-ratio: 3 / 4.2;
+    border-radius: 14px;
+  }
+
+  .mhot-empty {
+    height: 200px;
+    background: #fafafa;
+    border: 1px dashed #e4e4e7;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mhot-empty-content {
+    text-align: center;
+  }
+
+  .mhot-empty-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .mhot-empty-text {
+    font-size: 13px;
+    color: #a1a1aa;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  /* ── 요거픽 헤더만 mhot 톤 동일하게 (카드 본문은 기존 유지) ── */
+  .mpick-header {
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+  }
+
+  .mpick-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: -0.03em;
+    margin: 0;
+  }
+
+  .mpick-accent {
+    color: #7c3aed;
+  }
+
+  .mpick-live {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #ef4444;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+
+  .mpick-live-dot {
+    width: 5px;
+    height: 5px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    animation: mhot-pulse 1.5s infinite;
+  }
+
+  .mpick-sub {
+    font-size: 13px;
+    color: #71717a;
+    margin: 4px 0 0;
+  }
+
+  .mpick-more {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a1a1aa;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .mhot-title,
+  .mpick-title {
+    font-size: 1.125rem;
+  }
+  .mhot-card {
+    flex: 0 0 145px;
+  }
+  .mhot-review {
+    font-size: 13px;
+    -webkit-line-clamp: 2;
+  }
+}
+
+/* PC에서 모바일 블록 안전 차단 */
+@media (min-width: 768px) {
+  .mhot-section,
+  .mpick-header {
+    display: none !important;
   }
 }
 </style>
