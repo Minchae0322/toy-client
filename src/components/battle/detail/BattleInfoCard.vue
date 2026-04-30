@@ -11,12 +11,12 @@
       </button>
     </nav>
 
-    <div class="badge-wrapper">
-      <span class="pill category-pill">{{ categoryName }}</span>
+    <div v-if="isWeightedVote || showDetails" class="badge-wrapper">
+      <span v-if="showDetails" class="pill category-pill">{{ categoryName }}</span>
       <span v-if="isWeightedVote" class="pill weighted-pill">
         <span class="pulse-dot"></span> 순위 투표
       </span>
-      <span v-if="permissionType" class="pill permission-pill">
+      <span v-if="permissionType && showDetails" class="pill permission-pill">
         <svg class="permission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
@@ -32,9 +32,9 @@
     </div>
 
     <h1 class="main-title">{{ battle.title }}</h1>
-    <p v-if="battle.description" class="sub-desc">{{ battle.description }}</p>
+    <p v-if="battle.description && showDetails" class="sub-desc">{{ battle.description }}</p>
 
-    <div v-if="creatorNickname" class="creator-row">
+    <div v-if="creatorNickname && showDetails" class="creator-row">
       <img
         v-if="creatorProfileImage"
         :src="creatorProfileImage"
@@ -48,7 +48,7 @@
       <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="xs" />
     </div>
 
-    <div class="stats-dashboard">
+    <div class="stats-dashboard" :class="{ 'time-only': !showDetails }">
       <div class="stat-item time">
         <span class="stat-icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -64,7 +64,7 @@
           </span>
         </span>
       </div>
-      <div class="stat-item people">
+      <div v-if="showDetails" class="stat-item people">
         <span class="stat-icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/>
@@ -76,7 +76,7 @@
           <span class="stat-value">{{ formattedParticipants }}</span>
         </span>
       </div>
-      <div class="stat-item votes">
+      <div v-if="showDetails" class="stat-item votes">
         <span class="stat-icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 11 12 14 22 4"/>
@@ -91,6 +91,24 @@
     </div>
 
     <button
+        type="button"
+        class="details-toggle"
+        :aria-expanded="showDetails"
+        @click="showDetails = !showDetails"
+    >
+      <span>{{ showDetails ? '간단히 보기' : '자세히 보기' }}</span>
+      <svg
+          class="chevron"
+          :class="{ rotated: showDetails }"
+          width="14" height="14" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round"
+      >
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+
+    <button
         v-if="canUserAddItem"
         @click="$emit('add-product')"
         class="add-product-btn"
@@ -102,10 +120,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { battleUtils } from '@/services/BattleService.js'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
+
+const showDetails = ref(false)
 
 const props = defineProps({
   battle: {
@@ -180,10 +200,17 @@ const permissionType = computed(() => {
 .sub-desc,
 .badge-wrapper,
 .stats-dashboard,
+.details-toggle,
 .add-product-btn {
   max-width: 680px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* details-toggle은 inline-flex라 margin:auto가 안 먹음 → 래퍼 없이 가운데 정렬 */
+.details-toggle {
+  display: flex;
+  width: fit-content;
 }
 
 .nav-bar {
@@ -423,6 +450,43 @@ const permissionType = computed(() => {
   padding: 0;
   margin-top: 18px;
   box-shadow: none;
+}
+
+.stats-dashboard.time-only {
+  grid-template-columns: 1fr;
+  max-width: 320px;
+}
+
+/* 자세히 보기 토글 */
+.details-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px auto 0;
+  padding: 7px 16px;
+  background: #ffffff;
+  border: 1px solid #eef0f3;
+  border-radius: 999px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+}
+
+.details-toggle:hover {
+  background: #f7f8fa;
+  color: #374151;
+  border-color: #d8dde5;
+}
+
+.details-toggle .chevron {
+  transition: transform 0.2s ease;
+}
+
+.details-toggle .chevron.rotated {
+  transform: rotate(180deg);
 }
 
 .stat-item {
@@ -787,4 +851,5 @@ const permissionType = computed(() => {
     transform: none;
   }
 }
+
 </style>
