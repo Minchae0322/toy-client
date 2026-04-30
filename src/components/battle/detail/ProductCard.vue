@@ -40,14 +40,14 @@
       </div>
 
       <!-- Vote Actions -->
-      <div v-if="canVote" class="vote-actions">
+      <div class="vote-actions" :class="{ 'is-ended': !canVote }">
         <template v-if="isWeightedVote">
           <div class="rank-selector">
             <button
                 v-for="r in [1, 2, 3]"
                 :key="r"
                 @click="onVote(r)"
-                :disabled="submitting"
+                :disabled="submitting || !canVote"
                 :class="['rank-chip', `rank-${r}`, { active: productRank === r }]"
             >
               {{ r }}위
@@ -61,7 +61,7 @@
         <button
             v-else
             @click="onVote(1)"
-            :disabled="submitting"
+            :disabled="submitting || !canVote"
             :class="['vote-btn', { active: productRank !== null }]"
             :style="{ '--vote-fill': voteFillWidth }"
         >
@@ -74,7 +74,7 @@
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
             </template>
           </svg>
-          <span class="vote-btn-label">{{ productRank !== null ? '내가 뽑은 픽' : '투표하기' }}</span>
+          <span class="vote-btn-label">{{ !canVote ? '투표 마감' : (productRank !== null ? '내가 뽑은 픽' : '투표하기') }}</span>
           <span class="vote-btn-pct">{{ percentage }}%</span>
         </button>
       </div>
