@@ -240,6 +240,7 @@ onUnmounted(() => {
           </div>
           <span v-if="userLevel != null" class="mobile-level-badge">{{ userLevel }}</span>
         </div>
+        <RouterLink v-else to="/login" class="nav-item mobile-auth-btn">로그인</RouterLink>
       </div>
     </div>
 
@@ -678,6 +679,13 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 모바일 로그인/로그아웃: PC와 동일한 .btn-ghost / .nav-item 스타일 사용, 폭만 살짝 조정 */
+.mobile-auth-btn {
+  margin-left: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
 }
 
 

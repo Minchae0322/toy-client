@@ -16,6 +16,19 @@
       <span v-if="isWeightedVote" class="pill weighted-pill">
         <span class="pulse-dot"></span> 순위 투표
       </span>
+      <span v-if="permissionType" class="pill permission-pill">
+        <svg class="permission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        {{ permissionType.title }}
+        <span class="tooltip-wrapper">
+          <button class="help-btn" type="button" aria-label="참여 권한 설명">?</button>
+          <span class="tooltip">{{ permissionType.description }}</span>
+        </span>
+      </span>
     </div>
 
     <h1 class="main-title">{{ battle.title }}</h1>
@@ -74,23 +87,6 @@
           <span class="stat-label">총 투표수</span>
           <span class="stat-value">{{ formattedVotes }}</span>
         </span>
-      </div>
-    </div>
-
-    <!-- 참여 권한 안내 -->
-    <div v-if="permissionType" class="permission-info">
-      <span class="permission-badge">
-        <svg class="permission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        {{ permissionType.title }}
-      </span>
-      <div class="tooltip-wrapper">
-        <button class="help-btn" type="button" aria-label="참여 권한 설명">?</button>
-        <div class="tooltip">{{ permissionType.description }}</div>
       </div>
     </div>
 
@@ -240,6 +236,8 @@ const permissionType = computed(() => {
 .badge-wrapper {
   display: flex;
   justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 14px;
 }
@@ -262,6 +260,82 @@ const permissionType = computed(() => {
 .weighted-pill {
   background: #fff7ed;
   color: #f97316;
+}
+
+.permission-pill {
+  background: #f0fdf4;
+  color: #16a34a;
+  position: relative;
+}
+
+.permission-pill .permission-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* 참여 권한 도움말 (permission-pill 내부) */
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  margin-left: 2px;
+}
+
+.help-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(22, 163, 74, 0.35);
+  background: #ffffff;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.help-btn:hover {
+  border-color: #16a34a;
+  background: #ecfdf5;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  border-radius: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1f2937;
+}
+
+.tooltip-wrapper:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 
 .pulse-dot {
@@ -521,95 +595,6 @@ const permissionType = computed(() => {
   animation: none;
 }
 
-/* 참여 권한 안내 */
-.permission-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.permission-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 100px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #16a34a;
-}
-
-.permission-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.tooltip-wrapper {
-  position: relative;
-  display: inline-flex;
-}
-
-.help-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1.5px solid #d1d5db;
-  background: #ffffff;
-  color: #9ca3af;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.help-btn:hover {
-  border-color: #9333ea;
-  color: #9333ea;
-  background: #faf5ff;
-}
-
-.tooltip {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 14px;
-  background: #1f2937;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.5;
-  border-radius: 10px;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s;
-  z-index: 100;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: #1f2937;
-}
-
-.tooltip-wrapper:hover .tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
 /* 반응형 처리 */
 @media (max-width: 768px) {
   .hero-section {
@@ -623,6 +608,9 @@ const permissionType = computed(() => {
   .badge-wrapper {
     margin-bottom: 12px;
   }
+
+  /* 모바일: pulse-dot 애니메이션 제거 — 시선 분산 줄임 */
+  .pulse-dot { animation: none; }
 
   .main-title {
     font-size: 30px;
@@ -641,19 +629,76 @@ const permissionType = computed(() => {
     padding: 5px 12px 5px 5px;
   }
   .creator-row .creator-avatar { width: 22px; height: 22px; }
-  .creator-row .creator-label { font-size: 10px; }
+  /* 모바일: "만든이" 라벨 숨김 — 아바타+이름으로 충분 */
+  .creator-row .creator-label { display: none; }
   .creator-row .creator-name { font-size: 12px; }
 
+  /* 모바일: stats를 가벼운 인라인 행으로 — 큰 타일 카드 → 단일 슬랩 */
   .stats-dashboard {
-    margin-top: 16px;
-    gap: 8px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    margin-top: 14px;
+    padding: 10px 6px;
+    background: #f7f8fa;
+    border: 1px solid #eef0f3;
+    border-radius: 14px;
   }
-  .stat-item { gap: 10px; padding: 12px 12px; border-radius: 14px; }
-  .stat-icon-wrap { width: 34px; height: 34px; border-radius: 10px; }
-  .stat-icon-wrap svg { width: 16px; height: 16px; }
-  .stat-label { font-size: 11px; }
-  .stat-value { font-size: 18px; gap: 5px; }
-  .live-dot { width: 6px; height: 6px; }
+  .stat-item,
+  .stat-item.time {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 6px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    position: relative;
+    min-width: 0;
+  }
+  .stat-item:hover {
+    transform: none;
+    box-shadow: none;
+    border: none;
+  }
+  /* 인라인 stat 사이 얇은 세로 구분선 */
+  .stat-item + .stat-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 22px;
+    background: #e3e6eb;
+  }
+  .stat-icon-wrap,
+  .stat-item.time .stat-icon-wrap,
+  .stat-item.people .stat-icon-wrap,
+  .stat-item.votes .stat-icon-wrap {
+    width: auto;
+    height: auto;
+    background: transparent;
+    border-radius: 0;
+    flex-shrink: 0;
+  }
+  .stat-icon-wrap svg { width: 15px; height: 15px; }
+  .stat-text {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    min-width: 0;
+  }
+  .stat-label { font-size: 10px; line-height: 1; }
+  .stat-value { font-size: 14px; gap: 4px; line-height: 1.1; }
+  /* 모바일: live-dot 펄스 애니메이션 제거 — 인라인에서는 과함 */
+  .live-dot {
+    width: 5px;
+    height: 5px;
+    animation: none;
+    box-shadow: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -701,27 +746,21 @@ const permissionType = computed(() => {
     margin: 10px auto 0;
   }
 
+  /* 모바일 작은 화면: stats 더 압축 */
   .stats-dashboard {
-    margin-top: 14px;
-    gap: 6px;
-  }
-  .stat-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 10px 10px;
+    margin-top: 12px;
+    padding: 8px 4px;
     border-radius: 12px;
   }
-  .stat-icon-wrap {
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
+  .stat-item,
+  .stat-item.time {
+    gap: 6px;
+    padding: 3px 4px;
   }
-  .stat-icon-wrap svg { width: 14px; height: 14px; }
-  .stat-text { gap: 3px; }
-  .stat-label { font-size: 10px; }
-  .stat-value { font-size: 15px; gap: 5px; }
-  .live-dot { width: 5px; height: 5px; }
+  .stat-icon-wrap svg { width: 13px; height: 13px; }
+  .stat-label { font-size: 9px; }
+  .stat-value { font-size: 13px; gap: 4px; }
+  .stat-item + .stat-item::before { height: 20px; }
 
   .add-product-btn {
     padding: 14px;
@@ -736,51 +775,6 @@ const permissionType = computed(() => {
     font-size: 18px;
   }
 
-  .permission-info {
-    margin-top: 14px;
-    position: relative;
-  }
-
-  .permission-badge {
-    padding: 6px 12px;
-    font-size: 11px;
-    gap: 5px;
-  }
-
-  .permission-icon {
-    width: 14px;
-    height: 14px;
-  }
-
-  .help-btn {
-    width: 18px;
-    height: 18px;
-    font-size: 11px;
-  }
-
-  .tooltip-wrapper {
-    position: static;
-  }
-
-  .tooltip {
-    position: absolute;
-    font-size: 12px;
-    padding: 8px 12px;
-    white-space: normal;
-    width: max-content;
-    max-width: calc(100vw - 40px);
-    text-align: center;
-    left: 50%;
-    right: auto;
-    bottom: calc(100% + 8px);
-    transform: translateX(-50%);
-  }
-
-  .tooltip::after {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-  }
 }
 
 /* 모바일/터치: sticky hover 차단 */
