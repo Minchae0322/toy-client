@@ -673,7 +673,9 @@ function getDashBubbleStyle(i) {
     boxShadow: isHov ? `0 8px 32px ${colors.glow}, 0 0 0 4px rgba(124,58,237,0.1)`
       : `0 4px 16px ${colors.glow}`,
     zIndex: isHov ? 50 : rank <= 3 ? 10 : 1,
-    textDecoration: 'none'
+    textDecoration: 'none',
+    // 몽글몽글 staggered 등장 — 상위 랭크부터 차례로
+    animationDelay: (i * 50) + 'ms'
   }
 }
 
@@ -2793,6 +2795,26 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   user-select: none;
   text-decoration: none;
+  animation: dash-bubble-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+@keyframes dash-bubble-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-bubble { animation: none; }
 }
 .dash-bubble:hover {
   transform: scale(1.06);
