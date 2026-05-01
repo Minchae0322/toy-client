@@ -32,7 +32,7 @@
     </div>
 
     <h1 class="main-title">{{ battle.title }}</h1>
-    <p v-if="battle.description && showDetails" class="sub-desc">{{ battle.description }}</p>
+    <p v-if="battle.description" class="sub-desc" :class="{ clamped: !showDetails }">{{ battle.description }}</p>
 
     <div v-if="creatorNickname && showDetails" class="creator-row">
       <img
@@ -411,6 +411,13 @@ const permissionType = computed(() => {
   line-height: 1.5;
   max-width: 500px;
   margin: 0 auto 0;
+}
+.sub-desc.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .creator-row {
