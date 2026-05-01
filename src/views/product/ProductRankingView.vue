@@ -3,19 +3,21 @@
     <AppSidebar />
 
     <main class="main-content">
-      <CommonCategoryFilter
-        :categories="categories"
-        :show-view-toggle="false"
-        :initial-category-id="selectedCategoryId"
-        @category-change="handleCategoryChange"
-      />
-
       <div class="ranking-view">
-        <!-- 헤더 -->
+        <!-- 헤더 (피드 섹션 타이틀 톤과 통일) — 카테고리 필터 위로 이동 -->
         <header class="page-header">
-          <h1>핫 아이템</h1>
-          <span class="sub-title">버블이 클수록 이번 주 인기가 높아요</span>
+          <div class="title-with-badge">
+            <h2 class="section-title">핫 <span class="title-accent">아이템</span></h2>
+            <span class="sub-title">버블이 클수록 이번 주 인기가 높아요</span>
+          </div>
         </header>
+
+        <CommonCategoryFilter
+          :categories="categories"
+          :show-view-toggle="false"
+          :initial-category-id="selectedCategoryId"
+          @category-change="handleCategoryChange"
+        />
 
         <!-- 검색 -->
         <div class="search-box">
@@ -824,12 +826,30 @@ onUnmounted(() => {
 
 .ranking-view { max-width: 1000px; margin: 0; }
 
-/* 헤더 */
-.page-header { padding: 20px 0 8px; }
-.page-header h1 { font-size: 1rem; font-weight: 600; color: #1a1a1a; margin: 0 0 4px; padding-left: 10px; border-left: 3px solid #9333ea; }
-@media (min-width: 768px) { .page-header h1 { font-size: 1.125rem; } }
-@media (min-width: 1280px) { .page-header h1 { font-size: 1.3125rem; } }
-.sub-title { font-size: 12px; font-weight: 400; color: #999; padding-left: 13px; }
+/* 헤더 — BattleListView 등 다른 메뉴 섹션 타이틀과 톤 통일
+   filter-container 의 padding-top(16px)이 아래 간격 역할이라
+   헤더 자체 margin-bottom 은 0, 위쪽엔 적당한 padding-top 만 */
+.page-header { padding-top: 16px; margin-bottom: 0; }
+.page-header .title-with-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid #a1a1aa;
+}
+.page-header .section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #18181b;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.page-header .section-title .title-accent { color: #9333ea; }
+@media (min-width: 1280px) {
+  .page-header .section-title { font-size: 1.3125rem; }
+}
+.sub-title { font-size: 12px; font-weight: 400; color: #999; }
 
 /* 검색 */
 .search-box { position: relative; margin-bottom: 16px; }
@@ -1273,8 +1293,10 @@ onUnmounted(() => {
 
 /* 모바일 */
 @media (max-width: 640px) {
-  .page-header h1 { font-size: 0.875rem; padding-left: 8px; border-left-width: 2.5px; }
-  .sub-title { font-size: 10px; }
+  .page-header { padding-top: 12px; margin-bottom: 0; }
+  .page-header .section-title { font-size: 1rem; }
+  .page-header .title-with-badge { padding-left: 0.625rem; border-left-width: 2.5px; }
+  .sub-title { font-size: 11px; }
   .carrier-panel {
     /* BottomNavigation(약 84px) + FAB(52px+14gap) 위로 띄워 + 버튼과 겹치지 않게 */
     position: fixed; bottom: calc(170px + env(safe-area-inset-bottom)); right: auto; left: 50%; z-index: 200;
