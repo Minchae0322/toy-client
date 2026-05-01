@@ -52,10 +52,22 @@ const insStyle = computed(() => ({
   minHeight: typeof props.minHeight === 'number' ? `${props.minHeight}px` : props.minHeight
 }))
 
+function ensureAdsScript() {
+  if (typeof document === 'undefined') return
+  if (document.querySelector('script[data-adsbygoogle]')) return
+  const s = document.createElement('script')
+  s.async = true
+  s.crossOrigin = 'anonymous'
+  s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6101308382817399'
+  s.setAttribute('data-adsbygoogle', '')
+  document.head.appendChild(s)
+}
+
 onMounted(() => {
   if (!isValidSlot.value) return
   try {
     if (typeof window === 'undefined') return
+    ensureAdsScript()
     window.adsbygoogle = window.adsbygoogle || []
     window.adsbygoogle.push({})
   } catch (e) {
