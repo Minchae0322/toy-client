@@ -49,6 +49,15 @@
       </div>
     </div>
 
+    <label class="remember-id">
+      <input
+          type="checkbox"
+          v-model="form.rememberEmail"
+          :disabled="loading"
+      />
+      <span class="remember-id-text">아이디 저장</span>
+    </label>
+
     <button type="submit" class="submit-btn" :disabled="loading || !canSubmit">
       <div v-if="loading" class="spinner"></div>
       <span>{{ loading ? '진행 중' : '로그인' }}</span>
@@ -85,7 +94,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+
+const REMEMBERED_EMAIL_KEY = 'login_remembered_email'
 
 const props = defineProps({
   sessionExpired: Boolean,
@@ -95,11 +106,14 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'social-login', 'forgot-password'])
 
+const savedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY) || ''
+
 const form = ref({
-  email: '',
+  email: savedEmail,
   password: '',
   showPassword: false,
-  emailError: false
+  emailError: false,
+  rememberEmail: !!savedEmail
 })
 
 const displayError = computed(() => props.errorMessage)
@@ -110,10 +124,19 @@ const validateEmail = () => {
   form.value.emailError = form.value.email ? !emailRegex.test(form.value.email) : false
 }
 
+// 토글 끄면 저장된 이메일 즉시 제거
+watch(() => form.value.rememberEmail, (v) => {
+  if (!v) localStorage.removeItem(REMEMBERED_EMAIL_KEY)
+})
+
 const handleSubmit = () => {
-  if (canSubmit.value) {
-    emit('submit', { email: form.value.email, password: form.value.password })
+  if (!canSubmit.value) return
+  if (form.value.rememberEmail) {
+    localStorage.setItem(REMEMBERED_EMAIL_KEY, form.value.email)
+  } else {
+    localStorage.removeItem(REMEMBERED_EMAIL_KEY)
   }
+  emit('submit', { email: form.value.email, password: form.value.password })
 }
 </script>
 
@@ -198,6 +221,31 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
 }
 .eye-btn:hover { background: #F2F4F6; color: #4E5968; }
 .error-msg { color: #EF4444; font-size: 12px; font-weight: 600; margin-top: 6px; display: block; }
+
+/* 아이디 저장 토글 */
+.remember-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 18px;
+  cursor: pointer;
+  user-select: none;
+}
+.remember-id input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #9333EA;
+  flex-shrink: 0;
+  margin: 0;
+}
+.remember-id-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4E5968;
+  letter-spacing: -0.1px;
+}
+.remember-id:hover .remember-id-text { color: #0A0E1A; }
 
 /* 제출 버튼 */
 .submit-btn {
