@@ -400,6 +400,26 @@
             </div>
           </div>
 
+          <!-- 캐꾸 안내 배너: 대시보드에선 둘러보기만, 핫 아이템 페이지에서 캐꾸 시작 -->
+          <router-link v-if="!productsLoading && hotProducts.length > 0" :to="{ name: 'ProductRanking' }" class="dash-cgo-banner">
+            <div class="dash-cgo-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+                <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/>
+                <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+                <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+              </svg>
+            </div>
+            <div class="dash-cgo-text">
+              <span class="dash-cgo-title">버블을 끌어 캐리어에 담고 싶다면?</span>
+              <span class="dash-cgo-sub">핫 아이템 페이지에서 캐꾸를 시작할 수 있어요</span>
+            </div>
+            <span class="dash-cgo-cta">
+              핫 아이템으로
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </span>
+          </router-link>
+
           <div v-if="productsLoading" class="dash-bubble-wrapper">
             <div class="skeleton" style="width:100%;height:320px;border-radius:12px;"></div>
           </div>
@@ -1744,6 +1764,7 @@ onUnmounted(() => {
   margin-left: 2px;
 }
 
+
 .view-all-btn {
   display: flex;
   align-items: center;
@@ -2753,6 +2774,83 @@ onUnmounted(() => {
 
 .dash-bubble-wrapper {
   position: relative;
+}
+
+/* 캐꾸 안내 배너 (대시보드 → 핫 아이템 이동) */
+.dash-cgo-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+  background: #FAF5FF;
+  border: 1px solid #E9D5FF;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.dash-cgo-banner:hover {
+  background: #F3E8FF;
+  border-color: #C4B5FD;
+}
+.dash-cgo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #9333EA;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dash-cgo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.dash-cgo-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #4C1D95;
+  letter-spacing: -0.3px;
+}
+.dash-cgo-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: #7C3AED;
+  letter-spacing: -0.2px;
+}
+.dash-cgo-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 11px;
+  background: #fff;
+  border: 1px solid #E9D5FF;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7C3AED;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .dash-cgo-banner {
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 10px;
+  }
+  .dash-cgo-icon { width: 32px; height: 32px; border-radius: 8px; }
+  .dash-cgo-title { font-size: 12.5px; }
+  .dash-cgo-sub { font-size: 11px; }
+  .dash-cgo-cta {
+    padding: 6px 9px;
+    font-size: 11px;
+  }
 }
 
 .dash-bubble-area {

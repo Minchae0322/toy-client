@@ -68,6 +68,28 @@
         </div>
 
         <div v-else-if="filtered.length">
+          <!-- 캐꾸(캐리어 꾸미기) 가이드 배너 -->
+          <div v-if="showCarrierGuide" class="carrier-guide-banner">
+            <div class="cgb-icon-wrap">
+              <svg class="cgb-hand" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+                <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/>
+                <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/>
+                <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+              </svg>
+            </div>
+            <div class="cgb-text">
+              <span class="cgb-title">내 캐리어를 꾸며보세요</span>
+              <span class="cgb-sub">버블을 잡아 캐리어로 끌어다 놓으면 나만의 캐꾸가 시작돼요</span>
+            </div>
+            <button class="cgb-close" @click="dismissCarrierGuide" aria-label="안내 닫기">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
           <!-- 버블 차트 -->
           <div class="bubble-wrapper">
             <div
@@ -264,6 +286,14 @@ const router = useRouter()
 const route = useRoute()
 const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache()
 const { isLoggedIn } = useAuth()
+
+// ==================== 캐리어 가이드 ====================
+const CARRIER_GUIDE_DISMISS_KEY = 'hot_carrier_guide_dismissed'
+const showCarrierGuide = ref(sessionStorage.getItem(CARRIER_GUIDE_DISMISS_KEY) !== '1')
+const dismissCarrierGuide = () => {
+  showCarrierGuide.value = false
+  sessionStorage.setItem(CARRIER_GUIDE_DISMISS_KEY, '1')
+}
 
 // ==================== 상수 ====================
 const bubbleLimit = computed(() => dims.value.w < 600 ? 10 : 30)
@@ -916,6 +946,96 @@ onUnmounted(() => {
 /* ==================== 버블 차트 ==================== */
 .bubble-wrapper { position: relative; margin-bottom: 16px; }
 
+/* ==================== 캐리어 가이드 배너 ==================== */
+.carrier-guide-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  margin: 0 0 14px;
+  background: #FAF5FF;
+  border: 1px solid #E9D5FF;
+  border-radius: 14px;
+  position: relative;
+  animation: cgb-slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.cgb-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #9333EA;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25);
+}
+.cgb-hand {
+  animation: cgb-hand-wiggle 1.6s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+.cgb-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.cgb-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #4C1D95;
+  letter-spacing: -0.3px;
+}
+.cgb-sub {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #7C3AED;
+  letter-spacing: -0.2px;
+}
+.cgb-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #9333EA;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.cgb-close:hover { background: #F3E8FF; }
+
+@keyframes cgb-slide-in {
+  0% { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes cgb-hand-wiggle {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  30% { transform: translateX(3px) rotate(8deg); }
+  60% { transform: translateX(-3px) rotate(-6deg); }
+}
+
+@media (max-width: 600px) {
+  .carrier-guide-banner {
+    padding: 12px 14px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+  .cgb-icon-wrap { width: 36px; height: 36px; border-radius: 10px; }
+  .cgb-title { font-size: 13px; }
+  .cgb-sub { font-size: 11.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carrier-guide-banner,
+  .cgb-hand { animation: none; }
+}
+
 .bubble-area {
   position: relative; width: 100%; min-height: 500px;
   background: #fff; border-radius: 6px; border: 1px solid #e5e7eb;
@@ -1064,6 +1184,26 @@ onUnmounted(() => {
 .carrier-icon.active { background: #ede9fe; border: 2.5px dashed #7c3aed; box-shadow: 0 0 0 5px rgba(124,58,237,0.15), 0 8px 24px rgba(124,58,237,0.2); animation: bagBounce 0.5s ease; }
 .carrier-icon.has-items { border-color: #c4b5fd; }
 
+/* 비어있고 드래그 중이 아닐 때만 펄스로 시선 유도 */
+.carrier-icon:not(.has-items):not(.active)::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid #9333EA;
+  opacity: 0;
+  animation: carrier-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes carrier-pulse {
+  0% { opacity: 0.55; transform: scale(1); }
+  70% { opacity: 0; transform: scale(1.18); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carrier-icon:not(.has-items):not(.active)::before { animation: none; display: none; }
+}
+
 .carrier-badge {
   position: absolute; top: -7px; right: -7px;
   width: 22px; height: 22px; border-radius: 50%;
@@ -1136,7 +1276,8 @@ onUnmounted(() => {
   .page-header h1 { font-size: 0.875rem; padding-left: 8px; border-left-width: 2.5px; }
   .sub-title { font-size: 10px; }
   .carrier-panel {
-    position: fixed; bottom: calc(140px + env(safe-area-inset-bottom)); right: auto; left: 50%; z-index: 200;
+    /* BottomNavigation(약 84px) + FAB(52px+14gap) 위로 띄워 + 버튼과 겹치지 않게 */
+    position: fixed; bottom: calc(170px + env(safe-area-inset-bottom)); right: auto; left: 50%; z-index: 200;
     transform: translateX(-50%);
     max-width: calc(400px + 32px); width: 100%; padding-right: 24px; box-sizing: border-box;
     pointer-events: none;
