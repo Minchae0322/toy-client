@@ -181,7 +181,7 @@ const viewMode = ref('grid')
 // 정렬
 const sortOptions = [
   { id: 'popular', label: '인기순', value: 'hotScore,DESC' },
-  { id: 'deadline', label: '마감일순', value: 'endDate,DESC' },
+  { id: 'deadline', label: '마감일순', value: 'endDate,ASC' },
   { id: 'latest', label: '최신순', value: 'createdAt,DESC' }
 ]
 const sortKey = ref('latest')
