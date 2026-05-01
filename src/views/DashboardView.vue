@@ -569,33 +569,38 @@ function computeBubbleLayout(nodeList, W, H) {
 
   const gap = n <= 5 ? 4 : 6
   const centerPull = n <= 5 ? 0.015 : 0.01
-  const maxTicks = 150
+  const maxTicks = n <= 5 ? 40 : 60
+  const settleFloor = n <= 5 ? 12 : 20
+  const settleVel2 = 1.2 * 1.2  // 제곱 비교용
 
   for (let tick = 0; tick < maxTicks; tick++) {
     const alpha = Math.max(0.001, 1 - tick / maxTicks)
     let settled = true
     for (let i = 0; i < pos.length; i++) {
-      const dx = cx - pos[i].x, dy = cy - pos[i].y
+      const pi = pos[i]
+      const dx = cx - pi.x, dy = cy - pi.y
       const pull = centerPull * alpha * (i < 3 ? 1.8 : 0.3)
-      pos[i].vx += dx * pull; pos[i].vy += dy * pull
+      pi.vx += dx * pull; pi.vy += dy * pull
       for (let j = i + 1; j < pos.length; j++) {
-        const ddx = pos[i].x - pos[j].x, ddy = pos[i].y - pos[j].y
-        const d = Math.sqrt(ddx * ddx + ddy * ddy) || 1
-        const minD = pos[i].r + pos[j].r + gap
-        if (d < minD) {
+        const pj = pos[j]
+        const ddx = pi.x - pj.x, ddy = pi.y - pj.y
+        const minD = pi.r + pj.r + gap
+        const d2 = ddx * ddx + ddy * ddy
+        if (d2 < minD * minD) {
+          const d = Math.sqrt(d2) || 1
           const f = (minD - d) / d * 0.3
-          pos[i].vx += ddx * f; pos[i].vy += ddy * f
-          pos[j].vx -= ddx * f; pos[j].vy -= ddy * f
+          pi.vx += ddx * f; pi.vy += ddy * f
+          pj.vx -= ddx * f; pj.vy -= ddy * f
         }
       }
-      pos[i].vx *= 0.7; pos[i].vy *= 0.7
-      pos[i].x += pos[i].vx; pos[i].y += pos[i].vy
-      const pad = pos[i].r + 2
-      pos[i].x = Math.max(pad, Math.min(W - pad, pos[i].x))
-      pos[i].y = Math.max(pad, Math.min(H - pad, pos[i].y))
-      if (Math.abs(pos[i].vx) > 0.5 || Math.abs(pos[i].vy) > 0.5) settled = false
+      pi.vx *= 0.7; pi.vy *= 0.7
+      pi.x += pi.vx; pi.y += pi.vy
+      const pad = pi.r + 2
+      pi.x = Math.max(pad, Math.min(W - pad, pi.x))
+      pi.y = Math.max(pad, Math.min(H - pad, pi.y))
+      if (pi.vx * pi.vx + pi.vy * pi.vy > settleVel2) settled = false
     }
-    if (settled && tick > 60) break
+    if (settled && tick > settleFloor) break
   }
   return pos.map(p => ({ x: p.x, y: p.y }))
 }
