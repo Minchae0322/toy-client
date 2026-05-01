@@ -150,8 +150,8 @@ const processFile = async (file) => {
     return
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    await open({ type: 'alert', title: '파일 크기 초과', message: '파일 크기는 5MB 이하만 업로드 가능합니다' })
+  if (file.size > 10 * 1024 * 1024) {
+    await open({ type: 'alert', title: '파일 크기 초과', message: '파일 크기는 10MB 이하만 업로드 가능합니다' })
     return
   }
 

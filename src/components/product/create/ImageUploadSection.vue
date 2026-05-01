@@ -23,7 +23,7 @@
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M8 2V14M2 8H14" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
-          <span>최대: 5MB</span>
+          <span>최대: 10MB</span>
         </div>
         <div class="req-item">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

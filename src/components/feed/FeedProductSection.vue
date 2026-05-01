@@ -445,8 +445,8 @@ const handleProductImageSelect = async (e) => {
     emit('error', '이미지 파일만 업로드 가능합니다.')
     return
   }
-  if (file.size > 5 * 1024 * 1024) {
-    emit('error', '파일 크기는 5MB 이하만 가능합니다.')
+  if (file.size > 10 * 1024 * 1024) {
+    emit('error', '파일 크기는 10MB 이하만 가능합니다.')
     return
   }
 

@@ -153,7 +153,7 @@
                     </div>
                     <div class="upload-text-wrapper">
                       <span class="upload-text-main">이미지 업로드</span>
-                      <span class="upload-text-hint">클릭하여 선택 (최대 5MB)</span>
+                      <span class="upload-text-hint">클릭하여 선택 (최대 10MB)</span>
                     </div>
                     <input
                       type="file"

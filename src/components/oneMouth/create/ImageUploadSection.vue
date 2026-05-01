@@ -66,7 +66,7 @@ const emit = defineEmits(['upload', 'remove']);
 
 const { open } = useConfirmDialog();
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const handleFileChange = async (event) => {
   const files = Array.from(event.target.files);
@@ -74,7 +74,7 @@ const handleFileChange = async (event) => {
   const validFiles = [];
   for (const file of files) {
     if (file.size > MAX_FILE_SIZE) {
-      await open({ type: 'alert', title: '알림', message: `${file.name}: 파일 크기는 5MB 이하만 가능합니다.` });
+      await open({ type: 'alert', title: '알림', message: `${file.name}: 파일 크기는 10MB 이하만 가능합니다.` });
     } else {
       validFiles.push(file);
     }

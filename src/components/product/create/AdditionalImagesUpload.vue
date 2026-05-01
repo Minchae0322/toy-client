@@ -31,7 +31,7 @@
       </div>
       <div class="upload-hint" v-if="isLoggedIn && additionalFiles.length < 4">
         <span class="upload-count">{{ additionalFiles.length }}/4</span>
-        <span>PNG, JPG, JPEG · 최대 5MB</span>
+        <span>PNG, JPG, JPEG · 최대 10MB</span>
       </div>
       <input
           ref="fileInput"
@@ -164,8 +164,8 @@ const processFiles = async (files) => {
       continue
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      await open({ type: 'alert', title: '파일 크기 초과', message: `${file.name}: 파일 크기는 5MB 이하만 업로드 가능합니다` })
+    if (file.size > 10 * 1024 * 1024) {
+      await open({ type: 'alert', title: '파일 크기 초과', message: `${file.name}: 파일 크기는 10MB 이하만 업로드 가능합니다` })
       continue
     }
 

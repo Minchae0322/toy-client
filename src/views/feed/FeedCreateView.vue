@@ -547,8 +547,8 @@ const handleFileSelect = async (e) => {
   try {
     for (const file of files.slice(0, remaining)) {
       if (!file.type.startsWith('image/')) continue
-      if (file.size > 5 * 1024 * 1024) {
-        showError('파일 크기는 5MB 이하만 가능합니다.')
+      if (file.size > 10 * 1024 * 1024) {
+        showError('파일 크기는 10MB 이하만 가능합니다.')
         continue
       }
 

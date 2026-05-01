@@ -238,7 +238,7 @@
                 </svg>
               </div>
               <span class="dropzone-text">클릭하거나 이미지를 여기에 드래그하세요</span>
-              <span class="dropzone-hint">JPG, PNG, GIF / 최대 5MB</span>
+              <span class="dropzone-hint">JPG, PNG, GIF / 최대 10MB</span>
             </div>
           </div>
           <div v-else class="image-preview-box">
@@ -358,8 +358,8 @@ const handleImageUpload = async (event) => {
 };
 
 const processImageFile = async (file) => {
-  if (file.size > 5 * 1024 * 1024) {
-    await open({ type: 'alert', title: '알림', message: '파일 크기는 5MB를 초과할 수 없습니다.' });
+  if (file.size > 10 * 1024 * 1024) {
+    await open({ type: 'alert', title: '알림', message: '파일 크기는 10MB를 초과할 수 없습니다.' });
     return;
   }
 

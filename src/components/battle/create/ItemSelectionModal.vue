@@ -213,7 +213,7 @@
                     </div>
                     <div class="upload-text-wrapper">
                       <span class="upload-text-main">이미지 업로드</span>
-                      <span class="upload-text-hint">클릭하여 선택 (최대 5MB)</span>
+                      <span class="upload-text-hint">클릭하여 선택 (최대 10MB)</span>
                     </div>
                     <input type="file" accept="image/*" class="hidden-input" @change="handleImageSelect">
                   </label>
@@ -419,8 +419,8 @@ const handleImageSelect = async (event) => {
     return;
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    await open({ type: 'alert', title: '알림', message: '이미지 크기는 5MB 이하여야 합니다.' });
+  if (file.size > 10 * 1024 * 1024) {
+    await open({ type: 'alert', title: '알림', message: '이미지 크기는 10MB 이하여야 합니다.' });
     return;
   }
 

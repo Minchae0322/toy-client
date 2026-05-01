@@ -119,7 +119,7 @@
             <span class="upload-limit">(최대 5장)</span>
           </label>
         </div>
-        <p class="form-help">JPG, PNG 파일 (최대 5MB)</p>
+        <p class="form-help">JPG, PNG 파일 (최대 10MB)</p>
       </div>
 
       <!-- 제출 버튼 -->
@@ -218,8 +218,8 @@ const handleImageUpload = async (event) => {
   }
 
   for (const file of files) {
-    if (file.size > 5 * 1024 * 1024) {
-      await open({ type: 'alert', title: '파일 크기 초과', message: `${file.name}은(는) 5MB를 초과합니다` })
+    if (file.size > 10 * 1024 * 1024) {
+      await open({ type: 'alert', title: '파일 크기 초과', message: `${file.name}은(는) 10MB를 초과합니다` })
       continue
     }
 

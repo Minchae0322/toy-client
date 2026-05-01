@@ -105,7 +105,7 @@
               <polyline points="21 15 16 10 5 21"/>
             </svg>
             <p class="drop-title">이미지를 드래그하거나 클릭하여 선택</p>
-            <p class="drop-hint">여러 장 동시 업로드 가능 (최대 5MB/장)</p>
+            <p class="drop-hint">여러 장 동시 업로드 가능 (최대 10MB/장)</p>
           </div>
         </label>
 
@@ -482,8 +482,8 @@ const processFiles = async (files) => {
   const imageFiles = files.filter(file => file.type.startsWith('image/'));
 
   for (const file of imageFiles) {
-    if (file.size > 5 * 1024 * 1024) {
-      await open({ type: 'alert', title: '알림', message: `${file.name}은 5MB를 초과합니다.` });
+    if (file.size > 10 * 1024 * 1024) {
+      await open({ type: 'alert', title: '알림', message: `${file.name}은 10MB를 초과합니다.` });
       continue;
     }
 

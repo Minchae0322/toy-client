@@ -449,8 +449,8 @@ const handleImageChange = async (e) => {
   const file = e.target.files[0]
   if (!file) return
 
-  if (file.size > 5 * 1024 * 1024) {
-    await open({ type: 'alert', title: '파일 크기 초과', message: '이미지 크기는 5MB 이하여야 합니다.' })
+  if (file.size > 10 * 1024 * 1024) {
+    await open({ type: 'alert', title: '파일 크기 초과', message: '이미지 크기는 10MB 이하여야 합니다.' })
     return
   }
   if (!file.type.startsWith('image/')) {
