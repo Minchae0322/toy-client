@@ -1,7 +1,7 @@
 <template>
   <section class="dashboard-pick">
-    <!-- 헤더 -->
-    <header class="section-header">
+    <!-- PC 헤더 -->
+    <header class="section-header pc-header">
       <div class="title-with-badge">
         <h2 class="section-title">실시간 <span class="title-accent">요거픽</span></h2>
         <span class="sub-title">유저들이 직접 고르는 인기 승부</span>
@@ -11,6 +11,23 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6" /></svg>
       </router-link>
     </header>
+
+    <!-- 모바일 헤더 (DashboardHotFeeds의 mhot-header 톤과 동일) -->
+    <div class="mpick-header">
+      <div class="mpick-header-main">
+        <h2 class="mpick-title">
+          실시간 <span class="mpick-accent">요거픽</span>
+          <span class="mpick-live"><span class="mpick-live-dot"></span>LIVE</span>
+        </h2>
+        <p class="mpick-sub">유저들이 직접 고르는 인기 승부</p>
+      </div>
+      <router-link :to="{ name: 'BattleList' }" class="mpick-more">
+        <span>전체보기</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </router-link>
+    </div>
 
     <!-- 로딩 -->
     <div v-if="loading" class="dash-list">
@@ -207,6 +224,57 @@ onMounted(() => {
 }
 .view-all-link:hover { color: #6b7684; }
 
+/* 모바일 헤더 (PC에선 숨김) */
+.mpick-header { display: none; }
+.mpick-header-main { flex: 1; min-width: 0; }
+.mpick-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.mpick-accent { color: #9333ea; }
+.mpick-live {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.mpick-live-dot {
+  width: 5px;
+  height: 5px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  animation: mpick-pulse 1.5s infinite;
+}
+@keyframes mpick-pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.mpick-sub {
+  font-size: 13px;
+  color: #71717a;
+  margin: 4px 0 0;
+}
+.mpick-more {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a1a1aa;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
 /* 리스트 */
 .dash-list { display: flex; flex-direction: column; }
 
@@ -345,6 +413,29 @@ onMounted(() => {
   display: flex; align-items: center; justify-content: center; color: #a1a1aa;
 }
 .empty-text { font-size: 13px; font-weight: 500; margin: 0; }
+
+/* PC: 썸네일 확대 */
+@media (min-width: 768px) {
+  .dash-thumb { width: 96px; height: 96px; border-radius: 14px; }
+  .dash-row { gap: 18px; padding: 18px 4px; }
+  .battle-ttl { font-size: 16px; }
+}
+@media (min-width: 1280px) {
+  .dash-thumb { width: 104px; height: 104px; border-radius: 16px; }
+  .dash-row { gap: 20px; padding: 20px 4px; }
+}
+
+/* 모바일 헤더 swap */
+@media (max-width: 767px) {
+  .pc-header { display: none; }
+  .mpick-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    padding: 0 4px;
+  }
+}
 
 /* 좁은 화면 */
 @media (max-width: 400px) {
