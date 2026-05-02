@@ -1294,7 +1294,7 @@ onUnmounted(() => {
 /* 모바일 */
 @media (max-width: 640px) {
   .page-header { padding-top: 12px; margin-bottom: 0; }
-  .page-header .section-title { font-size: 1rem; }
+  .page-header .section-title { font-size: 1.125rem; }
   .page-header .title-with-badge { padding-left: 0.625rem; border-left-width: 2.5px; }
   .sub-title { font-size: 11px; }
   .carrier-panel {

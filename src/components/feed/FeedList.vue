@@ -922,6 +922,11 @@ defineExpose({ observerTarget });
     margin-bottom: 12px;
   }
 
+  /* 다른 메뉴(대시보드/배틀/핫 아이템)와 모바일 제목 크기 통일 */
+  .section-title {
+    font-size: 1.125rem;
+  }
+
   /* 모바일 Empty State */
   .feed-empty-state {
     padding: 60px 24px;
@@ -964,6 +969,7 @@ defineExpose({ observerTarget });
   }
 
   .list-item {
+    flex-direction: row-reverse;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
@@ -986,25 +992,32 @@ defineExpose({ observerTarget });
   .list-trend-badge { padding: 3px 6px; font-size: 8px; }
   .list-price-overlay { bottom: 6px; right: 6px; font-size: 10px; padding: 2px 6px; }
 
+  /* === 가독성 보강: 텍스트 사이즈 / line-height / 대비만 손봄 === */
   .list-content { padding: 10px 12px; gap: 6px; }
-  .list-review { font-size: 12px; }
-  .list-quote { font-size: 13px; }
-  .list-hashtags { gap: 5px; }
-  .list-tag { font-size: 10px; }
+  .list-review {
+    font-size: 13.5px;          /* 12 → 13.5 */
+    line-height: 1.45;          /* 가독성 향상 */
+    -webkit-line-clamp: 2;
+  }
+  .list-quote { font-size: 14px; }
 
   .list-product-info-box { padding: 5px 8px; border-radius: 6px; border: none; }
-  .list-buy-place { font-size: 8px; gap: 2px; }
-  .list-place-icon { width: 9px; height: 9px; }
-  .list-product-name { font-size: 11px; }
-  .list-hashtags { gap: 4px; }
-  .list-tag { font-size: 9px; }
+  .list-buy-place {
+    font-size: 10px;            /* 8 → 10 (너무 작아서 안 읽힘) */
+    gap: 3px;
+  }
+  .list-place-icon { width: 11px; height: 11px; }
+  .list-product-name { font-size: 12px; }   /* 11 → 12 */
 
-  .list-footer { padding-top: 6px; }
+  .list-hashtags { gap: 6px; }
+  .list-tag { font-size: 10.5px; }  /* 9 → 10.5 */
+
+  .list-footer { padding-top: 7px; }
   .list-avatar { width: 22px; height: 22px; }
-  .list-nickname { font-size: 10px; }
-  .list-time { font-size: 9px; }
-  .stat { font-size: 10px; padding: 4px 8px; }
-  .stat svg { width: 12px; height: 12px; }
+  .list-nickname { font-size: 11.5px; }   /* 10 → 11.5 */
+  .list-time { font-size: 10.5px; }       /* 9 → 10.5 */
+  .stat { font-size: 11px; padding: 4px 8px; gap: 4px; }   /* 10 → 11 */
+  .stat svg { width: 13px; height: 13px; }                  /* 12 → 13 */
 
   /* 모바일 스켈레톤: 그리드 뷰 - FeedCard 모바일과 동일 */
   .skeleton-card {

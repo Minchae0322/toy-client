@@ -27,22 +27,28 @@
           <span class="tier-range">Lv.{{ tier.levelRange[0] }}–{{ tier.levelRange[1] === 99 ? '∞' : tier.levelRange[1] }}</span>
         </div>
 
-        <!-- 5색 랭크 프로그레션 -->
-        <div class="color-row">
+        <!-- 5레벨 단위 색상 사이클 (각 줄 = 5레벨 1사이클) -->
+        <div class="cycle-stack">
           <div
-            v-for="(rank, rIdx) in RANKS"
-            :key="rank"
-            class="rank-cell"
-            :class="{
-              'is-current': isCurrentSlot(tier, rIdx),
-              'is-done': isSlotDone(tier, rIdx),
-              'is-locked': isSlotLocked(tier, rIdx),
-            }"
+            v-for="cycle in cyclesOf(tier)"
+            :key="cycle.startLevel"
+            class="color-row"
           >
-            <div class="art-wrap" :class="{ highlight: isCurrentSlot(tier, rIdx) }">
-              <YogurtTierArt :tier="tier.art" :color="rank" :size="artSize" />
+            <div
+              v-for="cell in cycle.cells"
+              :key="cell.level"
+              class="rank-cell"
+              :class="{
+                'is-current': cell.level === userLevel,
+                'is-done': cell.level < userLevel,
+                'is-locked': cell.level > userLevel,
+              }"
+            >
+              <div class="art-wrap" :class="{ highlight: cell.level === userLevel }">
+                <YogurtTierArt :tier="tier.art" :color="cell.color" :size="artSize" />
+              </div>
+              <span class="rank-lv">Lv.{{ cell.level }}</span>
             </div>
-            <span class="rank-lv">{{ slotLabel(tier, rIdx) }}</span>
           </div>
         </div>
       </div>
@@ -62,7 +68,11 @@ const props = defineProps({
 })
 
 const tiers = LEVEL_TIERS
+const userLevel = computed(() => props.userLevel)
 const currentTier = computed(() => getTierByLevel(props.userLevel))
+
+// Signature(36-99)는 64레벨 = 13사이클이 너무 많으므로 현재 사이클 ± 위아래 1줄만 노출
+const SIGNATURE_VISIBLE_CYCLES = 3
 
 // 반응형 아트 사이즈
 const vw = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
@@ -71,19 +81,37 @@ onMounted(() => window.addEventListener('resize', onResize))
 onUnmounted(() => window.removeEventListener('resize', onResize))
 const artSize = computed(() => (vw.value >= 768 ? 36 : 30))
 
-/* ---- 슬롯(rank) 레벨 범위 계산 ---- */
-function slotRange(tier, rIdx) {
+/* ---- 5레벨 단위 사이클 분할: 각 사이클은 startLevel 기준 5칸(white→…→gold) ---- */
+function cyclesOf(tier) {
   const [min, max] = tier.levelRange
-  const span = max - min + 1
-  const per = span / 5
-  const start = min + Math.floor(rIdx * per)
-  const end = rIdx === 4 ? max : min + Math.floor((rIdx + 1) * per) - 1
-  return [start, end]
-}
+  const cycles = []
+  for (let start = min; start <= max; start += 5) {
+    const cells = []
+    for (let i = 0; i < 5; i++) {
+      const lv = start + i
+      if (lv > max) break
+      cells.push({ level: lv, color: RANKS[i] })
+    }
+    cycles.push({ startLevel: start, cells })
+  }
 
-function slotLabel(tier, rIdx) {
-  const [s, e] = slotRange(tier, rIdx)
-  return s === e ? `Lv.${s}` : `Lv.${s}`
+  // Signature 처럼 사이클이 너무 많은 경우 현재 위치 기준 윈도우만 노출
+  if (cycles.length > SIGNATURE_VISIBLE_CYCLES && tier.tier === currentTier.value.tier) {
+    const currentCycleIdx = cycles.findIndex(
+      (c) => props.userLevel >= c.startLevel && props.userLevel < c.startLevel + 5
+    )
+    if (currentCycleIdx >= 0) {
+      const half = Math.floor(SIGNATURE_VISIBLE_CYCLES / 2)
+      const startIdx = Math.max(0, currentCycleIdx - half)
+      const endIdx = Math.min(cycles.length, startIdx + SIGNATURE_VISIBLE_CYCLES)
+      return cycles.slice(startIdx, endIdx)
+    }
+  }
+  // 잠긴 / 달성된 티어가 너무 길면 첫 사이클만 표시
+  if (cycles.length > SIGNATURE_VISIBLE_CYCLES) {
+    return cycles.slice(0, SIGNATURE_VISIBLE_CYCLES)
+  }
+  return cycles
 }
 
 /* ---- 상태 판정 ---- */
@@ -95,20 +123,6 @@ function isTierAchieved(tier) {
 
 function isTierLocked(tier) {
   return !isTierAchieved(tier) && currentTier.value.tier !== tier.tier
-}
-
-function isSlotDone(tier, rIdx) {
-  const [, end] = slotRange(tier, rIdx)
-  return props.userLevel > end
-}
-
-function isCurrentSlot(tier, rIdx) {
-  const [start, end] = slotRange(tier, rIdx)
-  return props.userLevel >= start && props.userLevel <= end
-}
-
-function isSlotLocked(tier, rIdx) {
-  return !isSlotDone(tier, rIdx) && !isCurrentSlot(tier, rIdx)
 }
 </script>
 
@@ -173,6 +187,11 @@ function isSlotLocked(tier, rIdx) {
 }
 
 /* ===== 5색 랭크 프로그레션 ===== */
+.cycle-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .color-row {
   display: flex;
   gap: 6px;

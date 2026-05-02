@@ -25,13 +25,13 @@ export const LEVEL_TIERS = [
     name: 'Fruity',
     emoji: '🍓',
     art: 'fruity',
-    levelRange: [6, 15],
+    levelRange: [6, 10],
     color: '#3b82f6',
     bgColor: '#eff6ff',
     borderColor: '#bfdbfe',
     description: '유리컵 + 과일 토핑 — 본격적으로 나만의 맛을 찾아가는 시기.',
     requirements: '총 2,300 EXP 이상',
-    nextGoal: '레벨 16에 도달해서 Granola가 되자!',
+    nextGoal: '레벨 11에 도달해서 Granola가 되자!',
     features: ['배틀 제품 등록', '배틀 생성', '프로필 커스텀', '전문 카테고리 선택', '추천 피드 가점'],
     restrictions: ['브랜드 협업 불가', 'VIP 라운지 불가'],
   },
@@ -40,13 +40,13 @@ export const LEVEL_TIERS = [
     name: 'Granola',
     emoji: '🥣',
     art: 'granola',
-    levelRange: [16, 25],
+    levelRange: [11, 15],
     color: '#a855f7',
     bgColor: '#faf5ff',
     borderColor: '#e9d5ff',
     description: '도자기 볼 + 그래놀라 — 취향과 전문성이 단단해지는 시기.',
-    requirements: '총 24,000 EXP 이상',
-    nextGoal: '레벨 26에 도달해서 Parfait가 되자!',
+    requirements: '총 10,000 EXP 이상',
+    nextGoal: '레벨 16에 도달해서 Parfait가 되자!',
     features: ['배틀 3개 동시 생성', '피드 우선 노출', '브랜드 협업 기회', 'VIP 라운지 접근'],
     restrictions: ['공식 앰배서더 불가', '커스텀 뱃지 불가'],
   },
@@ -55,13 +55,13 @@ export const LEVEL_TIERS = [
     name: 'Parfait',
     emoji: '🍨',
     art: 'parfait',
-    levelRange: [26, 35],
+    levelRange: [16, 20],
     color: '#f97316',
     bgColor: '#fff7ed',
     borderColor: '#fed7aa',
     description: '파르페 잔 + 레이어 — 커뮤니티를 이끄는 인플루언서.',
-    requirements: '총 128,000 EXP 이상',
-    nextGoal: '레벨 36에 도달해서 Signature가 되자!',
+    requirements: '총 24,000 EXP 이상',
+    nextGoal: '레벨 21에 도달해서 Signature가 되자!',
     features: ['공식 앰배서더', '배틀 스폰서', '피드 최우선 노출', '전용 컬러 닉네임'],
     restrictions: ['커스텀 뱃지 불가'],
   },
@@ -70,12 +70,12 @@ export const LEVEL_TIERS = [
     name: 'Signature',
     emoji: '💎',
     art: 'signature',
-    levelRange: [36, 99],
+    levelRange: [21, 99],
     color: '#06b6d4',
     bgColor: '#ecfeff',
     borderColor: '#a5f3fc',
     description: '고블릿 + 금박 · 플라워 — 커뮤니티의 문화를 만드는 존재.',
-    requirements: '총 448,000 EXP 이상',
+    requirements: '총 53,000 EXP 이상',
     nextGoal: '커뮤니티를 발전시키고 새로운 가치를 만들어가세요!',
     features: ['커스텀 뱃지 제작', 'Signature 배틀 배너', '수익 창출', '오프라인 이벤트 초대'],
     restrictions: [],
@@ -172,29 +172,30 @@ export const LEVEL_EXP_TABLE = [
   { level: 3, requiredExp: 300, totalExp: 500 },
   { level: 4, requiredExp: 500, totalExp: 1000 },
   { level: 5, requiredExp: 500, totalExp: 1500 },
-  // ── 🍓 Fruity (Lv.6-15) ──
+  // ── 🍓 Fruity (Lv.6-10) ──
   { level: 6, requiredExp: 800, totalExp: 2300 },
   { level: 7, requiredExp: 1000, totalExp: 3300 },
   { level: 8, requiredExp: 1200, totalExp: 4500 },
   { level: 9, requiredExp: 1500, totalExp: 6000 },
   { level: 10, requiredExp: 2000, totalExp: 8000 },
+  // ── 🥣 Granola (Lv.11-15) ──
   { level: 11, requiredExp: 2000, totalExp: 10000 },
   { level: 12, requiredExp: 2200, totalExp: 12200 },
   { level: 13, requiredExp: 2400, totalExp: 14600 },
   { level: 14, requiredExp: 2600, totalExp: 17200 },
   { level: 15, requiredExp: 2800, totalExp: 20000 },
-  // ── 🥣 Granola (Lv.16-25) ──
+  // ── 🍨 Parfait (Lv.16-20) ──
   { level: 16, requiredExp: 4000, totalExp: 24000 },
   { level: 17, requiredExp: 4500, totalExp: 28500 },
   { level: 18, requiredExp: 5000, totalExp: 33500 },
   { level: 19, requiredExp: 5500, totalExp: 39000 },
   { level: 20, requiredExp: 6000, totalExp: 45000 },
+  // ── 💎 Signature (Lv.21+, open-ended) ──
   { level: 21, requiredExp: 8000, totalExp: 53000 },
   { level: 22, requiredExp: 10000, totalExp: 63000 },
   { level: 23, requiredExp: 12000, totalExp: 75000 },
   { level: 24, requiredExp: 15000, totalExp: 90000 },
   { level: 25, requiredExp: 18000, totalExp: 108000 },
-  // ── 🍨 Parfait (Lv.26-35) ──
   { level: 26, requiredExp: 20000, totalExp: 128000 },
   { level: 27, requiredExp: 22000, totalExp: 150000 },
   { level: 28, requiredExp: 24000, totalExp: 174000 },
@@ -205,7 +206,6 @@ export const LEVEL_EXP_TABLE = [
   { level: 33, requiredExp: 35000, totalExp: 325000 },
   { level: 34, requiredExp: 38000, totalExp: 363000 },
   { level: 35, requiredExp: 40000, totalExp: 403000 },
-  // ── 💎 Signature (Lv.36+) ──
   { level: 36, requiredExp: 45000, totalExp: 448000 },
   { level: 37, requiredExp: 50000, totalExp: 498000 },
   { level: 38, requiredExp: 55000, totalExp: 553000 },
@@ -807,17 +807,15 @@ export function getTierByCode(code) {
 
 /**
  * 레벨로 rank 컬러 키 반환. YogurtTierArt의 color prop에 사용.
- * 티어 안에서 레벨 위치에 따라 white → blue → violet → red → gold 순으로 순환.
- * legend 티어(21-99)는 5단계로 비례 분할.
+ * 1레벨 단위로 white → blue → violet → red → gold 사이클이 진행되며,
+ * 5레벨마다 한 사이클이 완료되어 다시 white로 리셋된다 (티어 시작 기준).
  */
 export function getTierColor(level) {
   const RANK = ['white', 'blue', 'violet', 'red', 'gold']
   const tier = getTierByLevel(level)
   if (!tier) return 'white'
-  const [min, max] = tier.levelRange
-  const span = max - min + 1
-  const perColor = span / 5
-  const idx = Math.min(4, Math.max(0, Math.floor((level - min) / perColor)))
+  const [min] = tier.levelRange
+  const idx = ((level - min) % 5 + 5) % 5
   return RANK[idx]
 }
 
