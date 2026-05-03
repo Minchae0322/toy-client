@@ -103,7 +103,14 @@
       "Bash(git *)",
       "PowerShell(Get-NetTCPConnection *)",
       "Bash(npm i *)",
-      "Bash(npm view *)"
+      "Bash(npm view *)",
+      "Bash(gem list *)",
+      "Bash(python3 -c \"import pbxproj\")",
+      "Bash(gem install *)",
+      "Bash(awk '/^@media \\\\\\(max-width: 767px\\\\\\)/,/^}$/' /Users/minchae/sources/toy-client/src/views/DashboardView.vue)",
+      "Bash(awk 'NR==3382 || /^@media/ {p=$0; ln=NR} NR<=3405 && /^@media/ {print ln, p}' /Users/minchae/sources/toy-client/src/views/DashboardView.vue)",
+      "Bash(grep -v \"^[0-9]*:[^/]*$\")",
+      "Bash(awk *)"
     ]
   }
 }
