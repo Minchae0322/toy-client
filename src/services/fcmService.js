@@ -1,16 +1,29 @@
 // FCM (Firebase Cloud Messaging) 서비스 — 네이티브 푸시 전용
-// iOS/Android Capacitor 환경에서만 동작. 웹은 no-op.
+// iOS/Android Capacitor 환경에서만 동작. 웹은 no-op (모바일 한정 정책).
+//
+// 백엔드 스펙: POST/DELETE /user/me/fcm-tokens (AUTH 서비스, FcmTokenController)
+//   POST   body: { token, deviceId, platform: 'IOS' | 'ANDROID' }
+//   DELETE body: { token }
 
 import { Capacitor } from '@capacitor/core'
 import { FirebaseMessaging } from '@capacitor-firebase/messaging'
 import { apiClient } from '@/api/client.js'
+import { getDeviceId } from '@/utils/auth.js'
 
 let initialized = false
 let registeredToken = null
 
+/** Capacitor의 'ios'/'android' → 백엔드 enum 'IOS'/'ANDROID' */
+function platformCode() {
+  const p = Capacitor.getPlatform()
+  if (p === 'ios') return 'IOS'
+  if (p === 'android') return 'ANDROID'
+  return p.toUpperCase()
+}
+
 /**
  * 권한 요청 → FCM 토큰 발급 → 백엔드 등록
- * 로그인 직후 호출
+ * 로그인 직후 / 앱 시작 시 호출 (idempotent)
  */
 export async function registerFcm() {
   if (!Capacitor.isNativePlatform()) {
@@ -62,8 +75,11 @@ export async function registerFcm() {
 }
 
 async function sendTokenToBackend(token) {
-  const platform = Capacitor.getPlatform() // 'ios' | 'android'
-  await apiClient.post('/users/me/fcm-token', { token, platform })
+  await apiClient.post('/user/me/fcm-tokens', {
+    token,
+    deviceId: getDeviceId(),
+    platform: platformCode(),
+  })
 }
 
 /**
@@ -73,7 +89,7 @@ export async function unregisterFcm() {
   if (!Capacitor.isNativePlatform() || !registeredToken) return
 
   try {
-    await apiClient.delete('/users/me/fcm-token', {
+    await apiClient.delete('/user/me/fcm-tokens', {
       data: { token: registeredToken }
     })
   } catch (e) {
