@@ -181,6 +181,12 @@ const routes = [
     props: true,
     meta: { requiresAuth: false, public: true, title: '프로필', description: '사용자 프로필과 활동 내역을 확인하세요.' }
   },
+  {
+    path: '/settings/notifications',
+    name: 'NotificationSettings',
+    component: () => import('@/views/NotificationSettingsView.vue'),
+    meta: { requiresAuth: true, title: '알림 설정' }
+  },
 
   // ==================== 배틀 관련 라우트 ====================
   {

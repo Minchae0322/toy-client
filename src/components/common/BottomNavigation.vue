@@ -152,6 +152,18 @@
             <span class="sheet-desc">레벨과 뱃지를 모아봐요</span>
           </div>
         </button>
+        <button v-if="isLoggedIn" class="sheet-item" @click="handleMoreNav('notifications')">
+          <span class="sheet-icon notifications">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </span>
+          <div class="sheet-content">
+            <span class="sheet-text">알림 설정</span>
+            <span class="sheet-desc">받을 알림을 카테고리별로 관리해요</span>
+          </div>
+        </button>
         <div class="sheet-divider"></div>
         <button class="sheet-item" @click="openFeedback">
           <span class="sheet-icon feedback">
@@ -271,6 +283,7 @@ const moreNavMap = {
   chat: { name: 'Chat', path: '/chat' },
   mypage: { name: 'MyPage', path: '/mypage' },
   collection: { name: 'Collection', path: '/collection' },
+  notifications: { name: 'NotificationSettings', path: '/settings/notifications' },
   admin: { name: 'AdminDashboard', path: '/admin' },
 };
 
@@ -543,6 +556,7 @@ onBeforeUnmount(() => {
 .sheet-icon.mypage { background: #E0E7FF; color: #4f46e5; }
 .sheet-icon.collection { background: #FEF9C3; color: #EAB308; }
 .sheet-icon.admin { background: #FFF7ED; color: #ea580c; }
+.sheet-icon.notifications { background: #FAF5FF; color: #9333EA; }
 .sheet-icon.feedback { background: #F1F5F9; color: #475569; }
 .sheet-icon.logout-icon { background: #FEF2F2; color: #dc2626; }
 
