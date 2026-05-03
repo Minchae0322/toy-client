@@ -108,6 +108,37 @@
             </div>
 
             <div class="pc-tab-content">
+              <!-- 인라인 작성창 — 아이템(필터) 선택 시에만 활성 -->
+              <form
+                class="inline-comment-form"
+                :class="{ 'is-disabled': !selectedItemFilter }"
+                @submit.prevent="submitInlineComment"
+              >
+                <img
+                  v-if="selectedItemFilter"
+                  :src="getItemImageById(selectedItemFilter)"
+                  :alt="filteredItemName"
+                  class="inline-comment-thumb"
+                />
+                <input
+                  v-model="inlineCommentText"
+                  type="text"
+                  class="inline-comment-input"
+                  :placeholder="selectedItemFilter
+                    ? `${filteredItemName}에 PICK 한마디 남기기 (100자 이내)`
+                    : '위에서 아이템을 선택하면 PICK 한마디를 작성할 수 있어요'"
+                  :disabled="!selectedItemFilter || submittingInlineComment"
+                  maxlength="100"
+                />
+                <button
+                  type="submit"
+                  class="inline-comment-submit"
+                  :disabled="!selectedItemFilter || !inlineCommentText.trim() || submittingInlineComment"
+                >
+                  {{ submittingInlineComment ? '작성 중...' : '작성' }}
+                </button>
+              </form>
+
               <!-- 로딩 -->
               <div v-if="commentsLoading && allLoadedComments.length === 0" class="loading-comments">
                 <div class="spinner-small"></div>
@@ -329,6 +360,8 @@ export default {
       showShareModal: false,
       showCommentModal: false,
       selectedCommentItem: null,
+      inlineCommentText: '',
+      submittingInlineComment: false,
       commentSortType: 'likeCount',
       failedProfileImages: {},
       selectedItemFilter: null,
@@ -1007,6 +1040,43 @@ export default {
       this.showCommentModal = true
     },
 
+    // 인라인 PICK 한마디 작성
+    async submitInlineComment() {
+      if (!this.selectedItemFilter) return
+      const content = this.inlineCommentText.trim()
+      if (!content) return
+
+      // 로그인 체크
+      const userId = getUserId()
+      if (!userId) {
+        const confirmed = await this.openLoginRequired('PICK 한마디를 작성하려면 로그인이 필요합니다.')
+        if (confirmed) {
+          this.$router.push({ name: 'Login', query: { redirect: this.$route.fullPath } })
+        }
+        return
+      }
+
+      try {
+        this.submittingInlineComment = true
+        const res = await battleService.createComment(this.battleId, this.selectedItemFilter, content)
+        if (res.success) {
+          this.inlineCommentText = ''
+          await this.handleCommentCreated()
+        } else {
+          throw new Error(res.message || 'PICK 한마디 작성에 실패했습니다.')
+        }
+      } catch (err) {
+        console.error('인라인 코멘트 작성 실패:', err)
+        await this.open({
+          type: 'alert',
+          title: '오류',
+          message: err.message || 'PICK 한마디 작성에 실패했습니다.'
+        })
+      } finally {
+        this.submittingInlineComment = false
+      }
+    },
+
     // 코멘트 모달 닫기
     closeCommentModal() {
       this.showCommentModal = false
@@ -1359,6 +1429,101 @@ export default {
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: 20px;
+}
+
+/* ── 인라인 PICK 한마디 작성 ── */
+.inline-comment-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0 0 18px;
+  background: #FAFAFB;
+  border: 1px solid #ECECF0;
+  border-radius: 14px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.inline-comment-form:focus-within:not(.is-disabled) {
+  background: #fff;
+  border-color: #9333EA;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+}
+
+.inline-comment-form.is-disabled {
+  background: #F5F5F7;
+  cursor: not-allowed;
+}
+
+.inline-comment-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f4f4f5;
+}
+
+.inline-comment-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0A0E1A;
+  letter-spacing: -0.01em;
+  font-family: inherit;
+  padding: 6px 0;
+}
+
+.inline-comment-input::placeholder {
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.inline-comment-input:disabled {
+  cursor: not-allowed;
+}
+
+.inline-comment-submit {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #9333EA;
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.inline-comment-submit:hover:not(:disabled) {
+  background: #7C3AED;
+}
+
+.inline-comment-submit:disabled {
+  background: #CBD5E1;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+  .inline-comment-form {
+    padding: 8px 10px;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .inline-comment-thumb { width: 28px; height: 28px; }
+  .inline-comment-input { font-size: 13px; }
+  .inline-comment-submit {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
 }
 
 .pc-arguments-section .section-heading h2 {
