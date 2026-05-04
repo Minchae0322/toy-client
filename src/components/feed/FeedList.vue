@@ -139,7 +139,7 @@
         <router-link v-for="feed in feeds" :key="feed.feedId" :to="{ name: 'FeedDetail', params: { id: feed.feedId } }" class="list-item">
           <div class="list-image">
             <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
-            <span v-if="isFeedNew(feed)" class="list-new-badge" aria-label="새 게시물">N</span>
+            <span v-if="isFeedNew(feed)" class="list-new-badge" aria-label="새 게시물">NEW</span>
             <div v-if="feed.feedEvaluation" class="list-badges-top">
               <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
                 <span class="eval-dot"></span>
@@ -469,7 +469,7 @@ defineExpose({ observerTarget });
   z-index: 2;
 }
 
-/* NEW 뱃지 (24시간 이내) — 흰 배경 + 빨간 'N' 라운드 사각, 우상단 단독 */
+/* NEW 뱃지 (24시간 이내) — 흰 캡슐 + 빨간 'NEW', 우상단 단독 */
 .list-new-badge {
   position: absolute;
   top: 10px;
@@ -478,18 +478,16 @@ defineExpose({ observerTarget });
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 5px;
-  border-radius: 6px;
-  background: #fff;
-  color: #FF3B30;
-  font-size: 12px;
-  font-weight: 900;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #DC2626;
+  font-size: 10.5px;
+  font-weight: 800;
   font-family: inherit;
-  letter-spacing: -0.3px;
+  letter-spacing: 0.5px;
   line-height: 1;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* 평가 뱃지 - 그리드 뷰와 동일한 파스텔 스타일 */

@@ -7,8 +7,9 @@
           class="post-image"
       />
 
+      <span v-if="isNew" class="new-badge" aria-label="새 게시물">NEW</span>
+
       <div class="image-badges-top">
-        <div v-if="isNew" class="new-badge" aria-label="새 게시물">N</div>
         <div v-if="feed.feedEvaluation" :class="['evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
           <span class="eval-dot"></span>
           <span class="eval-text">{{ getEvaluationLabel(feed.feedEvaluation) }}</span>
@@ -235,22 +236,25 @@ const formatDate = (date) => feedUtils.formatDate(date);
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
+/* NEW 뱃지 — 우상단 단독, 흰 캡슐 + 빨간 'NEW' 텍스트 */
 .new-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 5px;
-  border-radius: 6px;
-  background: #fff;
-  color: #FF3B30;
-  font-size: 12px;
-  font-weight: 900;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #DC2626;
+  font-size: 10.5px;
+  font-weight: 800;
   font-family: inherit;
-  letter-spacing: -0.3px;
+  letter-spacing: 0.5px;
   line-height: 1;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* 멀티 사진 인디케이터 */
@@ -359,7 +363,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   .image-badges-top { top: 8px; left: 8px; }
   .evaluation-badge { padding: 4px 8px; font-size: 10px; }
   .trend-badge { padding: 4px 7px; font-size: 10px; }
-  .new-badge { min-width: 20px; height: 20px; padding: 0 4px; font-size: 10px; border-radius: 5px; }
+  .new-badge { top: 8px; right: 8px; padding: 3px 8px; font-size: 9.5px; }
 
   .post-content { padding: 12px 16px 16px; }
 
