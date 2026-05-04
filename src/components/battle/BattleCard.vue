@@ -349,17 +349,18 @@ const daysLeftText = computed(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
+  min-width: 20px;
   height: 20px;
-  border-radius: 50%;
-  background: #DC2626;
-  color: #fff;
-  font-size: 11px;
+  padding: 0 5px;
+  border-radius: 5px;
+  background: #fff;
+  color: #FF3B30;
+  font-size: 10px;
   font-weight: 800;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-style: italic;
+  font-family: inherit;
+  letter-spacing: -0.2px;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 .vote-type-badge {

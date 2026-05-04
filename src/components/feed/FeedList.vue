@@ -469,7 +469,7 @@ defineExpose({ observerTarget });
   z-index: 2;
 }
 
-/* NEW 뱃지 (24시간 이내) — 솔리드 빨강 'N', 우상단 단독 위치 */
+/* NEW 뱃지 (24시간 이내) — 흰 배경 + 빨간 'N' 라운드 사각, 우상단 단독 */
 .list-new-badge {
   position: absolute;
   top: 10px;
@@ -478,17 +478,18 @@ defineExpose({ observerTarget });
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
+  min-width: 22px;
   height: 22px;
-  border-radius: 50%;
-  background: #DC2626;
-  color: #fff;
-  font-size: 12px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: #fff;
+  color: #FF3B30;
+  font-size: 11px;
   font-weight: 800;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-style: italic;
+  font-family: inherit;
+  letter-spacing: -0.2px;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 /* 평가 뱃지 - 그리드 뷰와 동일한 파스텔 스타일 */

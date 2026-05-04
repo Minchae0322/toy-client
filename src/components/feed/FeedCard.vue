@@ -239,17 +239,18 @@ const formatDate = (date) => feedUtils.formatDate(date);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
+  min-width: 22px;
   height: 22px;
-  border-radius: 50%;
-  background: #DC2626;
-  color: #fff;
-  font-size: 12px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: #fff;
+  color: #FF3B30;
+  font-size: 11px;
   font-weight: 800;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-style: italic;
+  font-family: inherit;
+  letter-spacing: -0.2px;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 /* 멀티 사진 인디케이터 */
@@ -358,7 +359,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   .image-badges-top { top: 8px; left: 8px; }
   .evaluation-badge { padding: 4px 8px; font-size: 10px; }
   .trend-badge { padding: 4px 7px; font-size: 10px; }
-  .new-badge { width: 20px; height: 20px; font-size: 11px; }
+  .new-badge { min-width: 20px; height: 20px; padding: 0 4px; font-size: 10px; border-radius: 5px; }
 
   .post-content { padding: 12px 16px 16px; }
 
