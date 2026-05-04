@@ -245,10 +245,10 @@ const formatDate = (date) => feedUtils.formatDate(date);
   border-radius: 6px;
   background: #fff;
   color: #FF3B30;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 900;
   font-family: inherit;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
   line-height: 1;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
