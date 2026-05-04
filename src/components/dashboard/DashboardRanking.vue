@@ -432,18 +432,21 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* DashboardView의 .content-section 스타일을 덮어쓰기 위해 specificity 올림 */
+/* PC 카드 스타일 — DashboardView의 .content-section 기본을 덮어쓰면서 동일 톤 유지 */
 .content-section.ranking-section {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 20px 4px;
+  background: #fff;
+  border: 1px solid #efefef;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  padding: 1.375rem;
   margin-bottom: 1rem;
 }
 
 @media (min-width: 768px) {
-  .content-section.ranking-section { margin-bottom: 1.125rem; }
+  .content-section.ranking-section {
+    padding: 1.625rem;
+    margin-bottom: 1.125rem;
+  }
 }
 
 .section-header {

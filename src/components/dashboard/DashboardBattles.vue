@@ -171,19 +171,33 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 컨테이너 */
+/* 컨테이너 — PC 카드 / 모바일 플랫 */
 .dashboard-pick {
-  padding: 20px 4px;
-  background: transparent;
-  border: none;
-  border-radius: 0;
+  background: #fff;
+  border: 1px solid #efefef;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  padding: 1.375rem;
+  margin-bottom: 1rem;
 }
 
-/* 모바일에선 다른 섹션과 동일하게 하단 구분선 */
+@media (min-width: 768px) {
+  .dashboard-pick {
+    padding: 1.625rem;
+    margin-bottom: 1.125rem;
+  }
+}
+
+/* 모바일에선 카드 외곽 제거 + 하단 구분선만 */
 @media (max-width: 767px) {
   .dashboard-pick {
+    background: transparent;
+    border: none;
     border-bottom: 1px solid #f1f3f6;
+    border-radius: 0;
+    box-shadow: none;
     padding: 22px 0.625rem 24px 0.625rem;
+    margin-bottom: 0;
   }
 }
 
