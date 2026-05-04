@@ -430,27 +430,25 @@ const nodes = computed(() => {
   const { w, h } = dims.value
   if (!w || !h) return items.map(p => ({ id: p.id, r: min }))
 
-  const scores = items.map(p => Math.max(0, getPopularityScore(p) || 0))
-  const total = scores.reduce((s, x) => s + x, 0)
+  // 화면 면적의 30% 만 차지하도록 충분한 여유 확보
+  // (시뮬레이션이 못 풀고 겹치는 걸 방지)
+  const totalArea = w * h * 0.30
 
-  // 전체 면적 budget (gap·padding 고려해 보수적으로 0.42)
-  const totalArea = w * h * 0.42
+  // 점수 → sqrt 로 dynamic range 압축.
+  // 8 vs 1 → sqrt(8) vs sqrt(1) = 2.83 vs 1 (8:1 → 약 3:1)
+  // 점수 0 인 경우도 0.6 으로 floor 해서 작게라도 보이게 (완전 사라지면 안 됨)
+  const weighted = items.map(p => {
+    const s = Math.max(0, getPopularityScore(p) || 0)
+    return Math.sqrt(Math.max(0.6, s))
+  })
+  const wsum = weighted.reduce((s, x) => s + x, 0) || 1
 
-  // 모두 0 이면 균일 분배 (점수 정보가 없으니 같은 크기)
-  if (total === 0) {
-    const uniformR = Math.sqrt(totalArea / (items.length * Math.PI))
-    const r = Math.round(Math.max(min, Math.min(uniformR, max * 0.7)))
-    return items.map(p => ({ id: p.id, r }))
-  }
-
-  // "내 점수 / 전체 합" 비율로 면적 배분 → r = √(area/π)
-  // 균일(다 같은 점수)이면 자동으로 동일한 r 이 나오고,
-  // 한 제품이 압도적이면 그 버블이 자연스럽게 커짐.
   return items.map((p, i) => {
-    const share = scores[i] / total
+    const share = weighted[i] / wsum
     const area = totalArea * share
     const raw = Math.sqrt(area / Math.PI)
-    const r = Math.round(Math.max(min, Math.min(raw, max)))
+    // 균일 분포에 더 가깝게 — 너무 큰 1위 방지 위해 max 의 0.85 까지만
+    const r = Math.round(Math.max(min, Math.min(raw, max * 0.85)))
     return { id: p.id, r }
   })
 })

@@ -8,6 +8,7 @@
       />
 
       <div class="image-badges-top">
+        <div v-if="isNew" class="new-badge">NEW</div>
         <div v-if="feed.feedEvaluation" :class="['evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
           <span class="eval-dot"></span>
           <span class="eval-text">{{ getEvaluationLabel(feed.feedEvaluation) }}</span>
@@ -113,6 +114,14 @@ const localLikeCount = ref(props.feed.likeCount || 0);
 
 // userInfo: 프로필(닉네임/사진/뱃지) · userRewardInfo: 레벨/tier
 const profileImageUrl = computed(() => props.feed.userInfo?.profileImageFile?.fileUrl || props.feed.userInfo?.profileImgUrl);
+
+// 작성 후 24시간 이내 피드에 NEW 뱃지
+const isNew = computed(() => {
+  const created = props.feed?.createdAt
+  if (!created) return false
+  const ms = Date.now() - new Date(created).getTime()
+  return ms >= 0 && ms < 24 * 60 * 60 * 1000
+})
 const displayNickname = computed(() => props.feed.userInfo?.nickname || '익명');
 const userLevel = computed(() => props.feed.userRewardInfo?.level ?? null);
 const primaryBadgeId = computed(() => {
@@ -226,6 +235,18 @@ const formatDate = (date) => feedUtils.formatDate(date);
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
+.new-badge {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #9333EA;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.25);
+}
+
 /* 멀티 사진 인디케이터 */
 .multi-photo-indicator {
   position: absolute;
@@ -332,6 +353,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   .image-badges-top { top: 8px; left: 8px; }
   .evaluation-badge { padding: 4px 8px; font-size: 10px; }
   .trend-badge { padding: 4px 7px; font-size: 10px; }
+  .new-badge { padding: 4px 7px; font-size: 10px; }
 
   .post-content { padding: 12px 16px 16px; }
 

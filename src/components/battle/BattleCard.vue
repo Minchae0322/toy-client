@@ -23,6 +23,7 @@
       <!-- 상태 배지 -->
       <div class="badges-top">
         <span class="status-badge" :class="statusClass">{{ statusText }}</span>
+        <span v-if="isNew" class="new-badge">NEW</span>
         <span v-if="battle.voteType === 'MULTIPLE'" class="vote-type-badge">순위</span>
       </div>
 
@@ -88,6 +89,14 @@ const props = defineProps({
 
 const imageError = ref(false)
 const avatarError = ref(false)
+
+// 생성 후 3일 이내인 배틀에 NEW 뱃지
+const isNew = computed(() => {
+  const created = props.battle?.createdAt
+  if (!created) return false
+  const ms = Date.now() - new Date(created).getTime()
+  return ms >= 0 && ms < 3 * 24 * 60 * 60 * 1000
+})
 
 const handleImageError = () => imageError.value = true
 const handleAvatarError = () => avatarError.value = true
@@ -334,6 +343,17 @@ const daysLeftText = computed(() => {
 .status-badge.draft {
   background: #E5E8EB;
   color: #8B95A1;
+}
+
+.new-badge {
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  border-radius: 6px;
+  background: #9333EA;
+  color: #fff;
+  line-height: 1;
 }
 
 .vote-type-badge {

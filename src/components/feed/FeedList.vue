@@ -139,8 +139,9 @@
         <router-link v-for="feed in feeds" :key="feed.feedId" :to="{ name: 'FeedDetail', params: { id: feed.feedId } }" class="list-item">
           <div class="list-image">
             <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
-            <div v-if="feed.feedEvaluation" class="list-badges-top">
-              <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+            <div v-if="isFeedNew(feed) || feed.feedEvaluation" class="list-badges-top">
+              <span v-if="isFeedNew(feed)" class="list-new-badge">NEW</span>
+              <span v-if="feed.feedEvaluation" :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
                 <span class="eval-dot"></span>
                 {{ getEvaluationLabel(feed.feedEvaluation) }}
               </span>
@@ -254,6 +255,14 @@ const getEvaluationClass = (evaluation) => {
   return { 'BEST': 'eval-best', 'GOOD': 'eval-good', 'OKAY': 'eval-okay', 'BAD': 'eval-bad' }[code] || '';
 };
 const formatDate = (dateString) => feedUtils.formatDate(dateString);
+
+// 작성 후 24시간 이내 피드인지
+const isFeedNew = (feed) => {
+  const created = feed?.createdAt;
+  if (!created) return false;
+  const ms = Date.now() - new Date(created).getTime();
+  return ms >= 0 && ms < 24 * 60 * 60 * 1000;
+};
 const formatPrice = (price) => feedUtils.formatPrice(price);
 const formatCount = (count) => feedUtils.formatCount(count);
 

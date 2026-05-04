@@ -157,11 +157,6 @@ function calcDashRadiusBounds(count, W, H) {
   return { min: Math.round(minR), max: Math.round(Math.min(maxR, Math.min(W, H) * 0.45)) }
 }
 
-function getDashRadius(score, maxScore, minR, maxR) {
-  if (!maxScore) return minR
-  return minR + (maxR - minR) * Math.sqrt(score / maxScore)
-}
-
 function getDashRankColor(rank, total) {
   if (rank === 1) return { bg: '#7c3aed', border: '#7c3aed', glow: 'rgba(124,58,237,0.12)' }
   if (rank === 2) return { bg: '#6366f1', border: '#6366f1', glow: 'rgba(99,102,241,0.1)' }
@@ -233,15 +228,39 @@ const dashBubbleProducts = computed(() => {
   return sorted.slice(0, dashBubbleLimit.value)
 })
 
-const dashMaxScore = computed(() => getProductPopularityScore(dashBubbleProducts.value[0]) || 1)
-
 const dashRadiusBounds = computed(() =>
   calcDashRadiusBounds(dashBubbleProducts.value.length, bubbleDims.value.w, bubbleDims.value.h)
 )
 
 const dashBubbleNodes = computed(() => {
   const { min, max } = dashRadiusBounds.value
-  return dashBubbleProducts.value.map(p => ({ id: p.id, r: getDashRadius(getProductPopularityScore(p), dashMaxScore.value, min, max) }))
+  const items = dashBubbleProducts.value
+  if (items.length === 0) return []
+
+  const { w, h } = bubbleDims.value
+  if (!w || !h) return items.map(p => ({ id: p.id, r: min }))
+
+  const scores = items.map(p => Math.max(0, getProductPopularityScore(p) || 0))
+  const total = scores.reduce((s, x) => s + x, 0)
+
+  // 전체 면적 budget (gap·padding 고려해 보수적으로 0.42)
+  const totalArea = w * h * 0.42
+
+  // 모두 0 이면 균일 분배
+  if (total === 0) {
+    const uniformR = Math.sqrt(totalArea / (items.length * Math.PI))
+    const r = Math.round(Math.max(min, Math.min(uniformR, max * 0.7)))
+    return items.map(p => ({ id: p.id, r }))
+  }
+
+  // "내 점수 / 전체 합" 비율로 면적 배분 → r = √(area/π)
+  return items.map((p, i) => {
+    const share = scores[i] / total
+    const area = totalArea * share
+    const raw = Math.sqrt(area / Math.PI)
+    const r = Math.round(Math.max(min, Math.min(raw, max)))
+    return { id: p.id, r }
+  })
 })
 
 const dashBubblePositions = ref([])
