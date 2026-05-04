@@ -3,7 +3,9 @@
   "appName": "요거뜨",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "hostname": "app.yogurtte.com",
+    "androidScheme": "https",
+    "iosScheme": "https"
   },
   "plugins": {
     "CapacitorHttp": {

@@ -33,6 +33,22 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- ============== FCM 푸시 알림 기본 스타일 ============== -->
+        <!-- 상태바 아이콘 (Android가 단색 실루엣으로 자동 처리) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
+
+        <!-- 아이콘 강조 컬러 (브랜드 보라) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
+
+        <!-- 기본 알림 채널 ID -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="yogurtte_default" />
     </application>
 
     <!-- Permissions -->

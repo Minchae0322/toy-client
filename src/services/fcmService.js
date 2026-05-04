@@ -39,10 +39,32 @@ export async function registerFcm() {
     return { skipped: true, reason: 'permission-denied' }
   }
 
+  // Android 알림 채널 등록 (멱등) — 채널은 한 번 만들어지면 변경 불가능하므로 신중히
+  if (Capacitor.getPlatform() === 'android') {
+    try {
+      await FirebaseMessaging.createChannel({
+        id: 'yogurtte_default',
+        name: '요거뜨 알림',
+        description: '채팅, 댓글, 좋아요 등 일반 알림',
+        importance: 4, // IMPORTANCE_HIGH (헤드업 노티 + 사운드)
+        visibility: 1, // VISIBILITY_PUBLIC (잠금화면에서 내용 표시)
+        sound: 'default',
+        vibration: true,
+        lights: true,
+        lightColor: '#9333EA',
+      })
+    } catch (e) {
+      // 이미 존재하면 무시
+      console.log('[FCM] 채널 등록 스킵:', e?.message)
+    }
+  }
+
   const { token } = await FirebaseMessaging.getToken()
   if (!token) {
     return { skipped: true, reason: 'no-token' }
   }
+
+  console.log('[FCM] 발급된 토큰:', token)
 
   await sendTokenToBackend(token)
   registeredToken = token
@@ -60,7 +82,7 @@ export async function registerFcm() {
     })
 
     FirebaseMessaging.addListener('notificationReceived', (event) => {
-      console.log('[FCM] foreground 수신:', event)
+      console.log('[FCM] foreground 수신:', JSON.stringify(event, null, 2))
     })
 
     FirebaseMessaging.addListener('notificationActionPerformed', (event) => {
