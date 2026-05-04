@@ -8,7 +8,7 @@
       />
 
       <div class="image-badges-top">
-        <div v-if="isNew" class="new-badge">NEW</div>
+        <div v-if="isNew" class="new-badge" aria-label="새 게시물">N</div>
         <div v-if="feed.feedEvaluation" :class="['evaluation-badge', getEvaluationClass(feed.feedEvaluation)]">
           <span class="eval-dot"></span>
           <span class="eval-text">{{ getEvaluationLabel(feed.feedEvaluation) }}</span>
@@ -236,15 +236,20 @@ const formatDate = (date) => feedUtils.formatDate(date);
 }
 
 .new-badge {
-  padding: 5px 9px;
-  border-radius: 999px;
-  background: #9333EA;
-  color: #fff;
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  color: #EF4444;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.4px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.25);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.22);
 }
 
 /* 멀티 사진 인디케이터 */
@@ -353,7 +358,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   .image-badges-top { top: 8px; left: 8px; }
   .evaluation-badge { padding: 4px 8px; font-size: 10px; }
   .trend-badge { padding: 4px 7px; font-size: 10px; }
-  .new-badge { padding: 4px 7px; font-size: 10px; }
+  .new-badge { width: 20px; height: 20px; font-size: 11px; }
 
   .post-content { padding: 12px 16px 16px; }
 

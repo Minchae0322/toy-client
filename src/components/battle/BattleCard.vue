@@ -23,7 +23,7 @@
       <!-- 상태 배지 -->
       <div class="badges-top">
         <span class="status-badge" :class="statusClass">{{ statusText }}</span>
-        <span v-if="isNew" class="new-badge">NEW</span>
+        <span v-if="isNew" class="new-badge" aria-label="새 배틀">N</span>
         <span v-if="battle.voteType === 'MULTIPLE'" class="vote-type-badge">순위</span>
       </div>
 
@@ -346,14 +346,20 @@ const daysLeftText = computed(() => {
 }
 
 .new-badge {
-  padding: 3px 7px;
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  color: #EF4444;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.4px;
-  border-radius: 6px;
-  background: #9333EA;
-  color: #fff;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
   line-height: 1;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.22);
 }
 
 .vote-type-badge {
