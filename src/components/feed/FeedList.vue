@@ -139,9 +139,9 @@
         <router-link v-for="feed in feeds" :key="feed.feedId" :to="{ name: 'FeedDetail', params: { id: feed.feedId } }" class="list-item">
           <div class="list-image">
             <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
-            <div v-if="isFeedNew(feed) || feed.feedEvaluation" class="list-badges-top">
-              <span v-if="isFeedNew(feed)" class="list-new-badge" aria-label="새 게시물">N</span>
-              <span v-if="feed.feedEvaluation" :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
+            <span v-if="isFeedNew(feed)" class="list-new-badge" aria-label="새 게시물">N</span>
+            <div v-if="feed.feedEvaluation" class="list-badges-top">
+              <span :class="['list-eval-badge', getEvaluationClass(feed.feedEvaluation)]">
                 <span class="eval-dot"></span>
                 {{ getEvaluationLabel(feed.feedEvaluation) }}
               </span>
@@ -446,7 +446,7 @@ defineExpose({ observerTarget });
 
 .list-multi-photo {
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   right: 8px;
   z-index: 2;
   background: rgba(0, 0, 0, 0.45);
@@ -469,22 +469,26 @@ defineExpose({ observerTarget });
   z-index: 2;
 }
 
-/* NEW 뱃지 (24시간 이내) — 빨간 'N' 원형 */
+/* NEW 뱃지 (24시간 이내) — 솔리드 빨강 'N', 우상단 단독 위치 */
 .list-new-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: #fff;
-  color: #EF4444;
-  font-size: 11px;
+  background: #DC2626;
+  color: #fff;
+  font-size: 12px;
   font-weight: 800;
   font-family: Georgia, 'Times New Roman', serif;
   font-style: italic;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.22);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
 }
 
 /* 평가 뱃지 - 그리드 뷰와 동일한 파스텔 스타일 */

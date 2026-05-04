@@ -352,14 +352,14 @@ const daysLeftText = computed(() => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
-  color: #EF4444;
+  background: #DC2626;
+  color: #fff;
   font-size: 11px;
   font-weight: 800;
   font-family: Georgia, 'Times New Roman', serif;
   font-style: italic;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.22);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
 }
 
 .vote-type-badge {
