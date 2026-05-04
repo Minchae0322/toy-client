@@ -179,6 +179,14 @@ onMounted(() => {
   border-radius: 0;
 }
 
+/* 모바일에선 다른 섹션과 동일하게 하단 구분선 */
+@media (max-width: 767px) {
+  .dashboard-pick {
+    border-bottom: 1px solid #f1f3f6;
+    padding: 22px 0.625rem 24px 0.625rem;
+  }
+}
+
 /* 헤더 */
 .section-header {
   display: flex;
@@ -273,6 +281,10 @@ onMounted(() => {
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .mpick-title { font-size: 1.125rem; }
 }
 
 /* 리스트 */

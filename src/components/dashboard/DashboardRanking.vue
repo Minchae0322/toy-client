@@ -1,6 +1,7 @@
 <template>
   <section class="content-section ranking-section">
-    <div class="section-header">
+    <!-- PC 헤더 -->
+    <div class="section-header pc-header">
       <div class="title-with-badge">
         <h2 class="section-title">실시간 <span class="title-accent">제품 랭킹</span></h2>
         <div class="sub-title-row">
@@ -13,14 +14,35 @@
           </span>
         </div>
       </div>
-      <div class="header-right-group">
-        <router-link :to="{ name: 'ProductRanking' }" class="view-all-btn">
-          전체보기
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </router-link>
+      <router-link :to="{ name: 'ProductRanking' }" class="view-all-btn">
+        전체보기
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </router-link>
+    </div>
+
+    <!-- 모바일 헤더 (DashboardHotFeeds의 mhot 톤과 동일) -->
+    <div class="mranking-header">
+      <div class="mranking-header-main">
+        <h2 class="mranking-title">
+          실시간 <span class="mranking-accent">제품 랭킹</span>
+          <span class="mranking-live"><span class="mranking-live-dot"></span>LIVE</span>
+        </h2>
+        <p class="mranking-sub">지금 가장 주목받는 아이템</p>
+        <span class="sort-indicator mranking-sort">
+          <span class="sort-dot" style="width:10px;height:10px;background:#7c3aed;"></span>
+          <span class="sort-dot" style="width:8px;height:8px;background:#a78bfa;"></span>
+          <span class="sort-dot" style="width:6px;height:6px;background:#c4b5fd;"></span>
+          <span class="sort-label">크면 인기 많은 제품</span>
+        </span>
       </div>
+      <router-link :to="{ name: 'ProductRanking' }" class="mranking-more">
+        <span>전체보기</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </router-link>
     </div>
 
     <!-- 캐꾸 안내 배너 -->
@@ -410,17 +432,18 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.ranking-section {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1.375rem;
+/* DashboardView의 .content-section 스타일을 덮어쓰기 위해 specificity 올림 */
+.content-section.ranking-section {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 20px 4px;
   margin-bottom: 1rem;
-  border: 1px solid #efefef;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 
 @media (min-width: 768px) {
-  .ranking-section { padding: 1.625rem; margin-bottom: 1.125rem; }
+  .content-section.ranking-section { margin-bottom: 1.125rem; }
 }
 
 .section-header {
@@ -433,13 +456,12 @@ onUnmounted(() => {
 .title-with-badge { display: flex; flex-direction: column; gap: 4px; }
 
 .section-title {
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #18181b;
   margin: 0;
   letter-spacing: -0.02em;
-  border-left: 3px solid #a1a1aa;
-  padding-left: 0.75rem;
+  line-height: 1.2;
 }
 .section-title .title-accent { color: #9333ea; }
 
@@ -457,13 +479,64 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-left: calc(0.75rem + 3px);
 }
 
-.header-right-group {
+/* ===== 모바일 헤더 (PC에선 숨김) ===== */
+.mranking-header { display: none; }
+.mranking-header-main { flex: 1; min-width: 0; }
+.mranking-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.mranking-accent { color: #9333ea; }
+.mranking-live {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.mranking-live-dot {
+  width: 5px;
+  height: 5px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  animation: mranking-pulse 1.5s infinite;
+}
+@keyframes mranking-pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.mranking-sub {
+  font-size: 13px;
+  color: #71717a;
+  margin: 4px 0 8px;
+}
+.mranking-more {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a1a1aa;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.mranking-sort {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .mranking-title { font-size: 1.125rem; }
 }
 
 .sort-indicator {
@@ -790,14 +863,23 @@ onUnmounted(() => {
 }
 
 @media (max-width: 767px) {
-  .ranking-section {
+  .content-section.ranking-section {
     background: #ffffff;
     border: none;
     border-bottom: 1px solid #f1f3f6;
     box-shadow: none;
     border-radius: 0;
-    padding: 22px 0.625rem 24px 0.625rem;
+    padding: 16px 0.625rem 24px 0.625rem;
     margin: 0;
+  }
+
+  /* 모바일: PC 헤더 숨김 + 모바일 헤더 노출 */
+  .pc-header { display: none; }
+  .mranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 16px;
   }
 }
 </style>
