@@ -190,6 +190,29 @@ async function inlineExternalImages(svgEl) {
   return cloned
 }
 
+function canvasToBlob(canvas) {
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+}
+
+async function saveOrShareBlob(blob, filename) {
+  const file = new File([blob], filename, { type: 'image/png' })
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: '내 캐리어' })
+      return
+    } catch (e) {
+      if (e.name === 'AbortError') return
+      console.warn('[SHARE] navigator.share 실패, 다운로드로 폴백:', e)
+    }
+  }
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.download = filename
+  a.href = url
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 async function downloadCarrierImage() {
   const svgEl = document.querySelector('[data-share-svg]')
   if (!svgEl) return
@@ -199,13 +222,13 @@ async function downloadCarrierImage() {
   const ctx = canvas.getContext('2d')
   const svgData = new XMLSerializer().serializeToString(inlined)
   const img = new Image()
-  img.onload = () => {
+  const filename = props.shareNickname ? `${props.shareNickname}-carrier.png` : 'my-carrier.png'
+  img.onload = async () => {
     ctx.fillStyle = props.shareBg; ctx.fillRect(0, 0, 760, 1000)
     ctx.drawImage(img, 0, 0, 760, 1000)
-    const a = document.createElement('a')
-    a.download = props.shareNickname ? `${props.shareNickname}-carrier.png` : 'my-carrier.png'
-    a.href = canvas.toDataURL('image/png')
-    a.click()
+    const blob = await canvasToBlob(canvas)
+    if (!blob) return
+    await saveOrShareBlob(blob, filename)
   }
   img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
 }
