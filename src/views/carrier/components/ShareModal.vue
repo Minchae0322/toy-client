@@ -159,13 +159,45 @@ const props = defineProps({
 
 defineEmits(['update:visible', 'update:shareNickname'])
 
-function downloadCarrierImage() {
+async function urlToDataUrl(url) {
+  if (!url || url.startsWith('data:')) return url
+  const res = await fetch(url, { mode: 'cors', cache: 'no-cache' })
+  if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`)
+  const blob = await res.blob()
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+async function inlineExternalImages(svgEl) {
+  const cloned = svgEl.cloneNode(true)
+  const XLINK = 'http://www.w3.org/1999/xlink'
+  const imgs = cloned.querySelectorAll('image')
+  await Promise.all(Array.from(imgs).map(async el => {
+    const href = el.getAttribute('href') || el.getAttributeNS(XLINK, 'href')
+    if (!href || href.startsWith('data:')) return
+    try {
+      const dataUrl = await urlToDataUrl(href)
+      el.setAttribute('href', dataUrl)
+      el.removeAttributeNS(XLINK, 'href')
+    } catch (e) {
+      console.warn('[SHARE] 이미지 인라인 실패:', href, e)
+    }
+  }))
+  return cloned
+}
+
+async function downloadCarrierImage() {
   const svgEl = document.querySelector('[data-share-svg]')
   if (!svgEl) return
+  const inlined = await inlineExternalImages(svgEl)
   const canvas = document.createElement('canvas')
   canvas.width = 760; canvas.height = 1000
   const ctx = canvas.getContext('2d')
-  const svgData = new XMLSerializer().serializeToString(svgEl)
+  const svgData = new XMLSerializer().serializeToString(inlined)
   const img = new Image()
   img.onload = () => {
     ctx.fillStyle = props.shareBg; ctx.fillRect(0, 0, 760, 1000)
