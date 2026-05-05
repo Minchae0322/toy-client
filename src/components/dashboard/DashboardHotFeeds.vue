@@ -3,8 +3,11 @@
   <section class="content-section hot-feeds-section">
     <div class="section-header">
       <div class="title-with-badge">
-        <h2 class="section-title">지금 뜨는 <span class="title-accent">핫-기록</span></h2>
-        <span class="sub-title">실시간 인기 리뷰</span>
+        <h2 class="section-title">
+          지금 뜨는 <span class="title-accent">핫-기록</span>
+          <span class="title-live"><span class="title-live-dot"></span>LIVE</span>
+        </h2>
+        <span class="sub-title">실시간으로 가장 많이 본 인기 리뷰</span>
       </div>
       <router-link :to="{ name: 'FeedHome' }" class="view-all-link">
         전체보기
@@ -137,33 +140,55 @@ const handleImageError = (event) => {
 
 .section-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .title-with-badge { display: flex; flex-direction: column; gap: 4px; }
 
 .section-title {
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: #18181b;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111;
   margin: 0;
-  letter-spacing: -0.02em;
-  border-left: 3px solid #a1a1aa;
-  padding-left: 0.75rem;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.section-title .title-accent { color: #9333ea; }
+.section-title .title-accent { color: #7c3aed; }
+
+.title-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.title-live-dot {
+  width: 5px;
+  height: 5px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  animation: hf-live-pulse 1.5s infinite;
+}
+@keyframes hf-live-pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
 
 @media (min-width: 1280px) {
-  .section-title { font-size: 1.3125rem; }
+  .section-title { font-size: 1.375rem; }
 }
 
 .sub-title {
-  font-size: 12px;
-  color: #999;
+  font-size: 13px;
+  color: #71717a;
   font-weight: 400;
-  padding-left: calc(0.75rem + 3px);
 }
 
 .view-all-link {

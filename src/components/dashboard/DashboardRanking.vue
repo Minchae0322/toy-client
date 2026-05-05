@@ -1,28 +1,6 @@
 <template>
   <section class="content-section ranking-section">
-    <!-- PC 헤더 -->
-    <div class="section-header pc-header">
-      <div class="title-with-badge">
-        <h2 class="section-title">실시간 <span class="title-accent">제품 랭킹</span></h2>
-        <div class="sub-title-row">
-          <span class="sub-title">지금 가장 주목받는 아이템</span>
-          <span class="sort-indicator">
-            <span class="sort-dot" style="width:12px;height:12px;background:#7c3aed;"></span>
-            <span class="sort-dot" style="width:9px;height:9px;background:#a78bfa;"></span>
-            <span class="sort-dot" style="width:6px;height:6px;background:#c4b5fd;"></span>
-            <span class="sort-label">크면 인기 많은 제품</span>
-          </span>
-        </div>
-      </div>
-      <router-link :to="{ name: 'ProductRanking' }" class="view-all-btn">
-        전체보기
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      </router-link>
-    </div>
-
-    <!-- 모바일 헤더 (DashboardHotFeeds의 mhot 톤과 동일) -->
+    <!-- 헤더 (PC·모바일 통일 톤) -->
     <div class="mranking-header">
       <div class="mranking-header-main">
         <h2 class="mranking-title">
@@ -449,43 +427,13 @@ onUnmounted(() => {
   }
 }
 
-.section-header {
+/* ===== 헤더 (PC·모바일 공통) ===== */
+.mranking-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
 }
-
-.title-with-badge { display: flex; flex-direction: column; gap: 4px; }
-
-.section-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #18181b;
-  margin: 0;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-.section-title .title-accent { color: #9333ea; }
-
-@media (min-width: 1280px) {
-  .section-title { font-size: 1.3125rem; }
-}
-
-.sub-title {
-  font-size: 12px;
-  font-weight: 400;
-  color: #999;
-}
-
-.sub-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* ===== 모바일 헤더 (PC에선 숨김) ===== */
-.mranking-header { display: none; }
 .mranking-header-main { flex: 1; min-width: 0; }
 .mranking-title {
   font-size: 1.25rem;
@@ -876,13 +824,6 @@ onUnmounted(() => {
     margin: 0;
   }
 
-  /* 모바일: PC 헤더 숨김 + 모바일 헤더 노출 */
-  .pc-header { display: none; }
-  .mranking-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 16px;
-  }
+  .mranking-header { margin-bottom: 16px; }
 }
 </style>

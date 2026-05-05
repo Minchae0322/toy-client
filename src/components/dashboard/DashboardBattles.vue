@@ -1,18 +1,6 @@
 <template>
   <section class="dashboard-pick">
-    <!-- PC 헤더 -->
-    <header class="section-header pc-header">
-      <div class="title-with-badge">
-        <h2 class="section-title">실시간 <span class="title-accent">요거픽</span></h2>
-        <span class="sub-title">유저들이 직접 고르는 인기 승부</span>
-      </div>
-      <router-link :to="{ name: 'BattleList' }" class="view-all-link">
-        더보기
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6" /></svg>
-      </router-link>
-    </header>
-
-    <!-- 모바일 헤더 (DashboardHotFeeds의 mhot-header 톤과 동일) -->
+    <!-- 헤더 (PC·모바일 통일 톤) -->
     <div class="mpick-header">
       <div class="mpick-header-main">
         <h2 class="mpick-title">
@@ -201,53 +189,14 @@ onMounted(() => {
   }
 }
 
-/* 헤더 */
-.section-header {
+/* 헤더 (PC·모바일 공통) */
+.mpick-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   padding: 0 4px;
 }
-.title-with-badge {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.section-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #18181b;
-  margin: 0;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-.section-title .title-accent { color: #9333ea; }
-.sub-title {
-  font-size: 12px;
-  font-weight: 400;
-  color: #999;
-  letter-spacing: -0.1px;
-}
-
-@media (min-width: 1280px) {
-  .section-title { font-size: 1.3125rem; }
-}
-
-.view-all-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #adb5bd;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-.view-all-link:hover { color: #6b7684; }
-
-/* 모바일 헤더 (PC에선 숨김) */
-.mpick-header { display: none; }
 .mpick-header-main { flex: 1; min-width: 0; }
 .mpick-title {
   font-size: 1.25rem;
@@ -449,18 +398,6 @@ onMounted(() => {
 @media (min-width: 1280px) {
   .dash-thumb { width: 104px; height: 104px; border-radius: 16px; }
   .dash-row { gap: 20px; padding: 20px 4px; }
-}
-
-/* 모바일 헤더 swap */
-@media (max-width: 767px) {
-  .pc-header { display: none; }
-  .mpick-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 20px;
-    padding: 0 4px;
-  }
 }
 
 /* 좁은 화면 */
