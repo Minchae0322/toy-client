@@ -12,7 +12,7 @@
 
     <!-- 1뎁스 카테고리 칩 -->
     <div class="category-chips-section">
-      <p class="category-chips-title">인기 카테고리</p>
+      <p class="category-chips-title">{{ contentType === 'FEED' ? '카테고리' : '인기 카테고리' }}</p>
       <div class="category-chips-list">
         <button
           v-for="cat in popularCategories"
@@ -23,7 +23,7 @@
         >
           {{ cat.categoryName }}
         </button>
-        <button type="button" class="category-chip more-btn" @click="openCategoryModal">
+        <button v-if="contentType !== 'FEED'" type="button" class="category-chip more-btn" @click="openCategoryModal">
           더보기
           <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
@@ -141,6 +141,14 @@ const handleParentCategoryClick = (cat) => {
     return
   }
   selectedParentCategory.value = cat
+
+  // "기타" 부모 선택 시 동일 이름의 자식이 있으면 자동 선택
+  if (cat.categoryName?.trim() === '기타') {
+    const etcChild = (cat.children || []).find(c => c.categoryName?.trim() === '기타')
+    if (etcChild) {
+      selectSubCategory(etcChild)
+    }
+  }
 }
 
 // 2뎁스 카테고리 선택
