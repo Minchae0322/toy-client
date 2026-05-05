@@ -274,6 +274,8 @@ const daysLeftText = computed(() => {
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
 }
 
 .battle-card:hover {

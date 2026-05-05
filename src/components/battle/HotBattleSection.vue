@@ -221,6 +221,8 @@ const handleImageError = (battleId) => {
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s;
+  text-decoration: none;
+  color: inherit;
 }
 
 .hot-card:hover {
