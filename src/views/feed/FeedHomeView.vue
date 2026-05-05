@@ -58,7 +58,7 @@ export default { name: 'FeedHomeView' }
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useCategoryCache } from '@/composables/useCategoryCache.js';
 import { useFeed } from '@/services/FeedService.js';
 import * as authUtils from '@/utils/auth.js';
@@ -74,6 +74,7 @@ import { useConfirmDialog } from '@/composables/useConfirmDialog';
 const { open } = useConfirmDialog();
 
 const router = useRouter();
+const route = useRoute();
 
 const unreadMessages = ref(3);
 const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache();
@@ -124,6 +125,11 @@ watch(viewMode, (newMode) => {
   } catch (error) {
     console.error('localStorage 저장 실패:', error);
   }
+});
+
+// 피드 작성 후 router.push({ query: { _r: Date.now() } }) 진입 시 리스트 강제 갱신
+watch(() => route.query._r, (key) => {
+  if (key) resetAndLoadFeeds();
 });
 
 // Methods

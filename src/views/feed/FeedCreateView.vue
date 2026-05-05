@@ -897,7 +897,7 @@ const handleSubmit = async () => {
       })
       showExpGrant(result.data?.expGrant, { mode: 'full' })
       showSuccessToast.value = true
-      setTimeout(() => router.push('/feed'), 1500)
+      setTimeout(() => router.push({ path: '/feed', query: { _r: Date.now() } }), 1500)
     } else {
       throw new Error(result.error || 'Feed 생성 실패')
     }
