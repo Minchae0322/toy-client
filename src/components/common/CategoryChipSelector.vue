@@ -12,7 +12,6 @@
 
     <!-- 1뎁스 카테고리 칩 -->
     <div class="category-chips-section">
-      <p class="category-chips-title">{{ contentType === 'FEED' ? '카테고리' : '인기 카테고리' }}</p>
       <div class="category-chips-list">
         <button
           v-for="cat in popularCategories"
