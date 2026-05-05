@@ -140,8 +140,8 @@ export function useCategoryCache() {
 
       const formatDate = (date) => date.toISOString().split('T')[0]
 
+      // 핫아이템(PRODUCT)·요거픽(BATTLE)은 categoryType 미전달 — type만 전송
       const response = await categoryService.getPopularCategories({
-        categoryType,
         type: contentType,
         startDate: formatDate(startDate),
         endDate: formatDate(endDate),

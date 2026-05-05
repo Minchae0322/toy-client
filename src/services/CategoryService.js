@@ -179,14 +179,11 @@ class CategoryService extends BaseApiService {
    * @param {string} params.sort - 정렬 기준 (기본값: contentCount,desc)
    */
   async getPopularCategories(params = {}) {
-    // categoryType = 카테고리 자체의 도메인 (PRODUCT | FEED)
     // type        = popular 집계 도메인 (PRODUCT | FEED | BATTLE)
-    //   ex) 요거픽(BATTLE)은 카테고리는 PRODUCT지만 인기도는 BATTLE 집계 사용
+    // categoryType = 카테고리 자체의 도메인 (선택) — FEED 호출에만 사용,
+    //                핫아이템(PRODUCT)·요거픽(BATTLE)은 미전달
     const { type, categoryType, startDate, endDate, page = 0, size = 20, sort = 'contentCount,desc' } = params
 
-    if (!categoryType) {
-      throw new Error('categoryType은 필수입니다.')
-    }
     if (!type) {
       throw new Error('type(popular 집계 도메인)은 필수입니다.')
     }
@@ -195,7 +192,6 @@ class CategoryService extends BaseApiService {
     }
 
     const queryParams = {
-      categoryType,
       type,
       startDate,
       endDate,
@@ -204,6 +200,7 @@ class CategoryService extends BaseApiService {
       sort,
       isActive: true
     }
+    if (categoryType) queryParams.categoryType = categoryType
 
     return await this.get('/categories/popular', queryParams)
   }
