@@ -25,12 +25,19 @@ const CATEGORY_TYPES = [
 ]
 const selectedType = ref('PRODUCT')
 
-// type별로 카테고리 필터 (parentId가 없는 최상위는 type 비교, 자식은 부모 type 상속)
+// 백엔드는 type을 객체 { title, description } 또는 문자열로 응답할 수 있음 → 코드만 추출
+const getTypeCode = (cat) => {
+  const t = cat?.type
+  if (!t) return 'PRODUCT'
+  return typeof t === 'string' ? t : (t.title || t.code || 'PRODUCT')
+}
+
+// type별로 카테고리 필터
 const filteredCategories = computed(() => {
-  return categories.value.filter(c => (c.type || 'PRODUCT') === selectedType.value)
+  return categories.value.filter(c => getTypeCode(c) === selectedType.value)
 })
 const filteredFlatCategories = computed(() => {
-  return flatCategories.value.filter(c => (c.type || 'PRODUCT') === selectedType.value)
+  return flatCategories.value.filter(c => getTypeCode(c) === selectedType.value)
 })
 
 const activeCategories = computed(() =>
@@ -85,10 +92,11 @@ const loadCategories = async () => {
 const handleAddCategory = async (categoryData) => {
   try {
     // 하위 카테고리는 부모의 type을 상속, 최상위는 폼에서 받은 type 사용
+    // (서버 응답의 type은 객체일 수 있어 getTypeCode로 코드만 추출하여 전송)
     let type = categoryData.type || selectedType.value
     if (categoryData.parentId) {
       const parent = flatCategories.value.find(c => c.categoryId === categoryData.parentId)
-      if (parent?.type) type = parent.type
+      if (parent) type = getTypeCode(parent)
     }
     const payload = { ...categoryData, type }
     const response = await categoryService.createCategory(payload)
@@ -233,7 +241,7 @@ defineExpose({
         >
           <span class="type-emoji">{{ t.emoji }}</span>
           <span class="type-label">{{ t.label }}</span>
-          <span class="type-count">{{ flatCategories.filter(c => (c.type || 'PRODUCT') === t.code).length }}</span>
+          <span class="type-count">{{ flatCategories.filter(c => getTypeCode(c) === t.code).length }}</span>
         </button>
       </div>
 
