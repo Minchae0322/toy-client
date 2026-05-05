@@ -88,6 +88,15 @@
           @updated="handleFeedUpdated"
       />
 
+      <!-- Report Modal -->
+      <ReportModal
+          v-if="feed"
+          v-model:visible="showReportModal"
+          target="feed"
+          :target-id="feed.feedId"
+          @submitted="handleReportSubmitted"
+      />
+
     </template>
   </div>
 </template>
@@ -108,6 +117,7 @@ import FeedDetailInfo from '@/components/feed/detail/FeedDetailInfo.vue'
 import FeedCommentSection from '@/components/feed/detail/FeedCommentSection.vue'
 import ShareModal from '@/components/common/ShareModal.vue'
 import FeedEditModal from '@/components/feed/detail/FeedEditModal.vue'
+import ReportModal from '@/components/common/ReportModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -122,6 +132,7 @@ const isFollowing = ref(false)
 const commentSectionRef = ref(null)
 const showShareModal = ref(false)
 const showEditModal = ref(false)
+const showReportModal = ref(false)
 
 const comments = ref([])
 const commentLoading = ref(false)
@@ -433,7 +444,17 @@ const closeShareModal = () => {
 
 const shareImage = computed(() => imageList.value?.[0]?.fileUrl || '')
 
-const handleReport = () => console.log('Report feed')
+const handleReport = async () => {
+  if (!isLoggedIn.value) {
+    await openLoginRequired('신고하려면 로그인이 필요합니다.')
+    return
+  }
+  showReportModal.value = true
+}
+
+const handleReportSubmitted = async () => {
+  await open({ type: 'alert', title: '신고 접수', message: '신고가 접수되었습니다. 운영팀이 검토할게요.' })
+}
 
 const handleEdit = () => {
   showEditModal.value = true

@@ -295,6 +295,21 @@ class FeedService extends BaseApiService {
   async removeLike(feedId) { return this.removeFeedReaction(feedId, 'LIKE') }
   async removeHot(feedId) { return this.removeFeedReaction(feedId, 'HOT') }
 
+  // ==================== 신고 메서드 ====================
+  /**
+   * 피드 신고
+   * POST /feeds/{feedId}/reports
+   * @param {number|string} feedId
+   * @param {{ reason: string, detail?: string }} body - reason: ReportReason enum, detail: 상세(<=500)
+   */
+  async reportFeed(feedId, { reason, detail } = {}) {
+    if (!feedId) throw new Error('피드 ID가 필요합니다.')
+    if (!reason) throw new Error('신고 사유가 필요합니다.')
+    const payload = { reason }
+    if (detail && detail.trim()) payload.detail = detail.trim()
+    return await this.post(`/feeds/${feedId}/reports`, payload)
+  }
+
   // ==================== 해시태그 메서드 ====================
 
   async getHotHashtags(searchCondition = {}, pageable = {}) {

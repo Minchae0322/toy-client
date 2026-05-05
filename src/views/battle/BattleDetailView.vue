@@ -23,6 +23,7 @@
           @add-product="handleAddProduct"
           @back="goBack"
           @share="shareBattle"
+          @report="handleReport"
       />
 
       <main class="content-wrapper">
@@ -260,6 +261,15 @@
           @close="closeShareModal"
       />
 
+      <!-- Report Modal -->
+      <ReportModal
+          v-if="battle"
+          v-model:visible="showReportModal"
+          target="battle"
+          :target-id="battleId"
+          @submitted="handleReportSubmitted"
+      />
+
       <!-- Comment Modal -->
       <BattleCommentModal
           :visible="showCommentModal"
@@ -316,6 +326,7 @@ import { getUserId, getCurrentUser } from '@/utils/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { showExpGrant } from '@/composables/useExpToast'
 import ShareModal from '@/components/common/ShareModal.vue'
+import ReportModal from '@/components/common/ReportModal.vue'
 import BattleInfoCard from '@/components/battle/detail/BattleInfoCard.vue'
 import VoteSelectionBar from '@/components/battle/detail/VoteSelectionBar.vue'
 import ProductCard from '@/components/battle/detail/ProductCard.vue'
@@ -327,6 +338,7 @@ export default {
   name: 'BattleDetail',
   components: {
     ShareModal,
+    ReportModal,
     BattleInfoCard,
     VoteSelectionBar,
     ProductCard,
@@ -358,6 +370,7 @@ export default {
         uploadedImageUrl: null
       },
       showShareModal: false,
+      showReportModal: false,
       showCommentModal: false,
       selectedCommentItem: null,
       inlineCommentText: '',
@@ -1294,6 +1307,20 @@ export default {
 
     closeShareModal() {
       this.showShareModal = false
+    },
+
+    async handleReport() {
+      const userId = getUserId()
+      if (!userId) {
+        await this.openLoginRequired('신고하려면 로그인이 필요합니다.')
+        return
+      }
+      if (this.isCreator) return
+      this.showReportModal = true
+    },
+
+    async handleReportSubmitted() {
+      await this.open({ type: 'alert', title: '신고 접수', message: '신고가 접수되었습니다. 운영팀이 검토할게요.' })
     },
 
     getBattleImage() {

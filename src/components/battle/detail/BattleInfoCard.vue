@@ -6,9 +6,14 @@
         <span class="label">목록</span>
       </button>
 
-      <button @click="$emit('share')" class="nav-btn share-btn" aria-label="공유하기">
-        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
-      </button>
+      <div class="nav-actions">
+        <button @click="$emit('share')" class="nav-btn share-btn" aria-label="공유하기">
+          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+        </button>
+        <button v-if="!isCreator" @click="$emit('report')" class="nav-btn report-btn" aria-label="신고하기">
+          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+        </button>
+      </div>
     </nav>
 
     <div v-if="isWeightedVote || showDetails" class="badge-wrapper">
@@ -162,7 +167,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['add-product', 'back', 'share'])
+defineEmits(['add-product', 'back', 'share', 'report'])
 
 const categoryName = computed(() => {
   return props.battle.subCategoryDetail?.subCategoryName || '카테고리'
@@ -263,10 +268,18 @@ const permissionType = computed(() => {
   gap: 6px;
 }
 
-.share-btn {
+.share-btn,
+.report-btn {
   width: 44px;
   height: 44px;
 }
+
+.nav-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.report-btn:hover { color: #dc2626; border-color: #fecaca; }
 
 .nav-btn:hover {
   transform: translateY(-2px);

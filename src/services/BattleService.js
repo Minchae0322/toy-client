@@ -347,6 +347,20 @@ class BattleService extends BaseApiService {
     return await this.post(`/battles/${battleId}/items/${itemId}/report`, requestData)
   }
 
+  /**
+   * 배틀 신고 (배틀 자체)
+   * POST /battles/{battleId}/reports
+   * @param {number|string} battleId
+   * @param {{ reason: string, detail?: string }} body - reason: ReportReason enum, detail: 상세(<=500)
+   */
+  async reportBattle(battleId, { reason, detail } = {}) {
+    if (!battleId) throw new Error('배틀 ID가 필요합니다.')
+    if (!reason) throw new Error('신고 사유가 필요합니다.')
+    const payload = { reason }
+    if (detail && detail.trim()) payload.detail = detail.trim()
+    return await this.post(`/battles/${battleId}/reports`, payload)
+  }
+
   // ==================== 배틀 코멘트(한줄 변론) 메서드 ====================
 
   /**
