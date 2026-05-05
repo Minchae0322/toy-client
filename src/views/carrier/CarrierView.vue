@@ -1135,7 +1135,7 @@ onBeforeRouteLeave(async () => {
 .fab-group {
   position: fixed;
   bottom: 28px;
-  right: 28px;
+  right: max(28px, calc(50% - 320px));
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -1620,7 +1620,7 @@ onBeforeRouteLeave(async () => {
   justify-content: center;
   transition: background .3s;
 }
-.share-svg-wrap { width: 380px; height: 500px; }
+.share-svg-wrap { width: 380px; height: 520px; }
 
 .share-nickname-row {
   display: flex;
@@ -2102,7 +2102,7 @@ onBeforeRouteLeave(async () => {
     width: 100%;
     max-width: 340px;
     height: auto;
-    aspect-ratio: 380 / 500;
+    aspect-ratio: 380 / 520;
   }
   .share-nickname-row { padding: 0 16px; margin-top: 14px; }
   .share-save-btn { width: calc(100% - 32px); margin: 12px 16px 16px; }

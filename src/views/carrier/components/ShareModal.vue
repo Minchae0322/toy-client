@@ -5,8 +5,8 @@
         <button class="modal-close" @click="$emit('update:visible', false)">✕</button>
         <div class="share-preview" :style="{ background: shareBg }">
           <div class="share-svg-wrap">
-            <svg width="100%" height="100%" viewBox="-40 -60 380 500" fill="none" preserveAspectRatio="xMidYMid meet" data-share-svg>
-              <rect x="-40" y="-60" width="380" height="500" :fill="shareBg"/>
+            <svg width="100%" height="100%" viewBox="-40 -60 380 520" fill="none" preserveAspectRatio="xMidYMid meet" data-share-svg>
+              <rect x="-40" y="-60" width="380" height="520" :fill="shareBg"/>
               <text v-if="shareNickname" x="150" y="-30" text-anchor="middle" font-size="22" fill="#fff" :stroke="currentSkin.body.stroke" stroke-width="2.5" stroke-linejoin="round" paint-order="stroke" style="font-family: 'HancomMalangMalang', 'SUIT', sans-serif; font-weight: 700;">{{ shareNickname }}의 캐리어</text>
               <defs>
                 <filter id="bI2" x="-10%" y="-10%" width="120%" height="120%">
@@ -290,14 +290,14 @@ async function downloadCarrierImage() {
   if (!svgEl) return
   const inlined = await inlineExternalImages(svgEl)
   const canvas = document.createElement('canvas')
-  canvas.width = 760; canvas.height = 1000
+  canvas.width = 760; canvas.height = 1040
   const ctx = canvas.getContext('2d')
   const svgData = new XMLSerializer().serializeToString(inlined)
   const img = new Image()
   const filename = props.shareNickname ? `${props.shareNickname}-carrier.png` : 'my-carrier.png'
   img.onload = async () => {
-    ctx.fillStyle = props.shareBg; ctx.fillRect(0, 0, 760, 1000)
-    ctx.drawImage(img, 0, 0, 760, 1000)
+    ctx.fillStyle = props.shareBg; ctx.fillRect(0, 0, 760, 1040)
+    ctx.drawImage(img, 0, 0, 760, 1040)
     const blob = await canvasToBlob(canvas)
     if (!blob) return
     await saveOrShareBlob(blob, filename)
