@@ -1625,29 +1625,116 @@ onBeforeRouteLeave(async () => {
 .share-nickname-row {
   display: flex;
   align-items: center;
-  gap: 8px;
   padding: 0 20px;
   margin-top: 16px;
 }
-.nickname-icon { flex-shrink: 0; }
 .share-nickname-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #9333EA;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #9333EA;
+  background: #fff;
+  outline: none;
+  text-align: center;
+  letter-spacing: 0.3px;
+  transition: box-shadow .2s;
+  box-sizing: border-box;
+  font-family: 'HancomMalangMalang', 'SUIT', sans-serif;
+}
+.share-nickname-input::placeholder {
+  color: #c9aef0;
+  font-family: 'HancomMalangMalang', 'SUIT', sans-serif;
+  font-weight: 500;
+}
+.share-nickname-input:focus {
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.15);
+}
+
+.share-hashtag-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  margin-top: 8px;
+}
+.hashtag-add-btn {
+  flex-shrink: 0;
+  padding: 0 14px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: #9333EA;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'SUIT', sans-serif;
+  transition: background .2s, opacity .2s;
+}
+.hashtag-add-btn:hover:not(:disabled) { background: #7e22ce; }
+.hashtag-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.share-hashtag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 20px;
+  margin-top: 8px;
+}
+.hashtag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 10px;
+  background: #f3edff;
+  color: #5b21b6;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'SUIT', sans-serif;
+}
+.chip-remove {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(91, 33, 182, 0.15);
+  color: #5b21b6;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.chip-remove:hover { background: rgba(91, 33, 182, 0.3); }
+.share-hashtag-input {
   flex: 1;
   padding: 10px 14px;
   border: 1.5px solid #e8e0f5;
   border-radius: 10px;
   font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  background: #faf8ff;
+  font-weight: 600;
+  color: #5b21b6;
+  background: #fff;
   outline: none;
+  text-align: left;
+  letter-spacing: 0.3px;
   transition: border-color .2s, box-shadow .2s;
   box-sizing: border-box;
-  font-family: 'HancomMalangMalang', 'SUIT', sans-serif;
+  font-family: 'SUIT', sans-serif;
 }
-.share-nickname-input::placeholder { color: #bbb; font-family: 'SUIT', sans-serif; font-weight: 400; }
-.share-nickname-input:focus {
+.share-hashtag-input::placeholder {
+  color: #c9aef0;
+  font-weight: 500;
+}
+.share-hashtag-input:focus {
   border-color: #9333EA;
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.12);
 }
 
 .share-save-btn {

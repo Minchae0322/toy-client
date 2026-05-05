@@ -7,7 +7,7 @@
           <div class="share-svg-wrap">
             <svg width="100%" height="100%" viewBox="-40 -60 380 500" fill="none" preserveAspectRatio="xMidYMid meet" data-share-svg>
               <rect x="-40" y="-60" width="380" height="500" :fill="shareBg"/>
-              <text v-if="shareNickname" x="150" y="-30" text-anchor="middle" font-size="22" font-weight="700" fill="#363636" font-family="'HancomMalangMalang','SUIT',sans-serif">{{ shareNickname }}의 캐리어</text>
+              <text v-if="shareNickname" x="150" y="-30" text-anchor="middle" font-size="22" fill="#fff" :stroke="currentSkin.body.stroke" stroke-width="2.5" stroke-linejoin="round" paint-order="stroke" style="font-family: 'HancomMalangMalang', 'SUIT', sans-serif; font-weight: 700;">{{ shareNickname }}의 캐리어</text>
               <defs>
                 <filter id="bI2" x="-10%" y="-10%" width="120%" height="120%">
                   <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="b1"/><feOffset dx="6" dy="6" result="o1"/>
@@ -117,13 +117,22 @@
                 </template>
                 <text v-if="sortedItems.length === 0" x="150" y="210" text-anchor="middle" font-size="14" fill="#aaa">캐리어가 비어있어요</text>
               </template>
+
+              <!-- 해시태그 알약 (좌측부터, 최대 3개) -->
+              <g v-for="(tag, i) in hashtags" :key="'tag-' + i" :transform="`translate(${tagPositions[i].cx}, 422)`">
+                <rect :x="-tagPositions[i].w / 2" y="-12" :width="tagPositions[i].w" height="24" rx="12" :fill="currentSkin.body.stroke"/>
+                <text x="0" y="1" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12" font-weight="700" font-family="'Paperlogy','HancomMalangMalang','SUIT',sans-serif" letter-spacing="0.2">{{ tag }}</text>
+              </g>
+
+              <!-- 우측 사이트 사인 (해시태그와 동일 선상, 두 줄 vertical 중심 맞춤) -->
+              <g transform="translate(320, 422)">
+                <text y="-7" text-anchor="end" dominant-baseline="central" font-size="14" font-weight="700" :fill="currentSkin.body.stroke" font-family="'Paperlogy','HancomMalangMalang','SUIT',sans-serif">요거뜨</text>
+                <text y="9" text-anchor="end" dominant-baseline="central" font-size="10" font-weight="600" :fill="currentSkin.body.stroke" opacity="0.75" font-family="'Paperlogy','SUIT',sans-serif" letter-spacing="0.3">yogurtte.com</text>
+              </g>
             </svg>
           </div>
         </div>
         <div class="share-nickname-row">
-          <svg class="nickname-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-          </svg>
           <input
             :value="shareNickname"
             class="share-nickname-input"
@@ -131,6 +140,28 @@
             maxlength="10"
             @input="$emit('update:shareNickname', $event.target.value)"
           />
+        </div>
+        <div class="share-hashtag-row">
+          <input
+            v-model="hashtagInput"
+            class="share-hashtag-input"
+            :placeholder="tags.length >= 3 ? '최대 3개까지 입력했어요' : '#해시태그 (5자, 엔터로 추가)'"
+            :disabled="tags.length >= 3"
+            maxlength="5"
+            @keydown.enter="onEnterTag"
+          />
+          <button
+            class="hashtag-add-btn"
+            type="button"
+            :disabled="!hashtagInput.trim() || tags.length >= 3"
+            @click="addTag"
+          >추가</button>
+        </div>
+        <div v-if="tags.length" class="share-hashtag-chips">
+          <span v-for="(tag, i) in tags" :key="'chip-' + i" class="hashtag-chip">
+            #{{ tag }}
+            <button class="chip-remove" type="button" aria-label="삭제" @click="removeTag(i)">×</button>
+          </span>
         </div>
         <button class="share-save-btn" @click="downloadCarrierImage">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -144,6 +175,8 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+
 const props = defineProps({
   visible: { type: Boolean, required: true },
   currentSkin: { type: Object, required: true },
@@ -158,6 +191,45 @@ const props = defineProps({
 })
 
 defineEmits(['update:visible', 'update:shareNickname'])
+
+const hashtagInput = ref('')
+const tags = ref([])
+
+function tagWidth(tag) {
+  let w = 18
+  for (const ch of tag) {
+    w += /[가-힣]/.test(ch) ? 13 : 8
+  }
+  return Math.max(34, w)
+}
+function addTag() {
+  const t = hashtagInput.value.trim().replace(/^#+/, '').slice(0, 5)
+  if (!t || tags.value.length >= 3 || tags.value.includes(t)) {
+    hashtagInput.value = ''
+    return
+  }
+  tags.value.push(t)
+  hashtagInput.value = ''
+}
+function onEnterTag(e) {
+  if (e.isComposing || e.keyCode === 229) return
+  e.preventDefault()
+  addTag()
+}
+function removeTag(i) {
+  tags.value.splice(i, 1)
+}
+const hashtags = computed(() => tags.value.map(t => '#' + t))
+const tagPositions = computed(() => {
+  const widths = hashtags.value.map(tagWidth)
+  const gap = 6
+  let cursor = 5
+  return widths.map(w => {
+    const cx = cursor + w / 2
+    cursor += w + gap
+    return { cx, w }
+  })
+})
 
 async function urlToDataUrl(url) {
   if (!url || url.startsWith('data:')) return url
