@@ -25,20 +25,29 @@ const CATEGORY_TYPES = [
 ]
 const selectedType = ref('PRODUCT')
 
-// 백엔드는 type을 객체 { title, description } 또는 문자열로 응답할 수 있음 → 코드만 추출
+// type별 트리 캐시 (탭별 카운트 표시 위해 양쪽 동시 보관)
+const categoriesByType = ref({ PRODUCT: [], FEED: [] })
+const flatCategoriesByType = ref({ PRODUCT: [], FEED: [] })
+
+// 백엔드는 categoryType을 객체 { title, description } 또는 문자열로 응답할 수 있음 → 코드만 추출
+// (구버전 호환을 위해 type 필드도 fallback)
 const getTypeCode = (cat) => {
-  const t = cat?.type
+  const t = cat?.categoryType ?? cat?.type
   if (!t) return 'PRODUCT'
   return typeof t === 'string' ? t : (t.title || t.code || 'PRODUCT')
 }
 
-// type별로 카테고리 필터
-const filteredCategories = computed(() => {
-  return categories.value.filter(c => getTypeCode(c) === selectedType.value)
-})
-const filteredFlatCategories = computed(() => {
-  return flatCategories.value.filter(c => getTypeCode(c) === selectedType.value)
-})
+// 카테고리 트리를 sortOrder ASC로 재귀 정렬 (children도 함께)
+const sortRecursive = (cats) => {
+  if (!Array.isArray(cats)) return []
+  return [...cats]
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .map(c => ({ ...c, children: sortRecursive(c.children) }))
+}
+
+// 화면 표시용 — 현재 선택된 탭의 type
+const filteredCategories = computed(() => categoriesByType.value[selectedType.value] || [])
+const filteredFlatCategories = computed(() => flatCategoriesByType.value[selectedType.value] || [])
 
 const activeCategories = computed(() =>
     filteredFlatCategories.value.filter(c => c.isActive).length
@@ -57,30 +66,49 @@ const showNotification = (message, type = 'success') => {
   }, 3000)
 }
 
+// 단일 type의 카테고리를 서버에서 받아 트리 + 정렬 + flat 형태로 변환
+const fetchCategoriesByType = async (type) => {
+  const response = await categoryService.getCategories({ categoryType: type })
+  if (!(response.success && response.data)) {
+    throw new Error(response.message || `카테고리 목록 조회 실패 (categoryType=${type})`)
+  }
+  const data = Array.isArray(response.data) ? response.data : []
+  const hasParentId = data.some(cat => cat.parentId !== null && cat.parentId !== undefined)
+  // 서버가 이미 children을 채워 보낸 경우 그대로 쓰고, flat 응답이면 트리로 빌드
+  const tree = hasParentId ? categoryService.buildCategoryTree(data) : data
+  const sorted = sortRecursive(tree)
+  const flat = categoryService.flattenCategoryTree(sorted)
+  return { tree: sorted, flat }
+}
+
 const loadCategories = async () => {
   loading.value = true
   error.value = null
 
   try {
-    const response = await categoryService.getCategories()
+    // 양쪽 type을 병렬로 받아와 탭별 카운트 표시까지 한 번에 처리
+    const [productResult, feedResult] = await Promise.all([
+      fetchCategoriesByType('PRODUCT'),
+      fetchCategoriesByType('FEED'),
+    ])
 
-    if (response.success && response.data) {
-      const data = Array.isArray(response.data) ? response.data : []
-      const hasParentId = data.some(cat => cat.parentId !== null && cat.parentId !== undefined)
-
-      if (hasParentId) {
-        categories.value = categoryService.buildCategoryTree(data)
-        flatCategories.value = categoryService.flattenCategoryTree(categories.value)
-      } else {
-        categories.value = data
-        flatCategories.value = data
-      }
-    } else {
-      throw new Error(response.message || '카테고리 목록 조회 실패')
+    categoriesByType.value = {
+      PRODUCT: productResult.tree,
+      FEED: feedResult.tree,
     }
+    flatCategoriesByType.value = {
+      PRODUCT: productResult.flat,
+      FEED: feedResult.flat,
+    }
+
+    // 레거시 ref 동기화 (다른 곳에서 직접 참조할 경우 대비)
+    categories.value = filteredCategories.value
+    flatCategories.value = filteredFlatCategories.value
   } catch (apiError) {
     console.error('❌ 카테고리 로딩 에러:', apiError)
     error.value = apiError.message
+    categoriesByType.value = { PRODUCT: [], FEED: [] }
+    flatCategoriesByType.value = { PRODUCT: [], FEED: [] }
     categories.value = []
     flatCategories.value = []
     showNotification('카테고리 목록을 불러오는데 실패했습니다.', 'error')
@@ -91,14 +119,16 @@ const loadCategories = async () => {
 
 const handleAddCategory = async (categoryData) => {
   try {
-    // 하위 카테고리는 부모의 type을 상속, 최상위는 폼에서 받은 type 사용
-    // (서버 응답의 type은 객체일 수 있어 getTypeCode로 코드만 추출하여 전송)
-    let type = categoryData.type || selectedType.value
+    // 하위 카테고리는 부모의 categoryType 상속, 최상위는 폼에서 받은 type 사용
+    // (서버 응답의 categoryType은 객체일 수 있어 getTypeCode로 코드만 추출하여 전송)
+    let categoryType = categoryData.categoryType || categoryData.type || selectedType.value
     if (categoryData.parentId) {
       const parent = flatCategories.value.find(c => c.categoryId === categoryData.parentId)
-      if (parent) type = getTypeCode(parent)
+      if (parent) categoryType = getTypeCode(parent)
     }
-    const payload = { ...categoryData, type }
+    // type 키는 사용 안 함 — categoryType 으로만 전송
+    const { type: _legacyType, ...rest } = categoryData
+    const payload = { ...rest, categoryType }
     const response = await categoryService.createCategory(payload)
 
     if (response.success) {
@@ -241,7 +271,7 @@ defineExpose({
         >
           <span class="type-emoji">{{ t.emoji }}</span>
           <span class="type-label">{{ t.label }}</span>
-          <span class="type-count">{{ flatCategories.filter(c => getTypeCode(c) === t.code).length }}</span>
+          <span class="type-count">{{ flatCategoriesByType[t.code]?.length || 0 }}</span>
         </button>
       </div>
 

@@ -30,11 +30,11 @@ const formData = ref({
   categoryCode: '',
   keywords: [],
   parentId: props.parentId,
-  type: props.defaultType,
+  categoryType: props.defaultType,
 })
 
 watch(() => props.defaultType, (newVal) => {
-  formData.value.type = newVal
+  formData.value.categoryType = newVal
 })
 
 watch(() => props.parentId, (newVal) => {
@@ -79,7 +79,7 @@ const handleSubmit = async () => {
     categoryCode: categoryCode,
     keywords: keywordsString,
     parentId: formData.value.parentId,
-    type: formData.value.type,
+    categoryType: formData.value.categoryType,
   }
 
   emit('submit', data)
@@ -98,7 +98,7 @@ const resetForm = () => {
     categoryCode: '',
     keywords: [],
     parentId: props.parentId,
-    type: props.defaultType,
+    categoryType: props.defaultType,
   }
   keywordInput.value = ''
 }
@@ -164,8 +164,8 @@ const generateCategoryCode = () => {
                 :key="t.code"
                 type="button"
                 class="type-pill"
-                :class="{ active: formData.type === t.code }"
-                @click="formData.type = t.code"
+                :class="{ active: formData.categoryType === t.code }"
+                @click="formData.categoryType = t.code"
             >
               <span>{{ t.emoji }}</span>
               <span>{{ t.label }}</span>

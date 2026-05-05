@@ -76,7 +76,7 @@ export function useCategoryCache() {
 
     try {
       const condition = type
-        ? { type, isActive: true }
+        ? { categoryType: type, isActive: true }
         : { isActive: true }
       const response = await categoryService.getCategories(condition)
       if (response.success && response.data) {
