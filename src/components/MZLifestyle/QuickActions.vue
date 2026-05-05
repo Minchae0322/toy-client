@@ -11,7 +11,7 @@
       <div class="action-content">
         <div class="action-icon">📸</div>
         <h3 class="action-title">먹거리 인증</h3>
-        <p class="action-description">한입만 후기 남기기</p>
+        <p class="action-description">먹거리 후기 남기기</p>
       </div>
     </button>
   </div>

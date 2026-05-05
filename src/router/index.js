@@ -6,9 +6,6 @@ import { useConfirmDialog } from '@/composables/useConfirmDialog'
 // Views import (기존 구조 유지)
 import LoginView from '@/views/LoginView.vue'
 import OAuthCallback from '@/views/OAuth2Callback.vue'
-import OneMouthView from '@/views/OneMouthView.vue'
-import OneMouthListView from '@/views/OneMouthListView.vue'
-import OneMouthDetailView from '@/views/OneMouthDetailView.vue'
 import CategoryAdminView from '@/views/CategoryAdminView.vue'
 
 // Chat Views import
@@ -99,21 +96,6 @@ const routes = [
     name: 'MyProducts',
     component: MyProductView,
     meta: { requiresAuth: true, title: '내 상품' }
-  },
-
-  // ==================== 한입만 거래 관련 라우트 ====================
-  {
-    path: '/one-mouth',
-    name: 'OneMouthList',
-    component: OneMouthListView,
-    meta: { requiresAuth: false, public: true, title: '한입만 거래', description: '한입만 거래 - 소량 나눔과 거래를 통해 다양한 제품을 경험해보세요.' }
-  },
-  {
-    path: '/one-mouth/:id',
-    name: 'OneMouthDetail',
-    component: OneMouthDetailView,
-    props: true,
-    meta: { requiresAuth: false, public: true, title: '게시글 상세', description: '한입만 거래 게시글 상세 정보를 확인하세요.' }
   },
 
   // ==================== 피드(인증) 관련 라우트 ====================
@@ -287,12 +269,6 @@ const routes = [
     path: '/oauth/callback',
     name: 'OAuthCallback',
     component: OAuthCallback,
-    meta: { requiresAuth: false, public: true }
-  },
-  {
-    path: '/sell',
-    name: 'Sell',
-    component: OneMouthView,
     meta: { requiresAuth: false, public: true }
   },
   {
@@ -650,23 +626,6 @@ export const productNavigation = {
   toRankingByCategory(categoryId) { return this.toRanking({ categoryId }) }
 }
 
-// ==================== 한입만 거래 네비게이션 헬퍼 ====================
-export const salePostNavigation = {
-  toList(query = {}) { return router.push({ name: 'OneMouthList', query }) },
-  toDetail(postId) {
-    if (!postId) return this.toList()
-    return router.push({ name: 'OneMouthDetail', params: { id: postId } })
-  },
-  isOneMouthPage() {
-    const route = router.currentRoute.value
-    return route.name?.startsWith('OneMouth') || route.name?.startsWith('SalePost')
-  },
-  getPostUrl(postId) {
-    const route = router.resolve({ name: 'OneMouthDetail', params: { id: postId } })
-    return window.location.origin + route.href
-  }
-}
-
 // ==================== 피드(인증) 네비게이션 헬퍼 ====================
 export const feedNavigation = {
   toFeedHome(query = {}) { return router.push({ name: 'FeedHome', query }) },
@@ -750,7 +709,6 @@ export const navigation = {
   chat: chatNavigation,
   product: productNavigation,
   carrier: carrierNavigation,
-  salePost: salePostNavigation,
   feed: feedNavigation,
   battle: battleNavigation,
   user: userNavigation,

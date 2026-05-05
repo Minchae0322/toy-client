@@ -3,7 +3,7 @@
     <div class="section-header">
       <h2 class="section-title">
         <Coffee class="section-title-icon" />
-        한입만! 유행 먹거리
+        요즘 뜨는 먹거리
       </h2>
       <button class="view-more-button">더보기</button>
     </div>
@@ -56,7 +56,7 @@
             <span class="food-price">{{ food.price }}</span>
           </div>
           <button class="action-button">
-            나도 한입만! 👋
+            줍줍하기 👋
           </button>
         </div>
       </div>

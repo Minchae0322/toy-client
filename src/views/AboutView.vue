@@ -16,7 +16,6 @@
           <li><strong>제품 리뷰</strong> – 솔직한 사용자 리뷰와 별점 시스템</li>
           <li><strong>인증 피드</strong> – 제품 사용 인증과 경험 공유</li>
           <li><strong>요거픽 배틀</strong> – 제품 대결 투표로 최고의 제품 선정</li>
-          <li><strong>한입만 거래</strong> – 소량 나눔과 거래를 통한 제품 체험</li>
           <li><strong>캐리어</strong> – 관심 제품을 모아 나만의 컬렉션 구성</li>
         </ul>
       </section>

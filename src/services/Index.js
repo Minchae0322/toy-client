@@ -7,7 +7,6 @@ export { BaseApiService, ApiError } from './BaseApiService.js'
 // ==================== 서비스 클래스들 ====================
 export { default as authService, useAuth } from './AuthService.js'
 export { default as chatService, useChat } from './ChatService.js'
-export { default as oneMouthService, useOneMouth } from './SalePostService.js'
 
 // ==================== 통합 API 매니저 ====================
 
@@ -65,18 +64,15 @@ class ApiServiceManager {
       // 동적 import로 서비스들 불러오기
       const [
         { default: AuthService },
-        { default: ChatService },
-        { default: OneMouthService }
+        { default: ChatService }
       ] = await Promise.all([
         import('./AuthService.js'),
-        import('./ChatService.js'),
-        import('./SalePostService.js')
+        import('./ChatService.js')
       ])
 
       // 서비스 인스턴스들 등록
       this.registerService('auth', new AuthService())
       this.registerService('chat', new ChatService())
-      this.registerService('oneMouth', new OneMouthService())
 
       this.isInitialized = true
       console.log('✅ [API MANAGER] 모든 서비스 초기화 완료')
@@ -291,24 +287,20 @@ export function debugApiServices() {
 // 기존 방식으로 import한 사용자들을 위한 호환성 유지
 import authService from './AuthService.js'
 import chatService from './ChatService.js'
-import oneMouthService from './SalePostService.js'
 
 // 기존 axios.js 스타일 export (하위 호환성)
 export {
   authService as authApi,
-  chatService as chatApi,
-  oneMouthService as contentApi
+  chatService as chatApi
 }
 
 // Vue Composables 재내보내기
-export { useAuth, useChat, useOneMouth }
+export { useAuth, useChat }
 
 // 통합된 서비스 객체
 export const services = {
   auth: authService,
-  chat: chatService,
-  oneMouth: oneMouthService,
-  content: oneMouthService // 별칭
+  chat: chatService
 }
 
 // ==================== 기본 내보내기 ====================
@@ -317,7 +309,6 @@ export default {
   // 서비스들
   authService,
   chatService,
-  oneMouthService,
 
   // 매니저
   apiManager,
@@ -330,6 +321,5 @@ export default {
 
   // Composables
   useAuth,
-  useChat,
-  useOneMouth
+  useChat
 }

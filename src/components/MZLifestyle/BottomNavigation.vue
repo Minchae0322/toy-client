@@ -23,7 +23,6 @@ const navItems = [
   { icon: '🏠', label: '홈', route: '/' },
   { icon: '😂', label: '밈/짤', route: '/memes' },
   { icon: '✨', label: '만들기', route: '/create' },
-  { icon: '🍔', label: '먹거리', route: '/one-mouth/list' },
   { icon: '👤', label: '마이', route: '/profile' }
 ];
 

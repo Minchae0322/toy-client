@@ -2,23 +2,9 @@
 import * as authUtils from '@/utils/auth.js'
 
 /**
- * 인증 가드 - 로그인이 필요한 페이지 보호 (OneMouthDetail 특별 처리 포함)
+ * 인증 가드 - 로그인이 필요한 페이지 보호
  */
 export const authGuard = async (to, from, next) => {
-    // OneMouthDetail 페이지는 항상 허용 (최우선 처리)
-    if (to.name === 'OneMouthDetail') {
-        console.log('🔍 [AuthGuard] OneMouthDetail 페이지 - 공개 접근 허용:', to.params.id)
-        next()
-        return
-    }
-
-    // OneMouthList 페이지도 공개 허용
-    if (to.name === 'OneMouthList') {
-        console.log('🔍 [AuthGuard] OneMouthList 페이지 - 공개 접근 허용')
-        next()
-        return
-    }
-
     // requiresAuth가 false인 페이지는 인증 체크 하지 않음
     if (to.meta.requiresAuth === false) {
         console.log('🌍 [AuthGuard] 공개 페이지 접근:', to.path)
@@ -88,34 +74,6 @@ export const authGuard = async (to, from, next) => {
 }
 
 /**
- * OneMouth 전용 가드 (공개 접근 허용)
- */
-export const oneMouthGuard = async (to, from, next) => {
-    console.log('🍽️ [OneMouthGuard] OneMouth 페이지 접근:', to.path)
-
-    // OneMouth 관련 페이지는 모두 공개 접근 허용
-    if (to.name === 'OneMouthList' || to.name === 'OneMouthDetail') {
-        console.log('✅ [OneMouthGuard] OneMouth 페이지 공개 접근 허용')
-
-        // OneMouthDetail의 경우 ID 유효성 검사만 수행
-        if (to.name === 'OneMouthDetail') {
-            if (!to.params.id || to.params.id === 'undefined' || to.params.id === 'null') {
-                console.error('❌ [OneMouthGuard] 잘못된 상품 ID:', to.params.id)
-                next({ name: 'OneMouthList' })
-                return
-            }
-            console.log('✅ [OneMouthGuard] 상품 ID 유효:', to.params.id)
-        }
-
-        next()
-        return
-    }
-
-    // OneMouth 페이지가 아닌 경우 기본 인증 가드로 처리
-    authGuard(to, from, next)
-}
-
-/**
  * 관리자 전용 가드
  */
 export const adminGuard = async (to, from, next) => {
@@ -168,4 +126,4 @@ export const guestGuard = async (to, from, next) => {
     }
 }
 
-export default { authGuard, oneMouthGuard, adminGuard, guestGuard }
+export default { authGuard, adminGuard, guestGuard }
