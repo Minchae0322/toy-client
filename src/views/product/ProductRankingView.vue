@@ -747,8 +747,8 @@ async function fetchRanking(reset = false) {
 
 async function fetchCategories() {
   try {
-    await loadAllCategories()
-    categories.value = cachedCategories.value
+    const data = await loadAllCategories('PRODUCT')
+    categories.value = data
   } catch (e) {
     console.error('카테고리 로드 실패:', e)
   }

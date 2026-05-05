@@ -85,7 +85,7 @@
                 <div :class="['locked-wrap', { locked: hasParticipants }]">
                   <CategoryChipSelector
                     v-model="form.subCategoryId"
-                    content-type="BATTLE"
+                    content-type="PRODUCT"
                   />
                 </div>
               </section>

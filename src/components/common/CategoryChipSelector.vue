@@ -67,7 +67,7 @@ const props = defineProps({
   contentType: {
     type: String,
     required: true,
-    validator: (value) => ['FEED', 'BATTLE', 'PRODUCT'].includes(value)
+    validator: (value) => ['FEED', 'PRODUCT'].includes(value)
   },
   modelValue: {
     type: [Number, String, null],
@@ -94,10 +94,10 @@ const subCategories = computed(() => {
   return selectedParentCategory.value.children || []
 })
 
-// 인기 카테고리 로드
+// 인기 카테고리 로드 — contentType(FEED/PRODUCT)에 맞는 카테고리만
 const loadCategories = async () => {
   try {
-    await loadAllCategories()
+    await loadAllCategories(props.contentType)
     const popular = await loadPopularCategories(props.contentType, props.maxPopular)
     popularCategories.value = popular
 

@@ -29,7 +29,7 @@
           <CommonCategoryFilter
               :categories="categories"
               :initial-selected="selectedCategoryId"
-              content-type="BATTLE"
+              content-type="PRODUCT"
               @category-change="handleCategoryChange"
           />
 
@@ -234,8 +234,9 @@ const formatCount = (num) => {
 // API Methods
 const loadCategories = async () => {
   try {
-    await loadAllCategories()
-    categories.value = cachedCategories.value
+    // 배틀(요거픽) 카테고리는 제품 카테고리 사용 — type=PRODUCT
+    const data = await loadAllCategories('PRODUCT')
+    categories.value = data
   } catch (error) {
     console.error('카테고리 로드 실패:', error)
   }

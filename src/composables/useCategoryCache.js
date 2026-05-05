@@ -3,15 +3,23 @@ import { ref } from 'vue'
 import { categoryService } from '@/services/CategoryService.js'
 
 // 전역 캐시 (싱글톤)
+//
+// allCategories: 마지막 호출이 type 미지정(전체)일 때 채워지는 캐시. 레거시 호환.
+// categoriesByType: type별 분리 캐시. ALL = type 미지정으로 받은 전체.
 const allCategories = ref([])
+const categoriesByType = ref({
+  ALL: [],
+  FEED: [],
+  PRODUCT: []
+})
 const popularCategories = ref({
   FEED: [],
-  BATTLE: [],
   PRODUCT: []
 })
 const isLoaded = ref(false)
 const isLoading = ref(false)
 const lastFetchTime = ref(null)
+const lastFetchByType = ref({}) // { ALL: ts, FEED: ts, ... }
 
 // 캐시 유효 시간 (30분)
 const CACHE_TTL = 30 * 60 * 1000
@@ -19,25 +27,46 @@ const CACHE_TTL = 30 * 60 * 1000
 export function useCategoryCache() {
 
   // 캐시가 유효한지 확인
-  const isCacheValid = () => {
-    if (!isLoaded.value || !lastFetchTime.value) return false
-    return Date.now() - lastFetchTime.value < CACHE_TTL
+  const isCacheValid = (key = 'ALL') => {
+    const ts = lastFetchByType.value[key]
+    if (!ts) return false
+    return Date.now() - ts < CACHE_TTL
   }
 
-  // 전체 카테고리 로드
-  const loadAllCategories = async (force = false) => {
-    // 이미 유효한 캐시가 있으면 스킵
-    if (!force && isCacheValid() && allCategories.value.length > 0) {
-      return allCategories.value
+  /**
+   * 카테고리 로드.
+   *
+   * 호출 패턴:
+   *   loadAllCategories()                 // 레거시 — 전체(type 무관)
+   *   loadAllCategories(true)             // 레거시 — 전체 + force
+   *   loadAllCategories('FEED')           // type='FEED'만
+   *   loadAllCategories('FEED', true)     // type='FEED' + force
+   */
+  const loadAllCategories = async (typeOrForce = null, force = false) => {
+    let type = null
+    let forceFetch = false
+    if (typeof typeOrForce === 'boolean') {
+      forceFetch = typeOrForce
+    } else if (typeof typeOrForce === 'string') {
+      type = typeOrForce
+      forceFetch = force
     }
 
-    // 이미 로딩 중이면 대기
+    const key = type || 'ALL'
+
+    // 캐시 유효 + 데이터 있으면 스킵
+    if (!forceFetch && isCacheValid(key) && categoriesByType.value[key]?.length > 0) {
+      if (!type) allCategories.value = categoriesByType.value.ALL
+      return categoriesByType.value[key]
+    }
+
+    // 이미 같은 키로 로딩 중이면 대기
     if (isLoading.value) {
       return new Promise((resolve) => {
         const checkLoading = setInterval(() => {
           if (!isLoading.value) {
             clearInterval(checkLoading)
-            resolve(allCategories.value)
+            resolve(categoriesByType.value[key])
           }
         }, 100)
       })
@@ -46,14 +75,24 @@ export function useCategoryCache() {
     isLoading.value = true
 
     try {
-      const response = await categoryService.getCategories({ isActive: true })
+      const condition = type
+        ? { type, isActive: true }
+        : { isActive: true }
+      const response = await categoryService.getCategories(condition)
       if (response.success && response.data) {
-        allCategories.value = response.data.map(cat => ({
+        const normalized = response.data.map(cat => ({
           ...cat,
           children: cat.children || []
         }))
-        lastFetchTime.value = Date.now()
-        isLoaded.value = true
+        categoriesByType.value[key] = normalized
+        lastFetchByType.value[key] = Date.now()
+
+        // 레거시 호환: type 미지정 호출 시 allCategories도 갱신
+        if (!type) {
+          allCategories.value = normalized
+          lastFetchTime.value = Date.now()
+          isLoaded.value = true
+        }
       }
     } catch (error) {
       console.error('[CategoryCache] 카테고리 로드 실패:', error)
@@ -61,7 +100,7 @@ export function useCategoryCache() {
       isLoading.value = false
     }
 
-    return allCategories.value
+    return categoriesByType.value[key]
   }
 
   // 인기 카테고리 로드 (타입별)
@@ -114,24 +153,37 @@ export function useCategoryCache() {
   // 캐시 초기화 (필요시 강제 새로고침)
   const clearCache = () => {
     allCategories.value = []
-    popularCategories.value = { FEED: [], BATTLE: [], PRODUCT: [] }
+    categoriesByType.value = { ALL: [], FEED: [], PRODUCT: [] }
+    popularCategories.value = { FEED: [], PRODUCT: [] }
     isLoaded.value = false
     lastFetchTime.value = null
+    lastFetchByType.value = {}
   }
 
-  // 카테고리 ID로 카테고리 찾기 (string/number 타입 모두 허용)
+  // 카테고리 ID로 카테고리 찾기 — 모든 type 캐시(+ 레거시 allCategories)에서 탐색
   const findCategoryById = (categoryId) => {
     if (categoryId === null || categoryId === undefined) return null
     const targetId = Number(categoryId)
     if (Number.isNaN(targetId)) return null
-    for (const parent of allCategories.value) {
-      if (Number(parent.categoryId) === targetId) {
-        return { category: parent, parent: null }
-      }
-      if (parent.children) {
-        const sub = parent.children.find(c => Number(c.categoryId) === targetId)
-        if (sub) {
-          return { category: sub, parent }
+
+    const sources = [
+      allCategories.value,
+      categoriesByType.value.ALL,
+      categoriesByType.value.FEED,
+      categoriesByType.value.PRODUCT,
+    ]
+
+    for (const list of sources) {
+      if (!list?.length) continue
+      for (const parent of list) {
+        if (Number(parent.categoryId) === targetId) {
+          return { category: parent, parent: null }
+        }
+        if (parent.children) {
+          const sub = parent.children.find(c => Number(c.categoryId) === targetId)
+          if (sub) {
+            return { category: sub, parent }
+          }
         }
       }
     }
@@ -141,6 +193,7 @@ export function useCategoryCache() {
   return {
     // 상태
     allCategories,
+    categoriesByType,
     popularCategories,
     isLoaded,
     isLoading,

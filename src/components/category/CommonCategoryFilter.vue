@@ -102,7 +102,7 @@ const props = defineProps({
   },
   contentType: {
     type: String,
-    default: 'PRODUCT' // BATTLE, FEED, PRODUCT
+    default: 'PRODUCT' // FEED, PRODUCT
   },
   showAllButton: {
     type: Boolean,

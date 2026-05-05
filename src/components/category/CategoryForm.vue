@@ -2,6 +2,11 @@
 import { ref, computed, watch } from 'vue'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
+const TYPE_OPTIONS = [
+  { code: 'PRODUCT', label: '제품', emoji: '🛍️' },
+  { code: 'FEED', label: '피드', emoji: '📷' },
+]
+
 const props = defineProps({
   parentId: {
     type: Number,
@@ -10,6 +15,10 @@ const props = defineProps({
   categories: {
     type: Array,
     default: () => []
+  },
+  defaultType: {
+    type: String,
+    default: 'PRODUCT' // PRODUCT | FEED
   }
 })
 
@@ -20,7 +29,12 @@ const formData = ref({
   description: '',
   categoryCode: '',
   keywords: [],
-  parentId: props.parentId
+  parentId: props.parentId,
+  type: props.defaultType,
+})
+
+watch(() => props.defaultType, (newVal) => {
+  formData.value.type = newVal
 })
 
 watch(() => props.parentId, (newVal) => {
@@ -64,7 +78,8 @@ const handleSubmit = async () => {
     description: formData.value.description.trim() || null,
     categoryCode: categoryCode,
     keywords: keywordsString,
-    parentId: formData.value.parentId
+    parentId: formData.value.parentId,
+    type: formData.value.type,
   }
 
   emit('submit', data)
@@ -82,7 +97,8 @@ const resetForm = () => {
     description: '',
     categoryCode: '',
     keywords: [],
-    parentId: props.parentId
+    parentId: props.parentId,
+    type: props.defaultType,
   }
   keywordInput.value = ''
 }
@@ -139,6 +155,25 @@ const generateCategoryCode = () => {
     <!-- 바디 -->
     <div class="form-body">
       <div class="form-grid">
+        <!-- 카테고리 타입 (최상위 카테고리만 — 하위는 부모 타입 상속) -->
+        <div v-if="!parentId" class="form-group full">
+          <label class="form-label">카테고리 타입 <span class="required">*</span></label>
+          <div class="type-pills">
+            <button
+                v-for="t in TYPE_OPTIONS"
+                :key="t.code"
+                type="button"
+                class="type-pill"
+                :class="{ active: formData.type === t.code }"
+                @click="formData.type = t.code"
+            >
+              <span>{{ t.emoji }}</span>
+              <span>{{ t.label }}</span>
+            </button>
+          </div>
+          <span class="form-hint">제품/피드/요거픽 중 어느 영역에서 쓸 카테고리인지 선택</span>
+        </div>
+
         <!-- 부모 카테고리 선택 -->
         <div v-if="!parentId" class="form-group full">
           <label class="form-label">부모 카테고리</label>
@@ -421,6 +456,36 @@ const generateCategoryCode = () => {
 .form-hint {
   font-size: 12px;
   color: #64748b;
+}
+
+/* 타입 pill 선택 */
+.type-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.type-pill:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+.type-pill.active {
+  background: #faf5ff;
+  border-color: #9333ea;
+  color: #7e22ce;
 }
 
 /* 부모 정보 */

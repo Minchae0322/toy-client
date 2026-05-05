@@ -129,8 +129,9 @@ watch(viewMode, (newMode) => {
 // Methods
 const loadCategories = async () => {
   try {
-    await loadAllCategories();
-    rootCategories.value = cachedCategories.value;
+    // 피드 페이지는 type=FEED 카테고리만 로드
+    const data = await loadAllCategories('FEED');
+    rootCategories.value = data;
   } catch (error) {
     console.error('❌ 카테고리 로드 실패:', error);
   }
