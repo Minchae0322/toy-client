@@ -179,10 +179,12 @@ class CategoryService extends BaseApiService {
    * @param {string} params.sort - 정렬 기준 (기본값: contentCount,desc)
    */
   async getPopularCategories(params = {}) {
-    const { type, startDate, endDate, page = 0, size = 20, sort = 'contentCount,desc' } = params
+    // 호출부 호환: type / categoryType 둘 다 받음
+    const { type, categoryType, startDate, endDate, page = 0, size = 20, sort = 'contentCount,desc' } = params
+    const ctype = categoryType || type
 
-    if (!type) {
-      throw new Error('콘텐츠 타입(type)은 필수입니다.')
+    if (!ctype) {
+      throw new Error('콘텐츠 타입(categoryType)은 필수입니다.')
     }
 
     if (!startDate || !endDate) {
@@ -190,7 +192,7 @@ class CategoryService extends BaseApiService {
     }
 
     const queryParams = {
-      type,
+      categoryType: ctype,
       startDate,
       endDate,
       page,

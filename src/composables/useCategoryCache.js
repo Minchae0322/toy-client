@@ -110,8 +110,8 @@ export function useCategoryCache() {
       return popularCategories.value[type].slice(0, size)
     }
 
-    // 전체 카테고리 먼저 로드 (fallback용)
-    await loadAllCategories()
+    // 해당 type의 카테고리 먼저 로드 (fallback용 — popular가 부족할 때 채우기)
+    await loadAllCategories(type)
 
     let result = []
 

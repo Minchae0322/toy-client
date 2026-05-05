@@ -45,6 +45,19 @@ const sortRecursive = (cats) => {
       .map(c => ({ ...c, children: sortRecursive(c.children) }))
 }
 
+// 트리를 평탄화하여 단일 배열로 (depth 정보 포함)
+const flattenTree = (cats, depth = 0) => {
+  if (!Array.isArray(cats)) return []
+  const out = []
+  for (const c of cats) {
+    out.push({ ...c, depth })
+    if (Array.isArray(c.children) && c.children.length > 0) {
+      out.push(...flattenTree(c.children, depth + 1))
+    }
+  }
+  return out
+}
+
 // 화면 표시용 — 현재 선택된 탭의 type
 const filteredCategories = computed(() => categoriesByType.value[selectedType.value] || [])
 const filteredFlatCategories = computed(() => flatCategoriesByType.value[selectedType.value] || [])
@@ -77,7 +90,7 @@ const fetchCategoriesByType = async (type) => {
   // 서버가 이미 children을 채워 보낸 경우 그대로 쓰고, flat 응답이면 트리로 빌드
   const tree = hasParentId ? categoryService.buildCategoryTree(data) : data
   const sorted = sortRecursive(tree)
-  const flat = categoryService.flattenCategoryTree(sorted)
+  const flat = flattenTree(sorted)
   return { tree: sorted, flat }
 }
 
