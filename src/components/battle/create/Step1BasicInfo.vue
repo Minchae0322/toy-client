@@ -53,7 +53,7 @@
       <div class="card-body">
         <CategoryChipSelector
           v-model="battleForm.subCategoryId"
-          content-type="PRODUCT"
+          content-type="BATTLE"
           @select="handleCategorySelect"
         />
       </div>

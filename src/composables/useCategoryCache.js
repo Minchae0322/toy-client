@@ -14,6 +14,7 @@ const categoriesByType = ref({
 })
 const popularCategories = ref({
   FEED: [],
+  BATTLE: [],
   PRODUCT: []
 })
 const isLoaded = ref(false)
@@ -103,15 +104,32 @@ export function useCategoryCache() {
     return categoriesByType.value[key]
   }
 
-  // 인기 카테고리 로드 (타입별)
-  const loadPopularCategories = async (type, size = 8, force = false) => {
-    // 이미 유효한 캐시가 있고 충분한 개수면 스킵
-    if (!force && isCacheValid() && popularCategories.value[type]?.length >= size) {
-      return popularCategories.value[type].slice(0, size)
+  // contentType (FEED | BATTLE | PRODUCT) → 카테고리의 categoryType 매핑
+  // BATTLE도 카테고리는 PRODUCT 사용 (배틀은 제품 카테고리 위에 동작)
+  const resolveCategoryType = (contentType) => contentType === 'FEED' ? 'FEED' : 'PRODUCT'
+
+  // 인기 카테고리 로드
+  // contentType: FEED | BATTLE | PRODUCT — popular 집계 도메인 + categoryType 매핑 기준
+  const loadPopularCategories = async (contentType, size = 8, force = false) => {
+    // popularCategories 캐시는 contentType 단위 (FEED/BATTLE/PRODUCT)
+    if (!popularCategories.value[contentType]) popularCategories.value[contentType] = []
+
+    if (!force && isCacheValid() && popularCategories.value[contentType]?.length >= size) {
+      return popularCategories.value[contentType].slice(0, size)
     }
 
-    // 해당 type의 카테고리 먼저 로드 (fallback용 — popular가 부족할 때 채우기)
-    await loadAllCategories(type)
+    // FEED는 부모 카테고리 수가 적어 popular 별도 집계 의미 없음
+    // → /categories/popular API 호출 생략하고 일반 목록 그대로 사용
+    if (contentType === 'FEED') {
+      await loadAllCategories('FEED')
+      const list = (categoriesByType.value.FEED || []).slice(0, size)
+      popularCategories.value.FEED = list
+      return list
+    }
+
+    // fallback용 카테고리는 categoryType 기준으로 로드 (BATTLE → PRODUCT)
+    const categoryType = resolveCategoryType(contentType)
+    await loadAllCategories(categoryType)
 
     let result = []
 
@@ -123,7 +141,8 @@ export function useCategoryCache() {
       const formatDate = (date) => date.toISOString().split('T')[0]
 
       const response = await categoryService.getPopularCategories({
-        type,
+        categoryType,
+        type: contentType,
         startDate: formatDate(startDate),
         endDate: formatDate(endDate),
         page: 0,
@@ -138,15 +157,16 @@ export function useCategoryCache() {
       console.warn('[CategoryCache] 인기 카테고리 로드 실패:', error)
     }
 
-    // 인기 카테고리가 size보다 적으면 전체 카테고리에서 채움 (1뎁스 with children)
+    // 인기 카테고리가 size보다 적으면 해당 categoryType의 카테고리에서 채움
     if (result.length < size) {
       const existingIds = new Set(result.map(c => c.categoryId))
-      const remaining = allCategories.value.filter(c => !existingIds.has(c.categoryId))
+      const fallback = categoriesByType.value[categoryType] || []
+      const remaining = fallback.filter(c => !existingIds.has(c.categoryId))
       const needed = size - result.length
       result = [...result, ...remaining.slice(0, needed)]
     }
 
-    popularCategories.value[type] = result
+    popularCategories.value[contentType] = result
     return result
   }
 
@@ -154,7 +174,7 @@ export function useCategoryCache() {
   const clearCache = () => {
     allCategories.value = []
     categoriesByType.value = { ALL: [], FEED: [], PRODUCT: [] }
-    popularCategories.value = { FEED: [], PRODUCT: [] }
+    popularCategories.value = { FEED: [], BATTLE: [], PRODUCT: [] }
     isLoaded.value = false
     lastFetchTime.value = null
     lastFetchByType.value = {}

@@ -29,7 +29,7 @@
           <CommonCategoryFilter
               :categories="categories"
               :initial-selected="selectedCategoryId"
-              content-type="PRODUCT"
+              content-type="BATTLE"
               @category-change="handleCategoryChange"
           />
 

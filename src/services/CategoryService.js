@@ -179,20 +179,24 @@ class CategoryService extends BaseApiService {
    * @param {string} params.sort - 정렬 기준 (기본값: contentCount,desc)
    */
   async getPopularCategories(params = {}) {
-    // 호출부 호환: type / categoryType 둘 다 받음
+    // categoryType = 카테고리 자체의 도메인 (PRODUCT | FEED)
+    // type        = popular 집계 도메인 (PRODUCT | FEED | BATTLE)
+    //   ex) 요거픽(BATTLE)은 카테고리는 PRODUCT지만 인기도는 BATTLE 집계 사용
     const { type, categoryType, startDate, endDate, page = 0, size = 20, sort = 'contentCount,desc' } = params
-    const ctype = categoryType || type
 
-    if (!ctype) {
-      throw new Error('콘텐츠 타입(categoryType)은 필수입니다.')
+    if (!categoryType) {
+      throw new Error('categoryType은 필수입니다.')
     }
-
+    if (!type) {
+      throw new Error('type(popular 집계 도메인)은 필수입니다.')
+    }
     if (!startDate || !endDate) {
       throw new Error('조회 기간(startDate, endDate)은 필수입니다.')
     }
 
     const queryParams = {
-      categoryType: ctype,
+      categoryType,
+      type,
       startDate,
       endDate,
       page,

@@ -5,9 +5,10 @@
         <button
             v-if="showAllButton"
             @click="handleAllClick"
-            :class="['category-tab', { active: selectedCategory === null }]"
+            :class="['category-tab', 'tab-all', { active: selectedCategory === null }]"
         >
-          전체
+          <span class="tab-emoji">✨</span>
+          <span class="tab-name">전체</span>
         </button>
 
         <!-- 인기 카테고리 -->
@@ -17,7 +18,8 @@
             @click="handleCategoryClick(category)"
             :class="['category-tab', { active: selectedCategory?.categoryId === category.categoryId }]"
         >
-          {{ category.categoryName }}
+          <span class="tab-emoji">{{ getCategoryEmoji(category.categoryName, { fallbackType: contentType }) }}</span>
+          <span class="tab-name">{{ category.categoryName }}</span>
         </button>
 
         <!-- 로딩 중 -->
@@ -92,6 +94,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useCategoryCache } from '@/composables/useCategoryCache.js';
+import { getCategoryEmoji } from '@/utils/categoryIcon.js';
 import CategorySelectModal from '@/components/common/CategorySelectModal.vue';
 const { loadPopularCategories: loadPopularFromCache } = useCategoryCache();
 
@@ -102,7 +105,7 @@ const props = defineProps({
   },
   contentType: {
     type: String,
-    default: 'PRODUCT' // FEED, PRODUCT
+    default: 'PRODUCT' // FEED, BATTLE, PRODUCT
   },
   showAllButton: {
     type: Boolean,
@@ -410,25 +413,51 @@ watch(() => props.contentType, () => {
 }
 
 .category-tab {
-  padding: 8px 14px;
-  border-radius: 6px;
-  background: #f2f2f7;
-  color: #3a3a3c;
-  border: none;
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px 7px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4b5563;
+  border: 1.5px solid #e5e7eb;
+  font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.01em;
+}
+
+.category-tab .tab-emoji {
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: saturate(1.1);
+}
+
+.category-tab .tab-name {
+  line-height: 1;
 }
 
 .category-tab:hover {
-  background: #e5e5ea;
+  background: #fafafa;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
 }
 
 .category-tab.active {
-  background: #9933EA;
+  background: #9333EA;
   color: #ffffff;
+  border-color: #9333EA;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25);
+  transform: translateY(-1px);
+}
+
+.category-tab.active .tab-emoji {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
 }
 
 .category-tab.more-btn {
