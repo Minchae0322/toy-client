@@ -28,7 +28,7 @@
           <input
             type="text"
             class="product-search-input"
-            placeholder="제품명을 검색하세요 (예: 나이키 조던 4)"
+            placeholder="이름을 적거나 검색해보세요 (예: 두쫀쿠)"
             v-model="productNameCustom"
             @input="handleProductNameInput"
             maxlength="40"
@@ -114,11 +114,11 @@
         </div>
 
         <div class="register-field">
-          <label class="register-field-label">브랜드</label>
+          <label class="register-field-label">구매처 / 브랜드</label>
           <input
             type="text"
             class="form-input brand-input"
-            placeholder="브랜드명 (예: 나이키)"
+            placeholder="어디서 샀는지 또는 브랜드명을 적어주세요 (예: 편의점, 무신사, 나이키)"
             v-model="productBrandCustom"
             maxlength="40"
             :disabled="disabled"
@@ -126,7 +126,7 @@
         </div>
 
         <div class="register-field">
-          <label class="register-field-label">제품 정가 <span class="register-field-hint">(선택, 원 단위)</span></label>
+          <label class="register-field-label">정가 <span class="register-field-hint">(선택, 원 단위)</span></label>
           <input
             type="text"
             inputmode="numeric"
@@ -140,7 +140,7 @@
         </div>
 
         <div class="register-field" v-if="allowCustomProductImage">
-          <label class="register-field-label">제품 대표 이미지</label>
+          <label class="register-field-label">대표 이미지</label>
           <div class="product-image-options">
             <button
               type="button"
@@ -222,7 +222,7 @@
           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          제품 대표 이미지는 피드의 첫 번째 사진이 자동으로 사용됩니다
+          대표 이미지는 피드의 첫 번째 사진이 자동으로 들어가요
         </p>
       </div>
 
@@ -234,7 +234,7 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        제품명을 자유롭게 적어주세요. 등록된 제품이 있으면 추천해드릴게요
+        이름을 자유롭게 적어주세요. 이미 등록되어 있다면 추천해드릴게요
       </p>
     </div>
   </div>
@@ -262,7 +262,7 @@ const props = defineProps({
   disabled: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['error'])
+const emit = defineEmits(['error', 'price-change'])
 
 // 내부 상태
 const selectedProduct = ref(props.initialProduct || null)
@@ -272,6 +272,9 @@ const hasSearchedProducts = ref(false)
 const registerAsProduct = ref(false)
 const productBrandCustom = ref('')
 const productPriceCustom = ref('')
+
+// 정가 변경 시 부모에 전달 (피드 구매가 자동 입력용)
+watch(productPriceCustom, (v) => emit('price-change', v))
 const productImageMode = ref('feed') // 'feed' | 'custom'
 const customProductImage = ref(null) // { preview, attachmentInfo, uploading, uploadFailed, file }
 

@@ -50,7 +50,7 @@
                     <p v-if="displayEmail" class="email">{{ displayEmail }}</p>
                   </div>
                   <button v-if="!isEditing" class="btn-edit" @click="startEditing">
-                    편집
+                    프로필 편집
                   </button>
                 </div>
 

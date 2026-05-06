@@ -178,6 +178,7 @@ class UserService extends BaseApiService {
       description: profile.description || '',
       followerCount: profile.followerCount || 0,
       followingCount: profile.followingCount || 0,
+      feedCount: profile.feedCount ?? profile.postCount ?? profile.contentCount ?? 0,
       isFollowing: profile.isFollowing || false,
       profilePicture: this.normalizeAttachmentFile(profile.profilePicture),
       createdAt: profile.createdAt,

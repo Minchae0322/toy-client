@@ -2,10 +2,11 @@
   <nav class="bottom-nav">
     <!-- 플로팅 등록 버튼 (알약 위 우측) -->
     <div v-if="!isMoreMenuOpen && !isOnCarrier" class="fab-wrap">
-      <button class="fab" :class="{ open: isCreateMenuOpen }" @click="toggleCreateMenu" aria-label="등록">
+      <button class="fab" :class="{ open: isCreateMenuOpen, collapsed: isFabCollapsed }" @click="toggleCreateMenu" aria-label="글쓰기">
         <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
         </svg>
+        <span class="fab-label">글쓰기</span>
       </button>
     </div>
 
@@ -74,7 +75,7 @@
             </svg>
           </span>
           <div class="sheet-content">
-            <span class="sheet-text">인증 올리기</span>
+            <span class="sheet-text">피드 올리기</span>
             <span class="sheet-desc">자랑하고 싶은 아이템이 있나요?</span>
           </div>
         </button>
@@ -130,17 +131,6 @@
             <span class="sheet-desc">다른 사용자와 대화해요</span>
           </div>
         </button>
-        <button class="sheet-item" @click="handleMoreNav('mypage')">
-          <span class="sheet-icon mypage">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
-          </span>
-          <div class="sheet-content">
-            <span class="sheet-text">마이페이지</span>
-            <span class="sheet-desc">내 정보와 활동을 관리해요</span>
-          </div>
-        </button>
         <button class="sheet-item" @click="handleMoreNav('collection')">
           <span class="sheet-icon collection">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,6 +142,7 @@
             <span class="sheet-desc">레벨과 뱃지를 모아봐요</span>
           </div>
         </button>
+        <div class="sheet-divider"></div>
         <button v-if="isLoggedIn" class="sheet-item" @click="handleMoreNav('notifications')">
           <span class="sheet-icon notifications">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +155,6 @@
             <span class="sheet-desc">받을 알림을 카테고리별로 관리해요</span>
           </div>
         </button>
-        <div class="sheet-divider"></div>
         <button class="sheet-item" @click="openFeedback">
           <span class="sheet-icon feedback">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,6 +184,17 @@
           </button>
         </template>
         <div class="sheet-divider"></div>
+        <button class="sheet-item" @click="handleMoreNav('mypage')">
+          <span class="sheet-icon mypage">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </span>
+          <div class="sheet-content">
+            <span class="sheet-text">마이페이지</span>
+            <span class="sheet-desc">내 정보와 활동을 관리해요</span>
+          </div>
+        </button>
         <button v-if="isLoggedIn" class="sheet-item logout" @click="handleLogout">
           <span class="sheet-icon logout-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,12 +333,21 @@ const onKeydown = (e) => {
   if (e.key === 'Escape') closeAllMenus();
 };
 
+// FAB 축소/확장 (당근마켓처럼 스크롤 시 글쓰기 라벨 숨김)
+const isFabCollapsed = ref(false);
+const handleFabScroll = () => {
+  isFabCollapsed.value = window.scrollY > 80;
+};
+
 onMounted(() => {
   document.addEventListener('keydown', onKeydown);
+  window.addEventListener('scroll', handleFabScroll, { passive: true });
+  handleFabScroll();
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown);
+  window.removeEventListener('scroll', handleFabScroll);
 });
 </script>
 
@@ -451,20 +461,25 @@ onBeforeUnmount(() => {
 
 .fab {
   pointer-events: auto;
-  width: 52px;
+  position: relative;
+  width: 102px;
   height: 52px;
   background: var(--brand);
   border: none;
-  border-radius: 50%;
+  border-radius: 26px;
   color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+  display: block;
   box-shadow:
     0 1px 2px rgba(124, 58, 237, 0.2),
     0 8px 20px rgba(124, 58, 237, 0.32);
-  transition: transform 0.2s ease, background 0.15s ease, box-shadow 0.2s ease;
+  transition:
+    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    background 0.2s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
 }
 
 .fab:active {
@@ -474,14 +489,54 @@ onBeforeUnmount(() => {
 .fab.open {
   background: var(--ink);
   transform: rotate(45deg);
+  width: 52px;
   box-shadow:
     0 1px 2px rgba(10, 14, 26, 0.2),
     0 8px 20px rgba(10, 14, 26, 0.28);
 }
 
+.fab.collapsed {
+  width: 52px;
+}
+
 .fab-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
   width: 22px;
   height: 22px;
+  transform: translateY(-50%);
+  transition: left 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+  flex-shrink: 0;
+}
+
+.fab.collapsed .fab-icon,
+.fab.open .fab-icon {
+  left: 15px;
+}
+
+.fab-label {
+  position: absolute;
+  top: 50%;
+  left: 46px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  opacity: 1;
+  transition:
+    opacity 0.32s ease,
+    transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.fab.collapsed .fab-label,
+.fab.open .fab-label {
+  opacity: 0;
+  transform: translate(-6px, -50%);
+  transition:
+    opacity 0.18s ease,
+    transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* ===================== Action Sheet (공통 팝업) ===================== */

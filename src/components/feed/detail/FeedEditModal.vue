@@ -32,7 +32,7 @@
 
             <!-- 제품 정보 -->
             <section class="feed-edit-card">
-              <label class="feed-edit-label feed-edit-required">어떤 제품인가요?</label>
+              <label class="feed-edit-label feed-edit-required">무엇에 대한 글인가요?</label>
               <FeedProductSection
                 ref="productSectionRef"
                 v-model:productNameCustom="editData.productNameCustom"
@@ -61,7 +61,7 @@
                 한줄평
                 <span class="feed-edit-char-count" :class="{ 'feed-edit-error': editData.review.length > 100 }">{{ editData.review.length }}/100</span>
               </label>
-              <textarea class="feed-edit-textarea" placeholder="제품에 대한 솔직한 리뷰를 작성해주세요" v-model="editData.review" rows="3" maxlength="100"></textarea>
+              <textarea class="feed-edit-textarea" placeholder="솔직한 후기를 자유롭게 적어주세요" v-model="editData.review" rows="3" maxlength="100"></textarea>
             </section>
 
             <!-- 구매처 -->
@@ -92,7 +92,7 @@
             <section class="feed-edit-card">
               <label class="feed-edit-label feed-edit-required">
                 <svg width="16" height="16" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-                제품 평가
+                한줄 평가
               </label>
               <div class="feed-edit-eval-grid">
                 <button v-for="ev in evaluations" :key="ev.value" :class="['feed-edit-eval-btn', ev.value.toLowerCase(), { active: editData.evaluation === ev.value }]" @click="editData.evaluation = ev.value" type="button">{{ ev.label }}</button>

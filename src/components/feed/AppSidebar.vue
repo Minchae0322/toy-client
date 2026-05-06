@@ -80,7 +80,7 @@
       <!-- 사용자 활동 버튼 -->
       <button class="btn-subtle btn-purple" @click="handleProtectedRoute('create')">
         <div class="btn-content">
-          <span class="btn-text">인증 올리기</span>
+          <span class="btn-text">피드 올리기</span>
           <span class="btn-desc">자랑하고 싶은 아이템이 있나요?</span>
         </div>
         <div class="btn-icon-circle btn-icon-purple">

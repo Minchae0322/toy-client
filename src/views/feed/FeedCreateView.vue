@@ -96,20 +96,21 @@
             한줄평
             <span class="char-count" :class="{ error: formData.review.length > 100 }">{{ formData.review.length }}/100</span>
           </label>
-          <textarea class="form-textarea" placeholder="제품에 대한 솔직한 리뷰를 작성해주세요" v-model="formData.review" rows="2" maxlength="100"></textarea>
+          <textarea class="form-textarea" placeholder="솔직한 후기를 자유롭게 적어주세요" v-model="formData.review" rows="2" maxlength="100"></textarea>
         </div>
       </section>
 
       <!-- 제품 + 카테고리 -->
       <section class="card additional-info">
         <div class="form-group">
-          <label class="form-label required">어떤 제품인가요?</label>
+          <label class="form-label required">무엇에 대한 글인가요?</label>
           <FeedProductSection
             ref="productSectionRef"
             v-model:productNameCustom="formData.productNameCustom"
             v-model:productId="formData.productId"
             :feed-thumbnail-url="selectedPhotos[0]?.preview ?? null"
             @error="showError"
+            @price-change="onProductPriceChange"
           />
         </div>
         <div class="form-group">
@@ -129,7 +130,7 @@
             <svg class="inline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
             </svg>
-            제품 평가
+            한줄 평가
           </label>
           <div class="status-grid">
             <button v-for="ev in evaluations" :key="ev.value" :class="['status-btn', ev.value.toLowerCase(), { active: formData.evaluation === ev.value }]" @click="formData.evaluation = ev.value" type="button">
@@ -210,7 +211,7 @@
             가격이 비공개로 설정됩니다
           </p>
           <p v-if="formData.priceGift" class="price-hidden-notice">
-            선물받은 제품으로 표시됩니다
+            선물받은 걸로 표시돼요
           </p>
         </div>
         <div class="form-group">
@@ -312,7 +313,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFeed } from '@/services/FeedService.js'
 import { useFile } from '@/services/FileService.js'
@@ -340,6 +341,13 @@ const hashtagInput = ref('')
 const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
 const productSectionRef = ref(null)
+
+// 정가 입력 시 구매가도 동일하게 동기화 (비공개/선물 토글 시 무시)
+const onProductPriceChange = (raw) => {
+  if (formData.value.priceHidden || formData.value.priceGift) return
+  const num = Number(String(raw || '').replace(/[^0-9]/g, ''))
+  formData.value.buyPrice = num > 0 ? num : null
+}
 
 const formData = ref({
   userId: getUserId(),
@@ -444,11 +452,11 @@ const canSubmit = computed(() => {
 const missingFieldsText = computed(() => {
   const missing = []
   if (selectedPhotos.value.length === 0) missing.push('사진')
-  if (!formData.value.productNameCustom.trim()) missing.push('제품')
+  if (!formData.value.productNameCustom.trim()) missing.push('이름')
   if (!formData.value.subCategoryId) missing.push('카테고리')
   if (!formData.value.review.trim()) missing.push('한줄평')
   if (!formData.value.store.trim()) missing.push('구매처')
-  if (!formData.value.evaluation) missing.push('제품 평가')
+  if (!formData.value.evaluation) missing.push('한줄 평가')
   if (missing.length === 0) return ''
   if (missing.length <= 2) return `${missing.join(', ')} 입력이 필요합니다`
   return `${missing.length}개 항목을 더 입력해주세요`

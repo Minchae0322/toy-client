@@ -71,17 +71,17 @@
             </svg>
             {{ formatCount(feed.viewCount || 0) }}
           </div>
-          <div class="stat-pill" :class="{ active: localIsLiked }" @click.stop.prevent="handleLike">
-            <svg class="icon" viewBox="0 0 24 24" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-            {{ formatCount(localLikeCount) }}
-          </div>
           <div class="stat-pill">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
             </svg>
             {{ formatCount(feed.commentCount || 0) }}
+          </div>
+          <div class="stat-pill" :class="{ active: localIsLiked }" @click.stop.prevent="handleLike">
+            <svg class="icon" viewBox="0 0 24 24" :fill="localIsLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            {{ formatCount(localLikeCount) }}
           </div>
         </div>
       </div>
@@ -333,17 +333,17 @@ const formatDate = (date) => feedUtils.formatDate(date);
 .user-nickname { font-size: 13px; font-weight: 600; color: #4E5968; letter-spacing: -0.2px; }
 .post-date { font-size: 11px; color: #B0B8C1; font-weight: 500; letter-spacing: -0.1px; }
 
-.interaction-group { display: flex; gap: 4px; }
+.interaction-group { display: flex; gap: 5px; }
 .stat-pill {
-  display: flex; align-items: center; gap: 4px; padding: 5px 9px;
+  display: flex; align-items: center; gap: 4px; padding: 6px 10px;
   background: #F2F4F6; border-radius: 999px;
-  font-size: 11px; font-weight: 600; color: #8B95A1;
+  font-size: 12px; font-weight: 600; color: #8B95A1;
   letter-spacing: -0.1px;
   transition: background 0.15s ease, color 0.15s ease;
 }
 .stat-pill.active { background: #F3E8FF; color: #9333EA; }
 .stat-pill.active:hover { background: #E9D5FF; }
-.icon { width: 13px; height: 13px; }
+.icon { width: 14px; height: 14px; }
 
 /* 모바일 */
 @media (max-width: 768px) {
@@ -351,8 +351,13 @@ const formatDate = (date) => feedUtils.formatDate(date);
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    padding-bottom: 0; margin-bottom: 0;
-    border-bottom: 1px solid #F2F4F6;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  .post-card:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
   }
   .post-card:hover { transform: none; box-shadow: none; }
   .post-card:active { background: #F7F8FA; }
@@ -391,7 +396,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   .user-nickname { font-size: 12px; font-weight: 600; }
   .post-date { font-size: 11px; color: #B0B8C1; }
 
-  .stat-pill { padding: 4px 8px; font-size: 11px; }
-  .icon { width: 12px; height: 12px; }
+  .stat-pill { padding: 6px 11px; font-size: 12px; }
+  .icon { width: 14px; height: 14px; }
 }
 </style>
