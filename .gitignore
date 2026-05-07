@@ -49,3 +49,6 @@ google-application-credentials.json
 # 개인 .env (로컬에서만 쓰는 값 — 누군가 만들 경우 대비)
 .env.local
 .env.*.local
+
+# Claude Code 로컬 설정 (사용자별 권한 목록)
+.claude/settings.local.json

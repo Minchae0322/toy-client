@@ -676,17 +676,6 @@ export default {
         return
       }
 
-      // 로그인 체크
-      const userId = getUserId()
-      if (!userId) {
-        this.openLoginRequired('투표하려면 로그인이 필요합니다.').then(confirmed => {
-          if (confirmed) {
-            this.$router.push({ name: 'Login', query: { redirect: this.$route.fullPath } })
-          }
-        })
-        return
-      }
-
       const newRanks = { ...this.selectedRanks }
 
       if (this.isWeightedVote) {
@@ -720,16 +709,6 @@ export default {
         return
       }
 
-      // 로그인 체크
-      const userId = getUserId()
-      if (!userId) {
-        const confirmed = await this.openLoginRequired('투표하려면 로그인이 필요합니다.')
-        if (confirmed) {
-          this.$router.push({ name: 'Login', query: { redirect: this.$route.fullPath } })
-        }
-        return
-      }
-
       // MULTIPLE/SINGLE 모두 최소 1개 이상 선택 필요
       if (!this.hasSelectedItems) {
         await this.open({ type: 'alert', title: '요거픽 선택 필요', message: '아이템을 선택해주세요' })
@@ -757,8 +736,13 @@ export default {
 
         if (response.success) {
           // POST /battles/{battleId}/vote 응답 data가 ExpGrantInfo로 변경됨 (breaking)
+          // 게스트 투표는 ExpGrantInfo가 null/0이라 토스트 자동 숨김
           showExpGrant(response.data, { mode: 'burst-only' })
-          await this.open({ type: 'alert', title: '요거픽 완료', message: '요거픽이 완료되었습니다!' })
+          const isGuest = !getUserId()
+          const successMessage = isGuest
+            ? '요거픽이 완료되었습니다!\n로그인하면 EXP를 받을 수 있어요.'
+            : '요거픽이 완료되었습니다!'
+          await this.open({ type: 'alert', title: '요거픽 완료', message: successMessage })
           this.hasVoted = true
           this.selectedRanks = { 1: null, 2: null, 3: null }
           await this.loadBattle()
