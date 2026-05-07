@@ -90,11 +90,27 @@
       @open-comments="$emit('open-comments', item)"
       @submit-comment="handleSubmitComment"
     />
+
+    <!-- 이미지 크게 보기 Lightbox -->
+    <Teleport to="body">
+      <Transition name="lightbox">
+        <div v-if="lightboxOpen" class="lightbox-overlay" @click="closeLightbox">
+          <button class="lightbox-close" @click.stop="closeLightbox" aria-label="닫기">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+          <div class="lightbox-image-wrapper" @click.stop>
+            <img :src="itemImage" :alt="itemName" class="lightbox-image" draggable="false" />
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import BattleCommentSummary from './BattleCommentSummary.vue'
 import ProductStatusBadge from '@/components/product/ProductStatusBadge.vue'
 
@@ -190,10 +206,41 @@ const handleImageError = (e) => {
   e.target.src = 'https://placehold.co/400x400?text=No+Image'
 }
 
+const lightboxOpen = ref(false)
+
+const openLightbox = () => {
+  lightboxOpen.value = true
+  document.body.style.overflow = 'hidden'
+}
+
+const closeLightbox = () => {
+  lightboxOpen.value = false
+  document.body.style.overflow = ''
+}
+
+const onKeydown = (e) => {
+  if (lightboxOpen.value && e.key === 'Escape') closeLightbox()
+}
+
+watch(lightboxOpen, (open) => {
+  if (open) {
+    window.addEventListener('keydown', onKeydown)
+  } else {
+    window.removeEventListener('keydown', onKeydown)
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown)
+  if (lightboxOpen.value) document.body.style.overflow = ''
+})
+
 const handleImageClick = () => {
   if (isYoutube.value && props.item.embedUrl) {
     emit('play-youtube', props.item)
+    return
   }
+  openLightbox()
 }
 
 const onVote = (rank) => {
@@ -363,8 +410,9 @@ defineExpose({ setCommentSubmitting })
 .img-box {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: #111;
+  background: #f5f5f7;
   overflow: hidden;
+  cursor: zoom-in;
 }
 
 .img-box.is-youtube {
@@ -374,7 +422,7 @@ defineExpose({ setCommentSubmitting })
 .img-box img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   transition: transform 0.3s ease;
 }
 
@@ -809,6 +857,77 @@ defineExpose({ setCommentSubmitting })
   }
   .product-card-v1:hover .img-box img {
     transform: none;
+  }
+}
+
+/* ===== 이미지 크게 보기 Lightbox ===== */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.lightbox-image-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 16px;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  border-radius: 4px;
+}
+
+.lightbox-enter-active,
+.lightbox-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.lightbox-enter-from,
+.lightbox-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 640px) {
+  .lightbox-image-wrapper {
+    padding: 50px 0;
+  }
+  .lightbox-close {
+    top: 12px;
+    right: 12px;
   }
 }
 </style>
