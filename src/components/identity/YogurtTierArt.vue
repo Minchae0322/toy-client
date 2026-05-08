@@ -24,26 +24,26 @@
     <!-- ================================================== FRUITY -->
     <template v-else-if="tier === 'fruity'">
       <ellipse cx="60" cy="112" rx="30" ry="4" fill="#000000" opacity="0.15" />
-      <!-- cup body -->
-      <path d="M26 30 Q22 56 34 80 L36 102 Q36 108 60 108 Q84 108 84 102 L86 80 Q98 56 94 30 Z" fill="#FFFFFF" stroke="#1F2937" stroke-width="3" stroke-linejoin="round" paint-order="stroke" />
-      <!-- yogurt fill (소프트 파스텔 — 랭크 색조 표시) -->
-      <path d="M36 79 L38 101 Q38 106 60 106 Q82 106 82 101 L84 79 Q72 85 60 85 Q48 85 36 79Z" :fill="c.y" />
+      <!-- cup body (랭크 컬러로 채움 — 흰 면적 최소화) -->
+      <path d="M26 30 Q22 56 34 80 L36 102 Q36 108 60 108 Q84 108 84 102 L86 80 Q98 56 94 30 Z" :fill="c.y" stroke="#1F2937" stroke-width="3" stroke-linejoin="round" paint-order="stroke" />
+      <!-- 하단 음영 -->
+      <path d="M36 79 L38 101 Q38 106 60 106 Q82 106 82 101 L84 79 Q72 85 60 85 Q48 85 36 79Z" :fill="c.yHi" />
       <!-- cup rim -->
-      <ellipse cx="60" cy="30" rx="32" ry="5" fill="#8FA0B0" stroke="#1F2937" stroke-width="3" paint-order="stroke" />
-      <ellipse cx="60" cy="28" rx="32" ry="4.4" fill="#E4EAEF" />
+      <ellipse cx="60" cy="30" rx="32" ry="5" :fill="c.sh" stroke="#1F2937" stroke-width="3" paint-order="stroke" />
+      <ellipse cx="60" cy="28" rx="32" ry="4.4" :fill="c.base" />
 
-      <!-- Strawberry ×3 (랭크 무관하게 빨간 솔리드) -->
+      <!-- Berry ×3 (랭크별 솔리드 컬러) -->
       <g v-for="(b, i) in strawberries" :key="i" :transform="`translate(${b.x} ${b.y}) scale(${b.s})`">
-        <ellipse cx="0.5" cy="9" rx="7.5" ry="1.3" fill="#000" opacity="0.12" />
-        <path d="M-9 -3 Q-9 -12 0 -12 Q9 -12 9 -3 Q9 6 0 10 Q-9 6 -9 -3Z" :fill="BERRY.dk" stroke="#1F2937" stroke-width="2" paint-order="stroke" />
-        <path d="M-8 -3 Q-8 -11 0 -11 Q8 -11 8 -3 Q8 5 0 9 Q-8 5 -8 -3Z" :fill="BERRY.base" />
-        <path d="M-6 -5 Q-6 -10 -1 -10 Q3 -10 5 -6" :fill="BERRY.hi" />
-        <ellipse cx="-4" cy="-4" rx="0.8" ry="1.3" :fill="BERRY.dk" />
-        <ellipse cx="2" cy="-5" rx="0.8" ry="1.3" :fill="BERRY.dk" />
-        <ellipse cx="-1" cy="-1" rx="0.8" ry="1.3" :fill="BERRY.dk" />
-        <ellipse cx="4" cy="0" rx="0.8" ry="1.3" :fill="BERRY.dk" />
-        <ellipse cx="-3" cy="2" rx="0.8" ry="1.3" :fill="BERRY.dk" />
-        <ellipse cx="2" cy="4" rx="0.8" ry="1.3" :fill="BERRY.dk" />
+        <ellipse cx="0.5" cy="9" rx="7.5" ry="1.3" fill="#000" opacity="0.15" />
+        <path d="M-9 -3 Q-9 -12 0 -12 Q9 -12 9 -3 Q9 6 0 10 Q-9 6 -9 -3Z" :fill="c.berryDk" stroke="#1F2937" stroke-width="2" paint-order="stroke" />
+        <path d="M-8 -3 Q-8 -11 0 -11 Q8 -11 8 -3 Q8 5 0 9 Q-8 5 -8 -3Z" :fill="c.berry" />
+        <path d="M-6 -5 Q-6 -10 -1 -10 Q3 -10 5 -6" :fill="c.berryHi" />
+        <ellipse cx="-4" cy="-4" rx="0.8" ry="1.3" :fill="c.berryDk" />
+        <ellipse cx="2" cy="-5" rx="0.8" ry="1.3" :fill="c.berryDk" />
+        <ellipse cx="-1" cy="-1" rx="0.8" ry="1.3" :fill="c.berryDk" />
+        <ellipse cx="4" cy="0" rx="0.8" ry="1.3" :fill="c.berryDk" />
+        <ellipse cx="-3" cy="2" rx="0.8" ry="1.3" :fill="c.berryDk" />
+        <ellipse cx="2" cy="4" rx="0.8" ry="1.3" :fill="c.berryDk" />
         <path d="M-7 -10 L-4 -15 L-1 -11 L2 -16 L5 -11 L7 -14 L6 -9 Z" fill="#14532D" stroke="#1F2937" stroke-width="1.5" paint-order="stroke" />
         <path d="M-6 -10 L-4 -14 L-1 -11 L2 -15 L5 -11 L6 -13 L5 -9 Z" fill="#16A34A" />
       </g>
@@ -236,16 +236,26 @@ const props = defineProps({
   },
 })
 
+// base/hi/sh/dk: 다른 tier(plain·granola·parfait·signature)에서 공유하는 메인 컬러
+// y/yHi: fruity 요거트 충전부 색
+// berry*: fruity 딸기 색 — 랭크별로 다른 베리 테마 (white=핑크, red=딸기, blue=블루베리, violet=포도, gold=황금베리)
 const RANK_COLORS = {
-  white:  { base:'#F5F5F7', hi:'#FFFFFF', sh:'#D1D5DB', dk:'#6B7280', y:'#FFFFFF',  yHi:'#FAFAFA' },
-  red:    { base:'#DC2626', hi:'#FCA5A5', sh:'#991B1B', dk:'#7F1D1D', y:'#FECDD3',  yHi:'#FEE2E2' },
-  blue:   { base:'#2563EB', hi:'#93C5FD', sh:'#1E40AF', dk:'#1E3A8A', y:'#BFDBFE',  yHi:'#DBEAFE' },
-  violet: { base:'#9333EA', hi:'#D8B4FE', sh:'#6B21A8', dk:'#4C1D95', y:'#E9D5FF',  yHi:'#F3E8FF' },
-  gold:   { base:'#D97706', hi:'#FCD34D', sh:'#92400E', dk:'#78350F', y:'#FDE68A',  yHi:'#FEF3C7' },
+  white:  { base:'#F5F5F7', hi:'#FFFFFF', sh:'#D1D5DB', dk:'#6B7280',
+            y:'#F5F5F7', yHi:'#FAFAFA',
+            berry:'#FB7185', berryHi:'#FECDD3', berrySh:'#9F1239', berryDk:'#831843' },
+  red:    { base:'#DC2626', hi:'#FCA5A5', sh:'#991B1B', dk:'#7F1D1D',
+            y:'#FB7185', yHi:'#FDA4AF',
+            berry:'#DC2626', berryHi:'#FCA5A5', berrySh:'#991B1B', berryDk:'#7F1D1D' },
+  blue:   { base:'#2563EB', hi:'#93C5FD', sh:'#1E40AF', dk:'#1E3A8A',
+            y:'#60A5FA', yHi:'#93C5FD',
+            berry:'#1D4ED8', berryHi:'#60A5FA', berrySh:'#1E3A8A', berryDk:'#172554' },
+  violet: { base:'#9333EA', hi:'#D8B4FE', sh:'#6B21A8', dk:'#4C1D95',
+            y:'#A855F7', yHi:'#C084FC',
+            berry:'#7E22CE', berryHi:'#A855F7', berrySh:'#581C87', berryDk:'#3B0764' },
+  gold:   { base:'#D97706', hi:'#FCD34D', sh:'#92400E', dk:'#78350F',
+            y:'#FBBF24', yHi:'#FCD34D',
+            berry:'#B45309', berryHi:'#F59E0B', berrySh:'#78350F', berryDk:'#451A03' },
 }
-
-// 딸기는 랭크 무관하게 빨간 톤 유지 (블루베리·노랑 딸기 같은 어색함 방지)
-const BERRY = { base:'#E11D48', hi:'#FDA4AF', sh:'#9F1239', dk:'#831843' }
 
 const c = computed(() => RANK_COLORS[props.color] || RANK_COLORS.white)
 
