@@ -314,9 +314,10 @@
             <div class="youtube-player-wrapper">
               <iframe
                   v-if="currentYoutubeId"
-                  :src="`https://www.youtube.com/embed/${currentYoutubeId}`"
+                  :src="normalizeYoutubeEmbedUrl(`https://www.youtube.com/embed/${currentYoutubeId}`)"
                   frameborder="0"
-                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  playsinline
                   allowfullscreen
               ></iframe>
             </div>
@@ -332,6 +333,7 @@ import { ref, computed } from 'vue';
 import { useFile } from '@/services/FileService';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import productService from '@/services/ProductService';
+import { normalizeYoutubeEmbedUrl } from '@/utils/youtubeEmbed.js';
 
 const props = defineProps({
   battleForm: {

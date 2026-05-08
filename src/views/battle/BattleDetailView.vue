@@ -296,7 +296,8 @@
                     v-if="currentYoutubeEmbedUrl"
                     :src="currentYoutubeEmbedUrl"
                     frameborder="0"
-                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    playsinline
                     allowfullscreen
                 ></iframe>
               </div>
@@ -323,6 +324,7 @@
 import { battleService } from '@/services/BattleService.js'
 import { fileService } from '@/services/FileService.js'
 import { getUserId, getCurrentUser } from '@/utils/auth.js'
+import { normalizeYoutubeEmbedUrl } from '@/utils/youtubeEmbed.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { showExpGrant } from '@/composables/useExpToast'
 import ShareModal from '@/components/common/ShareModal.vue'
@@ -1319,7 +1321,7 @@ export default {
     playYoutube(item) {
       if (item.embedUrl) {
         this.currentYoutubeItem = item
-        this.currentYoutubeEmbedUrl = item.embedUrl
+        this.currentYoutubeEmbedUrl = normalizeYoutubeEmbedUrl(item.embedUrl)
         this.showYoutubePlayer = true
       }
     },
