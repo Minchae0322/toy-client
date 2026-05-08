@@ -334,6 +334,8 @@ import { useFile } from '@/services/FileService';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import productService from '@/services/ProductService';
 import { normalizeYoutubeEmbedUrl } from '@/utils/youtubeEmbed.js';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 const props = defineProps({
   battleForm: {
@@ -455,11 +457,25 @@ const addYoutubeItem = async () => {
 };
 
 // YouTube 재생
-const playYoutube = (item) => {
-  if (item.youtubeVideoId) {
-    currentYoutubeId.value = item.youtubeVideoId;
-    showYoutubePlayer.value = true;
+const playYoutube = async (item) => {
+  if (!item.youtubeVideoId) return;
+
+  // 네이티브 앱: SFSafariViewController로 열기
+  if (Capacitor.isNativePlatform()) {
+    const url = `https://www.youtube.com/watch?v=${item.youtubeVideoId}`;
+    try {
+      await Browser.open({ url, presentationStyle: 'popover' });
+    } catch (e) {
+      console.warn('[YouTube] Browser.open 실패, iframe fallback:', e);
+      currentYoutubeId.value = item.youtubeVideoId;
+      showYoutubePlayer.value = true;
+    }
+    return;
   }
+
+  // 웹: 기존 iframe 모달
+  currentYoutubeId.value = item.youtubeVideoId;
+  showYoutubePlayer.value = true;
 };
 
 const closeYoutubePlayer = () => {

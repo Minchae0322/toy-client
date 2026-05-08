@@ -325,6 +325,8 @@ import { battleService } from '@/services/BattleService.js'
 import { fileService } from '@/services/FileService.js'
 import { getUserId, getCurrentUser } from '@/utils/auth.js'
 import { normalizeYoutubeEmbedUrl } from '@/utils/youtubeEmbed.js'
+import { Capacitor } from '@capacitor/core'
+import { Browser } from '@capacitor/browser'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { showExpGrant } from '@/composables/useExpToast'
 import ShareModal from '@/components/common/ShareModal.vue'
@@ -1318,12 +1320,27 @@ export default {
     },
 
     // YouTube 재생
-    playYoutube(item) {
-      if (item.embedUrl) {
-        this.currentYoutubeItem = item
-        this.currentYoutubeEmbedUrl = normalizeYoutubeEmbedUrl(item.embedUrl)
-        this.showYoutubePlayer = true
+    async playYoutube(item) {
+      if (!item.embedUrl && !item.contentUrl) return
+
+      // 네이티브 앱에서는 SFSafariViewController로 열어서 안정적으로 재생
+      if (Capacitor.isNativePlatform()) {
+        const url = item.contentUrl || item.embedUrl
+        try {
+          await Browser.open({ url, presentationStyle: 'popover' })
+        } catch (e) {
+          console.warn('[YouTube] Browser.open 실패, iframe fallback:', e)
+          this.currentYoutubeItem = item
+          this.currentYoutubeEmbedUrl = normalizeYoutubeEmbedUrl(item.embedUrl)
+          this.showYoutubePlayer = true
+        }
+        return
       }
+
+      // 웹: 기존 iframe 모달
+      this.currentYoutubeItem = item
+      this.currentYoutubeEmbedUrl = normalizeYoutubeEmbedUrl(item.embedUrl)
+      this.showYoutubePlayer = true
     },
 
     closeYoutubePlayer() {
