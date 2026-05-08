@@ -23,36 +23,50 @@
 
     <!-- ================================================== FRUITY -->
     <template v-else-if="tier === 'fruity'">
-      <ellipse cx="60" cy="112" rx="30" ry="4" fill="#000000" opacity="0.15" />
+      <ellipse cx="60" cy="112" rx="30" ry="4" fill="#000000" opacity="0.18" />
       <path d="M26 30 Q22 56 34 80 L36 102 Q36 108 60 108 Q84 108 84 102 L86 80 Q98 56 94 30 Z" fill="#FFFFFF" stroke="#1F2937" stroke-width="3" stroke-linejoin="round" paint-order="stroke" />
+      <!-- yogurt fill (deep) -->
       <path d="M36 79 L38 101 Q38 106 60 106 Q82 106 82 101 L84 79 Q72 85 60 85 Q48 85 36 79Z" :fill="c.y" />
-      <path d="M36 79 Q48 82 60 82 Q72 82 84 79" :stroke="c.yHi" stroke-width="2" fill="none" />
-      <ellipse cx="60" cy="30" rx="32" ry="5" fill="#8FA0B0" stroke="#1F2937" stroke-width="3" paint-order="stroke" />
+      <!-- yogurt cream gloss -->
+      <path d="M36 79 Q48 82 60 82 Q72 82 84 79" :stroke="c.yHi" stroke-width="3" fill="none" stroke-linecap="round" />
+      <path d="M40 84 Q48 86 56 85" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.7" />
+      <ellipse cx="48" cy="93" rx="6" ry="1.2" fill="#FFFFFF" opacity="0.45" />
+      <!-- cup rim -->
+      <ellipse cx="60" cy="30" rx="32" ry="5" fill="#6B7884" stroke="#1F2937" stroke-width="3" paint-order="stroke" />
       <ellipse cx="60" cy="28" rx="32" ry="4.4" fill="#E4EAEF" />
-      <ellipse cx="60" cy="27.2" rx="31" ry="3.2" fill="#F6F8FA" />
+      <ellipse cx="60" cy="27.2" rx="31" ry="3.2" fill="#FFFFFF" />
 
       <!-- Strawberry ×3 -->
       <g v-for="(b, i) in strawberries" :key="i" :transform="`translate(${b.x} ${b.y}) scale(${b.s})`">
-        <ellipse cx="0.5" cy="9" rx="7.5" ry="1.3" fill="#000" opacity="0.12" />
-        <path d="M-9 -3 Q-9 -12 0 -12 Q9 -12 9 -3 Q9 6 0 10 Q-9 6 -9 -3Z" :fill="c.sh" stroke="#1F2937" stroke-width="2" paint-order="stroke" />
+        <ellipse cx="0.5" cy="9" rx="7.5" ry="1.5" fill="#000" opacity="0.18" />
+        <path d="M-9 -3 Q-9 -12 0 -12 Q9 -12 9 -3 Q9 6 0 10 Q-9 6 -9 -3Z" :fill="c.dk" stroke="#1F2937" stroke-width="2" paint-order="stroke" />
         <path d="M-8 -3 Q-8 -11 0 -11 Q8 -11 8 -3 Q8 5 0 9 Q-8 5 -8 -3Z" :fill="c.base" />
+        <path d="M-7 -2 Q-7 -10 -1 -10 Q4 -10 6 -5 Q4 0 -2 4 Q-7 3 -7 -2Z" :fill="c.sh" opacity="0.55" />
         <path d="M-6 -5 Q-6 -10 -1 -10 Q3 -10 5 -6" :fill="c.hi" />
-        <ellipse cx="-3" cy="-7" rx="2.4" ry="1.3" fill="#FFFFFF" opacity="0.85" />
+        <ellipse cx="-3" cy="-7" rx="2.6" ry="1.4" fill="#FFFFFF" opacity="0.95" />
+        <ellipse cx="3" cy="-5" rx="1.2" ry="0.6" fill="#FFFFFF" opacity="0.7" />
         <ellipse cx="-4" cy="-4" rx="0.8" ry="1.3" :fill="c.dk" />
         <ellipse cx="2" cy="-5" rx="0.8" ry="1.3" :fill="c.dk" />
         <ellipse cx="-1" cy="-1" rx="0.8" ry="1.3" :fill="c.dk" />
         <ellipse cx="4" cy="0" rx="0.8" ry="1.3" :fill="c.dk" />
         <ellipse cx="-3" cy="2" rx="0.8" ry="1.3" :fill="c.dk" />
         <ellipse cx="2" cy="4" rx="0.8" ry="1.3" :fill="c.dk" />
-        <path d="M-7 -10 L-4 -15 L-1 -11 L2 -16 L5 -11 L7 -14 L6 -9 Z" fill="#166534" stroke="#1F2937" stroke-width="1.5" paint-order="stroke" />
-        <path d="M-6 -10 L-4 -14 L-1 -11 L2 -15 L5 -11 L6 -13 L5 -9 Z" fill="#22C55E" />
+        <path d="M-7 -10 L-4 -15 L-1 -11 L2 -16 L5 -11 L7 -14 L6 -9 Z" fill="#14532D" stroke="#1F2937" stroke-width="1.5" paint-order="stroke" />
+        <path d="M-6 -10 L-4 -14 L-1 -11 L2 -15 L5 -11 L6 -13 L5 -9 Z" fill="#16A34A" />
+        <path d="M-3 -12 Q-1 -13 1 -12" stroke="#FFFFFF" stroke-width="0.7" stroke-linecap="round" fill="none" opacity="0.75" />
       </g>
 
       <g transform="translate(50 10)">
-        <path d="M0 0 Q-2 -4 -1 -8 Q1 -9 2.5 -5 Q1.5 -1 0 0Z" fill="#22C55E" stroke="#166534" stroke-width="1" />
-        <path d="M0 -1 Q-1 -4 -0.5 -7" stroke="#166534" stroke-width="0.6" fill="none" />
+        <path d="M0 0 Q-2 -4 -1 -8 Q1 -9 2.5 -5 Q1.5 -1 0 0Z" fill="#16A34A" stroke="#14532D" stroke-width="1" />
+        <path d="M0 -1 Q-1 -4 -0.5 -7" stroke="#14532D" stroke-width="0.6" fill="none" />
       </g>
 
+      <!-- sparkle accents -->
+      <g opacity="0.85">
+        <circle cx="28" cy="48" r="1.4" fill="#FFFFFF" />
+        <circle cx="92" cy="56" r="1.2" fill="#FFFFFF" />
+        <circle cx="100" cy="44" r="0.9" fill="#FFFFFF" />
+      </g>
     </template>
 
     <!-- ================================================== GRANOLA -->
@@ -239,11 +253,11 @@ const props = defineProps({
 })
 
 const RANK_COLORS = {
-  white:  { base:'#F5F5F7', hi:'#FFFFFF', sh:'#D1D5DB', dk:'#6B7280', y:'#FFFFFF',  yHi:'#FFFFFF' },
-  red:    { base:'#EF4444', hi:'#FCA5A5', sh:'#B91C1C', dk:'#7F1D1D', y:'#FEE2E2',  yHi:'#FEF2F2' },
-  blue:   { base:'#3B82F6', hi:'#93C5FD', sh:'#1D4ED8', dk:'#1E3A8A', y:'#DBEAFE',  yHi:'#EFF6FF' },
-  violet: { base:'#A855F7', hi:'#D8B4FE', sh:'#7E22CE', dk:'#581C87', y:'#F3E8FF',  yHi:'#FAF5FF' },
-  gold:   { base:'#F59E0B', hi:'#FCD34D', sh:'#D97706', dk:'#78350F', y:'#FEF3C7',  yHi:'#FFFBEB' },
+  white:  { base:'#F5F5F7', hi:'#FFFFFF', sh:'#D1D5DB', dk:'#6B7280', y:'#FAFAFA',  yHi:'#FFFFFF' },
+  red:    { base:'#DC2626', hi:'#FCA5A5', sh:'#991B1B', dk:'#7F1D1D', y:'#F87171',  yHi:'#FECACA' },
+  blue:   { base:'#2563EB', hi:'#93C5FD', sh:'#1E40AF', dk:'#1E3A8A', y:'#60A5FA',  yHi:'#BFDBFE' },
+  violet: { base:'#9333EA', hi:'#D8B4FE', sh:'#6B21A8', dk:'#4C1D95', y:'#C084FC',  yHi:'#E9D5FF' },
+  gold:   { base:'#D97706', hi:'#FCD34D', sh:'#92400E', dk:'#78350F', y:'#FBBF24',  yHi:'#FDE68A' },
 }
 
 const c = computed(() => RANK_COLORS[props.color] || RANK_COLORS.white)

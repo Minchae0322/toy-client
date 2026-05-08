@@ -25,7 +25,9 @@ const {user, isLoggedIn, isAdmin, logout, userId} = useAuth()
 const {open, openLoginRequired} = useConfirmDialog()
 
 const isLoggingOut = ref(false)
-const wsConnected = ref(false)
+const wsStatus = ref('disconnected') // 'disconnected' | 'connecting' | 'connected' | 'error'
+const wsConnected = computed(() => wsStatus.value === 'connected')
+const wsConnecting = computed(() => wsStatus.value === 'connecting')
 let unsubscribeWsStatus = null
 
 const showAppSplash = ref(Capacitor.isNativePlatform() && isLoggedIn.value)
@@ -73,13 +75,17 @@ async function loadHeaderRewards() {
   }
 }
 
+const syncWsStatus = () => {
+  wsStatus.value = webSocketService.getConnectionState().status || 'disconnected'
+}
+
 const monitorWebSocketStatus = () => {
-  wsConnected.value = webSocketService.isConnected()
+  syncWsStatus()
   if (unsubscribeWsStatus) {
     unsubscribeWsStatus()
   }
-  unsubscribeWsStatus = webSocketService.onConnectionChange((connected) => {
-    wsConnected.value = connected
+  unsubscribeWsStatus = webSocketService.onConnectionChange(() => {
+    syncWsStatus()
   })
 }
 
@@ -134,21 +140,13 @@ function hideAppSplash() {
 }
 
 async function runSplashFlow() {
-  if (!Capacitor.isNativePlatform()) return
-  if (!isLoggedIn.value) {
+  if (!Capacitor.isNativePlatform()) {
     hideAppSplash()
     return
   }
-  let off = null
-  const wsReady = new Promise(resolve => {
-    if (webSocketService.isConnected()) return resolve()
-    off = webSocketService.onConnectionChange((connected) => {
-      if (connected) resolve()
-    })
-  })
-  const timeout = new Promise(resolve => setTimeout(resolve, 5000))
-  await Promise.race([wsReady, timeout])
-  off?.()
+  // 스플래시는 auth 체크만 끝나면 즉시 종료 — WS는 백그라운드에서 조용히 연결
+  // (살짝 호흡감을 위해 최소 400ms만 유지)
+  await new Promise(resolve => setTimeout(resolve, 400))
   hideAppSplash()
 }
 
@@ -194,18 +192,20 @@ async function setupAppLifecycle() {
 }
 
 onMounted(() => {
+  // 리스너를 connect()보다 먼저 부착해야 'connecting' → 'connected' 전이를 놓치지 않음
+  monitorWebSocketStatus()
   if (isLoggedIn.value) {
     webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
     loadHeaderRewards()
     registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
   }
-  monitorWebSocketStatus()
   runSplashFlow()
   setupAppLifecycle()
 })
 
 watch(isLoggedIn, (newVal, oldVal) => {
   if (newVal === oldVal) return
+  monitorWebSocketStatus()
   if (newVal) {
     loadHeaderRewards()
     webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
@@ -216,7 +216,6 @@ watch(isLoggedIn, (newVal, oldVal) => {
     unregisterFcm().catch(e => console.warn('[FCM] 해제 실패:', e))
     webSocketService.disconnect()
   }
-  monitorWebSocketStatus()
 })
 
 onUnmounted(() => {
@@ -286,7 +285,7 @@ onUnmounted(() => {
 
           <div class="user-menu">
             <div class="user-info" @click="goToProfile">
-              <div class="user-avatar" :class="{ connected: wsConnected }">
+              <div class="user-avatar" :class="{ connected: wsConnected, connecting: wsConnecting }">
                 <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
                 <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
               </div>
@@ -321,7 +320,7 @@ onUnmounted(() => {
           </svg>
         </button>
         <div v-if="isLoggedIn" class="mobile-avatar-wrap" @click="goToProfile">
-          <div class="mobile-avatar" :class="{ connected: wsConnected }">
+          <div class="mobile-avatar" :class="{ connected: wsConnected, connecting: wsConnecting }">
             <img v-if="profileImageUrl" :src="profileImageUrl" alt="프로필" />
             <span v-else>{{ (user?.nickname || user?.username)?.charAt(0).toUpperCase() }}</span>
           </div>
@@ -684,9 +683,20 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
+.user-avatar.connecting {
+  border-color: #f59e0b;
+  animation: ws-pulse 1.2s ease-in-out infinite;
+}
+
 .user-avatar.connected {
   border-color: #00C853;
   box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.18);
+  animation: none;
+}
+
+@keyframes ws-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18); }
+  50%      { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.34); }
 }
 
 .user-avatar img {
@@ -785,9 +795,15 @@ onUnmounted(() => {
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
+.mobile-avatar.connecting {
+  border-color: #f59e0b;
+  animation: ws-pulse 1.2s ease-in-out infinite;
+}
+
 .mobile-avatar.connected {
   border-color: #00C853;
   box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.18);
+  animation: none;
 }
 
 .mobile-avatar img {
