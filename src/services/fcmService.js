@@ -9,9 +9,12 @@ import { Capacitor } from '@capacitor/core'
 import { FirebaseMessaging } from '@capacitor-firebase/messaging'
 import { apiClient } from '@/api/client.js'
 import { getDeviceId } from '@/utils/auth.js'
+import router from '@/router'
+import { notificationService } from '@/services/NotificationService.js'
 
 let initialized = false
 let registeredToken = null
+let inflightTokenPost = null
 
 /** Capacitor의 'ios'/'android' → 백엔드 enum 'IOS'/'ANDROID' */
 function platformCode() {
@@ -67,17 +70,14 @@ export async function registerFcm() {
   console.log('[FCM] 발급된 토큰:', token)
 
   await sendTokenToBackend(token)
-  registeredToken = token
 
   if (!initialized) {
     FirebaseMessaging.addListener('tokenReceived', async (event) => {
-      if (event.token && event.token !== registeredToken) {
-        try {
-          await sendTokenToBackend(event.token)
-          registeredToken = event.token
-        } catch (e) {
-          console.warn('[FCM] 토큰 갱신 등록 실패:', e)
-        }
+      if (!event.token) return
+      try {
+        await sendTokenToBackend(event.token)
+      } catch (e) {
+        console.warn('[FCM] 토큰 갱신 등록 실패:', e)
       }
     })
 
@@ -85,9 +85,9 @@ export async function registerFcm() {
       console.log('[FCM] foreground 수신:', JSON.stringify(event, null, 2))
     })
 
-    FirebaseMessaging.addListener('notificationActionPerformed', (event) => {
+    FirebaseMessaging.addListener('notificationActionPerformed', async (event) => {
       console.log('[FCM] 알림 탭:', event)
-      // TODO: event.notification.data.roomId로 라우팅
+      await routeFromPushPayload(event?.notification?.data)
     })
 
     initialized = true
@@ -96,12 +96,39 @@ export async function registerFcm() {
   return { token }
 }
 
+async function routeFromPushPayload(data) {
+  if (!data) return
+  const route = notificationService.getNotificationRoute({
+    actionUrl: data.actionUrl,
+    referenceType: data.referenceType,
+    referenceId: data.referenceId,
+  })
+  if (!route) return
+  try {
+    await router.isReady()
+    await router.push(route)
+  } catch (e) {
+    console.warn('[FCM] 푸시 라우팅 실패:', e)
+  }
+}
+
 async function sendTokenToBackend(token) {
-  await apiClient.post('/user/me/fcm-tokens', {
+  if (registeredToken === token) return
+  if (inflightTokenPost) {
+    try { await inflightTokenPost.promise } catch {}
+    if (registeredToken === token) return
+  }
+  const promise = apiClient.post('/user/me/fcm-tokens', {
     token,
     deviceId: getDeviceId(),
     platform: platformCode(),
+  }).then(() => {
+    registeredToken = token
+  }).finally(() => {
+    if (inflightTokenPost?.token === token) inflightTokenPost = null
   })
+  inflightTokenPost = { token, promise }
+  await promise
 }
 
 /**

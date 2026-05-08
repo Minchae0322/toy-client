@@ -12,15 +12,15 @@
       "enabled": true
     },
     "SplashScreen": {
-      "launchShowDuration": 1500,
-      "launchAutoHide": true,
+      "launchShowDuration": 3000,
+      "launchAutoHide": false,
       "backgroundColor": "#ffffff",
       "showSpinner": false,
       "splashFullScreen": true,
       "splashImmersive": false
     },
     "StatusBar": {
-      "style": "DARK",
+      "style": "LIGHT",
       "backgroundColor": "#ffffff"
     }
   }

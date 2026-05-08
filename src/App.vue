@@ -14,6 +14,10 @@ import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
 import {rewardsService} from '@/services/RewardsService.js'
 import {getTierByLevel, getTierColor} from '@/data/levelSystemData.js'
 import {registerFcm, unregisterFcm} from '@/services/fcmService.js'
+import {Capacitor} from '@capacitor/core'
+import {SplashScreen} from '@capacitor/splash-screen'
+import {App as CapApp} from '@capacitor/app'
+import {StatusBar, Style} from '@capacitor/status-bar'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,6 +27,8 @@ const {open, openLoginRequired} = useConfirmDialog()
 const isLoggingOut = ref(false)
 const wsConnected = ref(false)
 let unsubscribeWsStatus = null
+
+const showAppSplash = ref(Capacitor.isNativePlatform() && isLoggedIn.value)
 
 const isAuthPage = computed(() =>
     ['/login', '/register', '/oauth/callback'].includes(route.path)
@@ -120,25 +126,95 @@ const goToCollection = async () => {
   }
 }
 
+function hideAppSplash() {
+  showAppSplash.value = false
+  if (Capacitor.isNativePlatform()) {
+    SplashScreen.hide().catch(() => {})
+  }
+}
+
+async function runSplashFlow() {
+  if (!Capacitor.isNativePlatform()) return
+  if (!isLoggedIn.value) {
+    hideAppSplash()
+    return
+  }
+  let off = null
+  const wsReady = new Promise(resolve => {
+    if (webSocketService.isConnected()) return resolve()
+    off = webSocketService.onConnectionChange((connected) => {
+      if (connected) resolve()
+    })
+  })
+  const timeout = new Promise(resolve => setTimeout(resolve, 5000))
+  await Promise.race([wsReady, timeout])
+  off?.()
+  hideAppSplash()
+}
+
+function ensureWsConnected() {
+  if (!isLoggedIn.value) return
+  if (webSocketService.isConnected()) return
+  webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
+}
+
+const appLifecycleHandlers = []
+const visibilityHandler = () => {
+  if (document.visibilityState === 'visible') {
+    ensureWsConnected()
+  } else {
+    webSocketService.disconnect()
+  }
+}
+const beforeUnloadHandler = () => {
+  webSocketService.disconnect()
+}
+
+async function setupAppLifecycle() {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await StatusBar.setStyle({ style: Style.Light })
+      await StatusBar.setBackgroundColor({ color: '#ffffff' })
+    } catch (e) {
+      console.warn('[StatusBar] 스타일 적용 실패:', e)
+    }
+    const stateHandle = await CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        StatusBar.setStyle({ style: Style.Light }).catch(() => {})
+        ensureWsConnected()
+      } else {
+        webSocketService.disconnect()
+      }
+    })
+    appLifecycleHandlers.push(stateHandle)
+  } else {
+    document.addEventListener('visibilitychange', visibilityHandler)
+    window.addEventListener('beforeunload', beforeUnloadHandler)
+  }
+}
+
 onMounted(() => {
   if (isLoggedIn.value) {
-    webSocketService.connect().catch(console.error)
+    webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
     loadHeaderRewards()
     registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
   }
   monitorWebSocketStatus()
+  runSplashFlow()
+  setupAppLifecycle()
 })
 
-watch(isLoggedIn, (newVal) => {
+watch(isLoggedIn, (newVal, oldVal) => {
+  if (newVal === oldVal) return
   if (newVal) {
     loadHeaderRewards()
-    webSocketService.connect().catch(console.error)
+    webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
     registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
   } else {
     userLevel.value = null
     userBadges.value = []
-    webSocketService.disconnect()
     unregisterFcm().catch(e => console.warn('[FCM] 해제 실패:', e))
+    webSocketService.disconnect()
   }
   monitorWebSocketStatus()
 })
@@ -147,11 +223,22 @@ onUnmounted(() => {
   if (unsubscribeWsStatus) {
     unsubscribeWsStatus()
   }
+  appLifecycleHandlers.forEach(h => { try { h.remove() } catch {} })
+  appLifecycleHandlers.length = 0
+  document.removeEventListener('visibilitychange', visibilityHandler)
+  window.removeEventListener('beforeunload', beforeUnloadHandler)
   webSocketService.disconnect()
 })
 </script>
 
 <template>
+  <!-- 앱 스플래시 (네이티브 + 로그인 상태에서 WS 연결까지 표시) -->
+  <transition name="splash-fade">
+    <div v-if="showAppSplash" class="app-splash">
+      <img src="/images/logo5.png" alt="요거뜨" class="app-splash-logo" />
+    </div>
+  </transition>
+
   <!-- 헤더 -->
   <header v-if="!isAuthPage" class="header">
     <div class="header-content">
@@ -283,6 +370,34 @@ onUnmounted(() => {
 <style scoped>
 /* ===================== 기본 설정 ===================== */
 /* font-family 는 main.css / index.html 의 html,body 에서 상속 */
+
+/* ===================== 앱 스플래시 ===================== */
+.app-splash {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.app-splash-logo {
+  width: 160px;
+  height: auto;
+  animation: app-splash-pulse 1.6s ease-in-out infinite;
+}
+@keyframes app-splash-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.96); }
+}
+.splash-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.splash-fade-leave-to {
+  opacity: 0;
+}
 
 /* ===================== 헤더 ===================== */
 .header {
