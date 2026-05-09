@@ -52,7 +52,7 @@
 
       <div class="post-footer">
         <div class="user-block" role="link" tabindex="0" @click.stop.prevent="goToUser" @keydown.enter.prevent="goToUser">
-          <img :src="profileImageUrl || '/default-avatar.png'" class="user-avatar" />
+          <img :src="profileImageUrl" class="user-avatar" @error="onAvatarError" />
           <div class="user-meta">
             <div class="nickname-row">
               <span class="user-nickname">{{ displayNickname }}</span>
@@ -97,6 +97,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import UserLevelTag from '@/components/identity/UserLevelTag.vue';
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
+import { resolveProfileImage, onAvatarError } from '@/utils/defaultAvatar';
 
 const props = defineProps({ feed: { type: Object, required: true } });
 const emit = defineEmits(['update']);
@@ -114,7 +115,7 @@ const localIsLiked = ref(props.feed.userReactions?.hasLike === true);
 const localLikeCount = ref(props.feed.likeCount || 0);
 
 // userInfo: 프로필(닉네임/사진/뱃지) · userRewardInfo: 레벨/tier
-const profileImageUrl = computed(() => props.feed.userInfo?.profileImageFile?.fileUrl || props.feed.userInfo?.profileImgUrl);
+const profileImageUrl = computed(() => resolveProfileImage(props.feed.userInfo?.profileImageFile?.fileUrl, props.feed.userInfo?.profileImgUrl));
 
 // 작성 후 24시간 이내 피드에 NEW 뱃지
 const isNew = computed(() => {

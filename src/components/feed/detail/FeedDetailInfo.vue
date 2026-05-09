@@ -171,7 +171,7 @@
 
       <section class="author-section">
         <div class="author-click-zone" role="link" tabindex="0" @click="goToUser" @keydown.enter="goToUser">
-          <img :src="getAuthorProfileImage" class="author-avatar" alt="" />
+          <img :src="getAuthorProfileImage" class="author-avatar" alt="" @error="onAvatarError" />
           <div class="author-meta">
             <div class="nickname-row">
               <span class="author-name">{{ getAuthorNickname }}</span>
@@ -211,6 +211,7 @@ import ProductStatusBadge from '@/components/product/ProductStatusBadge.vue'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 import { getTierByLevel } from '@/data/levelSystemData.js'
+import { resolveProfileImage, onAvatarError } from '@/utils/defaultAvatar'
 
 const props = defineProps({
   feed: { type: Object, required: true },
@@ -281,7 +282,7 @@ const goToProductDetail = () => {
     router.push({ name: 'ProductDetail', params: { id: props.feed.product.id } })
   }
 }
-const getAuthorProfileImage = computed(() => props.feed?.userInfo?.profileImageFile?.fileUrl || props.feed?.userInfo?.profileImageUrl || 'https://i.pravatar.cc/150')
+const getAuthorProfileImage = computed(() => resolveProfileImage(props.feed?.userInfo?.profileImageFile?.fileUrl, props.feed?.userInfo?.profileImageUrl, props.feed?.userInfo?.profileImgUrl))
 const getAuthorNickname = computed(() => props.feed?.userInfo?.nickname || '사용자')
 
 // userRewardInfo 필드 규약 (백엔드 RewardResponse.UserRewardInfo):

@@ -43,9 +43,10 @@
           <!-- 부모 댓글 -->
           <div class="comment-row">
             <img
-                :src="comment.deleted ? deletedAvatar : (comment.creatorProfileUrl || 'https://i.pravatar.cc/150')"
+                :src="comment.deleted ? deletedAvatar : resolveProfileImage(comment.creatorProfileUrl)"
                 :class="['avatar', { clickable: !comment.deleted && comment.creatorId }]"
                 @click="!comment.deleted && goToUser(comment.creatorId)"
+                @error="onAvatarError"
             />
             <div class="body">
               <!-- 삭제된 부모 (답글만 남음) -->
@@ -134,9 +135,10 @@
           <ul v-if="comment.replies?.length" class="reply-list">
             <li v-for="reply in comment.replies" :key="reply.commentId" class="reply-item">
               <img
-                  :src="reply.creatorProfileUrl || 'https://i.pravatar.cc/150'"
+                  :src="resolveProfileImage(reply.creatorProfileUrl)"
                   :class="['avatar', 'reply-avatar', { clickable: !!reply.creatorId }]"
                   @click="goToUser(reply.creatorId)"
+                  @error="onAvatarError"
               />
               <div class="body">
                 <div v-if="editingId === reply.commentId" class="edit-mode">
@@ -201,6 +203,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { feedUtils } from '@/services/FeedService'
 import { getUserId } from '@/utils/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { DEFAULT_AVATAR_URL, resolveProfileImage, onAvatarError } from '@/utils/defaultAvatar'
 
 const props = defineProps({
   comments: { type: Array, default: () => [] },
@@ -208,7 +211,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
   hasNext: { type: Boolean, default: false },
   feedCreatorId: { type: Number, default: null },
-  currentUserProfile: { type: String, default: 'https://i.pravatar.cc/150' }
+  currentUserProfile: { type: String, default: DEFAULT_AVATAR_URL }
 })
 
 const emit = defineEmits(['submit', 'update', 'delete', 'load-more'])

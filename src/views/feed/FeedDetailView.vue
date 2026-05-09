@@ -118,6 +118,7 @@ import FeedCommentSection from '@/components/feed/detail/FeedCommentSection.vue'
 import ShareModal from '@/components/common/ShareModal.vue'
 import FeedEditModal from '@/components/feed/detail/FeedEditModal.vue'
 import ReportModal from '@/components/common/ReportModal.vue'
+import { DEFAULT_AVATAR_URL } from '@/utils/defaultAvatar'
 
 const router = useRouter()
 const route = useRoute()
@@ -150,13 +151,7 @@ const isOwner = computed(() => {
   if (!feed.value?.userInfo?.userId || !currentUserId.value) return false
   return feed.value.userInfo.userId === currentUserId.value
 })
-const currentUserProfile = computed(() => {
-  try {
-    const token = localStorage.getItem('access_token')
-    if (!token) return 'https://i.pravatar.cc/150'
-    return 'https://i.pravatar.cc/150'
-  } catch { return 'https://i.pravatar.cc/150' }
-})
+const currentUserProfile = computed(() => DEFAULT_AVATAR_URL)
 
 const scrollToComments = () => {
   commentSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
