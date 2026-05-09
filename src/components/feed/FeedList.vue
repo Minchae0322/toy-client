@@ -438,7 +438,8 @@ defineExpose({ observerTarget });
   position: relative;
   width: 180px;
   min-width: 180px;
-  aspect-ratio: 1 / 1;
+  height: 180px;
+  align-self: flex-start;
   background: #F7F8FA;
   overflow: hidden;
 }
@@ -1016,7 +1017,7 @@ defineExpose({ observerTarget });
     transform: none;
   }
 
-  .list-image { width: 120px; min-width: 120px; }
+  .list-image { width: 120px; min-width: 120px; height: 120px; }
 
   .list-badges-top { top: 8px; left: 8px; gap: 4px; }
   .list-eval-badge { padding: 3px 7px; font-size: 9px; gap: 4px; }
