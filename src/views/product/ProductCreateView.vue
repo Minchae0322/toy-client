@@ -316,7 +316,7 @@ const { createProduct, debugStatus } = useProduct()
 const isEditMode = computed(() => !!route.params.id)
 const editProductId = computed(() => route.params.id)
 const { upload } = useFile()
-const { open } = useConfirmDialog()
+const { open, openLoginRequired } = useConfirmDialog()
 
 const isLoading = ref(false)
 const showSuccessModal = ref(false)
@@ -643,7 +643,7 @@ const buildImageInfo = (info) => ({
 
 const handleSubmit = async () => {
   if (!isLoggedIn.value) {
-    await open({ type: 'login', title: '로그인이 필요합니다', message: '제품을 등록하려면 로그인이 필요합니다.' })
+    await openLoginRequired('제품을 등록하려면 로그인이 필요해요')
     showAuthRequiredMessage(); return
   }
   if (!userId.value) {
