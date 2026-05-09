@@ -438,7 +438,8 @@ defineExpose({ observerTarget });
   position: relative;
   width: 180px;
   min-width: 180px;
-  aspect-ratio: 1 / 1;
+  height: 180px;
+  align-self: flex-start;
   background: #F7F8FA;
   overflow: hidden;
 }
@@ -624,14 +625,15 @@ defineExpose({ observerTarget });
   border-top: 1px solid #F2F4F6;
 }
 
-.list-author { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.list-author-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.list-author { display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; min-width: 0; }
+.list-author-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .list-nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .list-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; }
-.list-nickname { font-size: 12px; font-weight: 600; color: #191F28; }
+.list-nickname { font-size: 12px; font-weight: 600; color: #191F28; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.list-nickname-row > :not(.list-nickname) { flex-shrink: 0; }
 .list-time { font-size: 10px; color: #B0B8C1; }
 
-.list-stats { display: flex; gap: 4px; }
+.list-stats { display: flex; gap: 4px; flex-shrink: 0; }
 .stat {
   display: flex; align-items: center; gap: 3px;
   padding: 4px 8px;
@@ -1015,7 +1017,7 @@ defineExpose({ observerTarget });
     transform: none;
   }
 
-  .list-image { width: 120px; min-width: 120px; }
+  .list-image { width: 120px; min-width: 120px; height: 120px; }
 
   .list-badges-top { top: 8px; left: 8px; gap: 4px; }
   .list-eval-badge { padding: 3px 7px; font-size: 9px; gap: 4px; }
