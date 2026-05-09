@@ -1,4 +1,5 @@
 import { reactive, readonly } from 'vue'
+import { useLoginPrompt } from '@/composables/useLoginPrompt'
 
 const state = reactive({
   visible: false,
@@ -37,12 +38,9 @@ function dismiss() {
   close()
 }
 
-function openLoginRequired(message = '이 기능을 사용하려면 로그인이 필요합니다.') {
-  return open({
-    type: 'login',
-    title: '로그인이 필요합니다',
-    message
-  })
+function openLoginRequired(message = '') {
+  const { openLoginPrompt } = useLoginPrompt()
+  return openLoginPrompt(message)
 }
 
 function confirm(result = true) {

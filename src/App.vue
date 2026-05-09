@@ -4,6 +4,7 @@ import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {webSocketService} from '@/services/webSocketService.js'
 import {useAuth} from '@/composables/useAuth'
 import GlobalConfirmDialog from '@/components/common/GlobalConfirmDialog.vue'
+import LoginPromptModal from '@/components/common/LoginPromptModal.vue'
 import {useConfirmDialog} from '@/composables/useConfirmDialog'
 import NotificationDropdown from '@/components/notification/NotificationDropdown.vue'
 import NotificationToast from '@/components/notification/NotificationToast.vue'
@@ -358,6 +359,9 @@ onUnmounted(() => {
 
   <!-- 글로벌 확인 다이얼로그 -->
   <GlobalConfirmDialog />
+
+  <!-- 로그인 유도 모달 -->
+  <LoginPromptModal />
 
   <!-- 알림 토스트 -->
   <NotificationToast v-if="isLoggedIn" />
