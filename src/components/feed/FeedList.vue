@@ -1003,10 +1003,13 @@ defineExpose({ observerTarget });
 
   .list-item {
     flex-direction: row-reverse;
+    align-items: flex-start;
     border-radius: 0;
-    background: transparent;
+    background: #ffffff;
     box-shadow: none;
-    border-bottom: 1px solid #F2F4F6;
+    border-bottom: 1px solid #F1F3F6;
+    padding: 12px 16px;
+    gap: 12px;
   }
   .list-item:hover {
     transform: none;
@@ -1017,16 +1020,24 @@ defineExpose({ observerTarget });
     transform: none;
   }
 
-  .list-image { width: 120px; min-width: 120px; height: 120px; }
+  .list-image {
+    width: 100px;
+    min-width: 100px;
+    height: 100px;
+    border-radius: 12px;
+  }
 
-  .list-badges-top { top: 8px; left: 8px; gap: 4px; }
-  .list-eval-badge { padding: 3px 7px; font-size: 9px; gap: 4px; }
+  .list-badges-top { top: 6px; left: 6px; gap: 3px; }
+  .list-eval-badge { padding: 2.5px 6px; font-size: 9px; gap: 3px; }
   .list-eval-badge .eval-dot { width: 4px; height: 4px; }
   .list-trend-badge { padding: 3px 6px; font-size: 8px; }
   .list-price-overlay { bottom: 6px; right: 6px; font-size: 10px; padding: 2px 6px; }
+  .list-new-badge { top: 6px; right: 6px; padding: 3px 7px; font-size: 9.5px; }
+  .list-multi-photo { bottom: 6px; right: 6px; width: 22px; height: 22px; }
+  .list-multi-photo svg { width: 12px; height: 12px; }
 
   /* === 가독성 보강: 텍스트 사이즈 / line-height / 대비만 손봄 === */
-  .list-content { padding: 10px 12px; gap: 6px; }
+  .list-content { padding: 0; gap: 5px; }
   .list-review {
     font-size: 13.5px;          /* 12 → 13.5 */
     line-height: 1.45;          /* 가독성 향상 */
@@ -1045,12 +1056,54 @@ defineExpose({ observerTarget });
   .list-hashtags { gap: 6px; }
   .list-tag { font-size: 10.5px; }  /* 9 → 10.5 */
 
-  .list-footer { padding-top: 7px; }
-  .list-avatar { width: 22px; height: 22px; }
-  .list-nickname { font-size: 11.5px; }   /* 10 → 11.5 */
-  .list-time { font-size: 10.5px; }       /* 9 → 10.5 */
-  .stat { font-size: 11px; padding: 4px 8px; gap: 4px; }   /* 10 → 11 */
-  .stat svg { width: 13px; height: 13px; }                  /* 12 → 13 */
+  /* 푸터: 작성자/메타/리액션 한 줄 인라인 */
+  .list-footer {
+    padding-top: 7px;
+    border-top: 1px solid #F1F3F6;
+    gap: 8px;
+  }
+  .list-author { gap: 5px; align-items: center; min-width: 0; }
+  .list-avatar { width: 18px; height: 18px; }
+  .list-author-meta {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .list-nickname-row { gap: 3px; min-width: 0; }
+  .list-nickname { font-size: 11.5px; }
+  .list-time {
+    font-size: 10.5px;
+    color: #94A3B8;
+    flex-shrink: 0;
+    position: relative;
+    padding-left: 8px;
+  }
+  .list-time::before {
+    content: '·';
+    position: absolute;
+    left: 1px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #CBD5E1;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* 리액션: pill 배경 제거하고 플랫 인라인 */
+  .list-stats { gap: 10px; }
+  .stat {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: 11px;
+    font-weight: 500;
+    color: #94A3B8;
+    gap: 3px;
+  }
+  .stat svg { width: 13px; height: 13px; }
+  .stat.active { background: transparent; color: #9333EA; }
+  .stat.like-btn:active { background: transparent; color: #9333EA; }
 
   /* 모바일 스켈레톤: 그리드 뷰 - FeedCard 모바일과 동일 */
   .skeleton-card {
