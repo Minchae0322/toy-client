@@ -5,6 +5,7 @@
           :src="getUserProfileImage"
           :alt="userInfo?.nickname"
           class="author-avatar"
+          @error="onAvatarError"
       />
       <div class="author-details">
         <div class="author-name-row">
@@ -44,6 +45,7 @@
 <script setup>
 import { computed } from 'vue'
 import { feedUtils } from '@/services/FeedService'
+import { resolveProfileImage, onAvatarError } from '@/utils/defaultAvatar'
 
 const props = defineProps({
   userInfo: {
@@ -71,7 +73,7 @@ const props = defineProps({
 defineEmits(['follow', 'unfollow'])
 
 const getUserProfileImage = computed(() => {
-  return props.userInfo?.profileImageFile?.fileUrl || 'https://i.pravatar.cc/150?img=33'
+  return resolveProfileImage(props.userInfo?.profileImageFile?.fileUrl, props.userInfo?.profileImageUrl, props.userInfo?.profileImgUrl)
 })
 
 const formatDate = (dateString) => feedUtils.formatDate(dateString)

@@ -3,7 +3,7 @@
     <div class="user-dropdown">
       <button class="user-trigger">
         <img
-            :src="user?.profileImage || '/default-avatar.png'"
+            :src="user?.profileImage || '/default-avatar.svg'"
             :alt="user?.nickname || '사용자'"
             class="user-avatar"
         >

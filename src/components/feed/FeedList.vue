@@ -175,7 +175,7 @@
             <!-- 푸터: 작성자 + 조회수/좋아요/댓글 -->
             <div class="list-footer">
               <div class="list-author" role="link" tabindex="0" @click.stop.prevent="goToUser(feed)" @keydown.enter.prevent="goToUser(feed)">
-                <img :src="getProfileImageUrl(feed) || '/default-avatar.png'" class="list-avatar" />
+                <img :src="getProfileImageUrl(feed)" class="list-avatar" @error="onAvatarError" />
                 <div class="list-author-meta">
                   <div class="list-nickname-row">
                     <span class="list-nickname">{{ getDisplayNickname(feed) }}</span>
@@ -221,6 +221,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import UserLevelTag from '@/components/identity/UserLevelTag.vue';
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
+import { resolveProfileImage, onAvatarError } from '@/utils/defaultAvatar';
 
 const props = defineProps({
   feeds: { type: Array, default: () => [] },
@@ -242,7 +243,7 @@ const goToUser = (feed) => {
 };
 
 // userInfo: 프로필(닉네임/사진/뱃지) · userRewardInfo: 레벨/tier
-const getProfileImageUrl = (feed) => feed.userInfo?.profileImageFile?.fileUrl || feed.userInfo?.profileImgUrl || null;
+const getProfileImageUrl = (feed) => resolveProfileImage(feed.userInfo?.profileImageFile?.fileUrl, feed.userInfo?.profileImgUrl);
 const getDisplayNickname = (feed) => feed.userInfo?.nickname || feed.userInfo?.nickName || '익명';
 const getUserLevel = (feed) => feed.userRewardInfo?.level ?? null;
 const getPrimaryBadgeId = (feed) => {
