@@ -28,14 +28,14 @@
             @input="onTitleInput"
             @compositionend="onTitleInput"
             type="text"
-            maxlength="20"
+            maxlength="30"
             class="form-input title-input"
             :class="{ filled: battleForm.title.trim().length > 0 }"
             placeholder="예: 2025 최고의 무선 이어폰은?"
         >
         <div class="input-footer">
-          <span class="char-count" :class="{ warning: battleForm.title.length >= 20 }">
-            {{ battleForm.title.length }}/20
+          <span class="char-count" :class="{ warning: battleForm.title.length >= 30 }">
+            {{ battleForm.title.length }}/30
           </span>
         </div>
       </div>
