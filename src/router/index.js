@@ -169,6 +169,12 @@ const routes = [
     component: () => import('@/views/NotificationSettingsView.vue'),
     meta: { requiresAuth: true, title: '알림 설정' }
   },
+  {
+    path: '/settings/account',
+    name: 'AccountSettings',
+    component: () => import('@/views/AccountSettingsView.vue'),
+    meta: { requiresAuth: true, title: '계정 설정' }
+  },
 
   // ==================== 배틀 관련 라우트 ====================
   {

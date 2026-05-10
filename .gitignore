@@ -52,3 +52,15 @@ google-application-credentials.json
 
 # Claude Code 로컬 설정 (사용자별 권한 목록)
 .claude/settings.local.json
+
+# iOS Xcode 자동 생성/사용자별 파일
+ios/App/Pods/
+ios/DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Android 자동 생성
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/

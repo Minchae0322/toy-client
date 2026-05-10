@@ -511,7 +511,7 @@ const goToMyProducts = () => router.push({name: 'MyProducts'})
 const showComingSoon = () => open({ type: 'alert', title: '준비중입니다', message: '해당 기능은 현재 준비중입니다.' })
 const goToSavedPosts = () => showComingSoon()
 const goToNotificationSettings = () => router.push({ name: 'NotificationSettings' })
-const goToAccountSettings = () => showComingSoon()
+const goToAccountSettings = () => router.push({ name: 'AccountSettings' })
 
 const handleLogout = async () => {
   const confirmed = await open({ type: 'confirm', title: '로그아웃', message: '로그아웃 하시겠습니까?' })

@@ -4,4 +4,5 @@
     <string name="title_activity_main">요거뜨</string>
     <string name="package_name">com.jmcabc0322.yogurt</string>
     <string name="custom_url_scheme">com.jmcabc0322.yogurt</string>
+    <string name="server_client_id">4259829940-5fchek1qftvv1i3nhqbjh4lc54pnfek0.apps.googleusercontent.com</string>
 </resources>

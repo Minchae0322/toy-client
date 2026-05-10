@@ -81,6 +81,8 @@
 
             <!-- 피드 탭 -->
             <div v-if="activeTab === 'feed'" class="tab-content">
+              <!-- 의견 작성 진입 — 기능 점검 중 임시 비활성화 -->
+              <!--
               <div class="write-box" @click="handleWriteFeed">
                 <div class="write-avatar">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -88,6 +90,8 @@
                 <span class="write-placeholder">이 상품에 대한 의견을 남겨보세요</span>
                 <span class="write-action">작성</span>
               </div>
+              -->
+
 
               <FeedCard v-for="feed in feeds" :key="feed.id" :feed="feed" @like="handleFeedLike" />
 
