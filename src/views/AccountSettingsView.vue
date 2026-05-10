@@ -13,10 +13,6 @@
       <section class="card" v-if="user">
         <h2 class="card-title">계정 정보</h2>
         <div class="info-row">
-          <span class="info-label">이메일</span>
-          <span class="info-value">{{ user.email || '-' }}</span>
-        </div>
-        <div class="info-row">
           <span class="info-label">닉네임</span>
           <span class="info-value">{{ user.nickname || user.username || '-' }}</span>
         </div>
@@ -29,7 +25,7 @@
           회원 탈퇴 시 다음 정보가 <strong>영구 삭제</strong>되며 복구할 수 없습니다.
         </p>
         <ul class="delete-list">
-          <li>프로필 정보 (닉네임, 이메일, 프로필 사진)</li>
+          <li>프로필 정보 (닉네임, 프로필 사진)</li>
           <li>작성한 피드, 배틀, 한줄 변론</li>
           <li>채팅 내역 및 알림</li>
           <li>보유한 EXP, 뱃지, 컬렉션</li>

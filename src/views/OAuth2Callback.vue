@@ -79,6 +79,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import * as authUtils from '@/utils/auth.js'
+import { signInWithApple, signInWithGoogle } from '@/services/nativeAuth.js'
 
 const router = useRouter()
 const { login } = useAuth()
@@ -98,6 +99,9 @@ const steps = ['서비스 연결 중', '계정 확인 중', '프로필 불러오
 
 // 어떤 소셜 서비스를 선택했는지 감지
 const detectProvider = () => {
+  const queryProvider = new URLSearchParams(window.location.search).get('provider')
+  if (queryProvider) return queryProvider
+
   const saved = sessionStorage.getItem('oauth_provider')
   if (saved) return saved
 
@@ -187,15 +191,22 @@ const handleOAuthCallback = async () => {
     currentStep.value = 0
 
     const urlParams = new URLSearchParams(window.location.search)
-    const accessToken = urlParams.get('token')
-    const refreshToken = urlParams.get('refreshToken')
+    const isNative = urlParams.get('native') === '1'
     const errorParam = urlParams.get('error')
+    if (errorParam) throw new Error(`OAuth 인증 실패: ${errorParam}`)
 
-    if (errorParam) {
-      throw new Error(`OAuth 인증 실패: ${errorParam}`)
-    }
-    if (!accessToken) {
-      throw new Error('Access Token이 URL에 없습니다.')
+    let accessToken, refreshToken, nativeUser
+    if (isNative) {
+      // 네이티브 SDK 호출 (Apple/Google)
+      const fn = provider.value === 'apple' ? signInWithApple : signInWithGoogle
+      const res = await fn()
+      accessToken = res.accessToken
+      refreshToken = res.refreshToken
+      nativeUser = res.user
+    } else {
+      accessToken = urlParams.get('token')
+      refreshToken = urlParams.get('refreshToken')
+      if (!accessToken) throw new Error('Access Token이 URL에 없습니다.')
     }
 
     // Step 2: 계정 확인
@@ -215,7 +226,7 @@ const handleOAuthCallback = async () => {
     await new Promise(r => setTimeout(r, 400))
     currentStep.value = 2
 
-    const userInfo = {
+    const userInfo = nativeUser || {
       id: payload.userId || payload.sub,
       username: payload.username || payload.sub,
       email: payload.email || `${payload.sub}@oauth.local`,
@@ -267,6 +278,12 @@ const handleOAuthCallback = async () => {
 
   } catch (err) {
     console.error('[OAuth] 콜백 처리 실패:', err)
+    // 사용자가 네이티브 시트에서 취소한 경우 → 조용히 로그인 화면으로 복귀
+    const msg = String(err?.message || '')
+    if (/cancel|canceled|dismiss|user.*cancel/i.test(msg)) {
+      router.replace({ name: 'Login' })
+      return
+    }
     error.value = true
     errorMessage.value = err.message
     debugInfo.value = {

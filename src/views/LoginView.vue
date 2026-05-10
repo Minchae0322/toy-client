@@ -65,7 +65,6 @@ import { useAuth } from '@/composables/useAuth'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import * as authUtils from '@/utils/auth.js'
 import { authService } from '@/services/AuthService.js'
-import { signInWithApple, signInWithGoogle } from '@/services/nativeAuth.js'
 import LoginForm from '@/components/login/LoginForm.vue'
 import RegisterForm from '@/components/login/RegisterForm.vue'
 import PasswordResetForm from '@/components/login/PasswordResetForm.vue'
@@ -130,24 +129,11 @@ const handleRegister = async (formData) => {
 const handleSocialLogin = async (provider) => {
   loginError.value = ''
 
-  // 네이티브: Apple/Google은 SDK 직접 호출 → 백엔드 native endpoint
+  // 네이티브: Apple/Google은 OAuth 콜백 화면으로 라우팅 (진행 UI 재사용)
   if (Capacitor.isNativePlatform() && (provider === 'apple' || provider === 'google')) {
-    loading.value = true
-    try {
-      const fn = provider === 'apple' ? signInWithApple : signInWithGoogle
-      const { accessToken, refreshToken, user } = await fn()
-      await login({ accessToken, refreshToken }, user)
-      router.replace(redirectPath.value)
-    } catch (err) {
-      console.error(`[LoginView] ${provider} 네이티브 로그인 실패:`, err)
-      // 사용자가 취소한 경우는 조용히 처리
-      const msg = String(err?.message || '')
-      if (!/cancel|canceled|dismiss/i.test(msg)) {
-        loginError.value = `${provider} 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.`
-      }
-    } finally {
-      loading.value = false
-    }
+    sessionStorage.setItem('oauth_provider', provider)
+    sessionStorage.setItem('oauth_redirect', redirectPath.value)
+    router.push({ path: '/oauth/callback', query: { native: '1', provider } })
     return
   }
 
