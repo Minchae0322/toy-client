@@ -39,7 +39,7 @@
       </div>
 
       <ul v-else class="list">
-        <li v-for="comment in comments" :key="comment.commentId" class="item">
+        <li v-for="comment in visibleComments" :key="comment.commentId" class="item">
           <!-- 부모 댓글 -->
           <div class="comment-row">
             <img
@@ -203,6 +203,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { feedUtils } from '@/services/FeedService'
 import { getUserId } from '@/utils/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { useUserBlock } from '@/composables/useUserBlock.js'
 import { DEFAULT_AVATAR_URL, resolveProfileImage, onAvatarError } from '@/utils/defaultAvatar'
 
 const props = defineProps({
@@ -213,6 +214,18 @@ const props = defineProps({
   feedCreatorId: { type: Number, default: null },
   currentUserProfile: { type: String, default: DEFAULT_AVATAR_URL }
 })
+
+const { isBlocked } = useUserBlock()
+const visibleComments = computed(() =>
+  props.comments
+    .filter((c) => !isBlocked(c?.creatorId))
+    .map((c) => ({
+      ...c,
+      replies: Array.isArray(c.replies)
+        ? c.replies.filter((r) => !isBlocked(r?.creatorId))
+        : c.replies,
+    }))
+)
 
 const emit = defineEmits(['submit', 'update', 'delete', 'load-more'])
 

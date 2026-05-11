@@ -15,6 +15,7 @@ import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
 import {rewardsService} from '@/services/RewardsService.js'
 import {getTierByLevel, getTierColor} from '@/data/levelSystemData.js'
 import {registerFcm, unregisterFcm} from '@/services/fcmService.js'
+import {useUserBlockStore} from '@/stores/userBlock.js'
 import {Capacitor} from '@capacitor/core'
 import {SplashScreen} from '@capacitor/splash-screen'
 import {App as CapApp} from '@capacitor/app'
@@ -24,6 +25,7 @@ const route = useRoute()
 const router = useRouter()
 const {user, isLoggedIn, isAdmin, logout, userId} = useAuth()
 const {open, openLoginRequired} = useConfirmDialog()
+const userBlockStore = useUserBlockStore()
 
 const isLoggingOut = ref(false)
 const wsStatus = ref('disconnected') // 'disconnected' | 'connecting' | 'connected' | 'error'
@@ -199,6 +201,7 @@ onMounted(() => {
     webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
     loadHeaderRewards()
     registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
+    userBlockStore.load(userId.value)
   }
   runSplashFlow()
   setupAppLifecycle()
@@ -211,11 +214,13 @@ watch(isLoggedIn, (newVal, oldVal) => {
     loadHeaderRewards()
     webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
     registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
+    userBlockStore.load(userId.value)
   } else {
     userLevel.value = null
     userBadges.value = []
     unregisterFcm().catch(e => console.warn('[FCM] 해제 실패:', e))
     webSocketService.disconnect()
+    userBlockStore.clear()
   }
 })
 

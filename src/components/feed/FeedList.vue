@@ -38,7 +38,7 @@
     <slot name="after-header" />
 
     <!-- Empty State -->
-    <div v-if="!loading && feeds.length === 0" class="feed-empty-state">
+    <div v-if="!loading && visibleFeeds.length === 0" class="feed-empty-state">
       <div class="empty-illustration">
         <div class="illustration-circle circle-1"></div>
         <div class="illustration-circle circle-2"></div>
@@ -98,7 +98,7 @@
       <!-- 실제 피드 카드 -->
       <FeedCard
           v-else
-          v-for="feed in feeds"
+          v-for="feed in visibleFeeds"
           :key="feed.feedId"
           :feed="feed"
           @update="(data) => $emit('update', data)"
@@ -136,7 +136,7 @@
       </template>
       <!-- 실제 리스트 아이템 -->
       <template v-else>
-        <router-link v-for="feed in feeds" :key="feed.feedId" :to="{ name: 'FeedDetail', params: { id: feed.feedId } }" class="list-item">
+        <router-link v-for="feed in visibleFeeds" :key="feed.feedId" :to="{ name: 'FeedDetail', params: { id: feed.feedId } }" class="list-item">
           <div class="list-image">
             <img :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'" :alt="feed.productName" />
             <span v-if="isFeedNew(feed)" class="list-new-badge" aria-label="새 게시물">NEW</span>
@@ -213,12 +213,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import FeedCard from './FeedCard.vue';
 import feedService, { feedUtils } from '@/services/FeedService';
 import { useAuth } from '@/composables/useAuth';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
+import { useUserBlock } from '@/composables/useUserBlock.js';
 import UserLevelTag from '@/components/identity/UserLevelTag.vue';
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue';
 import { resolveProfileImage, onAvatarError } from '@/utils/defaultAvatar';
@@ -229,6 +230,9 @@ const props = defineProps({
   viewMode: { type: String, default: 'feed' },
   hideTitle: { type: Boolean, default: false }
 });
+
+const { isBlocked } = useUserBlock();
+const visibleFeeds = computed(() => props.feeds.filter((f) => !isBlocked(f?.userInfo?.userId)));
 
 const emit = defineEmits(['update', 'post-click', 'view-mode-change']);
 const observerTarget = ref(null);

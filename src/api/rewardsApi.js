@@ -32,7 +32,7 @@ import {
   getNextLevelExp,
 } from '@/data/levelSystemData.js'
 
-export const USE_MOCK = true
+export const USE_MOCK = false
 const MOCK_LATENCY = 200
 
 // 세션 내에서만 유지되는 mutable mock state (유저 전환 시 reset 하려면 resetMockState 호출)

@@ -21,6 +21,8 @@ export default defineConfig(({ mode }) => {
   console.log(`   User:    ${proxyTargets.user}`)
   console.log(`   Chat:    ${proxyTargets.chat}\n`)
 
+  const isProduction = mode === 'production'
+
   return {
     plugins: [vue()],
     resolve: {
@@ -31,6 +33,12 @@ export default defineConfig(({ mode }) => {
     define: {
       // SockJS global 에러 해결
       global: 'globalThis',
+    },
+    esbuild: {
+      // 운영 빌드(웹/Capacitor iOS)에서 console.log/info/debug 및 debugger 제거.
+      // console.error/console.warn은 실서비스 에러 추적을 위해 유지.
+      pure: isProduction ? ['console.log', 'console.info', 'console.debug'] : [],
+      drop: isProduction ? ['debugger'] : [],
     },
     server: {
       // MSA 환경 프록시 설정 (환경변수 기반)

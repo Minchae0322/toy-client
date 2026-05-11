@@ -18,6 +18,28 @@
         </div>
       </section>
 
+      <!-- 안전/관리 -->
+      <section class="card">
+        <h2 class="card-title">안전 / 관리</h2>
+        <button class="policy-row" @click="goToBlockedUsers">
+          <span>차단한 사용자</span>
+          <ChevronRight :size="16" />
+        </button>
+      </section>
+
+      <!-- 약관 및 정책 -->
+      <section class="card">
+        <h2 class="card-title">약관 및 정책</h2>
+        <button class="policy-row" @click="openTerms('terms')">
+          <span>이용약관</span>
+          <ChevronRight :size="16" />
+        </button>
+        <button class="policy-row" @click="openTerms('privacy')">
+          <span>개인정보처리방침</span>
+          <ChevronRight :size="16" />
+        </button>
+      </section>
+
       <!-- 회원 탈퇴 -->
       <section class="card danger-card">
         <h2 class="card-title">회원 탈퇴</h2>
@@ -41,22 +63,38 @@
         </button>
       </section>
     </main>
+
+    <TermsModal
+      :visible="termsModalVisible"
+      :initial-tab="termsInitialTab"
+      @close="termsModalVisible = false"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, Trash2 } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-vue-next'
 import { authService } from '@/services/AuthService.js'
 import { getUserInfo } from '@/utils/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import TermsModal from '@/components/login/TermsModal.vue'
 
 const router = useRouter()
 const { open } = useConfirmDialog()
 
 const user = ref(null)
 const submitting = ref(false)
+
+const termsModalVisible = ref(false)
+const termsInitialTab = ref('terms')
+const openTerms = (tab) => {
+  termsInitialTab.value = tab
+  termsModalVisible.value = true
+}
+
+const goToBlockedUsers = () => router.push({ name: 'BlockedUsers' })
 
 onMounted(() => {
   user.value = getUserInfo()
@@ -184,6 +222,28 @@ const handleDeleteAccount = async () => {
 .info-label { color: #6b7280; }
 
 .info-value { color: #111827; font-weight: 600; }
+
+.policy-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  border-top: 1px solid #f5f5f7;
+  background: transparent;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease;
+}
+
+.policy-row:first-of-type { border-top: none; }
+
+.policy-row:hover { color: #9333ea; }
 
 .danger-card {
   border-color: #fee2e2;

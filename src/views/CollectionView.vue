@@ -7,11 +7,11 @@
         <!-- 헤더 -->
         <header class="page-header">
           <h1 class="page-title">컬렉션</h1>
-          <p class="page-subtitle">나의 성장 · 뱃지 · 숙련도 · 예측 전적</p>
+          <p class="page-subtitle">나의 성장 · 뱃지</p>
         </header>
 
         <!-- 탭 -->
-        <nav class="tab-bar">
+        <nav v-if="tabs.length > 1" class="tab-bar">
           <button
             v-for="tab in tabs"
             :key="tab.id"
@@ -70,28 +70,6 @@
           </section>
         </div>
 
-        <!-- 숙련도 탭 -->
-        <div v-else-if="currentTab === 'proficiency'" class="tab-panel">
-          <div class="coming-soon">
-            <div class="coming-soon-icon">
-              <Award :size="32" :stroke-width="2.2" />
-            </div>
-            <h3 class="coming-soon-title">준비중인 메뉴예요</h3>
-            <p class="coming-soon-desc">곧 만나보실 수 있도록 준비하고 있어요</p>
-          </div>
-        </div>
-
-        <!-- 예측 탭 -->
-        <div v-else-if="currentTab === 'prediction'" class="tab-panel">
-          <div class="coming-soon">
-            <div class="coming-soon-icon">
-              <Target :size="32" :stroke-width="2.2" />
-            </div>
-            <h3 class="coming-soon-title">준비중인 메뉴예요</h3>
-            <p class="coming-soon-desc">곧 만나보실 수 있도록 준비하고 있어요</p>
-          </div>
-        </div>
-
         <Transition name="toast">
           <div v-if="toast" class="toast">
             <component :is="toast.icon" class="toast-icon" :size="18" :stroke-width="2.2" />
@@ -118,16 +96,12 @@ import {
   Gift,
   Ticket,
   AlertCircle,
-  Award,
-  Target,
 } from '@/utils/collectionIcons.js'
 
 const authStore = useAuthStore()
 
 const tabs = [
   { id: 'rewards', icon: Gift, label: '보상' },
-  { id: 'proficiency', icon: Award, label: '숙련도' },
-  { id: 'prediction', icon: Target, label: '예측' },
 ]
 
 const currentUser = reactive({

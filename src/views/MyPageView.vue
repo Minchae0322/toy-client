@@ -164,10 +164,6 @@
               </div>
               <ChevronRight :size="18" />
             </button>
-            <button class="menu-item" @click="goToSavedPosts">
-              <div class="menu-left"><Bookmark :size="18" /><span>저장한 글</span></div>
-              <ChevronRight :size="18" />
-            </button>
             <button class="menu-item" @click="goToNotificationSettings">
               <div class="menu-left"><Bell :size="18" /><span>알림 설정</span></div>
               <ChevronRight :size="18" />
@@ -195,7 +191,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  Camera, Calendar, Mail, FileText, Bookmark,
+  Camera, Calendar, Mail, FileText,
   Bell, Settings, ChevronRight, LogOut
 } from 'lucide-vue-next'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
@@ -508,8 +504,6 @@ const showFollowings = () => console.log('팔로잉 목록')
 const goToProfile = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToMyFeeds = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToMyProducts = () => router.push({name: 'MyProducts'})
-const showComingSoon = () => open({ type: 'alert', title: '준비중입니다', message: '해당 기능은 현재 준비중입니다.' })
-const goToSavedPosts = () => showComingSoon()
 const goToNotificationSettings = () => router.push({ name: 'NotificationSettings' })
 const goToAccountSettings = () => router.push({ name: 'AccountSettings' })
 

@@ -58,7 +58,7 @@
       <div v-else key="content" :class="['battles-grid', `view-${viewMode}`]">
         <TransitionGroup name="card">
           <BattleCard
-              v-for="battle in battles"
+              v-for="battle in visibleBattles"
               :key="battle.id || battle.battleId"
               :battle="battle"
               @click="handleBattleClick(battle.id || battle.battleId)"
@@ -81,8 +81,10 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BattleCard from '@/components/battle/BattleCard.vue'
+import { useUserBlock } from '@/composables/useUserBlock.js'
 
 const router = useRouter()
+const { isBlocked } = useUserBlock()
 
 const props = defineProps({
   battles: { type: Array, default: () => [] },
@@ -94,6 +96,10 @@ const props = defineProps({
 
 const emit = defineEmits(['battle-click', 'create-battle'])
 const observerTarget = ref(null)
+
+const visibleBattles = computed(() =>
+  props.battles.filter((b) => !isBlocked(b?.creatorUserInfo?.userId ?? b?.creatorId))
+)
 
 const skeletonCount = computed(() => {
   if (typeof window === 'undefined') return 6

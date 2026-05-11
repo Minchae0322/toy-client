@@ -175,6 +175,12 @@ const routes = [
     component: () => import('@/views/AccountSettingsView.vue'),
     meta: { requiresAuth: true, title: '계정 설정' }
   },
+  {
+    path: '/settings/blocked-users',
+    name: 'BlockedUsers',
+    component: () => import('@/views/BlockedUsersView.vue'),
+    meta: { requiresAuth: true, title: '차단한 사용자' }
+  },
 
   // ==================== 배틀 관련 라우트 ====================
   {

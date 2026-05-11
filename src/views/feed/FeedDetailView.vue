@@ -94,6 +94,9 @@
           v-model:visible="showReportModal"
           target="feed"
           :target-id="feed.feedId"
+          :target-user-id="feed.userInfo?.userId"
+          :target-user-nickname="feed.userInfo?.nickname || ''"
+          :target-user-profile-image="feed.userInfo?.profileImage || ''"
           @submitted="handleReportSubmitted"
       />
 

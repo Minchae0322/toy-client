@@ -160,7 +160,7 @@ onMounted(() => {
 <style scoped>
 .notif-settings-page {
   min-height: 100vh;
-  background: #FAFAFB;
+  background: #FFFFFF;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: #0A0E1A;
 }

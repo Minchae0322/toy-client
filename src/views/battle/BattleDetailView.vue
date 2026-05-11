@@ -267,6 +267,9 @@
           v-model:visible="showReportModal"
           target="battle"
           :target-id="battleId"
+          :target-user-id="battle.creatorUserInfo?.userId"
+          :target-user-nickname="battle.creatorUserInfo?.nickname || ''"
+          :target-user-profile-image="battle.creatorUserInfo?.profileImage || ''"
           @submitted="handleReportSubmitted"
       />
 

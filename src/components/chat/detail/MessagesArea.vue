@@ -16,7 +16,7 @@
     <div v-else class="messages-list">
       <TransitionGroup name="message" tag="div">
         <ChatMessage
-            v-for="message in messages"
+            v-for="message in visibleMessages"
             :key="message.messageId || message.id"
             :message="message"
             :is-mine="message.senderId === currentUserId"
@@ -42,8 +42,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import ChatMessage from '@/components/chat/ChatMessage.vue'
+import { useUserBlock } from '@/composables/useUserBlock.js'
 
 const props = defineProps({
   messages: { type: Array, default: () => [] },
@@ -52,6 +53,9 @@ const props = defineProps({
   typingUsers: { type: Array, default: () => [] },
   currentUserId: { type: [String, Number], required: true }
 })
+
+const { isBlocked } = useUserBlock()
+const visibleMessages = computed(() => props.messages.filter((m) => !isBlocked(m?.senderId)))
 
 const emit = defineEmits(['scroll', 'message-click', 'retry', 'delete'])
 const messagesContainer = ref(null)

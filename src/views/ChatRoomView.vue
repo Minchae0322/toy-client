@@ -136,8 +136,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, X, AlertCircle, Check, MessageCircle, CheckCircle, ChevronRight } from 'lucide-vue-next'
 import { chatService } from '@/services/ChatService.js'
+import { useUserBlock } from '@/composables/useUserBlock.js'
 
 const router = useRouter()
+const { isBlocked } = useUserBlock()
 
 // 상태
 const activeTab = ref('all')
@@ -158,7 +160,8 @@ const visibleTabs = computed(() => [
 
 // 필터링
 const filteredRooms = computed(() => {
-  let rooms = [...allChatRooms.value]
+  // 차단된 상대와의 1:1 방은 제외
+  let rooms = allChatRooms.value.filter(r => !isBlocked(r.participantUserId))
 
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
@@ -218,6 +221,8 @@ const loadChatRooms = async () => {
 const transformRoom = (room) => ({
   id: room.chatRoomId || room.roomId || room.id,
   name: room.title || room.participantName || '알 수 없음',
+  // 1:1 채팅의 상대 userId (차단 필터링용)
+  participantUserId: room.participantUserId || room.participantId || room.targetUserId || room.otherUserId || null,
   // 백엔드가 lastMessage를 문자열(신규) 또는 {content, createdAt}(구)로 보낼 수 있음
   lastMessage: typeof room.lastMessage === 'string'
     ? room.lastMessage

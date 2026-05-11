@@ -45,6 +45,15 @@
             <div class="detail-counter">{{ detail.length }} / 500</div>
           </div>
 
+          <!-- 신고와 함께 차단 -->
+          <label v-if="canOfferBlock" class="block-toggle">
+            <input type="checkbox" v-model="alsoBlock" :disabled="submitting" />
+            <span class="block-toggle-text">
+              이 사용자도 차단합니다
+              <span class="block-toggle-desc">차단하면 해당 사용자의 게시물·댓글·메시지가 보이지 않게 됩니다</span>
+            </span>
+          </label>
+
           <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
 
           <div class="actions">
@@ -63,13 +72,22 @@
 import { ref, computed, watch } from 'vue'
 import { feedService } from '@/services/FeedService.js'
 import { battleService } from '@/services/BattleService.js'
+import { useUserBlock } from '@/composables/useUserBlock.js'
+import { useAuthStore } from '@/stores/auth.js'
 
 const props = defineProps({
   visible: { type: Boolean, required: true },
   target: { type: String, required: true, validator: v => ['feed', 'battle'].includes(v) },
-  targetId: { type: [Number, String], required: true }
+  targetId: { type: [Number, String], required: true },
+  // 차단 옵션 (선택) — 전달되면 신고와 함께 차단 옵션 노출
+  targetUserId: { type: [Number, String], default: null },
+  targetUserNickname: { type: String, default: '' },
+  targetUserProfileImage: { type: String, default: '' },
 })
 const emit = defineEmits(['update:visible', 'submitted'])
+
+const userBlock = useUserBlock()
+const authStore = useAuthStore()
 
 const REASON_OPTIONS = [
   { code: 'SPAM',           label: '광고/스팸' },
@@ -85,12 +103,22 @@ const selectedReason = ref('')
 const detail = ref('')
 const submitting = ref(false)
 const errorMessage = ref('')
+const alsoBlock = ref(false)
 
 const titleId = `report-title-${Math.random().toString(36).slice(2, 8)}`
 const detailId = `report-detail-${Math.random().toString(36).slice(2, 8)}`
 
 const isEtc = computed(() => selectedReason.value === 'ETC')
 const canSubmit = computed(() => !!selectedReason.value)
+
+const canOfferBlock = computed(() => {
+  if (!props.targetUserId) return false
+  // 본인 자신은 차단 옵션 노출 X (보통 본인 신고도 막혀있지만 방어적으로)
+  if (String(authStore.userId) === String(props.targetUserId)) return false
+  // 이미 차단된 유저면 노출 X
+  if (userBlock.isBlocked(props.targetUserId)) return false
+  return true
+})
 const subText = computed(() => props.target === 'battle'
   ? '부적절한 배틀을 신고합니다. 신고 내용은 운영팀이 검토합니다.'
   : '부적절한 피드를 신고합니다. 신고 내용은 운영팀이 검토합니다.')
@@ -101,6 +129,7 @@ watch(() => props.visible, v => {
     detail.value = ''
     errorMessage.value = ''
     submitting.value = false
+    alsoBlock.value = false
   }
 })
 
@@ -120,7 +149,21 @@ async function handleSubmit() {
       : await feedService.reportFeed(props.targetId, body)
 
     if (res?.success) {
-      emit('submitted', { reportId: res.data, target: props.target, targetId: props.targetId })
+      // 신고 성공 시 옵션에 따라 차단도 함께
+      let blocked = false
+      if (alsoBlock.value && canOfferBlock.value) {
+        const r = userBlock.block(props.targetUserId, {
+          nickname: props.targetUserNickname || null,
+          profileImage: props.targetUserProfileImage || null,
+        })
+        blocked = r === 'ok'
+      }
+      emit('submitted', {
+        reportId: res.data,
+        target: props.target,
+        targetId: props.targetId,
+        blocked,
+      })
       emit('update:visible', false)
       return
     }
@@ -287,6 +330,46 @@ function mapErrorCode(code, fallback) {
   font-size: 11px;
   color: #a1a1aa;
   text-align: right;
+}
+
+.block-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  margin: 0 0 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.block-toggle:hover { border-color: #d4d4d8; background: #f4f4f5; }
+
+.block-toggle input[type="checkbox"] {
+  accent-color: #9333EA;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.block-toggle-text {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #27272a;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.block-toggle-desc {
+  font-size: 12px;
+  color: #71717a;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .error-msg {
