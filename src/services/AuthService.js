@@ -177,12 +177,29 @@ class AuthService extends BaseApiService {
   }
 
   /**
-   * 사용자 계정 삭제
+   * 회원 탈퇴
+   * DELETE /user/{userId} → 204 No Content
+   * 성공 시 백엔드 로그아웃(/auth/logout)으로 refreshToken 쿠키를 만료시키고
+   * 로컬의 accessToken / user_info도 모두 제거한다.
    */
   async deleteAccount() {
-    const response = await this.delete('/users/profile')
+    const userId = authUtils.getUserId()
+    if (!userId) {
+      return {
+        success: false,
+        message: '사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.'
+      }
+    }
+
+    const response = await this.delete(`/user/${userId}`)
 
     if (response.success) {
+      try {
+        await this.post('/auth/logout', {})
+        console.log('✅ [AUTH] 탈퇴 후 백엔드 로그아웃(refresh 쿠키 만료) 완료')
+      } catch (error) {
+        console.warn('⚠️ [AUTH] 탈퇴 후 백엔드 로그아웃 실패:', error.message)
+      }
       authUtils.logout()
     }
 
