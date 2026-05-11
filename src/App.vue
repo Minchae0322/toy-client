@@ -240,7 +240,7 @@ onUnmounted(() => {
   <!-- 앱 스플래시 (네이티브 + 로그인 상태에서 WS 연결까지 표시) -->
   <transition name="splash-fade">
     <div v-if="showAppSplash" class="app-splash">
-      <img src="/images/logo5.png" alt="요거뜨" class="app-splash-logo" />
+      <img src="/images/yogodde_01.png" alt="요거뜨" class="app-splash-logo" />
     </div>
   </transition>
 
