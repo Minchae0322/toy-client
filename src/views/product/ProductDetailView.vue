@@ -452,9 +452,14 @@ const productCategoryName = computed(() => {
 })
 
 const productAvgRating = computed(() => {
+  // 로드된 리뷰가 있으면 즉시 계산 (등록/삭제 후 바로 반영)
+  if (reviews.value.length > 0) {
+    const sum = reviews.value.reduce((acc, r) => acc + (r.rating || 0), 0)
+    return sum / reviews.value.length
+  }
+  // 없으면 백엔드의 averageRating 사용
   const p = product.value
-  if (!p) return 0
-  return p.averageRating ?? p.avgRating ?? 0
+  return p?.averageRating ?? p?.avgRating ?? 0
 })
 
 const productTags = computed(() => {
