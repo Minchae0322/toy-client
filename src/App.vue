@@ -392,7 +392,7 @@ onUnmounted(() => {
   padding-bottom: env(safe-area-inset-bottom);
 }
 .app-splash-logo {
-  width: 160px;
+  width: min(32vw, 220px);
   height: auto;
   animation: app-splash-pulse 1.6s ease-in-out infinite;
 }
