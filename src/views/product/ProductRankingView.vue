@@ -445,32 +445,58 @@ const nodes = computed(() => {
     return items.map(p => ({ id: p.id, r }))
   }
 
-  // 1단계: "내 점수 / 전체 합" 비율로 면적 배분 → r = √(area/π)
-  // 균일(다 같은 점수)이면 자동으로 동일한 r 이 나오고,
-  // 한 제품이 압도적이면 그 버블이 자연스럽게 커짐.
+  // 점수 비례로 면적 배분 (압축 X) → r = √(area/π)
+  // 1위가 압도적(예: 285 vs 1.1)이면 raw 가 max 를 크게 초과 → 일반 max 로
+  // clamp 해버리면 빈 공간이 많아지고 1위의 "압도적" 느낌이 사라짐.
+  // 그래서 "지배적 버블"은 topMax(=min(w,h)*0.36, 일반 max 의 약 1.4 배)까지 허용,
+  // 나머지는 남은 budget 안에서 자기들끼리 점수 비율 그대로 재분배한다.
+  //   → 1위는 압도적으로 크고, 2~꼴찌는 자기들끼리 정확한 비율 유지 + min 이상으로 보임.
+  const topMax = Math.min(Math.min(w, h) * 0.36, max * 1.5)
   const raw = scores.map(s => Math.sqrt((targetArea * (s / total)) / Math.PI))
-  const rs = raw.map(r => Math.max(min, Math.min(r, max)))
+  const rs = new Array(items.length).fill(0)
 
-  // 2단계: 클램프로 남거나 부족해진 면적을 비-클램프 버블에 재분배
-  //        → 총 버블 면적이 target 에 맞도록 꽉 채움 (비율은 유지)
-  for (let it = 0; it < 6; it++) {
-    let used = 0
-    for (let i = 0; i < rs.length; i++) used += Math.PI * rs[i] * rs[i]
-    const delta = targetArea - used
-    if (Math.abs(delta) < targetArea * 0.015) break
-
-    let flexArea = 0
-    const flexIdxs = []
-    for (let i = 0; i < rs.length; i++) {
-      if (rs[i] > min + 0.5 && rs[i] < max - 0.5) {
-        flexIdxs.push(i)
-        flexArea += Math.PI * rs[i] * rs[i]
-      }
+  // 1단계: raw 가 일반 max 를 크게 넘는 지배적 버블만 먼저 배치
+  let dominantArea = 0
+  const isDom = raw.map(r => r > max * 1.05)
+  for (let i = 0; i < items.length; i++) {
+    if (isDom[i]) {
+      rs[i] = Math.min(raw[i], topMax)
+      dominantArea += Math.PI * rs[i] * rs[i]
     }
-    if (!flexIdxs.length || flexArea <= 0) break
-    const scale = Math.sqrt(Math.max(0, (flexArea + delta) / flexArea))
-    for (const i of flexIdxs) {
-      rs[i] = Math.max(min, Math.min(rs[i] * scale, max))
+  }
+
+  // 2단계: 비-지배 버블 → 남은 budget 으로 자기들 점수 비율대로 재분배
+  const otherIdxs = []
+  let otherScoreTotal = 0
+  for (let i = 0; i < items.length; i++) {
+    if (!isDom[i]) { otherIdxs.push(i); otherScoreTotal += scores[i] }
+  }
+  const otherBudget = Math.max(0, targetArea - dominantArea)
+
+  if (otherIdxs.length > 0) {
+    if (otherScoreTotal === 0 || otherBudget === 0) {
+      for (const i of otherIdxs) rs[i] = min
+    } else {
+      for (const i of otherIdxs) {
+        const share = scores[i] / otherScoreTotal
+        const r = Math.sqrt((otherBudget * share) / Math.PI)
+        rs[i] = Math.max(min, Math.min(r, max))
+      }
+      // 3단계: 비-지배 그룹 안에서 min/max 클램프로 어긋난 면적을 재분배
+      for (let it = 0; it < 6; it++) {
+        let used = dominantArea
+        for (const i of otherIdxs) used += Math.PI * rs[i] * rs[i]
+        const delta = targetArea - used
+        if (Math.abs(delta) < targetArea * 0.015) break
+        const flexIdxs = otherIdxs.filter(i => rs[i] > min + 0.5 && rs[i] < max - 0.5)
+        let flexArea = 0
+        for (const i of flexIdxs) flexArea += Math.PI * rs[i] * rs[i]
+        if (!flexIdxs.length || flexArea <= 0) break
+        const scale = Math.sqrt(Math.max(0, (flexArea + delta) / flexArea))
+        for (const i of flexIdxs) {
+          rs[i] = Math.max(min, Math.min(rs[i] * scale, max))
+        }
+      }
     }
   }
 
