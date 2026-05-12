@@ -326,6 +326,12 @@ const routes = [
     meta: { requiresAuth: false, public: true, title: '이용약관' }
   },
   {
+    path: '/support',
+    name: 'Support',
+    component: () => import('@/views/SupportView.vue'),
+    meta: { requiresAuth: false, public: true, title: '고객 지원', description: '요거뜨 앱 사용 중 궁금한 점이나 문의 사항을 확인할 수 있는 고객 지원 페이지입니다.' }
+  },
+  {
     path: '/about',
     name: 'About',
     component: () => import('@/views/AboutView.vue'),

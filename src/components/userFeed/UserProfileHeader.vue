@@ -76,6 +76,20 @@
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
             </button>
+            <div class="more-wrap" ref="moreMenuRefMobile">
+              <button class="btn btn-soft btn-icon" @click="toggleMoreMenu" aria-label="더보기" :aria-expanded="moreMenuOpen">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="5" r="1"/>
+                  <circle cx="12" cy="12" r="1"/>
+                  <circle cx="12" cy="19" r="1"/>
+                </svg>
+              </button>
+              <div v-if="moreMenuOpen" class="more-menu" role="menu">
+                <button type="button" class="more-item danger" @click="handleToggleBlock" role="menuitem">
+                  {{ isUserBlocked ? '차단 해제' : '이 사용자 차단하기' }}
+                </button>
+              </div>
+            </div>
           </template>
         </div>
 
@@ -149,6 +163,20 @@
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                   </svg>
                 </button>
+                <div class="more-wrap" ref="moreMenuRefDesktop">
+                  <button class="btn btn-soft btn-icon" @click="toggleMoreMenu" aria-label="더보기" :aria-expanded="moreMenuOpen">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="5" r="1"/>
+                      <circle cx="12" cy="12" r="1"/>
+                      <circle cx="12" cy="19" r="1"/>
+                    </svg>
+                  </button>
+                  <div v-if="moreMenuOpen" class="more-menu" role="menu">
+                    <button type="button" class="more-item danger" @click="handleToggleBlock" role="menuitem">
+                      {{ isUserBlocked ? '차단 해제' : '이 사용자 차단하기' }}
+                    </button>
+                  </div>
+                </div>
               </template>
             </div>
           </div>
@@ -201,13 +229,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { userService, userUtils } from '@/services/UserService'
 import { chatService } from '@/services/ChatService.js'
 import { rewardsService } from '@/services/RewardsService.js'
 import { useAuth } from '@/composables/useAuth'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { useUserBlock } from '@/composables/useUserBlock.js'
 import YogurtTierArt from '@/components/identity/YogurtTierArt.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 import { getTierByLevel, getTierColor } from '@/data/levelSystemData.js'
@@ -216,6 +245,11 @@ const route = useRoute()
 const router = useRouter()
 const { isLoggedIn, userId } = useAuth()
 const { open, openLoginRequired } = useConfirmDialog()
+const userBlock = useUserBlock()
+
+const moreMenuOpen = ref(false)
+const moreMenuRefMobile = ref(null)
+const moreMenuRefDesktop = ref(null)
 
 const profileData = ref({
   userId: null,
@@ -400,6 +434,66 @@ const handleEditProfile = () => {
   router.push({ name: 'MyPage' })
 }
 
+const isUserBlocked = computed(() => {
+  const id = profileData.value?.userId
+  if (id == null) return false
+  return userBlock.isBlocked(id)
+})
+
+const toggleMoreMenu = (e) => {
+  e?.stopPropagation()
+  moreMenuOpen.value = !moreMenuOpen.value
+}
+
+const closeMoreMenu = () => {
+  moreMenuOpen.value = false
+}
+
+const handleToggleBlock = async () => {
+  closeMoreMenu()
+  const targetId = profileData.value?.userId
+  if (!targetId) return
+
+  if (!isLoggedIn.value) {
+    const confirmed = await openLoginRequired('로그인이 필요한 기능입니다.\n로그인 페이지로 이동하시겠습니까?')
+    if (confirmed) await router.push({ name: 'Login', query: { redirect: route.fullPath } })
+    return
+  }
+
+  if (isUserBlocked.value) {
+    const confirmed = await open({
+      type: 'confirm',
+      title: '차단을 해제할까요?',
+      message: '차단을 해제하면 다시 게시물·댓글·메시지를 볼 수 있습니다.',
+      confirmText: '차단 해제',
+      cancelText: '취소',
+    })
+    if (!confirmed) return
+    userBlock.unblock(targetId)
+    await open({ type: 'alert', title: '완료', message: '차단이 해제되었습니다.' })
+    return
+  }
+
+  const ok = await userBlock.blockWithConfirm(targetId, {
+    nickname: profileData.value?.nickname || null,
+    profileImage: profileData.value?.profilePicture?.fileUrl || null,
+  })
+  if (ok) {
+    await router.push({ name: 'FeedHome' })
+  }
+}
+
+const handleDocClick = (e) => {
+  if (!moreMenuOpen.value) return
+  const inMobile = moreMenuRefMobile.value && moreMenuRefMobile.value.contains(e.target)
+  const inDesktop = moreMenuRefDesktop.value && moreMenuRefDesktop.value.contains(e.target)
+  if (!inMobile && !inDesktop) closeMoreMenu()
+}
+
+const handleDocKeydown = (e) => {
+  if (e.key === 'Escape') closeMoreMenu()
+}
+
 const formatNumber = (num) => userUtils.formatFollowCount(num)
 
 const formatJoinDate = (dateString) => {
@@ -410,12 +504,20 @@ const formatJoinDate = (dateString) => {
 
 onMounted(() => {
   loadProfile()
+  document.addEventListener('click', handleDocClick)
+  document.addEventListener('keydown', handleDocKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocClick)
+  document.removeEventListener('keydown', handleDocKeydown)
 })
 
 // 같은 뷰에서 다른 유저로 이동하면 프로필·보상 다시 로드
 watch(() => route.params.userId, (newId, oldId) => {
   if (newId === oldId) return
   isProfileLoaded.value = false
+  closeMoreMenu()
   profileData.value = {
     userId: null,
     nickname: '',
@@ -686,6 +788,47 @@ watch(() => route.params.userId, (newId, oldId) => {
   padding: 0;
   color: #475569;
 }
+
+/* ============ 더보기 메뉴 ============ */
+.more-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px #F1F3F6, 0 10px 28px rgba(10, 14, 26, 0.10);
+  min-width: 180px;
+  padding: 6px;
+  z-index: 20;
+}
+
+.more-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #0A0E1A;
+  border-radius: 8px;
+  cursor: pointer;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.more-item:hover { background: #F2F4F6; }
+
+.more-item.danger { color: #DC2626; }
+.more-item.danger:hover { background: #FEF2F2; }
 
 /* ============ EXP — 얇은 인라인 프로그레스 ============ */
 .exp-row {
