@@ -354,6 +354,7 @@ onUnmounted(() => {
         <RouterLink to="/" class="footer-logo">요거뜨</RouterLink>
         <div class="footer-links">
           <RouterLink to="/about">소개</RouterLink>
+          <RouterLink to="/support">고객 지원</RouterLink>
           <RouterLink to="/terms">이용약관</RouterLink>
           <RouterLink to="/privacy">개인정보처리방침</RouterLink>
         </div>

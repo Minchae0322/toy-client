@@ -39,6 +39,7 @@
       <section class="legal-section">
         <h2>법적 고지</h2>
         <p>
+          <router-link to="/support">고객 지원</router-link> |
           <router-link to="/privacy">개인정보처리방침</router-link> |
           <router-link to="/terms">이용약관</router-link>
         </p>
