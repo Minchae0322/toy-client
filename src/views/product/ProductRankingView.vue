@@ -433,26 +433,48 @@ const nodes = computed(() => {
   const scores = items.map(p => Math.max(0, getPopularityScore(p) || 0))
   const total = scores.reduce((s, x) => s + x, 0)
 
-  // 전체 면적 budget (gap·padding 고려해 보수적으로 0.42)
-  const totalArea = w * h * 0.42
+  // 모바일은 컨테이너가 좁아 빈 공간이 두드러지므로 fill ratio 를 더 높여 꽉 차게
+  const isMobile = w < 600
+  const fillRatio = isMobile ? 0.62 : 0.5
+  const targetArea = w * h * fillRatio
 
   // 모두 0 이면 균일 분배 (점수 정보가 없으니 같은 크기)
   if (total === 0) {
-    const uniformR = Math.sqrt(totalArea / (items.length * Math.PI))
+    const uniformR = Math.sqrt(targetArea / (items.length * Math.PI))
     const r = Math.round(Math.max(min, Math.min(uniformR, max * 0.7)))
     return items.map(p => ({ id: p.id, r }))
   }
 
-  // "내 점수 / 전체 합" 비율로 면적 배분 → r = √(area/π)
+  // 1단계: "내 점수 / 전체 합" 비율로 면적 배분 → r = √(area/π)
   // 균일(다 같은 점수)이면 자동으로 동일한 r 이 나오고,
   // 한 제품이 압도적이면 그 버블이 자연스럽게 커짐.
-  return items.map((p, i) => {
-    const share = scores[i] / total
-    const area = totalArea * share
-    const raw = Math.sqrt(area / Math.PI)
-    const r = Math.round(Math.max(min, Math.min(raw, max)))
-    return { id: p.id, r }
-  })
+  const raw = scores.map(s => Math.sqrt((targetArea * (s / total)) / Math.PI))
+  const rs = raw.map(r => Math.max(min, Math.min(r, max)))
+
+  // 2단계: 클램프로 남거나 부족해진 면적을 비-클램프 버블에 재분배
+  //        → 총 버블 면적이 target 에 맞도록 꽉 채움 (비율은 유지)
+  for (let it = 0; it < 6; it++) {
+    let used = 0
+    for (let i = 0; i < rs.length; i++) used += Math.PI * rs[i] * rs[i]
+    const delta = targetArea - used
+    if (Math.abs(delta) < targetArea * 0.015) break
+
+    let flexArea = 0
+    const flexIdxs = []
+    for (let i = 0; i < rs.length; i++) {
+      if (rs[i] > min + 0.5 && rs[i] < max - 0.5) {
+        flexIdxs.push(i)
+        flexArea += Math.PI * rs[i] * rs[i]
+      }
+    }
+    if (!flexIdxs.length || flexArea <= 0) break
+    const scale = Math.sqrt(Math.max(0, (flexArea + delta) / flexArea))
+    for (const i of flexIdxs) {
+      rs[i] = Math.max(min, Math.min(rs[i] * scale, max))
+    }
+  }
+
+  return items.map((p, i) => ({ id: p.id, r: Math.round(rs[i]) }))
 })
 
 // positions: 동기 computed 대신 RAF 지연으로 메인 스레드 블로킹 방지
