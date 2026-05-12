@@ -42,6 +42,9 @@
       <!-- Vote Actions -->
       <div class="vote-actions" :class="{ 'is-ended': !canVote }">
         <template v-if="isWeightedVote">
+          <div v-if="canVote" class="vote-hint">
+            <span>탭하여 순위 투표</span>
+          </div>
           <div class="rank-selector">
             <button
                 v-for="r in [1, 2, 3]"
@@ -58,25 +61,32 @@
             <span class="vote-rate-pct">{{ percentage }}%</span>
           </div>
         </template>
-        <button
-            v-else
-            @click="onVote(1)"
-            :disabled="submitting || !canVote"
-            :class="['vote-btn', { active: productRank !== null }]"
-            :style="{ '--vote-fill': voteFillWidth }"
-        >
-          <svg class="vote-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <template v-if="productRank !== null">
-              <path d="M20 6L9 17l-5-5"/>
-            </template>
-            <template v-else>
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </template>
-          </svg>
-          <span class="vote-btn-label">{{ !canVote ? '투표 마감' : (productRank !== null ? '내가 뽑은 픽' : '투표하기') }}</span>
-          <span class="vote-btn-pct">{{ percentage }}%</span>
-        </button>
+        <template v-else>
+          <button
+              @click="onVote(1)"
+              :disabled="submitting || !canVote"
+              :class="['vote-btn', { active: productRank !== null, ended: !canVote }]"
+          >
+            <svg class="vote-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <template v-if="productRank !== null">
+                <path d="M20 6L9 17l-5-5"/>
+              </template>
+              <template v-else>
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </template>
+            </svg>
+            <span class="vote-btn-label">{{ !canVote ? '투표 마감' : (productRank !== null ? '내가 뽑은 픽' : '투표하기') }}</span>
+            <svg v-if="canVote && productRank === null" class="vote-btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/>
+              <path d="M13 6l6 6-6 6"/>
+            </svg>
+          </button>
+          <div class="vote-rate-bar" :style="{ '--vote-fill': voteFillWidth }">
+            <span class="vote-rate-label">투표율</span>
+            <span class="vote-rate-pct">{{ percentage }}%</span>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -532,6 +542,19 @@ defineExpose({ setCommentSubmitting })
   padding-top: 8px;
 }
 
+/* 탭하라는 힌트 */
+.vote-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9333ea;
+  letter-spacing: -0.2px;
+}
+
 /* 순위 선택 칩 */
 .rank-selector {
   display: flex;
@@ -540,13 +563,23 @@ defineExpose({ setCommentSubmitting })
 
 .rank-chip {
   flex: 1;
-  padding: 8px 0;
+  padding: 10px 0;
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.rank-chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+.rank-chip:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 /* 1위 - 골드 */
@@ -608,59 +641,59 @@ defineExpose({ setCommentSubmitting })
   cursor: not-allowed;
 }
 
-/* 요거 픽 버튼 */
+/* 투표하기 CTA */
 .vote-btn {
   position: relative;
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-radius: 10px;
-  border: 1.5px solid #e9d5ff;
-  background: #faf5ff;
+  border: none;
+  background: #9333ea;
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: #9333ea;
-  transition: border-color 0.2s ease, color 0.2s ease;
-  overflow: hidden;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.3px;
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.28), 0 2px 4px rgba(147, 51, 234, 0.12);
 }
 
-/* 투표율만큼 채워지는 fill 바 */
-.vote-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: var(--vote-fill, 0%);
-  background: #e9d5ff;
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
-  z-index: 0;
+.vote-btn:hover:not(:disabled) {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(147, 51, 234, 0.36), 0 2px 4px rgba(147, 51, 234, 0.18);
 }
 
-.vote-btn > * {
-  position: relative;
-  z-index: 1;
+.vote-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.28);
 }
 
 .vote-btn-icon {
-  width: 15px;
-  height: 15px;
+  width: 17px;
+  height: 17px;
   flex-shrink: 0;
+}
+
+.vote-btn-arrow {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+
+.vote-btn:hover:not(:disabled) .vote-btn-arrow {
+  transform: translateX(3px);
 }
 
 .vote-btn-label {
   flex: 1;
-  text-align: left;
-}
-
-.vote-btn-pct {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.3px;
-  font-weight: 800;
+  text-align: center;
 }
 
 /* 가중치 투표 모드용 투표율 바 */
@@ -709,33 +742,36 @@ defineExpose({ setCommentSubmitting })
   font-variant-numeric: tabular-nums;
 }
 
-.vote-btn:hover:not(:disabled) {
-  border-color: #d8b4fe;
-}
-.vote-btn:hover:not(:disabled)::before {
-  background: #d8b4fe;
-}
-
+/* 이미 투표함 — 선택된 상태로 식별 */
 .vote-btn.active {
   background: #faf5ff;
-  border-color: #9333ea;
+  border: 1.5px solid #9333ea;
   color: #9333ea;
-}
-
-.vote-btn.active::before {
-  background: #c4b5fd;
+  box-shadow: 0 1px 2px rgba(147, 51, 234, 0.08);
+  font-weight: 700;
 }
 
 .vote-btn.active:hover:not(:disabled) {
-  border-color: #7e22ce;
+  background: #f3e8ff;
+  border-color: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(147, 51, 234, 0.16);
 }
-.vote-btn.active:hover:not(:disabled)::before {
-  background: #a78bfa;
+
+/* 투표 마감 */
+.vote-btn.ended {
+  background: #f3f4f6;
+  color: #94a3b8;
+  box-shadow: none;
+  font-weight: 700;
 }
 
 .vote-btn:disabled {
-  opacity: 0.6;
   cursor: not-allowed;
+}
+
+.vote-btn:disabled:not(.active):not(.ended) {
+  opacity: 0.7;
 }
 
 @media (max-width: 768px) {
@@ -837,16 +873,33 @@ defineExpose({ setCommentSubmitting })
   }
 
   .rank-chip {
-    padding: 6px 0;
-    font-size: 10px;
-    border-radius: 5px;
+    padding: 8px 0;
+    font-size: 11px;
+    border-radius: 6px;
     border-width: 1px;
   }
 
+  .vote-hint {
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+
   .vote-btn {
-    padding: 6px 8px;
-    font-size: 11px;
-    border-radius: 6px;
+    padding: 9px 10px;
+    font-size: 12px;
+    border-radius: 8px;
+    gap: 6px;
+    box-shadow: 0 3px 8px rgba(147, 51, 234, 0.24), 0 1px 2px rgba(147, 51, 234, 0.12);
+  }
+
+  .vote-btn-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .vote-btn-arrow {
+    width: 13px;
+    height: 13px;
   }
 }
 
