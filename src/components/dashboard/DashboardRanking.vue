@@ -241,12 +241,28 @@ const dashBubbleNodes = computed(() => {
   if (!w || !h) return items.map(p => ({ id: p.id, r: min }))
 
   const scores = items.map(p => Math.max(0, getProductPopularityScore(p) || 0))
-  const total = scores.reduce((s, x) => s + x, 0)
 
   // 모바일은 컨테이너가 좁아 빈 공간이 두드러지므로 fill ratio 를 더 높여 꽉 차게
   const isMobile = w < 600
   const fillRatio = isMobile ? 0.62 : 0.5
   const targetArea = w * h * fillRatio
+
+  // 점수 편차가 극단적이면(예: 285 vs 1.1) 작은 버블이 보이지 않을 만큼 작아짐.
+  // 압축 후 (max/min) 면적 비가 MAX_AREA_RATIO 를 넘지 않도록 지수 e 를 적응적으로 결정
+  //   - e = 1: 압축 없음 (편차 작을 때)
+  //   - e < 1: 압축 (편차 클수록 더 강하게)
+  // 항상 순서/상대 크기는 보존됨.
+  const MAX_AREA_RATIO = 10
+  const positives = scores.filter(s => s > 0)
+  let exp = 1
+  if (positives.length > 1) {
+    const minPos = Math.min(...positives)
+    const maxPos = Math.max(...positives)
+    const ratio = maxPos / minPos
+    if (ratio > MAX_AREA_RATIO) exp = Math.log(MAX_AREA_RATIO) / Math.log(ratio)
+  }
+  const compressed = scores.map(s => s > 0 ? Math.pow(s, exp) : 0)
+  const total = compressed.reduce((s, x) => s + x, 0)
 
   // 모두 0 이면 균일 분배
   if (total === 0) {
@@ -255,8 +271,8 @@ const dashBubbleNodes = computed(() => {
     return items.map(p => ({ id: p.id, r }))
   }
 
-  // 1단계: "내 점수 / 전체 합" 비율로 면적 배분 → r = √(area/π)
-  const raw = scores.map(s => Math.sqrt((targetArea * (s / total)) / Math.PI))
+  // 1단계: 압축된 점수 비율로 면적 배분 → r = √(area/π)
+  const raw = compressed.map(c => Math.sqrt((targetArea * (c / total)) / Math.PI))
   const rs = raw.map(r => Math.max(min, Math.min(r, max)))
 
   // 2단계: 클램프로 남거나 부족해진 면적을 비-클램프 버블에 재분배
