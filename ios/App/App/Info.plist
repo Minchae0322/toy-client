@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>ko</string>
 	<key>CFBundleDisplayName</key>
         <string>요거뜨</string>
 	<key>CFBundleExecutable</key>
@@ -63,8 +63,8 @@
 		</dict>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>프로필 사진, 피드 게시물, 배틀 상품, 채팅 이미지를 첨부하기 위해 사진 라이브러리에 접근합니다.</string>
+	<string>사진 보관함은 프로필·피드·요거픽(배틀)·채팅에 이미지를 첨부할 때 사용됩니다.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>프로필 사진, 피드 게시물, 배틀 상품, 채팅 이미지를 직접 촬영하기 위해 카메라에 접근합니다.</string>
+	<string>카메라는 프로필·피드·요거픽(배틀)·채팅 사진을 촬영하는 데 사용됩니다.</string>
 </dict>
 </plist>
