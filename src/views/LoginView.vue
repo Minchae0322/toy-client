@@ -90,6 +90,55 @@ const switchTab = (tab) => {
   resetError.value = ''
 }
 
+/**
+ * 이메일 로그인 에러를 코드와 함께 분류한다.
+ * 화면에 표시되는 메시지에 [ERR-E-xxx] 형태로 코드를 포함시켜
+ * 심사·고객 지원에서 어떤 단계의 실패인지 즉시 식별 가능.
+ *
+ * ERR-E-200 : 네트워크 도달 실패 (서버 응답 없음)
+ * ERR-E-201 : 타임아웃
+ * ERR-E-299 : 통신 실패 (원인 불명)
+ * ERR-E-400 : 잘못된 요청 (이메일 형식 오류 등)
+ * ERR-E-401 : 자격 증명 거부 (비밀번호 불일치)
+ * ERR-E-403 : 접근 거부 (정지된 계정 등)
+ * ERR-E-404 : 사용자 없음
+ * ERR-E-409 : 충돌 (중복 등)
+ * ERR-E-429 : 요청 횟수 초과
+ * ERR-E-4xx : 기타 클라이언트 오류
+ * ERR-E-5xx : 서버 오류
+ */
+const classifyEmailLoginError = (err) => {
+  const status = err?.status
+  const rawMsg = String(err?.message || '')
+  const rawLower = rawMsg.toLowerCase()
+
+  if (!status) {
+    if (rawLower.includes('timeout')) {
+      return { code: 'ERR-E-201', text: '서버 응답이 너무 느려요. 잠시 후 다시 시도해주세요.' }
+    }
+    if (
+      rawLower.includes('network') ||
+      rawLower.includes('failed to fetch') ||
+      rawLower.includes('xhr') ||
+      rawLower.includes('err_')
+    ) {
+      return { code: 'ERR-E-200', text: '서버에 도달할 수 없어요. 네트워크 연결을 확인해주세요.' }
+    }
+    return { code: 'ERR-E-299', text: '서버 통신 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.' }
+  }
+
+  if (status === 400) return { code: 'ERR-E-400', text: '입력값을 다시 확인해주세요.' }
+  if (status === 401) return { code: 'ERR-E-401', text: '이메일 또는 비밀번호가 일치하지 않습니다.' }
+  if (status === 403) return { code: 'ERR-E-403', text: '접근이 거부되었어요. 계정 상태를 확인해주세요.' }
+  if (status === 404) return { code: 'ERR-E-404', text: '존재하지 않는 계정이에요.' }
+  if (status === 409) return { code: 'ERR-E-409', text: '계정 상태에 충돌이 있어요. 고객 지원에 문의해주세요.' }
+  if (status === 429) return { code: 'ERR-E-429', text: '시도 횟수가 너무 많아요. 잠시 후 다시 시도해주세요.' }
+  if (status >= 500) return { code: `ERR-E-${status}`, text: '서버에 일시적인 문제가 있어요. 잠시 후 다시 시도해주세요.' }
+  if (status >= 400) return { code: `ERR-E-${status}`, text: '요청이 거부되었어요. 잠시 후 다시 시도해주세요.' }
+
+  return { code: `ERR-E-${status}`, text: '알 수 없는 오류가 발생했어요.' }
+}
+
 const handleLogin = async (formData) => {
   loading.value = true
   loginError.value = ''
@@ -99,7 +148,9 @@ const handleLogin = async (formData) => {
     await login({ accessToken, refreshToken }, user)
     router.push(redirectPath.value)
   } catch (error) {
-    loginError.value = '이메일 또는 비밀번호가 일치하지 않습니다.'
+    const { code, text } = classifyEmailLoginError(error)
+    loginError.value = `${text} [${code}]`
+    console.error('[Login] 이메일 로그인 실패:', { code, status: error?.status, message: error?.message })
   } finally {
     loading.value = false
   }

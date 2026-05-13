@@ -38,6 +38,22 @@
         <h2>로그인에 실패했어요</h2>
         <p class="error-desc">{{ friendlyMessage }}</p>
 
+        <!-- 진단 박스 (오류 코드 + 원본 메시지) — 심사·고객 지원 식별용으로 항상 노출 -->
+        <div class="diag-box">
+          <div class="diag-row">
+            <span class="diag-label">오류 코드</span>
+            <code class="diag-code">{{ errorCode || 'ERR-UNKNOWN' }}</code>
+          </div>
+          <div v-if="errorMessage" class="diag-row diag-row-msg">
+            <span class="diag-label">상세</span>
+            <span class="diag-msg">{{ errorMessage }}</span>
+          </div>
+          <details v-if="hasDetails" class="diag-details">
+            <summary>기술 정보</summary>
+            <pre>{{ detailsJSON }}</pre>
+          </details>
+        </div>
+
         <div class="help-box">
           <p class="help-title">이렇게 해보세요</p>
           <ul class="help-list">
@@ -52,11 +68,6 @@
           </button>
           <button @click="goToLogin" class="btn-ghost">다른 방법으로 로그인</button>
         </div>
-
-        <details v-if="isDev && debugInfo" class="debug-details">
-          <summary>개발자 정보</summary>
-          <pre>{{ debugInfo }}</pre>
-        </details>
       </div>
 
       <!-- 성공: 바로 리다이렉트 (별도 화면 없음) -->
@@ -79,21 +90,30 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import * as authUtils from '@/utils/auth.js'
-import { signInWithApple, signInWithGoogle } from '@/services/nativeAuth.js'
+import { signInWithApple, signInWithGoogle, LoginError } from '@/services/nativeAuth.js'
 
 const router = useRouter()
 const { login } = useAuth()
 
 const loading = ref(true)
 const error = ref(false)
+const errorCode = ref('')
 const errorMessage = ref('')
+const errorDetails = ref(null)
 const debugInfo = ref('')
 const currentStep = ref(0)
 const welcomeName = ref('')
 const redirectTarget = ref('/feed')
 const provider = ref('oauth')
 
-const isDev = computed(() => import.meta.env.DEV)
+const detailsJSON = computed(() => {
+  try {
+    return JSON.stringify(errorDetails.value || {}, null, 2)
+  } catch {
+    return String(errorDetails.value)
+  }
+})
+const hasDetails = computed(() => errorDetails.value && Object.keys(errorDetails.value).length > 0)
 
 const steps = ['서비스 연결 중', '계정 확인 중', '프로필 불러오는 중', '로그인 완료']
 
@@ -123,28 +143,78 @@ const redirectLabel = computed(() => {
   return map[redirectTarget.value] || '홈'
 })
 
-// 기술 용어를 사용자 언어로 변환
+// 에러 코드 기반 사용자 친화 메시지 매핑
+// (코드 자체는 화면에 따로 노출되므로, 여기서는 사용자에게 보일 한국어 설명만)
 const friendlyMessage = computed(() => {
-  const m = errorMessage.value
-  if (m.includes('Access Token') || m.includes('URL에 없습니다'))
-    return '로그인 정보를 받아오지 못했어요. 인터넷 연결을 확인해주세요.'
-  if (m.includes('JWT') || m.includes('디코딩'))
-    return '받은 로그인 정보에 문제가 있어요. 잠시 후 다시 시도해주세요.'
-  if (m.includes('인증 상태 저장 실패'))
-    return '로그인 정보를 저장하지 못했어요. 브라우저 설정을 확인해주세요.'
-  if (m.includes('인증 실패'))
-    return `${providerLabel.value} 계정 인증에 실패했어요. 계정 상태를 확인해주세요.`
+  const c = errorCode.value
+  if (!c) return '로그인 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.'
+
+  // SDK 초기화 실패
+  if (c === 'ERR-INIT-01') return '소셜 로그인 SDK 초기화에 실패했어요. 앱을 재설치하면 해결될 수 있어요.'
+
+  // Apple/Google SDK 단계
+  if (c === 'ERR-A-101') return 'Apple 로그인 중 시스템 오류가 발생했어요. 잠시 후 다시 시도해주세요.'
+  if (c === 'ERR-A-102') return 'Apple로부터 로그인 정보를 받지 못했어요. 설정 → Apple ID 상태를 확인해주세요.'
+  if (c === 'ERR-G-101') return 'Google 로그인 중 시스템 오류가 발생했어요. 잠시 후 다시 시도해주세요.'
+  if (c === 'ERR-G-102') return 'Google로부터 로그인 정보를 받지 못했어요. 다시 시도해주세요.'
+
+  // 네트워크 단계
+  if (c.endsWith('-200')) return '서버에 도달할 수 없어요. 네트워크 연결을 확인해주세요.'
+  if (c.endsWith('-201')) return '서버 응답이 너무 느려요. 잠시 후 다시 시도해주세요.'
+  if (c.endsWith('-299')) return '서버 통신 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.'
+
+  // HTTP 상태
+  if (/^ERR-[AG]-401$/.test(c) || /^ERR-[AG]-403$/.test(c))
+    return `${providerLabel.value} 계정 인증이 거부됐어요. 다른 방법으로 로그인해보세요.`
+  if (/^ERR-[AG]-4\d{2}$/.test(c))
+    return '서버가 요청을 거부했어요. 잠시 후 다시 시도해주세요.'
+  if (/^ERR-[AG]-5\d{2}$/.test(c))
+    return '서버에 일시적인 문제가 있어요. 잠시 후 다시 시도해주세요.'
+
+  // 응답 누락
+  if (c === 'ERR-A-300' || c === 'ERR-G-300')
+    return '로그인 응답을 제대로 받지 못했어요. 잠시 후 다시 시도해주세요.'
+
+  // OAuth 웹 콜백
+  if (c === 'ERR-O-100') return `${providerLabel.value} 계정 인증에 실패했어요. 계정 상태를 확인해주세요.`
+  if (c === 'ERR-O-101') return '로그인 정보를 받아오지 못했어요. 다시 시도해주세요.'
+  if (c === 'ERR-O-102') return '받은 로그인 정보에 문제가 있어요. 잠시 후 다시 시도해주세요.'
+  if (c === 'ERR-O-103') return '로그인 정보를 저장하지 못했어요. 브라우저 설정을 확인해주세요.'
+
   return '로그인 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.'
 })
 
 const helpTips = computed(() => {
-  const m = errorMessage.value
-  if (m.includes('인증 상태 저장 실패'))
+  const c = errorCode.value
+
+  if (c === 'ERR-O-103') {
     return [
       '브라우저의 쿠키가 허용되어 있는지 확인해주세요',
       '시크릿(프라이빗) 모드에서는 로그인이 제한될 수 있어요',
       '브라우저 캐시를 지우고 다시 시도해보세요'
     ]
+  }
+  if (c === 'ERR-A-102') {
+    return [
+      '설정 → Apple ID → 비밀번호 및 보안 → "Apple로 로그인 사용 중인 앱"에서 요거뜨를 확인해주세요',
+      '2단계 인증이 활성화되어 있는지 확인해주세요',
+      '잠시 후 다시 시도해주세요'
+    ]
+  }
+  if (c?.endsWith('-200') || c?.endsWith('-201') || c?.endsWith('-299')) {
+    return [
+      'Wi-Fi 또는 모바일 데이터 연결을 확인해주세요',
+      'VPN 사용 중이라면 잠시 꺼보세요',
+      '문제가 반복되면 이메일로 로그인해주세요'
+    ]
+  }
+  if (/^ERR-[AG]-4\d{2}$/.test(c || '') || /^ERR-[AG]-5\d{2}$/.test(c || '')) {
+    return [
+      '잠시 후 다시 시도해주세요',
+      '문제가 반복되면 이메일로 로그인해주세요',
+      `오류 코드를 고객 지원에 알려주시면 도움이 됩니다`
+    ]
+  }
   return [
     '인터넷 연결이 안정적인지 확인해주세요',
     '잠시 후 다시 시도해주세요',
@@ -193,7 +263,13 @@ const handleOAuthCallback = async () => {
     const urlParams = new URLSearchParams(window.location.search)
     const isNative = urlParams.get('native') === '1'
     const errorParam = urlParams.get('error')
-    if (errorParam) throw new Error(`OAuth 인증 실패: ${errorParam}`)
+    if (errorParam) {
+      throw new LoginError(
+        'ERR-O-100',
+        `OAuth 콜백 URL에 에러 파라미터: ${errorParam}`,
+        { errorParam }
+      )
+    }
 
     let accessToken, refreshToken, nativeUser
     if (isNative) {
@@ -206,7 +282,13 @@ const handleOAuthCallback = async () => {
     } else {
       accessToken = urlParams.get('token')
       refreshToken = urlParams.get('refreshToken')
-      if (!accessToken) throw new Error('Access Token이 URL에 없습니다.')
+      if (!accessToken) {
+        throw new LoginError(
+          'ERR-O-101',
+          '웹 OAuth 콜백 URL에 access token 쿼리 누락',
+          { search: window.location.search.slice(0, 200) }
+        )
+      }
     }
 
     // Step 2: 계정 확인
@@ -215,7 +297,11 @@ const handleOAuthCallback = async () => {
 
     const payload = decodeJWTPayload(accessToken)
     if (!payload) {
-      throw new Error('JWT 디코딩 실패')
+      throw new LoginError(
+        'ERR-O-102',
+        '백엔드가 발급한 accessToken을 JWT로 디코딩할 수 없음 (포맷 손상)',
+        { tokenLength: accessToken?.length || 0 }
+      )
     }
 
     if (payload.provider) {
@@ -255,7 +341,11 @@ const handleOAuthCallback = async () => {
     }
 
     if (!finalCheck.isAuthenticated) {
-      throw new Error('인증 상태 저장 실패')
+      throw new LoginError(
+        'ERR-O-103',
+        '토큰은 받았지만 인증 상태 저장에 실패 (localStorage/스토어 동기화 실패)',
+        finalCheck
+      )
     }
 
     // Step 4: 완료
@@ -279,23 +369,29 @@ const handleOAuthCallback = async () => {
   } catch (err) {
     console.error('[OAuth] 콜백 처리 실패:', err)
     // 사용자가 네이티브 시트에서 취소한 경우 → 조용히 로그인 화면으로 복귀
-    const msg = String(err?.message || '')
-    if (/cancel|canceled|dismiss|user.*cancel/i.test(msg)) {
+    if (err?.isCancel) {
       router.replace({ name: 'Login' })
       return
     }
     error.value = true
-    errorMessage.value = err.message
-    debugInfo.value = {
-      error: err.message,
-      stack: err.stack,
-      url: window.location.href,
+    errorCode.value = err?.code || 'ERR-UNKNOWN'
+    errorMessage.value = err?.message || String(err)
+    errorDetails.value = {
+      ...(err?.details || {}),
       provider: provider.value,
+      step: currentStep.value,
+      url: window.location.href.slice(0, 200),
       tokens: {
         hasAccessToken: !!authUtils.getAccessToken(),
         hasRefreshToken: !!authUtils.getRefreshToken(),
         hasUserInfo: !!authUtils.getUserInfo()
       }
+    }
+    debugInfo.value = {
+      code: errorCode.value,
+      message: errorMessage.value,
+      stack: err?.stack,
+      ...errorDetails.value
     }
     loading.value = false
   }
@@ -457,6 +553,69 @@ onMounted(handleOAuthCallback)
   line-height: 1.6;
 }
 
+/* ===== 진단 박스 (오류 코드 + 원본 메시지) ===== */
+.diag-box {
+  background: #fff7f7;
+  border: 1px solid #fee2e2;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  text-align: left;
+  font-size: 12px;
+}
+.diag-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 0;
+}
+.diag-row-msg { align-items: flex-start; }
+.diag-label {
+  flex-shrink: 0;
+  width: 56px;
+  color: #991b1b;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.diag-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  word-break: break-all;
+}
+.diag-msg {
+  color: #7f1d1d;
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+}
+.diag-details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #fecaca;
+}
+.diag-details summary {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  color: #991b1b;
+}
+.diag-details pre {
+  margin: 6px 0 0;
+  font-size: 10px;
+  color: #7f1d1d;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
 .help-box {
   background: #fafafa;
   border: 1px solid #f4f4f5;
@@ -559,31 +718,6 @@ onMounted(handleOAuthCallback)
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: .3; }
-}
-
-/* ===== 디버그 (dev only) ===== */
-.debug-details {
-  margin-top: 20px;
-  text-align: left;
-  background: #fafafa;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #e4e4e7;
-}
-.debug-details summary {
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  color: #a1a1aa;
-  margin-bottom: 8px;
-}
-.debug-details pre {
-  font-size: 11px;
-  color: #71717a;
-  margin: 0;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
 }
 
 /* ===== 모바일 ===== */
