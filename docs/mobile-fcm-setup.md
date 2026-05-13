@@ -146,3 +146,54 @@ watch(isLoggedIn, (newVal) => {
 - Service Account JSON으로 `FirebaseApp` 초기화 빈 등록
 - `POST /api/users/me/fcm-token`, `DELETE /api/users/me/fcm-token` 엔드포인트
 - 채팅 메시지 저장 후 수신자 오프라인이면 `FirebaseMessaging.send(...)` 호출
+
+---
+
+## 7. 푸시 알림 아이콘 (작은 아이콘 + 큰 이미지)
+
+### 7-1. Android 작은 아이콘 (상태바 / 알림 좌측)
+
+Android Lollipop+은 작은 아이콘을 **알파 마스크 단색 실루엣**으로 렌더링한다. 컬러 PNG를 넣으면 하얀 사각형으로 보이는 버그가 발생.
+
+**적용 완료:**
+- `android/app/src/main/res/drawable/ic_stat_notification.xml` — U 자 + 상승 화살표 단색 벡터 드로어블
+- `AndroidManifest.xml`의 `default_notification_icon` 메타데이터를 `@drawable/ic_stat_notification`으로 변경
+- 틴트 색상은 기존 `@color/notification_color`(#9333EA 브랜드 보라) 유지
+
+### 7-2. 큰 이미지 (컬러 로고)
+
+FCM payload에 `notification.image` 필드로 컬러 로고 URL을 실어 보내면 알림 본문에 큰 이미지로 표시됨.
+
+**백엔드에서 FCM 전송 시 payload 예시:**
+
+```json
+{
+  "message": {
+    "token": "...",
+    "notification": {
+      "title": "댓글이 달렸어요",
+      "body": "...",
+      "image": "https://app.yogurtte.com/images/yogurtte_logo_3.png"
+    },
+    "data": { "referenceType": "POST", "referenceId": "123" }
+  }
+}
+```
+
+`firebase-admin` Java SDK 사용 시:
+
+```java
+Notification notification = Notification.builder()
+    .setTitle(title)
+    .setBody(body)
+    .setImage("https://app.yogurtte.com/images/yogurtte_logo_3.png")
+    .build();
+```
+
+> 컬러 로고는 `public/images/yogurtte_logo_3.png`로 이미 배포돼 있어 `https://app.yogurtte.com/images/yogurtte_logo_3.png`로 접근 가능. URL은 **HTTPS 필수**이고 디바이스에서 외부망으로 접근 가능해야 함.
+
+### 7-3. iOS
+
+iOS 알림 좌측 아이콘은 **앱 아이콘(`AppIcon.appiconset`)** 으로 자동 설정되며 개별 알림에서 변경 불가. 별도 작업 없음.
+
+큰 이미지는 위 `notification.image`가 그대로 사용됨(Notification Service Extension은 미구성 — 기본 동작 사용).

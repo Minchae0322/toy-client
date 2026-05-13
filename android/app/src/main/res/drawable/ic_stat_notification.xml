@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  요거뜨 푸시 알림 작은 아이콘 (상태 바 / 알림 좌측).
+  Android는 작은 알림 아이콘을 알파 마스크로만 렌더링하므로 반드시 단색 실루엣.
+  실제 표시 색상은 AndroidManifest의 default_notification_color(@color/notification_color)로 틴트됨.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- U-bowl: 둥근 컵 모양 -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M5.5,8 L5.5,13.5 C5.5,16.2 7.6,18.3 10.3,18.3 L13.7,18.3 C16.4,18.3 18.5,16.2 18.5,13.5 L18.5,9.5" />
+
+    <!-- Up-right arrow shaft -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M14.5,9.5 L20,4" />
+
+    <!-- Arrow head (up-right) -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M15.5,4 L20,4 L20,8.5" />
+</vector>

@@ -35,10 +35,11 @@
         </provider>
 
         <!-- ============== FCM 푸시 알림 기본 스타일 ============== -->
-        <!-- 상태바 아이콘 (Android가 단색 실루엣으로 자동 처리) -->
+        <!-- 작은 아이콘 (상태바 / 알림 좌측) — Android가 알파 마스크로 단색 실루엣 렌더링.
+             컬러 mipmap을 그대로 쓰면 하얀 사각형으로 보이므로 전용 단색 벡터 드로어블 사용. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@mipmap/ic_launcher" />
+            android:resource="@drawable/ic_stat_notification" />
 
         <!-- 아이콘 강조 컬러 (브랜드 보라) -->
         <meta-data
