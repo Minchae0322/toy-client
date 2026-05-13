@@ -58,16 +58,14 @@
           </div>
           <div class="vote-rate-bar" :style="{ '--vote-fill': voteFillWidth }">
             <span class="vote-rate-label">투표율</span>
-            <span class="vote-rate-pct">
-              {{ percentage }}%
-              <span class="vote-rate-count">({{ voteCount }}명/총 {{ totalParticipants }}명)</span>
-            </span>
+            <span class="vote-rate-pct">{{ percentage }}% · {{ voteCount }}명</span>
           </div>
         </template>
         <template v-else>
           <button
               @click="onVote(1)"
               :disabled="submitting || !canVote"
+              :style="{ '--vote-fill': voteFillWidth }"
               :class="['vote-btn', { active: productRank !== null, ended: !canVote }]"
           >
             <svg class="vote-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -80,18 +78,8 @@
               </template>
             </svg>
             <span class="vote-btn-label">{{ !canVote ? '투표 마감' : (productRank !== null ? '내가 뽑은 픽' : '투표하기') }}</span>
-            <svg v-if="canVote && productRank === null" class="vote-btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"/>
-              <path d="M13 6l6 6-6 6"/>
-            </svg>
+            <span class="vote-btn-stats">{{ percentage }}% · {{ voteCount }}명</span>
           </button>
-          <div class="vote-rate-bar" :style="{ '--vote-fill': voteFillWidth }">
-            <span class="vote-rate-label">투표율</span>
-            <span class="vote-rate-pct">
-              {{ percentage }}%
-              <span class="vote-rate-count">({{ voteCount }}명/총 {{ totalParticipants }}명)</span>
-            </span>
-          </div>
         </template>
       </div>
     </div>
@@ -162,10 +150,6 @@ const props = defineProps({
   percentage: {
     type: [Number, String],
     required: true
-  },
-  totalParticipants: {
-    type: Number,
-    default: 0
   }
 })
 
@@ -655,7 +639,7 @@ defineExpose({ setCommentSubmitting })
 .vote-btn {
   position: relative;
   width: 100%;
-  padding: 9px 14px;
+  padding: 11px 14px;
   border-radius: 10px;
   border: none;
   background: #9333ea;
@@ -668,9 +652,29 @@ defineExpose({ setCommentSubmitting })
   transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
+  overflow: hidden;
   box-shadow: 0 4px 12px rgba(147, 51, 234, 0.28), 0 2px 4px rgba(147, 51, 234, 0.12);
+}
+
+/* 결과 fill bar (배경) — % 만큼 차오름 */
+.vote-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--vote-fill, 0%);
+  background: rgba(255, 255, 255, 0.18);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.vote-btn > * {
+  position: relative;
+  z-index: 1;
 }
 
 .vote-btn:hover:not(:disabled) {
@@ -685,25 +689,23 @@ defineExpose({ setCommentSubmitting })
 }
 
 .vote-btn-icon {
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-}
-
-.vote-btn-arrow {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  transition: transform 0.18s ease;
-}
-
-.vote-btn:hover:not(:disabled) .vote-btn-arrow {
-  transform: translateX(3px);
 }
 
 .vote-btn-label {
   flex: 1;
-  text-align: center;
+  text-align: left;
+}
+
+.vote-btn-stats {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.92;
+  letter-spacing: -0.2px;
 }
 
 /* 가중치 투표 모드용 투표율 바 */
@@ -752,14 +754,6 @@ defineExpose({ setCommentSubmitting })
   font-variant-numeric: tabular-nums;
 }
 
-.vote-rate-count {
-  margin-left: 4px;
-  color: #9333ea;
-  font-weight: 600;
-  font-size: 11px;
-  opacity: 0.8;
-}
-
 /* 이미 투표함 — 선택된 상태로 식별 */
 .vote-btn.active {
   background: #faf5ff;
@@ -767,6 +761,10 @@ defineExpose({ setCommentSubmitting })
   color: #9333ea;
   box-shadow: 0 1px 2px rgba(147, 51, 234, 0.08);
   font-weight: 700;
+}
+
+.vote-btn.active::before {
+  background: #e9d5ff;
 }
 
 .vote-btn.active:hover:not(:disabled) {
@@ -782,6 +780,10 @@ defineExpose({ setCommentSubmitting })
   color: #94a3b8;
   box-shadow: none;
   font-weight: 700;
+}
+
+.vote-btn.ended::before {
+  background: #e5e7eb;
 }
 
 .vote-btn:disabled {
@@ -915,9 +917,8 @@ defineExpose({ setCommentSubmitting })
     height: 14px;
   }
 
-  .vote-btn-arrow {
-    width: 13px;
-    height: 13px;
+  .vote-btn-stats {
+    font-size: 11px;
   }
 }
 
