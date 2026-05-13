@@ -1,12 +1,14 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Capacitor } from '@capacitor/core'
 import { useLoginPrompt } from '@/composables/useLoginPrompt'
 
 const { state, closeLoginPrompt } = useLoginPrompt()
 const route = useRoute()
 const router = useRouter()
 
+const isNative = Capacitor.isNativePlatform()
 const headline = computed(() => state.message || '로그인하고 더 많은 기능을 이용해보세요')
 
 const startSocialLogin = (provider) => {
@@ -15,6 +17,13 @@ const startSocialLogin = (provider) => {
     sessionStorage.setItem('oauth_redirect', route.fullPath || '/feed')
   } catch {}
   closeLoginPrompt(false)
+
+  // 네이티브 Apple/Google → OAuth 콜백 화면 진행 UI 재사용
+  if (isNative && (provider === 'apple' || provider === 'google')) {
+    router.push({ path: '/oauth/callback', query: { native: '1', provider } })
+    return
+  }
+
   const authBaseUrl = import.meta.env.VITE_AUTH_BASE_URL
   window.location.href = `${authBaseUrl}/oauth2/authorization/${provider}`
 }
@@ -61,7 +70,15 @@ const handleOverlayClick = () => closeLoginPrompt(false)
               </span>
               <span>네이버로 계속하기</span>
             </button>
-            <button type="button" class="lp-btn lp-btn--github" @click="startSocialLogin('github')">
+            <button v-if="isNative" type="button" class="lp-btn lp-btn--apple" @click="startSocialLogin('apple')">
+              <span class="lp-icon-svg">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                </svg>
+              </span>
+              <span>Apple로 계속하기</span>
+            </button>
+            <button v-else type="button" class="lp-btn lp-btn--github" @click="startSocialLogin('github')">
               <span class="lp-icon-svg">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
@@ -217,6 +234,12 @@ const handleOverlayClick = () => closeLoginPrompt(false)
   color: #ffffff;
 }
 .lp-btn--github:hover { background: #1B1F23; }
+
+.lp-btn--apple {
+  background: #000000;
+  color: #ffffff;
+}
+.lp-btn--apple:hover { background: #1A1A1A; }
 
 .lp-divider {
   display: flex;
