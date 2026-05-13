@@ -655,13 +655,13 @@ defineExpose({ setCommentSubmitting })
 .vote-btn {
   position: relative;
   width: 100%;
-  padding: 12px 14px;
+  padding: 9px 14px;
   border-radius: 10px;
   border: none;
   background: #9333ea;
   cursor: pointer;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.3px;
@@ -712,15 +712,15 @@ defineExpose({ setCommentSubmitting })
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
   background: #faf5ff;
   border: 1px solid #f3e8ff;
   overflow: hidden;
-  margin-top: 6px;
-  font-size: 11px;
-  line-height: 1;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.15;
 }
 
 .vote-rate-bar::before {
@@ -753,11 +753,11 @@ defineExpose({ setCommentSubmitting })
 }
 
 .vote-rate-count {
-  margin-left: 2px;
+  margin-left: 4px;
   color: #9333ea;
   font-weight: 600;
-  font-size: 10px;
-  opacity: 0.75;
+  font-size: 11px;
+  opacity: 0.8;
 }
 
 /* 이미 투표함 — 선택된 상태로 식별 */
@@ -903,8 +903,8 @@ defineExpose({ setCommentSubmitting })
   }
 
   .vote-btn {
-    padding: 9px 10px;
-    font-size: 12px;
+    padding: 7px 10px;
+    font-size: 11px;
     border-radius: 8px;
     gap: 6px;
     box-shadow: 0 3px 8px rgba(147, 51, 234, 0.24), 0 1px 2px rgba(147, 51, 234, 0.12);
