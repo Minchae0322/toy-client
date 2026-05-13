@@ -24,7 +24,7 @@
       <div v-if="!initializationComplete" class="init-screen">
         <div class="init-content">
           <div class="loader-large"></div>
-          <p>준비 중...</p>
+          <p>불러오는 중...</p>
         </div>
       </div>
 
