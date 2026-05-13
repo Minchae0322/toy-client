@@ -53,6 +53,7 @@
               :can-vote="canVote"
               :submitting="submitting"
               :percentage="getPercentage(item)"
+              :total-participants="battle.totalParticipants || 0"
               @vote="handleVote"
               @open-comments="scrollToComments"
               @submit-comment="handleInlineComment"

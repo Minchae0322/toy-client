@@ -58,7 +58,10 @@
           </div>
           <div class="vote-rate-bar" :style="{ '--vote-fill': voteFillWidth }">
             <span class="vote-rate-label">투표율</span>
-            <span class="vote-rate-pct">{{ percentage }}%</span>
+            <span class="vote-rate-pct">
+              {{ percentage }}%
+              <span class="vote-rate-count">({{ voteCount }}명/총 {{ totalParticipants }}명)</span>
+            </span>
           </div>
         </template>
         <template v-else>
@@ -84,7 +87,10 @@
           </button>
           <div class="vote-rate-bar" :style="{ '--vote-fill': voteFillWidth }">
             <span class="vote-rate-label">투표율</span>
-            <span class="vote-rate-pct">{{ percentage }}%</span>
+            <span class="vote-rate-pct">
+              {{ percentage }}%
+              <span class="vote-rate-count">({{ voteCount }}명/총 {{ totalParticipants }}명)</span>
+            </span>
           </div>
         </template>
       </div>
@@ -156,6 +162,10 @@ const props = defineProps({
   percentage: {
     type: [Number, String],
     required: true
+  },
+  totalParticipants: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -740,6 +750,14 @@ defineExpose({ setCommentSubmitting })
   color: #6b21a8;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+.vote-rate-count {
+  margin-left: 2px;
+  color: #9333ea;
+  font-weight: 600;
+  font-size: 10px;
+  opacity: 0.75;
 }
 
 /* 이미 투표함 — 선택된 상태로 식별 */
