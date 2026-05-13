@@ -188,6 +188,27 @@ async function setupAppLifecycle() {
       }
     })
     appLifecycleHandlers.push(stateHandle)
+
+    // OAuth deep link: yogurtte://oauth/callback?token=...&refreshToken=...
+    const urlHandle = await CapApp.addListener('appUrlOpen', async ({ url }) => {
+      try {
+        if (!url || !url.startsWith('yogurtte://')) return
+        const parsed = new URL(url)
+        if (!parsed.pathname.includes('/oauth/callback') && parsed.host !== 'oauth') return
+        const token = parsed.searchParams.get('token')
+        const refreshToken = parsed.searchParams.get('refreshToken') || token
+        const errorParam = parsed.searchParams.get('error')
+        // 진행 UI는 OAuth2Callback 화면을 재사용 (token을 쿼리로 전달)
+        const query = errorParam
+          ? { error: errorParam }
+          : { token, ...(refreshToken !== token ? { refreshToken } : {}) }
+        await router.replace({ path: '/oauth/callback', query })
+        try { const { Browser } = await import('@capacitor/browser'); await Browser.close() } catch {}
+      } catch (e) {
+        console.warn('[appUrlOpen] OAuth deep link 처리 실패:', e)
+      }
+    })
+    appLifecycleHandlers.push(urlHandle)
   } else {
     document.addEventListener('visibilitychange', visibilityHandler)
     window.addEventListener('beforeunload', beforeUnloadHandler)

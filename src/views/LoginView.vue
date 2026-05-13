@@ -188,7 +188,27 @@ const handleSocialLogin = async (provider) => {
     return
   }
 
-  // 웹 (또는 Naver/GitHub 네이티브 — 기존 OAuth redirect)
+  // 네이티브: Naver는 SFSafariViewController + deep link (yogurtte://)
+  // 백엔드가 ?platform=ios|android 감지 시 yogurtte://oauth/callback?token=...로 redirect
+  if (Capacitor.isNativePlatform() && provider === 'naver') {
+    sessionStorage.setItem('oauth_provider', provider)
+    sessionStorage.setItem('oauth_redirect', redirectPath.value)
+    const authBaseUrl = import.meta.env.VITE_AUTH_BASE_URL
+    const platform = Capacitor.getPlatform()
+    try {
+      const { Browser } = await import('@capacitor/browser')
+      await Browser.open({
+        url: `${authBaseUrl}/oauth2/authorization/naver?platform=${platform}`,
+        presentationStyle: 'popover',
+      })
+    } catch (e) {
+      console.error('[LoginView] Naver Browser.open 실패:', e)
+      loginError.value = 'Naver 로그인 페이지를 열 수 없습니다.'
+    }
+    return
+  }
+
+  // 웹 (또는 GitHub 네이티브 — 기존 OAuth redirect)
   sessionStorage.setItem('oauth_provider', provider)
   const authBaseUrl = import.meta.env.VITE_AUTH_BASE_URL
   window.location.href = `${authBaseUrl}/oauth2/authorization/${provider}`
