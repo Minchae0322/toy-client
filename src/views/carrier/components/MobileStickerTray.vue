@@ -105,7 +105,7 @@ function onPlace(d) {
   position: relative;
   width: 100%;
   max-height: 52vh;
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 24px 24px 0 0;
   box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
   display: flex;
@@ -124,7 +124,7 @@ function onPlace(d) {
   width: 36px;
   height: 4px;
   border-radius: 2px;
-  background: #e5e7eb;
+  background: var(--border-strong);
   margin-bottom: 8px;
 }
 .stray-header-row {
@@ -137,7 +137,7 @@ function onPlace(d) {
 .stray-title {
   font-size: 16px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   letter-spacing: -0.2px;
 }
 .stray-close {
@@ -147,14 +147,14 @@ function onPlace(d) {
   align-items: center;
   justify-content: center;
   border: none;
-  background: #f3f4f6;
+  background: var(--border-default);
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 .stray-close:active {
-  background: #e5e7eb;
+  background: var(--border-strong);
 }
 
 /* — 카테고리 탭 — */
@@ -176,22 +176,22 @@ function onPlace(d) {
   background: transparent;
   font-size: 13px;
   font-weight: 500;
-  color: #9ca3af;
+  color: var(--c-text-400);
   cursor: pointer;
   transition: all 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
 .stray-tab.active {
-  background: #f3f4f6;
-  color: #111827;
+  background: var(--border-default);
+  color: var(--text-primary);
   font-weight: 600;
 }
 .stray-tab.special {
-  color: #d97706;
+  color: var(--c-bronze);
 }
 .stray-tab.special.active {
-  background: #fffbeb;
-  color: #b45309;
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
   font-weight: 600;
 }
 
@@ -199,7 +199,7 @@ function onPlace(d) {
 .stray-divider {
   height: 1px;
   margin: 0 16px;
-  background: #f3f4f6;
+  background: var(--border-default);
 }
 
 /* — 스티커 그리드 — */
@@ -220,7 +220,7 @@ function onPlace(d) {
   align-items: center;
   justify-content: center;
   border-radius: 16px;
-  background: #f9fafb;
+  background: var(--bg-subtle);
   border: 1.5px solid #f0f0f3;
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s, box-shadow 0.15s;
@@ -247,17 +247,17 @@ function onPlace(d) {
 .stray-special {
   flex-direction: column;
   gap: 2px;
-  border: 1.5px dashed #d1d5db;
+  border: 1.5px dashed var(--c-text-300);
   background: #fefefe;
   box-shadow: none;
 }
 .stray-special.stray-active {
   border-color: #8b5cf6;
-  background: #faf5ff;
+  background: var(--c-brand-soft);
   border-style: solid;
 }
 .stray-special-icon { font-size: 20px; }
-.stray-special-label { font-size: 9px; color: #9ca3af; font-weight: 600; letter-spacing: -0.2px; }
+.stray-special-label { font-size: 9px; color: var(--c-text-400); font-weight: 600; letter-spacing: -0.2px; }
 
 /* — 토스트 — */
 .stray-toast {
@@ -268,7 +268,7 @@ function onPlace(d) {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #1f2937;
+  background: var(--c-ink-900);
   color: #fff;
   font-size: 13px;
   font-weight: 600;

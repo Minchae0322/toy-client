@@ -259,7 +259,7 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f2f2f7;
+  background: var(--bg-mute);
   border: none;
   border-radius: 6px;
   margin-bottom: 12px;
@@ -268,7 +268,7 @@ onMounted(() => {
 .selected-category-label {
   font-size: 13px;
   font-weight: 600;
-  color: #3a3a3c;
+  color: var(--c-text-600);
 }
 
 .selected-category-clear {
@@ -280,14 +280,14 @@ onMounted(() => {
   background: transparent;
   border: none;
   border-radius: 50%;
-  color: #8e8e93;
+  color: var(--c-text-400);
   cursor: pointer;
   transition: all 0.15s;
   margin-left: 4px;
 }
 
 .selected-category-clear:hover {
-  color: #3a3a3c;
+  color: var(--c-text-600);
 }
 
 /* 1뎁스 카테고리 칩 */
@@ -300,7 +300,7 @@ onMounted(() => {
 .category-chips-title {
   font-size: 13px;
   font-weight: 600;
-  color: #8e8e93;
+  color: var(--c-text-400);
   margin: 0;
 }
 
@@ -312,8 +312,8 @@ onMounted(() => {
 
 .category-chip {
   padding: 8px 14px;
-  background: #f2f2f7;
-  color: #3a3a3c;
+  background: var(--bg-mute);
+  color: var(--c-text-600);
   border: none;
   border-radius: 6px;
   font-size: 13px;
@@ -325,11 +325,11 @@ onMounted(() => {
 }
 
 .category-chip:hover {
-  background: #e5e5ea;
+  background: var(--bg-subtle);
 }
 
 .category-chip.active {
-  background: #9933EA;
+  background: var(--c-brand);
   color: #ffffff;
 }
 
@@ -339,20 +339,20 @@ onMounted(() => {
   gap: 4px;
   padding: 8px 10px;
   background: transparent;
-  color: #8e8e93;
+  color: var(--c-text-400);
   font-weight: 600;
 }
 
 .category-chip.more-btn:hover {
-  background: #f2f2f7;
-  color: #3a3a3c;
+  background: var(--bg-mute);
+  color: var(--c-text-600);
 }
 
 /* 2뎁스 하위 카테고리 */
 .sub-category-section {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid #f2f2f7;
+  border-top: 1px solid var(--bg-mute);
 }
 
 .sub-category-list {
@@ -364,7 +364,7 @@ onMounted(() => {
 .sub-category-chip {
   padding: 6px 12px;
   background: transparent;
-  color: #8e8e93;
+  color: var(--c-text-400);
   border: none;
   border-radius: 6px;
   font-size: 12px;
@@ -376,12 +376,12 @@ onMounted(() => {
 }
 
 .sub-category-chip:hover {
-  background: #f2f2f7;
-  color: #3a3a3c;
+  background: var(--bg-mute);
+  color: var(--c-text-600);
 }
 
 .sub-category-chip.active {
-  background: #3a3a3c;
+  background: var(--c-text-600);
   color: #ffffff;
 }
 </style>

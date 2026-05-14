@@ -460,7 +460,7 @@ onMounted(() => {
 <style scoped>
 /* 기존 스타일과 동일하므로 생략... */
 .category-item {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-strong);
   padding: 12px;
   transition: all 0.2s ease;
   cursor: move;
@@ -468,7 +468,7 @@ onMounted(() => {
 }
 
 .category-item:hover {
-  background: #f9fafb;
+  background: var(--bg-subtle);
 }
 
 .category-item.dragging {
@@ -476,12 +476,12 @@ onMounted(() => {
   transform: scale(0.98);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 10;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .category-item.drag-over {
-  border-top: 3px solid #10b981;
-  background: #f0fdf4;
+  border-top: 3px solid var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .category-item:last-child {
@@ -508,17 +508,17 @@ onMounted(() => {
 }
 
 .drag-handle:hover {
-  background: #f3f4f6;
+  background: var(--border-default);
 }
 
 .drag-dots {
-  color: #9ca3af;
+  color: var(--c-text-400);
   font-size: 14px;
   line-height: 1;
 }
 
 .drag-handle:hover .drag-dots {
-  color: #6b7280;
+  color: var(--c-text-500);
 }
 
 .category-order {
@@ -526,8 +526,8 @@ onMounted(() => {
   text-align: center;
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
-  background: #f9fafb;
+  color: var(--c-text-500);
+  background: var(--bg-subtle);
   border-radius: 4px;
   padding: 2px 4px;
   margin-top: 2px;
@@ -546,23 +546,23 @@ onMounted(() => {
 .category-name {
   font-size: 14px;
   font-weight: 500;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .edit-input {
   font-size: 14px;
   font-weight: 500;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--c-text-300);
   border-radius: 4px;
   padding: 4px 8px;
-  background: white;
+  background: var(--bg-elevated);
   width: 100%;
 }
 
 .edit-input:focus {
   outline: none;
-  border-color: #10b981;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
@@ -579,7 +579,7 @@ onMounted(() => {
 
 .meta-item {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--c-text-500);
 }
 
 .category-actions-wrapper {
@@ -614,7 +614,7 @@ onMounted(() => {
 
 .status-button.active {
   background: rgba(34, 197, 94, 0.1);
-  color: #16a34a;
+  color: var(--c-success);
   border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
@@ -627,7 +627,7 @@ onMounted(() => {
 
 .status-button.inactive {
   background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  color: var(--c-danger);
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
@@ -674,7 +674,7 @@ onMounted(() => {
 
 .action-button.save {
   background: rgba(34, 197, 94, 0.1);
-  color: #16a34a;
+  color: var(--c-success);
   border-color: rgba(34, 197, 94, 0.2);
 }
 
@@ -686,7 +686,7 @@ onMounted(() => {
 
 .action-button.cancel {
   background: rgba(107, 114, 128, 0.1);
-  color: #6b7280;
+  color: var(--c-text-500);
   border-color: rgba(107, 114, 128, 0.2);
 }
 
@@ -698,7 +698,7 @@ onMounted(() => {
 
 .action-button.edit {
   background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  color: var(--c-info);
   border-color: rgba(59, 130, 246, 0.2);
 }
 
@@ -710,7 +710,7 @@ onMounted(() => {
 
 .action-button.delete {
   background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  color: var(--c-danger);
   border-color: rgba(239, 68, 68, 0.2);
 }
 
@@ -733,18 +733,18 @@ onMounted(() => {
 /* 편집 모드 스타일 */
 .edit-textarea {
   width: 100%;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--c-text-300);
   border-radius: 4px;
   padding: 4px 8px;
   font-size: 12px;
-  background: white;
+  background: var(--bg-elevated);
   resize: vertical;
   min-height: 40px;
 }
 
 .edit-textarea:focus {
   outline: none;
-  border-color: #10b981;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
 }
 
@@ -760,7 +760,7 @@ onMounted(() => {
 
 .keyword-input {
   flex: 1;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--c-text-300);
   border-radius: 4px;
   padding: 3px 6px;
   font-size: 11px;
@@ -768,12 +768,12 @@ onMounted(() => {
 
 .keyword-input:focus {
   outline: none;
-  border-color: #10b981;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
 }
 
 .add-keyword-btn {
-  background: #10b981;
+  background: var(--c-success);
   color: white;
   border: none;
   border-radius: 4px;
@@ -784,7 +784,7 @@ onMounted(() => {
 }
 
 .add-keyword-btn:hover {
-  background: #059669;
+  background: var(--c-success);
 }
 
 .keywords-list {
@@ -797,7 +797,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  background: #dbeafe;
+  background: var(--c-info-soft);
   color: #1e40af;
   padding: 2px 6px;
   border-radius: 10px;
@@ -834,7 +834,7 @@ onMounted(() => {
     cursor: default;
     border-radius: 12px;
     margin-bottom: 8px;
-    background: white;
+    background: var(--bg-elevated);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
@@ -849,7 +849,7 @@ onMounted(() => {
   .category-order {
     width: 24px;
     font-size: 11px;
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    background: linear-gradient(135deg, var(--bg-subtle) 0%, var(--border-strong) 100%);
   }
 
   .category-name {
@@ -932,7 +932,7 @@ onMounted(() => {
   .category-order {
     width: 36px;
     font-size: 14px;
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    background: linear-gradient(135deg, var(--bg-subtle) 0%, var(--border-strong) 100%);
   }
 
   .category-name {

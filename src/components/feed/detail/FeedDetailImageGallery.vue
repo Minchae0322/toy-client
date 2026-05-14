@@ -309,7 +309,7 @@ onUnmounted(() => {
   width: 100%;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: #1a1a1a;
+  background: var(--c-ink-900);
   cursor: pointer;
   touch-action: pan-y pinch-zoom;
 }
@@ -330,7 +330,7 @@ onUnmounted(() => {
   transform: translateY(-50%);
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--header-blur-bg);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -362,7 +362,7 @@ onUnmounted(() => {
 .nav-icon {
   width: 20px;
   height: 20px;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 /* Image Indicators */
@@ -396,7 +396,7 @@ onUnmounted(() => {
 .indicator.active {
   width: 18px;
   border-radius: 3px;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 /* Fade Transition */
@@ -434,7 +434,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.15);
   border: none;
   border-radius: 50%;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -488,7 +488,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.15);
   border: none;
   border-radius: 50%;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -535,7 +535,7 @@ onUnmounted(() => {
 .lightbox-dot.active {
   width: 20px;
   border-radius: 4px;
-  background: #fff;
+  background: var(--bg-elevated);
 }
 
 /* Lightbox Transition */

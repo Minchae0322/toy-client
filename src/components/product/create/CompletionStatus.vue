@@ -61,11 +61,11 @@ defineProps({
 
 <style scoped>
 .completion-status {
-  background: #F9FAFB;
+  background: var(--bg-subtle);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 32px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
 }
 
 .status-header {
@@ -78,7 +78,7 @@ defineProps({
 .status-title {
   font-size: 16px;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
   margin: 0;
   letter-spacing: -0.01em;
 }
@@ -86,13 +86,13 @@ defineProps({
 .percentage {
   font-size: 24px;
   font-weight: 700;
-  color: #059669;
+  color: var(--c-success);
   letter-spacing: -0.02em;
 }
 
 .progress-bar {
   height: 8px;
-  background: #E5E7EB;
+  background: var(--border-strong);
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 20px;
@@ -100,13 +100,13 @@ defineProps({
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #059669 0%, #10B981 100%);
+  background: linear-gradient(90deg, var(--c-success) 0%, var(--c-success) 100%);
   border-radius: 10px;
   transition: width 0.3s ease;
 }
 
 .progress-fill.complete {
-  background: linear-gradient(90deg, #059669 0%, #047857 100%);
+  background: linear-gradient(90deg, var(--c-success) 0%, #047857 100%);
 }
 
 .checklist {
@@ -120,36 +120,36 @@ defineProps({
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 8px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
   transition: all 0.2s;
 }
 
 .checklist-item.completed {
-  background: #ECFDF5;
-  border-color: #10B981;
+  background: var(--c-success-soft);
+  border-color: var(--c-success);
 }
 
 .check-icon {
   font-size: 16px;
   font-weight: 700;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .checklist-item.completed .check-icon {
-  color: #059669;
+  color: var(--c-success);
 }
 
 .check-label {
   font-size: 13px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--c-text-500);
   letter-spacing: -0.01em;
 }
 
 .checklist-item.completed .check-label {
-  color: #059669;
+  color: var(--c-success);
   font-weight: 600;
 }
 

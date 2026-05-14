@@ -126,11 +126,11 @@ const handleImageError = (event) => {
 <style scoped>
 /* ==================== PC 섹션 ==================== */
 .hot-feeds-section {
-  background: #fff;
+  background: var(--bg-base);
   border-radius: 16px;
   padding: 1.375rem;
   margin-bottom: 0.75rem;
-  border: 1px solid #efefef;
+  border: 1px solid var(--border-default);
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 
@@ -150,28 +150,28 @@ const handleImageError = (event) => {
 .section-title {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #111;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.03em;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.section-title .title-accent { color: #7c3aed; }
+.section-title .title-accent { color: var(--c-brand-hover); }
 
 .title-live {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: #ef4444;
+  color: var(--c-danger);
   font-weight: 700;
   margin-left: 4px;
 }
 .title-live-dot {
   width: 5px;
   height: 5px;
-  background-color: #ef4444;
+  background-color: var(--c-danger);
   border-radius: 50%;
   animation: hf-live-pulse 1.5s infinite;
 }
@@ -187,7 +187,7 @@ const handleImageError = (event) => {
 
 .sub-title {
   font-size: 13px;
-  color: #71717a;
+  color: var(--c-text-500);
   font-weight: 400;
 }
 
@@ -196,18 +196,18 @@ const handleImageError = (event) => {
   align-items: center;
   gap: 2px;
   padding: 0.375rem 0.875rem;
-  background: #f5f5f6;
+  background: var(--bg-subtle);
   border: none;
   border-radius: 100px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #888;
+  color: var(--c-text-400);
   cursor: pointer;
   transition: all 0.18s ease;
   font-family: inherit;
   text-decoration: none;
 }
-.view-all-link:hover { background: #eaeaeb; color: #555; }
+.view-all-link:hover { background: var(--border-strong); color: var(--c-text-600); }
 
 .dashboard-feed-scroll {
   display: flex;
@@ -286,7 +286,7 @@ const handleImageError = (event) => {
 .trending-tag {
   background: rgba(251, 113, 133, 0.85);
   backdrop-filter: blur(4px);
-  color: #fff;
+  color: #ffffff;
   font-size: 10px;
   font-weight: 700;
   padding: 4px 10px;
@@ -294,7 +294,7 @@ const handleImageError = (event) => {
   letter-spacing: 0.3px;
 }
 
-.overlay-bottom { color: #fff; }
+.overlay-bottom { color: #ffffff; }
 
 .eval-pill {
   display: inline-block;
@@ -305,15 +305,15 @@ const handleImageError = (event) => {
   margin-bottom: 6px;
   backdrop-filter: blur(4px);
 }
-.eval-pill.best { background: rgba(251, 191, 36, 0.85); color: #fff; }
-.eval-pill.good { background: rgba(34, 197, 94, 0.8); color: #fff; }
-.eval-pill.okay { background: rgba(139, 92, 246, 0.8); color: #fff; }
-.eval-pill.bad { background: rgba(239, 68, 68, 0.8); color: #fff; }
+.eval-pill.best { background: rgba(251, 191, 36, 0.85); color: #ffffff; }
+.eval-pill.good { background: rgba(34, 197, 94, 0.8); color: #ffffff; }
+.eval-pill.okay { background: rgba(139, 92, 246, 0.8); color: #ffffff; }
+.eval-pill.bad { background: rgba(239, 68, 68, 0.8); color: #ffffff; }
 
 .review-main {
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: #ffffff;
   margin: 0 0 6px;
   line-height: 1.4;
   display: -webkit-box;
@@ -343,7 +343,7 @@ const handleImageError = (event) => {
 @media (min-width: 1280px) { .dash-card-skeleton { flex: 0 0 200px; height: 280px; } }
 
 .skeleton {
-  background: linear-gradient(90deg, #f1f3f6 25%, #e8eaed 37%, #f1f3f6 63%);
+  background: linear-gradient(90deg, var(--border-default) 25%, #e8eaed 37%, var(--border-default) 63%);
   background-size: 400% 100%;
   animation: hf-shimmer 1.4s ease-in-out infinite;
 }
@@ -358,18 +358,18 @@ const handleImageError = (event) => {
   align-items: center;
   justify-content: center;
   padding: 48px 16px;
-  color: #94a3b8;
+  color: var(--c-text-400);
   gap: 12px;
 }
 .empty-icon {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #f4f4f5;
+  background: var(--bg-mute);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a1a1aa;
+  color: var(--c-text-400);
 }
 .empty-text {
   font-size: 14px;
@@ -394,9 +394,9 @@ const handleImageError = (event) => {
   /* 모바일 섹션 노출 */
   .mhot-section {
     display: block;
-    background: #ffffff;
+    background: var(--bg-base);
     border: none;
-    border-bottom: 1px solid #f1f3f6;
+    border-bottom: 1px solid var(--border-default);
     box-shadow: none;
     border-radius: 0;
     padding: 22px 0.625rem 24px 0.625rem;
@@ -413,7 +413,7 @@ const handleImageError = (event) => {
   .mhot-title {
     font-size: 1.25rem;
     font-weight: 800;
-    color: #111;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -421,14 +421,14 @@ const handleImageError = (event) => {
     margin: 0;
   }
 
-  .mhot-accent { color: #7c3aed; }
+  .mhot-accent { color: var(--c-brand-hover); }
 
   .mhot-live {
     display: flex;
     align-items: center;
     gap: 4px;
     font-size: 10px;
-    color: #ef4444;
+    color: var(--c-danger);
     font-weight: 700;
     margin-left: 4px;
   }
@@ -436,7 +436,7 @@ const handleImageError = (event) => {
   .mhot-live-dot {
     width: 5px;
     height: 5px;
-    background-color: #ef4444;
+    background-color: var(--c-danger);
     border-radius: 50%;
     animation: mhot-pulse 1.5s infinite;
   }
@@ -449,14 +449,14 @@ const handleImageError = (event) => {
 
   .mhot-sub {
     font-size: 13px;
-    color: #71717a;
+    color: var(--c-text-500);
     margin: 4px 0 0;
   }
 
   .mhot-more {
     font-size: 13px;
     font-weight: 600;
-    color: #a1a1aa;
+    color: var(--c-text-400);
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -480,7 +480,7 @@ const handleImageError = (event) => {
     overflow: hidden;
     position: relative;
     text-decoration: none;
-    background: #f4f4f5;
+    background: var(--bg-mute);
     isolation: isolate;
   }
 
@@ -511,15 +511,15 @@ const handleImageError = (event) => {
   .mhot-rank {
     font-size: 20px;
     font-weight: 900;
-    color: #fff;
+    color: #ffffff;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     font-style: italic;
   }
 
   .mhot-trending {
     padding: 4px 8px;
-    background: rgba(255, 255, 255, 0.9);
-    color: #111;
+    background: var(--header-blur-bg);
+    color: var(--text-primary);
     font-size: 10px;
     font-weight: 800;
     border-radius: 4px;
@@ -532,7 +532,7 @@ const handleImageError = (event) => {
     right: 0;
     padding: 40px 14px 16px;
     background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
-    color: #fff;
+    color: #ffffff;
     z-index: 1;
   }
 
@@ -544,12 +544,12 @@ const handleImageError = (event) => {
     padding: 2px 6px;
     border-radius: 4px;
     text-transform: uppercase;
-    color: #fff;
+    color: #ffffff;
   }
-  .mhot-eval.best { background: #f59e0b; }
-  .mhot-eval.good { background: #10b981; }
-  .mhot-eval.okay { background: #6366f1; }
-  .mhot-eval.bad { background: #ef4444; }
+  .mhot-eval.best { background: var(--c-warning); }
+  .mhot-eval.good { background: var(--c-success); }
+  .mhot-eval.okay { background: var(--c-info); }
+  .mhot-eval.bad { background: var(--c-danger); }
 
   .mhot-review {
     font-size: 14px;
@@ -561,7 +561,7 @@ const handleImageError = (event) => {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     text-overflow: ellipsis;
-    color: #fff;
+    color: #ffffff;
   }
 
   .mhot-product {
@@ -581,8 +581,8 @@ const handleImageError = (event) => {
 
   .mhot-empty {
     height: 200px;
-    background: #fafafa;
-    border: 1px dashed #e4e4e7;
+    background: var(--bg-subtle);
+    border: 1px dashed var(--border-strong);
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -593,7 +593,7 @@ const handleImageError = (event) => {
   .mhot-empty-icon { font-size: 24px; margin-bottom: 8px; }
   .mhot-empty-text {
     font-size: 13px;
-    color: #a1a1aa;
+    color: var(--c-text-400);
     font-weight: 500;
     margin: 0;
   }

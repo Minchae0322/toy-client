@@ -298,7 +298,7 @@ defineExpose({ addToast })
 
 .type-battle {
   background: #FFFBEB;
-  color: #D97706;
+  color: var(--c-bronze);
 }
 
 .type-default {

@@ -549,7 +549,7 @@ onUnmounted(() => {
 
 .action-btn.danger:hover {
   background: #fef2f2;
-  border-color: #fecaca;
+  border-color: var(--c-danger-soft);
   color: #dc2626;
 }
 
@@ -717,7 +717,7 @@ onUnmounted(() => {
 
 .type-battle {
   background: #FFFBEB;
-  color: #D97706;
+  color: var(--c-bronze);
 }
 
 .type-default {

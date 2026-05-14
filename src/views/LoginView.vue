@@ -253,7 +253,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ffffff;
+  background-color: var(--bg-base);
   padding: 20px;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
@@ -261,7 +261,7 @@ onMounted(() => {
 .auth-container {
   width: 100%;
   max-width: 420px;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 20px;
   box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04), 0 8px 32px rgba(15, 23, 42, 0.06);
 }
@@ -279,7 +279,7 @@ onMounted(() => {
 .tab-header {
   display: flex;
   margin: 0 28px;
-  background: #F2F4F6;
+  background: var(--bg-mute);
   border-radius: 10px;
   padding: 4px;
 }
@@ -291,7 +291,7 @@ onMounted(() => {
   background: transparent;
   font-size: 14px;
   font-weight: 600;
-  color: #8B95A1;
+  color: var(--c-text-400);
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.18s ease;
@@ -300,12 +300,12 @@ onMounted(() => {
 }
 
 .tab-btn:hover:not(.active) {
-  color: #4E5968;
+  color: var(--c-text-600);
 }
 
 .tab-btn.active {
-  color: #0A0E1A;
-  background: white;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
@@ -321,7 +321,7 @@ onMounted(() => {
 .fade-slide-leave-to { opacity: 0; transform: translateY(-5px); }
 
 @media (max-width: 480px) {
-  .auth-wrapper { background: #ffffff; padding: 16px; }
+  .auth-wrapper { background: var(--bg-base); padding: 16px; }
   .auth-container { border-radius: 16px; }
   .tab-header { margin: 0 20px; }
   .tab-content { padding: 28px 20px 36px; }

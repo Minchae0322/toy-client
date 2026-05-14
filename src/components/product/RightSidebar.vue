@@ -138,16 +138,16 @@ const getRandomDistance = () => {
 }
 
 .widget {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
 }
 
 .widget-title {
   font-size: 14px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 16px;
   letter-spacing: -0.01em;
 }
@@ -157,7 +157,7 @@ const getRandomDistance = () => {
   align-items: center;
   gap: 12px;
   padding: 12px 8px;
-  border-bottom: 1px solid #F9FAFB;
+  border-bottom: 1px solid var(--bg-subtle);
   cursor: pointer;
   transition: all 0.2s;
   border-radius: 8px;
@@ -165,7 +165,7 @@ const getRandomDistance = () => {
 }
 
 .ranking-item:hover {
-  background: #F9FAFB;
+  background: var(--bg-subtle);
 }
 
 .ranking-item:last-child {
@@ -176,19 +176,19 @@ const getRandomDistance = () => {
 .rank-number {
   width: 28px;
   height: 28px;
-  background: #F3F4F6;
+  background: var(--border-default);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   flex-shrink: 0;
 }
 
 .rank-number.top3 {
-  background: linear-gradient(135deg, #059669, #047857);
+  background: linear-gradient(135deg, var(--c-success), #047857);
   color: white;
   box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
 }
@@ -201,7 +201,7 @@ const getRandomDistance = () => {
 .ranking-name {
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -212,7 +212,7 @@ const getRandomDistance = () => {
 
 .ranking-brand {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -221,7 +221,7 @@ const getRandomDistance = () => {
 
 .ranking-meta {
   font-size: 11px;
-  color: #6B7280;
+  color: var(--c-text-500);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -229,7 +229,7 @@ const getRandomDistance = () => {
 }
 
 .divider {
-  color: #D1D5DB;
+  color: var(--c-text-300);
 }
 
 .trend-badge {
@@ -242,13 +242,13 @@ const getRandomDistance = () => {
 }
 
 .trend-badge.hot {
-  background: linear-gradient(135deg, #EF4444, #DC2626);
+  background: linear-gradient(135deg, var(--c-danger), var(--c-danger));
   color: white;
   box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
 }
 
 .trend-badge.new {
-  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  background: linear-gradient(135deg, var(--c-info), #2563EB);
   color: white;
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
 }
@@ -263,14 +263,14 @@ const getRandomDistance = () => {
 .user-stat-item {
   text-align: center;
   padding: 16px 10px;
-  background: #FAFAFA;
+  background: var(--bg-subtle);
   border-radius: 10px;
   transition: all 0.2s;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
 }
 
 .user-stat-item:hover {
-  background: #F9FAFB;
+  background: var(--bg-subtle);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
@@ -278,14 +278,14 @@ const getRandomDistance = () => {
 .user-stat-number {
   font-size: 20px;
   font-weight: 700;
-  color: #059669;
+  color: var(--c-success);
   margin-bottom: 4px;
   letter-spacing: -0.02em;
 }
 
 .user-stat-label {
   font-size: 11px;
-  color: #6B7280;
+  color: var(--c-text-500);
   font-weight: 600;
 }
 
@@ -307,27 +307,27 @@ const getRandomDistance = () => {
 
 .category-stat-name {
   font-size: 13px;
-  color: #374151;
+  color: var(--c-text-600);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .category-stat-count {
   font-size: 12px;
-  color: #059669;
+  color: var(--c-success);
   font-weight: 700;
 }
 
 .category-progress {
   height: 6px;
-  background: #F3F4F6;
+  background: var(--border-default);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .category-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #059669, #047857);
+  background: linear-gradient(90deg, var(--c-success), #047857);
   border-radius: 3px;
   transition: width 0.4s ease;
 }

@@ -324,14 +324,14 @@ onUnmounted(() => {
 <style scoped>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
-:root {
-  --primary: #222222;
-  --secondary: #64748B;
-  --accent: #9333EA;
-  --bg: #FFFFFF;
-  --card: #FFFFFF;
-  --border: #E2E8F0;
-  --hover: #F8FAFC;
+.app-container {
+  --primary: var(--text-primary);
+  --secondary: var(--c-text-500);
+  --accent: var(--c-brand);
+  --bg: var(--bg-base);
+  --card: var(--bg-elevated);
+  --border: var(--border-strong);
+  --hover: var(--bg-subtle);
 }
 
 * {
@@ -487,7 +487,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #F5F5F5;
+  background: var(--bg-subtle);
   border-radius: 8px;
   flex: 1;
   max-width: 320px;
@@ -572,7 +572,7 @@ onUnmounted(() => {
 }
 
 .user-card:hover {
-  border-color: #D1D5DB;
+  border-color: var(--c-text-300);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -588,7 +588,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #9333EA, #C084FC);
+  background: linear-gradient(135deg, var(--c-brand), var(--c-brand));
   color: white;
 }
 
@@ -629,7 +629,7 @@ onUnmounted(() => {
   border: 1px solid var(--border);
 }
 
-.follow-btn.active:hover { background: #E5E7EB; }
+.follow-btn.active:hover { background: var(--border-strong); }
 
 /* 로딩 */
 .loading-container {

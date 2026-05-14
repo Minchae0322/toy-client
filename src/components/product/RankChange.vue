@@ -38,15 +38,15 @@ defineProps({
 }
 
 .rank-change.new {
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 .rank-change.up {
-  color: #10b981;
+  color: var(--c-success);
 }
 
 .rank-change.down {
-  color: #f43f5e;
+  color: var(--c-danger);
 }
 
 .rank-change.none {

@@ -81,7 +81,7 @@ const emit = defineEmits(['cancel'])
   gap: 16px;
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 2px solid #F3F4F6;
+  border-top: 2px solid var(--border-default);
 }
 
 .btn {
@@ -105,20 +105,20 @@ const emit = defineEmits(['cancel'])
 }
 
 .btn-secondary {
-  background: #F3F4F6;
-  color: #6B7280;
-  border: 2px solid #E5E7EB;
+  background: var(--border-default);
+  color: var(--c-text-500);
+  border: 2px solid var(--border-strong);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #E5E7EB;
-  color: #374151;
-  border-color: #D1D5DB;
+  background: var(--border-strong);
+  color: var(--c-text-600);
+  border-color: var(--c-text-300);
 }
 
 .btn-primary {
   flex: 1;
-  background: #059669;
+  background: var(--c-success);
   color: white;
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
 }
@@ -131,12 +131,12 @@ const emit = defineEmits(['cancel'])
 
 .btn:disabled,
 .btn.disabled {
-  background: #E5E7EB;
-  color: #9CA3AF;
+  background: var(--border-strong);
+  color: var(--c-text-400);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
-  border-color: #E5E7EB;
+  border-color: var(--border-strong);
 }
 
 .btn.loading {

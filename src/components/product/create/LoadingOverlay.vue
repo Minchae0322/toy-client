@@ -15,7 +15,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--header-blur-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -33,8 +33,8 @@
 .loading-spinner {
   width: 60px;
   height: 60px;
-  border: 4px solid #F3F4F6;
-  border-top: 4px solid #059669;
+  border: 4px solid var(--border-default);
+  border-top: 4px solid var(--c-success);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -46,13 +46,13 @@
 .loading-content p {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
 .loading-hint {
   font-size: 14px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 </style>

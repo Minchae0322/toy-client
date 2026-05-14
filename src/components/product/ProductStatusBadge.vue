@@ -85,17 +85,17 @@ const iconPath = computed(() => ({
 }
 
 .product-status-badge.status-pending {
-  background: #FEF3C7;
-  color: #B45309;
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
 }
 
 .product-status-badge.status-rejected {
-  background: #FEE2E2;
+  background: var(--c-danger-soft);
   color: #B91C1C;
 }
 
 .product-status-badge.status-deleted {
-  background: #E5E8EB;
-  color: #6B7280;
+  background: var(--border-default);
+  color: var(--c-text-500);
 }
 </style>

@@ -73,8 +73,8 @@ defineExpose({ focus })
   display: flex;
   gap: 10px;
   padding: 12px 16px;
-  background: #fff;
-  border-top: 1px solid #f0f0f0;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--bg-subtle);
 }
 
 .input-container {
@@ -85,7 +85,7 @@ defineExpose({ focus })
 .comment-input {
   width: 100%;
   padding: 12px 60px 12px 14px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border-strong);
   border-radius: 24px;
   font-size: 14px;
   font-family: inherit;
@@ -98,12 +98,12 @@ defineExpose({ focus })
 }
 
 .comment-input:disabled {
-  background: #f9fafb;
+  background: var(--bg-subtle);
   cursor: not-allowed;
 }
 
 .comment-input::placeholder {
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .char-count {
@@ -112,11 +112,11 @@ defineExpose({ focus })
   top: 50%;
   transform: translateY(-50%);
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .char-count.warning {
-  color: #f97316;
+  color: var(--c-heat);
 }
 
 .submit-btn {
@@ -125,7 +125,7 @@ defineExpose({ focus })
   border: none;
   border-radius: 50%;
   background: #6b7df5;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -140,7 +140,7 @@ defineExpose({ focus })
 }
 
 .submit-btn:disabled {
-  background: #d1d5db;
+  background: var(--c-text-300);
   cursor: not-allowed;
 }
 </style>

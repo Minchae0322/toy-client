@@ -316,7 +316,7 @@ const generateCategoryCode = () => {
 
 <style scoped>
 .form-container {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -330,8 +330,8 @@ const generateCategoryCode = () => {
   justify-content: space-between;
   align-items: flex-start;
   padding: 24px 28px;
-  border-bottom: 1px solid #f1f5f9;
-  background: #fafbfc;
+  border-bottom: 1px solid var(--bg-subtle);
+  background: var(--bg-subtle);
 }
 
 .header-content {
@@ -341,14 +341,14 @@ const generateCategoryCode = () => {
 .form-title {
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 6px 0;
   letter-spacing: -0.2px;
 }
 
 .form-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: var(--c-text-500);
   margin: 0;
   font-weight: 400;
 }
@@ -358,8 +358,8 @@ const generateCategoryCode = () => {
   height: 32px;
   border-radius: 8px;
   border: none;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -369,8 +369,8 @@ const generateCategoryCode = () => {
 }
 
 .close-button:hover {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--border-strong);
+  color: var(--c-text-600);
 }
 
 /* 바디 */
@@ -397,45 +397,45 @@ const generateCategoryCode = () => {
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--c-text-600);
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .required {
-  color: #ef4444;
+  color: var(--c-danger);
 }
 
 .count-badge {
   margin-left: auto;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
 .form-input,
 .form-select,
 .form-textarea {
-  border: 1px solid #cbd5e0;
+  border: 1px solid var(--c-text-300);
   border-radius: 10px;
   padding: 11px 14px;
   font-size: 14px;
-  color: #0f172a;
+  color: var(--text-primary);
   transition: all 0.2s;
   font-family: inherit;
 }
 
 .form-input::placeholder,
 .form-textarea::placeholder {
-  color: #94a3b8;
+  color: var(--c-text-400);
 }
 
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--c-info);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -455,7 +455,7 @@ const generateCategoryCode = () => {
 
 .form-hint {
   font-size: 12px;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 /* 타입 pill 선택 */
@@ -469,23 +469,23 @@ const generateCategoryCode = () => {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: #fff;
-  border: 1.5px solid #e5e7eb;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-strong);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--c-text-600);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .type-pill:hover {
-  border-color: #d1d5db;
-  background: #f9fafb;
+  border-color: var(--c-text-300);
+  background: var(--bg-subtle);
 }
 .type-pill.active {
-  background: #faf5ff;
-  border-color: #9333ea;
-  color: #7e22ce;
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand);
+  color: var(--c-brand);
 }
 
 /* 부모 정보 */
@@ -494,7 +494,7 @@ const generateCategoryCode = () => {
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
-  background: #eff6ff;
+  background: var(--c-info-soft);
   border: 1px solid #bfdbfe;
   border-radius: 10px;
 }
@@ -502,12 +502,12 @@ const generateCategoryCode = () => {
 .info-icon {
   width: 40px;
   height: 40px;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3b82f6;
+  color: var(--c-info);
   flex-shrink: 0;
 }
 
@@ -518,7 +518,7 @@ const generateCategoryCode = () => {
 .info-label {
   font-size: 11px;
   font-weight: 600;
-  color: #3b82f6;
+  color: var(--c-info);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 3px;
@@ -527,7 +527,7 @@ const generateCategoryCode = () => {
 .info-value {
   font-size: 15px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 /* 인풋 그룹 */
@@ -545,7 +545,7 @@ const generateCategoryCode = () => {
   height: 40px;
   border-radius: 8px;
   border: none;
-  background: #0f172a;
+  background: var(--c-ink-900);
   color: white;
   cursor: pointer;
   display: flex;
@@ -556,7 +556,7 @@ const generateCategoryCode = () => {
 }
 
 .generate-button:hover {
-  background: #1e293b;
+  background: var(--c-ink-700);
   transform: translateY(-1px);
 }
 
@@ -574,7 +574,7 @@ const generateCategoryCode = () => {
   padding: 0 20px;
   border-radius: 8px;
   border: none;
-  background: #22c55e;
+  background: var(--c-success);
   color: white;
   font-size: 14px;
   font-weight: 600;
@@ -584,12 +584,12 @@ const generateCategoryCode = () => {
 }
 
 .add-button:hover:not(:disabled) {
-  background: #16a34a;
+  background: var(--c-success);
   transform: translateY(-1px);
 }
 
 .add-button:disabled {
-  background: #cbd5e0;
+  background: var(--c-text-300);
   cursor: not-allowed;
 }
 
@@ -605,8 +605,8 @@ const generateCategoryCode = () => {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #eff6ff;
-  color: #3b82f6;
+  background: var(--c-info-soft);
+  color: var(--c-info);
   border-radius: 16px;
   font-size: 13px;
   font-weight: 500;
@@ -616,7 +616,7 @@ const generateCategoryCode = () => {
 .remove-button {
   background: none;
   border: none;
-  color: #3b82f6;
+  color: var(--c-info);
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
@@ -640,8 +640,8 @@ const generateCategoryCode = () => {
   justify-content: flex-end;
   gap: 10px;
   padding: 20px 28px;
-  background: #fafbfc;
-  border-top: 1px solid #f1f5f9;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--bg-subtle);
 }
 
 .button {
@@ -658,23 +658,23 @@ const generateCategoryCode = () => {
 }
 
 .button-secondary {
-  background: white;
-  color: #475569;
-  border: 1px solid #cbd5e0;
+  background: var(--bg-elevated);
+  color: var(--c-text-600);
+  border: 1px solid var(--c-text-300);
 }
 
 .button-secondary:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: var(--bg-subtle);
+  border-color: var(--c-text-400);
 }
 
 .button-primary {
-  background: #0f172a;
+  background: var(--c-ink-900);
   color: white;
 }
 
 .button-primary:hover {
-  background: #1e293b;
+  background: var(--c-ink-700);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
 }

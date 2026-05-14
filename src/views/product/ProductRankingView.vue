@@ -873,14 +873,14 @@ onUnmounted(() => {
 .no-select { user-select: none; }
 
 .app-container {
-  background: #fff;
+  background: var(--bg-base);
   min-height: 100vh;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
   max-width: 100%;
   overflow-x: clip;
   padding: 0 1rem;
-  color: #222;
+  color: var(--text-primary);
 }
 @media (min-width: 768px) { .app-container { padding: 0 2rem; } }
 @media (min-width: 1280px) { .app-container { padding: 0 3rem; max-width: 1920px; margin: 0 auto; } }
@@ -901,33 +901,33 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 0.25rem;
   padding-left: 0.75rem;
-  border-left: 3px solid #a1a1aa;
+  border-left: 3px solid var(--c-text-400);
 }
 .page-header .section-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
-.page-header .section-title .title-accent { color: #9333ea; }
+.page-header .section-title .title-accent { color: var(--c-brand); }
 @media (min-width: 1280px) {
   .page-header .section-title { font-size: 1.3125rem; }
 }
-.sub-title { font-size: 12px; font-weight: 400; color: #999; }
+.sub-title { font-size: 12px; font-weight: 400; color: var(--c-text-400); }
 
 /* 검색 */
 .search-box { position: relative; margin-bottom: 16px; }
 .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; }
-.search-input { width: 100%; padding: 12px 40px; border: 1px solid #e5e7eb; border-radius: 12px; font-size: 14px; font-family: inherit; background: #fff; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
-.search-input:focus { border-color: #9333ea; box-shadow: 0 0 0 3px rgba(147,51,234,0.1); }
-.search-input::placeholder { color: #9ca3af; }
-.search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; background: #f3f4f6; border: none; border-radius: 50%; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.search-clear:hover { background: #e5e7eb; }
+.search-input { width: 100%; padding: 12px 40px; border: 1px solid var(--border-strong); border-radius: 12px; font-size: 14px; font-family: inherit; background: var(--bg-elevated); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.search-input:focus { border-color: var(--c-brand); box-shadow: 0 0 0 3px rgba(147,51,234,0.1); }
+.search-input::placeholder { color: var(--c-text-400); }
+.search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; background: var(--border-default); border: none; border-radius: 50%; color: var(--c-text-500); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.search-clear:hover { background: var(--border-strong); }
 
 /* 빈 상태 */
-.empty-state { display: flex; flex-direction: column; align-items: center; padding: 80px 0; color: #888; }
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 80px 0; color: var(--c-text-400); }
 
 /* ==================== 스켈레톤 로딩 ==================== */
 @keyframes skeleton-pulse {
@@ -938,7 +938,7 @@ onUnmounted(() => {
 .skeleton-wrapper { pointer-events: none; }
 
 .skeleton-line {
-  background: #f0f0f0;
+  background: var(--bg-subtle);
   border-radius: 4px;
   animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -948,9 +948,9 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   height: 500px;
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 6px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-strong);
   overflow: hidden;
   margin-bottom: 16px;
 }
@@ -958,7 +958,7 @@ onUnmounted(() => {
 .skeleton-bubble {
   position: absolute;
   border-radius: 50%;
-  background: #f0f0f0;
+  background: var(--bg-subtle);
   animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -973,16 +973,16 @@ onUnmounted(() => {
 
 /* 순위 리스트 스켈레톤 */
 .skeleton-rank-list {
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-strong);
   overflow: hidden;
   margin-bottom: 16px;
 }
 
 .skeleton-rank-header {
   padding: 12px 20px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .skeleton-rank-item {
@@ -990,7 +990,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 10px 20px;
-  border-bottom: 1px solid #f8f8f8;
+  border-bottom: 1px solid var(--bg-subtle);
 }
 .skeleton-rank-item:last-child { border-bottom: none; }
 
@@ -998,7 +998,7 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #f0f0f0;
+  background: var(--bg-subtle);
   flex-shrink: 0;
   animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -1010,7 +1010,7 @@ onUnmounted(() => {
 .skeleton-rank-bar {
   width: 50px;
   height: 4px;
-  background: #f0f0f0;
+  background: var(--bg-subtle);
   border-radius: 2px;
   flex-shrink: 0;
   animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -1039,8 +1039,8 @@ onUnmounted(() => {
   gap: 14px;
   padding: 14px 16px;
   margin: 0 0 14px;
-  background: #FAF5FF;
-  border: 1px solid #E9D5FF;
+  background: var(--c-brand-soft);
+  border: 1px solid var(--c-brand-soft);
   border-radius: 14px;
   position: relative;
   animation: cgb-slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -1049,7 +1049,7 @@ onUnmounted(() => {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: #9333EA;
+  background: var(--c-brand);
   color: #fff;
   display: flex;
   align-items: center;
@@ -1071,13 +1071,13 @@ onUnmounted(() => {
 .cgb-title {
   font-size: 14.5px;
   font-weight: 700;
-  color: #4C1D95;
+  color: var(--c-brand-hover);
   letter-spacing: -0.3px;
 }
 .cgb-sub {
   font-size: 12.5px;
   font-weight: 500;
-  color: #7C3AED;
+  color: var(--c-brand-hover);
   letter-spacing: -0.2px;
 }
 .cgb-close {
@@ -1085,7 +1085,7 @@ onUnmounted(() => {
   height: 28px;
   border: none;
   background: transparent;
-  color: #9333EA;
+  color: var(--c-brand);
   border-radius: 8px;
   cursor: pointer;
   display: flex;
@@ -1094,7 +1094,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   transition: background 0.15s ease;
 }
-.cgb-close:hover { background: #F3E8FF; }
+.cgb-close:hover { background: var(--c-brand-soft); }
 
 @keyframes cgb-slide-in {
   0% { opacity: 0; transform: translateY(-6px); }
@@ -1124,7 +1124,7 @@ onUnmounted(() => {
 
 .bubble-area {
   position: relative; width: 100%; min-height: 500px;
-  background: #fff; border-radius: 6px; border: 1px solid #e5e7eb;
+  background: var(--bg-elevated); border-radius: 6px; border: 1px solid var(--border-strong);
   overflow: hidden; cursor: default;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
@@ -1135,7 +1135,7 @@ onUnmounted(() => {
 .bubble-layout-overlay {
   position: absolute;
   inset: 0;
-  background: #fff;
+  background: var(--bg-elevated);
   z-index: 5;
   display: flex;
   align-items: center;
@@ -1144,7 +1144,7 @@ onUnmounted(() => {
 .bubble-layout-overlay .skeleton-bubble {
   position: absolute;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  background: linear-gradient(135deg, var(--c-brand-soft) 0%, var(--c-brand-soft) 100%);
   opacity: 0.7;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
@@ -1195,22 +1195,22 @@ onUnmounted(() => {
   box-shadow: 0 1px 4px rgba(0,0,0,0.12); z-index: 5;
 }
 .rank-badge-top.rank-1 { background: #FFD700; color: #7a5a00; }
-.rank-badge-top.rank-2 { background: #C0C0C0; color: #444; }
+.rank-badge-top.rank-2 { background: #C0C0C0; color: var(--c-text-600); }
 .rank-badge-top.rank-3 { background: #CD7F32; color: #5a2d00; }
 
 /* 4위+ 뱃지 */
 .rank-badge-sm {
   position: absolute; top: -4px; right: -4px; border-radius: 50%;
-  background: #f3f4f6; display: flex; align-items: center; justify-content: center;
-  font-weight: 700; color: #888;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1.5px solid #fff;
+  background: var(--border-default); display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: var(--c-text-400);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1.5px solid var(--bg-elevated);
 }
 
 /* 담김 표시 */
 .bagged-check {
   position: absolute; top: -4px; left: -4px; border-radius: 50%;
-  background: #7c3aed; display: flex; align-items: center; justify-content: center;
-  border: 2px solid #fff; box-shadow: 0 1px 4px rgba(124,58,237,0.4);
+  background: var(--c-brand-hover); display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-elevated); box-shadow: 0 1px 4px rgba(124,58,237,0.4);
   color: #fff; font-weight: 700;
 }
 
@@ -1218,19 +1218,19 @@ onUnmounted(() => {
 /* 툴팁 */
 .bubble-tooltip {
   position: absolute; z-index: 100;
-  background: #fff; border-radius: 14px; padding: 14px 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid #e5e7eb;
+  background: var(--bg-elevated); border-radius: 14px; padding: 14px 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid var(--border-strong);
   pointer-events: none; animation: fadeIn 0.15s ease;
 }
 .tooltip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.tooltip-name { font-weight: 700; font-size: 14px; color: #111; }
-.tooltip-rank { font-size: 11px; color: #7c3aed; font-weight: 700; }
-.tooltip-brand { font-size: 12px; color: #888; }
+.tooltip-name { font-weight: 700; font-size: 14px; color: var(--text-primary); }
+.tooltip-rank { font-size: 11px; color: var(--c-brand-hover); font-weight: 700; }
+.tooltip-brand { font-size: 12px; color: var(--c-text-400); }
 .tooltip-metrics { display: flex; gap: 12px; margin-top: 10px; }
-.metric-label { font-size: 10px; color: #aaa; }
-.metric-value { font-weight: 700; font-size: 14px; color: #333; display: flex; align-items: center; gap: 3px; }
-.metric-value.purple { color: #7c3aed; }
-.tooltip-hint { margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 10px; color: #aaa; }
+.metric-label { font-size: 10px; color: var(--c-text-400); }
+.metric-value { font-weight: 700; font-size: 14px; color: var(--text-primary); display: flex; align-items: center; gap: 3px; }
+.metric-value.purple { color: var(--c-brand-hover); }
+.tooltip-hint { margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 10px; color: var(--c-text-400); }
 
 /* ==================== 캐리어 패널 ==================== */
 .carrier-panel {
@@ -1239,36 +1239,36 @@ onUnmounted(() => {
 }
 
 .carrier-items {
-  background: #fff; border-radius: 16px; border: 1px solid #e5e7eb;
+  background: var(--bg-elevated); border-radius: 16px; border: 1px solid var(--border-strong);
   box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 14px 14px 10px;
   min-width: 230px; max-width: 280px;
 }
-.carrier-items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; font-weight: 700; color: #7c3aed; letter-spacing: 0.03em; }
-.carrier-clear-all { font-size: 10px; color: #c084fc; border: none; background: none; cursor: pointer; }
-.carrier-empty { font-size: 12px; color: #bbb; text-align: center; padding: 10px 0; }
-.carrier-list { display: flex; flex-direction: column; gap: 6px; max-height: 265px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #c4b5fd #f5f3ff; }
+.carrier-items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; font-weight: 700; color: var(--c-brand-hover); letter-spacing: 0.03em; }
+.carrier-clear-all { font-size: 10px; color: var(--c-brand); border: none; background: none; cursor: pointer; }
+.carrier-empty { font-size: 12px; color: var(--c-text-300); text-align: center; padding: 10px 0; }
+.carrier-list { display: flex; flex-direction: column; gap: 6px; max-height: 265px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--c-brand-soft) var(--c-brand-soft); }
 
-.carrier-chip { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; background: #faf5ff; animation: chipIn 0.2s ease; }
+.carrier-chip { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; background: var(--c-brand-soft); animation: chipIn 0.2s ease; }
 .carrier-chip-info { flex: 1; min-width: 0; }
-.carrier-chip-name { font-size: 12px; font-weight: 600; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.carrier-chip-brand { font-size: 10px; color: #999; }
-.carrier-chip-remove { border: none; background: none; cursor: pointer; color: #c084fc; font-size: 14px; line-height: 1; padding: 2px 4px; }
+.carrier-chip-name { font-size: 12px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.carrier-chip-brand { font-size: 10px; color: var(--c-text-400); }
+.carrier-chip-remove { border: none; background: none; cursor: pointer; color: var(--c-brand); font-size: 14px; line-height: 1; padding: 2px 4px; }
 
-.carrier-go-btn { width: 100%; margin-top: 10px; padding: 9px 0; border-radius: 8px; border: none; background: #7c3aed; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 0.02em; font-family: inherit; }
-.carrier-go-btn:hover { background: #6d28d9; }
+.carrier-go-btn { width: 100%; margin-top: 10px; padding: 9px 0; border-radius: 8px; border: none; background: var(--c-brand-hover); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 0.02em; font-family: inherit; }
+.carrier-go-btn:hover { background: var(--c-brand-hover); }
 
-.carrier-drop-hint { background: #ede9fe; border: 2px dashed #7c3aed; border-radius: 12px; padding: 6px 14px; font-size: 12px; color: #7c3aed; font-weight: 600; animation: fadeIn 0.1s ease; white-space: nowrap; }
+.carrier-drop-hint { background: #ede9fe; border: 2px dashed var(--c-brand-hover); border-radius: 12px; padding: 6px 14px; font-size: 12px; color: var(--c-brand-hover); font-weight: 600; animation: fadeIn 0.1s ease; white-space: nowrap; }
 
 .carrier-icon {
   width: 72px; height: 72px; border-radius: 22px;
-  background: #fff; border: 2px solid #e5e7eb;
+  background: var(--bg-elevated); border: 2px solid var(--border-strong);
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   cursor: pointer; transition: border 0.2s, box-shadow 0.2s, background 0.2s;
   position: relative;
 }
-.carrier-icon.active { background: #ede9fe; border: 2.5px dashed #7c3aed; box-shadow: 0 0 0 5px rgba(124,58,237,0.15), 0 8px 24px rgba(124,58,237,0.2); animation: bagBounce 0.5s ease; }
-.carrier-icon.has-items { border-color: #c4b5fd; }
+.carrier-icon.active { background: #ede9fe; border: 2.5px dashed var(--c-brand-hover); box-shadow: 0 0 0 5px rgba(124,58,237,0.15), 0 8px 24px rgba(124,58,237,0.2); animation: bagBounce 0.5s ease; }
+.carrier-icon.has-items { border-color: var(--c-brand-soft); }
 
 /* 비어있고 드래그 중이 아닐 때만 펄스로 시선 유도 */
 .carrier-icon:not(.has-items):not(.active)::before {
@@ -1276,7 +1276,7 @@ onUnmounted(() => {
   position: absolute;
   inset: -4px;
   border-radius: inherit;
-  border: 2px solid #9333EA;
+  border: 2px solid var(--c-brand);
   opacity: 0;
   animation: carrier-pulse 2.2s ease-out infinite;
   pointer-events: none;
@@ -1293,58 +1293,58 @@ onUnmounted(() => {
 .carrier-badge {
   position: absolute; top: -7px; right: -7px;
   width: 22px; height: 22px; border-radius: 50%;
-  background: #7c3aed; color: #fff;
+  background: var(--c-brand-hover); color: #fff;
   font-size: 11px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 6px rgba(124,58,237,0.3); border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(124,58,237,0.3); border: 2px solid var(--bg-elevated);
   animation: popIn 0.25s ease;
 }
 
 /* ==================== 순위 리스트 ==================== */
-.rank-list { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 16px; }
+.rank-list { background: var(--bg-elevated); border-radius: 14px; border: 1px solid var(--border-strong); overflow: hidden; margin-bottom: 16px; }
 .rank-list-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px; border-bottom: 1px solid #f3f4f6;
+  padding: 14px 20px; border-bottom: 1px solid var(--border-default);
 }
-.rank-list-title { font-size: 14px; font-weight: 700; color: #18181b; letter-spacing: -0.2px; }
-.rank-list-count { font-size: 12px; font-weight: 600; color: #9ca3af; letter-spacing: -0.1px; }
+.rank-list-title { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.2px; }
+.rank-list-count { font-size: 12px; font-weight: 600; color: var(--c-text-400); letter-spacing: -0.1px; }
 
 .rank-item {
   display: flex; align-items: center; gap: 12px; padding: 10px 20px;
-  border-bottom: 1px solid #f8f8f8; cursor: pointer; transition: background 0.15s;
+  border-bottom: 1px solid var(--bg-subtle); cursor: pointer; transition: background 0.15s;
 }
 .rank-item:last-of-type { border-bottom: none; }
-.rank-item:hover { background: #fafafa; }
+.rank-item:hover { background: var(--bg-subtle); }
 
 .rank-num {
   width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; background: #f3f4f6; color: #888;
+  font-size: 12px; font-weight: 700; background: var(--border-default); color: var(--c-text-400);
 }
 .rank-num.gold { background: #f5c518; color: #5a4200; }
-.rank-num.silver { background: #d4d4d8; color: #555; }
+.rank-num.silver { background: var(--c-text-300); color: var(--c-text-600); }
 .rank-num.bronze { background: #c8874d; color: #fff; }
 
 .rank-info { flex: 1; min-width: 0; }
-.rank-name { font-size: 14px; font-weight: 600; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rank-brand { font-size: 11px; color: #999; }
+.rank-name { font-size: 14px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-brand { font-size: 11px; color: var(--c-text-400); }
 
 .rank-stats { text-align: right; flex-shrink: 0; }
-.rank-rating { font-size: 12px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 2px; }
-.rank-review { font-size: 10px; color: #aaa; }
+.rank-rating { font-size: 12px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 2px; }
+.rank-review { font-size: 10px; color: var(--c-text-400); }
 
-.rank-bar { width: 50px; height: 4px; background: #f3f4f6; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+.rank-bar { width: 50px; height: 4px; background: var(--border-default); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
 .rank-bar-fill { height: 100%; border-radius: 2px; background: #9b7be8; transition: width 0.3s; }
 
 /* 더보기 */
 .load-more { text-align: center; padding: 8px 0 32px; }
 .load-more-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 13px 36px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
-  font-size: 14px; font-weight: 600; color: #4b5563; cursor: pointer; font-family: inherit;
+  padding: 13px 36px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 10px;
+  font-size: 14px; font-weight: 600; color: var(--c-text-600); cursor: pointer; font-family: inherit;
   letter-spacing: -0.2px; transition: all 0.15s;
 }
-.load-more-btn:hover:not(:disabled) { border-color: #7c3aed; color: #7c3aed; background: #faf5ff; }
+.load-more-btn:hover:not(:disabled) { border-color: var(--c-brand-hover); color: var(--c-brand-hover); background: var(--c-brand-soft); }
 .load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ==================== 애니메이션 ==================== */
@@ -1387,10 +1387,10 @@ onUnmounted(() => {
 }
 .drag-ghost-circle {
   width: 56px; height: 56px; border-radius: 50%;
-  background: #7c3aed;
+  background: var(--c-brand-hover);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 24px rgba(124,58,237,0.35);
-  border: 3px solid #fff; opacity: 0.93; overflow: hidden;
+  border: 3px solid var(--bg-elevated); opacity: 0.93; overflow: hidden;
 }
 .drag-ghost-circle img { width: 100%; height: 100%; object-fit: cover; }
 </style>

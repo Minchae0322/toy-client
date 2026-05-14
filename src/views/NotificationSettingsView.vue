@@ -160,9 +160,9 @@ onMounted(() => {
 <style scoped>
 .notif-settings-page {
   min-height: 100vh;
-  background: #FFFFFF;
+  background: var(--bg-base);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
-  color: #0A0E1A;
+  color: var(--text-primary);
 }
 
 .page-header {
@@ -170,20 +170,20 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 14px 16px;
-  background: #FFFFFF;
-  border-bottom: 1px solid #F1F3F6;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-default);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 .back-btn {
   width: 36px; height: 36px;
-  border: 1px solid #E5E7EB; background: #FFFFFF;
-  color: #4E5968; border-radius: 10px;
+  border: 1px solid var(--border-strong); background: var(--bg-elevated);
+  color: var(--c-text-600); border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
 }
-.back-btn:hover { background: #FAFAFB; border-color: #CBD5E1; }
+.back-btn:hover { background: var(--bg-subtle); border-color: var(--c-text-300); }
 .page-title {
   flex: 1;
   text-align: center;
@@ -203,7 +203,7 @@ onMounted(() => {
 .page-desc {
   margin: 0 0 16px;
   font-size: 13px;
-  color: #6B7684;
+  color: var(--c-text-500);
   letter-spacing: -0.01em;
 }
 
@@ -212,24 +212,24 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 24px 16px;
-  background: #FFFFFF;
-  border: 1px solid #F1F3F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 14px;
   font-size: 13px;
-  color: #4E5968;
+  color: var(--c-text-600);
 }
-.state-block.error { color: #DC2626; border-color: #FEE2E2; background: #FEF2F2; }
+.state-block.error { color: var(--c-danger); border-color: var(--c-danger-soft); background: var(--c-danger-soft); }
 .retry-btn {
   margin-left: auto;
   padding: 6px 10px;
-  background: #fff; border: 1px solid #FECACA; color: #DC2626;
+  background: var(--bg-elevated); border: 1px solid var(--c-danger-soft); color: var(--c-danger);
   border-radius: 8px; font-weight: 700; font-size: 12px;
   cursor: pointer;
 }
 
 .spinner {
   width: 18px; height: 18px;
-  border: 2px solid #F2F4F6; border-top-color: #9333EA;
+  border: 2px solid var(--bg-mute); border-top-color: var(--c-brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -242,8 +242,8 @@ onMounted(() => {
   display: flex; flex-direction: column; gap: 10px;
 }
 .setting-row {
-  background: #FFFFFF;
-  border: 1px solid #F1F3F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 14px;
   padding: 16px;
   display: flex;
@@ -261,21 +261,21 @@ onMounted(() => {
 .setting-title {
   font-size: 14.5px;
   font-weight: 700;
-  color: #191F28;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 .setting-tag {
   font-size: 10.5px;
   font-weight: 700;
-  color: #9333EA;
-  background: #F3E8FF;
+  color: var(--c-brand);
+  background: var(--c-brand-soft);
   border-radius: 6px;
   padding: 2px 6px;
   letter-spacing: 0.2px;
 }
 .setting-desc {
   font-size: 12.5px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   letter-spacing: -0.01em;
 }
 
@@ -297,7 +297,7 @@ onMounted(() => {
 .switch {
   position: relative;
   width: 36px; height: 20px;
-  background: #D1D6DB;
+  background: var(--c-text-300);
   border-radius: 999px;
   transition: background 0.18s ease;
   flex-shrink: 0;
@@ -306,12 +306,12 @@ onMounted(() => {
   position: absolute;
   top: 2px; left: 2px;
   width: 16px; height: 16px;
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0,0,0,0.12);
   transition: transform 0.18s ease;
 }
-.channel-toggle input:checked + .switch { background: #9333EA; }
+.channel-toggle input:checked + .switch { background: var(--c-brand); }
 .channel-toggle input:checked + .switch .knob { transform: translateX(16px); }
 
 /* 저장 실패 토스트 */
@@ -321,7 +321,7 @@ onMounted(() => {
   transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: 6px;
   padding: 10px 14px;
-  background: #DC2626; color: #fff;
+  background: var(--c-danger); color: #fff;
   border-radius: 10px;
   font-size: 12.5px; font-weight: 600;
   box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3);

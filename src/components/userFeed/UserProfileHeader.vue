@@ -781,7 +781,7 @@ watch(() => route.params.userId, (newId, oldId) => {
   background: #F2F4F6;
   color: #0A0E1A;
 }
-.btn-soft:hover:not(:disabled) { background: #E5E8EB; }
+.btn-soft:hover:not(:disabled) { background: var(--border-default); }
 
 .btn-icon {
   width: 32px;

@@ -54,13 +54,13 @@ const bulkFrame = ref(null)
 }
 
 .page-header h2 {
-  color: #333;
+  color: var(--text-primary);
   font-size: 20px;
   font-weight: 700;
 }
 
 .header-desc {
-  color: #999;
+  color: var(--c-text-400);
   font-size: 13px;
   margin-top: 4px;
 }
@@ -83,7 +83,7 @@ const bulkFrame = ref(null)
 .btn-back {
   padding: 8px 16px;
   background: #f0f1f3;
-  color: #555;
+  color: var(--c-text-600);
   border: 1px solid #d0d5dd;
   border-radius: 8px;
   cursor: pointer;

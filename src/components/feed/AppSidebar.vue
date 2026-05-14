@@ -191,8 +191,8 @@ const handleProtectedRoute = async (routeName) => {
   width: 240px;
   height: calc(100vh - 66px);
   top: 66px;
-  background: #ffffff;
-  border-right: 1px solid #F1F3F6;
+  background: var(--bg-base);
+  border-right: 1px solid var(--border-default);
   padding: 24px 14px;
   display: none;
   flex-direction: column;
@@ -223,7 +223,7 @@ const handleProtectedRoute = async (routeName) => {
   flex-direction: column;
   gap: 2px;
   padding: 10px 0;
-  border-bottom: 1px solid #F1F3F6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .nav-section:last-child {
@@ -251,51 +251,51 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .nav-item:hover {
-  background: #F7F8FA;
+  background: var(--bg-subtle);
 }
 
 .nav-item.active {
-  background: #F3EAFD;
+  background: var(--c-brand-soft);
 }
 
 .nav-item .icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: #8B95A1;
+  color: var(--c-text-400);
   transition: color 0.15s ease;
 }
 
 .nav-item:hover .icon {
-  color: #4E5968;
+  color: var(--c-text-600);
 }
 
 .nav-item.active .icon {
-  color: #9333EA;
+  color: var(--c-brand);
 }
 
 .nav-text {
   font-size: 14px;
   font-weight: 500;
-  color: #4E5968;
+  color: var(--c-text-600);
   letter-spacing: -0.2px;
   transition: color 0.15s ease;
 }
 
 .nav-item:hover .nav-text {
-  color: #333D4B;
+  color: var(--text-primary);
 }
 
 .nav-item.active .nav-text {
-  color: #7C3AED;
+  color: var(--c-brand-hover);
   font-weight: 600;
 }
 
 .badge {
   margin-left: auto;
   padding: 2px 7px;
-  background: #F7F8FA;
-  color: #6B7684;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
   font-size: 11px;
   font-weight: 600;
   border-radius: 6px;
@@ -304,8 +304,8 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .badge-red {
-  background: #FEF2F2;
-  color: #DC2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 /* ===== 액션 버튼 ===== */
@@ -317,7 +317,7 @@ const handleProtectedRoute = async (routeName) => {
 
 .action-divider {
   height: 1px;
-  background: #F1F3F6;
+  background: var(--border-default);
   margin: 4px 0;
 }
 
@@ -335,47 +335,53 @@ const handleProtectedRoute = async (routeName) => {
 
 /* 보라 */
 .btn-purple {
-  background: #FAF5FF;
-  border: 1px solid #EDE5F7;
+  background: var(--c-brand-soft);
+  border: 1px solid var(--c-brand-soft);
 }
 
 .btn-purple:hover {
-  background: #F3EAFD;
-  border-color: #D8B4FE;
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand-soft);
 }
 
 .btn-purple .btn-text {
-  color: #7C3AED;
+  color: var(--c-brand-hover);
 }
 
 /* 주황 */
 .btn-orange {
-  background: #FFF7ED;
-  border: 1px solid #FEE4C8;
+  background: var(--c-heat-soft);
+  border: 1px solid var(--c-heat-soft);
 }
 
 .btn-orange:hover {
-  background: #FFEDD5;
-  border-color: #FDBA74;
+  background: var(--c-heat-soft);
+  border-color: var(--c-heat);
 }
 
 .btn-orange .btn-text {
-  color: #C2410C;
+  color: var(--c-heat);
 }
 
 /* 다크 */
 .btn-dark {
-  background: #F7F8FA;
-  border: 1px solid #E5E8EB;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
 }
 
 .btn-dark:hover {
-  background: #F2F4F6;
-  border-color: #D1D6DB;
+  background: var(--bg-mute);
+  border-color: var(--c-text-300);
 }
 
 .btn-dark .btn-text {
-  color: #333D4B;
+  color: var(--text-primary);
+}
+
+/* 다크 모드: soft 톤 배경 위에 같은 컬러 텍스트면 가독성 떨어짐 → 흰색으로 */
+:root[data-theme="dark"] .btn-purple .btn-text,
+:root[data-theme="dark"] .btn-orange .btn-text {
+  color: var(--text-primary);
 }
 
 /* 버튼 내부 */
@@ -397,7 +403,7 @@ const handleProtectedRoute = async (routeName) => {
 .btn-desc {
   font-size: 11px;
   font-weight: 500;
-  color: #8B95A1;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
   white-space: nowrap;
   overflow: hidden;
@@ -406,7 +412,7 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .btn-subtle:hover .btn-desc {
-  color: #6B7684;
+  color: var(--c-text-500);
 }
 
 /* + 아이콘 */
@@ -426,15 +432,15 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .btn-icon-purple {
-  background: #9333EA;
+  background: var(--c-brand);
 }
 
 .btn-icon-orange {
-  background: #F97316;
+  background: var(--c-heat);
 }
 
 .btn-icon-dark {
-  background: #333D4B;
+  background: var(--c-ink-900);
 }
 
 .btn-icon {
@@ -453,16 +459,16 @@ const handleProtectedRoute = async (routeName) => {
   padding: 8px 4px 0;
   background: transparent;
   border: none;
-  border-top: 1px solid #F1F3F6;
+  border-top: 1px solid var(--border-default);
   font-size: 12px;
   font-weight: 500;
-  color: #8B95A1;
+  color: var(--c-text-400);
   cursor: pointer;
   font-family: inherit;
   letter-spacing: -0.1px;
   transition: color 0.15s ease;
 }
-.feedback-link:hover { color: #4E5968; }
+.feedback-link:hover { color: var(--c-text-600); }
 .feedback-icon { width: 13px; height: 13px; flex-shrink: 0; }
-.feedback-anon { color: #B0B8C1; font-weight: 400; margin-left: 2px; }
+.feedback-anon { color: var(--c-text-300); font-weight: 400; margin-left: 2px; }
 </style>

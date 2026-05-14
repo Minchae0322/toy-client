@@ -383,7 +383,7 @@ watch(
   width: 100%;
   max-width: 500px;
   max-height: 85vh;
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 20px 20px 0 0;
   display: flex;
   flex-direction: column;
@@ -403,7 +403,7 @@ watch(
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--bg-subtle);
   flex-shrink: 0;
 }
 
@@ -418,7 +418,7 @@ watch(
   height: 64px;
   border-radius: 12px;
   object-fit: cover;
-  background: #f5f5f5;
+  background: var(--bg-subtle);
 }
 
 .item-info {
@@ -430,7 +430,7 @@ watch(
 .item-name {
   font-size: 15px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -440,32 +440,32 @@ watch(
 
 .comment-count {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--c-text-500);
 }
 
 .close-btn {
   width: 36px;
   height: 36px;
   border: none;
-  background: #f3f4f6;
+  background: var(--border-default);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--c-text-500);
   transition: all 0.15s ease;
 }
 
 .close-btn:hover {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--border-strong);
+  color: var(--c-text-600);
 }
 
 /* 탭 헤더 (시안 스타일) */
 .tab-header {
   display: flex;
-  border-bottom: 1.5px solid #f0f0f0;
+  border-bottom: 1.5px solid var(--bg-subtle);
   flex-shrink: 0;
 }
 
@@ -474,7 +474,7 @@ watch(
   padding: 14px 0;
   font-size: 14px;
   font-weight: 700;
-  color: #9ca3af;
+  color: var(--c-text-400);
   background: none;
   border: none;
   cursor: pointer;
@@ -484,7 +484,7 @@ watch(
 }
 
 .tab-btn.active {
-  color: #4a6cf7;
+  color: var(--c-info);
 }
 
 .tab-btn.active::after {
@@ -494,22 +494,22 @@ watch(
   left: 20%;
   right: 20%;
   height: 3px;
-  background: #4a6cf7;
+  background: var(--c-info);
   border-radius: 3px;
 }
 
 .tab-count {
   font-size: 11px;
   font-weight: 600;
-  background: #f3f4f6;
+  background: var(--border-default);
   padding: 2px 7px;
   border-radius: 10px;
   margin-left: 4px;
 }
 
 .tab-btn.active .tab-count {
-  background: #eff2ff;
-  color: #4a6cf7;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 /* 코멘트 목록 */
@@ -528,14 +528,14 @@ watch(
   align-items: center;
   justify-content: center;
   padding: 48px 16px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #f3f4f6;
-  border-top-color: #4a6cf7;
+  border: 3px solid var(--border-default);
+  border-top-color: var(--c-info);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 12px;
@@ -556,7 +556,7 @@ watch(
 
 .empty-state .sub {
   font-size: 13px;
-  color: #d1d5db;
+  color: var(--c-text-300);
   margin-top: 4px;
 }
 
@@ -568,18 +568,18 @@ watch(
 
 .load-more-btn {
   padding: 10px 24px;
-  background: #f3f4f6;
+  background: var(--border-default);
   border: none;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .load-more-btn:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: var(--border-strong);
 }
 
 .load-more-btn:disabled {

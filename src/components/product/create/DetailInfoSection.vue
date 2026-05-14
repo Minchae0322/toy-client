@@ -222,7 +222,7 @@ defineExpose({
 .form-section {
   margin-bottom: 40px;
   padding-bottom: 40px;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .section-header {
@@ -235,15 +235,15 @@ defineExpose({
 .section-title {
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .optional-badge {
   padding: 4px 12px;
-  background: #ECFDF5;
-  color: #059669;
+  background: var(--c-success-soft);
+  color: var(--c-success);
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
@@ -260,7 +260,7 @@ defineExpose({
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
   margin-bottom: 8px;
   letter-spacing: -0.01em;
   display: flex;
@@ -271,14 +271,14 @@ defineExpose({
 .optional {
   font-size: 12px;
   font-weight: 500;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .label-hint {
   font-size: 11px;
   font-weight: 500;
-  color: #9CA3AF;
-  background: #F9FAFB;
+  color: var(--c-text-400);
+  background: var(--bg-subtle);
   padding: 2px 8px;
   border-radius: 10px;
   margin-left: auto;
@@ -286,12 +286,12 @@ defineExpose({
 
 .form-textarea {
   padding: 12px 16px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   transition: all 0.2s;
-  background: white;
-  color: #111827;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-weight: 500;
   letter-spacing: -0.01em;
   resize: vertical;
@@ -301,19 +301,19 @@ defineExpose({
 
 .form-textarea:focus {
   outline: none;
-  border-color: #059669;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }
 
 .form-textarea:disabled {
-  background: #F9FAFB;
-  color: #9CA3AF;
+  background: var(--bg-subtle);
+  color: var(--c-text-400);
   cursor: not-allowed;
 }
 
 .form-textarea.success {
-  border-color: #10B981;
-  background: #F0FDF4;
+  border-color: var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .input-footer {
@@ -326,18 +326,18 @@ defineExpose({
 
 .form-help {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
 .char-counter {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
 .char-counter.warning {
-  color: #F59E0B;
+  color: var(--c-warning);
   font-weight: 600;
 }
 
@@ -353,24 +353,24 @@ defineExpose({
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-strong);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
   font-weight: 500;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .checkbox-item:hover:not(.disabled) {
-  border-color: #059669;
-  background: #F9FAFB;
+  border-color: var(--c-success);
+  background: var(--bg-subtle);
 }
 
 .checkbox-item.active {
-  border-color: #059669;
-  background: #ECFDF5;
-  color: #059669;
+  border-color: var(--c-success);
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .checkbox-item.disabled {
@@ -396,31 +396,31 @@ defineExpose({
 .form-input {
   flex: 1;
   padding: 12px 16px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   transition: all 0.2s;
-  background: white;
-  color: #111827;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #059669;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }
 
 .form-input:disabled {
-  background: #F9FAFB;
-  color: #9CA3AF;
+  background: var(--bg-subtle);
+  color: var(--c-text-400);
   cursor: not-allowed;
 }
 
 .btn-add {
   padding: 12px 20px;
-  background: #059669;
+  background: var(--c-success);
   color: white;
   border: none;
   border-radius: 8px;
@@ -438,17 +438,17 @@ defineExpose({
 }
 
 .btn-add:disabled {
-  background: #E5E7EB;
-  color: #9CA3AF;
+  background: var(--border-strong);
+  color: var(--c-text-400);
   cursor: not-allowed;
 }
 
 .selected-info {
   font-size: 12px;
-  color: #059669;
+  color: var(--c-success);
   font-weight: 600;
   padding: 4px 10px;
-  background: #ECFDF5;
+  background: var(--c-success-soft);
   border-radius: 10px;
   display: inline-block;
   margin-top: 8px;
@@ -459,22 +459,22 @@ defineExpose({
   flex-wrap: wrap;
   gap: 8px;
   padding: 12px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-strong);
   border-radius: 10px;
   min-height: 48px;
   cursor: text;
   transition: all 0.2s;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .tag-container:focus-within {
-  border-color: #059669;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }
 
 .tag-container.disabled {
-  background: #F9FAFB;
-  border-color: #E5E7EB;
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
   cursor: not-allowed;
   opacity: 0.8;
 }
@@ -484,7 +484,7 @@ defineExpose({
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #059669;
+  background: var(--c-success);
   color: white;
   border-radius: 16px;
   font-size: 13px;

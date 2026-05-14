@@ -87,7 +87,7 @@ const formatCount = (count) => feedUtils.formatCount(count)
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-bottom: 1px solid #f9fafb;
+  border-bottom: 1px solid var(--bg-subtle);
 }
 
 .author-info {
@@ -127,7 +127,7 @@ const formatCount = (count) => feedUtils.formatCount(count)
 .author-name {
   font-size: 15px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -140,7 +140,7 @@ const formatCount = (count) => feedUtils.formatCount(count)
 .verified-badge svg {
   width: 16px;
   height: 16px;
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 .author-meta {
@@ -148,14 +148,14 @@ const formatCount = (count) => feedUtils.formatCount(count)
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .meta-dot {
   width: 2px;
   height: 2px;
   border-radius: 9999px;
-  background: #d1d5db;
+  background: var(--c-text-300);
 }
 
 .view-count {
@@ -181,21 +181,21 @@ const formatCount = (count) => feedUtils.formatCount(count)
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
-  background: #9333ea;
+  background: var(--c-brand);
   color: white;
 }
 
 .btn-follow:hover {
-  background: #7c22ce;
+  background: var(--c-brand);
 }
 
 .btn-follow--active {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--border-default);
+  color: var(--c-text-500);
 }
 
 .btn-follow--active:hover {
-  background: #e5e7eb;
+  background: var(--border-strong);
 }
 
 .btn-follow svg {

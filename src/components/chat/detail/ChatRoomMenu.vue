@@ -119,7 +119,7 @@ defineEmits([
 }
 
 .room-menu {
-  background: #FFFFFF;
+  background: var(--bg-elevated);
   border-radius: 20px 20px 0 0;
   width: 100%;
   max-width: 500px;
@@ -145,13 +145,13 @@ defineEmits([
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .menu-header h3 {
   font-size: 18px;
   font-weight: 700;
-  color: #222;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -159,19 +159,19 @@ defineEmits([
   width: 36px;
   height: 36px;
   border: none;
-  background: #F5F5F5;
+  background: var(--bg-subtle);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: var(--c-text-500);
   transition: all 0.2s;
 }
 
 .close-btn:hover {
   background: #EEEEEE;
-  color: #222;
+  color: var(--text-primary);
 }
 
 .menu-content {
@@ -195,35 +195,35 @@ defineEmits([
 }
 
 .menu-item:hover {
-  background: #FAF5FF;
+  background: var(--c-brand-soft);
 }
 
 .menu-icon {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #F5F5F5;
+  background: var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: var(--c-text-500);
   flex-shrink: 0;
   transition: all 0.2s;
 }
 
 .menu-item:hover .menu-icon {
-  background: #F3E8FF;
-  color: #9333EA;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .menu-icon.accent {
-  background: #F3E8FF;
-  color: #9333EA;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .menu-icon.danger {
-  background: #FEF2F2;
-  color: #DC2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .menu-text {
@@ -237,12 +237,12 @@ defineEmits([
 .menu-label {
   font-size: 15px;
   font-weight: 600;
-  color: #222;
+  color: var(--text-primary);
 }
 
 .menu-desc {
   font-size: 13px;
-  color: #999;
+  color: var(--c-text-400);
 }
 
 .menu-arrow {
@@ -252,15 +252,15 @@ defineEmits([
 
 .menu-footer {
   padding: 8px 0;
-  border-top: 1px solid #E2E8F0;
+  border-top: 1px solid var(--border-strong);
 }
 
 .menu-item.danger .menu-label {
-  color: #DC2626;
+  color: var(--c-danger);
 }
 
 .menu-item.danger:hover {
-  background: #FEF2F2;
+  background: var(--c-danger-soft);
 }
 
 /* 트랜지션 */
@@ -303,7 +303,7 @@ defineEmits([
 }
 
 .menu-content::-webkit-scrollbar-thumb {
-  background: #E2E8F0;
+  background: var(--border-strong);
   border-radius: 2px;
 }
 </style>

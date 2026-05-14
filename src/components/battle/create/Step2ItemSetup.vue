@@ -733,7 +733,7 @@ const handleImageError = (event) => {
 .form-section {
   flex: 1;
   width: 100%;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   padding: 32px;
   border: 1px solid #F0F0F3;
@@ -748,17 +748,17 @@ const handleImageError = (event) => {
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .required {
-  color: #DC2626;
+  color: var(--c-danger);
 }
 
 .form-hint {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   margin-top: 4px;
 }
 
@@ -768,7 +768,7 @@ const handleImageError = (event) => {
   gap: 8px;
   margin-bottom: 20px;
   padding: 4px;
-  background: #F3F4F6;
+  background: var(--border-default);
   border-radius: 12px;
 }
 
@@ -784,18 +784,18 @@ const handleImageError = (event) => {
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  color: #6B7280;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tab-btn:hover {
-  color: #374151;
+  color: var(--c-text-600);
 }
 
 .tab-btn.active {
-  background: white;
-  color: #1A1A1A;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -808,9 +808,9 @@ const handleImageError = (event) => {
 .input-panel {
   margin-bottom: 32px;
   padding: 24px;
-  background: #FAFBFC;
+  background: var(--bg-subtle);
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
 }
 
 /* ===== YouTube 입력 ===== */
@@ -828,7 +828,7 @@ const handleImageError = (event) => {
 .youtube-input {
   flex: 1;
   padding: 14px 16px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
@@ -843,7 +843,7 @@ const handleImageError = (event) => {
 
 .add-btn {
   padding: 14px 24px;
-  background: #1A1A1A;
+  background: var(--c-ink-900);
   border: none;
   border-radius: 10px;
   font-size: 14px;
@@ -855,12 +855,12 @@ const handleImageError = (event) => {
 }
 
 .add-btn:hover:not(:disabled) {
-  background: #333;
+  background: var(--c-ink-900);
 }
 
 .add-btn:disabled {
-  background: #E5E7EB;
-  color: #9CA3AF;
+  background: var(--border-strong);
+  color: var(--c-text-400);
   cursor: not-allowed;
 }
 
@@ -868,9 +868,9 @@ const handleImageError = (event) => {
   display: flex;
   gap: 16px;
   padding: 16px;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
 }
 
 .preview-thumbnail {
@@ -907,7 +907,7 @@ const handleImageError = (event) => {
 
 .preview-input {
   padding: 10px 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
@@ -915,7 +915,7 @@ const handleImageError = (event) => {
 
 .preview-input:focus {
   outline: none;
-  border-color: #9333EA;
+  border-color: var(--c-brand);
 }
 
 .preview-input.small {
@@ -928,7 +928,7 @@ const handleImageError = (event) => {
   flex-direction: column;
   align-items: center;
   padding: 32px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   text-align: center;
 }
 
@@ -954,17 +954,17 @@ const handleImageError = (event) => {
   align-items: center;
   justify-content: center;
   padding: 40px 24px;
-  border: 2px dashed #D1D5DB;
+  border: 2px dashed var(--c-text-300);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .drop-zone:hover,
 .drop-zone.drag-over {
-  border-color: #9333EA;
-  background: #FAF5FF;
+  border-color: var(--c-brand);
+  background: var(--c-brand-soft);
 }
 
 .hidden-input {
@@ -979,28 +979,28 @@ const handleImageError = (event) => {
 }
 
 .drop-content svg {
-  color: #9CA3AF;
+  color: var(--c-text-400);
   margin-bottom: 12px;
 }
 
 .drop-title {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
   margin: 0 0 4px 0;
 }
 
 .drop-hint {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   margin: 0;
 }
 
 /* 대기 이미지 목록 */
 .pending-images {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
   overflow: hidden;
 }
 
@@ -1009,19 +1009,19 @@ const handleImageError = (event) => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: #F9FAFB;
-  border-bottom: 1px solid #E5E7EB;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .pending-title {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
 }
 
 .add-all-btn {
   padding: 8px 16px;
-  background: #9333EA;
+  background: var(--c-brand);
   border: none;
   border-radius: 8px;
   font-size: 13px;
@@ -1032,12 +1032,12 @@ const handleImageError = (event) => {
 }
 
 .add-all-btn:hover:not(:disabled) {
-  background: #7C3AED;
+  background: var(--c-brand-hover);
 }
 
 .add-all-btn:disabled {
-  background: #E5E7EB;
-  color: #9CA3AF;
+  background: var(--border-strong);
+  color: var(--c-text-400);
   cursor: not-allowed;
 }
 
@@ -1049,8 +1049,8 @@ const handleImageError = (event) => {
 }
 
 .pending-card {
-  background: #FAFBFC;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.2s;
@@ -1064,7 +1064,7 @@ const handleImageError = (event) => {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  background: #F3F4F6;
+  background: var(--border-default);
   overflow: hidden;
 }
 
@@ -1097,7 +1097,7 @@ const handleImageError = (event) => {
 }
 
 .card-remove-btn:hover {
-  background: #DC2626;
+  background: var(--c-danger);
 }
 
 .upload-overlay {
@@ -1137,7 +1137,7 @@ const handleImageError = (event) => {
 .card-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 13px;
   font-family: inherit;
@@ -1146,7 +1146,7 @@ const handleImageError = (event) => {
 
 .card-input:focus {
   outline: none;
-  border-color: #9333EA;
+  border-color: var(--c-brand);
   box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.1);
 }
 
@@ -1162,7 +1162,7 @@ const handleImageError = (event) => {
   gap: 6px;
   width: 100%;
   padding: 10px 16px;
-  background: #1A1A1A;
+  background: var(--c-ink-900);
   border: none;
   border-radius: 8px;
   font-size: 13px;
@@ -1174,12 +1174,12 @@ const handleImageError = (event) => {
 }
 
 .card-add-btn:hover:not(:disabled) {
-  background: #333;
+  background: var(--c-ink-900);
 }
 
 .card-add-btn:disabled {
-  background: #E5E7EB;
-  color: #9CA3AF;
+  background: var(--border-strong);
+  color: var(--c-text-400);
   cursor: not-allowed;
 }
 
@@ -1194,22 +1194,22 @@ const handleImageError = (event) => {
   position: relative;
   display: flex;
   align-items: center;
-  background: #F7F8FA;
-  border: 1.5px solid #E5E8EB;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-default);
   border-radius: 12px;
   transition: all 0.15s ease;
 }
 
 .product-search-bar:focus-within {
-  background: #fff;
-  border-color: #9333EA;
+  background: var(--bg-elevated);
+  border-color: var(--c-brand);
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
 }
 
 .product-search-icon {
   width: 18px;
   height: 18px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   margin-left: 14px;
   flex-shrink: 0;
 }
@@ -1223,11 +1223,11 @@ const handleImageError = (event) => {
   font-size: 15px;
   font-weight: 500;
   font-family: inherit;
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 .product-search-input::placeholder {
-  color: #B0B8C1;
+  color: var(--c-text-300);
   font-weight: 400;
 }
 
@@ -1242,7 +1242,7 @@ const handleImageError = (event) => {
 .product-search-spinner svg {
   width: 18px;
   height: 18px;
-  color: #9333EA;
+  color: var(--c-brand);
   animation: spin 0.8s linear infinite;
 }
 
@@ -1258,8 +1258,8 @@ const handleImageError = (event) => {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  background: #fff;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1268,8 +1268,8 @@ const handleImageError = (event) => {
 }
 
 .product-suggestion-item:hover:not(:disabled) {
-  border-color: #9333EA;
-  background: #FAF5FF;
+  border-color: var(--c-brand);
+  background: var(--c-brand-soft);
 }
 
 .product-suggestion-item.is-disabled,
@@ -1283,7 +1283,7 @@ const handleImageError = (event) => {
   height: 44px;
   object-fit: cover;
   border-radius: 8px;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   flex-shrink: 0;
 }
 
@@ -1295,7 +1295,7 @@ const handleImageError = (event) => {
 .product-suggestion-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: var(--text-primary);
   margin: 0 0 2px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1304,7 +1304,7 @@ const handleImageError = (event) => {
 
 .product-suggestion-brand {
   font-size: 12px;
-  color: #6B7280;
+  color: var(--c-text-500);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1314,19 +1314,19 @@ const handleImageError = (event) => {
 .product-suggestion-arrow {
   width: 18px;
   height: 18px;
-  color: #B0B8C1;
+  color: var(--c-text-300);
   flex-shrink: 0;
 }
 
 .product-suggestion-item:hover:not(:disabled) .product-suggestion-arrow {
-  color: #9333EA;
+  color: var(--c-brand);
 }
 
 .product-suggestion-badge {
   flex-shrink: 0;
   padding: 3px 8px;
-  background: #F3F4F6;
-  color: #6B7280;
+  background: var(--border-default);
+  color: var(--c-text-500);
   font-size: 11px;
   font-weight: 600;
   border-radius: 6px;
@@ -1338,11 +1338,11 @@ const handleImageError = (event) => {
   gap: 4px;
   margin: 2px 0 0 2px;
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .product-search-hint svg {
-  color: #9CA3AF;
+  color: var(--c-text-400);
   flex-shrink: 0;
 }
 
@@ -1352,11 +1352,11 @@ const handleImageError = (event) => {
 }
 
 .empty-state {
-  border: 2px dashed #E5E7EB;
+  border: 2px dashed var(--border-strong);
   border-radius: 12px;
   padding: 48px 24px;
   text-align: center;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .empty-icon {
@@ -1367,13 +1367,13 @@ const handleImageError = (event) => {
 .empty-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .empty-desc {
   font-size: 13px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .items-grid {
@@ -1384,8 +1384,8 @@ const handleImageError = (event) => {
 
 .selected-item {
   position: relative;
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -1398,8 +1398,8 @@ const handleImageError = (event) => {
 }
 
 .selected-item.is-youtube {
-  border-color: #FEE2E2;
-  background: #FFF5F5;
+  border-color: var(--c-danger-soft);
+  background: var(--c-danger-soft);
 }
 
 .selected-item-remove {
@@ -1426,7 +1426,7 @@ const handleImageError = (event) => {
 }
 
 .selected-item-remove:hover {
-  background: #DC2626;
+  background: var(--c-danger);
 }
 
 .item-visual {
@@ -1434,7 +1434,7 @@ const handleImageError = (event) => {
   width: 100%;
   aspect-ratio: 16/9;
   overflow: hidden;
-  background: #F3F4F6;
+  background: var(--border-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1479,7 +1479,7 @@ const handleImageError = (event) => {
   font-size: 15px;
   font-weight: 700;
   line-height: 1.3;
-  color: #1A1A1A;
+  color: var(--text-primary);
   word-break: break-word;
   margin-bottom: 4px;
   display: -webkit-box;
@@ -1490,7 +1490,7 @@ const handleImageError = (event) => {
 
 .item-brand {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .item-badge {
@@ -1503,13 +1503,13 @@ const handleImageError = (event) => {
 }
 
 .item-badge.custom {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
 }
 
 .item-badge.youtube {
-  background: #FEE2E2;
-  color: #DC2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 /* ===== YouTube 플레이어 모달 ===== */

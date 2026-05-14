@@ -420,7 +420,7 @@ onMounted(handleOAuthCallback)
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #ffffff;
+  background-color: var(--bg-base);
   padding: 20px;
 }
 
@@ -429,9 +429,9 @@ onMounted(handleOAuthCallback)
   max-width: 420px;
   padding: 48px 36px;
   text-align: center;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--border-strong);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
   animation: fadeUp 0.35s ease-out;
 }
@@ -450,13 +450,13 @@ onMounted(handleOAuthCallback)
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px;
-  background: #71717a;
+  background: var(--c-text-500);
 }
-.provider-badge.google { background: #fff; border: 1px solid #e4e4e7; }
+.provider-badge.google { background: var(--bg-elevated); border: 1px solid var(--border-strong); }
 .provider-badge.naver { background: #03C75A; }
 .provider-badge.github { background: #24292e; }
 /* 로그인 완료 상태: provider 무관, 체크마크가 흰색이므로 어두운 배경 필요 */
-.provider-badge.success { background: #1DCD9F; }
+.provider-badge.success { background: var(--c-success); }
 .provider-img { width: 28px; height: 28px; }
 
 /* ===== 로딩 ===== */
@@ -464,13 +464,13 @@ onMounted(handleOAuthCallback)
   margin: 0 0 4px;
   font-size: 18px;
   font-weight: 600;
-  color: #18181b;
+  color: var(--text-primary);
 }
 
 .loading-sub {
   margin: 0 0 28px;
   font-size: 13px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
 }
 
 .steps {
@@ -487,7 +487,7 @@ onMounted(handleOAuthCallback)
   border-radius: 8px;
   transition: background 0.25s;
 }
-.step.active { background: #f4f4f5; }
+.step.active { background: var(--bg-mute); }
 
 .step-dot {
   width: 26px;
@@ -497,13 +497,13 @@ onMounted(handleOAuthCallback)
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: #f4f4f5;
+  background: var(--bg-mute);
   transition: all 0.25s;
 }
-.step.active .step-dot { background: #18181b; }
-.step.done .step-dot { background: #ecfdf5; }
+.step.active .step-dot { background: var(--c-ink-900); }
+.step.done .step-dot { background: var(--c-success-soft); }
 
-.dot-num { font-size: 11px; font-weight: 600; color: #a1a1aa; }
+.dot-num { font-size: 11px; font-weight: 600; color: var(--c-text-400); }
 
 .dot-spinner {
   width: 12px;
@@ -516,12 +516,12 @@ onMounted(handleOAuthCallback)
 
 .step-text {
   font-size: 14px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   transition: color 0.25s;
 }
-.step.active .step-text { color: #18181b; font-weight: 500; }
-.step.done .step-text { color: #1DCD9F; }
-.step.done .step-dot svg { color: #1DCD9F; }
+.step.active .step-text { color: var(--text-primary); font-weight: 500; }
+.step.done .step-text { color: var(--c-success); }
+.step.done .step-dot svg { color: var(--c-success); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -532,7 +532,7 @@ onMounted(handleOAuthCallback)
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: #fef2f2;
+  background: var(--c-danger-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -543,20 +543,20 @@ onMounted(handleOAuthCallback)
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 600;
-  color: #18181b;
+  color: var(--text-primary);
 }
 
 .error-desc {
   margin: 0 0 20px;
   font-size: 14px;
-  color: #71717a;
+  color: var(--c-text-500);
   line-height: 1.6;
 }
 
 /* ===== 진단 박스 (오류 코드 + 원본 메시지) ===== */
 .diag-box {
   background: #fff7f7;
-  border: 1px solid #fee2e2;
+  border: 1px solid var(--c-danger-soft);
   border-radius: 10px;
   padding: 12px 14px;
   margin-bottom: 14px;
@@ -573,14 +573,14 @@ onMounted(handleOAuthCallback)
 .diag-label {
   flex-shrink: 0;
   width: 56px;
-  color: #991b1b;
+  color: var(--c-danger);
   font-weight: 700;
   letter-spacing: -0.2px;
 }
 .diag-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
   padding: 2px 8px;
   border-radius: 6px;
   font-weight: 700;
@@ -598,13 +598,13 @@ onMounted(handleOAuthCallback)
 .diag-details {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px dashed #fecaca;
+  border-top: 1px dashed var(--c-danger-soft);
 }
 .diag-details summary {
   cursor: pointer;
   font-size: 11px;
   font-weight: 600;
-  color: #991b1b;
+  color: var(--c-danger);
 }
 .diag-details pre {
   margin: 6px 0 0;
@@ -617,8 +617,8 @@ onMounted(handleOAuthCallback)
 }
 
 .help-box {
-  background: #fafafa;
-  border: 1px solid #f4f4f5;
+  background: var(--bg-subtle);
+  border: 1px solid var(--bg-mute);
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -629,7 +629,7 @@ onMounted(handleOAuthCallback)
   margin: 0 0 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #3f3f46;
+  color: var(--c-text-600);
 }
 
 .help-list {
@@ -642,7 +642,7 @@ onMounted(handleOAuthCallback)
   padding-left: 14px;
   margin-bottom: 5px;
   font-size: 13px;
-  color: #71717a;
+  color: var(--c-text-500);
   line-height: 1.5;
 }
 .help-list li:last-child { margin-bottom: 0; }
@@ -654,7 +654,7 @@ onMounted(handleOAuthCallback)
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #d4d4d8;
+  background: var(--c-text-300);
 }
 
 .error-btns {
@@ -670,7 +670,7 @@ onMounted(handleOAuthCallback)
   gap: 6px;
   width: 100%;
   padding: 12px;
-  background: #18181b;
+  background: var(--c-ink-900);
   color: white;
   border: none;
   border-radius: 8px;
@@ -679,21 +679,21 @@ onMounted(handleOAuthCallback)
   cursor: pointer;
   transition: background .15s;
 }
-.btn-primary:hover { background: #3f3f46; }
+.btn-primary:hover { background: var(--c-text-600); }
 
 .btn-ghost {
   width: 100%;
   padding: 12px;
-  background: white;
-  color: #71717a;
-  border: 1px solid #e4e4e7;
+  background: var(--bg-elevated);
+  color: var(--c-text-500);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all .15s;
 }
-.btn-ghost:hover { background: #fafafa; color: #18181b; }
+.btn-ghost:hover { background: var(--bg-subtle); color: var(--text-primary); }
 
 /* ===== 성공 (리다이렉트 안내만 표시) ===== */
 
@@ -702,17 +702,17 @@ onMounted(handleOAuthCallback)
   align-items: center;
   gap: 8px;
   padding: 8px 18px;
-  background: #f4f4f5;
+  background: var(--bg-mute);
   border-radius: 20px;
   font-size: 13px;
-  color: #71717a;
+  color: var(--c-text-500);
 }
 
 .pulse-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #1DCD9F;
+  background: var(--c-success);
   animation: pulse 1s ease-in-out infinite;
 }
 @keyframes pulse {
@@ -722,7 +722,7 @@ onMounted(handleOAuthCallback)
 
 /* ===== 모바일 ===== */
 @media (max-width: 480px) {
-  .callback-wrapper { background: #ffffff; padding: 0; align-items: flex-start; padding-top: 60px; }
+  .callback-wrapper { background: var(--bg-base); padding: 0; align-items: flex-start; padding-top: 60px; }
   .callback-container { border: none; box-shadow: none; border-radius: 0; padding: 32px 24px; }
 }
 </style>

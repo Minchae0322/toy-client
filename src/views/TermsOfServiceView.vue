@@ -119,7 +119,7 @@
 <style scoped>
 .legal-page {
   min-height: 100vh;
-  background: #fff;
+  background: var(--bg-base);
   padding: 40px 24px 80px;
 }
 
@@ -131,13 +131,13 @@
 .legal-title {
   font-size: 24px;
   font-weight: 700;
-  color: #111;
+  color: var(--text-primary);
   margin: 0 0 4px;
 }
 
 .legal-date {
   font-size: 13px;
-  color: #999;
+  color: var(--c-text-400);
   margin: 0 0 32px;
 }
 
@@ -148,13 +148,13 @@
 .legal-section h2 {
   font-size: 16px;
   font-weight: 600;
-  color: #222;
+  color: var(--text-primary);
   margin: 0 0 8px;
 }
 
 .legal-section p {
   font-size: 14px;
-  color: #555;
+  color: var(--c-text-600);
   line-height: 1.7;
   margin: 0 0 8px;
 }
@@ -166,7 +166,7 @@
 
 .legal-section li {
   font-size: 14px;
-  color: #555;
+  color: var(--c-text-600);
   line-height: 1.7;
   margin-bottom: 4px;
 }

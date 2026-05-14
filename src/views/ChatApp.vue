@@ -343,9 +343,9 @@ onBeforeUnmount(async () => {
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 .app-container {
-  background: #ffffff;
+  background: var(--bg-base);
   min-height: 100vh;
-  color: #111827;
+  color: var(--text-primary);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
   max-width: 100%;
@@ -412,13 +412,13 @@ onBeforeUnmount(async () => {
 }
 
 .connection-banner.connecting {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
 }
 
 .connection-banner.error {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .banner-content {
@@ -431,7 +431,7 @@ onBeforeUnmount(async () => {
 
 .banner-btn {
   padding: 4px 12px;
-  background: #9333ea;
+  background: var(--c-brand);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -440,7 +440,7 @@ onBeforeUnmount(async () => {
   cursor: pointer;
 }
 
-.banner-btn:hover { background: #7c3aed; }
+.banner-btn:hover { background: var(--c-brand-hover); }
 
 /* 로더 */
 .loader-small {
@@ -455,8 +455,8 @@ onBeforeUnmount(async () => {
 .loader-large {
   width: 32px;
   height: 32px;
-  border: 3px solid #f3e8ff;
-  border-top-color: #9333ea;
+  border: 3px solid var(--c-brand-soft);
+  border-top-color: var(--c-brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -480,7 +480,7 @@ onBeforeUnmount(async () => {
 
 .init-content p {
   font-size: 15px;
-  color: #6b7280;
+  color: var(--c-text-500);
   font-weight: 500;
 }
 
@@ -493,10 +493,10 @@ onBeforeUnmount(async () => {
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 14px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  border: 1px solid #f3f4f6;
+  border: 1px solid var(--border-default);
   cursor: pointer;
   z-index: 1001;
   max-width: 360px;
@@ -512,7 +512,7 @@ onBeforeUnmount(async () => {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #9333ea, #a855f7);
+  background: linear-gradient(135deg, var(--c-brand), var(--c-brand));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -533,12 +533,12 @@ onBeforeUnmount(async () => {
 .toast-sender {
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .toast-text {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--c-text-500);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -548,9 +548,9 @@ onBeforeUnmount(async () => {
   width: 28px;
   height: 28px;
   border: none;
-  background: #f3f4f6;
+  background: var(--border-default);
   border-radius: 8px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -560,8 +560,8 @@ onBeforeUnmount(async () => {
 }
 
 .toast-close:hover {
-  background: #e5e7eb;
-  color: #6b7280;
+  background: var(--border-strong);
+  color: var(--c-text-500);
 }
 
 /* 트랜지션 */

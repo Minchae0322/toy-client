@@ -101,8 +101,8 @@ const handleImageError = (e) => {
 <style scoped>
 .product-info-card {
   margin: 12px 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -112,10 +112,10 @@ const handleImageError = (e) => {
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background: #e2e8f0;
+  background: var(--border-strong);
   font-size: 12px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .product-content {
@@ -128,7 +128,7 @@ const handleImageError = (e) => {
 }
 
 .product-content:hover {
-  background: #f1f5f9;
+  background: var(--bg-subtle);
 }
 
 .product-image {
@@ -137,7 +137,7 @@ const handleImageError = (e) => {
   height: 48px;
   border-radius: 8px;
   overflow: hidden;
-  background: #e2e8f0;
+  background: var(--border-strong);
 }
 
 .product-image img {
@@ -152,7 +152,7 @@ const handleImageError = (e) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: var(--c-text-400);
 }
 
 .product-details {
@@ -163,7 +163,7 @@ const handleImageError = (e) => {
 .product-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--c-text-600);
   margin: 0 0 4px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -173,7 +173,7 @@ const handleImageError = (e) => {
 .product-price {
   font-size: 16px;
   font-weight: 700;
-  color: #dc2626;
+  color: var(--c-danger);
   margin-bottom: 4px;
 }
 
@@ -186,66 +186,66 @@ const handleImageError = (e) => {
 }
 
 .status-sale {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .status-reserved {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
 }
 
 .status-sold {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--border-default);
+  color: var(--c-text-500);
 }
 
 .arrow-icon {
-  color: #94a3b8;
+  color: var(--c-text-400);
   flex-shrink: 0;
 }
 
 /* 다크 모드 지원 */
 @media (prefers-color-scheme: dark) {
   .product-info-card {
-    background: #374151;
-    border-color: #4b5563;
+    background: var(--c-text-600);
+    border-color: var(--c-text-600);
   }
 
   .product-header {
-    background: #4b5563;
-    color: #9ca3af;
+    background: var(--c-text-600);
+    color: var(--c-text-400);
   }
 
   .product-content:hover {
-    background: #4b5563;
+    background: var(--c-text-600);
   }
 
   .product-name {
-    color: #f9fafb;
+    color: var(--bg-subtle);
   }
 
   .product-image {
-    background: #4b5563;
+    background: var(--c-text-600);
   }
 
   .no-image {
-    color: #6b7280;
+    color: var(--c-text-500);
   }
 
   .status-sale {
     background: #065f46;
-    color: #10b981;
+    color: var(--c-success);
   }
 
   .status-reserved {
     background: #78350f;
-    color: #f59e0b;
+    color: var(--c-warning);
   }
 
   .status-sold {
-    background: #4b5563;
-    color: #9ca3af;
+    background: var(--c-text-600);
+    color: var(--c-text-400);
   }
 }
 </style>

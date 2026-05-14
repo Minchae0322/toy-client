@@ -250,65 +250,65 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  border: 2px dashed #D1D5DB;
+  border: 2px dashed var(--c-text-300);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  background: #FAFAFA;
+  background: var(--bg-subtle);
   position: relative;
   min-height: 300px;
 }
 
 .upload-area:hover:not(.disabled):not(.has-image) {
-  border-color: #059669;
-  background: #F0FDF4;
+  border-color: var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .upload-area.dragover {
-  border-color: #059669;
-  background: #ECFDF5;
+  border-color: var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .upload-area.disabled {
-  background: #F9FAFB;
-  border-color: #E5E7EB;
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
   cursor: not-allowed;
   opacity: 0.8;
 }
 
 .upload-area.has-image {
   padding: 0;
-  border: 2px solid #059669;
-  background: white;
+  border: 2px solid var(--c-success);
+  background: var(--bg-elevated);
 }
 
 .upload-area.error {
-  border-color: #EF4444;
-  background: #FEF2F2;
+  border-color: var(--c-danger);
+  background: var(--c-danger-soft);
 }
 
 .upload-icon {
-  color: #9CA3AF;
+  color: var(--c-text-400);
   margin-bottom: 16px;
 }
 
 .upload-text {
   font-size: 15px;
   font-weight: 500;
-  color: #374151;
+  color: var(--c-text-600);
   text-align: center;
   margin-bottom: 8px;
   letter-spacing: -0.01em;
 }
 
 .upload-text strong {
-  color: #059669;
+  color: var(--c-success);
   font-weight: 600;
 }
 
 .upload-hint {
   font-size: 13px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   text-align: center;
   font-weight: 500;
 }
@@ -362,7 +362,7 @@ defineExpose({
 }
 
 .remove-btn:hover:not(:disabled) {
-  background: #DC2626;
+  background: var(--c-danger);
   transform: scale(1.1);
 }
 
@@ -400,14 +400,14 @@ defineExpose({
 .error-message {
   margin-top: 8px;
   font-size: 13px;
-  color: #DC2626;
+  color: var(--c-danger);
   font-weight: 500;
 }
 
 .success-message {
   margin-top: 8px;
   font-size: 13px;
-  color: #059669;
+  color: var(--c-success);
   font-weight: 500;
 }
 </style>

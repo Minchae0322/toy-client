@@ -550,7 +550,7 @@ watch(activeTab, async (newTab) => {
 }
 
 .modal-container {
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 20px 20px 0 0;
   width: 100%;
   max-width: 460px;
@@ -588,14 +588,14 @@ watch(activeTab, async (newTab) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f4f4f5;
+  background: var(--bg-mute);
   border: none;
   border-radius: 10px;
   cursor: pointer;
   transition: background 0.15s;
 }
 
-.btn-close:hover { background: #e4e4e7; }
+.btn-close:hover { background: var(--border-strong); }
 
 .close-icon {
   width: 18px;
@@ -618,12 +618,12 @@ watch(activeTab, async (newTab) => {
   justify-content: center;
   gap: 6px;
   padding: 10px 12px;
-  background: #f4f4f5;
+  background: var(--bg-mute);
   border: none;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
-  color: #71717a;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   letter-spacing: -0.01em;
@@ -632,11 +632,11 @@ watch(activeTab, async (newTab) => {
 
 .tab-btn:hover {
   color: #27272a;
-  background: #e4e4e7;
+  background: var(--border-strong);
 }
 
 .tab-btn.active {
-  background: #18181b;
+  background: var(--c-ink-900);
   color: #ffffff;
 }
 
@@ -677,8 +677,8 @@ watch(activeTab, async (newTab) => {
 .youtube-url-input {
   flex: 1;
   padding: 13px 16px;
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
@@ -688,13 +688,13 @@ watch(activeTab, async (newTab) => {
 
 .youtube-url-input:focus {
   outline: none;
-  background: #ffffff;
-  border-color: #18181b;
+  background: var(--bg-elevated);
+  border-color: var(--c-ink-900);
   box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
 }
 
 .youtube-url-input::placeholder {
-  color: #a1a1aa;
+  color: var(--c-text-400);
 }
 
 .youtube-preview {
@@ -702,9 +702,9 @@ watch(activeTab, async (newTab) => {
   flex-direction: column;
   gap: 12px;
   padding: 14px;
-  background: #fafafa;
+  background: var(--bg-subtle);
   border-radius: 12px;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--border-strong);
 }
 
 .preview-thumbnail {
@@ -740,8 +740,8 @@ watch(activeTab, async (newTab) => {
 .preview-input {
   width: 100%;
   padding: 12px 14px;
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
@@ -752,7 +752,7 @@ watch(activeTab, async (newTab) => {
 
 .preview-input:focus {
   outline: none;
-  border-color: #18181b;
+  border-color: var(--c-ink-900);
   box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
 }
 
@@ -766,7 +766,7 @@ watch(activeTab, async (newTab) => {
   right: 12px;
   top: 12px;
   font-size: 11px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   font-weight: 500;
   pointer-events: none;
 }
@@ -776,13 +776,13 @@ watch(activeTab, async (newTab) => {
   flex-direction: column;
   align-items: center;
   padding: 40px 20px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   text-align: center;
 }
 
 .youtube-empty svg {
   margin-bottom: 12px;
-  color: #d4d4d8;
+  color: var(--c-text-300);
 }
 
 .youtube-empty p {
@@ -802,7 +802,7 @@ watch(activeTab, async (newTab) => {
 .form-label {
   font-size: 13px;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -810,13 +810,13 @@ watch(activeTab, async (newTab) => {
 }
 
 .required {
-  color: #ef4444;
+  color: var(--c-danger);
 }
 
 .optional {
   font-size: 12px;
   font-weight: 500;
-  color: #a1a1aa;
+  color: var(--c-text-400);
 }
 
 .image-upload-area {
@@ -829,16 +829,16 @@ watch(activeTab, async (newTab) => {
   height: 120px;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--border-strong);
   transition: border-color 0.15s;
 }
 
 .image-preview-wrapper.uploading {
-  border-color: #18181b;
+  border-color: var(--c-ink-900);
 }
 
 .image-preview-wrapper.upload-failed {
-  border-color: #ef4444;
+  border-color: var(--c-danger);
 }
 
 .preview-image {
@@ -915,23 +915,23 @@ watch(activeTab, async (newTab) => {
   align-items: center;
   gap: 16px;
   padding: 18px;
-  border: 1.5px dashed #d4d4d8;
+  border: 1.5px dashed var(--c-text-300);
   border-radius: 12px;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
-  background: #fafafa;
+  background: var(--bg-subtle);
 }
 
 .image-upload-label:hover {
-  border-color: #18181b;
-  background: #f4f4f5;
+  border-color: var(--c-ink-900);
+  background: var(--bg-mute);
 }
 
 .upload-icon-wrapper {
   width: 48px;
   height: 48px;
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -941,7 +941,7 @@ watch(activeTab, async (newTab) => {
 }
 
 .image-upload-label:hover .upload-icon-wrapper {
-  border-color: #18181b;
+  border-color: var(--c-ink-900);
 }
 
 .upload-icon-svg {
@@ -952,7 +952,7 @@ watch(activeTab, async (newTab) => {
 }
 
 .image-upload-label:hover .upload-icon-svg {
-  color: #18181b;
+  color: var(--text-primary);
 }
 
 .upload-text-wrapper {
@@ -964,13 +964,13 @@ watch(activeTab, async (newTab) => {
 .upload-text-main {
   font-size: 14px;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
 .upload-text-hint {
   font-size: 12px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
@@ -987,8 +987,8 @@ watch(activeTab, async (newTab) => {
   width: 100%;
   padding: 13px 16px;
   padding-right: 60px;
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
@@ -999,13 +999,13 @@ watch(activeTab, async (newTab) => {
 
 .form-input:focus {
   outline: none;
-  background: #ffffff;
-  border-color: #18181b;
+  background: var(--bg-elevated);
+  border-color: var(--c-ink-900);
   box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
 }
 
 .form-input::placeholder {
-  color: #a1a1aa;
+  color: var(--c-text-400);
 }
 
 .char-count {
@@ -1014,7 +1014,7 @@ watch(activeTab, async (newTab) => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 11px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   font-weight: 500;
   pointer-events: none;
 }
@@ -1035,15 +1035,15 @@ watch(activeTab, async (newTab) => {
   left: 16px;
   width: 18px;
   height: 18px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   pointer-events: none;
 }
 
 .search-input {
   width: 100%;
   padding: 14px 48px;
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   font-size: 14px;
   font-family: inherit;
@@ -1054,13 +1054,13 @@ watch(activeTab, async (newTab) => {
 
 .search-input:focus {
   outline: none;
-  background: #ffffff;
-  border-color: #18181b;
+  background: var(--bg-elevated);
+  border-color: var(--c-ink-900);
   box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
 }
 
 .search-input::placeholder {
-  color: #a1a1aa;
+  color: var(--c-text-400);
 }
 
 .search-clear {
@@ -1068,7 +1068,7 @@ watch(activeTab, async (newTab) => {
   right: 12px;
   width: 26px;
   height: 26px;
-  background: #e4e4e7;
+  background: var(--border-strong);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -1078,7 +1078,7 @@ watch(activeTab, async (newTab) => {
   transition: background 0.15s;
 }
 
-.search-clear:hover { background: #d4d4d8; }
+.search-clear:hover { background: var(--c-text-300); }
 
 .search-clear svg {
   width: 12px;
@@ -1099,7 +1099,7 @@ watch(activeTab, async (newTab) => {
   justify-content: center;
   gap: 12px;
   padding: 48px 20px;
-  color: #71717a;
+  color: var(--c-text-500);
   font-size: 13px;
   font-weight: 500;
 }
@@ -1116,7 +1116,7 @@ watch(activeTab, async (newTab) => {
 .empty-illustration {
   width: 56px;
   height: 56px;
-  background: #f4f4f5;
+  background: var(--bg-mute);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -1127,29 +1127,29 @@ watch(activeTab, async (newTab) => {
 .empty-illustration svg {
   width: 24px;
   height: 24px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
 }
 
 .empty-illustration.warning {
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
 }
 
 .empty-illustration.warning svg {
-  color: #71717a;
+  color: var(--c-text-500);
 }
 
 .empty-title {
   font-size: 14px;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0 0 6px 0;
   letter-spacing: -0.01em;
 }
 
 .empty-desc {
   font-size: 13px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   font-weight: 500;
   margin: 0 0 16px 0;
 }
@@ -1159,7 +1159,7 @@ watch(activeTab, async (newTab) => {
   align-items: center;
   gap: 6px;
   padding: 10px 18px;
-  background: #18181b;
+  background: var(--c-ink-900);
   border: none;
   border-radius: 10px;
   font-size: 13px;
@@ -1188,7 +1188,7 @@ watch(activeTab, async (newTab) => {
 .results-count {
   font-size: 12px;
   font-weight: 600;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   margin: 0 0 8px 0;
   letter-spacing: -0.01em;
 }
@@ -1198,8 +1198,8 @@ watch(activeTab, async (newTab) => {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
@@ -1209,14 +1209,14 @@ watch(activeTab, async (newTab) => {
 }
 
 .product-item:hover {
-  background: #fafafa;
-  border-color: #18181b;
+  background: var(--bg-subtle);
+  border-color: var(--c-ink-900);
 }
 
 .product-item:hover .select-badge {
-  background: #18181b;
+  background: var(--c-ink-900);
   color: #ffffff;
-  border-color: #18181b;
+  border-color: var(--c-ink-900);
 }
 
 .product-image {
@@ -1225,7 +1225,7 @@ watch(activeTab, async (newTab) => {
   object-fit: cover;
   border-radius: 8px;
   flex-shrink: 0;
-  background: #f4f4f5;
+  background: var(--bg-mute);
 }
 
 .product-info {
@@ -1246,15 +1246,15 @@ watch(activeTab, async (newTab) => {
 
 .product-brand {
   font-size: 12px;
-  color: #71717a;
+  color: var(--c-text-500);
   font-weight: 500;
   margin: 0;
 }
 
 .select-badge {
   padding: 5px 12px;
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
@@ -1268,7 +1268,7 @@ watch(activeTab, async (newTab) => {
 .btn-submit {
   width: 100%;
   padding: 14px 24px;
-  background: #18181b;
+  background: var(--c-ink-900);
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -1286,8 +1286,8 @@ watch(activeTab, async (newTab) => {
 }
 
 .btn-submit:disabled {
-  background: #e4e4e7;
-  color: #a1a1aa;
+  background: var(--border-strong);
+  color: var(--c-text-400);
   cursor: not-allowed;
 }
 
@@ -1320,8 +1320,8 @@ watch(activeTab, async (newTab) => {
 .spinner-medium {
   width: 28px;
   height: 28px;
-  border: 2.5px solid #f4f4f5;
-  border-top-color: #18181b;
+  border: 2.5px solid var(--bg-mute);
+  border-top-color: var(--text-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

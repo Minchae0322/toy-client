@@ -56,19 +56,19 @@ defineProps({
 .dash-greeting {
   font-size: 1.625rem;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.03em;
   line-height: 1.25;
 }
 
 .dash-greeting-accent {
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 .dash-greeting-sub {
   font-size: 0.8125rem;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   margin: 0.375rem 0 0;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -76,8 +76,8 @@ defineProps({
 
 .dash-trend-banner {
   display: block;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   flex: 1;
   text-decoration: none;
@@ -98,7 +98,7 @@ defineProps({
 .dash-trend-cta {
   font-size: 13px;
   font-weight: 700;
-  color: #191F28;
+  color: var(--text-primary);
   white-space: nowrap;
   position: absolute;
   bottom: 12px;

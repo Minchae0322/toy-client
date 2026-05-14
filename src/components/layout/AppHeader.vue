@@ -342,7 +342,7 @@ onUnmounted(() => {
 }
 
 .app-header {
-  background: white;
+  background: var(--bg-elevated);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -406,7 +406,7 @@ onUnmounted(() => {
 }
 
 .admin-link {
-  background: linear-gradient(135deg, #ff6b35, #f39c12);
+  background: linear-gradient(135deg, var(--c-heat), #f39c12);
   color: white !important;
   font-weight: 600;
   border-radius: 8px;
@@ -548,7 +548,7 @@ onUnmounted(() => {
 }
 
 .admin-badge {
-  background: linear-gradient(135deg, #ff6b35, #f39c12);
+  background: linear-gradient(135deg, var(--c-heat), #f39c12);
   color: white;
   padding: 2px 8px;
   border-radius: 12px;

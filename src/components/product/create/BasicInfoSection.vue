@@ -222,7 +222,7 @@ const validatePrice = () => {
 .form-section {
   margin-bottom: 40px;
   padding-bottom: 40px;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .section-header {
@@ -235,15 +235,15 @@ const validatePrice = () => {
 .section-title {
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .required-badge {
   padding: 4px 12px;
-  background: #FEE2E2;
-  color: #DC2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
@@ -269,54 +269,54 @@ const validatePrice = () => {
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
   margin-bottom: 8px;
   letter-spacing: -0.01em;
 }
 
 .required {
-  color: #DC2626;
+  color: var(--c-danger);
   font-weight: 700;
 }
 
 .optional {
   font-size: 12px;
   font-weight: 500;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .form-input {
   padding: 12px 16px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   transition: all 0.2s;
-  background: white;
-  color: #111827;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #059669;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }
 
 .form-input:disabled {
-  background: #F9FAFB;
-  color: #9CA3AF;
+  background: var(--bg-subtle);
+  color: var(--c-text-400);
   cursor: not-allowed;
 }
 
 .form-input.error {
-  border-color: #EF4444;
-  background: #FEF2F2;
+  border-color: var(--c-danger);
+  background: var(--c-danger-soft);
 }
 
 .form-input.success {
-  border-color: #10B981;
-  background: #F0FDF4;
+  border-color: var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .input-footer {
@@ -334,33 +334,33 @@ const validatePrice = () => {
 }
 
 .validation-message.error {
-  color: #DC2626;
+  color: var(--c-danger);
 }
 
 .validation-message.success {
-  color: #059669;
+  color: var(--c-success);
 }
 
 .char-counter {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
 .char-counter.warning {
-  color: #F59E0B;
+  color: var(--c-warning);
   font-weight: 600;
 }
 
 .form-help {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   margin-top: 6px;
   font-weight: 500;
 }
 
 .form-help.error {
-  color: #DC2626;
+  color: var(--c-danger);
 }
 
 .price-input-wrapper {
@@ -372,7 +372,7 @@ const validatePrice = () => {
   right: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-size: 14px;
   font-weight: 500;
   pointer-events: none;

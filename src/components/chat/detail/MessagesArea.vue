@@ -124,7 +124,7 @@ defineExpose({ scrollToBottom, isAtBottom, isAtTop, getScrollHeight, restoreScro
   flex: 1;
   overflow-y: auto;
   padding: 20px;
-  background: #FAFAFA;
+  background: var(--bg-subtle);
 }
 
 .loading-more {
@@ -132,7 +132,7 @@ defineExpose({ scrollToBottom, isAtBottom, isAtTop, getScrollHeight, restoreScro
   align-items: center;
   justify-content: center;
   padding: 16px;
-  color: #666;
+  color: var(--c-text-500);
   font-size: 13px;
   gap: 8px;
 }
@@ -143,14 +143,14 @@ defineExpose({ scrollToBottom, isAtBottom, isAtTop, getScrollHeight, restoreScro
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: #666;
+  color: var(--c-text-500);
 }
 
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid #F3E8FF;
-  border-top: 3px solid #9333EA;
+  border: 3px solid var(--c-brand-soft);
+  border-top: 3px solid var(--c-brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 16px;
@@ -159,8 +159,8 @@ defineExpose({ scrollToBottom, isAtBottom, isAtTop, getScrollHeight, restoreScro
 .spinner-small {
   width: 18px;
   height: 18px;
-  border: 2px solid #F3E8FF;
-  border-top: 2px solid #9333EA;
+  border: 2px solid var(--c-brand-soft);
+  border-top: 2px solid var(--c-brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -182,7 +182,7 @@ defineExpose({ scrollToBottom, isAtBottom, isAtTop, getScrollHeight, restoreScro
   gap: 10px;
   padding: 12px 16px;
   margin-top: 12px;
-  background: #FFFFFF;
+  background: var(--bg-elevated);
   border-radius: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   width: fit-content;
@@ -196,7 +196,7 @@ defineExpose({ scrollToBottom, isAtBottom, isAtTop, getScrollHeight, restoreScro
 .typing-animation span {
   width: 7px;
   height: 7px;
-  background: #9333EA;
+  background: var(--c-brand);
   border-radius: 50%;
   animation: typing 1.4s ease-in-out infinite both;
 }
@@ -211,7 +211,7 @@ defineExpose({ scrollToBottom, isAtBottom, isAtTop, getScrollHeight, restoreScro
 
 .typing-text {
   font-size: 13px;
-  color: #666;
+  color: var(--c-text-500);
   font-style: italic;
 }
 
@@ -226,6 +226,6 @@ defineExpose({ scrollToBottom, isAtBottom, isAtTop, getScrollHeight, restoreScro
 /* 스크롤바 스타일 */
 .messages-container::-webkit-scrollbar { width: 6px; }
 .messages-container::-webkit-scrollbar-track { background: transparent; }
-.messages-container::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 3px; }
-.messages-container::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
+.messages-container::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+.messages-container::-webkit-scrollbar-thumb:hover { background: var(--c-text-300); }
 </style>

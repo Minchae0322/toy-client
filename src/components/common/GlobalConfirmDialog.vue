@@ -86,7 +86,7 @@ const handleOverlayClick = () => {
 
 /* ===================== 컨테이너 ===================== */
 .dialog-container {
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 16px;
   padding: 32px 28px 24px;
   width: 100%;
@@ -113,8 +113,8 @@ const handleOverlayClick = () => {
 }
 
 .dialog--confirm .dialog-icon-wrap {
-  background: #FAF5FF;
-  color: #9933EA;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .dialog--alert .dialog-icon-wrap {
@@ -124,11 +124,11 @@ const handleOverlayClick = () => {
 
 .dialog--login .dialog-icon-wrap {
   background: #EBF5FF;
-  color: #3B82F6;
+  color: var(--c-info);
 }
 
 .dialog--danger .dialog-icon-wrap {
-  background: #FFF5F5;
+  background: var(--c-danger-soft);
   color: #E53E3E;
 }
 
@@ -140,7 +140,7 @@ const handleOverlayClick = () => {
 .dialog-title {
   font-size: 17px;
   font-weight: 700;
-  color: #111111;
+  color: var(--text-primary);
   margin: 8px 0 0;
   line-height: 1.4;
 }
@@ -179,7 +179,7 @@ const handleOverlayClick = () => {
 }
 
 .dialog-btn--cancel {
-  background: #F5F5F5;
+  background: var(--bg-subtle);
   color: #666666;
 }
 
@@ -190,7 +190,7 @@ const handleOverlayClick = () => {
 
 /* confirm 타입 */
 .dialog-btn--confirm.dialog-btn--confirm {
-  background: #9933EA;
+  background: var(--c-brand);
   color: #ffffff;
 }
 
@@ -200,7 +200,7 @@ const handleOverlayClick = () => {
 
 /* alert 타입 */
 .dialog-btn--confirm.dialog-btn--alert {
-  background: #9933EA;
+  background: var(--c-brand);
   color: #ffffff;
   max-width: 160px;
 }
@@ -211,7 +211,7 @@ const handleOverlayClick = () => {
 
 /* login 타입 */
 .dialog-btn--confirm.dialog-btn--login {
-  background: #3B82F6;
+  background: var(--c-info);
   color: #ffffff;
 }
 

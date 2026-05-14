@@ -137,7 +137,7 @@ defineExpose({
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   padding: 20px;
   display: flex;
@@ -164,18 +164,18 @@ defineExpose({
 }
 
 .stat-icon.total {
-  background: #eff6ff;
-  color: #3b82f6;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .stat-icon.active {
-  background: #f0fdf4;
-  color: #22c55e;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .stat-icon.inactive {
-  background: #fef2f2;
-  color: #ef4444;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .stat-content {
@@ -186,7 +186,7 @@ defineExpose({
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   line-height: 1;
   margin-bottom: 6px;
 }
@@ -194,7 +194,7 @@ defineExpose({
 .stat-label {
   font-size: 13px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 @media (max-width: 768px) {

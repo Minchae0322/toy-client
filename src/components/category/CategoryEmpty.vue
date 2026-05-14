@@ -33,7 +33,7 @@ const handleAddClick = () => {
 
 <style scoped>
 .empty-state {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 20px;
   padding: 80px 40px;
   text-align: center;

@@ -411,7 +411,7 @@ onUnmounted(() => {
 .app-splash {
   position: fixed;
   inset: 0;
-  background: #ffffff;
+  background: var(--bg-base);
   z-index: 99999;
   display: flex;
   align-items: center;
@@ -439,8 +439,8 @@ onUnmounted(() => {
 .header {
   position: sticky;
   top: 0;
-  background: #ffffff;
-  border-bottom: 1px solid #ede9f8;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-default);
   z-index: 1000;
   /* iOS 노치/다이내믹 아일랜드 회피 — 일반 브라우저에서는 0이라 영향 없음 */
   padding-top: env(safe-area-inset-top);
@@ -481,7 +481,7 @@ onUnmounted(() => {
 
 .nav-item {
   text-decoration: none;
-  color: #6b7280;
+  color: var(--c-text-500);
   font-size: 14px;
   font-weight: 500;
   padding: 7px 14px;
@@ -490,20 +490,20 @@ onUnmounted(() => {
 }
 
 .nav-item:hover {
-  color: #111827;
-  background: #f5f5f7;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
 }
 
 .nav-item.router-link-active {
-  color: #7c3aed;
+  color: var(--c-brand-hover);
   font-weight: 600;
-  background: #f3e8ff;
+  background: var(--c-brand-soft);
 }
 
 .nav-divider {
   width: 1px;
   height: 20px;
-  background: #e5e7eb;
+  background: var(--border-strong);
   margin: 0 10px;
   flex-shrink: 0;
 }
@@ -511,7 +511,7 @@ onUnmounted(() => {
 /* ===================== 버튼 ===================== */
 .btn-primary {
   text-decoration: none;
-  background: #7c3aed;
+  background: var(--c-brand-hover);
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
@@ -521,12 +521,12 @@ onUnmounted(() => {
 }
 
 .btn-primary:hover {
-  background: #6d28d9;
+  background: var(--c-brand-hover);
 }
 
 .btn-ghost {
   background: transparent;
-  color: #9ca3af;
+  color: var(--c-text-400);
   border: none;
   font-size: 12px;
   font-weight: 500;
@@ -538,7 +538,7 @@ onUnmounted(() => {
 }
 
 .btn-ghost:hover:not(:disabled) {
-  color: #4b5563;
+  color: var(--c-text-600);
   background: transparent;
 }
 
@@ -560,23 +560,23 @@ onUnmounted(() => {
   height: 34px;
   background: transparent;
   border: none;
-  color: #6b7280;
+  color: var(--c-text-500);
   border-radius: 7px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .dropdown-trigger:hover {
-  color: #7c3aed;
-  background: #f5f3ff;
+  color: var(--c-brand-hover);
+  background: var(--c-brand-soft);
 }
 
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  background: #ffffff;
-  border: 1px solid #ede9f8;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 10px;
   padding: 4px;
   min-width: 148px;
@@ -596,7 +596,7 @@ onUnmounted(() => {
 .dropdown-item {
   display: block;
   text-decoration: none;
-  color: #374151;
+  color: var(--c-text-600);
   font-size: 13px;
   font-weight: 500;
   padding: 9px 12px;
@@ -605,13 +605,13 @@ onUnmounted(() => {
 }
 
 .dropdown-item:hover {
-  background: #f5f5f7;
-  color: #111827;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
 }
 
 .dropdown-item.router-link-active {
-  background: #f3e8ff;
-  color: #7c3aed;
+  background: var(--c-brand-soft);
+  color: var(--c-brand-hover);
   font-weight: 600;
 }
 
@@ -634,7 +634,7 @@ onUnmounted(() => {
   border: none;
   background: transparent;
   border-radius: 7px;
-  color: #6b7280;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -645,8 +645,8 @@ onUnmounted(() => {
 }
 
 .msg-btn:hover {
-  color: #7c3aed;
-  background: #f5f3ff;
+  color: var(--c-brand-hover);
+  background: var(--c-brand-soft);
 }
 
 .mobile-msg-btn {
@@ -658,7 +658,7 @@ onUnmounted(() => {
   border: none;
   background: transparent;
   border-radius: 7px;
-  color: #6b7280;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -669,8 +669,8 @@ onUnmounted(() => {
 }
 
 .mobile-msg-btn:hover {
-  color: #7c3aed;
-  background: #f5f3ff;
+  color: var(--c-brand-hover);
+  background: var(--c-brand-soft);
 }
 
 /* ===================== 유저 메뉴 (데스크톱) ===================== */
@@ -691,7 +691,7 @@ onUnmounted(() => {
 }
 
 .user-info:hover {
-  background: #f5f5f7;
+  background: var(--bg-subtle);
 }
 
 .tier-avatar-wrap {
@@ -706,7 +706,7 @@ onUnmounted(() => {
 .user-avatar {
   width: 28px;
   height: 28px;
-  background: #7c3aed;
+  background: var(--c-brand-hover);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -721,12 +721,12 @@ onUnmounted(() => {
 }
 
 .user-avatar.connecting {
-  border-color: #f59e0b;
+  border-color: var(--c-warning);
   animation: ws-pulse 1.2s ease-in-out infinite;
 }
 
 .user-avatar.connected {
-  border-color: #00C853;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.18);
   animation: none;
 }
@@ -752,7 +752,7 @@ onUnmounted(() => {
 .user-name {
   font-size: 13px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -800,8 +800,8 @@ onUnmounted(() => {
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  background: #0A0E1A;
-  color: #ffffff;
+  background: var(--c-ink-900);
+  color: var(--text-on-ink);
   font-size: 10px;
   font-weight: 800;
   line-height: 1;
@@ -809,7 +809,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid #ffffff;
+  border: 1.5px solid var(--bg-base);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.3px;
   pointer-events: none;
@@ -818,7 +818,7 @@ onUnmounted(() => {
 .mobile-avatar {
   width: 30px;
   height: 30px;
-  background: #7c3aed;
+  background: var(--c-brand-hover);
   color: #fff;
   display: flex;
   align-items: center;
@@ -833,12 +833,12 @@ onUnmounted(() => {
 }
 
 .mobile-avatar.connecting {
-  border-color: #f59e0b;
+  border-color: var(--c-warning);
   animation: ws-pulse 1.2s ease-in-out infinite;
 }
 
 .mobile-avatar.connected {
-  border-color: #00C853;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.18);
   animation: none;
 }
@@ -870,17 +870,17 @@ onUnmounted(() => {
 /* ===================== 메인 컨텐츠 ===================== */
 .main {
   min-height: calc(100vh - 66px);
-  background: #ffffff;
+  background: var(--bg-base);
 }
 
 .main.auth-page {
-  background: #ffffff;
+  background: var(--bg-base);
 }
 
 /* ===================== 푸터 ===================== */
 .site-footer {
-  background: #ffffff;
-  border-top: 1px solid #ede9f8;
+  background: var(--bg-base);
+  border-top: 1px solid var(--border-default);
   padding: 24px 24px 32px;
 }
 
@@ -899,7 +899,7 @@ onUnmounted(() => {
 .footer-logo {
   font-size: 15px;
   font-weight: 700;
-  color: #888;
+  color: var(--c-text-400);
   text-decoration: none;
 }
 
@@ -910,19 +910,19 @@ onUnmounted(() => {
 
 .footer-links a {
   font-size: 13px;
-  color: #888;
+  color: var(--c-text-400);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.15s;
 }
 
 .footer-links a:hover {
-  color: #333;
+  color: var(--text-primary);
 }
 
 .footer-copy {
   font-size: 12px;
-  color: #bbb;
+  color: var(--c-text-300);
   margin: 0;
 }
 

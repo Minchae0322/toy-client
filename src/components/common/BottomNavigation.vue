@@ -354,12 +354,14 @@ onBeforeUnmount(() => {
 <style scoped>
 /* ===================== Container ===================== */
 .bottom-nav {
-  --brand: #9333EA;
-  --brand-deep: #7c3aed;
-  --ink: #0A0E1A;
-  --text-dim: #94A3B8;
-  --border: #F1F3F6;
-  --surface: #ffffff;
+  --brand: var(--c-brand);
+  --brand-deep: var(--c-brand-hover);
+  /* --ink 는 텍스트 색 용도로 쓰이므로 자동 반전되는 text-primary 사용.
+     배경/엄청 어두운 톤이 필요한 곳(.fab.open 등)에선 var(--c-ink-900) 직접 사용 */
+  --ink: var(--text-primary);
+  --text-dim: var(--c-text-400);
+  --border: var(--border-default);
+  --surface: var(--bg-elevated);
 
   position: fixed;
   bottom: 0;
@@ -487,7 +489,7 @@ onBeforeUnmount(() => {
 }
 
 .fab.open {
-  background: var(--ink);
+  background: var(--c-ink-900);
   transform: rotate(45deg);
   width: 52px;
   box-shadow:
@@ -584,7 +586,7 @@ onBeforeUnmount(() => {
 }
 
 .sheet-item:active {
-  background: #F7F8FA;
+  background: var(--bg-subtle);
 }
 
 .sheet-icon {
@@ -602,18 +604,18 @@ onBeforeUnmount(() => {
   height: 18px;
 }
 
-.sheet-icon.feed { background: #EFF6FF; color: #3b82f6; }
-.sheet-icon.battle { background: #FEF3C7; color: #f97316; }
-.sheet-icon.product { background: #F0FDF4; color: #10b981; }
-.sheet-icon.home { background: #F0FDF4; color: #16a34a; }
-.sheet-icon.carrier { background: #FAF5FF; color: #9333ea; }
-.sheet-icon.chat { background: #FEF3C7; color: #d97706; }
-.sheet-icon.mypage { background: #E0E7FF; color: #4f46e5; }
-.sheet-icon.collection { background: #FEF9C3; color: #EAB308; }
-.sheet-icon.admin { background: #FFF7ED; color: #ea580c; }
-.sheet-icon.notifications { background: #FAF5FF; color: #9333EA; }
-.sheet-icon.feedback { background: #F1F5F9; color: #475569; }
-.sheet-icon.logout-icon { background: #FEF2F2; color: #dc2626; }
+.sheet-icon.feed { background: var(--c-info-soft); color: var(--c-info); }
+.sheet-icon.battle { background: var(--c-warning-soft); color: var(--c-heat); }
+.sheet-icon.product { background: var(--c-success-soft); color: var(--c-success); }
+.sheet-icon.home { background: var(--c-success-soft); color: var(--c-success); }
+.sheet-icon.carrier { background: var(--c-brand-soft); color: var(--c-brand); }
+.sheet-icon.chat { background: var(--c-warning-soft); color: var(--c-bronze); }
+.sheet-icon.mypage { background: var(--c-info-soft); color: var(--c-info); }
+.sheet-icon.collection { background: var(--c-warning-soft); color: var(--c-warning); }
+.sheet-icon.admin { background: var(--c-heat-soft); color: var(--c-heat); }
+.sheet-icon.notifications { background: var(--c-brand-soft); color: var(--c-brand); }
+.sheet-icon.feedback { background: var(--bg-subtle); color: var(--c-text-600); }
+.sheet-icon.logout-icon { background: var(--c-danger-soft); color: var(--c-danger); }
 
 .sheet-content {
   display: flex;
@@ -632,7 +634,7 @@ onBeforeUnmount(() => {
 .sheet-desc {
   font-size: 11px;
   font-weight: 500;
-  color: #94A3B8;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
 }
 
@@ -643,7 +645,15 @@ onBeforeUnmount(() => {
 }
 
 .sheet-item.logout .sheet-text {
-  color: #dc2626;
+  color: var(--c-danger);
+}
+
+/* 다크 모드: 더보기 시트 가독성 보강 */
+:root[data-theme="dark"] .sheet-desc {
+  color: var(--c-text-500);
+}
+:root[data-theme="dark"] .sheet-item:active {
+  background: var(--bg-mute);
 }
 
 /* ===================== Overlay ===================== */

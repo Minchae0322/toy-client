@@ -540,8 +540,8 @@ defineExpose({
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f9fafb;
-  border: 1px solid #E5E8EB;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
 }
 .selected-product-image {
@@ -550,13 +550,13 @@ defineExpose({
   object-fit: cover;
   border-radius: 8px;
   flex-shrink: 0;
-  background: #e5e7eb;
+  background: var(--border-strong);
 }
 .selected-product-info { flex: 1; min-width: 0; }
 .selected-product-name {
   font-size: 15px;
   font-weight: 600;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin: 0 0 4px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -564,7 +564,7 @@ defineExpose({
 }
 .selected-product-brand {
   font-size: 13px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   margin: 0;
 }
 .btn-clear-product {
@@ -573,19 +573,19 @@ defineExpose({
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: white;
-  border: 1px solid #E5E8EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 50%;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.2s;
 }
 .btn-clear-product:hover:not(:disabled) {
-  background: #fee2e2;
-  border-color: #ef4444;
+  background: var(--c-danger-soft);
+  border-color: var(--c-danger);
 }
 .btn-clear-product:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-clear-product .icon { width: 16px; height: 16px; color: #8B95A1; }
+.btn-clear-product .icon { width: 16px; height: 16px; color: var(--c-text-400); }
 
 /* 검색 바 */
 .product-search-wrapper { display: flex; flex-direction: column; gap: 10px; }
@@ -596,21 +596,21 @@ defineExpose({
   position: relative;
   display: flex;
   align-items: center;
-  background: #F7F8FA;
-  border: 1.5px solid #E5E8EB;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-default);
   border-radius: 12px;
   transition: all 0.15s ease;
   min-width: 0;
 }
 .product-search-bar:focus-within {
-  background: #fff;
-  border-color: #9333ea;
+  background: var(--bg-elevated);
+  border-color: var(--c-brand);
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
 }
 .product-search-icon {
   width: 18px;
   height: 18px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   margin-left: 14px;
   flex-shrink: 0;
 }
@@ -623,10 +623,10 @@ defineExpose({
   font-size: 15px;
   font-weight: 500;
   font-family: inherit;
-  color: #0A0E1A;
+  color: var(--text-primary);
   min-width: 0;
 }
-.product-search-input::placeholder { color: #B0B8C1; font-weight: 400; }
+.product-search-input::placeholder { color: var(--c-text-300); font-weight: 400; }
 
 .product-search-spinner {
   display: flex;
@@ -638,7 +638,7 @@ defineExpose({
 .product-search-spinner svg {
   width: 18px;
   height: 18px;
-  color: #9333ea;
+  color: var(--c-brand);
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -649,19 +649,19 @@ defineExpose({
   align-items: center;
   gap: 6px;
   padding: 0 14px;
-  background: #F7F8FA;
-  border: 1.5px solid #E5E8EB;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-default);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.register-toggle:hover { border-color: #9333ea; background: #FAF5FF; }
+.register-toggle:hover { border-color: var(--c-brand); background: var(--c-brand-soft); }
 .register-toggle.active {
-  background: #9333ea;
-  border-color: #9333ea;
-  color: #fff;
+  background: var(--c-brand);
+  border-color: var(--c-brand);
+  color: #ffffff;
 }
 .register-toggle-input {
   position: absolute;
@@ -670,15 +670,15 @@ defineExpose({
   width: 0;
   height: 0;
 }
-.register-toggle-icon { width: 16px; height: 16px; color: #8B95A1; }
-.register-toggle.active .register-toggle-icon { color: #fff; }
+.register-toggle-icon { width: 16px; height: 16px; color: var(--c-text-400); }
+.register-toggle.active .register-toggle-icon { color: #ffffff; }
 .register-toggle-text {
   font-size: 13px;
   font-weight: 700;
-  color: #4E5968;
+  color: var(--c-text-600);
   letter-spacing: -0.1px;
 }
-.register-toggle.active .register-toggle-text { color: #fff; }
+.register-toggle.active .register-toggle-text { color: #ffffff; }
 
 /* 끄기 칩 (active 상태에서 우측 표시) */
 .register-toggle-close {
@@ -688,7 +688,7 @@ defineExpose({
   padding: 3px 7px 3px 5px;
   margin-left: 4px;
   background: rgba(255, 255, 255, 0.22);
-  color: #fff;
+  color: #ffffff;
   border-radius: 999px;
   line-height: 1;
   transition: background 0.15s ease;
@@ -696,7 +696,7 @@ defineExpose({
 .register-toggle-close svg {
   width: 11px;
   height: 11px;
-  color: #fff;
+  color: #ffffff;
   flex-shrink: 0;
 }
 .register-toggle-close-text {
@@ -714,7 +714,7 @@ defineExpose({
   padding: 0;
   font-size: 11.5px;
   font-weight: 500;
-  color: #94A3B8;
+  color: var(--c-text-400);
   line-height: 1.5;
   letter-spacing: -0.1px;
   word-break: keep-all;
@@ -728,28 +728,28 @@ defineExpose({
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  background: #fff;
-  border: 1px solid #E5E8EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
   font-family: inherit;
 }
-.product-suggestion-item:hover { border-color: #9333ea; background: #FAF5FF; }
+.product-suggestion-item:hover { border-color: var(--c-brand); background: var(--c-brand-soft); }
 .product-suggestion-thumb {
   width: 44px;
   height: 44px;
   object-fit: cover;
   border-radius: 8px;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   flex-shrink: 0;
 }
 .product-suggestion-info { flex: 1; min-width: 0; }
 .product-suggestion-name {
   font-size: 14px;
   font-weight: 600;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin: 0 0 2px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -757,14 +757,14 @@ defineExpose({
 }
 .product-suggestion-brand {
   font-size: 12px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.product-suggestion-arrow { width: 16px; height: 16px; color: #B0B8C1; flex-shrink: 0; }
-.product-suggestion-item:hover .product-suggestion-arrow { color: #9333ea; }
+.product-suggestion-arrow { width: 16px; height: 16px; color: var(--c-text-300); flex-shrink: 0; }
+.product-suggestion-item:hover .product-suggestion-arrow { color: var(--c-brand); }
 
 /* 새 제품 정보 블록 */
 .brand-input-block {
@@ -772,8 +772,8 @@ defineExpose({
   flex-direction: column;
   gap: 14px;
   padding: 14px;
-  background: #FAF5FF;
-  border: 1px solid #E9D5FF;
+  background: var(--c-brand-soft);
+  border: 1px solid var(--c-brand-soft);
   border-radius: 12px;
 }
 .register-block-header {
@@ -785,7 +785,7 @@ defineExpose({
 .register-block-title {
   font-size: 13px;
   font-weight: 800;
-  color: #9333ea;
+  color: var(--c-brand);
   letter-spacing: -0.1px;
 }
 .register-help {
@@ -799,13 +799,13 @@ defineExpose({
   background: transparent;
   border: none;
   border-radius: 50%;
-  color: #8B95A1;
+  color: var(--c-text-400);
   cursor: help;
   transition: all 0.15s ease;
 }
 .register-help:hover, .register-help:focus-visible {
-  background: #fff;
-  color: #9333ea;
+  background: var(--bg-elevated);
+  color: var(--c-brand);
   outline: none;
 }
 .register-help svg { width: 16px; height: 16px; }
@@ -819,8 +819,8 @@ defineExpose({
   width: max-content;
   max-width: 260px;
   padding: 10px 12px;
-  background: #0A0E1A;
-  color: #fff;
+  background: var(--c-ink-900);
+  color: #ffffff;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
@@ -842,7 +842,7 @@ defineExpose({
   right: 8px;
   width: 8px;
   height: 8px;
-  background: #0A0E1A;
+  background: var(--c-ink-900);
   transform: rotate(45deg);
   border-radius: 1px;
 }
@@ -858,26 +858,26 @@ defineExpose({
 .register-field-label {
   font-size: 13px;
   font-weight: 700;
-  color: #4E5968;
+  color: var(--c-text-600);
   letter-spacing: -0.1px;
 }
 .register-field-hint {
   font-size: 11px;
   font-weight: 500;
-  color: #94A3B8;
+  color: var(--c-text-400);
   margin-left: 4px;
 }
 .brand-input {
   padding: 11px 14px;
   font-size: 14px;
-  background: #fff;
+  background: var(--bg-elevated);
   width: 100%;
-  border: 1.5px solid #E5E8EB;
+  border: 1.5px solid var(--border-default);
   border-radius: 10px;
   font-family: inherit;
   outline: none;
 }
-.brand-input:focus { border-color: #9333ea; box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08); }
+.brand-input:focus { border-color: var(--c-brand); box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08); }
 
 .product-image-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .product-image-option {
@@ -886,16 +886,16 @@ defineExpose({
   align-items: stretch;
   gap: 8px;
   padding: 10px;
-  background: #fff;
-  border: 1.5px solid #E5E8EB;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-default);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
   text-align: left;
 }
-.product-image-option:hover:not(.disabled):not(:disabled) { border-color: #9333ea; }
-.product-image-option.active { border-color: #9333ea; background: #F3EAFD; }
+.product-image-option:hover:not(.disabled):not(:disabled) { border-color: var(--c-brand); }
+.product-image-option.active { border-color: var(--c-brand); background: #F3EAFD; }
 .product-image-option.disabled, .product-image-option:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .product-image-thumb {
@@ -904,7 +904,7 @@ defineExpose({
   aspect-ratio: 1;
   border-radius: 8px;
   overflow: hidden;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
 }
 .product-image-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .product-image-empty {
@@ -913,10 +913,10 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #B0B8C1;
+  color: var(--c-text-300);
 }
 .product-image-empty svg { width: 28px; height: 28px; }
-.product-image-empty.plus { background: #F7F8FA; color: #9333ea; }
+.product-image-empty.plus { background: var(--bg-subtle); color: var(--c-brand); }
 .product-image-upload-overlay {
   position: absolute;
   inset: 0;
@@ -928,7 +928,7 @@ defineExpose({
 .product-image-upload-overlay svg {
   width: 24px;
   height: 24px;
-  color: #fff;
+  color: #ffffff;
   animation: spin 0.8s linear infinite;
 }
 .product-image-option-meta { display: flex; align-items: center; gap: 6px; }
@@ -937,25 +937,25 @@ defineExpose({
   height: 16px;
   border-radius: 50%;
   border: 1.5px solid #C7CDD5;
-  background: #fff;
+  background: var(--bg-elevated);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition: all 0.15s ease;
 }
-.product-image-radio.checked { border-color: #9333ea; background: #9333ea; }
-.product-image-radio svg { width: 10px; height: 10px; color: #fff; }
+.product-image-radio.checked { border-color: var(--c-brand); background: var(--c-brand); }
+.product-image-radio svg { width: 10px; height: 10px; color: #ffffff; }
 .product-image-option-text {
   font-size: 12px;
   font-weight: 600;
-  color: #4E5968;
+  color: var(--c-text-600);
   letter-spacing: -0.1px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.product-image-option.active .product-image-option-text { color: #9333ea; }
+.product-image-option.active .product-image-option-text { color: var(--c-brand); }
 
 .product-image-hidden-input { display: none; }
 
@@ -965,10 +965,10 @@ defineExpose({
   gap: 6px;
   margin: 0;
   padding: 10px 12px;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   border-radius: 8px;
   font-size: 12px;
-  color: #8B95A1;
+  color: var(--c-text-400);
 }
 
 .product-search-hint {
@@ -977,9 +977,9 @@ defineExpose({
   gap: 4px;
   margin: 2px 0 0 2px;
   font-size: 12px;
-  color: #8B95A1;
+  color: var(--c-text-400);
 }
-.product-search-hint svg { color: #8B95A1; flex-shrink: 0; }
+.product-search-hint svg { color: var(--c-text-400); flex-shrink: 0; }
 
 @media (max-width: 480px) {
   .product-search-row { flex-direction: column; }

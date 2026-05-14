@@ -605,22 +605,22 @@ onUnmounted(() => {
 .app-container {
   min-height: 100vh;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
-  background: #ffffff;
-  color: #1A1A1A;
+  background: var(--bg-base);
+  color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
 .main-content {
   width: 100%;
-  background: #ffffff;
+  background: var(--bg-base);
 }
 
 .content-area {
   max-width: 1400px;
   margin: 0 auto;
   padding: 32px 60px 80px;
-  background: #ffffff;
+  background: var(--bg-base);
 }
 
 .create-container {

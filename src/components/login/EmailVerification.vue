@@ -293,11 +293,11 @@ onUnmounted(() => {
   display: block;
   font-size: 13px;
   font-weight: 700;
-  color: #333D4B;
+  color: var(--text-primary);
   margin-bottom: 8px;
   letter-spacing: -0.1px;
 }
-.required { color: #9333EA; margin-left: 2px; }
+.required { color: var(--c-brand); margin-left: 2px; }
 .input-row { display: flex; gap: 8px; }
 .input-wrapper { position: relative; flex: 1; }
 
@@ -307,26 +307,26 @@ input {
   padding: 12px 14px 12px 42px;
   font-size: 14px;
   font-weight: 500;
-  border: 1.5px solid #E5E8EB;
+  border: 1.5px solid var(--border-default);
   border-radius: 10px;
   outline: none;
   transition: all 0.15s ease;
-  color: #0A0E1A;
-  background: #F7F8FA;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
   font-family: inherit;
 }
-input::placeholder { color: #B0B8C1; font-weight: 400; }
-input:focus { border-color: #9333EA; box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08); background: #fff; }
-input:disabled { background-color: #F2F4F6; color: #B0B8C1; }
-input.error { border-color: #EF4444; background: #FEF2F2; }
-input.success { border-color: #16A34A; background-color: #F0FDF4; }
+input::placeholder { color: var(--c-text-300); font-weight: 400; }
+input:focus { border-color: var(--c-brand); box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08); background: var(--bg-elevated); }
+input:disabled { background-color: var(--bg-mute); color: var(--c-text-300); }
+input.error { border-color: var(--c-danger); background: var(--c-danger-soft); }
+input.success { border-color: var(--c-success); background-color: var(--c-success-soft); }
 
-.input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #B0B8C1; }
+.input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--c-text-300); }
 
 /* 인증 버튼 */
 .action-btn {
   padding: 0 18px;
-  background-color: #0A0E1A;
+  background-color: var(--c-ink-900);
   color: white;
   border: none;
   border-radius: 10px;
@@ -338,24 +338,24 @@ input.success { border-color: #16A34A; background-color: #F0FDF4; }
   font-family: inherit;
   letter-spacing: -0.1px;
 }
-.action-btn:hover:not(:disabled) { background: #1E293B; }
-.action-btn:disabled { background-color: #F2F4F6; color: #B0B8C1; cursor: not-allowed; }
-.action-btn.verified { background-color: #16A34A; color: #fff; cursor: default; }
+.action-btn:hover:not(:disabled) { background: var(--c-ink-700); }
+.action-btn:disabled { background-color: var(--bg-mute); color: var(--c-text-300); cursor: not-allowed; }
+.action-btn.verified { background-color: var(--c-success); color: #fff; cursor: default; }
 /* 전송됨: 비활성이지만 시각적으로 "완료된 액션"임을 알림 */
-.action-btn.sent:disabled { background-color: #F3E8FF; color: #9333EA; cursor: default; }
+.action-btn.sent:disabled { background-color: var(--c-brand-soft); color: var(--c-brand); cursor: default; }
 
 /* 인증 박스 */
 .verify-box {
   margin-top: 12px;
   padding: 18px;
-  background-color: #F7F8FA;
-  border: 1.5px solid #E5E8EB;
+  background-color: var(--bg-subtle);
+  border: 1.5px solid var(--border-default);
   border-radius: 12px;
 }
 .verify-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.verify-title { font-size: 13px; font-weight: 700; color: #333D4B; letter-spacing: -0.1px; }
-.timer { font-size: 13px; font-weight: 800; color: #9333EA; font-variant-numeric: tabular-nums; }
-.timer.warning { color: #EF4444; }
+.verify-title { font-size: 13px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.1px; }
+.timer { font-size: 13px; font-weight: 800; color: var(--c-brand); font-variant-numeric: tabular-nums; }
+.timer.warning { color: var(--c-danger); }
 
 .code-input {
   height: 48px;
@@ -365,14 +365,14 @@ input.success { border-color: #16A34A; background-color: #F0FDF4; }
   letter-spacing: 6px;
   margin-bottom: 14px;
   padding: 0;
-  background: #fff;
+  background: var(--bg-elevated);
 }
 
 .verify-footer { display: flex; gap: 8px; }
 .confirm-btn {
   flex: 2;
   padding: 12px;
-  background-color: #9333EA;
+  background-color: var(--c-brand);
   color: white;
   border: none;
   border-radius: 10px;
@@ -386,23 +386,23 @@ input.success { border-color: #16A34A; background-color: #F0FDF4; }
   font-family: inherit;
   transition: background 0.15s ease;
 }
-.confirm-btn:hover:not(:disabled) { background: #7C3AED; }
-.confirm-btn:disabled { background: #E9D5FF; cursor: not-allowed; }
+.confirm-btn:hover:not(:disabled) { background: var(--c-brand-hover); }
+.confirm-btn:disabled { background: var(--c-brand-soft); cursor: not-allowed; }
 .resend-btn {
   flex: 1;
   padding: 12px;
-  background-color: white;
-  border: 1.5px solid #E5E8EB;
+  background-color: var(--bg-elevated);
+  border: 1.5px solid var(--border-default);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  color: #4E5968;
+  color: var(--c-text-600);
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s ease;
 }
-.resend-btn:hover:not(:disabled) { border-color: #D1D6DB; background: #F7F8FA; }
-.resend-btn:disabled { color: #B0B8C1; cursor: not-allowed; }
+.resend-btn:hover:not(:disabled) { border-color: var(--c-text-300); background: var(--bg-subtle); }
+.resend-btn:disabled { color: var(--c-text-300); cursor: not-allowed; }
 
 /* 알림 */
 .banner {
@@ -411,14 +411,14 @@ input.success { border-color: #16A34A; background-color: #F0FDF4; }
   gap: 8px;
   margin-top: 8px;
   padding: 10px 14px;
-  background-color: #DCFCE7;
+  background-color: var(--c-success-soft);
   border: 1px solid #BBF7D0;
   border-radius: 10px;
-  color: #16A34A;
+  color: var(--c-success);
   font-size: 12px;
   font-weight: 600;
 }
-.error-msg { font-size: 12px; font-weight: 600; color: #EF4444; margin-top: 6px; display: block; }
+.error-msg { font-size: 12px; font-weight: 600; color: var(--c-danger); margin-top: 6px; display: block; }
 .text-center { text-align: center; }
 
 /* 애니메이션 */

@@ -141,20 +141,20 @@ const handleImageError = (battleId) => {
 .section-title {
   font-size: 1.0625rem;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .section-title .title-accent {
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 .sub-title {
   font-size: 12px;
   font-weight: 400;
-  color: #999;
+  color: var(--c-text-400);
   padding-left: 0;
 }
 
@@ -173,7 +173,7 @@ const handleImageError = (battleId) => {
 .view-all-btn {
   font-size: 11px;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--c-text-400);
   background: none;
   border: none;
   cursor: pointer;
@@ -181,7 +181,7 @@ const handleImageError = (battleId) => {
 }
 
 .view-all-btn:hover {
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 /* 스크롤 - 항상 가로 한 줄 */
@@ -215,8 +215,8 @@ const handleImageError = (battleId) => {
 .hot-card {
   flex-shrink: 0;
   width: 180px;
-  background: #fff;
-  border: 1px solid #f1f5f9;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-subtle);
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -226,7 +226,7 @@ const handleImageError = (battleId) => {
 }
 
 .hot-card:hover {
-  border-color: #e2e8f0;
+  border-color: var(--border-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
@@ -247,7 +247,7 @@ const handleImageError = (battleId) => {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: #f8fafc;
+  background: var(--bg-subtle);
   overflow: hidden;
 }
 
@@ -268,7 +268,7 @@ const handleImageError = (battleId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #cbd5e1;
+  color: var(--c-text-300);
 }
 
 /* 순위 뱃지 */
@@ -284,25 +284,25 @@ const handleImageError = (battleId) => {
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
-  background: #fff;
-  color: #64748b;
+  background: var(--bg-elevated);
+  color: var(--c-text-500);
 }
 
 .rank-badge.first {
   background: linear-gradient(135deg, #ffd700 0%, #ffb800 100%);
-  color: #fff;
+  color: #ffffff;
   box-shadow: 0 2px 4px rgba(255, 184, 0, 0.3);
 }
 
 .rank-badge.second {
   background: linear-gradient(135deg, #e8e8e8 0%, #c0c0c0 100%);
-  color: #fff;
+  color: #ffffff;
   box-shadow: 0 2px 4px rgba(192, 192, 192, 0.3);
 }
 
 .rank-badge.third {
   background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
-  color: #fff;
+  color: #ffffff;
   box-shadow: 0 2px 4px rgba(205, 127, 50, 0.3);
 }
 
@@ -314,8 +314,8 @@ const handleImageError = (battleId) => {
   padding: 2px 6px;
   font-size: 10px;
   font-weight: 600;
-  color: #fff;
-  background: #9333ea;
+  color: #ffffff;
+  background: var(--c-brand);
   border-radius: 4px;
 }
 
@@ -328,7 +328,7 @@ const handleImageError = (battleId) => {
   margin: 0 0 6px;
   font-size: 13px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--c-text-600);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -350,7 +350,7 @@ const handleImageError = (battleId) => {
   gap: 3px;
   font-size: 11px;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--c-text-400);
 }
 
 .stat-icon {
@@ -367,7 +367,7 @@ const handleImageError = (battleId) => {
 .skeleton-thumb {
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: linear-gradient(90deg, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%);
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-subtle) 50%, var(--bg-subtle) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -383,7 +383,7 @@ const handleImageError = (battleId) => {
   height: 13px;
   width: 100%;
   border-radius: 4px;
-  background: linear-gradient(90deg, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%);
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-subtle) 50%, var(--bg-subtle) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

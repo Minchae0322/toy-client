@@ -17,21 +17,21 @@
   align-items: center;
   gap: 12px;
   padding: 14px 20px;
-  background: #FEF3C7;
-  border: 1px solid #FDE68A;
+  background: var(--c-warning-soft);
+  border: 1px solid var(--c-warning);
   border-radius: 10px;
   margin-bottom: 32px;
 }
 
 .notice-text {
   font-size: 14px;
-  color: #92400E;
+  color: var(--c-warning);
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
 .required-mark {
-  color: #DC2626;
+  color: var(--c-danger);
   font-weight: 700;
   font-size: 16px;
 }

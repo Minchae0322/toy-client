@@ -23,7 +23,7 @@ import { Menu, Search, Bell, User } from 'lucide-vue-next';
 <style scoped>
 .mz-header {
   /* bg-white shadow-sm sticky top-0 z-50 */
-  background-color: white; /* bg-white */
+  background-color: var(--bg-elevated); /* bg-white */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
   position: sticky; /* sticky */
   top: 0; /* top-0 */

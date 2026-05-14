@@ -29,7 +29,7 @@ const searchQuery = ref('');
   top: 0;
   z-index: 30;
   backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--header-blur-bg);
 }
 
 .header-container {
@@ -93,7 +93,7 @@ const searchQuery = ref('');
 .search-box input:focus {
   outline: none;
   border-color: var(--primary);
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .search-box input::placeholder {

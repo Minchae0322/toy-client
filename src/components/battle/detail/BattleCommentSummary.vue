@@ -285,7 +285,7 @@ defineExpose({ closeInput })
 
 <style scoped>
 .pc-card-arguments {
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--border-default);
   padding: 12px 16px;
   transition: background 0.2s ease;
   min-height: 100px;
@@ -308,7 +308,7 @@ defineExpose({ closeInput })
 .arg-header .label {
   font-size: 12px;
   font-weight: 700;
-  color: #374151;
+  color: var(--c-text-600);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -317,7 +317,7 @@ defineExpose({ closeInput })
 }
 
 .arg-header .label:hover {
-  color: #4a6cf7;
+  color: var(--c-info);
 }
 
 .arg-header .chat-icon {
@@ -326,7 +326,7 @@ defineExpose({ closeInput })
 
 .arg-header .cnt {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   font-weight: 600;
   margin-left: 4px;
 }
@@ -336,19 +336,19 @@ defineExpose({ closeInput })
   width: 28px;
   height: 28px;
   border: none;
-  background: #f3f4f6;
+  background: var(--border-default);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--c-text-500);
   transition: all 0.15s;
 }
 
 .write-btn:hover {
-  background: #4a6cf7;
-  color: #fff;
+  background: var(--c-info);
+  color: #ffffff;
 }
 
 /* 인라인 입력창 */
@@ -365,7 +365,7 @@ defineExpose({ closeInput })
   flex: 1;
   min-width: 0;
   padding: 12px 16px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border-strong);
   border-radius: 12px;
   font-size: 14px;
   font-family: inherit;
@@ -375,11 +375,11 @@ defineExpose({ closeInput })
 }
 
 .inline-input:focus {
-  border-color: #9333ea;
+  border-color: var(--c-brand);
 }
 
 .inline-input::placeholder {
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .submit-btn {
@@ -387,8 +387,8 @@ defineExpose({ closeInput })
   height: 44px;
   border: none;
   border-radius: 12px;
-  background: #9333ea;
-  color: #fff;
+  background: var(--c-brand);
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -398,11 +398,11 @@ defineExpose({ closeInput })
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #3a5ce7;
+  background: var(--c-info-hover);
 }
 
 .submit-btn:disabled {
-  background: #d1d5db;
+  background: var(--c-text-300);
   cursor: not-allowed;
 }
 
@@ -423,15 +423,15 @@ defineExpose({ closeInput })
   display: flex;
   gap: 8px;
   padding: 8px 10px;
-  background: #fffbeb;
+  background: var(--c-warning-soft);
   border-radius: 10px;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--c-warning);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .best-arg:hover {
-  background: #fef3c7;
+  background: var(--c-warning-soft);
 }
 
 img.ba-avatar {
@@ -446,13 +446,13 @@ div.ba-avatar {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #e0e7ff;
+  background: var(--c-info-soft);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
   font-weight: 700;
-  color: #4a6cf7;
+  color: var(--c-info);
   flex-shrink: 0;
 }
 
@@ -471,22 +471,22 @@ div.ba-avatar {
 .ba-nick {
   font-size: 11px;
   font-weight: 700;
-  color: #374151;
+  color: var(--c-text-600);
 }
 
 .best-badge {
   font-size: 10px;
   font-weight: 700;
-  color: #f59e0b;
-  background: #fffbeb;
+  color: var(--c-warning);
+  background: var(--c-warning-soft);
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--c-warning);
 }
 
 .ba-text {
   font-size: 12px;
-  color: #4b5563;
+  color: var(--c-text-600);
   line-height: 1.4;
   margin: 0;
   display: -webkit-box;
@@ -497,7 +497,7 @@ div.ba-avatar {
 
 .ba-likes {
   font-size: 10px;
-  color: #f43f5e;
+  color: var(--c-danger);
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -518,7 +518,7 @@ div.ba-avatar {
   border: none;
   font-size: 11px;
   font-weight: 600;
-  color: #4a6cf7;
+  color: var(--c-info);
   cursor: pointer;
   font-family: inherit;
   padding: 4px 10px;
@@ -527,7 +527,7 @@ div.ba-avatar {
 }
 
 .view-all button:hover {
-  background: #eff6ff;
+  background: var(--c-info-soft);
 }
 
 /* 빈 상태 */
@@ -546,19 +546,19 @@ div.ba-avatar {
 }
 
 .empty-icon {
-  color: #9ca3af;
+  color: var(--c-text-400);
   flex-shrink: 0;
 }
 
 .empty-text {
   font-size: 12px;
   font-weight: 500;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .empty-state:hover .empty-icon,
 .empty-state:hover .empty-text {
-  color: #4a6cf7;
+  color: var(--c-info);
 }
 
 /* 모바일 최적화 */
@@ -714,7 +714,7 @@ div.ba-avatar {
 }
 
 .bottomsheet {
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 28px 28px 0 0;
   width: 100%;
   max-width: 500px;
@@ -735,7 +735,7 @@ div.ba-avatar {
 .bottomsheet-handle {
   width: 40px;
   height: 5px;
-  background: #e5e7eb;
+  background: var(--border-strong);
   border-radius: 3px;
   margin: 12px auto 0;
 }
@@ -752,7 +752,7 @@ div.ba-avatar {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #111;
+  color: var(--text-primary);
 }
 
 /* 아이템 카드 */
@@ -762,8 +762,8 @@ div.ba-avatar {
   gap: 14px;
   margin: 0 20px 16px;
   padding: 14px 16px;
-  background: #faf5ff;
-  border: 1.5px solid #e9d5ff;
+  background: var(--c-brand-soft);
+  border: 1.5px solid var(--c-brand-soft);
   border-radius: 16px;
 }
 
@@ -772,8 +772,8 @@ div.ba-avatar {
   height: 72px;
   border-radius: 14px;
   object-fit: cover;
-  background: #fff;
-  border: 2px solid #fff;
+  background: var(--bg-elevated);
+  border: 2px solid var(--bg-elevated);
   box-shadow: 0 2px 8px rgba(147, 51, 234, 0.15);
 }
 
@@ -786,7 +786,7 @@ div.ba-avatar {
   display: inline-block;
   font-size: 11px;
   font-weight: 700;
-  color: #9333ea;
+  color: var(--c-brand);
   margin-bottom: 4px;
 }
 
@@ -794,7 +794,7 @@ div.ba-avatar {
   display: block;
   font-size: 15px;
   font-weight: 700;
-  color: #581c87;
+  color: var(--c-brand);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -806,7 +806,7 @@ div.ba-avatar {
 }
 
 .input-wrapper {
-  background: #f9fafb;
+  background: var(--bg-subtle);
   border-radius: 16px;
   padding: 4px;
 }
@@ -822,18 +822,18 @@ div.ba-avatar {
   outline: none;
   transition: all 0.2s;
   box-sizing: border-box;
-  background: #fff;
+  background: var(--bg-elevated);
   line-height: 1.5;
   border: 2px solid transparent;
 }
 
 .bottomsheet-input:focus {
-  border-color: #9333ea;
+  border-color: var(--c-brand);
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
 }
 
 .bottomsheet-input::placeholder {
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .input-footer {
@@ -845,18 +845,18 @@ div.ba-avatar {
 
 .hint-text {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .char-count {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   font-weight: 600;
   transition: color 0.2s;
 }
 
 .char-count.near-limit {
-  color: #f59e0b;
+  color: var(--c-warning);
 }
 
 /* 버튼 영역 */
@@ -870,8 +870,8 @@ div.ba-avatar {
 .cancel-btn {
   flex: 1;
   padding: 16px 12px;
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--border-default);
+  color: var(--c-text-500);
   border: none;
   border-radius: 14px;
   font-size: 15px;
@@ -882,7 +882,7 @@ div.ba-avatar {
 }
 
 .cancel-btn:hover {
-  background: #e5e7eb;
+  background: var(--border-strong);
 }
 
 .cancel-btn:active {
@@ -896,8 +896,8 @@ div.ba-avatar {
   justify-content: center;
   gap: 8px;
   padding: 16px 20px;
-  background: #9333ea;
-  color: #fff;
+  background: var(--c-brand);
+  color: #ffffff;
   border: none;
   border-radius: 14px;
   font-size: 16px;
@@ -919,7 +919,7 @@ div.ba-avatar {
 }
 
 .bottomsheet-submit:disabled {
-  background: #d1d5db;
+  background: var(--c-text-300);
   box-shadow: none;
   cursor: not-allowed;
 }
@@ -928,7 +928,7 @@ div.ba-avatar {
   width: 18px;
   height: 18px;
   border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
+  border-top-color: #ffffff;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

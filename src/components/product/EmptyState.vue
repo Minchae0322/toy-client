@@ -23,8 +23,8 @@ const emit = defineEmits(['clear'])
 .empty-container {
   padding: 80px 24px;
   text-align: center;
-  background: white;
-  border: 1px solid #F3F4F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-top: none;
   border-radius: 0 0 12px 12px;
 }
@@ -36,23 +36,23 @@ const emit = defineEmits(['clear'])
 .empty-container h3 {
   font-size: 18px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 8px;
   letter-spacing: -0.02em;
 }
 
 .empty-container p {
   font-size: 14px;
-  color: #6B7280;
+  color: var(--c-text-500);
   margin-bottom: 24px;
   font-weight: 500;
 }
 
 .clear-search-btn {
   padding: 12px 24px;
-  background: #F9FAFB;
-  color: #374151;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-subtle);
+  color: var(--c-text-600);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -62,7 +62,7 @@ const emit = defineEmits(['clear'])
 }
 
 .clear-search-btn:hover {
-  background: #F3F4F6;
-  border-color: #D1D5DB;
+  background: var(--border-default);
+  border-color: var(--c-text-300);
 }
 </style>

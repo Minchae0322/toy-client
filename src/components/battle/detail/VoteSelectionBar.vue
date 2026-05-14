@@ -139,7 +139,7 @@ const handleRemove = (rank) => {
   bottom: calc(24px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  background: #111;
+  background: var(--c-ink-900);
   padding: 12px 16px;
   border-radius: 20px;
   display: flex;
@@ -168,12 +168,12 @@ const handleRemove = (rank) => {
 
 .item-slot.filled {
   background: #1e1e1e;
-  border: 1.5px solid #333;
+  border: 1.5px solid var(--text-primary);
 }
 
 .item-slot.empty {
   background: transparent;
-  border: 1.5px dashed #444;
+  border: 1.5px dashed var(--c-text-600);
 }
 
 .item-thumb {
@@ -194,14 +194,14 @@ const handleRemove = (rank) => {
 .rank-badge {
   font-size: 10px;
   font-weight: 700;
-  color: #4a6cf7;
+  color: var(--c-info);
   text-transform: uppercase;
 }
 
 .item-name {
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -211,9 +211,9 @@ const handleRemove = (rank) => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #333;
+  background: var(--c-ink-900);
   border: none;
-  color: #888;
+  color: var(--c-text-400);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -223,8 +223,8 @@ const handleRemove = (rank) => {
 }
 
 .remove-btn:hover:not(:disabled) {
-  background: #ef4444;
-  color: #fff;
+  background: var(--c-danger);
+  color: #ffffff;
 }
 
 .remove-btn:disabled {
@@ -244,12 +244,12 @@ const handleRemove = (rank) => {
 .rank-num {
   font-size: 13px;
   font-weight: 600;
-  color: #555;
+  color: var(--c-text-600);
 }
 
 .pick-hint {
   font-size: 12px;
-  color: #555;
+  color: var(--c-text-600);
 }
 
 /* 제출 버튼 */
@@ -258,8 +258,8 @@ const handleRemove = (rank) => {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: linear-gradient(135deg, #4a6cf7 0%, #6366f1 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--c-info) 0%, var(--c-info) 100%);
+  color: #ffffff;
   border: none;
   padding: 12px 24px;
   border-radius: 14px;
@@ -284,14 +284,14 @@ const handleRemove = (rank) => {
 .submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: #333;
+  background: var(--c-ink-900);
 }
 
 .spinner {
   width: 18px;
   height: 18px;
   border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
+  border-top-color: #ffffff;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -370,11 +370,11 @@ const handleRemove = (rank) => {
     left: -4px;
     width: 18px;
     height: 18px;
-    background: #4a6cf7;
+    background: var(--c-info);
     border-radius: 50%;
     font-size: 10px;
     font-weight: 700;
-    color: #fff;
+    color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;

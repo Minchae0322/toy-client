@@ -175,7 +175,7 @@ const handleStatusUpdated = (eventData) => {
 
 <style scoped>
 .list-section {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -183,8 +183,8 @@ const handleStatusUpdated = (eventData) => {
 }
 
 .list-section.nested {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   margin-left: 40px;
   margin-top: 12px;
@@ -193,8 +193,8 @@ const handleStatusUpdated = (eventData) => {
 
 .list-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
-  background: #fafbfc;
+  border-bottom: 1px solid var(--bg-subtle);
+  background: var(--bg-subtle);
 }
 
 .header-row {
@@ -207,13 +207,13 @@ const handleStatusUpdated = (eventData) => {
 .list-title {
   font-size: 16px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .list-count {
   padding: 4px 10px;
-  background: #3b82f6;
+  background: var(--c-info);
   color: white;
   border-radius: 12px;
   font-size: 12px;
@@ -222,7 +222,7 @@ const handleStatusUpdated = (eventData) => {
 
 .list-hint {
   font-size: 13px;
-  color: #64748b;
+  color: var(--c-text-500);
   margin: 0;
 }
 

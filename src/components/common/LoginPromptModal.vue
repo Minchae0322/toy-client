@@ -120,7 +120,7 @@ const handleOverlayClick = () => closeLoginPrompt(false)
 
 .lp-container {
   position: relative;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 20px;
   padding: 36px 28px 24px;
   width: 100%;
@@ -139,8 +139,8 @@ const handleOverlayClick = () => closeLoginPrompt(false)
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #F2F4F6;
-  color: #4E5968;
+  background: var(--bg-mute);
+  color: var(--c-text-600);
   border: none;
   cursor: pointer;
   display: inline-flex;
@@ -148,7 +148,7 @@ const handleOverlayClick = () => closeLoginPrompt(false)
   justify-content: center;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.lp-close:hover { background: #E5E8EB; color: #191F28; }
+.lp-close:hover { background: var(--border-default); color: var(--text-primary); }
 
 .lp-logo {
   display: flex;
@@ -163,7 +163,7 @@ const handleOverlayClick = () => closeLoginPrompt(false)
 .lp-title {
   font-size: 18px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin: 0 0 6px;
   line-height: 1.4;
   letter-spacing: -0.3px;
@@ -174,7 +174,7 @@ const handleOverlayClick = () => closeLoginPrompt(false)
 .lp-sub {
   font-size: 13.5px;
   font-weight: 500;
-  color: #8B95A1;
+  color: var(--c-text-400);
   margin: 0 0 22px;
   line-height: 1.5;
   letter-spacing: -0.2px;
@@ -217,11 +217,11 @@ const handleOverlayClick = () => closeLoginPrompt(false)
 }
 
 .lp-btn--google {
-  background: #ffffff;
-  color: #191F28;
-  border: 1px solid #E5E8EB;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
 }
-.lp-btn--google:hover { background: #F7F8FA; }
+.lp-btn--google:hover { background: var(--bg-subtle); }
 
 .lp-btn--naver {
   background: #03C75A;
@@ -236,17 +236,17 @@ const handleOverlayClick = () => closeLoginPrompt(false)
 .lp-btn--github:hover { background: #1B1F23; }
 
 .lp-btn--apple {
-  background: #000000;
+  background: var(--c-ink-900);
   color: #ffffff;
 }
-.lp-btn--apple:hover { background: #1A1A1A; }
+.lp-btn--apple:hover { background: var(--c-ink-900); }
 
 .lp-divider {
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 4px 0 14px;
-  color: #B0B8C1;
+  color: var(--c-text-300);
   font-size: 12px;
   font-weight: 500;
 }
@@ -255,7 +255,7 @@ const handleOverlayClick = () => closeLoginPrompt(false)
   content: '';
   flex: 1;
   height: 1px;
-  background: #F2F4F6;
+  background: var(--bg-mute);
 }
 
 .lp-email-link {
@@ -264,7 +264,7 @@ const handleOverlayClick = () => closeLoginPrompt(false)
   cursor: pointer;
   font-size: 14px;
   font-weight: 700;
-  color: #4E5968;
+  color: var(--c-text-600);
   text-decoration: none;
   padding: 8px 12px;
   border-radius: 8px;
@@ -273,24 +273,24 @@ const handleOverlayClick = () => closeLoginPrompt(false)
   letter-spacing: -0.2px;
 }
 .lp-email-link:hover {
-  color: #191F28;
-  background: #F7F8FA;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
 }
 
 .lp-footnote {
   margin: 16px 0 0;
   font-size: 11px;
-  color: #B0B8C1;
+  color: var(--c-text-300);
   line-height: 1.5;
   letter-spacing: -0.1px;
   word-break: keep-all;
 }
 .lp-footnote a {
-  color: #8B95A1;
+  color: var(--c-text-400);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.lp-footnote a:hover { color: #4E5968; }
+.lp-footnote a:hover { color: var(--c-text-600); }
 
 /* 트랜지션 */
 .login-prompt-enter-active { transition: opacity 0.2s ease; }

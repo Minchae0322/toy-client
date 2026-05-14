@@ -97,9 +97,9 @@ onMounted(() => {
 }
 
 .app-container {
-  background: #ffffff;
+  background: var(--bg-base);
   min-height: 100vh;
-  color: #1a1a1a;
+  color: var(--text-primary);
   font-family: 'SUIT', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", sans-serif;
   display: flex;
   max-width: 100%;
@@ -212,13 +212,13 @@ onMounted(() => {
   align-items: center;
   padding: 1rem 1.25rem;
   border-radius: 18px;
-  background: #fff;
-  border: 1px solid #efefef;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   transition: border-color 0.2s;
 }
 
 .glass-banner:hover .banner-inner {
-  border-color: #e4e4e6;
+  border-color: var(--border-strong);
 }
 
 .banner-left {
@@ -233,8 +233,8 @@ onMounted(() => {
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.75rem;
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
   font-size: 0.6875rem;
   font-weight: 700;
   border-radius: 8px;
@@ -247,7 +247,7 @@ onMounted(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ef4444;
+  background: var(--c-danger);
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
   animation: dot-blink 1.5s ease-in-out infinite;
 }
@@ -266,7 +266,7 @@ onMounted(() => {
 
 .banner-title {
   font-size: 0.9375rem;
-  color: #1c1917;
+  color: var(--text-primary);
   margin: 0;
   font-weight: 400;
   white-space: nowrap;
@@ -276,12 +276,12 @@ onMounted(() => {
 
 .banner-title strong {
   font-weight: 700;
-  color: #1c1917;
+  color: var(--text-primary);
 }
 
 .banner-sub {
   font-size: 0.75rem;
-  color: #a8a29e;
+  color: var(--c-text-400);
   margin: 0;
   font-weight: 400;
 }
@@ -290,18 +290,18 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: #f5f5f5;
+  background: var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a3a3a3;
+  color: var(--c-text-400);
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
 .glass-banner:hover .banner-action {
-  background: #f0ebf5;
-  color: #7c3aed;
+  background: var(--c-brand-soft);
+  color: var(--c-brand-hover);
 }
 
 /* live dot */
@@ -311,7 +311,7 @@ onMounted(() => {
   right: 2px;
   width: 6px;
   height: 6px;
-  background: #ef4444;
+  background: var(--c-danger);
   border-radius: 50%;
   animation: pulse-dot 2s ease-in-out infinite;
 }
@@ -329,11 +329,11 @@ onMounted(() => {
 
 /* 섹션 */
 .content-section {
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 16px;
   padding: 1.375rem;
   margin-bottom: 1rem;
-  border: 1px solid #efefef;
+  border: 1px solid var(--border-default);
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 
@@ -361,19 +361,19 @@ onMounted(() => {
   flex-direction: column;
   gap: 0.25rem;
   padding-left: 0.75rem;
-  border-left: 3px solid #a1a1aa;
+  border-left: 3px solid var(--c-text-400);
 }
 
 .section-title {
   font-size: 1.0625rem;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .section-title .title-accent {
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 @media (min-width: 768px) {
@@ -391,7 +391,7 @@ onMounted(() => {
 .sub-title {
   font-size: 12px;
   font-weight: 400;
-  color: #999;
+  color: var(--c-text-400);
   padding-left: 0;
 }
 
@@ -400,12 +400,12 @@ onMounted(() => {
   align-items: center;
   gap: 2px;
   padding: 0.375rem 0.875rem;
-  background: #f5f5f6;
+  background: var(--bg-subtle);
   border: none;
   border-radius: 100px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #888;
+  color: var(--c-text-400);
   cursor: pointer;
   transition: all 0.18s ease;
   font-family: inherit;
@@ -413,8 +413,8 @@ onMounted(() => {
 }
 
 .view-all-btn:hover {
-  background: #eaeaeb;
-  color: #555;
+  background: var(--border-strong);
+  color: var(--c-text-600);
 }
 
 @media (min-width: 1280px) {
@@ -455,8 +455,8 @@ onMounted(() => {
 /* 피드 카드 */
 .feed-card {
   position: relative;
-  background: #fff;
-  border: 1px solid #eee;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -464,7 +464,7 @@ onMounted(() => {
 }
 
 .feed-card:hover {
-  border-color: #ddd;
+  border-color: var(--border-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
 }
@@ -488,7 +488,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.1875rem;
   padding: 0.1875rem 0.375rem;
-  background: #ef4444;
+  background: var(--c-danger);
   border-radius: 4px;
   font-size: 0.5625rem;
   font-weight: 700;
@@ -586,7 +586,7 @@ onMounted(() => {
   display: block;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -595,7 +595,7 @@ onMounted(() => {
 .header-info .time {
   display: block;
   font-size: 0.625rem;
-  color: #999;
+  color: var(--c-text-400);
 }
 
 /* 카드 이미지 */
@@ -603,7 +603,7 @@ onMounted(() => {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  background: #f5f5f5;
+  background: var(--bg-subtle);
   overflow: hidden;
 }
 
@@ -624,7 +624,7 @@ onMounted(() => {
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: #ccc;
+  color: var(--c-text-300);
 }
 
 /* 평가 뱃지 - 파스텔 스타일 */
@@ -649,17 +649,17 @@ onMounted(() => {
   border-radius: 50%;
 }
 
-.eval-badge.best { background-color: #fef3c7; color: #92400e; }
-.eval-badge.best .eval-dot { background-color: #f59e0b; }
+.eval-badge.best { background-color: var(--c-warning-soft); color: var(--c-warning); }
+.eval-badge.best .eval-dot { background-color: var(--c-warning); }
 
-.eval-badge.good { background-color: #dcfce7; color: #166534; }
-.eval-badge.good .eval-dot { background-color: #10b981; }
+.eval-badge.good { background-color: var(--c-success-soft); color: var(--c-success); }
+.eval-badge.good .eval-dot { background-color: var(--c-success); }
 
-.eval-badge.okay { background-color: #f3e8ff; color: #6b21a8; }
-.eval-badge.okay .eval-dot { background-color: #9333ea; }
+.eval-badge.okay { background-color: var(--c-brand-soft); color: var(--c-brand); }
+.eval-badge.okay .eval-dot { background-color: var(--c-brand); }
 
-.eval-badge.bad { background-color: #fee2e2; color: #991b1b; }
-.eval-badge.bad .eval-dot { background-color: #ef4444; }
+.eval-badge.bad { background-color: var(--c-danger-soft); color: var(--c-danger); }
+.eval-badge.bad .eval-dot { background-color: var(--c-danger); }
 
 /* 카드 바디 */
 .feed-card-body {
@@ -674,7 +674,7 @@ onMounted(() => {
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -689,7 +689,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  background: #f8f8fa;
+  background: var(--bg-subtle);
   border-radius: 8px;
 }
 
@@ -702,7 +702,7 @@ onMounted(() => {
   display: inline-block;
   font-size: 9px;
   font-weight: 600;
-  color: #9333ea;
+  color: var(--c-brand);
   text-transform: uppercase;
   margin-bottom: 1px;
 }
@@ -710,7 +710,7 @@ onMounted(() => {
 .product-name {
   font-size: 12px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0;
   line-height: 1.3;
   white-space: nowrap;
@@ -721,7 +721,7 @@ onMounted(() => {
 .price {
   font-size: 12px;
   font-weight: 700;
-  color: #9333ea;
+  color: var(--c-brand);
   white-space: nowrap;
 }
 
@@ -735,7 +735,7 @@ onMounted(() => {
 .author-name {
   font-size: 10px;
   font-weight: 400;
-  color: #999;
+  color: var(--c-text-400);
 }
 
 .card-stats {
@@ -750,7 +750,7 @@ onMounted(() => {
   gap: 2px;
   font-size: 10px;
   font-weight: 500;
-  color: #b0b0b0;
+  color: var(--c-text-400);
 }
 
 /* 카드 콘텐츠 (레거시) */
@@ -760,7 +760,7 @@ onMounted(() => {
 
 .content-text {
   font-size: 0.75rem;
-  color: #444;
+  color: var(--c-text-600);
   margin: 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -772,7 +772,7 @@ onMounted(() => {
 /* 카드 푸터 */
 .feed-card-footer {
   padding: 0.5rem 0.75rem 0.75rem;
-  border-top: 1px solid #f5f5f5;
+  border-top: 1px solid var(--bg-subtle);
 }
 
 .stats {
@@ -785,11 +785,11 @@ onMounted(() => {
   align-items: center;
   gap: 0.25rem;
   font-size: 0.6875rem;
-  color: #888;
+  color: var(--c-text-400);
 }
 
 .stat svg {
-  color: #bbb;
+  color: var(--c-text-300);
 }
 
 /* 스켈레톤 */
@@ -899,7 +899,7 @@ onMounted(() => {
 
 /* 스켈레톤 */
 .skeleton {
-  background: linear-gradient(90deg, #f5f5f5 25%, #ebebeb 50%, #f5f5f5 75%);
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, #ebebeb 50%, var(--bg-subtle) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 10px;
@@ -922,7 +922,7 @@ onMounted(() => {
   height: 10px;
   border-radius: 3px;
   margin-bottom: 0.375rem;
-  background: linear-gradient(90deg, #f5f5f5 25%, #ebebeb 50%, #f5f5f5 75%);
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, #ebebeb 50%, var(--bg-subtle) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -944,7 +944,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 2.5rem 1rem;
-  background: #f9f9fa;
+  background: var(--bg-subtle);
   border-radius: 12px;
 }
 
@@ -952,18 +952,18 @@ onMounted(() => {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #f0f0f1;
+  background: var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 0.625rem;
-  color: #bbb;
+  color: var(--c-text-300);
 }
 
 .empty-text {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #909094;
+  color: var(--c-text-400);
   margin: 0;
 }
 
@@ -972,7 +972,7 @@ onMounted(() => {
   .skeleton,
   .skeleton-line {
     animation: none;
-    background: #f0f0f0;
+    background: var(--bg-subtle);
   }
 
   .live-dot,

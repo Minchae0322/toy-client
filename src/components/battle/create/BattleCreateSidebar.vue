@@ -36,7 +36,7 @@
 <style scoped>
 .sidebar-left {
   width: 260px;
-  background: #FFFFFF;
+  background: var(--bg-elevated);
   border-right: 1px solid #F0F0F3;
   position: fixed;
   height: 100vh;
@@ -55,7 +55,7 @@
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 .nav-menu {
@@ -80,12 +80,12 @@
 
 .nav-item:hover {
   background: #F8F9FA;
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 .nav-item.active {
-  background: #1A1A1A;
-  color: #FFFFFF;
+  background: var(--c-ink-900);
+  color: #ffffff;
 }
 
 .nav-icon {

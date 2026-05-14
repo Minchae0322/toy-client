@@ -31,7 +31,7 @@ defineEmits(['add-category'])
 
 <style scoped>
 .category-header {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   padding: 24px 28px;
   margin-bottom: 20px;
@@ -56,7 +56,7 @@ defineEmits(['add-category'])
 .icon-wrapper {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, var(--c-info) 0%, #2563eb 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -72,14 +72,14 @@ defineEmits(['add-category'])
 .header-title {
   font-size: 24px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 4px 0;
   letter-spacing: -0.3px;
 }
 
 .header-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: var(--c-text-500);
   margin: 0;
   font-weight: 400;
 }
@@ -89,7 +89,7 @@ defineEmits(['add-category'])
   align-items: center;
   gap: 8px;
   padding: 11px 20px;
-  background: #0f172a;
+  background: var(--c-ink-900);
   color: white;
   border: none;
   border-radius: 10px;
@@ -100,7 +100,7 @@ defineEmits(['add-category'])
 }
 
 .add-button:hover {
-  background: #1e293b;
+  background: var(--c-ink-700);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
 }

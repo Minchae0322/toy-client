@@ -182,8 +182,8 @@ onMounted(reload)
 
 <style scoped>
 .section-card {
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 14px;
   padding: 18px;
   margin-bottom: 16px;
@@ -195,7 +195,7 @@ onMounted(reload)
 .section-title {
   font-size: 15px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin-bottom: 16px;
   letter-spacing: -0.2px;
 }
@@ -210,7 +210,7 @@ onMounted(reload)
   align-items: center;
   gap: 12px;
   padding: 12px 0;
-  border-top: 1px solid #F1F5F9;
+  border-top: 1px solid var(--bg-subtle);
 }
 
 .exp-history-item:first-child { border-top: none; padding-top: 4px; }
@@ -226,13 +226,13 @@ onMounted(reload)
 .exp-history-action {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   letter-spacing: -0.2px;
 }
 
 .exp-history-date {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
@@ -250,12 +250,12 @@ onMounted(reload)
   letter-spacing: -0.2px;
 }
 
-.exp-history-value.is-positive { color: #16A34A; }
-.exp-history-value.is-negative { color: #EF4444; }
+.exp-history-value.is-positive { color: var(--c-success); }
+.exp-history-value.is-negative { color: var(--c-danger); }
 
 .exp-history-total {
   font-size: 11px;
-  color: #94A3B8;
+  color: var(--c-text-400);
   font-weight: 600;
   letter-spacing: -0.1px;
 }
@@ -271,13 +271,13 @@ onMounted(reload)
   text-align: center;
 }
 
-.state-icon { color: #94A3B8; }
-.state-block.empty .state-icon { color: #CBD5E1; }
+.state-icon { color: var(--c-text-400); }
+.state-block.empty .state-icon { color: var(--c-text-300); }
 
 .state-text {
   font-size: 13px;
   font-weight: 600;
-  color: #64748B;
+  color: var(--c-text-500);
   margin: 0;
   letter-spacing: -0.2px;
 }
@@ -285,44 +285,44 @@ onMounted(reload)
 .retry-btn {
   margin-top: 4px;
   padding: 8px 14px;
-  border: 1px solid #E5E7EB;
-  background: #FFFFFF;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
   border-radius: 8px;
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
-  color: #0A0E1A;
+  color: var(--text-primary);
   cursor: pointer;
   letter-spacing: -0.1px;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.retry-btn:hover { background: #FAF5FF; border-color: #9333EA; color: #9333EA; }
+.retry-btn:hover { background: var(--c-brand-soft); border-color: var(--c-brand); color: var(--c-brand); }
 
 /* ===== 더 보기 / 페이지네이션 ===== */
 .more-row {
   display: flex;
   justify-content: center;
   padding: 14px 0 4px;
-  border-top: 1px solid #F1F5F9;
+  border-top: 1px solid var(--bg-subtle);
   margin-top: 4px;
 }
 
 .more-btn {
   padding: 9px 18px;
-  border: 1px solid #E5E7EB;
-  background: #FFFFFF;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
   border-radius: 999px;
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 700;
-  color: #475569;
+  color: var(--c-text-600);
   cursor: pointer;
   letter-spacing: -0.1px;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.more-btn:hover { background: #FAF5FF; border-color: #9333EA; color: #9333EA; }
+.more-btn:hover { background: var(--c-brand-soft); border-color: var(--c-brand); color: var(--c-brand); }
 
 .spinner-wrap { padding: 6px 0; }
 
@@ -330,8 +330,8 @@ onMounted(reload)
   display: inline-block;
   width: 18px;
   height: 18px;
-  border: 2px solid #E5E7EB;
-  border-top-color: #9333EA;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--c-brand);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -346,13 +346,13 @@ onMounted(reload)
   padding: 8px 0 4px;
   font-size: 12px;
   font-weight: 600;
-  color: #EF4444;
+  color: var(--c-danger);
 }
 
 .retry-inline {
   background: none;
   border: none;
-  color: #9333EA;
+  color: var(--c-brand);
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -375,7 +375,7 @@ onMounted(reload)
 .sk-bar {
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 50%, #F1F5F9 100%);
+  background: linear-gradient(90deg, var(--bg-subtle) 0%, var(--border-strong) 50%, var(--bg-subtle) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.2s linear infinite;
 }

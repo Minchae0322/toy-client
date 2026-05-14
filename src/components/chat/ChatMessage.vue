@@ -126,7 +126,7 @@ const formatTime = (timestamp) => {
 
 .message-sender {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--c-text-400);
   margin-bottom: 4px;
   margin-left: 14px;
   font-weight: 500;
@@ -136,7 +136,7 @@ const formatTime = (timestamp) => {
   max-width: 70%;
   padding: 12px 16px;
   border-radius: 20px;
-  background: #ffffff;
+  background: var(--bg-elevated);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   word-wrap: break-word;
   transition: all 0.2s ease;
@@ -147,7 +147,7 @@ const formatTime = (timestamp) => {
 }
 
 .message-bubble.is-mine {
-  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  background: linear-gradient(135deg, var(--c-brand) 0%, var(--c-brand) 100%);
   color: white;
   border-bottom-right-radius: 6px;
 }
@@ -157,8 +157,8 @@ const formatTime = (timestamp) => {
 }
 
 .message-bubble.is-system {
-  background: #f8fafc;
-  color: #64748b;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
   text-align: center;
   font-size: 13px;
   max-width: 85%;
@@ -168,9 +168,9 @@ const formatTime = (timestamp) => {
 }
 
 .message-bubble.is-failed {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  background: var(--c-danger-soft);
+  border: 1px solid var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .message-content {
@@ -262,7 +262,7 @@ const formatTime = (timestamp) => {
 }
 
 .status-icon.failed {
-  color: #dc2626;
+  color: var(--c-danger);
   opacity: 1;
 }
 

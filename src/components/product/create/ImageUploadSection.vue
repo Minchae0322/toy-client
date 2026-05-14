@@ -136,7 +136,7 @@ defineExpose({
 .form-section {
   margin-bottom: 40px;
   padding-bottom: 40px;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .section-header {
@@ -149,15 +149,15 @@ defineExpose({
 .section-title {
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .required-badge {
   padding: 4px 12px;
-  background: #FEE2E2;
-  color: #DC2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
@@ -172,7 +172,7 @@ defineExpose({
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
   margin-bottom: 12px;
   letter-spacing: -0.01em;
   display: flex;
@@ -181,21 +181,21 @@ defineExpose({
 }
 
 .required {
-  color: #DC2626;
+  color: var(--c-danger);
   font-weight: 700;
 }
 
 .optional {
   font-size: 12px;
   font-weight: 500;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .label-hint {
   font-size: 11px;
   font-weight: 500;
-  color: #9CA3AF;
-  background: #F9FAFB;
+  color: var(--c-text-400);
+  background: var(--bg-subtle);
   padding: 2px 8px;
   border-radius: 10px;
   margin-left: auto;
@@ -206,9 +206,9 @@ defineExpose({
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
   padding: 16px;
-  background: #FAFAFA;
+  background: var(--bg-subtle);
   border-radius: 10px;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
   margin-bottom: 16px;
 }
 
@@ -217,7 +217,7 @@ defineExpose({
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #6B7280;
+  color: var(--c-text-500);
   font-weight: 500;
 }
 

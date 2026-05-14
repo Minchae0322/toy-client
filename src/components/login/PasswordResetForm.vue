@@ -138,14 +138,14 @@ const handleSubmit = () => {
 .form-title {
   font-size: 18px;
   font-weight: 700;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.3px;
   margin: 0 0 6px;
 }
 .form-sub {
   font-size: 13px;
   font-weight: 500;
-  color: #8B95A1;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
   margin: 0;
 }
@@ -163,8 +163,8 @@ const handleSubmit = () => {
   letter-spacing: -0.1px;
 }
 .status-banner.success {
-  background-color: #DCFCE7;
-  color: #16A34A;
+  background-color: var(--c-success-soft);
+  color: var(--c-success);
   border: 1px solid #BBF7D0;
 }
 
@@ -176,7 +176,7 @@ const handleSubmit = () => {
   display: block;
   font-size: 13px;
   font-weight: 700;
-  color: #333D4B;
+  color: var(--text-primary);
   margin-bottom: 8px;
   letter-spacing: -0.1px;
 }
@@ -187,28 +187,28 @@ input {
   padding: 12px 14px 12px 42px;
   font-size: 14px;
   font-weight: 500;
-  border: 1.5px solid #E5E8EB;
+  border: 1.5px solid var(--border-default);
   border-radius: 10px;
   outline: none;
   transition: all 0.15s ease;
-  color: #0A0E1A;
-  background: #F7F8FA;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
   font-family: inherit;
 }
-input::placeholder { color: #B0B8C1; font-weight: 400; }
-input:focus { border-color: #9333EA; box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08); background: #fff; }
-input:disabled { background-color: #F2F4F6; color: #B0B8C1; }
-input.error { border-color: #EF4444; background: #FEF2F2; }
+input::placeholder { color: var(--c-text-300); font-weight: 400; }
+input:focus { border-color: var(--c-brand); box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08); background: var(--bg-elevated); }
+input:disabled { background-color: var(--bg-mute); color: var(--c-text-300); }
+input.error { border-color: var(--c-danger); background: var(--c-danger-soft); }
 
-.input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #B0B8C1; }
+.input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--c-text-300); }
 
-.error-msg { font-size: 12px; font-weight: 600; color: #EF4444; margin-top: 6px; display: block; }
+.error-msg { font-size: 12px; font-weight: 600; color: var(--c-danger); margin-top: 6px; display: block; }
 
 /* 제출 버튼 */
 .submit-btn {
   width: 100%;
   padding: 14px;
-  background-color: #0A0E1A;
+  background-color: var(--c-ink-900);
   color: white;
   border: none;
   border-radius: 10px;
@@ -224,8 +224,8 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
   transition: background 0.15s ease;
   margin-top: 8px;
 }
-.submit-btn:hover:not(:disabled) { background: #1E293B; }
-.submit-btn:disabled { background-color: #F2F4F6; color: #B0B8C1; cursor: not-allowed; }
+.submit-btn:hover:not(:disabled) { background: var(--c-ink-700); }
+.submit-btn:disabled { background-color: var(--bg-mute); color: var(--c-text-300); cursor: not-allowed; }
 
 /* 에러 알림 */
 .error-alert {
@@ -234,10 +234,10 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
   gap: 8px;
   margin-top: 12px;
   padding: 12px 14px;
-  background-color: #FEF2F2;
-  border: 1px solid #FECACA;
+  background-color: var(--c-danger-soft);
+  border: 1px solid var(--c-danger-soft);
   border-radius: 10px;
-  color: #EF4444;
+  color: var(--c-danger);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.1px;
@@ -252,13 +252,13 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
   border: none;
   font-size: 13px;
   font-weight: 600;
-  color: #8B95A1;
+  color: var(--c-text-400);
   cursor: pointer;
   font-family: inherit;
   letter-spacing: -0.1px;
   transition: color 0.15s ease;
 }
-.back-btn:hover:not(:disabled) { color: #4E5968; }
+.back-btn:hover:not(:disabled) { color: var(--c-text-600); }
 .back-btn:disabled { cursor: not-allowed; opacity: 0.5; }
 
 /* 스피너 */

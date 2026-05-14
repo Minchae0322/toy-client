@@ -39,10 +39,10 @@ const emit = defineEmits(['set-sort'])
 
 <style scoped>
 .feed-header {
-  background: white;
+  background: var(--bg-base);
   padding: 16px 20px;
   border-radius: 12px 12px 0 0;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
   border-bottom: none;
   display: flex;
   justify-content: space-between;
@@ -52,7 +52,7 @@ const emit = defineEmits(['set-sort'])
 .sort-options {
   display: flex;
   gap: 6px;
-  background: #F9FAFB;
+  background: var(--bg-subtle);
   padding: 4px;
   border-radius: 8px;
 }
@@ -64,7 +64,7 @@ const emit = defineEmits(['set-sort'])
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
@@ -72,26 +72,26 @@ const emit = defineEmits(['set-sort'])
 }
 
 .sort-btn:hover {
-  color: #059669;
+  color: var(--c-success);
   background: rgba(5, 150, 105, 0.08);
 }
 
 .sort-btn.active {
-  background: white;
-  color: #059669;
+  background: var(--bg-elevated);
+  color: var(--c-success);
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .result-count {
   font-size: 14px;
-  color: #6B7280;
+  color: var(--c-text-500);
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
 .result-count strong {
-  color: #059669;
+  color: var(--c-success);
   font-weight: 700;
 }
 
@@ -112,7 +112,7 @@ const emit = defineEmits(['set-sort'])
   }
 
   .sort-options::-webkit-scrollbar-thumb {
-    background: #E5E7EB;
+    background: var(--border-strong);
     border-radius: 2px;
   }
 

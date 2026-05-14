@@ -217,20 +217,20 @@ const descriptionCharCount = computed(() => {
   align-items: flex-start;
   gap: 16px;
   padding: 20px 24px;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-strong);
 }
 
 .intro-icon {
   width: 48px;
   height: 48px;
-  background: #f3f4f6;
+  background: var(--border-default);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--c-text-500);
   flex-shrink: 0;
 }
 
@@ -241,28 +241,28 @@ const descriptionCharCount = computed(() => {
 .intro-title {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0 0 6px 0;
 }
 
 .intro-desc {
   font-size: 14px;
-  color: #64748b;
+  color: var(--c-text-500);
   margin: 0;
   line-height: 1.5;
 }
 
 /* 폼 카드 */
 .form-card {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-strong);
   overflow: hidden;
   transition: all 0.2s;
 }
 
 .form-card:hover {
-  border-color: #d1d5db;
+  border-color: var(--c-text-300);
 }
 
 .form-card.optional {
@@ -279,7 +279,7 @@ const descriptionCharCount = computed(() => {
 .card-number {
   width: 28px;
   height: 28px;
-  background: #374151;
+  background: var(--c-text-600);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -291,8 +291,8 @@ const descriptionCharCount = computed(() => {
 }
 
 .card-number.optional {
-  background: #e5e7eb;
-  color: #6b7280;
+  background: var(--border-strong);
+  color: var(--c-text-500);
 }
 
 .card-title-group {
@@ -305,20 +305,20 @@ const descriptionCharCount = computed(() => {
   gap: 8px;
   font-size: 15px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .card-subtitle {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .optional-badge {
   font-size: 11px;
   font-weight: 500;
-  color: #9ca3af;
-  background: #f3f4f6;
+  color: var(--c-text-400);
+  background: var(--border-default);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -339,8 +339,8 @@ const descriptionCharCount = computed(() => {
   align-items: center;
   gap: 16px;
   padding: 20px;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border-strong);
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.2s;
@@ -348,24 +348,24 @@ const descriptionCharCount = computed(() => {
 }
 
 .vote-option:hover {
-  border-color: #9ca3af;
-  background: #f9fafb;
+  border-color: var(--c-text-400);
+  background: var(--bg-subtle);
 }
 
 .vote-option.selected.vote-single {
-  border-color: #a5b4fc;
-  background: #f5f7ff;
+  border-color: var(--c-info);
+  background: var(--c-info-soft);
 }
 
 .vote-option.selected.vote-multiple {
-  border-color: #fcd34d;
-  background: #fffef5;
+  border-color: var(--c-warning);
+  background: var(--bg-subtle);
 }
 
 .option-radio {
   width: 22px;
   height: 22px;
-  border: 2px solid #d1d5db;
+  border: 2px solid var(--c-text-300);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -375,11 +375,11 @@ const descriptionCharCount = computed(() => {
 }
 
 .vote-option.selected.vote-single .option-radio {
-  border-color: #818cf8;
+  border-color: var(--c-info);
 }
 
 .vote-option.selected.vote-multiple .option-radio {
-  border-color: #fbbf24;
+  border-color: var(--c-warning);
 }
 
 .radio-dot {
@@ -391,11 +391,11 @@ const descriptionCharCount = computed(() => {
 }
 
 .vote-option.selected.vote-single .radio-dot {
-  background: #818cf8;
+  background: var(--c-info);
 }
 
 .vote-option.selected.vote-multiple .radio-dot {
-  background: #fbbf24;
+  background: var(--c-warning);
 }
 
 .option-visual {
@@ -412,23 +412,23 @@ const descriptionCharCount = computed(() => {
 }
 
 .option-visual.vote-single {
-  background: #f5f7ff;
-  color: #818cf8;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .option-visual.vote-multiple {
-  background: #fefce8;
-  color: #eab308;
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
 }
 
 .vote-option.selected .option-visual.vote-single {
-  background: #e0e7ff;
-  color: #6366f1;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .vote-option.selected .option-visual.vote-multiple {
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--c-warning-soft);
+  color: var(--c-bronze);
 }
 
 .visual-icon {
@@ -452,12 +452,12 @@ const descriptionCharCount = computed(() => {
 .option-title {
   font-size: 16px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .option-desc {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--c-text-500);
   line-height: 1.4;
 }
 
@@ -470,13 +470,13 @@ const descriptionCharCount = computed(() => {
 }
 
 .score-info.single {
-  background: #fafafe;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
 }
 
 .score-info.multiple {
-  background: #fefefa;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
 }
 
 .score-header {
@@ -489,11 +489,11 @@ const descriptionCharCount = computed(() => {
 }
 
 .score-info.single .score-header {
-  color: #6b7280;
+  color: var(--c-text-500);
 }
 
 .score-info.multiple .score-header {
-  color: #6b7280;
+  color: var(--c-text-500);
 }
 
 .score-content {
@@ -516,48 +516,48 @@ const descriptionCharCount = computed(() => {
 }
 
 .score-info.single .score-badge {
-  background: #e0e7ff;
-  color: #6366f1;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .score-badge.first {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
 }
 
 .score-badge.second {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--border-default);
+  color: var(--c-text-500);
 }
 
 .score-badge.third {
-  background: #ffedd5;
-  color: #c2410c;
+  background: var(--c-heat-soft);
+  color: var(--c-heat);
 }
 
 .score-text {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
 }
 
 /* 텍스트 에어리어 */
 .textarea-wrapper {
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-strong);
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.2s;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .textarea-wrapper.focused {
-  border-color: #9ca3af;
+  border-color: var(--c-text-400);
   box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.1);
 }
 
 .textarea-wrapper.filled:not(.focused) {
-  border-color: #d1fae5;
-  background: #f9fdfb;
+  border-color: var(--c-success-soft);
+  background: var(--bg-subtle);
 }
 
 .description-textarea {
@@ -576,7 +576,7 @@ const descriptionCharCount = computed(() => {
 }
 
 .description-textarea::placeholder {
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .textarea-footer {
@@ -584,13 +584,13 @@ const descriptionCharCount = computed(() => {
   justify-content: flex-end;
   align-items: center;
   padding: 10px 16px;
-  background: #f9fafb;
-  border-top: 1px solid #f3f4f6;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-default);
 }
 
 .char-count {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   font-variant-numeric: tabular-nums;
 }
 
@@ -600,7 +600,7 @@ const descriptionCharCount = computed(() => {
   gap: 6px;
   margin-top: 12px;
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 /* 완료 안내 */
@@ -609,10 +609,10 @@ const descriptionCharCount = computed(() => {
   align-items: center;
   gap: 10px;
   padding: 16px 20px;
-  background: #f0fdf4;
-  border: 1px solid #d1fae5;
+  background: var(--c-success-soft);
+  border: 1px solid var(--c-success-soft);
   border-radius: 12px;
-  color: #16a34a;
+  color: var(--c-success);
   font-size: 14px;
   font-weight: 500;
 }

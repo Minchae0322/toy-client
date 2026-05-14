@@ -136,15 +136,15 @@ const getRandomDistance = () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
-  background: white;
-  border: 1px solid #F3F4F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-top: none;
   border-radius: 0 0 12px 12px;
 }
 
 .product-card {
-  background: white;
-  border: 1px solid #F3F4F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.2s;
@@ -152,7 +152,7 @@ const getRandomDistance = () => {
 }
 
 .product-card:hover {
-  border-color: #E5E7EB;
+  border-color: var(--border-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
@@ -161,7 +161,7 @@ const getRandomDistance = () => {
   position: relative;
   height: 220px;
   overflow: hidden;
-  background: #F9FAFB;
+  background: var(--bg-subtle);
 }
 
 .product-image img {
@@ -178,7 +178,7 @@ const getRandomDistance = () => {
 .product-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, var(--c-success) 0%, #047857 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -205,7 +205,7 @@ const getRandomDistance = () => {
   left: 12px;
   width: 36px;
   height: 36px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--header-blur-bg);
   backdrop-filter: blur(4px);
   border: none;
   border-radius: 50%;
@@ -238,7 +238,7 @@ const getRandomDistance = () => {
 .product-name {
   font-size: 16px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 8px;
   line-height: 1.4;
   display: -webkit-box;
@@ -251,7 +251,7 @@ const getRandomDistance = () => {
 
 .product-brand {
   font-size: 13px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
@@ -262,7 +262,7 @@ const getRandomDistance = () => {
 .product-price {
   font-size: 18px;
   font-weight: 700;
-  color: #059669;
+  color: var(--c-success);
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
@@ -276,7 +276,7 @@ const getRandomDistance = () => {
 
 .stat {
   font-size: 13px;
-  color: #6B7280;
+  color: var(--c-text-500);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -285,7 +285,7 @@ const getRandomDistance = () => {
 
 .distance {
   font-size: 13px;
-  color: #6B7280;
+  color: var(--c-text-500);
   font-weight: 500;
   display: flex;
   align-items: center;

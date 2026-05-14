@@ -139,6 +139,27 @@
             </template>
           </div>
 
+          <!-- Theme Section -->
+          <div class="theme-section">
+            <div class="theme-section-head">
+              <span class="theme-section-title">화면 모드</span>
+            </div>
+            <div class="theme-segment" role="radiogroup" aria-label="화면 모드 선택">
+              <button
+                v-for="opt in themeOptions"
+                :key="opt.value"
+                class="theme-segment-item"
+                :class="{ active: themeMode === opt.value }"
+                role="radio"
+                :aria-checked="themeMode === opt.value"
+                @click="setThemeMode(opt.value)"
+              >
+                <component :is="opt.icon" :size="16" />
+                <span>{{ opt.label }}</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Menu Section -->
           <div class="menu-section">
             <button class="menu-item" @click="goToProfile">
@@ -192,8 +213,10 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Camera, Calendar, Mail, FileText,
-  Bell, Settings, ChevronRight, LogOut
+  Bell, Settings, ChevronRight, LogOut,
+  Sun, Moon, Monitor
 } from 'lucide-vue-next'
+import { useTheme } from '@/composables/useTheme'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
@@ -210,6 +233,13 @@ const router = useRouter()
 const userService = useUser()
 const fileService = useFile()
 const { open } = useConfirmDialog()
+const { mode: themeMode, setMode: setThemeMode } = useTheme()
+
+const themeOptions = [
+  { value: 'light', label: '라이트', icon: Sun },
+  { value: 'dark', label: '다크', icon: Moon },
+  { value: 'auto', label: '시스템', icon: Monitor },
+]
 
 // ==================== State ====================
 const loading = ref(true)
@@ -529,23 +559,23 @@ onMounted(() => {
 <style scoped>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
-:root {
-  --primary: #222222;
-  --secondary: #64748B;
-  --accent: #9333ea;
-  --bg: #FFFFFF;
-  --card: #FFFFFF;
-  --border: #E2E8F0;
-  --hover: #F8FAFC;
-}
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* scoped 안에서 :root 는 [data-v-xxx] 가 붙어 html 과 매칭 실패 →
+   변수는 컴포넌트 root 클래스(.app-container)에 정의해서 자식에 상속 */
 .app-container {
+  --primary: var(--text-primary);
+  --secondary: var(--c-text-500);
+  --accent: var(--c-brand);
+  --bg: var(--bg-base);
+  --card: var(--bg-elevated);
+  --border: var(--border-strong);
+  --hover: var(--bg-subtle);
+
   background: var(--bg);
   min-height: 100vh;
   color: var(--primary);
@@ -675,7 +705,7 @@ onMounted(() => {
   height: 80px;
   border-radius: 50%;
   border: 2px solid var(--accent);
-  background: #f3f4f6;
+  background: var(--border-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -748,6 +778,14 @@ onMounted(() => {
   border: 1px solid var(--border);
 }
 
+/* 다크 모드: inline tier.bgColor (옅은 라이트 톤) 가 박혀 글자 가독성 떨어짐 → 카드 톤으로 override */
+:root[data-theme="dark"] .tier-card {
+  background: var(--bg-elevated) !important;
+}
+:root[data-theme="dark"] .tier-label {
+  color: var(--c-brand-hover) !important;
+}
+
 .tier-card-deco {
   position: absolute;
   top: -16px;
@@ -773,7 +811,7 @@ onMounted(() => {
 .tier-art-wrap {
   width: 52px;
   height: 52px;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -799,7 +837,7 @@ onMounted(() => {
 .tier-level {
   font-size: 24px;
   font-weight: 900;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.8px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -812,7 +850,7 @@ onMounted(() => {
 }
 
 .tier-exp {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 8px;
   padding: 12px 14px;
   display: flex;
@@ -822,7 +860,7 @@ onMounted(() => {
 
 .exp-bar {
   height: 6px;
-  background: #F1F3F6;
+  background: var(--border-default);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -835,13 +873,13 @@ onMounted(() => {
 
 .exp-text {
   font-size: 12px;
-  color: #64748B;
+  color: var(--c-text-500);
   font-weight: 600;
   letter-spacing: -0.1px;
 }
 
 .exp-text strong {
-  color: #0A0E1A;
+  color: var(--text-primary);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -859,7 +897,7 @@ onMounted(() => {
 }
 
 .btn-edit:hover {
-  background: #faf5ff;
+  background: var(--c-brand-soft);
 }
 
 .follow-stats {
@@ -951,13 +989,13 @@ onMounted(() => {
 }
 
 .btn-cancel {
-  background: #f3f4f6;
+  background: var(--border-default);
   border: 1px solid var(--border);
   color: var(--secondary);
 }
 
 .btn-cancel:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: var(--border-strong);
 }
 
 .btn-save {
@@ -1020,6 +1058,67 @@ onMounted(() => {
   opacity: 0.7;
 }
 
+/* Theme Section — 토큰 기반 (다크 모드 대응) */
+.theme-section {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.theme-section-head {
+  margin-bottom: 10px;
+}
+
+.theme-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: -0.2px;
+}
+
+.theme-segment {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: var(--bg-subtle);
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.theme-segment-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+}
+
+.theme-segment-item:hover:not(.active) {
+  color: var(--text-secondary);
+}
+
+.theme-segment-item.active {
+  background: var(--bg-elevated);
+  color: var(--c-brand);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-segment-item svg {
+  flex-shrink: 0;
+}
+
 /* Menu Section */
 .menu-section {
   background: var(--card);
@@ -1037,7 +1136,7 @@ onMounted(() => {
   padding: 14px 16px;
   background: transparent;
   border: none;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-default);
   font-size: 14px;
   color: var(--primary);
   cursor: pointer;
@@ -1088,9 +1187,9 @@ onMounted(() => {
 }
 
 .btn-logout:hover {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #dc2626;
+  background: var(--c-danger-soft);
+  border-color: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .btn-logout svg {

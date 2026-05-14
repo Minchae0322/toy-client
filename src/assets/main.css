@@ -4,10 +4,19 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: 'SUIT', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", "맑은 고딕", sans-serif;
-  background-color: #ffffff;
-  color: #222;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   /* 모바일/Capacitor WebView: 탭 시 회색 박스 제거 (PC 영향 없음) */
   -webkit-tap-highlight-color: transparent;
+}
+
+/* 다크 모드에서 input/textarea/select 의 user agent 기본 흰 배경 자동 반전.
+   color-scheme 속성을 dark 로 두면 브라우저가 form control 의 기본 색을 다크로 처리. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 /* iOS rubber-band 바운스 억제 — 모바일 한정 (PC 트랙패드 elastic 유지) */

@@ -31,8 +31,8 @@ const emit = defineEmits(['login'])
   justify-content: center;
   padding: 60px 24px;
   text-align: center;
-  background: #FEF2F2;
-  border: 2px solid #FEE2E2;
+  background: var(--c-danger-soft);
+  border: 2px solid var(--c-danger-soft);
   border-radius: 16px;
   margin: 24px 0;
 }
@@ -43,7 +43,7 @@ const emit = defineEmits(['login'])
 
 .auth-error h3 {
   font-size: 18px;
-  color: #DC2626;
+  color: var(--c-danger);
   font-weight: 700;
   margin-bottom: 24px;
   letter-spacing: -0.02em;
@@ -51,7 +51,7 @@ const emit = defineEmits(['login'])
 
 .login-btn {
   padding: 12px 32px;
-  background: #059669;
+  background: var(--c-success);
   color: white;
   border: none;
   border-radius: 10px;

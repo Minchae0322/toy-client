@@ -334,20 +334,20 @@ defineExpose({ observerTarget });
   flex-direction: column;
   gap: 0.25rem;
   padding-left: 0.75rem;
-  border-left: 3px solid #a1a1aa;
+  border-left: 3px solid var(--c-text-400);
 }
 
 .section-title {
   font-size: 1.0625rem;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .section-title .title-accent {
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 @media (min-width: 768px) {
@@ -365,7 +365,7 @@ defineExpose({ observerTarget });
 .sub-title {
   font-size: 12px;
   font-weight: 400;
-  color: #999;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
 }
 
@@ -373,7 +373,7 @@ defineExpose({ observerTarget });
 .view-switcher {
   display: flex;
   gap: 2px;
-  background: #F2F4F6;
+  background: var(--bg-mute);
   border-radius: 10px;
   padding: 3px;
 }
@@ -387,18 +387,18 @@ defineExpose({ observerTarget });
   background: transparent;
   border: none;
   border-radius: 7px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   cursor: pointer;
   transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .view-btn:hover:not(.active) {
-  color: #4E5968;
+  color: var(--c-text-600);
 }
 
 .view-btn.active {
-  color: #0A0E1A;
-  background: #ffffff;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
@@ -419,7 +419,7 @@ defineExpose({ observerTarget });
 .list-item {
   display: flex;
   gap: 0;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
@@ -444,7 +444,7 @@ defineExpose({ observerTarget });
   min-width: 180px;
   height: 180px;
   align-self: flex-start;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   overflow: hidden;
 }
 
@@ -486,8 +486,8 @@ defineExpose({ observerTarget });
   justify-content: center;
   padding: 4px 9px;
   border-radius: 999px;
-  background: #FFFFFF;
-  color: #DC2626;
+  background: var(--bg-elevated);
+  color: var(--c-danger);
   font-size: 10.5px;
   font-weight: 800;
   font-family: inherit;
@@ -514,14 +514,14 @@ defineExpose({ observerTarget });
   border-radius: 50%;
 }
 
-.eval-best { background-color: #fef3c7; color: #92400e; }
-.eval-best .eval-dot { background-color: #f59e0b; }
-.eval-good { background-color: #dcfce7; color: #166534; }
-.eval-good .eval-dot { background-color: #10b981; }
-.eval-okay { background-color: #f3e8ff; color: #6b21a8; }
-.eval-okay .eval-dot { background-color: #9333ea; }
-.eval-bad { background-color: #fee2e2; color: #991b1b; }
-.eval-bad .eval-dot { background-color: #ef4444; }
+.eval-best { background-color: var(--c-warning-soft); color: var(--c-warning); }
+.eval-best .eval-dot { background-color: var(--c-warning); }
+.eval-good { background-color: var(--c-success-soft); color: var(--c-success); }
+.eval-good .eval-dot { background-color: var(--c-success); }
+.eval-okay { background-color: var(--c-brand-soft); color: var(--c-brand); }
+.eval-okay .eval-dot { background-color: var(--c-brand); }
+.eval-bad { background-color: var(--c-danger-soft); color: var(--c-danger); }
+.eval-bad .eval-dot { background-color: var(--c-danger); }
 
 /* 급상승 뱃지 */
 .list-trend-badge {
@@ -530,7 +530,7 @@ defineExpose({ observerTarget });
   gap: 3px;
   padding: 4px 9px;
   border-radius: 100px;
-  background: #ef4444;
+  background: var(--c-danger);
   font-size: 9px;
   font-weight: 700;
   color: white;
@@ -549,7 +549,7 @@ defineExpose({ observerTarget });
 
 /* 제품 정보 박스 */
 .list-product-info-box {
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   border-radius: 8px;
   padding: 6px 10px;
   border: none;
@@ -560,7 +560,7 @@ defineExpose({ observerTarget });
   gap: 3px;
   font-size: 9px;
   font-weight: 600;
-  color: #9333ea;
+  color: var(--c-brand);
   margin-bottom: 1px;
 }
 .list-place-icon {
@@ -572,7 +572,7 @@ defineExpose({ observerTarget });
 .list-product-name {
   font-size: 13px;
   font-weight: 700;
-  color: #4E5968;
+  color: var(--c-text-600);
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -585,7 +585,7 @@ defineExpose({ observerTarget });
 .list-review {
   font-size: 14px;
   font-weight: 600;
-  color: #191F28;
+  color: var(--text-primary);
   line-height: 1.5;
   letter-spacing: -0.02em;
   word-break: keep-all;
@@ -598,7 +598,7 @@ defineExpose({ observerTarget });
 }
 
 .list-quote {
-  color: #C4B5FD;
+  color: var(--c-brand-soft);
   font-family: 'SUIT', sans-serif;
   font-size: 16px;
   margin-right: 1px;
@@ -614,7 +614,7 @@ defineExpose({ observerTarget });
 
 .list-tag {
   font-size: 11px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
@@ -626,34 +626,34 @@ defineExpose({ observerTarget });
   align-items: center;
   margin-top: auto;
   padding-top: 8px;
-  border-top: 1px solid #F2F4F6;
+  border-top: 1px solid var(--bg-mute);
 }
 
 .list-author { display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; min-width: 0; }
 .list-author-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .list-nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .list-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; }
-.list-nickname { font-size: 12px; font-weight: 600; color: #191F28; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.list-nickname { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .list-nickname-row > :not(.list-nickname) { flex-shrink: 0; }
-.list-time { font-size: 10px; color: #B0B8C1; }
+.list-time { font-size: 10px; color: var(--c-text-300); }
 
 .list-stats { display: flex; gap: 4px; flex-shrink: 0; }
 .stat {
   display: flex; align-items: center; gap: 3px;
   padding: 4px 8px;
-  background: #F2F4F6;
+  background: var(--bg-mute);
   border-radius: 100px;
-  font-size: 11px; font-weight: 500; color: #8B95A1;
+  font-size: 11px; font-weight: 500; color: var(--c-text-400);
   transition: all 0.15s ease;
 }
 .stat svg { width: 13px; height: 13px; }
-.stat.active { background: #F3E8FF; color: #9333EA; }
+.stat.active { background: var(--c-brand-soft); color: var(--c-brand); }
 .stat.like-btn { cursor: pointer; }
-.stat.like-btn:active { background: #F3E8FF; color: #9333EA; }
+.stat.like-btn:active { background: var(--c-brand-soft); color: var(--c-brand); }
 
 /* Scroll Status */
 .scroll-status { height: 80px; display: flex; align-items: center; justify-content: center; }
-.loader { width: 26px; height: 26px; border: 2.5px solid #F2F4F6; border-top-color: #0A0E1A; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.loader { width: 26px; height: 26px; border: 2.5px solid var(--bg-mute); border-top-color: var(--text-primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ===== 스켈레톤 애니메이션 ===== */
@@ -666,7 +666,7 @@ defineExpose({ observerTarget });
 .skeleton-card {
   width: 100%;
   pointer-events: none;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04);
@@ -678,13 +678,13 @@ defineExpose({ observerTarget });
   width: 100%;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
 }
 
 .skeleton-image {
   width: 100%;
   height: 100%;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -700,7 +700,7 @@ defineExpose({ observerTarget });
 
 .skeleton-line {
   height: 16px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 6px;
   margin-bottom: 6px;
@@ -722,7 +722,7 @@ defineExpose({ observerTarget });
 .skeleton-tag {
   height: 14px;
   width: 50px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 6px;
 }
@@ -732,17 +732,17 @@ defineExpose({ observerTarget });
 
 /* 제품 정보 박스 스켈레톤 */
 .skeleton-product-box {
-  background: #f9fafb;
+  background: var(--bg-subtle);
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 16px;
-  border: 1px solid #F2F4F6;
+  border: 1px solid var(--bg-mute);
 }
 
 .skeleton-category {
   height: 10px;
   width: 50px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
   margin-bottom: 6px;
@@ -751,7 +751,7 @@ defineExpose({ observerTarget });
 .skeleton-product-name {
   height: 15px;
   width: 100px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 6px;
 }
@@ -762,7 +762,7 @@ defineExpose({ observerTarget });
   justify-content: space-between;
   align-items: center;
   padding-top: 18px;
-  border-top: 1px solid #F2F4F6;
+  border-top: 1px solid var(--bg-mute);
 }
 
 .skeleton-user {
@@ -775,7 +775,7 @@ defineExpose({ observerTarget });
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   flex-shrink: 0;
 }
@@ -789,7 +789,7 @@ defineExpose({ observerTarget });
 .skeleton-nickname {
   height: 13px;
   width: 50px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
 }
@@ -797,7 +797,7 @@ defineExpose({ observerTarget });
 .skeleton-date {
   height: 10px;
   width: 35px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
 }
@@ -811,7 +811,7 @@ defineExpose({ observerTarget });
   width: 55px;
   height: 30px;
   border-radius: 100px;
-  background-color: #F2F4F6;
+  background-color: var(--bg-mute);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -823,7 +823,7 @@ defineExpose({ observerTarget });
 .skeleton-list-image {
   width: 100%;
   height: 100%;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -845,7 +845,7 @@ defineExpose({ observerTarget });
   align-items: center;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid #F2F4F6;
+  border-top: 1px solid var(--bg-mute);
 }
 
 .skeleton-list-item .list-author {
@@ -863,7 +863,7 @@ defineExpose({ observerTarget });
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   flex-shrink: 0;
 }
@@ -898,21 +898,21 @@ defineExpose({ observerTarget });
 .feed-empty-state .circle-1 {
   width: 140px;
   height: 140px;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   animation-delay: 0s;
 }
 
 .feed-empty-state .circle-2 {
   width: 100px;
   height: 100px;
-  background: #F2F4F6;
+  background: var(--bg-mute);
   animation-delay: 0.5s;
 }
 
 .feed-empty-state .illustration-icon {
   width: 52px;
   height: 52px;
-  color: #4E5968;
+  color: var(--c-text-600);
   z-index: 1;
 }
 
@@ -934,7 +934,7 @@ defineExpose({ observerTarget });
 .feed-empty-state .empty-title {
   font-size: 18px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin: 0 0 6px 0;
   letter-spacing: -0.4px;
 }
@@ -942,7 +942,7 @@ defineExpose({ observerTarget });
 .feed-empty-state .empty-description {
   font-size: 13px;
   font-weight: 500;
-  color: #8B95A1;
+  color: var(--c-text-400);
   line-height: 1.5;
   letter-spacing: -0.2px;
   margin: 0;
@@ -952,7 +952,7 @@ defineExpose({ observerTarget });
 @media (max-width: 768px) {
   .feed-container {
     padding: 12px 0;
-    background: white;
+    background: var(--bg-base);
   }
 
   .feed-header {
@@ -1009,9 +1009,9 @@ defineExpose({ observerTarget });
     flex-direction: row-reverse;
     align-items: flex-start;
     border-radius: 0;
-    background: #ffffff;
+    background: var(--bg-elevated);
     box-shadow: none;
-    border-bottom: 1px solid #F1F3F6;
+    border-bottom: 1px solid var(--border-default);
     padding: 12px 16px;
     gap: 12px;
   }
@@ -1020,7 +1020,7 @@ defineExpose({ observerTarget });
     box-shadow: none;
   }
   .list-item:active {
-    background: #F7F8FA;
+    background: var(--bg-subtle);
     transform: none;
   }
 
@@ -1063,7 +1063,7 @@ defineExpose({ observerTarget });
   /* 푸터: 작성자/메타/리액션 한 줄 인라인 */
   .list-footer {
     padding-top: 7px;
-    border-top: 1px solid #F1F3F6;
+    border-top: 1px solid var(--border-default);
     gap: 8px;
   }
   .list-author { gap: 5px; align-items: center; min-width: 0; }
@@ -1078,7 +1078,7 @@ defineExpose({ observerTarget });
   .list-nickname { font-size: 11.5px; }
   .list-time {
     font-size: 10.5px;
-    color: #94A3B8;
+    color: var(--c-text-400);
     flex-shrink: 0;
     position: relative;
     padding-left: 8px;
@@ -1089,7 +1089,7 @@ defineExpose({ observerTarget });
     left: 1px;
     top: 50%;
     transform: translateY(-50%);
-    color: #CBD5E1;
+    color: var(--c-text-300);
     font-weight: 700;
     line-height: 1;
   }
@@ -1102,12 +1102,12 @@ defineExpose({ observerTarget });
     border-radius: 0;
     font-size: 11px;
     font-weight: 500;
-    color: #94A3B8;
+    color: var(--c-text-400);
     gap: 3px;
   }
   .stat svg { width: 13px; height: 13px; }
-  .stat.active { background: transparent; color: #9333EA; }
-  .stat.like-btn:active { background: transparent; color: #9333EA; }
+  .stat.active { background: transparent; color: var(--c-brand); }
+  .stat.like-btn:active { background: transparent; color: var(--c-brand); }
 
   /* 모바일 스켈레톤: 그리드 뷰 - FeedCard 모바일과 동일 */
   .skeleton-card {
@@ -1116,7 +1116,7 @@ defineExpose({ observerTarget });
     box-shadow: none;
     padding-bottom: 0;
     margin-bottom: 0;
-    border-bottom: 1px solid #F2F4F6;
+    border-bottom: 1px solid var(--bg-mute);
   }
 
   .skeleton-image-container {
@@ -1217,7 +1217,7 @@ defineExpose({ observerTarget });
   .skeleton-list-image,
   .skeleton-list-avatar {
     animation: none;
-    background-color: #e5e7eb;
+    background-color: var(--border-strong);
   }
 }
 </style>

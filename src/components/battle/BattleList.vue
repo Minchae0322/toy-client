@@ -143,10 +143,10 @@ defineExpose({ observerTarget })
 
 /* ===== 스켈레톤 카드 (BattleCard와 동일한 레이아웃) ===== */
 .skeleton-card {
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--bg-subtle);
   pointer-events: none;
 }
 
@@ -154,14 +154,14 @@ defineExpose({ observerTarget })
 .skeleton-thumbnail {
   position: relative;
   aspect-ratio: 16/10;
-  background: #f8fafc;
+  background: var(--bg-subtle);
   overflow: hidden;
 }
 
 .skeleton-image {
   width: 100%;
   height: 100%;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -205,7 +205,7 @@ defineExpose({ observerTarget })
 .skeleton-category {
   width: 50px;
   height: 11px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
   margin-bottom: 6px;
@@ -214,7 +214,7 @@ defineExpose({ observerTarget })
 .skeleton-title {
   width: 100%;
   height: 15px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
   margin-bottom: 6px;
@@ -235,7 +235,7 @@ defineExpose({ observerTarget })
 .skeleton-stat {
   width: 55px;
   height: 11px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
 }
@@ -250,7 +250,7 @@ defineExpose({ observerTarget })
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bg-subtle);
 }
 
 .skeleton-creator {
@@ -263,7 +263,7 @@ defineExpose({ observerTarget })
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   flex-shrink: 0;
 }
@@ -271,7 +271,7 @@ defineExpose({ observerTarget })
 .skeleton-creator-name {
   width: 50px;
   height: 11px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
 }
@@ -279,7 +279,7 @@ defineExpose({ observerTarget })
 .skeleton-action-hint {
   width: 60px;
   height: 11px;
-  background-color: #e5e7eb;
+  background-color: var(--border-strong);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 4px;
 }
@@ -295,19 +295,19 @@ defineExpose({ observerTarget })
 
 .empty-icon {
   margin-bottom: 16px;
-  color: #cbd5e1;
+  color: var(--c-text-300);
 }
 
 .empty-text {
   font-size: 14px;
-  color: #64748b;
+  color: var(--c-text-500);
   margin: 0 0 16px;
 }
 
 .create-btn {
   font-size: 14px;
   font-weight: 500;
-  color: #9333ea;
+  color: var(--c-brand);
   background: none;
   border: none;
   cursor: pointer;
@@ -316,7 +316,7 @@ defineExpose({ observerTarget })
 }
 
 .create-btn:hover {
-  color: #7e22ce;
+  color: var(--c-brand);
 }
 
 .empty-state .spinner {
@@ -336,15 +336,15 @@ defineExpose({ observerTarget })
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #64748b;
+  color: var(--c-text-500);
   font-size: 13px;
 }
 
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #e2e8f0;
-  border-top-color: #9333ea;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--c-brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -427,7 +427,7 @@ defineExpose({ observerTarget })
   .skeleton-action-hint,
   .spinner {
     animation: none;
-    background-color: #e5e7eb;
+    background-color: var(--border-strong);
   }
 
   .card-enter-active,

@@ -143,7 +143,7 @@ const handleDeleteAccount = async () => {
 <style scoped>
 .account-settings-page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--bg-base);
 }
 
 .page-header {
@@ -151,10 +151,10 @@ const handleDeleteAccount = async () => {
   align-items: center;
   height: 56px;
   padding: 0 12px;
-  border-bottom: 1px solid #ede9f8;
+  border-bottom: 1px solid var(--border-default);
   position: sticky;
   top: 0;
-  background: #ffffff;
+  background: var(--bg-elevated);
   z-index: 10;
 }
 
@@ -167,18 +167,18 @@ const handleDeleteAccount = async () => {
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #4b5563;
+  color: var(--c-text-600);
   cursor: pointer;
 }
 
-.back-btn:hover { background: #f5f5f7; }
+.back-btn:hover { background: var(--bg-subtle); }
 
 .page-title {
   flex: 1;
   text-align: center;
   font-size: 16px;
   font-weight: 700;
-  color: #0a0e1a;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   margin: 0;
 }
@@ -195,8 +195,8 @@ const handleDeleteAccount = async () => {
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #ede9f8;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 14px;
   padding: 18px;
 }
@@ -204,7 +204,7 @@ const handleDeleteAccount = async () => {
 .card-title {
   font-size: 14px;
   font-weight: 800;
-  color: #0a0e1a;
+  color: var(--text-primary);
   margin: 0 0 12px;
   letter-spacing: -0.02em;
 }
@@ -213,15 +213,15 @@ const handleDeleteAccount = async () => {
   display: flex;
   justify-content: space-between;
   padding: 10px 0;
-  border-top: 1px solid #f5f5f7;
+  border-top: 1px solid var(--bg-subtle);
   font-size: 14px;
 }
 
 .info-row:first-of-type { border-top: none; }
 
-.info-label { color: #6b7280; }
+.info-label { color: var(--c-text-500); }
 
-.info-value { color: #111827; font-weight: 600; }
+.info-value { color: var(--text-primary); font-weight: 600; }
 
 .policy-row {
   display: flex;
@@ -230,9 +230,9 @@ const handleDeleteAccount = async () => {
   width: 100%;
   padding: 12px 0;
   border: none;
-  border-top: 1px solid #f5f5f7;
+  border-top: 1px solid var(--bg-subtle);
   background: transparent;
-  color: #111827;
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -243,16 +243,16 @@ const handleDeleteAccount = async () => {
 
 .policy-row:first-of-type { border-top: none; }
 
-.policy-row:hover { color: #9333ea; }
+.policy-row:hover { color: var(--c-brand); }
 
 .danger-card {
-  border-color: #fee2e2;
+  border-color: var(--c-danger-soft);
   background: #fff7f7;
 }
 
 .card-desc {
   font-size: 13px;
-  color: #4b5563;
+  color: var(--c-text-600);
   line-height: 1.55;
   margin: 0 0 12px;
 }
@@ -263,7 +263,7 @@ const handleDeleteAccount = async () => {
   margin: 0 0 16px;
   padding-left: 18px;
   font-size: 13px;
-  color: #4b5563;
+  color: var(--c-text-600);
   line-height: 1.7;
 }
 
@@ -272,7 +272,7 @@ const handleDeleteAccount = async () => {
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  background: #dc2626;
+  background: var(--c-danger);
   color: #ffffff;
   border: none;
   border-radius: 10px;

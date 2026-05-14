@@ -135,8 +135,8 @@ const formatNumber = (num) => (num || 0).toLocaleString()
 
 <style scoped>
 .battle-card {
-  background: white;
-  border: 1px solid #eee;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
@@ -144,7 +144,7 @@ const formatNumber = (num) => (num || 0).toLocaleString()
 }
 
 .battle-card:hover {
-  border-color: #ddd;
+  border-color: var(--border-strong);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -174,24 +174,24 @@ const formatNumber = (num) => (num || 0).toLocaleString()
 }
 
 .status-badge.live {
-  background: #ef4444;
+  background: var(--c-danger);
   color: white;
 }
 
 .status-badge.upcoming {
-  background: #f3e8ff;
-  color: #7c3aed;
+  background: var(--c-brand-soft);
+  color: var(--c-brand-hover);
 }
 
 .status-badge.ended {
-  background: #f5f5f5;
-  color: #999;
+  background: var(--bg-subtle);
+  color: var(--c-text-400);
 }
 
 .pulse-dot {
   width: 5px;
   height: 5px;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 50%;
   animation: pulse 1.5s infinite;
 }
@@ -204,7 +204,7 @@ const formatNumber = (num) => (num || 0).toLocaleString()
 .title {
   font-size: 15px;
   font-weight: 600;
-  color: #111;
+  color: var(--text-primary);
   margin: 0;
   flex: 1;
 }
@@ -214,7 +214,7 @@ const formatNumber = (num) => (num || 0).toLocaleString()
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #999;
+  color: var(--c-text-400);
   flex-shrink: 0;
 }
 
@@ -229,13 +229,13 @@ const formatNumber = (num) => (num || 0).toLocaleString()
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f9f9f9;
+  background: var(--bg-subtle);
   border-radius: 8px;
   transition: all 0.15s;
 }
 
 .item-row.is-this {
-  background: #faf5ff;
+  background: var(--c-brand-soft);
   outline: 1px solid #ede9fe;
 }
 
@@ -251,11 +251,11 @@ const formatNumber = (num) => (num || 0).toLocaleString()
   flex-shrink: 0;
 }
 
-.rank-badge.rank-1 { background: #fbbf24; color: #78350f; }
-.rank-badge.rank-2 { background: #e5e7eb; color: #374151; }
-.rank-badge.rank-3 { background: #d97706; color: white; }
+.rank-badge.rank-1 { background: var(--c-warning); color: #78350f; }
+.rank-badge.rank-2 { background: var(--border-strong); color: var(--c-text-600); }
+.rank-badge.rank-3 { background: var(--c-bronze); color: white; }
 .rank-badge.rank-4,
-.rank-badge.rank-5 { background: #f3f4f6; color: #9ca3af; }
+.rank-badge.rank-5 { background: var(--border-default); color: var(--c-text-400); }
 
 .item-info {
   flex: 1;
@@ -268,18 +268,18 @@ const formatNumber = (num) => (num || 0).toLocaleString()
 .item-name {
   font-size: 13px;
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .item-row.is-this .item-name {
-  color: #7c3aed;
+  color: var(--c-brand-hover);
   font-weight: 600;
 }
 
 .this-badge {
   padding: 2px 6px;
   background: #ede9fe;
-  color: #7c3aed;
+  color: var(--c-brand-hover);
   font-size: 10px;
   font-weight: 600;
   border-radius: 4px;
@@ -289,7 +289,7 @@ const formatNumber = (num) => (num || 0).toLocaleString()
 .progress-bar {
   width: 100px;
   height: 6px;
-  background: #e5e7eb;
+  background: var(--border-strong);
   border-radius: 3px;
   overflow: hidden;
   flex-shrink: 0;
@@ -297,13 +297,13 @@ const formatNumber = (num) => (num || 0).toLocaleString()
 
 .progress-fill {
   height: 100%;
-  background: #d1d5db;
+  background: var(--c-text-300);
   border-radius: 3px;
   transition: width 0.3s ease;
 }
 
 .progress-fill.is-this {
-  background: #7c3aed;
+  background: var(--c-brand-hover);
 }
 
 .votes {
@@ -311,12 +311,12 @@ const formatNumber = (num) => (num || 0).toLocaleString()
   text-align: right;
   font-size: 13px;
   font-weight: 600;
-  color: #666;
+  color: var(--c-text-500);
   flex-shrink: 0;
 }
 
 .votes.is-this {
-  color: #7c3aed;
+  color: var(--c-brand-hover);
 }
 
 .battle-footer {
@@ -325,7 +325,7 @@ const formatNumber = (num) => (num || 0).toLocaleString()
   justify-content: space-between;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--border-default);
 }
 
 .stats {
@@ -339,12 +339,12 @@ const formatNumber = (num) => (num || 0).toLocaleString()
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #999;
+  color: var(--c-text-400);
 }
 
 .vote-btn {
   padding: 10px 18px;
-  background: #7c3aed;
+  background: var(--c-brand-hover);
   color: white;
   border: none;
   border-radius: 6px;
@@ -355,7 +355,7 @@ const formatNumber = (num) => (num || 0).toLocaleString()
 }
 
 .vote-btn:hover {
-  background: #6d28d9;
+  background: var(--c-brand-hover);
 }
 
 @media (max-width: 640px) {

@@ -459,17 +459,17 @@ onUnmounted(() => {
 <style scoped>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
-:root {
-  --primary: #0f172a;
-  --primary-accent: #9333ea;
-  --secondary: #64748b;
-  --bg: #ffffff;
-  --card: #ffffff;
-  --border: #f1f5f9;
-  --border-hover: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+.app-container {
+  --primary: var(--text-primary);
+  --primary-accent: var(--c-brand);
+  --secondary: var(--c-text-500);
+  --bg: var(--bg-base);
+  --card: var(--bg-elevated);
+  --border: var(--bg-subtle);
+  --border-hover: var(--border-strong);
+  --text-primary: var(--text-primary);
+  --text-secondary: var(--c-text-500);
+  --text-muted: var(--c-text-400);
 }
 
 * {
@@ -563,20 +563,20 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 0.25rem;
   padding-left: 0.75rem;
-  border-left: 3px solid #a1a1aa;
+  border-left: 3px solid var(--c-text-400);
 }
 
 .section-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .section-title .title-accent {
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 @media (min-width: 1280px) {
@@ -588,7 +588,7 @@ onUnmounted(() => {
 .sub-title {
   font-size: 12px;
   font-weight: 400;
-  color: #999;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
 }
 
@@ -636,10 +636,10 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
-  color: #64748B;
+  color: var(--c-text-500);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -649,16 +649,16 @@ onUnmounted(() => {
 }
 
 .filter-chip:hover {
-  background: #F1F5F9;
-  border-color: #CBD5E1;
-  color: #334155;
+  background: var(--bg-subtle);
+  border-color: var(--c-text-300);
+  color: var(--c-text-600);
 }
 
 .filter-chip.active {
-  background: #0F172A;
-  border-color: #0F172A;
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  background: var(--c-brand);
+  border-color: var(--c-brand);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25);
 }
 
 .chip-count {
@@ -670,7 +670,7 @@ onUnmounted(() => {
 
 .filter-chip.active .chip-count {
   opacity: 1;
-  color: #94A3B8;
+  color: var(--c-text-400);
 }
 
 .chip-icon {
@@ -702,19 +702,19 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: #94A3B8;
+  color: var(--c-text-400);
   padding: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .view-btn:hover {
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .view-btn.active {
-  background: #F1F5F9;
-  color: #0F172A;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
 }
 
 /* 정렬 드롭다운 */
@@ -730,7 +730,7 @@ onUnmounted(() => {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
-  color: #475569;
+  color: var(--c-text-600);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.2px;
@@ -741,18 +741,18 @@ onUnmounted(() => {
 }
 
 .sort-trigger:hover {
-  background: #F7F8FA;
-  color: #0F172A;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
 }
 
 .sort-trigger.active {
-  background: #F2F4F6;
-  color: #0F172A;
+  background: var(--bg-mute);
+  color: var(--text-primary);
 }
 
 .sort-trigger:focus-visible {
   outline: none;
-  border-color: #CBD5E1;
+  border-color: var(--c-text-300);
 }
 
 .sort-trigger-label {
@@ -762,13 +762,13 @@ onUnmounted(() => {
 .sort-chevron {
   width: 14px;
   height: 14px;
-  color: #94A3B8;
+  color: var(--c-text-400);
   transition: transform 0.18s ease;
 }
 
 .sort-chevron.open {
   transform: rotate(180deg);
-  color: #0F172A;
+  color: var(--text-primary);
 }
 
 .sort-menu {
@@ -776,8 +776,8 @@ onUnmounted(() => {
   top: calc(100% + 6px);
   right: 0;
   min-width: 144px;
-  background: #FFFFFF;
-  border: 1px solid #F1F3F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04);
   padding: 4px;
@@ -794,7 +794,7 @@ onUnmounted(() => {
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #475569;
+  color: var(--c-text-600);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.2px;
@@ -805,13 +805,13 @@ onUnmounted(() => {
 }
 
 .sort-option:hover {
-  background: #F7F8FA;
-  color: #0F172A;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
 }
 
 .sort-option.active {
-  background: #FAF5FF;
-  color: #9333EA;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .sort-option-label {
@@ -822,7 +822,7 @@ onUnmounted(() => {
 .sort-option-check {
   width: 14px;
   height: 14px;
-  color: #9333EA;
+  color: var(--c-brand);
   flex-shrink: 0;
 }
 
@@ -845,8 +845,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.375rem;
   padding: 8px 16px;
-  background: #7C3AED;
-  color: #fff;
+  background: var(--c-brand-hover);
+  color: #ffffff;
   border: none;
   border-radius: 10px;
   font-size: 13px;
@@ -859,7 +859,7 @@ onUnmounted(() => {
 }
 
 .create-battle-btn:hover {
-  background: #6D28D9;
+  background: var(--c-brand-hover);
   box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
 }
 

@@ -94,13 +94,13 @@ async function handleClaim(m) {
 <style scoped>
 .section-card {
   padding: 4px 20px;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 4px;
 }
 
 @media (min-width: 768px) { .section-card { padding: 8px 24px; } }
 
-.empty { padding: 40px 0; text-align: center; font-size: 14px; color: #94A3B8; }
+.empty { padding: 40px 0; text-align: center; font-size: 14px; color: var(--c-text-400); }
 
 .mission-list { list-style: none; padding: 0; margin: 0; }
 
@@ -109,7 +109,7 @@ async function handleClaim(m) {
   align-items: flex-start;
   gap: 14px;
   padding: 16px 0;
-  border-top: 1px solid #F1F3F6;
+  border-top: 1px solid var(--border-default);
   transition: opacity 0.2s;
 }
 
@@ -136,9 +136,9 @@ async function handleClaim(m) {
   margin-top: 8px;
 }
 
-.diff-dot.diff-easy { background: #22C55E; }
-.diff-dot.diff-normal { background: #EAB308; }
-.diff-dot.diff-hard { background: #EF4444; }
+.diff-dot.diff-easy { background: var(--c-success); }
+.diff-dot.diff-normal { background: var(--c-warning); }
+.diff-dot.diff-hard { background: var(--c-danger); }
 
 .row-main { flex: 1; min-width: 0; }
 
@@ -153,7 +153,7 @@ async function handleClaim(m) {
 .mission-title {
   font-size: 14px;
   font-weight: 700;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.2px;
   line-height: 1.35;
 }
@@ -161,7 +161,7 @@ async function handleClaim(m) {
 .mission-exp {
   font-size: 13px;
   font-weight: 800;
-  color: #9333EA;
+  color: var(--c-brand);
   flex-shrink: 0;
   letter-spacing: -0.2px;
 }
@@ -175,7 +175,7 @@ async function handleClaim(m) {
 .progress-track {
   flex: 1;
   height: 5px;
-  background: #F1F3F6;
+  background: var(--border-default);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -186,14 +186,14 @@ async function handleClaim(m) {
   transition: width 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-.diff-easy-bg { background: #22C55E; }
-.diff-normal-bg { background: #EAB308; }
-.diff-hard-bg { background: #EF4444; }
+.diff-easy-bg { background: var(--c-success); }
+.diff-normal-bg { background: var(--c-warning); }
+.diff-hard-bg { background: var(--c-danger); }
 
 .progress-count {
   font-size: 11.5px;
   font-weight: 700;
-  color: #64748B;
+  color: var(--c-text-500);
   min-width: 40px;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -201,7 +201,7 @@ async function handleClaim(m) {
 
 .row-hint {
   font-size: 11.5px;
-  color: #9333EA;
+  color: var(--c-brand);
   font-weight: 700;
   margin-top: 8px;
   letter-spacing: -0.1px;
@@ -223,15 +223,15 @@ async function handleClaim(m) {
   gap: 3px;
   padding: 5px 10px;
   border-radius: 7px;
-  background: #F0FDF4;
-  color: #16A34A;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .claim-btn {
   padding: 8px 14px;
-  border: 2px solid #0A0E1A;
+  border: 2px solid var(--c-ink-900);
   border-radius: 4px;
-  background: #0A0E1A;
+  background: var(--c-ink-900);
   color: #B4FF39;
   font-size: 12px;
   font-weight: 900;
@@ -239,12 +239,12 @@ async function handleClaim(m) {
   cursor: pointer;
   letter-spacing: 0.3px;
   text-transform: uppercase;
-  box-shadow: 2px 2px 0 #FFFFFF;
+  box-shadow: 2px 2px 0 var(--bg-elevated);
   transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
-.claim-btn:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 #FFFFFF; }
-.claim-btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 0 0 0 #FFFFFF; }
+.claim-btn:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--bg-elevated); }
+.claim-btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 0 0 0 var(--bg-elevated); }
 
-.claim-btn:disabled { background: #CBD5E1; border-color: #CBD5E1; color: white; cursor: not-allowed; box-shadow: none; }
+.claim-btn:disabled { background: var(--c-text-300); border-color: var(--c-text-300); color: white; cursor: not-allowed; box-shadow: none; }
 </style>

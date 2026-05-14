@@ -145,7 +145,7 @@ const getEvalBadgeClass = (evaluation) => {
 
 <style scoped>
 .thread-section {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   border: 1px solid rgba(226, 232, 240, 0.6);
   overflow: hidden;
@@ -155,7 +155,7 @@ const getEvalBadgeClass = (evaluation) => {
 /* Header */
 .thread-header {
   padding: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -173,29 +173,29 @@ const getEvalBadgeClass = (evaluation) => {
   border-radius: 4px;
 }
 
-.gradient-amber { background: linear-gradient(to bottom, #fbbf24, #f97316); }
+.gradient-amber { background: linear-gradient(to bottom, var(--c-warning), var(--c-heat)); }
 .gradient-emerald { background: linear-gradient(to bottom, #34d399, #14b8a6); }
-.gradient-sky { background: linear-gradient(to bottom, #38bdf8, #3b82f6); }
+.gradient-sky { background: linear-gradient(to bottom, #38bdf8, var(--c-info)); }
 .gradient-rose { background: linear-gradient(to bottom, #fb7185, #ec4899); }
-.gradient-slate { background: linear-gradient(to bottom, #94a3b8, #64748b); }
+.gradient-slate { background: linear-gradient(to bottom, var(--c-text-400), var(--c-text-500)); }
 
 .header-title {
   margin: 0;
   font-size: 14px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--c-text-600);
 }
 
 .header-subtitle {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--c-text-400);
 }
 
 .thread-count {
   padding: 4px 10px;
-  background: #f5f3ff;
-  color: #7c3aed;
+  background: var(--c-brand-soft);
+  color: var(--c-brand-hover);
   border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
@@ -216,7 +216,7 @@ const getEvalBadgeClass = (evaluation) => {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to bottom, #c4b5fd, #a78bfa, #e2e8f0);
+  background: linear-gradient(to bottom, var(--c-brand-soft), var(--c-brand), var(--border-strong));
   border-radius: 2px;
 }
 
@@ -247,28 +247,28 @@ const getEvalBadgeClass = (evaluation) => {
   transform: scale(1.15);
 }
 
-.dot-amber { background: #fbbf24; }
+.dot-amber { background: var(--c-warning); }
 .dot-emerald { background: #34d399; }
 .dot-sky { background: #38bdf8; }
 .dot-rose { background: #fb7185; }
-.dot-slate { background: #94a3b8; }
+.dot-slate { background: var(--c-text-400); }
 
 /* Review Card */
 .review-card {
   padding: 16px;
   background: linear-gradient(to bottom right, rgba(248, 250, 252, 0.8), white);
   border-radius: 12px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--bg-subtle);
   transition: all 0.2s ease;
 }
 
 .review-card:hover {
-  border-color: #e2e8f0;
+  border-color: var(--border-strong);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .review-card.selected {
-  border-color: #c4b5fd;
+  border-color: var(--c-brand-soft);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
@@ -289,16 +289,16 @@ const getEvalBadgeClass = (evaluation) => {
   font-weight: 700;
 }
 
-.badge-amber { background: #fffbeb; color: #d97706; }
-.badge-emerald { background: #ecfdf5; color: #059669; }
+.badge-amber { background: var(--c-warning-soft); color: var(--c-bronze); }
+.badge-emerald { background: var(--c-success-soft); color: var(--c-success); }
 .badge-sky { background: #f0f9ff; color: #0284c7; }
 .badge-rose { background: #fff1f2; color: #e11d48; }
-.badge-slate { background: #f8fafc; color: #64748b; }
+.badge-slate { background: var(--bg-subtle); color: var(--c-text-500); }
 
 .review-date {
   font-size: 12px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .flex-spacer {
@@ -310,7 +310,7 @@ const getEvalBadgeClass = (evaluation) => {
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--c-text-400);
 }
 
 .review-likes svg {
@@ -322,7 +322,7 @@ const getEvalBadgeClass = (evaluation) => {
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #475569;
+  color: var(--c-text-600);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -346,7 +346,7 @@ const getEvalBadgeClass = (evaluation) => {
   height: 80px;
   border-radius: 8px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--bg-subtle);
 }
 
 .review-image img {
@@ -367,13 +367,13 @@ const getEvalBadgeClass = (evaluation) => {
   border: none;
   font-size: 14px;
   font-weight: 600;
-  color: #7c3aed;
+  color: var(--c-brand-hover);
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .expand-btn:hover {
-  color: #6d28d9;
+  color: var(--c-brand-hover);
 }
 
 .expand-btn svg {
@@ -398,7 +398,7 @@ const getEvalBadgeClass = (evaluation) => {
   justify-content: center;
   gap: 8px;
   padding: 12px;
-  background: linear-gradient(to right, #8b5cf6, #a855f7);
+  background: linear-gradient(to right, #8b5cf6, var(--c-brand));
   color: white;
   border: none;
   border-radius: 12px;

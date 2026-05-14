@@ -109,7 +109,7 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  background: linear-gradient(135deg, var(--c-brand) 0%, var(--c-brand) 100%);
   color: white;
   box-shadow: 0 2px 12px rgba(147, 51, 234, 0.2);
 }
@@ -207,7 +207,7 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
 
 .connection-status.connecting {
   background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
+  color: var(--c-warning);
 }
 
 .connection-status.connecting .spin {
@@ -221,7 +221,7 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
 
 .connection-status.disconnected {
   background: rgba(248, 113, 113, 0.2);
-  color: #f87171;
+  color: var(--c-danger);
 }
 
 .device-info-banner {
@@ -229,10 +229,10 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-strong);
   font-size: 12px;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .device-details {
@@ -245,7 +245,7 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
   height: 24px;
   border: none;
   background: none;
-  color: #94a3b8;
+  color: var(--c-text-400);
   cursor: pointer;
   padding: 0;
   border-radius: 6px;
@@ -261,8 +261,8 @@ defineEmits(['back-to-list', 'toggle-menu', 'close-device-info', 'reconnect'])
 }
 
 .close-device-info:hover {
-  background: #e2e8f0;
-  color: #64748b;
+  background: var(--border-strong);
+  color: var(--c-text-500);
 }
 
 /* 반응형 디자인 */
