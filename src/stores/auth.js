@@ -156,6 +156,10 @@ export const useAuthStore = defineStore('auth', {
                     this.lastActivity = Date.now()
 
                     console.log('✅ [AuthStore] 로그인 완료:', completeUser.nickname || completeUser.username)
+
+                    // 서버에서만 받아오는 프로필 필드(profilePicture 등) 백그라운드 동기화
+                    this.syncProfileFromServer(completeUser.id)
+
                     return true
                 } else {
                     throw new Error('유효한 사용자 정보가 없습니다')
@@ -259,6 +263,29 @@ export const useAuthStore = defineStore('auth', {
 
             console.log('✅ [AuthStore] 사용자 정보 업데이트 완료')
             return true
+        },
+
+        /**
+         * 로그인 직후 호출 — 서버 전용 필드(profilePicture 등)를 백그라운드로 머지.
+         * 실패해도 인증 상태는 건드리지 않는다 (clearAuthState 호출 X).
+         * 응답 도착 시점에 이미 다른 유저로 전환되었으면 무시.
+         */
+        async syncProfileFromServer(expectedUserId) {
+            try {
+                const profileResponse = await userService.getUserProfile(expectedUserId)
+                if (!this.isAuthenticated || this.user?.id !== expectedUserId) return
+                if (profileResponse?.success && profileResponse.data) {
+                    this.user = {
+                        ...this.user,
+                        profilePicture: profileResponse.data.profilePicture,
+                        nickname: profileResponse.data.nickname || this.user.nickname,
+                        description: profileResponse.data.description || this.user.description,
+                    }
+                    authUtils.setUserInfo(this.user)
+                }
+            } catch (e) {
+                console.warn('⚠️ [AuthStore] 로그인 후 프로필 동기화 실패:', e)
+            }
         },
 
         /**

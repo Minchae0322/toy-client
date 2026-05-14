@@ -228,20 +228,26 @@ onMounted(() => {
   setupAppLifecycle()
 })
 
-watch(isLoggedIn, (newVal, oldVal) => {
-  if (newVal === oldVal) return
+// userId 기준 watch — logout(A→null) / login(null→B) / switch(A→B) 모두 처리
+watch(userId, (newId, oldId) => {
+  if (newId === oldId) return
   monitorWebSocketStatus()
-  if (newVal) {
+
+  // 기존 유저 cleanup
+  if (oldId != null) {
+    userLevel.value = null
+    userBadges.value = []
+    userBlockStore.clear()
+    unregisterFcm().catch(e => console.warn('[FCM] 해제 실패:', e))
+    webSocketService.disconnect()
+  }
+
+  // 새 유저 setup
+  if (newId != null) {
     loadHeaderRewards()
     webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
     registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
-    userBlockStore.load(userId.value)
-  } else {
-    userLevel.value = null
-    userBadges.value = []
-    unregisterFcm().catch(e => console.warn('[FCM] 해제 실패:', e))
-    webSocketService.disconnect()
-    userBlockStore.clear()
+    userBlockStore.load(newId)
   }
 })
 
