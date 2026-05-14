@@ -370,7 +370,7 @@ onMounted(() => {
 
 .my-products {
   min-height: 100vh;
-  background: var(--bg-elevated);
+  background: var(--bg-base);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: var(--text-primary);
 }
@@ -479,7 +479,7 @@ onMounted(() => {
 
 .tab-btn {
   padding: 8px 16px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
@@ -616,7 +616,7 @@ onMounted(() => {
   height: 34px;
   border-radius: 8px;
   background: var(--bg-elevated);
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border-strong);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -699,7 +699,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border-strong);
   background: var(--bg-elevated);
   border-radius: 10px;
   font-size: 13px;

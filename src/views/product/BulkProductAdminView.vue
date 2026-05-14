@@ -50,7 +50,7 @@ const bulkFrame = ref(null)
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .page-header h2 {
@@ -99,7 +99,7 @@ const bulkFrame = ref(null)
 .iframe-wrapper {
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border-strong);
   box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
 }
 

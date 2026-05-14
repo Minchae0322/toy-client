@@ -913,7 +913,7 @@ onMounted(() => {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--c-info);
 }
 
 .spinner-small {

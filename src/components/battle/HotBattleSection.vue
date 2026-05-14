@@ -295,7 +295,7 @@ const handleImageError = (battleId) => {
 }
 
 .rank-badge.second {
-  background: linear-gradient(135deg, #e8e8e8 0%, #c0c0c0 100%);
+  background: linear-gradient(135deg, var(--border-strong) 0%, #c0c0c0 100%);
   color: #ffffff;
   box-shadow: 0 2px 4px rgba(192, 192, 192, 0.3);
 }

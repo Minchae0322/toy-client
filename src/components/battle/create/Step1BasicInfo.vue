@@ -752,7 +752,7 @@ const removeImage = () => {
   padding: 6px 12px;
   background: var(--bg-elevated);
   color: var(--c-text-400);
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-strong);
   border-radius: 16px;
   font-size: 13px;
   font-weight: 500;
@@ -861,7 +861,7 @@ const removeImage = () => {
 
 .permission-option.selected .option-icon.globe {
   background: var(--c-info-soft);
-  color: #2563eb;
+  color: var(--c-info);
 }
 
 .permission-option.selected .option-icon.check-circle {

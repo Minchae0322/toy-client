@@ -216,7 +216,7 @@ const handleOverlayClick = () => {
 }
 
 .dialog-btn--confirm.dialog-btn--login:hover {
-  background: #2563EB;
+  background: var(--c-info);
 }
 
 /* danger 타입 */

@@ -93,7 +93,7 @@ const getIcon = (value) => {
    - 활성 탭은 상단 잉크 인디케이터 바
    - 중앙 정렬, 아이콘 + 한글 라벨, 절제된 트래킹 */
 .tabs {
-  background: #ffffff;
+  background: var(--bg-elevated);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -155,7 +155,7 @@ const getIcon = (value) => {
 
 /* Active — 상단 1px 잉크 인디케이터 (인스타 시그니처) */
 .tab.active {
-  color: #0A0E1A;
+  color: var(--text-primary);
 }
 
 .tab.active::before {
@@ -165,12 +165,12 @@ const getIcon = (value) => {
   left: 0;
   right: 0;
   height: 1px;
-  background: #0A0E1A;
+  background: var(--c-ink-900);
 }
 
 /* Hover (비활성) */
 .tab:hover:not(.active) {
-  color: #475569;
+  color: var(--c-text-600);
 }
 
 /* 모바일: 라벨 유지하되 살짝 축소 */

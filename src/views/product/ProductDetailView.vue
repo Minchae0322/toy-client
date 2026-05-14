@@ -864,7 +864,7 @@ watch(isLoggedIn, (val) => {
 .write-box:hover { background: var(--border-default); }
 .write-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--border-strong); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .write-placeholder { flex: 1; font-size: 14px; color: var(--c-text-400); }
-.write-action { font-size: 14px; font-weight: 600; color: var(--text-primary); padding: 6px 16px; background: var(--bg-elevated); border-radius: 20px; border: 1px solid #e5e5e5; }
+.write-action { font-size: 14px; font-weight: 600; color: var(--text-primary); padding: 6px 16px; background: var(--bg-elevated); border-radius: 20px; border: 1px solid var(--border-strong); }
 
 /* Empty / Loading */
 .empty-box { padding: 48px 24px; text-align: center; }
@@ -962,7 +962,7 @@ watch(isLoggedIn, (val) => {
 .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border-strong); }
 
 /* Actions */
-.action-bar { display: flex; gap: 0; margin-top: 16px; border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden; }
+.action-bar { display: flex; gap: 0; margin-top: 16px; border: 1px solid var(--border-strong); border-radius: 10px; overflow: hidden; }
 .action-btn { flex: 1; padding: 12px 0; background: var(--bg-elevated); border: none; border-right: 1px solid var(--border-default); font-size: 12px; font-weight: 500; color: var(--c-text-500); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: background 0.15s; }
 .action-btn:last-child { border-right: none; }
 .action-btn:hover { background: var(--bg-subtle); }

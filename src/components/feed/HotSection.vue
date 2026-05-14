@@ -473,7 +473,7 @@ onUnmounted(() => {
   flex: 0 0 180px;
   height: 260px;
   border-radius: 24px;
-  background: linear-gradient(90deg, var(--bg-subtle) 25%, #e8e8e8 50%, var(--bg-subtle) 75%);
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--border-strong) 50%, var(--bg-subtle) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

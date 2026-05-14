@@ -824,7 +824,7 @@ onMounted(() => {
   gap: 6px;
   padding: 8px 16px;
   background: var(--bg-elevated);
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-strong);
   border-radius: 20px;
   font-size: 13px;
   cursor: pointer;
@@ -843,7 +843,7 @@ onMounted(() => {
   gap: 8px;
   padding: 8px 14px;
   background: var(--bg-elevated);
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
 }
 
@@ -856,7 +856,7 @@ onMounted(() => {
 
 .sort-select {
   padding: 8px 14px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 13px;
   background: var(--bg-elevated);
@@ -1003,7 +1003,7 @@ onMounted(() => {
 .action-btn:hover:not(:disabled) { transform: scale(1.05); }
 .action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .action-btn.view { color: var(--c-text-500); }
-.action-btn.view:hover { background: #e5e5e5; }
+.action-btn.view:hover { background: var(--border-strong); }
 .action-btn.pending { color: var(--c-warning); }
 .action-btn.pending:hover:not(:disabled) { background: var(--c-warning-soft); }
 .action-btn.approve { color: var(--c-success); }
@@ -1050,7 +1050,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-strong);
   background: var(--bg-elevated);
   border-radius: 8px;
   font-size: 13px;
@@ -1206,7 +1206,7 @@ onMounted(() => {
 .form-group textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;

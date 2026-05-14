@@ -248,7 +248,7 @@ const getRandomDistance = () => {
 }
 
 .trend-badge.new {
-  background: linear-gradient(135deg, var(--c-info), #2563EB);
+  background: linear-gradient(135deg, var(--c-info), var(--c-info));
   color: white;
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
 }

@@ -56,7 +56,7 @@ defineEmits(['add-category'])
 .icon-wrapper {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, var(--c-info) 0%, #2563eb 100%);
+  background: linear-gradient(135deg, var(--c-info) 0%, var(--c-info) 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
