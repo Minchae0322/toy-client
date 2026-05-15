@@ -330,7 +330,7 @@ defineExpose({
 <style scoped>
 .category-admin {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--bg-base);
   padding: 0;
 }
 
@@ -346,8 +346,8 @@ defineExpose({
   gap: 8px;
   margin-bottom: 20px;
   padding: 6px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   width: fit-content;
 }
@@ -361,20 +361,20 @@ defineExpose({
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .type-tab:hover {
-  background: #f3f4f6;
-  color: #18181b;
+  background: var(--border-default);
+  color: var(--text-primary);
 }
 .type-tab.active {
-  background: #9333ea;
+  background: var(--c-brand);
   color: #fff;
 }
 .type-tab.active:hover {
-  background: #7e22ce;
+  background: var(--c-brand);
 }
 .type-emoji {
   font-size: 16px;

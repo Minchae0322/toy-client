@@ -338,10 +338,10 @@ const handleDelete = (commentId) => {
 </script>
 
 <style scoped>
-/* 색상: #191F28 / #4E5968 / #8B95A1 / #B0B8C1 */
+/* 색상: var(--text-primary) / var(--c-text-600) / var(--c-text-400) / var(--c-text-300) */
 
 .comment-section {
-  background: #fff;
+  background: var(--bg-elevated);
   /* iOS 홈 인디케이터 회피: env()는 PC에서 0 */
   padding: 0 20px calc(32px + env(safe-area-inset-bottom));
 }
@@ -354,13 +354,13 @@ const handleDelete = (commentId) => {
 .comment-title {
   font-size: 15px;
   font-weight: 700;
-  color: #191F28;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .count {
-  color: #8B95A1;
+  color: var(--c-text-400);
   font-weight: 500;
   margin-left: 4px;
 }
@@ -371,15 +371,15 @@ const handleDelete = (commentId) => {
   align-items: center;
   gap: 0;
   padding: 4px 4px 4px 16px;
-  background: #F7F8FA;
-  border: 1px solid #F2F4F6;
+  background: var(--bg-subtle);
+  border: 1px solid var(--bg-mute);
   border-radius: 24px;
   margin-bottom: 16px;
   transition: all 0.15s ease;
 }
 .input-bar.focused {
-  border-color: #E5E8EB;
-  background: #fff;
+  border-color: var(--border-default);
+  background: var(--bg-elevated);
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.06);
 }
 .input-bar.reply {
@@ -392,12 +392,12 @@ const handleDelete = (commentId) => {
   padding: 8px 0;
   border: none;
   font-size: 14px;
-  color: #191F28;
+  color: var(--text-primary);
   background: transparent;
   outline: none;
   letter-spacing: -0.01em;
 }
-.input::placeholder { color: #B0B8C1; }
+.input::placeholder { color: var(--c-text-300); }
 
 .btn-post {
   width: 36px;
@@ -405,16 +405,16 @@ const handleDelete = (commentId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F2F4F6;
+  background: var(--bg-mute);
   border: none;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
-  color: #B0B8C1;
+  color: var(--c-text-300);
 }
-.btn-post.active { background: #9333EA; color: #fff; }
-.btn-post.active:active { background: #7E22CE; transform: scale(0.92); }
+.btn-post.active { background: var(--c-brand); color: #ffffff; }
+.btn-post.active:active { background: var(--c-brand); transform: scale(0.92); }
 .btn-post:disabled { cursor: not-allowed; }
 .send-icon { width: 18px; height: 18px; }
 
@@ -426,7 +426,7 @@ const handleDelete = (commentId) => {
 .item {
   padding: 14px 0;
 }
-.item + .item { border-top: 1px solid #F2F4F6; }
+.item + .item { border-top: 1px solid var(--bg-mute); }
 
 .comment-row {
   display: flex;
@@ -439,7 +439,7 @@ const handleDelete = (commentId) => {
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  background: #F2F4F6;
+  background: var(--bg-mute);
 }
 .avatar.clickable { cursor: pointer; transition: opacity 0.15s ease; }
 .avatar.clickable:hover { opacity: 0.85; }
@@ -456,7 +456,7 @@ const handleDelete = (commentId) => {
 .reply-arrow {
   width: 12px;
   height: 12px;
-  color: #B0B8C1;
+  color: var(--c-text-300);
   margin-right: 2px;
   flex-shrink: 0;
 }
@@ -464,42 +464,42 @@ const handleDelete = (commentId) => {
 .author {
   font-size: 13px;
   font-weight: 600;
-  color: #191F28;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 .author.clickable { cursor: pointer; transition: color 0.15s ease; }
-.author.clickable:hover { color: #9333EA; }
+.author.clickable:hover { color: var(--c-brand); }
 .author.deleted-label {
-  color: #B0B8C1;
+  color: var(--c-text-300);
   font-weight: 500;
 }
 
 .badge {
   font-size: 10px;
   font-weight: 700;
-  color: #9333EA;
-  background: #F3E8FF;
+  color: var(--c-brand);
+  background: var(--c-brand-soft);
   padding: 2px 6px;
   border-radius: 4px;
   margin-left: 2px;
 }
 
-.dot { color: #B0B8C1; font-size: 11px; }
+.dot { color: var(--c-text-300); font-size: 11px; }
 
-.time { font-size: 12px; color: #B0B8C1; }
+.time { font-size: 12px; color: var(--c-text-300); }
 
-.edited { font-size: 11px; color: #B0B8C1; }
+.edited { font-size: 11px; color: var(--c-text-300); }
 
 .text {
   font-size: 14px;
-  color: #4E5968;
+  color: var(--c-text-600);
   line-height: 1.6;
   margin: 0;
   word-break: break-word;
   letter-spacing: -0.01em;
 }
 .text.deleted-text {
-  color: #B0B8C1;
+  color: var(--c-text-300);
   font-style: italic;
 }
 
@@ -512,11 +512,11 @@ const handleDelete = (commentId) => {
 
 .meta-btn {
   background: none; border: none; padding: 0;
-  font-size: 12px; font-weight: 500; color: #8B95A1;
+  font-size: 12px; font-weight: 500; color: var(--c-text-400);
   cursor: pointer; transition: color 0.15s ease;
 }
-.meta-btn:hover { color: #4E5968; }
-.meta-btn:active { color: #4E5968; }
+.meta-btn:hover { color: var(--c-text-600); }
+.meta-btn:active { color: var(--c-text-600); }
 .meta-btn.delete:hover { color: #E53935; }
 .meta-btn.delete:active { color: #E53935; }
 
@@ -539,7 +539,7 @@ const handleDelete = (commentId) => {
   display: flex;
   gap: 10px;
   padding-top: 10px;
-  border-top: 1px dashed #F2F4F6;
+  border-top: 1px dashed var(--bg-mute);
 }
 
 .reply-avatar {
@@ -553,18 +553,18 @@ const handleDelete = (commentId) => {
 .edit-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #E5E8EB;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   font-size: 14px;
   line-height: 1.5;
   resize: none;
   outline: none;
   font-family: inherit;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   box-sizing: border-box;
-  color: #191F28;
+  color: var(--text-primary);
 }
-.edit-input:focus { border-color: #8B95A1; background: #fff; }
+.edit-input:focus { border-color: var(--c-text-400); background: var(--bg-elevated); }
 
 .edit-actions {
   display: flex;
@@ -575,9 +575,9 @@ const handleDelete = (commentId) => {
 
 .btn-text {
   background: none; border: none; padding: 0;
-  font-size: 13px; font-weight: 600; color: #8B95A1; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--c-text-400); cursor: pointer;
 }
-.btn-text.primary { color: #191F28; }
+.btn-text.primary { color: var(--text-primary); }
 .btn-text:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* 더보기 */
@@ -586,17 +586,17 @@ const handleDelete = (commentId) => {
   width: 100%;
   margin: 12px 0 0;
   padding: 10px;
-  background: #F7F8FA;
-  border: 1px solid #F2F4F6;
+  background: var(--bg-subtle);
+  border: 1px solid var(--bg-mute);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  color: #8B95A1;
+  color: var(--c-text-400);
   cursor: pointer;
   text-align: center;
   transition: background 0.15s ease;
 }
-.btn-more:active { background: #F2F4F6; }
+.btn-more:active { background: var(--bg-mute); }
 
 /* 상태 */
 .loading,
@@ -610,8 +610,8 @@ const handleDelete = (commentId) => {
 
 .spinner {
   width: 20px; height: 20px;
-  border: 2px solid #F2F4F6;
-  border-top-color: #8B95A1;
+  border: 2px solid var(--bg-mute);
+  border-top-color: var(--c-text-400);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -619,10 +619,10 @@ const handleDelete = (commentId) => {
 
 .empty p {
   font-size: 14px; font-weight: 600;
-  color: #4E5968; margin: 0 0 4px;
+  color: var(--c-text-600); margin: 0 0 4px;
 }
 .empty span {
-  font-size: 13px; color: #B0B8C1;
+  font-size: 13px; color: var(--c-text-300);
 }
 
 .loading-more {

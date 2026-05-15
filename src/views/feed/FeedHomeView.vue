@@ -326,9 +326,9 @@ onUnmounted(() => {
 
 
 .app-container {
-  background: #ffffff;
+  background: var(--bg-base);
   min-height: 100vh;
-  color: #191F28;
+  color: var(--text-primary);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
   max-width: 100%;

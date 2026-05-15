@@ -80,7 +80,7 @@ onMounted(() => {
 .ad-slot {
   position: relative;
   width: 100%;
-  background: #fafafa;
+  background: var(--bg-subtle);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -97,8 +97,8 @@ onMounted(() => {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #a1a1aa;
-  background: rgba(255, 255, 255, 0.9);
+  color: var(--c-text-400);
+  background: var(--header-blur-bg);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -113,12 +113,12 @@ onMounted(() => {
   justify-content: center;
   background: repeating-linear-gradient(
     135deg,
-    #fafafa 0,
-    #fafafa 10px,
-    #f4f4f5 10px,
-    #f4f4f5 20px
+    var(--bg-subtle) 0,
+    var(--bg-subtle) 10px,
+    var(--bg-mute) 10px,
+    var(--bg-mute) 20px
   );
-  border: 1px dashed #d4d4d8;
+  border: 1px dashed var(--c-text-300);
 }
 .ad-slot__placeholder {
   text-align: center;
@@ -127,13 +127,13 @@ onMounted(() => {
 .ad-slot__placeholder-title {
   font-size: 13px;
   font-weight: 700;
-  color: #71717a;
+  color: var(--c-text-500);
   margin-bottom: 4px;
   letter-spacing: -0.2px;
 }
 .ad-slot__placeholder-sub {
   font-size: 11px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
 }
 </style>

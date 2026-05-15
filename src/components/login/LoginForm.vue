@@ -156,10 +156,10 @@ const handleSubmit = () => {
   align-items: center;
   gap: 8px;
   padding: 12px 14px;
-  background-color: #FEF9C3;
-  border: 1px solid #FDE68A;
+  background-color: var(--c-warning-soft);
+  border: 1px solid var(--c-warning);
   border-radius: 10px;
-  color: #92400E;
+  color: var(--c-warning);
   font-size: 13px;
   font-weight: 600;
   margin-bottom: 24px;
@@ -172,14 +172,14 @@ const handleSubmit = () => {
 .input-label {
   font-size: 13px;
   font-weight: 700;
-  color: #333D4B;
+  color: var(--text-primary);
   margin-bottom: 8px;
   display: block;
   letter-spacing: -0.1px;
 }
 .link-btn {
   font-size: 12px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   background: none;
   border: none;
   cursor: pointer;
@@ -187,7 +187,7 @@ const handleSubmit = () => {
   text-decoration: none;
   transition: color 0.15s;
 }
-.link-btn:hover { color: #6B7684; }
+.link-btn:hover { color: var(--c-text-500); }
 
 .input-wrapper { position: relative; }
 input {
@@ -195,23 +195,23 @@ input {
   padding: 12px 14px 12px 42px;
   font-size: 14px;
   font-weight: 500;
-  border: 1.5px solid #E5E8EB;
+  border: 1.5px solid var(--border-default);
   border-radius: 10px;
   transition: all 0.15s ease;
   outline: none;
-  color: #0A0E1A;
-  background: #F7F8FA;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
   font-family: inherit;
 }
-input::placeholder { color: #B0B8C1; font-weight: 400; }
+input::placeholder { color: var(--c-text-300); font-weight: 400; }
 input:focus {
-  border-color: #9333EA;
+  border-color: var(--c-brand);
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
-  background: #fff;
+  background: var(--bg-elevated);
 }
-input.error { border-color: #EF4444; background: #FEF2F2; }
+input.error { border-color: var(--c-danger); background: var(--c-danger-soft); }
 
-.input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #B0B8C1; }
+.input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--c-text-300); }
 .eye-btn {
   position: absolute;
   right: 12px;
@@ -221,15 +221,15 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
   background: none;
   font-size: 11px;
   font-weight: 700;
-  color: #8B95A1;
+  color: var(--c-text-400);
   cursor: pointer;
   padding: 4px 6px;
   border-radius: 4px;
   transition: all 0.15s;
   font-family: inherit;
 }
-.eye-btn:hover { background: #F2F4F6; color: #4E5968; }
-.error-msg { color: #EF4444; font-size: 12px; font-weight: 600; margin-top: 6px; display: block; }
+.eye-btn:hover { background: var(--bg-mute); color: var(--c-text-600); }
+.error-msg { color: var(--c-danger); font-size: 12px; font-weight: 600; margin-top: 6px; display: block; }
 
 /* 아이디 저장 토글 */
 .remember-id {
@@ -244,23 +244,23 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: #9333EA;
+  accent-color: var(--c-brand);
   flex-shrink: 0;
   margin: 0;
 }
 .remember-id-text {
   font-size: 13px;
   font-weight: 600;
-  color: #4E5968;
+  color: var(--c-text-600);
   letter-spacing: -0.1px;
 }
-.remember-id:hover .remember-id-text { color: #0A0E1A; }
+.remember-id:hover .remember-id-text { color: var(--text-primary); }
 
 /* 제출 버튼 */
 .submit-btn {
   width: 100%;
   padding: 14px;
-  background: #0A0E1A;
+  background: var(--c-ink-900);
   color: white;
   border: none;
   border-radius: 12px;
@@ -275,16 +275,16 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
   letter-spacing: -0.2px;
   transition: background 0.15s ease;
 }
-.submit-btn:hover:not(:disabled) { background: #1E293B; }
+.submit-btn:hover:not(:disabled) { background: var(--c-ink-700); }
 .submit-btn:disabled {
-  background: #F2F4F6;
-  color: #B0B8C1;
+  background: var(--bg-mute);
+  color: var(--c-text-300);
   cursor: not-allowed;
 }
 
 .error-text {
   text-align: center;
-  color: #EF4444;
+  color: var(--c-danger);
   font-size: 13px;
   font-weight: 600;
   margin-top: 16px;
@@ -293,12 +293,12 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
 /* 소셜 */
 .social-area { margin-top: 28px; }
 .divider { display: flex; align-items: center; margin-bottom: 18px; }
-.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #E5E8EB; }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border-default); }
 .divider span {
   padding: 0 14px;
   font-size: 12px;
   font-weight: 600;
-  color: #8B95A1;
+  color: var(--c-text-400);
   white-space: nowrap;
 }
 
@@ -311,17 +311,17 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
   justify-content: center;
   gap: 6px;
   padding: 11px 8px;
-  border: 1.5px solid #E5E8EB;
+  border: 1.5px solid var(--border-default);
   border-radius: 10px;
-  background: white;
+  background: var(--bg-elevated);
   font-size: 13px;
   font-weight: 600;
-  color: #333D4B;
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
 }
-.social-btn:hover { border-color: #D1D6DB; background: #F7F8FA; }
+.social-btn:hover { border-color: var(--c-text-300); background: var(--bg-subtle); }
 .social-btn img { width: 16px; }
 .social-btn.naver {
   background: #03C75A;
@@ -336,11 +336,11 @@ input.error { border-color: #EF4444; background: #FEF2F2; }
 }
 .social-btn.github:hover { background: #1b1f23; }
 .social-btn.apple {
-  background: #000000;
-  border-color: #000000;
+  background: var(--c-ink-900);
+  border-color: var(--c-ink-900);
   color: #ffffff;
 }
-.social-btn.apple:hover { background: #1a1a1a; }
+.social-btn.apple:hover { background: var(--c-ink-900); }
 
 .spinner {
   width: 16px;

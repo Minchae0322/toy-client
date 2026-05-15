@@ -555,12 +555,12 @@ onMounted(() => loadFeedDetail())
 </script>
 
 <style scoped>
-/* 색상: #0A0E1A / #191F28 / #4E5968 / #8B95A1 / #B0B8C1 / #F2F4F6 / #F7F8FA */
+/* 색상: var(--c-ink-900) / var(--text-primary) / var(--c-text-600) / var(--c-text-400) / var(--c-text-300) / var(--bg-mute) / var(--bg-subtle) */
 
 .detail-container {
-  background: #ffffff;
+  background: var(--bg-base);
   min-height: 100vh;
-  color: #191F28;
+  color: var(--text-primary);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   letter-spacing: -0.2px;
 }
@@ -572,15 +572,15 @@ onMounted(() => loadFeedDetail())
   align-items: center;
   justify-content: center;
   min-height: 60vh;
-  background: #ffffff;
+  background: var(--bg-elevated);
   gap: 16px;
 }
 
 .spinner {
   width: 28px;
   height: 28px;
-  border: 2.5px solid #F2F4F6;
-  border-top-color: #0A0E1A;
+  border: 2.5px solid var(--bg-mute);
+  border-top-color: var(--text-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -588,7 +588,7 @@ onMounted(() => loadFeedDetail())
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .error-text {
-  color: #4E5968;
+  color: var(--c-text-600);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.2px;
@@ -596,7 +596,7 @@ onMounted(() => loadFeedDetail())
 
 .btn-retry {
   padding: 11px 22px;
-  background: #0A0E1A;
+  background: var(--c-ink-900);
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -607,8 +607,8 @@ onMounted(() => loadFeedDetail())
   font-family: inherit;
   transition: background 0.18s ease, transform 0.1s ease;
 }
-.btn-retry:hover { background: #191F28; }
-.btn-retry:active { background: #333D4B; transform: scale(0.98); }
+.btn-retry:hover { background: var(--c-ink-900); }
+.btn-retry:active { background: var(--c-ink-900); transform: scale(0.98); }
 
 .detail-main {
   max-width: 1100px;
@@ -624,7 +624,7 @@ onMounted(() => loadFeedDetail())
 .main-card {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 20px;
   overflow: hidden;
   box-shadow:
@@ -633,12 +633,12 @@ onMounted(() => loadFeedDetail())
 }
 
 .image-area {
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   overflow: hidden;
 }
 
 .info-area {
-  background: #ffffff;
+  background: var(--bg-elevated);
   overflow: hidden;
 }
 
@@ -658,7 +658,7 @@ onMounted(() => loadFeedDetail())
   .info-area {
     flex: 1;
     min-width: 0;
-    border-left: 1px solid #F2F4F6;
+    border-left: 1px solid var(--bg-mute);
   }
 }
 
@@ -675,7 +675,7 @@ onMounted(() => loadFeedDetail())
 
 .comment-section-wrapper {
   margin-top: 16px;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 20px;
   overflow: hidden;
   box-shadow:
@@ -687,7 +687,7 @@ onMounted(() => loadFeedDetail())
   .comment-section-wrapper {
     margin-top: 8px;
     border-radius: 0;
-    border-top: 1px solid #F2F4F6;
+    border-top: 1px solid var(--bg-mute);
     box-shadow: none;
   }
 }

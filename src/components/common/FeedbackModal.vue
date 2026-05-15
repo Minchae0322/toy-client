@@ -162,7 +162,7 @@ const handleSubmit = async () => {
 .modal {
   width: 100%;
   max-width: 480px;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 18px;
   padding: 24px;
   box-shadow:
@@ -184,7 +184,7 @@ const handleSubmit = async () => {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.3px;
 }
 
@@ -194,20 +194,20 @@ const handleSubmit = async () => {
   padding: 4px;
   margin: -4px;
   border-radius: 8px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.close-btn:hover { background: #F2F4F6; color: #0A0E1A; }
+.close-btn:hover { background: var(--bg-mute); color: var(--text-primary); }
 
 .modal-sub {
   margin: 0 0 18px;
   font-size: 13px;
   font-weight: 500;
-  color: #8B95A1;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
   line-height: 1.5;
 }
@@ -226,18 +226,18 @@ const handleSubmit = async () => {
 .field-label {
   font-size: 13px;
   font-weight: 700;
-  color: #333D4B;
+  color: var(--text-primary);
   letter-spacing: -0.1px;
 }
 
 .char-count {
   font-size: 11px;
   font-weight: 600;
-  color: #B0B8C1;
+  color: var(--c-text-300);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.1px;
 }
-.char-count.over { color: #EF4444; }
+.char-count.over { color: var(--c-danger); }
 
 .text-input,
 .textarea-input {
@@ -245,25 +245,25 @@ const handleSubmit = async () => {
   padding: 12px 14px;
   font-size: 14px;
   font-weight: 500;
-  border: 1.5px solid #E5E8EB;
+  border: 1.5px solid var(--border-default);
   border-radius: 10px;
   outline: none;
   transition: all 0.15s ease;
-  color: #0A0E1A;
-  background: #F7F8FA;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
   font-family: inherit;
   box-sizing: border-box;
 }
 .text-input::placeholder,
-.textarea-input::placeholder { color: #B0B8C1; font-weight: 400; }
+.textarea-input::placeholder { color: var(--c-text-300); font-weight: 400; }
 .text-input:focus,
 .textarea-input:focus {
-  border-color: #9333EA;
+  border-color: var(--c-brand);
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
-  background: #fff;
+  background: var(--bg-elevated);
 }
 .text-input:disabled,
-.textarea-input:disabled { background: #F2F4F6; color: #B0B8C1; cursor: not-allowed; }
+.textarea-input:disabled { background: var(--bg-mute); color: var(--c-text-300); cursor: not-allowed; }
 
 .textarea-input {
   resize: vertical;
@@ -274,10 +274,10 @@ const handleSubmit = async () => {
 .error-msg {
   margin: -4px 0 0;
   padding: 10px 12px;
-  background: #FEF2F2;
-  border: 1px solid #FECACA;
+  background: var(--c-danger-soft);
+  border: 1px solid var(--c-danger-soft);
   border-radius: 10px;
-  color: #EF4444;
+  color: var(--c-danger);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: -0.1px;
@@ -307,20 +307,20 @@ const handleSubmit = async () => {
 }
 
 .btn-cancel {
-  background: #F2F4F6;
-  color: #4E5968;
+  background: var(--bg-mute);
+  color: var(--c-text-600);
   border: none;
 }
-.btn-cancel:hover:not(:disabled) { background: #E5E8EB; color: #191F28; }
+.btn-cancel:hover:not(:disabled) { background: var(--border-default); color: var(--text-primary); }
 .btn-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-submit {
-  background: #0A0E1A;
+  background: var(--c-ink-900);
   color: #fff;
   border: none;
 }
-.btn-submit:hover:not(:disabled) { background: #1E293B; }
-.btn-submit:disabled { background: #F2F4F6; color: #B0B8C1; cursor: not-allowed; }
+.btn-submit:hover:not(:disabled) { background: var(--c-ink-700); }
+.btn-submit:disabled { background: var(--bg-mute); color: var(--c-text-300); cursor: not-allowed; }
 
 .spinner {
   width: 14px;

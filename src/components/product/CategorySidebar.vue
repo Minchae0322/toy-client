@@ -133,10 +133,10 @@ const emit = defineEmits([
 
 <style scoped>
 .category-sidebar {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 12px;
   padding: 24px;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
   position: sticky;
   top: 24px;
   height: fit-content;
@@ -153,7 +153,7 @@ const emit = defineEmits([
 .sidebar-title {
   font-size: 14px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 16px;
   letter-spacing: -0.01em;
 }
@@ -179,20 +179,20 @@ const emit = defineEmits([
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #6B7280;
+  color: var(--c-text-500);
   letter-spacing: -0.01em;
 }
 
 .category-item:hover,
 .filter-item:hover,
 .mypage-item:hover {
-  background: #F9FAFB;
-  color: #111827;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
 }
 
 .category-item.active {
-  background: #ECFDF5;
-  color: #059669;
+  background: var(--c-success-soft);
+  color: var(--c-success);
   font-weight: 600;
 }
 
@@ -203,24 +203,24 @@ const emit = defineEmits([
 }
 
 .filter-item.active {
-  background: #ECFDF5;
-  color: #059669;
+  background: var(--c-success-soft);
+  color: var(--c-success);
   font-weight: 600;
 }
 
 .filter-item.active svg,
 .mypage-item:hover svg {
-  color: #059669;
+  color: var(--c-success);
 }
 
 .product-count {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
 .category-item.active .product-count {
-  color: #059669;
+  color: var(--c-success);
 }
 
 @media (max-width: 1024px) {

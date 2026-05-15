@@ -46,7 +46,7 @@ const emit = defineEmits(['close'])
 }
 
 .login-modal-content {
-  background: white;
+  background: var(--bg-elevated);
   padding: 40px 32px;
   border-radius: 16px;
   max-width: 420px;
@@ -74,14 +74,14 @@ const emit = defineEmits(['close'])
 .login-modal-content h3 {
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
 
 .login-modal-content p {
   font-size: 14px;
-  color: #6B7280;
+  color: var(--c-text-500);
   margin-bottom: 28px;
   line-height: 1.6;
   font-weight: 500;
@@ -110,17 +110,17 @@ const emit = defineEmits(['close'])
 }
 
 .modal-btn.secondary {
-  background: #F3F4F6;
-  color: #6B7280;
+  background: var(--border-default);
+  color: var(--c-text-500);
 }
 
 .modal-btn.secondary:hover {
-  background: #E5E7EB;
-  color: #374151;
+  background: var(--border-strong);
+  color: var(--c-text-600);
 }
 
 .modal-btn.primary {
-  background: #059669;
+  background: var(--c-success);
   color: white;
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
 }

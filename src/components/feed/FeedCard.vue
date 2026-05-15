@@ -172,11 +172,11 @@ const formatDate = (date) => feedUtils.formatDate(date);
 </script>
 
 <style scoped>
-/* 색상: #191F28 / #4E5968 / #8B95A1 / #B0B8C1 (토스 계열) */
+/* 색상: var(--text-primary) / var(--c-text-600) / var(--c-text-400) / var(--c-text-300) (토스 계열) */
 /* 간격: 4px 그리드 (4, 8, 12, 16, 20, 24) */
 
 .post-card {
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 20px;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -200,7 +200,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
 /* 이미지 영역 */
 .post-image-container {
   position: relative; width: 100%; aspect-ratio: 1 / 1;
-  overflow: hidden; background: #F7F8FA;
+  overflow: hidden; background: var(--bg-subtle);
 }
 .post-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
 .post-card:hover .post-image { transform: scale(1.02); }
@@ -219,19 +219,19 @@ const formatDate = (date) => feedUtils.formatDate(date);
 }
 .eval-dot { width: 5px; height: 5px; border-radius: 50%; }
 
-.eb-best { background-color: #FEF3C7; color: #92400e; }
-.eb-best .eval-dot { background-color: #f59e0b; }
-.eb-good { background-color: #DCFCE7; color: #166534; }
-.eb-good .eval-dot { background-color: #16a34a; }
-.eb-okay { background-color: #F3E8FF; color: #6b21a8; }
-.eb-okay .eval-dot { background-color: #9333ea; }
-.eval-bad { background-color: #FEE2E2; color: #991b1b; }
-.eval-bad .eval-dot { background-color: #ef4444; }
+.eb-best { background-color: var(--c-warning-soft); color: var(--c-warning); }
+.eb-best .eval-dot { background-color: var(--c-warning); }
+.eb-good { background-color: var(--c-success-soft); color: var(--c-success); }
+.eb-good .eval-dot { background-color: var(--c-success); }
+.eb-okay { background-color: var(--c-brand-soft); color: var(--c-brand); }
+.eb-okay .eval-dot { background-color: var(--c-brand); }
+.eval-bad { background-color: var(--c-danger-soft); color: var(--c-danger); }
+.eval-bad .eval-dot { background-color: var(--c-danger); }
 
 .trend-badge {
   display: flex; align-items: center; gap: 3px;
   padding: 5px 9px; border-radius: 999px;
-  background: #EF4444;
+  background: var(--c-danger);
   font-size: 11px; font-weight: 700; color: #ffffff;
   letter-spacing: -0.2px;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
@@ -248,8 +248,8 @@ const formatDate = (date) => feedUtils.formatDate(date);
   justify-content: center;
   padding: 4px 9px;
   border-radius: 999px;
-  background: #FFFFFF;
-  color: #DC2626;
+  background: var(--bg-elevated);
+  color: var(--c-danger);
   font-size: 10.5px;
   font-weight: 800;
   font-family: inherit;
@@ -276,7 +276,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   transition: background 0.2s;
 }
 .indicator-dot.active {
-  background: #fff;
+  background: var(--bg-elevated);
 }
 
 /* 콘텐츠 영역 */
@@ -286,33 +286,33 @@ const formatDate = (date) => feedUtils.formatDate(date);
 }
 
 .category-label {
-  font-size: 11px; font-weight: 600; color: #8B95A1;
+  font-size: 11px; font-weight: 600; color: var(--c-text-400);
   display: block; margin-bottom: 6px; letter-spacing: -0.2px;
 }
-.category-arrow { margin: 0 2px; color: #CBD5E1; }
+.category-arrow { margin: 0 2px; color: var(--c-text-300); }
 
 .primary-review {
-  font-size: 15px; font-weight: 700; color: #0A0E1A;
+  font-size: 15px; font-weight: 700; color: var(--text-primary);
   line-height: 1.5; margin-bottom: 14px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   min-height: calc(1.5em * 2);
   letter-spacing: -0.3px; word-break: keep-all;
   overflow-wrap: anywhere;
 }
-.quote { color: #C4B5FD; font-size: 15px; font-family: 'SUIT', sans-serif; margin-right: 1px; }
+.quote { color: var(--c-brand-soft); font-size: 15px; font-family: 'SUIT', sans-serif; margin-right: 1px; }
 
 /* 제품 정보 박스 */
 .product-info-box {
-  background: #F7F8FA; border-radius: 10px;
+  background: var(--bg-subtle); border-radius: 10px;
   padding: 10px 12px; margin-bottom: 12px; border: none;
 }
 .buy-place {
   display: flex; align-items: center; gap: 3px;
-  font-size: 11px; font-weight: 600; color: #9333EA; margin-bottom: 2px;
+  font-size: 11px; font-weight: 600; color: var(--c-brand); margin-bottom: 2px;
 }
 .place-icon { width: 11px; height: 11px; flex-shrink: 0; }
 .product-name {
-  font-size: 13px; font-weight: 700; color: #4E5968;
+  font-size: 13px; font-weight: 700; color: var(--c-text-600);
   margin: 2px 0 0; line-height: 1.3;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   letter-spacing: -0.01em;
@@ -320,30 +320,30 @@ const formatDate = (date) => feedUtils.formatDate(date);
 
 /* 해시태그 */
 .hashtag-group { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; min-height: 16px; }
-.tag-item { font-size: 12px; color: #8B95A1; font-weight: 500; }
+.tag-item { font-size: 12px; color: var(--c-text-400); font-weight: 500; }
 
 /* 푸터 */
 .post-footer {
   display: flex; justify-content: space-between; align-items: center;
-  padding-top: 14px; border-top: 1px solid #F2F4F6; margin-top: auto;
+  padding-top: 14px; border-top: 1px solid var(--bg-mute); margin-top: auto;
 }
 .user-block { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; }
 .user-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .nickname-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.user-nickname { font-size: 13px; font-weight: 600; color: #4E5968; letter-spacing: -0.2px; }
-.post-date { font-size: 11px; color: #B0B8C1; font-weight: 500; letter-spacing: -0.1px; }
+.user-nickname { font-size: 13px; font-weight: 600; color: var(--c-text-600); letter-spacing: -0.2px; }
+.post-date { font-size: 11px; color: var(--c-text-300); font-weight: 500; letter-spacing: -0.1px; }
 
 .interaction-group { display: flex; gap: 5px; }
 .stat-pill {
   display: flex; align-items: center; gap: 4px; padding: 6px 10px;
-  background: #F2F4F6; border-radius: 999px;
-  font-size: 12px; font-weight: 600; color: #8B95A1;
+  background: var(--bg-mute); border-radius: 999px;
+  font-size: 12px; font-weight: 600; color: var(--c-text-400);
   letter-spacing: -0.1px;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.stat-pill.active { background: #F3E8FF; color: #9333EA; }
-.stat-pill.active:hover { background: #E9D5FF; }
+.stat-pill.active { background: var(--c-brand-soft); color: var(--c-brand); }
+.stat-pill.active:hover { background: var(--c-brand-soft); }
 .icon { width: 14px; height: 14px; }
 
 /* 모바일 */
@@ -354,14 +354,14 @@ const formatDate = (date) => feedUtils.formatDate(date);
     box-shadow: none;
     padding-bottom: 8px;
     margin-bottom: 16px;
-    border-bottom: 1px solid #E5E7EB;
+    border-bottom: 1px solid var(--border-strong);
   }
   .post-card:last-child {
     margin-bottom: 0;
     border-bottom: none;
   }
   .post-card:hover { transform: none; box-shadow: none; }
-  .post-card:active { background: #F7F8FA; }
+  .post-card:active { background: var(--bg-subtle); }
 
   .post-image-container { border-radius: 0; }
   .post-card:hover .post-image { transform: none; }
@@ -395,7 +395,7 @@ const formatDate = (date) => feedUtils.formatDate(date);
   .post-footer { padding-top: 8px; border-top: none; }
   .user-avatar { width: 24px; height: 24px; }
   .user-nickname { font-size: 12px; font-weight: 600; }
-  .post-date { font-size: 11px; color: #B0B8C1; }
+  .post-date { font-size: 11px; color: var(--c-text-300); }
 
   .stat-pill { padding: 6px 11px; font-size: 12px; }
   .icon { width: 14px; height: 14px; }

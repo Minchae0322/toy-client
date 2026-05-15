@@ -239,10 +239,10 @@ defineExpose({ addToast })
   gap: 14px;
   width: 380px;
   padding: 16px 18px;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-strong);
   cursor: pointer;
   pointer-events: auto;
   position: relative;
@@ -272,38 +272,38 @@ defineExpose({ addToast })
 }
 
 .type-comment {
-  background: #EFF6FF;
-  color: #2563EB;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .type-like {
-  background: #FEF2F2;
-  color: #DC2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .type-follow {
-  background: #F0FDF4;
-  color: #16A34A;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .type-chat {
-  background: #FAF5FF;
-  color: #9333EA;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .type-system {
-  background: #F5F5F5;
-  color: #525252;
+  background: var(--bg-subtle);
+  color: var(--c-text-600);
 }
 
 .type-battle {
-  background: #FFFBEB;
-  color: #D97706;
+  background: var(--c-warning-soft);
+  color: var(--c-bronze);
 }
 
 .type-default {
-  background: #F5F5F5;
-  color: #525252;
+  background: var(--bg-subtle);
+  color: var(--c-text-600);
 }
 
 /* 내용 */
@@ -323,20 +323,20 @@ defineExpose({ addToast })
 .toast-type-label {
   font-size: 11px;
   font-weight: 600;
-  color: #737373;
+  color: var(--c-text-500);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
 .toast-time {
   font-size: 11px;
-  color: #a3a3a3;
+  color: var(--c-text-400);
 }
 
 .toast-title {
   font-size: 14px;
   font-weight: 600;
-  color: #171717;
+  color: var(--text-primary);
   margin: 0 0 3px 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -347,7 +347,7 @@ defineExpose({ addToast })
 
 .toast-body {
   font-size: 13px;
-  color: #525252;
+  color: var(--c-text-600);
   margin: 0;
   line-height: 1.5;
   display: -webkit-box;
@@ -380,8 +380,8 @@ defineExpose({ addToast })
 }
 
 .toast-close:hover {
-  background: #f5f5f5;
-  color: #737373;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
 }
 
 /* 프로그레스 바 (단색) */
@@ -390,7 +390,7 @@ defineExpose({ addToast })
   bottom: 0;
   left: 0;
   height: 3px;
-  background: #9333EA;
+  background: var(--c-brand);
   animation: progress linear forwards;
   border-radius: 0 0 0 12px;
 }

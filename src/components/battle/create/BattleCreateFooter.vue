@@ -46,7 +46,7 @@ defineEmits(['previous', 'next']);
 
 <style scoped>
 .action-footer {
-  background: white;
+  background: var(--bg-elevated);
   border-top: 1px solid #F0F0F3;
   /* iOS 홈 인디케이터 회피 */
   padding: 24px 40px calc(24px + env(safe-area-inset-bottom));
@@ -65,7 +65,7 @@ defineEmits(['previous', 'next']);
 
 .step-info {
   font-size: 14px;
-  color: #6B7280;
+  color: var(--c-text-500);
 }
 
 .action-buttons {
@@ -75,10 +75,10 @@ defineEmits(['previous', 'next']);
 
 .btn-secondary {
   padding: 10px 20px;
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  color: #6B7280;
+  color: var(--c-text-500);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -86,13 +86,13 @@ defineEmits(['previous', 'next']);
 }
 
 .btn-secondary:hover {
-  border-color: #9CA3AF;
-  color: #1A1A1A;
+  border-color: var(--c-text-400);
+  color: var(--text-primary);
 }
 
 .btn-primary {
   padding: 10px 24px;
-  background: #1A1A1A;
+  background: var(--c-ink-900);
   border: none;
   border-radius: 8px;
   color: white;
@@ -103,7 +103,7 @@ defineEmits(['previous', 'next']);
 }
 
 .btn-primary:hover {
-  background: #000000;
+  background: var(--c-ink-900);
   transform: translateY(-1px);
 }
 /* 모바일 sticky hover 차단 */
@@ -114,14 +114,14 @@ defineEmits(['previous', 'next']);
 }
 
 .btn-primary:disabled {
-  background: #E5E7EB;
-  color: #9CA3AF;
+  background: var(--border-strong);
+  color: var(--c-text-400);
   cursor: not-allowed;
   transform: none;
 }
 
 .btn-primary:disabled:not(.loading) {
-  background: #E5E7EB;
+  background: var(--border-strong);
 }
 
 .btn-primary:has(.loading-spinner) {
@@ -129,7 +129,7 @@ defineEmits(['previous', 'next']);
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #4B5563;
+  background: var(--c-text-600);
 }
 
 .loading-spinner {

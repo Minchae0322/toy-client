@@ -265,13 +265,13 @@ defineExpose({ setCommentSubmitting })
 
 <style scoped>
 .product-card-v1 {
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.25s ease;
   position: relative;
-  border: 1.5px solid #efefef;
+  border: 1.5px solid var(--border-default);
   display: flex;
   flex-direction: column;
   max-width: 100%;
@@ -308,7 +308,7 @@ defineExpose({ setCommentSubmitting })
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #ffffff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   animation: popIn 0.25s ease;
 }
@@ -332,19 +332,19 @@ defineExpose({ setCommentSubmitting })
 }
 
 .selected-rank-badge.rank-1 {
-  background: #f59e0b;
+  background: var(--c-warning);
 }
 
 .selected-rank-badge.rank-2 {
-  background: #6b7280;
+  background: var(--c-text-500);
 }
 
 .selected-rank-badge.rank-3 {
-  background: #ea580c;
+  background: var(--c-heat);
 }
 
 .selected-rank-badge.single-pick {
-  background: #9333ea;
+  background: var(--c-brand);
 }
 
 .selected-rank-badge .pick-text {
@@ -359,19 +359,19 @@ defineExpose({ setCommentSubmitting })
 }
 
 .product-card-v1.selected:has(.rank-1) {
-  border-color: #f59e0b;
+  border-color: var(--c-warning);
 }
 
 .product-card-v1.selected:has(.rank-2) {
-  border-color: #6b7280;
+  border-color: var(--c-text-500);
 }
 
 .product-card-v1.selected:has(.rank-3) {
-  border-color: #ea580c;
+  border-color: var(--c-heat);
 }
 
 .product-card-v1.selected:has(.single-pick) {
-  border-color: #9333ea;
+  border-color: var(--c-brand);
 }
 
 .rank-indicator {
@@ -381,32 +381,32 @@ defineExpose({ setCommentSubmitting })
   z-index: 10;
   width: 30px;
   height: 30px;
-  background: rgba(255, 255, 255, 0.97);
+  background: var(--header-blur-bg);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  color: #555;
+  color: var(--c-text-600);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
 }
 
 .rank-indicator.rank-pos-1 {
   background: #e8a830;
-  color: #fff;
+  color: #ffffff;
   box-shadow: 0 3px 12px rgba(232, 168, 48, 0.35);
 }
 
 .rank-indicator.rank-pos-2 {
   background: #8c9bb0;
-  color: #fff;
+  color: #ffffff;
   box-shadow: 0 3px 12px rgba(140, 155, 176, 0.35);
 }
 
 .rank-indicator.rank-pos-3 {
   background: #d4784a;
-  color: #fff;
+  color: #ffffff;
   box-shadow: 0 3px 12px rgba(212, 120, 74, 0.35);
 }
 
@@ -414,7 +414,7 @@ defineExpose({ setCommentSubmitting })
 .img-box {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: #f5f5f7;
+  background: var(--bg-subtle);
   overflow: hidden;
   cursor: zoom-in;
 }
@@ -441,8 +441,8 @@ defineExpose({ setCommentSubmitting })
   right: 10px;
   z-index: 15;
   padding: 4px 8px;
-  background: #9333ea;
-  color: #fff;
+  background: var(--c-brand);
+  color: #ffffff;
   font-size: 10px;
   font-weight: 700;
   border-radius: 6px;
@@ -502,7 +502,7 @@ defineExpose({ setCommentSubmitting })
 
 .brand {
   font-size: 11px;
-  color: #999;
+  color: var(--c-text-400);
   margin: 0 0 2px;
 }
 
@@ -516,7 +516,7 @@ defineExpose({ setCommentSubmitting })
 .name {
   font-size: 18px;
   font-weight: 700;
-  color: #222;
+  color: var(--text-primary);
   margin: 0;
   line-height: 1.35;
   display: -webkit-box;
@@ -528,7 +528,7 @@ defineExpose({ setCommentSubmitting })
 }
 
 .name.unavailable {
-  color: #6B7280;
+  color: var(--c-text-500);
   text-decoration: line-through;
 }
 
@@ -545,7 +545,7 @@ defineExpose({ setCommentSubmitting })
   margin-bottom: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #9333ea;
+  color: var(--c-brand);
   letter-spacing: -0.2px;
 }
 
@@ -578,56 +578,56 @@ defineExpose({ setCommentSubmitting })
 
 /* 1위 - 골드 */
 .rank-chip.rank-1 {
-  border: 1.5px solid #fde68a;
-  background: #fffbeb;
-  color: #b45309;
+  border: 1.5px solid var(--c-warning);
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
 }
 
 .rank-chip.rank-1:hover:not(:disabled) {
-  background: #fef3c7;
-  border-color: #fcd34d;
+  background: var(--c-warning-soft);
+  border-color: var(--c-warning);
 }
 
 .rank-chip.rank-1.active {
-  background: #f59e0b;
-  border-color: #f59e0b;
-  color: #fff;
+  background: var(--c-warning);
+  border-color: var(--c-warning);
+  color: #ffffff;
 }
 
 /* 2위 - 실버 */
 .rank-chip.rank-2 {
-  border: 1.5px solid #d1d5db;
-  background: #f9fafb;
-  color: #4b5563;
+  border: 1.5px solid var(--c-text-300);
+  background: var(--bg-subtle);
+  color: var(--c-text-600);
 }
 
 .rank-chip.rank-2:hover:not(:disabled) {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: var(--border-default);
+  border-color: var(--c-text-400);
 }
 
 .rank-chip.rank-2.active {
-  background: #6b7280;
-  border-color: #6b7280;
-  color: #fff;
+  background: var(--c-text-500);
+  border-color: var(--c-text-500);
+  color: #ffffff;
 }
 
 /* 3위 - 브론즈 */
 .rank-chip.rank-3 {
-  border: 1.5px solid #fed7aa;
-  background: #fff7ed;
-  color: #c2410c;
+  border: 1.5px solid var(--c-heat-soft);
+  background: var(--c-heat-soft);
+  color: var(--c-heat);
 }
 
 .rank-chip.rank-3:hover:not(:disabled) {
-  background: #ffedd5;
+  background: var(--c-heat-soft);
   border-color: #fdba74;
 }
 
 .rank-chip.rank-3.active {
-  background: #ea580c;
-  border-color: #ea580c;
-  color: #fff;
+  background: var(--c-heat);
+  border-color: var(--c-heat);
+  color: #ffffff;
 }
 
 .rank-chip:disabled {
@@ -642,12 +642,12 @@ defineExpose({ setCommentSubmitting })
   padding: 11px 14px;
   border-radius: 10px;
   border: none;
-  background: #9333ea;
+  background: var(--c-brand);
   cursor: pointer;
   font-family: inherit;
   font-size: 13px;
   font-weight: 800;
-  color: #fff;
+  color: #ffffff;
   letter-spacing: -0.3px;
   transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   display: flex;
@@ -678,7 +678,7 @@ defineExpose({ setCommentSubmitting })
 }
 
 .vote-btn:hover:not(:disabled) {
-  background: #7c3aed;
+  background: var(--c-brand-hover);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(147, 51, 234, 0.36), 0 2px 4px rgba(147, 51, 234, 0.18);
 }
@@ -717,8 +717,8 @@ defineExpose({ setCommentSubmitting })
   gap: 8px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #faf5ff;
-  border: 1px solid #f3e8ff;
+  background: var(--c-brand-soft);
+  border: 1px solid var(--c-brand-soft);
   overflow: hidden;
   margin-top: 8px;
   font-size: 13px;
@@ -732,7 +732,7 @@ defineExpose({ setCommentSubmitting })
   left: 0;
   bottom: 0;
   width: var(--vote-fill, 0%);
-  background: #e9d5ff;
+  background: var(--c-brand-soft);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
 }
@@ -743,47 +743,47 @@ defineExpose({ setCommentSubmitting })
 }
 
 .vote-rate-label {
-  color: #7e22ce;
+  color: var(--c-brand);
   font-weight: 600;
   letter-spacing: -0.2px;
 }
 
 .vote-rate-pct {
-  color: #6b21a8;
+  color: var(--c-brand);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
 /* 이미 투표함 — 선택된 상태로 식별 */
 .vote-btn.active {
-  background: #faf5ff;
-  border: 1.5px solid #9333ea;
-  color: #9333ea;
+  background: var(--c-brand-soft);
+  border: 1.5px solid var(--c-brand);
+  color: var(--c-brand);
   box-shadow: 0 1px 2px rgba(147, 51, 234, 0.08);
   font-weight: 700;
 }
 
 .vote-btn.active::before {
-  background: #e9d5ff;
+  background: var(--c-brand-soft);
 }
 
 .vote-btn.active:hover:not(:disabled) {
-  background: #f3e8ff;
-  border-color: #7c3aed;
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(147, 51, 234, 0.16);
 }
 
 /* 투표 마감 */
 .vote-btn.ended {
-  background: #f3f4f6;
-  color: #94a3b8;
+  background: var(--border-default);
+  color: var(--c-text-400);
   box-shadow: none;
   font-weight: 700;
 }
 
 .vote-btn.ended::before {
-  background: #e5e7eb;
+  background: var(--border-strong);
 }
 
 .vote-btn:disabled {
@@ -956,7 +956,7 @@ defineExpose({ setCommentSubmitting })
   background: rgba(255, 255, 255, 0.15);
   border: none;
   border-radius: 50%;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
   transition: background 0.2s;
 }

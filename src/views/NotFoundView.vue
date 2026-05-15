@@ -56,7 +56,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 66px);
-  background: #ffffff;
+  background: var(--bg-elevated);
   padding: 2rem;
 }
 
@@ -85,14 +85,14 @@ onUnmounted(() => {
 .circle-lg {
   width: 200px;
   height: 200px;
-  background: #9933EA;
+  background: var(--c-brand);
   animation: pulse 3s ease-in-out infinite;
 }
 
 .circle-md {
   width: 140px;
   height: 140px;
-  background: #9933EA;
+  background: var(--c-brand);
   opacity: 0.18;
   animation: pulse 3s ease-in-out 0.5s infinite;
 }
@@ -100,7 +100,7 @@ onUnmounted(() => {
 .circle-sm {
   width: 90px;
   height: 90px;
-  background: #9933EA;
+  background: var(--c-brand);
   opacity: 0.25;
   animation: pulse 3s ease-in-out 1s infinite;
 }
@@ -109,7 +109,7 @@ onUnmounted(() => {
   position: relative;
   font-size: 64px;
   font-weight: 700;
-  color: #9933EA;
+  color: var(--c-brand);
   letter-spacing: -2px;
   z-index: 1;
 }
@@ -129,7 +129,7 @@ onUnmounted(() => {
 .title {
   font-size: 22px;
   font-weight: 700;
-  color: #111111;
+  color: var(--text-primary);
   margin: 0 0 0.75rem;
 }
 
@@ -146,7 +146,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 12px 28px;
-  background: #9933EA;
+  background: var(--c-brand);
   color: #ffffff;
   font-size: 15px;
   font-weight: 600;

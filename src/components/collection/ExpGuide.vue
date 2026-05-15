@@ -37,8 +37,8 @@ const expRules = [
 
 <style scoped>
 .section-card {
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 14px;
   padding: 18px;
   margin-bottom: 16px;
@@ -50,7 +50,7 @@ const expRules = [
 .section-title {
   font-size: 15px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin-bottom: 16px;
   letter-spacing: -0.2px;
 }
@@ -70,7 +70,7 @@ const expRules = [
   align-items: center;
   gap: 12px;
   padding: 12px 0;
-  border-top: 1px solid #F1F5F9;
+  border-top: 1px solid var(--bg-subtle);
 }
 
 .exp-rule-item:first-child {
@@ -82,8 +82,8 @@ const expRules = [
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #F3E8FF;
-  color: #9333EA;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -93,7 +93,7 @@ const expRules = [
 .exp-rule-action {
   flex: 1;
   font-size: 14px;
-  color: #334155;
+  color: var(--c-text-600);
   font-weight: 600;
   letter-spacing: -0.1px;
   min-width: 0;
@@ -102,7 +102,7 @@ const expRules = [
 .exp-rule-value {
   font-size: 13px;
   font-weight: 800;
-  color: #9333EA;
+  color: var(--c-brand);
   white-space: nowrap;
   letter-spacing: -0.2px;
 }

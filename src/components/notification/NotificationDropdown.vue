@@ -444,18 +444,18 @@ onUnmounted(() => {
 }
 
 .notification-trigger:hover {
-  background: #f5f3ff;
+  background: var(--c-brand-soft);
 }
 
 .notification-icon {
   width: 17px;
   height: 17px;
-  color: #6b7280;
+  color: var(--c-text-500);
   transition: color 0.15s ease;
 }
 
 .notification-trigger:hover .notification-icon {
-  color: #7c3aed;
+  color: var(--c-brand-hover);
 }
 
 /* 배지 */
@@ -466,7 +466,7 @@ onUnmounted(() => {
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
-  background: #dc2626;
+  background: var(--c-danger);
   color: white;
   font-size: 11px;
   font-weight: 700;
@@ -475,7 +475,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   line-height: 1;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--bg-elevated);
 }
 
 /* 드롭다운 패널 */
@@ -485,10 +485,10 @@ onUnmounted(() => {
   right: 0;
   width: 400px;
   max-height: 560px;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-strong);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -498,7 +498,7 @@ onUnmounted(() => {
 /* 헤더 */
 .dropdown-header {
   padding: 0;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .header-top {
@@ -511,7 +511,7 @@ onUnmounted(() => {
 .dropdown-title {
   font-size: 18px;
   font-weight: 700;
-  color: #171717;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
@@ -526,9 +526,9 @@ onUnmounted(() => {
   align-items: center;
   gap: 5px;
   padding: 6px 12px;
-  border: 1px solid #e5e5e5;
-  background: #ffffff;
-  color: #525252;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--c-text-600);
   font-size: 12px;
   font-weight: 500;
   border-radius: 6px;
@@ -537,9 +537,9 @@ onUnmounted(() => {
 }
 
 .action-btn:hover {
-  background: #f5f5f5;
+  background: var(--bg-subtle);
   border-color: #d4d4d4;
-  color: #262626;
+  color: var(--text-primary);
 }
 
 .action-btn:disabled {
@@ -548,20 +548,20 @@ onUnmounted(() => {
 }
 
 .action-btn.danger:hover {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #dc2626;
+  background: var(--c-danger-soft);
+  border-color: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .action-btn.close {
   padding: 6px;
   border: none;
-  background: #f5f5f5;
+  background: var(--bg-subtle);
 }
 
 .action-btn.close:hover {
-  background: #e5e5e5;
-  color: #171717;
+  background: var(--border-strong);
+  color: var(--text-primary);
 }
 
 .action-icon {
@@ -578,7 +578,7 @@ onUnmounted(() => {
   margin: 8px 20px 0 20px;
   font-size: 13px;
   font-weight: 500;
-  color: #9333EA;
+  color: var(--c-brand);
 }
 
 /* 필터 탭 */
@@ -596,7 +596,7 @@ onUnmounted(() => {
   padding: 10px 16px;
   border: none;
   background: none;
-  color: #737373;
+  color: var(--c-text-500);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -605,11 +605,11 @@ onUnmounted(() => {
 }
 
 .filter-tab:hover {
-  color: #262626;
+  color: var(--text-primary);
 }
 
 .filter-tab.active {
-  color: #171717;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -620,7 +620,7 @@ onUnmounted(() => {
   left: 16px;
   right: 16px;
   height: 2px;
-  background: #171717;
+  background: var(--text-primary);
   border-radius: 1px;
 }
 
@@ -631,7 +631,7 @@ onUnmounted(() => {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  background: #9333EA;
+  background: var(--c-brand);
   color: #ffffff;
   font-size: 11px;
   font-weight: 600;
@@ -655,7 +655,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: background 0.15s ease;
   position: relative;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid var(--bg-subtle);
 }
 
 .notification-item:last-child {
@@ -663,15 +663,15 @@ onUnmounted(() => {
 }
 
 .notification-item:hover {
-  background: #fafafa;
+  background: var(--bg-subtle);
 }
 
 .notification-item.unread {
-  background: #FAF5FF;
+  background: var(--c-brand-soft);
 }
 
 .notification-item.unread:hover {
-  background: #F3E8FF;
+  background: var(--c-brand-soft);
 }
 
 /* 타입 아이콘 */
@@ -691,38 +691,38 @@ onUnmounted(() => {
 }
 
 .type-comment {
-  background: #EFF6FF;
-  color: #2563EB;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .type-like {
-  background: #FEF2F2;
-  color: #DC2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .type-follow {
-  background: #F0FDF4;
-  color: #16A34A;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .type-chat {
-  background: #FAF5FF;
-  color: #9333EA;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .type-system {
-  background: #F5F5F5;
-  color: #525252;
+  background: var(--bg-subtle);
+  color: var(--c-text-600);
 }
 
 .type-battle {
-  background: #FFFBEB;
-  color: #D97706;
+  background: var(--c-warning-soft);
+  color: var(--c-bronze);
 }
 
 .type-default {
-  background: #F5F5F5;
-  color: #525252;
+  background: var(--bg-subtle);
+  color: var(--c-text-600);
 }
 
 /* 알림 내용 */
@@ -735,7 +735,7 @@ onUnmounted(() => {
 .notification-title {
   font-size: 14px;
   font-weight: 500;
-  color: #171717;
+  color: var(--text-primary);
   margin: 0 0 3px 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -746,7 +746,7 @@ onUnmounted(() => {
 
 .notification-title :deep(.actor-name) {
   font-weight: 700;
-  color: #171717;
+  color: var(--text-primary);
 }
 
 .notification-item.unread .notification-title {
@@ -759,7 +759,7 @@ onUnmounted(() => {
 
 .notification-body {
   font-size: 13px;
-  color: #525252;
+  color: var(--c-text-600);
   margin: 0 0 6px 0;
   line-height: 1.5;
   display: -webkit-box;
@@ -778,7 +778,7 @@ onUnmounted(() => {
 }
 
 .notification-type-label {
-  color: #9333EA;
+  color: var(--c-brand);
   font-weight: 600;
 }
 
@@ -800,7 +800,7 @@ onUnmounted(() => {
 }
 
 .notification-time {
-  color: #a3a3a3;
+  color: var(--c-text-400);
 }
 
 /* 삭제 버튼 */
@@ -832,8 +832,8 @@ onUnmounted(() => {
 }
 
 .delete-btn:hover {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 /* 빈 상태 */
@@ -861,13 +861,13 @@ onUnmounted(() => {
 .empty-title {
   font-size: 14px;
   font-weight: 600;
-  color: #525252;
+  color: var(--c-text-600);
   margin: 0 0 4px 0;
 }
 
 .empty-desc {
   font-size: 13px;
-  color: #a3a3a3;
+  color: var(--c-text-400);
   margin: 0;
 }
 
@@ -875,8 +875,8 @@ onUnmounted(() => {
 .loading-spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid #e5e5e5;
-  border-top-color: #9333EA;
+  border: 3px solid var(--border-strong);
+  border-top-color: var(--c-brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 12px;
@@ -891,7 +891,7 @@ onUnmounted(() => {
 
 .loading-text {
   font-size: 13px;
-  color: #a3a3a3;
+  color: var(--c-text-400);
 }
 
 .loading-more {
@@ -904,7 +904,7 @@ onUnmounted(() => {
   text-align: center;
   padding: 16px;
   font-size: 12px;
-  color: #a3a3a3;
+  color: var(--c-text-400);
 }
 
 @keyframes spin {

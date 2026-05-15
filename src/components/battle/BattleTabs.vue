@@ -93,7 +93,7 @@ const formatCount = (count) => {
 }
 
 .tab-button:hover {
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 .tab-button.is-active {

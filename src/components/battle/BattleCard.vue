@@ -52,7 +52,15 @@
       </div>
 
       <div v-if="!hideCreator" class="card-footer">
-        <div class="creator">
+        <div
+            class="creator"
+            :class="{ 'is-clickable': creatorUserId != null }"
+            role="link"
+            tabindex="0"
+            @click.stop.prevent="goToCreator"
+            @keydown.enter.stop.prevent="goToCreator"
+            @keydown.space.stop.prevent="goToCreator"
+        >
           <div v-if="creatorProfileImage" class="creator-avatar">
             <img :src="creatorProfileImage" :alt="creatorNickname" @error="handleAvatarError">
           </div>
@@ -72,8 +80,11 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
+
+const router = useRouter()
 
 const props = defineProps({
   battle: {
@@ -187,6 +198,14 @@ const primaryBadgeId = computed(() => {
   return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
 })
 
+const creatorUserId = computed(() => props.battle?.creatorUserInfo?.userId ?? props.battle?.creatorId ?? null)
+
+const goToCreator = () => {
+  const userId = creatorUserId.value
+  if (userId == null) return
+  router.push({ name: 'UserFeedList', params: { userId: String(userId) } })
+}
+
 const dDay = computed(() => {
   if (!props.battle?.endDate) return null
   const diff = new Date(props.battle.endDate) - new Date()
@@ -268,9 +287,9 @@ const daysLeftText = computed(() => {
 
 <style scoped>
 .battle-card {
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 16px;
-  border: 1px solid #F2F4F6;
+  border: 1px solid var(--bg-mute);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -279,7 +298,7 @@ const daysLeftText = computed(() => {
 }
 
 .battle-card:hover {
-  border-color: #E5E8EB;
+  border-color: var(--border-default);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
@@ -287,7 +306,7 @@ const daysLeftText = computed(() => {
 .card-thumbnail {
   position: relative;
   aspect-ratio: 16 / 10;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   overflow: hidden;
 }
 
@@ -303,7 +322,7 @@ const daysLeftText = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #B0B8C1;
+  color: var(--c-text-300);
 }
 
 /* 배지 */
@@ -323,28 +342,28 @@ const daysLeftText = computed(() => {
 }
 
 .status-badge.active {
-  background: #10b981;
-  color: #fff;
+  background: var(--c-success);
+  color: #ffffff;
 }
 
 .status-badge.scheduled {
-  background: #f59e0b;
-  color: #fff;
+  background: var(--c-warning);
+  color: #ffffff;
 }
 
 .status-badge.ended {
-  background: #8B95A1;
-  color: #fff;
+  background: var(--c-text-400);
+  color: #ffffff;
 }
 
 .status-badge.suspended {
-  background: #ef4444;
-  color: #fff;
+  background: var(--c-danger);
+  color: #ffffff;
 }
 
 .status-badge.draft {
-  background: #E5E8EB;
-  color: #8B95A1;
+  background: var(--border-default);
+  color: var(--c-text-400);
 }
 
 .new-badge {
@@ -353,8 +372,8 @@ const daysLeftText = computed(() => {
   justify-content: center;
   padding: 3px 8px;
   border-radius: 999px;
-  background: #FFFFFF;
-  color: #DC2626;
+  background: var(--bg-elevated);
+  color: var(--c-danger);
   font-size: 10px;
   font-weight: 800;
   font-family: inherit;
@@ -368,8 +387,8 @@ const daysLeftText = computed(() => {
   font-size: 10px;
   font-weight: 600;
   border-radius: 6px;
-  background: #f3e8ff;
-  color: #9333EA;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .dday-badge {
@@ -383,13 +402,13 @@ const daysLeftText = computed(() => {
 }
 
 .dday-badge.normal {
-  background: rgba(255, 255, 255, 0.95);
-  color: #4E5968;
+  background: var(--header-blur-bg);
+  color: var(--c-text-600);
 }
 
 .dday-badge.urgent {
-  background: #ef4444;
-  color: #fff;
+  background: var(--c-danger);
+  color: #ffffff;
 }
 
 /* 컨텐츠 */
@@ -399,14 +418,14 @@ const daysLeftText = computed(() => {
 
 .category {
   font-size: 12px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   margin: 0 0 4px;
 }
 
 .title {
   font-size: 16px;
   font-weight: 700;
-  color: #191F28;
+  color: var(--text-primary);
   line-height: 1.5;
   margin: 0 0 10px;
   display: -webkit-box;
@@ -422,7 +441,7 @@ const daysLeftText = computed(() => {
   align-items: baseline;
   gap: 8px;
   font-size: 12px;
-  color: #8B95A1;
+  color: var(--c-text-400);
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
 }
@@ -436,24 +455,24 @@ const daysLeftText = computed(() => {
 .stats .stat-num {
   font-size: 12.5px;
   font-weight: 600;
-  color: #6B7684;
+  color: var(--c-text-500);
   letter-spacing: -0.02em;
 }
 
 .stats .stat-label {
   font-weight: 400;
-  color: #8B95A1;
+  color: var(--c-text-400);
 }
 
 .stats .stat-dot {
-  color: #E5E8EB;
+  color: var(--border-default);
   font-weight: 600;
 }
 
 .stats .days-left {
   margin-left: auto;
   font-size: 12px;
-  color: #9333EA;
+  color: var(--c-brand);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -465,13 +484,29 @@ const daysLeftText = computed(() => {
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #F2F4F6;
+  border-top: 1px solid var(--bg-mute);
 }
 
 .creator {
   display: flex;
   align-items: center;
   gap: 8px;
+  border-radius: 6px;
+  outline: none;
+}
+
+.creator.is-clickable {
+  cursor: pointer;
+}
+
+.creator.is-clickable:hover .creator-name {
+  color: var(--c-text-600);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.creator.is-clickable:focus-visible {
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.4);
 }
 
 .creator-avatar {
@@ -479,7 +514,7 @@ const daysLeftText = computed(() => {
   height: 20px;
   border-radius: 50%;
   overflow: hidden;
-  background: #E5E8EB;
+  background: var(--border-default);
 }
 
 .creator-avatar img {
@@ -490,7 +525,7 @@ const daysLeftText = computed(() => {
 
 .creator-name {
   font-size: 12px;
-  color: #8B95A1;
+  color: var(--c-text-400);
 }
 
 .action-hint {
@@ -499,7 +534,7 @@ const daysLeftText = computed(() => {
   gap: 2px;
   font-size: 12px;
   font-weight: 500;
-  color: #9333EA;
+  color: var(--c-brand);
   opacity: 0;
   transition: opacity 0.2s;
 }

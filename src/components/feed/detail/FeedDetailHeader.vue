@@ -104,10 +104,10 @@ const handleAction = (action) => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.97);
+  background: var(--header-blur-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid #F2F4F6;
+  border-bottom: 1px solid var(--bg-mute);
   padding: 0 12px;
   height: 52px;
   display: flex;
@@ -125,18 +125,18 @@ const handleAction = (action) => {
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  color: #191F28;
+  color: var(--text-primary);
   transition: background 0.15s ease;
   flex-shrink: 0;
 }
-.btn-back:active { background: #F2F4F6; }
+.btn-back:active { background: var(--bg-mute); }
 .back-icon { width: 22px; height: 22px; }
 
 .header-title {
   flex: 1;
   font-size: 16px;
   font-weight: 700;
-  color: #191F28;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   margin: 0;
   padding-left: 4px;
@@ -159,10 +159,10 @@ const handleAction = (action) => {
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  color: #4E5968;
+  color: var(--c-text-600);
   transition: all 0.15s ease;
 }
-.action-btn:active { background: #F2F4F6; }
+.action-btn:active { background: var(--bg-mute); }
 .action-icon { width: 20px; height: 20px; }
 
 /* 드롭다운 메뉴 */
@@ -176,9 +176,9 @@ const handleAction = (action) => {
   position: absolute;
   top: 48px;
   right: 12px;
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 12px;
-  border: 1px solid #F2F4F6;
+  border: 1px solid var(--bg-mute);
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
   min-width: 160px;
   padding: 4px;
@@ -196,20 +196,20 @@ const handleAction = (action) => {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #191F28;
+  color: var(--text-primary);
   cursor: pointer;
   transition: background 0.15s ease;
   text-align: left;
 }
-.menu-item:active { background: #F2F4F6; }
+.menu-item:active { background: var(--bg-mute); }
 .menu-item--danger { color: #E53935; }
-.menu-item--danger:active { background: #FFF5F5; }
+.menu-item--danger:active { background: var(--c-danger-soft); }
 
 .menu-tag {
   margin-left: auto;
   padding: 2px 6px;
   border-radius: 4px;
-  background: #FEE2E2;
+  background: var(--c-danger-soft);
   color: #B91C1C;
   font-size: 10px;
   font-weight: 700;
@@ -218,7 +218,7 @@ const handleAction = (action) => {
 
 .menu-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
-.menu-divider { height: 1px; background: #F2F4F6; margin: 4px 0; }
+.menu-divider { height: 1px; background: var(--bg-mute); margin: 4px 0; }
 
 /* 메뉴 트랜지션 */
 .menu-enter-active { transition: opacity 0.15s ease; }

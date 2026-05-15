@@ -262,9 +262,9 @@ onUnmounted(() => {
 
 <style scoped>
 .app-container {
-  background: #ffffff;
+  background: var(--bg-base);
   min-height: 100vh;
-  color: #0A0E1A;
+  color: var(--text-primary);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   display: flex;
   max-width: 100%;
@@ -329,7 +329,7 @@ onUnmounted(() => {
 
 /* ============ 탭 네비게이션 ============
    프로필 하단 divider가 바로 위에 있으므로 탭은 자체 top border 없이
-   sticky 시 bottom border(`#F1F3F6`)만 유지 */
+   sticky 시 bottom border(`var(--border-default)`)만 유지 */
 .tab-nav { }
 
 /* ============ 피드 영역 ============

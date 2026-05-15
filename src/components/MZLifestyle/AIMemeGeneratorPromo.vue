@@ -22,7 +22,7 @@ export default {
 <style scoped>
 .promo-container {
   /* bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl p-6 text-white */
-  background: linear-gradient(to right, #60a5fa, #a855f7); /* blue-400 to purple-500 */
+  background: linear-gradient(to right, #60a5fa, var(--c-brand)); /* blue-400 to purple-500 */
   border-radius: 0.75rem; /* rounded-xl */
   padding: 1.5rem; /* p-6 (1rem = 16px, so 6 * 0.25rem = 1.5rem) */
   color: white; /* text-white */
@@ -51,7 +51,7 @@ export default {
 
 .create-button {
   /* bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors */
-  background-color: white; /* bg-white */
+  background-color: var(--bg-elevated); /* bg-white */
   color: #9333ea; /* text-purple-600 */
   padding-left: 1rem; /* px-4 */
   padding-right: 1rem; /* px-4 */

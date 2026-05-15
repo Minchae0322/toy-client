@@ -537,21 +537,22 @@ watch(() => route.params.userId, (newId, oldId) => {
 </script>
 
 <style scoped>
-/* 토큰: Ink 900 #0A0E1A / Text 600 #475569 / Text 500 #64748B / Text 400 #94A3B8 / Border #F1F3F6
+/* 토큰: Ink 900 var(--c-ink-900) / Text 600 var(--c-text-600) / Text 500 var(--c-text-500) / Text 400 var(--c-text-400) / Border var(--border-default)
    대원칙 — 흰 캔버스. 카드/그림자/컬러 바/회색 구분 박스 없이 타이포·여백으로 위계. */
 
 .profile {
-  background: #ffffff;
+  background: var(--bg-elevated);
+  border-radius: 16px;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
 
 .profile-wrap {
-  padding: 24px 0 20px;
+  padding: 24px 20px 20px;
 }
 
 @media (min-width: 768px) {
   .profile-wrap {
-    padding: 40px 0 28px;
+    padding: 40px 32px 28px;
   }
 }
 
@@ -605,8 +606,8 @@ watch(() => route.params.userId, (newId, oldId) => {
   height: 96px;
   border-radius: 50%;
   object-fit: cover;
-  background: #F7F8FA;
-  box-shadow: inset 0 0 0 1px #F1F3F6;
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border-default);
   display: block;
 }
 
@@ -623,7 +624,7 @@ watch(() => route.params.userId, (newId, oldId) => {
 .avatar-empty svg {
   width: 36px;
   height: 36px;
-  color: #CBD5E1;
+  color: var(--c-text-300);
 }
 
 @media (min-width: 768px) {
@@ -634,7 +635,7 @@ watch(() => route.params.userId, (newId, oldId) => {
 .username {
   font-size: 20px;
   font-weight: 700;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.4px;
   line-height: 1.25;
@@ -672,7 +673,7 @@ watch(() => route.params.userId, (newId, oldId) => {
   border: none;
   padding: 0;
   font-family: inherit;
-  color: #0A0E1A;
+  color: var(--text-primary);
   font-size: 15px;
   letter-spacing: -0.2px;
 }
@@ -692,17 +693,17 @@ watch(() => route.params.userId, (newId, oldId) => {
 
 .stat strong {
   font-weight: 700;
-  color: #0A0E1A;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 
 .stat span {
   font-weight: 500;
-  color: #475569;
+  color: var(--c-text-600);
 }
 
 .mobile .stat strong { font-size: 16px; }
-.mobile .stat span { font-size: 12px; color: #64748B; }
+.mobile .stat span { font-size: 12px; color: var(--c-text-500); }
 
 /* ============ Tier 정체성 ============ */
 .identity-row {
@@ -726,7 +727,7 @@ watch(() => route.params.userId, (newId, oldId) => {
   gap: 5px;
   padding: 3px 9px 3px 6px;
   background: transparent;
-  box-shadow: inset 0 0 0 1px #F1F3F6;
+  box-shadow: inset 0 0 0 1px var(--border-default);
   border-radius: 999px;
   font-size: 11.5px;
   font-weight: 700;
@@ -735,9 +736,9 @@ watch(() => route.params.userId, (newId, oldId) => {
 }
 
 .tier-chip .tier-name { color: inherit; }
-.tier-chip .tier-sep { color: #CBD5E1; font-weight: 500; }
+.tier-chip .tier-sep { color: var(--c-text-300); font-weight: 500; }
 .tier-chip .tier-level {
-  color: #0A0E1A;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -756,7 +757,7 @@ watch(() => route.params.userId, (newId, oldId) => {
   height: 32px;
   padding: 0 16px;
   background: transparent;
-  color: #0A0E1A;
+  color: var(--text-primary);
   border: none;
   border-radius: 8px;
   font-size: 13px;
@@ -772,21 +773,21 @@ watch(() => route.params.userId, (newId, oldId) => {
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-dark {
-  background: #0A0E1A;
+  background: var(--c-ink-900);
   color: #ffffff;
 }
-.btn-dark:hover:not(:disabled) { background: #1E293B; }
+.btn-dark:hover:not(:disabled) { background: var(--c-ink-700); }
 
 .btn-soft {
-  background: #F2F4F6;
-  color: #0A0E1A;
+  background: var(--bg-mute);
+  color: var(--text-primary);
 }
-.btn-soft:hover:not(:disabled) { background: #E5E8EB; }
+.btn-soft:hover:not(:disabled) { background: var(--border-default); }
 
 .btn-icon {
   width: 32px;
   padding: 0;
-  color: #475569;
+  color: var(--c-text-600);
 }
 
 /* ============ 더보기 메뉴 ============ */
@@ -799,9 +800,9 @@ watch(() => route.params.userId, (newId, oldId) => {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 12px;
-  box-shadow: inset 0 0 0 1px #F1F3F6, 0 10px 28px rgba(10, 14, 26, 0.10);
+  box-shadow: inset 0 0 0 1px var(--border-default), 0 10px 28px rgba(10, 14, 26, 0.10);
   min-width: 180px;
   padding: 6px;
   z-index: 20;
@@ -817,7 +818,7 @@ watch(() => route.params.userId, (newId, oldId) => {
   font-size: 13.5px;
   font-weight: 600;
   font-family: inherit;
-  color: #0A0E1A;
+  color: var(--text-primary);
   border-radius: 8px;
   cursor: pointer;
   letter-spacing: -0.2px;
@@ -825,10 +826,10 @@ watch(() => route.params.userId, (newId, oldId) => {
   transition: background 0.15s ease;
 }
 
-.more-item:hover { background: #F2F4F6; }
+.more-item:hover { background: var(--bg-mute); }
 
-.more-item.danger { color: #DC2626; }
-.more-item.danger:hover { background: #FEF2F2; }
+.more-item.danger { color: var(--c-danger); }
+.more-item.danger:hover { background: var(--c-danger-soft); }
 
 /* ============ EXP — 얇은 인라인 프로그레스 ============ */
 .exp-row {
@@ -858,14 +859,14 @@ watch(() => route.params.userId, (newId, oldId) => {
 .exp-label {
   font-size: 11.5px;
   font-weight: 500;
-  color: #94A3B8;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
 }
 
 .exp-value {
   font-size: 12px;
   font-weight: 700;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.2px;
   font-variant-numeric: tabular-nums;
 }
@@ -873,7 +874,7 @@ watch(() => route.params.userId, (newId, oldId) => {
 .exp-value em {
   font-style: normal;
   font-weight: 700;
-  color: #94A3B8;
+  color: var(--c-text-400);
   font-size: 10.5px;
   margin-left: 3px;
 }
@@ -881,14 +882,14 @@ watch(() => route.params.userId, (newId, oldId) => {
 .exp-bar {
   width: 100%;
   height: 3px;
-  background: #F2F4F6;
+  background: var(--bg-mute);
   border-radius: 999px;
   overflow: hidden;
 }
 
 .exp-fill {
   height: 100%;
-  background: #0A0E1A;
+  background: var(--c-ink-900);
   border-radius: 999px;
   transition: width 0.4s ease;
 }
@@ -897,7 +898,7 @@ watch(() => route.params.userId, (newId, oldId) => {
 .bio {
   font-size: 14px;
   font-weight: 500;
-  color: #0A0E1A;
+  color: var(--text-primary);
   line-height: 1.55;
   letter-spacing: -0.2px;
   margin: 0;
@@ -918,7 +919,7 @@ watch(() => route.params.userId, (newId, oldId) => {
   gap: 5px;
   font-size: 12px;
   font-weight: 500;
-  color: #94A3B8;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
 }
 
@@ -926,7 +927,7 @@ watch(() => route.params.userId, (newId, oldId) => {
 
 /* ============ 스켈레톤 ============ */
 .sk {
-  background: #F2F4F6;
+  background: var(--bg-mute);
   animation: sk-pulse 1.6s ease-in-out infinite;
   border-radius: 6px;
 }

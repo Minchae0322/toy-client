@@ -36,7 +36,7 @@ const tabs = [
 <style scoped>
 .navigation-tabs-container {
   /* bg-white border-b */
-  background-color: white; /* bg-white */
+  background-color: var(--bg-elevated); /* bg-white */
   border-bottom: 1px solid #e5e7eb; /* border-b (Tailwind gray-200 default) */
 }
 
@@ -76,7 +76,7 @@ const tabs = [
 
 .tab-button-active {
   /* border-purple-500 text-purple-600 */
-  border-color: #a855f7; /* border-purple-500 */
+  border-color: var(--c-brand); /* border-purple-500 */
   color: #9333ea; /* text-purple-600 */
 }
 

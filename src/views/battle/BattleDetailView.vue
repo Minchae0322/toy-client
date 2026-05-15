@@ -1362,7 +1362,7 @@ export default {
 
 <style scoped>
 .soft-modern-v1 {
-  background: #fdfeff;
+  background: var(--bg-base);
   min-height: 100vh;
   /* iOS 홈 인디케이터 회피 */
   padding-bottom: calc(100px + env(safe-area-inset-bottom));
@@ -1382,8 +1382,8 @@ export default {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #efefef;
-  border-top-color: #4a6cf7;
+  border: 3px solid var(--border-default);
+  border-top-color: var(--c-info);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -1396,12 +1396,12 @@ export default {
 
 .error-message {
   font-size: 16px;
-  color: #ef4444;
+  color: var(--c-danger);
 }
 
 .btn-retry {
   padding: 12px 24px;
-  background: #4a6cf7;
+  background: var(--c-info);
   color: white;
   border: none;
   border-radius: 12px;
@@ -1413,7 +1413,7 @@ export default {
 }
 
 .btn-retry:hover {
-  background: #3a5ce7;
+  background: var(--c-info-hover);
 }
 
 /* Content Wrapper */
@@ -1433,7 +1433,7 @@ export default {
 /* PC 디바이더 */
 .pc-divider {
   height: 1px;
-  background: #efefef;
+  background: var(--border-default);
   margin: 32px 24px;
 }
 
@@ -1471,20 +1471,20 @@ export default {
   gap: 10px;
   padding: 10px 12px;
   margin: 0 0 18px;
-  background: #FAFAFB;
-  border: 1px solid #ECECF0;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 14px;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .inline-comment-form:focus-within:not(.is-disabled) {
-  background: #fff;
-  border-color: #9333EA;
+  background: var(--bg-elevated);
+  border-color: var(--c-brand);
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
 }
 
 .inline-comment-form.is-disabled {
-  background: #F5F5F7;
+  background: var(--bg-subtle);
   cursor: not-allowed;
 }
 
@@ -1494,7 +1494,7 @@ export default {
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
-  background: #f4f4f5;
+  background: var(--bg-mute);
 }
 
 .inline-comment-input {
@@ -1505,14 +1505,14 @@ export default {
   background: transparent;
   font-size: 14px;
   font-weight: 500;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
   font-family: inherit;
   padding: 6px 0;
 }
 
 .inline-comment-input::placeholder {
-  color: #94A3B8;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
@@ -1524,8 +1524,8 @@ export default {
   flex-shrink: 0;
   padding: 7px 14px;
   border-radius: 999px;
-  background: #9333EA;
-  color: #fff;
+  background: var(--c-brand);
+  color: #ffffff;
   border: none;
   font-size: 13px;
   font-weight: 700;
@@ -1536,12 +1536,12 @@ export default {
 }
 
 .inline-comment-submit:hover:not(:disabled) {
-  background: #7C3AED;
+  background: var(--c-brand-hover);
 }
 
 .inline-comment-submit:disabled {
-  background: #CBD5E1;
-  color: #fff;
+  background: var(--c-text-300);
+  color: #ffffff;
   cursor: not-allowed;
 }
 
@@ -1562,7 +1562,7 @@ export default {
 .pc-arguments-section .section-heading h2 {
   font-size: 22px;
   font-weight: 700;
-  color: #1a1a1e;
+  color: var(--text-primary);
   margin: 0;
   display: flex;
   align-items: center;
@@ -1572,15 +1572,15 @@ export default {
 .pc-arguments-section .section-heading h2 .comment-total-count {
   font-size: 14px;
   font-weight: 700;
-  color: #9333ea;
-  background: #f3e8ff;
+  color: var(--c-brand);
+  background: var(--c-brand-soft);
   padding: 4px 10px;
   border-radius: 12px;
 }
 
 .pc-arguments-section .section-heading .sub {
   font-size: 14px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   margin-top: 4px;
 }
 
@@ -1590,8 +1590,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: #f9f6fd;
-  border: 1.5px solid #ece5f5;
+  background: var(--c-brand-soft);
+  border: 1.5px solid var(--c-brand-soft);
   border-radius: 16px;
   margin-bottom: 20px;
 }
@@ -1607,7 +1607,7 @@ export default {
   height: 44px;
   border-radius: 10px;
   object-fit: cover;
-  border: 2px solid #fff;
+  border: 2px solid var(--bg-elevated);
   box-shadow: 0 2px 8px rgba(147, 51, 234, 0.15);
 }
 
@@ -1620,13 +1620,13 @@ export default {
 .filter-label {
   font-size: 11px;
   font-weight: 600;
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 .filter-name {
   font-size: 15px;
   font-weight: 700;
-  color: #581c87;
+  color: var(--c-brand);
 }
 
 .clear-filter-btn {
@@ -1634,31 +1634,31 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: #9333ea;
+  background: var(--c-brand);
   border: none;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.2s;
 }
 
 .clear-filter-btn:hover {
-  background: #7e22ce;
+  background: var(--c-brand);
 }
 
 .pc-tab-container {
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 20px;
-  border: 1.5px solid #efefef;
+  border: 1.5px solid var(--border-default);
   overflow: hidden;
 }
 
 .pc-tab-header {
   display: flex;
-  border-bottom: 1.5px solid #efefef;
+  border-bottom: 1.5px solid var(--border-default);
   padding: 0 24px;
 }
 
@@ -1666,7 +1666,7 @@ export default {
   padding: 16px 24px;
   font-size: 15px;
   font-weight: 700;
-  color: #9ca3af;
+  color: var(--c-text-400);
   background: none;
   border: none;
   cursor: pointer;
@@ -1676,7 +1676,7 @@ export default {
 }
 
 .pc-tab-btn.active {
-  color: #4a6cf7;
+  color: var(--c-info);
 }
 
 .pc-tab-btn.active::after {
@@ -1686,22 +1686,22 @@ export default {
   left: 12px;
   right: 12px;
   height: 3px;
-  background: #4a6cf7;
+  background: var(--c-info);
   border-radius: 3px;
 }
 
 .pc-tab-btn .cnt {
   font-size: 12px;
   font-weight: 600;
-  background: #f3f4f6;
+  background: var(--border-default);
   padding: 2px 8px;
   border-radius: 10px;
   margin-left: 6px;
 }
 
 .pc-tab-btn.active .cnt {
-  background: #eff2ff;
-  color: #4a6cf7;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .pc-tab-content {
@@ -1720,19 +1720,19 @@ export default {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #fafbfc;
+  background: var(--bg-subtle);
   border-radius: 10px;
   transition: all 0.15s;
   cursor: pointer;
 }
 
 .pc-arg-card:hover {
-  background: #f5f7ff;
+  background: var(--c-info-soft);
 }
 
 .pc-arg-card.best {
-  background: #fffbf0;
-  border: 1px solid #fde68a;
+  background: var(--c-warning-soft);
+  border: 1px solid var(--c-warning);
 }
 
 .pc-arg-card .arg-product-img {
@@ -1759,8 +1759,8 @@ export default {
 .pc-arg-card .arg-product-name {
   font-size: 11px;
   font-weight: 700;
-  color: #4a6cf7;
-  background: #eff2ff;
+  color: var(--c-info);
+  background: var(--c-info-soft);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -1768,17 +1768,17 @@ export default {
 .pc-arg-card .best-badge {
   font-size: 9px;
   font-weight: 700;
-  color: #f59e0b;
-  background: #fffbeb;
+  color: var(--c-warning);
+  background: var(--c-warning-soft);
   padding: 2px 5px;
   border-radius: 3px;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--c-warning);
 }
 
 .pc-arg-card .arg-text {
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--c-text-600);
   line-height: 1.4;
   margin: 0;
   white-space: nowrap;
@@ -1798,7 +1798,7 @@ export default {
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .pc-arg-card img.arg-user-avatar {
@@ -1812,13 +1812,13 @@ export default {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #dde3f8;
+  background: var(--c-info-soft);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 9px;
   font-weight: 700;
-  color: #4a6cf7;
+  color: var(--c-info);
 }
 
 .pc-arg-card .like-btn {
@@ -1827,25 +1827,25 @@ export default {
   gap: 3px;
   padding: 4px 10px;
   border-radius: 16px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
 }
 
 .pc-arg-card .like-btn:hover {
-  border-color: #f43f5e;
-  color: #f43f5e;
-  background: #fff5f5;
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+  background: var(--c-danger-soft);
 }
 
 .pc-arg-card .like-btn.liked {
-  border-color: #f43f5e;
-  color: #f43f5e;
-  background: #fff5f5;
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+  background: var(--c-danger-soft);
 }
 
 /* PICK 한마디 보기 버튼 */
@@ -1860,7 +1860,7 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 14px 28px;
-  background: #8b2de0;
+  background: var(--c-brand);
   color: white;
   border: none;
   border-radius: 12px;
@@ -1892,8 +1892,8 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 12px 24px;
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--border-default);
+  color: var(--c-text-600);
   border: none;
   border-radius: 10px;
   font-size: 14px;
@@ -1903,7 +1903,7 @@ export default {
 }
 
 .load-more-btn:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: var(--border-strong);
 }
 
 .load-more-btn:disabled {
@@ -1925,15 +1925,15 @@ export default {
   justify-content: center;
   padding: 60px 20px;
   gap: 12px;
-  color: #6b7280;
+  color: var(--c-text-500);
   font-size: 14px;
 }
 
 .spinner-small {
   width: 24px;
   height: 24px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #9333ea;
+  border: 3px solid var(--border-strong);
+  border-top-color: var(--c-brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -1959,13 +1959,13 @@ export default {
 .empty-comments p {
   font-size: 16px;
   font-weight: 700;
-  color: #374151;
+  color: var(--c-text-600);
   margin: 0 0 6px;
 }
 
 .empty-comments span {
   font-size: 14px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 @media (max-width: 768px) {
@@ -2120,7 +2120,7 @@ export default {
   height: 0;
   overflow: hidden;
   border-radius: 12px;
-  background: #000;
+  background: var(--c-ink-900);
 }
 
 .youtube-player-wrapper iframe {

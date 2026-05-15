@@ -189,14 +189,14 @@ onUnmounted(() => {
 .section-title {
   font-size: 1.0625rem;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .section-title .title-accent {
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 @media (min-width: 768px) {
@@ -214,7 +214,7 @@ onUnmounted(() => {
 .sub-title {
   font-size: 12px;
   font-weight: 400;
-  color: #999;
+  color: var(--c-text-400);
   padding-left: 0;
 }
 
@@ -229,15 +229,15 @@ onUnmounted(() => {
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #999;
+  color: var(--c-text-400);
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .view-all-link:hover {
-  background: #f5f5f5;
-  color: #666;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
 }
 
 /* 스크롤 래퍼 (PC 네비게이션 버튼 포함) */
@@ -262,18 +262,18 @@ onUnmounted(() => {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    border: 1px solid #e5e7eb;
-    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border-strong);
+    background: var(--header-blur-bg);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    color: #374151;
+    color: var(--c-text-600);
     cursor: pointer;
     transition: all 0.2s ease;
   }
 
   .nav-arrow:hover {
-    background: #fff;
+    background: var(--bg-elevated);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    color: #111827;
+    color: var(--text-primary);
   }
 
   .nav-arrow-left {
@@ -398,7 +398,7 @@ onUnmounted(() => {
 .trending-tag {
   background: rgba(251, 113, 133, 0.85);
   backdrop-filter: blur(4px);
-  color: #fff;
+  color: #ffffff;
   font-size: 9px;
   font-weight: 700;
   padding: 4px 10px;
@@ -407,7 +407,7 @@ onUnmounted(() => {
 }
 
 .overlay-bottom {
-  color: #fff;
+  color: #ffffff;
 }
 
 .eval-pill {
@@ -422,28 +422,28 @@ onUnmounted(() => {
 
 .eval-pill.best {
   background: rgba(251, 191, 36, 0.85);
-  color: #fff;
+  color: #ffffff;
 }
 
 .eval-pill.good {
   background: rgba(34, 197, 94, 0.8);
-  color: #fff;
+  color: #ffffff;
 }
 
 .eval-pill.okay {
   background: rgba(139, 92, 246, 0.8);
-  color: #fff;
+  color: #ffffff;
 }
 
 .eval-pill.bad {
   background: rgba(239, 68, 68, 0.8);
-  color: #fff;
+  color: #ffffff;
 }
 
 .review-main {
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: #ffffff;
   margin: 0 0 6px;
   line-height: 1.4;
   display: -webkit-box;
@@ -473,7 +473,7 @@ onUnmounted(() => {
   flex: 0 0 180px;
   height: 260px;
   border-radius: 24px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--border-strong) 50%, var(--bg-subtle) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -497,7 +497,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 2.5rem 1rem;
-  background: #fafafa;
+  background: var(--bg-subtle);
   border-radius: 10px;
 }
 
@@ -505,17 +505,17 @@ onUnmounted(() => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #f0f0f0;
+  background: var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 0.625rem;
-  color: #bbb;
+  color: var(--c-text-300);
 }
 
 .empty-text {
   font-size: 0.8125rem;
-  color: #999;
+  color: var(--c-text-400);
   margin: 0;
 }
 </style>

@@ -39,7 +39,16 @@
     <h1 class="main-title">{{ battle.title }}</h1>
     <p v-if="battle.description" class="sub-desc" :class="{ clamped: !showDetails }">{{ battle.description }}</p>
 
-    <div v-if="creatorNickname && showDetails" class="creator-row">
+    <div
+      v-if="creatorNickname && showDetails"
+      class="creator-row"
+      :class="{ 'is-clickable': creatorUserId != null }"
+      :role="creatorUserId != null ? 'link' : undefined"
+      :tabindex="creatorUserId != null ? 0 : undefined"
+      @click="goToCreator"
+      @keydown.enter.prevent="goToCreator"
+      @keydown.space.prevent="goToCreator"
+    >
       <img
         v-if="creatorProfileImage"
         :src="creatorProfileImage"
@@ -142,9 +151,12 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { battleUtils } from '@/services/BattleService.js'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
+
+const router = useRouter()
 
 const showDetails = ref(false)
 
@@ -182,6 +194,13 @@ const primaryBadgeId = computed(() => {
   const u = props.battle?.creatorUserInfo
   return u?.primaryBadgeId || u?.representativeBadgeId || (Array.isArray(u?.badgeIds) ? u.badgeIds[0] : null)
 })
+const creatorUserId = computed(() => props.battle?.creatorUserInfo?.userId ?? props.battle?.creatorId ?? null)
+
+const goToCreator = () => {
+  const userId = creatorUserId.value
+  if (userId == null) return
+  router.push({ name: 'UserFeedList', params: { userId: String(userId) } })
+}
 
 const formattedDaysLeft = computed(() => {
   return battleUtils.formatDaysLeft(props.battle.endDate)
@@ -213,7 +232,7 @@ const permissionType = computed(() => {
   padding: 24px 40px 36px;
   width: 100%;
   box-sizing: border-box;
-  background: #ffffff;
+  background: var(--bg-elevated);
   font-family: 'SUIT', -apple-system, "system-ui", "Segoe UI", sans-serif;
 }
 
@@ -249,14 +268,14 @@ const permissionType = computed(() => {
 }
 
 .nav-btn {
-  background: #ffffff;
-  border: 1px solid #f1f3f5;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-subtle);
   border-radius: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4b5563;
+  color: var(--c-text-600);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
@@ -279,13 +298,13 @@ const permissionType = computed(() => {
   gap: 8px;
 }
 
-.report-btn:hover { color: #dc2626; border-color: #fecaca; }
+.report-btn:hover { color: var(--c-danger); border-color: var(--c-danger-soft); }
 
 .nav-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-  border-color: #e5e7eb;
-  color: #111827;
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 /* 배지 */
@@ -309,18 +328,18 @@ const permissionType = computed(() => {
 }
 
 .category-pill {
-  background: #eff6ff;
-  color: #3b82f6;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .weighted-pill {
-  background: #fff7ed;
-  color: #f97316;
+  background: var(--c-heat-soft);
+  color: var(--c-heat);
 }
 
 .permission-pill {
-  background: #f0fdf4;
-  color: #16a34a;
+  background: var(--c-success-soft);
+  color: var(--c-success);
   position: relative;
 }
 
@@ -341,8 +360,8 @@ const permissionType = computed(() => {
   height: 18px;
   border-radius: 50%;
   border: 1.5px solid rgba(22, 163, 74, 0.35);
-  background: #ffffff;
-  color: #16a34a;
+  background: var(--bg-elevated);
+  color: var(--c-success);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -355,8 +374,8 @@ const permissionType = computed(() => {
 }
 
 .help-btn:hover {
-  border-color: #16a34a;
-  background: #ecfdf5;
+  border-color: var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .tooltip {
@@ -365,7 +384,7 @@ const permissionType = computed(() => {
   left: 50%;
   transform: translateX(-50%);
   padding: 10px 14px;
-  background: #1f2937;
+  background: var(--c-ink-900);
   color: #ffffff;
   font-size: 13px;
   font-weight: 500;
@@ -386,7 +405,7 @@ const permissionType = computed(() => {
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: #1f2937;
+  border-top-color: var(--text-primary);
 }
 
 .tooltip-wrapper:hover .tooltip {
@@ -397,7 +416,7 @@ const permissionType = computed(() => {
 .pulse-dot {
   width: 6px;
   height: 6px;
-  background: #f97316;
+  background: var(--c-heat);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
@@ -412,7 +431,7 @@ const permissionType = computed(() => {
 .main-title {
   font-size: 46px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-primary);
   letter-spacing: -0.035em;
   margin: 0 auto 10px;
   line-height: 1.18;
@@ -420,7 +439,7 @@ const permissionType = computed(() => {
 
 .sub-desc {
   font-size: 16px;
-  color: #6b7280;
+  color: var(--c-text-500);
   line-height: 1.5;
   max-width: 500px;
   margin: 0 auto 0;
@@ -439,22 +458,34 @@ const permissionType = computed(() => {
   gap: 8px;
   margin: 12px auto 0;
   padding: 6px 14px 6px 6px;
-  background: #F7F8FA;
-  border: 1px solid #EEF0F3;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
   border-radius: 999px;
+  outline: none;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.creator-row.is-clickable {
+  cursor: pointer;
+}
+.creator-row.is-clickable:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+.creator-row.is-clickable:focus-visible {
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.4);
 }
 .creator-row .creator-avatar {
   width: 26px;
   height: 26px;
   border-radius: 50%;
   overflow: hidden;
-  background: #e5e7eb;
+  background: var(--border-strong);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 800;
-  color: #6b7280;
+  color: var(--c-text-500);
   flex-shrink: 0;
 }
 .creator-row .creator-avatar img {
@@ -466,13 +497,13 @@ const permissionType = computed(() => {
 .creator-row .creator-label {
   font-size: 11px;
   font-weight: 700;
-  color: #9ca3af;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
 }
 .creator-row .creator-name {
   font-size: 13px;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   letter-spacing: -0.2px;
 }
 
@@ -496,8 +527,8 @@ const permissionType = computed(() => {
   width: fit-content;
   margin: 18px auto 0;
   padding: 9px 18px 9px 9px;
-  background: #f5f8ff;
-  border: 1px solid #e0e8ff;
+  background: var(--c-info-soft);
+  border: 1px solid var(--c-info-soft);
   border-radius: 999px;
 }
 
@@ -508,8 +539,8 @@ const permissionType = computed(() => {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #e0e8ff;
-  color: #4a6cf7;
+  background: var(--c-info-soft);
+  color: var(--c-info);
   flex-shrink: 0;
 }
 
@@ -521,7 +552,7 @@ const permissionType = computed(() => {
 .time-pill-label {
   font-size: 12px;
   font-weight: 600;
-  color: #8a92a3;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
 }
 
@@ -531,7 +562,7 @@ const permissionType = computed(() => {
   gap: 6px;
   font-size: 16px;
   font-weight: 800;
-  color: #4a6cf7;
+  color: var(--c-info);
   letter-spacing: -0.02em;
   font-feature-settings: 'tnum' 1;
 }
@@ -540,7 +571,7 @@ const permissionType = computed(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #4a6cf7;
+  background: var(--c-info);
   flex-shrink: 0;
 }
 
@@ -551,10 +582,10 @@ const permissionType = computed(() => {
   gap: 6px;
   margin: 14px auto 0;
   padding: 7px 16px;
-  background: #ffffff;
-  border: 1px solid #eef0f3;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 999px;
-  color: #6b7280;
+  color: var(--c-text-500);
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -563,9 +594,9 @@ const permissionType = computed(() => {
 }
 
 .details-toggle:hover {
-  background: #f7f8fa;
-  color: #374151;
-  border-color: #d8dde5;
+  background: var(--bg-subtle);
+  color: var(--c-text-600);
+  border-color: var(--border-strong);
 }
 
 .details-toggle .chevron {
@@ -581,22 +612,22 @@ const permissionType = computed(() => {
   align-items: center;
   gap: 12px;
   padding: 16px 18px;
-  background: #ffffff;
-  border: 1px solid #eceff3;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 16px;
   min-width: 0;
   transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .stat-item:hover {
-  border-color: #d8dde5;
+  border-color: var(--border-strong);
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
 }
 
 .stat-item.time {
-  background: #f5f8ff;
-  border-color: #e0e8ff;
+  background: var(--c-info-soft);
+  border-color: var(--c-info-soft);
 }
 
 .stat-icon-wrap {
@@ -610,18 +641,18 @@ const permissionType = computed(() => {
 }
 
 .stat-item.time .stat-icon-wrap {
-  background: #e0e8ff;
-  color: #4a6cf7;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .stat-item.people .stat-icon-wrap {
-  background: #f3e8ff;
-  color: #9333ea;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .stat-item.votes .stat-icon-wrap {
-  background: #ecfdf5;
-  color: #10b981;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .stat-icon-wrap svg {
@@ -640,7 +671,7 @@ const permissionType = computed(() => {
 .stat-label {
   font-size: 12px;
   font-weight: 600;
-  color: #8a92a3;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
   line-height: 1;
 }
@@ -648,7 +679,7 @@ const permissionType = computed(() => {
 .stat-value {
   font-size: 22px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-primary);
   letter-spacing: -0.04em;
   font-feature-settings: 'tnum' 1;
   line-height: 1.1;
@@ -661,14 +692,14 @@ const permissionType = computed(() => {
 }
 
 .stat-value.highlight {
-  color: #4a6cf7;
+  color: var(--c-info);
 }
 
 .live-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #4a6cf7;
+  background: var(--c-info);
   box-shadow: 0 0 0 0 rgba(74, 108, 247, 0.5);
   animation: livepulse 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   flex-shrink: 0;
@@ -685,12 +716,12 @@ const permissionType = computed(() => {
   width: 100%;
   margin-top: 24px;
   padding: 20px;
-  background: #ffffff;
-  border: 2px solid #f3e8ff;
+  background: var(--bg-elevated);
+  border: 2px solid var(--c-brand-soft);
   border-radius: 20px;
   font-size: 16px;
   font-weight: 700;
-  color: #9333ea;
+  color: var(--c-brand);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -705,18 +736,18 @@ const permissionType = computed(() => {
 @keyframes btn-glow {
   0%, 100% {
     box-shadow: 0 0 0 0 rgba(147, 51, 234, 0);
-    border-color: #f3e8ff;
+    border-color: var(--c-brand-soft);
   }
   50% {
     box-shadow: 0 0 20px 3px rgba(147, 51, 234, 0.15);
-    border-color: #c084fc;
+    border-color: var(--c-brand);
   }
 }
 
 .plus-circle {
   width: 28px;
   height: 28px;
-  background: #9333ea;
+  background: var(--c-brand);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -733,9 +764,9 @@ const permissionType = computed(() => {
 }
 
 .add-product-btn:hover {
-  border-color: #c084fc;
-  background: #faf5ff;
-  color: #7c3aed;
+  border-color: var(--c-brand);
+  background: var(--c-brand-soft);
+  color: var(--c-brand-hover);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(147, 51, 234, 0.12);
   animation: none;
@@ -790,8 +821,8 @@ const permissionType = computed(() => {
     gap: 0;
     margin-top: 14px;
     padding: 10px 6px;
-    background: #f7f8fa;
-    border: 1px solid #eef0f3;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-default);
     border-radius: 14px;
   }
   .stat-item,
@@ -822,7 +853,7 @@ const permissionType = computed(() => {
     transform: translateY(-50%);
     width: 1px;
     height: 22px;
-    background: #e3e6eb;
+    background: var(--border-strong);
   }
   .stat-icon-wrap,
   .stat-item.time .stat-icon-wrap,

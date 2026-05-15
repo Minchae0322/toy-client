@@ -14,10 +14,7 @@
       <!-- 피드 -->
       <router-link to="/feed" class="nav-tab" :class="{ active: isActive('/feed') }">
         <span class="icon-slot">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clip-rule="evenodd"/>
-            <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z"/>
-          </svg>
+          <MessageSquareText class="nav-icon" :stroke-width="1.8" />
         </span>
         <span class="nav-label">피드</span>
       </router-link>
@@ -25,9 +22,7 @@
       <!-- 핫 아이템 -->
       <router-link to="/products" class="nav-tab" :class="{ active: isActive('/products') }">
         <span class="icon-slot">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
-          </svg>
+          <Flame class="nav-icon" :stroke-width="1.8" />
         </span>
         <span class="nav-label">핫 아이템</span>
       </router-link>
@@ -35,9 +30,7 @@
       <!-- 요거픽 -->
       <router-link to="/battle" class="nav-tab" :class="{ active: isActive('/battle') }">
         <span class="icon-slot">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd"/>
-          </svg>
+          <Trophy class="nav-icon" :stroke-width="1.8" />
         </span>
         <span class="nav-label">요거픽</span>
       </router-link>
@@ -45,9 +38,7 @@
       <!-- 캐꾸 (캐리어 꾸미기) -->
       <button class="nav-tab" :class="{ active: isActive('/carrier') }" @click="handleCarrier">
         <span class="icon-slot">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path fill-rule="evenodd" d="M8 6a4 4 0 118 0v2h1a3 3 0 013 3v9a2 2 0 01-2 2H6a2 2 0 01-2-2v-9a3 3 0 013-3h1V6zm6 2V6a2 2 0 10-4 0v2h4zm-2 4.7a2 2 0 100 4 2 2 0 000-4z" clip-rule="evenodd"/>
-          </svg>
+          <Luggage class="nav-icon" :stroke-width="1.8" />
         </span>
         <span class="nav-label">캐꾸</span>
       </button>
@@ -55,11 +46,7 @@
       <!-- 더보기 -->
       <button class="nav-tab" :class="{ active: isMoreMenuOpen || isActive('/mypage') || isActive('/chat') }" @click="toggleMoreMenu">
         <span class="icon-slot">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="5" cy="12" r="2"/>
-            <circle cx="12" cy="12" r="2"/>
-            <circle cx="19" cy="12" r="2"/>
-          </svg>
+          <MoreHorizontal class="nav-icon" :stroke-width="1.8" />
         </span>
         <span class="nav-label">더보기</span>
       </button>
@@ -70,9 +57,7 @@
       <div v-if="isCreateMenuOpen" class="action-sheet create-sheet">
         <button class="sheet-item" @click="handleCreate('feed')">
           <span class="sheet-icon feed">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
+            <PenSquare :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
             <span class="sheet-text">피드 올리기</span>
@@ -81,9 +66,7 @@
         </button>
         <button class="sheet-item" @click="handleCreate('battle')">
           <span class="sheet-icon battle">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
+            <Trophy :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
             <span class="sheet-text">요거픽 등록</span>
@@ -93,9 +76,7 @@
         <div class="sheet-divider"></div>
         <button class="sheet-item" @click="handleCreate('product')">
           <span class="sheet-icon product">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-            </svg>
+            <Package :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
             <span class="sheet-text">아이템 등록</span>
@@ -110,9 +91,7 @@
       <div v-if="isMoreMenuOpen" class="action-sheet more-sheet">
         <button class="sheet-item" @click="handleMoreNav('home')">
           <span class="sheet-icon home">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-            </svg>
+            <Home :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
             <span class="sheet-text">홈</span>
@@ -122,9 +101,7 @@
         <div class="sheet-divider"></div>
         <button class="sheet-item" @click="handleMoreNav('chat')">
           <span class="sheet-icon chat">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
+            <MessageCircle :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
             <span class="sheet-text">메시지</span>
@@ -133,9 +110,7 @@
         </button>
         <button class="sheet-item" @click="handleMoreNav('collection')">
           <span class="sheet-icon collection">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 2l2.39 4.84L20 8l-4 3.9.94 5.5L12 14.77 7.06 17.4 8 11.9 4 8l5.61-1.16L12 2z"/>
-            </svg>
+            <Sparkles :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
             <span class="sheet-text">컬렉션</span>
@@ -143,23 +118,18 @@
           </div>
         </button>
         <div class="sheet-divider"></div>
-        <button v-if="isLoggedIn" class="sheet-item" @click="handleMoreNav('notifications')">
-          <span class="sheet-icon notifications">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
+        <button class="sheet-item" @click="handleMoreNav('settings')">
+          <span class="sheet-icon settings">
+            <Settings :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
-            <span class="sheet-text">알림 설정</span>
-            <span class="sheet-desc">받을 알림을 카테고리별로 관리해요</span>
+            <span class="sheet-text">환경설정</span>
+            <span class="sheet-desc">화면 모드(라이트/다크)를 바꿔요</span>
           </div>
         </button>
         <button class="sheet-item" @click="openFeedback">
           <span class="sheet-icon feedback">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-            </svg>
+            <MessageSquare :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
             <span class="sheet-text">의견 보내기</span>
@@ -170,12 +140,7 @@
           <div class="sheet-divider"></div>
           <button class="sheet-item" @click="handleMoreNav('admin')">
             <span class="sheet-icon admin">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.8"/>
-                <rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.8"/>
-                <rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.8"/>
-                <rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.8"/>
-              </svg>
+              <LayoutGrid :stroke-width="1.8" />
             </span>
             <div class="sheet-content">
               <span class="sheet-text">관리자</span>
@@ -186,9 +151,7 @@
         <div class="sheet-divider"></div>
         <button class="sheet-item" @click="handleMoreNav('mypage')">
           <span class="sheet-icon mypage">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
+            <UserCircle :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
             <span class="sheet-text">마이페이지</span>
@@ -197,9 +160,7 @@
         </button>
         <button v-if="isLoggedIn" class="sheet-item logout" @click="handleLogout">
           <span class="sheet-icon logout-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
-            </svg>
+            <LogOut :stroke-width="1.8" />
           </span>
           <div class="sheet-content">
             <span class="sheet-text">로그아웃</span>
@@ -219,6 +180,11 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import {
+  MessageSquareText, Flame, Trophy, Luggage, MoreHorizontal,
+  PenSquare, Package, Home, MessageCircle, Sparkles,
+  Settings, MessageSquare, LayoutGrid, UserCircle, LogOut
+} from 'lucide-vue-next';
 import { useAuth } from '@/composables/useAuth';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import FeedbackModal from '@/components/common/FeedbackModal.vue';
@@ -285,6 +251,7 @@ const moreNavMap = {
   mypage: { name: 'MyPage', path: '/mypage' },
   collection: { name: 'Collection', path: '/collection' },
   notifications: { name: 'NotificationSettings', path: '/settings/notifications' },
+  settings: { name: 'Settings', path: '/settings' },
   admin: { name: 'AdminDashboard', path: '/admin' },
 };
 
@@ -305,7 +272,7 @@ const handleMoreNav = async (key) => {
   const target = moreNavMap[key];
   if (!target) return;
 
-  if (key === 'home' || key === 'collection') {
+  if (key === 'home' || key === 'collection' || key === 'settings') {
     router.push(target.path);
     return;
   }
@@ -354,12 +321,14 @@ onBeforeUnmount(() => {
 <style scoped>
 /* ===================== Container ===================== */
 .bottom-nav {
-  --brand: #9333EA;
-  --brand-deep: #7c3aed;
-  --ink: #0A0E1A;
-  --text-dim: #94A3B8;
-  --border: #F1F3F6;
-  --surface: #ffffff;
+  --brand: var(--c-brand);
+  --brand-deep: var(--c-brand-hover);
+  /* --ink 는 텍스트 색 용도로 쓰이므로 자동 반전되는 text-primary 사용.
+     배경/엄청 어두운 톤이 필요한 곳(.fab.open 등)에선 var(--c-ink-900) 직접 사용 */
+  --ink: var(--text-primary);
+  --text-dim: var(--c-text-400);
+  --border: var(--border-default);
+  --surface: var(--bg-elevated);
 
   position: fixed;
   bottom: 0;
@@ -487,7 +456,7 @@ onBeforeUnmount(() => {
 }
 
 .fab.open {
-  background: var(--ink);
+  background: var(--c-ink-900);
   transform: rotate(45deg);
   width: 52px;
   box-shadow:
@@ -584,7 +553,7 @@ onBeforeUnmount(() => {
 }
 
 .sheet-item:active {
-  background: #F7F8FA;
+  background: var(--bg-subtle);
 }
 
 .sheet-icon {
@@ -602,18 +571,18 @@ onBeforeUnmount(() => {
   height: 18px;
 }
 
-.sheet-icon.feed { background: #EFF6FF; color: #3b82f6; }
-.sheet-icon.battle { background: #FEF3C7; color: #f97316; }
-.sheet-icon.product { background: #F0FDF4; color: #10b981; }
-.sheet-icon.home { background: #F0FDF4; color: #16a34a; }
-.sheet-icon.carrier { background: #FAF5FF; color: #9333ea; }
-.sheet-icon.chat { background: #FEF3C7; color: #d97706; }
-.sheet-icon.mypage { background: #E0E7FF; color: #4f46e5; }
-.sheet-icon.collection { background: #FEF9C3; color: #EAB308; }
-.sheet-icon.admin { background: #FFF7ED; color: #ea580c; }
-.sheet-icon.notifications { background: #FAF5FF; color: #9333EA; }
-.sheet-icon.feedback { background: #F1F5F9; color: #475569; }
-.sheet-icon.logout-icon { background: #FEF2F2; color: #dc2626; }
+.sheet-icon.feed { background: var(--c-info-soft); color: var(--c-info); }
+.sheet-icon.battle { background: var(--c-warning-soft); color: var(--c-heat); }
+.sheet-icon.product { background: var(--c-success-soft); color: var(--c-success); }
+.sheet-icon.home { background: var(--c-success-soft); color: var(--c-success); }
+.sheet-icon.carrier { background: var(--c-brand-soft); color: var(--c-brand); }
+.sheet-icon.chat { background: var(--c-warning-soft); color: var(--c-bronze); }
+.sheet-icon.mypage { background: var(--c-info-soft); color: var(--c-info); }
+.sheet-icon.collection { background: var(--c-warning-soft); color: var(--c-warning); }
+.sheet-icon.admin { background: var(--c-heat-soft); color: var(--c-heat); }
+.sheet-icon.notifications { background: var(--c-brand-soft); color: var(--c-brand); }
+.sheet-icon.feedback { background: var(--bg-subtle); color: var(--c-text-600); }
+.sheet-icon.logout-icon { background: var(--c-danger-soft); color: var(--c-danger); }
 
 .sheet-content {
   display: flex;
@@ -632,7 +601,7 @@ onBeforeUnmount(() => {
 .sheet-desc {
   font-size: 11px;
   font-weight: 500;
-  color: #94A3B8;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
 }
 
@@ -643,7 +612,15 @@ onBeforeUnmount(() => {
 }
 
 .sheet-item.logout .sheet-text {
-  color: #dc2626;
+  color: var(--c-danger);
+}
+
+/* 다크 모드: 더보기 시트 가독성 보강 */
+:root[data-theme="dark"] .sheet-desc {
+  color: var(--c-text-500);
+}
+:root[data-theme="dark"] .sheet-item:active {
+  background: var(--bg-mute);
 }
 
 /* ===================== Overlay ===================== */

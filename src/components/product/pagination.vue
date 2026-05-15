@@ -58,8 +58,8 @@ const emit = defineEmits(['go-to-page'])
   justify-content: center;
   align-items: center;
   gap: 8px;
-  background: white;
-  border: 1px solid #F3F4F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-top: none;
   border-radius: 0 0 12px 12px;
 }
@@ -69,14 +69,14 @@ const emit = defineEmits(['go-to-page'])
   min-width: 40px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  color: #6B7280;
+  color: var(--c-text-500);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -85,15 +85,15 @@ const emit = defineEmits(['go-to-page'])
 
 .page-btn:hover:not(.active),
 .page-nav-btn:hover:not(:disabled) {
-  border-color: #059669;
-  color: #059669;
-  background: #F0FDF4;
+  border-color: var(--c-success);
+  color: var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .page-btn.active {
-  background: #059669;
+  background: var(--c-success);
   color: white;
-  border-color: #059669;
+  border-color: var(--c-success);
 }
 
 .page-nav-btn:disabled {

@@ -462,8 +462,8 @@ onUnmounted(() => {
 <style scoped>
 /* PC 카드 스타일 — DashboardView의 .content-section 기본을 덮어쓰면서 동일 톤 유지 */
 .content-section.ranking-section {
-  background: #fff;
-  border: 1px solid #efefef;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 16px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   padding: 1.375rem;
@@ -488,27 +488,27 @@ onUnmounted(() => {
 .mranking-title {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #111;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 6px;
   letter-spacing: -0.03em;
   margin: 0;
 }
-.mranking-accent { color: #9333ea; }
+.mranking-accent { color: var(--c-brand); }
 .mranking-live {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: #ef4444;
+  color: var(--c-danger);
   font-weight: 700;
   margin-left: 4px;
 }
 .mranking-live-dot {
   width: 5px;
   height: 5px;
-  background-color: #ef4444;
+  background-color: var(--c-danger);
   border-radius: 50%;
   animation: mranking-pulse 1.5s infinite;
 }
@@ -519,13 +519,13 @@ onUnmounted(() => {
 }
 .mranking-sub {
   font-size: 13px;
-  color: #71717a;
+  color: var(--c-text-500);
   margin: 4px 0 8px;
 }
 .mranking-more {
   font-size: 13px;
   font-weight: 600;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -566,13 +566,13 @@ onUnmounted(() => {
   gap: 4px;
   font-size: 13px;
   font-weight: 600;
-  color: #71717a;
+  color: var(--c-text-500);
   text-decoration: none;
   padding: 6px 10px;
   border-radius: 8px;
   transition: all 0.15s ease;
 }
-.view-all-btn:hover { color: #18181b; background: #f4f4f5; }
+.view-all-btn:hover { color: var(--text-primary); background: var(--bg-mute); }
 
 .dash-bubble-wrapper { position: relative; }
 
@@ -583,22 +583,22 @@ onUnmounted(() => {
   gap: 12px;
   padding: 12px 14px;
   margin: 0 0 14px;
-  background: #FAF5FF;
-  border: 1px solid #E9D5FF;
+  background: var(--c-brand-soft);
+  border: 1px solid var(--c-brand-soft);
   border-radius: 12px;
   text-decoration: none;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .dash-cgo-banner:hover {
-  background: #F3E8FF;
-  border-color: #C4B5FD;
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand-soft);
 }
 .dash-cgo-icon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #9333EA;
-  color: #fff;
+  background: var(--c-brand);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -614,13 +614,13 @@ onUnmounted(() => {
 .dash-cgo-title {
   font-size: 13.5px;
   font-weight: 700;
-  color: #4C1D95;
+  color: var(--c-brand-hover);
   letter-spacing: -0.3px;
 }
 .dash-cgo-sub {
   font-size: 12px;
   font-weight: 500;
-  color: #7C3AED;
+  color: var(--c-brand-hover);
   letter-spacing: -0.2px;
 }
 .dash-cgo-cta {
@@ -628,12 +628,12 @@ onUnmounted(() => {
   align-items: center;
   gap: 2px;
   padding: 7px 11px;
-  background: #fff;
-  border: 1px solid #E9D5FF;
+  background: var(--bg-elevated);
+  border: 1px solid var(--c-brand-soft);
   border-radius: 9px;
   font-size: 12px;
   font-weight: 700;
-  color: #7C3AED;
+  color: var(--c-brand-hover);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -650,9 +650,9 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   min-height: 360px;
-  background: #f9f9fa;
+  background: var(--bg-subtle);
   border-radius: 16px;
-  border: 1px solid #efefef;
+  border: 1px solid var(--border-default);
   overflow: hidden;
   cursor: default;
 }
@@ -753,21 +753,21 @@ onUnmounted(() => {
   white-space: nowrap;
   z-index: 5;
 }
-.dash-rank-badge-top.rank-1 { background: #fbbf24; color: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-.dash-rank-badge-top.rank-2 { background: #94a3b8; color: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-.dash-rank-badge-top.rank-3 { background: #d97706; color: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.dash-rank-badge-top.rank-1 { background: var(--c-warning); color: #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.dash-rank-badge-top.rank-2 { background: var(--c-text-400); color: #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.dash-rank-badge-top.rank-3 { background: var(--c-bronze); color: #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 
 .dash-rank-badge-sm {
   position: absolute;
   top: -3px;
   right: -3px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.9);
+  background: var(--header-blur-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #7c3aed;
+  color: var(--c-brand-hover);
   box-shadow: 0 1px 4px rgba(124,58,237,0.1);
   border: 1.5px solid rgba(139,92,246,0.3);
 }
@@ -775,7 +775,7 @@ onUnmounted(() => {
 .dash-bubble-tooltip {
   position: absolute;
   z-index: 100;
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 14px;
   padding: 14px 16px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.12);
@@ -792,7 +792,7 @@ onUnmounted(() => {
 .dash-tooltip-name {
   font-weight: 700;
   font-size: 14px;
-  color: #111;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -800,25 +800,25 @@ onUnmounted(() => {
 }
 .dash-tooltip-rank {
   font-size: 11px;
-  color: #7c3aed;
+  color: var(--c-brand-hover);
   font-weight: 700;
   flex-shrink: 0;
   margin-left: 8px;
 }
-.dash-tooltip-brand { font-size: 12px; color: #888; }
+.dash-tooltip-brand { font-size: 12px; color: var(--c-text-400); }
 .dash-tooltip-metrics { display: flex; gap: 12px; margin-top: 10px; }
 .dash-tooltip-metric { display: flex; flex-direction: column; }
-.dash-metric-label { font-size: 10px; color: #aaa; }
+.dash-metric-label { font-size: 10px; color: var(--c-text-400); }
 .dash-metric-value {
   font-weight: 700;
   font-size: 14px;
-  color: #333;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 3px;
   white-space: nowrap;
 }
-.dash-metric-value.purple { color: #7c3aed; }
+.dash-metric-value.purple { color: var(--c-brand-hover); }
 .dash-star-icon { flex-shrink: 0; }
 
 @keyframes tooltipFadeIn {
@@ -828,7 +828,7 @@ onUnmounted(() => {
 
 /* Skeleton */
 .skeleton {
-  background: linear-gradient(90deg, #f1f3f6 25%, #e8eaed 37%, #f1f3f6 63%);
+  background: linear-gradient(90deg, var(--border-default) 25%, #e8eaed 37%, var(--border-default) 63%);
   background-size: 400% 100%;
   animation: rk-shimmer 1.4s ease-in-out infinite;
   border-radius: 4px;
@@ -844,18 +844,18 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 48px 16px;
-  color: #94a3b8;
+  color: var(--c-text-400);
   gap: 12px;
 }
 .empty-icon {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #f4f4f5;
+  background: var(--bg-mute);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a1a1aa;
+  color: var(--c-text-400);
 }
 .empty-text { font-size: 14px; font-weight: 500; margin: 0; }
 
@@ -865,9 +865,9 @@ onUnmounted(() => {
 
 @media (max-width: 767px) {
   .content-section.ranking-section {
-    background: #ffffff;
+    background: var(--bg-elevated);
     border: none;
-    border-bottom: 1px solid #f1f3f6;
+    border-bottom: 1px solid var(--border-default);
     box-shadow: none;
     border-radius: 0;
     padding: 16px 0.625rem 24px 0.625rem;

@@ -337,12 +337,12 @@ onUnmounted(() => {
 }
 
 .debug-info .active {
-  color: #22c55e;
+  color: var(--c-success);
   font-weight: bold;
 }
 
 .app-header {
-  background: white;
+  background: var(--bg-elevated);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -380,7 +380,7 @@ onUnmounted(() => {
 
 .nav-link {
   text-decoration: none;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
   padding: 8px 12px;
   border-radius: 6px;
@@ -388,12 +388,12 @@ onUnmounted(() => {
 }
 
 .nav-link:hover {
-  background: #f3f4f6;
-  color: #9333ea;
+  background: var(--border-default);
+  color: var(--c-brand);
 }
 
 .nav-link.router-link-active {
-  background: #9333ea;
+  background: var(--c-brand);
   color: white;
 }
 
@@ -401,12 +401,12 @@ onUnmounted(() => {
   display: flex;
   gap: 10px;
   padding: 0 15px;
-  border-left: 2px solid #e5e7eb;
-  border-right: 2px solid #e5e7eb;
+  border-left: 2px solid var(--border-strong);
+  border-right: 2px solid var(--border-strong);
 }
 
 .admin-link {
-  background: linear-gradient(135deg, #ff6b35, #f39c12);
+  background: linear-gradient(135deg, var(--c-heat), #f39c12);
   color: white !important;
   font-weight: 600;
   border-radius: 8px;
@@ -447,19 +447,19 @@ onUnmounted(() => {
 
 .connection-status.connected {
   background: rgba(34, 197, 94, 0.1);
-  color: #16a34a;
+  color: var(--c-success);
   border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
 .connection-status.disconnected {
   background: rgba(156, 163, 175, 0.1);
-  color: #6b7280;
+  color: var(--c-text-500);
   border: 1px solid rgba(156, 163, 175, 0.2);
 }
 
 .connection-status.error {
   background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  color: var(--c-danger);
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
@@ -472,7 +472,7 @@ onUnmounted(() => {
 }
 
 .connection-status.connected .status-dot {
-  background: #22c55e;
+  background: var(--c-success);
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
 }
 
@@ -482,16 +482,16 @@ onUnmounted(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #22c55e;
+  background: var(--c-success);
   animation: pulse 2s infinite;
 }
 
 .connection-status.disconnected .status-dot {
-  background: #9ca3af;
+  background: var(--c-text-400);
 }
 
 .connection-status.error .status-dot {
-  background: #ef4444;
+  background: var(--c-danger);
 }
 
 @keyframes pulse {
@@ -525,14 +525,14 @@ onUnmounted(() => {
   height: 36px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-strong);
   transition: all 0.3s;
   flex-shrink: 0;
-  background: #f3f4f6;
+  background: var(--border-default);
 }
 
 .user-avatar:hover {
-  border-color: #9333ea;
+  border-color: var(--c-brand);
   transform: scale(1.05);
 }
 
@@ -544,11 +544,11 @@ onUnmounted(() => {
 
 .username {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .admin-badge {
-  background: linear-gradient(135deg, #ff6b35, #f39c12);
+  background: linear-gradient(135deg, var(--c-heat), #f39c12);
   color: white;
   padding: 2px 8px;
   border-radius: 12px;
@@ -557,7 +557,7 @@ onUnmounted(() => {
 }
 
 .logout-btn {
-  background: #ef4444;
+  background: var(--c-danger);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -568,11 +568,11 @@ onUnmounted(() => {
 }
 
 .logout-btn:hover {
-  background: #dc2626;
+  background: var(--c-danger);
 }
 
 .loading {
-  color: #6b7280;
+  color: var(--c-text-500);
   font-style: italic;
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -593,17 +593,17 @@ onUnmounted(() => {
 }
 
 .message-btn:hover {
-  background: #f3f4f6;
+  background: var(--border-default);
 }
 
 .message-btn:hover .message-icon {
-  color: #9333ea;
+  color: var(--c-brand);
 }
 
 .message-icon {
   width: 24px;
   height: 24px;
-  color: #4b5563;
+  color: var(--c-text-600);
   transition: color 0.2s ease;
 }
 
@@ -614,7 +614,7 @@ onUnmounted(() => {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  background: #ef4444;
+  background: var(--c-danger);
   color: white;
   font-size: 11px;
   font-weight: 700;

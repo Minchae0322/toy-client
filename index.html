@@ -18,6 +18,24 @@
   <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
   <link rel="apple-touch-icon" href="/favicon-192.png" />
+
+  <!-- 테마 초기 적용: useTheme 컴포저블이 로드되기 전에 페인트되는 깜빡임 방지.
+       localStorage 'yogurtte:theme' (light|dark|auto) 우선, 없으면 시스템 setting. -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('yogurtte:theme');
+        var resolved =
+          saved === 'light' || saved === 'dark'
+            ? saved
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', resolved);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",

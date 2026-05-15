@@ -91,7 +91,7 @@ const formatDate = (ts) => {
 <style scoped>
 .blocked-users-page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--bg-base);
 }
 
 .page-header {
@@ -99,10 +99,10 @@ const formatDate = (ts) => {
   align-items: center;
   height: 56px;
   padding: 0 12px;
-  border-bottom: 1px solid #ede9f8;
+  border-bottom: 1px solid var(--border-default);
   position: sticky;
   top: 0;
-  background: #ffffff;
+  background: var(--bg-elevated);
   z-index: 10;
 }
 
@@ -115,18 +115,18 @@ const formatDate = (ts) => {
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #4b5563;
+  color: var(--c-text-600);
   cursor: pointer;
 }
 
-.back-btn:hover { background: #f5f5f7; }
+.back-btn:hover { background: var(--bg-subtle); }
 
 .page-title {
   flex: 1;
   text-align: center;
   font-size: 16px;
   font-weight: 700;
-  color: #0a0e1a;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   margin: 0;
 }
@@ -142,7 +142,7 @@ const formatDate = (ts) => {
 .page-desc {
   margin: 0 0 16px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--c-text-500);
   line-height: 1.55;
 }
 
@@ -154,19 +154,19 @@ const formatDate = (ts) => {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .empty-title {
   font-size: 15px;
   font-weight: 700;
-  color: #374151;
+  color: var(--c-text-600);
   margin: 6px 0 0;
 }
 
 .empty-desc {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   margin: 0;
   line-height: 1.5;
 }
@@ -186,9 +186,9 @@ const formatDate = (ts) => {
   justify-content: space-between;
   gap: 12px;
   padding: 12px;
-  border: 1px solid #ede9f8;
+  border: 1px solid var(--border-default);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--bg-elevated);
 }
 
 .block-user {
@@ -203,7 +203,7 @@ const formatDate = (ts) => {
   height: 40px;
   border-radius: 50%;
   overflow: hidden;
-  background: #f3f4f6;
+  background: var(--border-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,7 +213,7 @@ const formatDate = (ts) => {
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 .avatar-fallback {
-  color: #9ca3af;
+  color: var(--c-text-400);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -228,7 +228,7 @@ const formatDate = (ts) => {
 .block-name {
   font-size: 14px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
@@ -237,17 +237,17 @@ const formatDate = (ts) => {
 
 .block-date {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   margin-top: 2px;
 }
 
 .btn-unblock {
   flex-shrink: 0;
   padding: 8px 14px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--c-text-300);
   border-radius: 10px;
-  background: #ffffff;
-  color: #374151;
+  background: var(--bg-elevated);
+  color: var(--c-text-600);
   font-size: 13px;
   font-weight: 700;
   font-family: inherit;
@@ -256,7 +256,7 @@ const formatDate = (ts) => {
 }
 
 .btn-unblock:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: var(--bg-subtle);
+  border-color: var(--c-text-400);
 }
 </style>

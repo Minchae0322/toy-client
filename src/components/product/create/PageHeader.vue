@@ -57,11 +57,11 @@ const getRoleText = (role) => {
 
 <style scoped>
 .page-header {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 24px;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
 }
 
 .header-content {
@@ -72,8 +72,8 @@ const getRoleText = (role) => {
 .step-badge {
   display: inline-block;
   padding: 6px 16px;
-  background: #ECFDF5;
-  color: #059669;
+  background: var(--c-success-soft);
+  color: var(--c-success);
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
@@ -84,14 +84,14 @@ const getRoleText = (role) => {
 .title-section h1 {
   font-size: 28px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
 
 .title-section p {
   font-size: 15px;
-  color: #6B7280;
+  color: var(--c-text-500);
   font-weight: 500;
   letter-spacing: -0.01em;
 }
@@ -101,20 +101,20 @@ const getRoleText = (role) => {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #F0FDF4;
-  border: 1px solid #D1FAE5;
+  background: var(--c-success-soft);
+  border: 1px solid var(--c-success-soft);
   border-radius: 10px;
   margin-top: 20px;
   font-size: 14px;
-  color: #059669;
+  color: var(--c-success);
   font-weight: 600;
 }
 
 .author-card {
   padding: 20px;
-  background: #FAFAFA;
+  background: var(--bg-subtle);
   border-radius: 12px;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
 }
 
 .author-info {
@@ -126,7 +126,7 @@ const getRoleText = (role) => {
 .author-avatar {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, var(--c-success) 0%, #047857 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -144,7 +144,7 @@ const getRoleText = (role) => {
 .author-name {
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 4px;
   letter-spacing: -0.01em;
 }
@@ -159,13 +159,13 @@ const getRoleText = (role) => {
 }
 
 .author-role.admin {
-  background: #FEE2E2;
-  color: #DC2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .author-role.user {
-  background: #ECFDF5;
-  color: #059669;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 @media (max-width: 768px) {

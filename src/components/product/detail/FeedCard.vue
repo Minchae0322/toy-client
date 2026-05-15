@@ -68,8 +68,8 @@ defineEmits(['like'])
 
 <style scoped>
 .feed-card {
-  background: white;
-  border: 1px solid #eee;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -85,7 +85,7 @@ defineEmits(['like'])
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #f5f5f5;
+  background: var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -104,13 +104,13 @@ defineEmits(['like'])
 .username {
   font-size: 14px;
   font-weight: 600;
-  color: #111;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .time {
   font-size: 12px;
-  color: #999;
+  color: var(--c-text-400);
   margin: 2px 0 0;
 }
 
@@ -118,15 +118,15 @@ defineEmits(['like'])
   padding: 8px;
   border: none;
   background: none;
-  color: #999;
+  color: var(--c-text-400);
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .more-btn:hover {
-  background: #f5f5f5;
-  color: #666;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
 }
 
 .feed-content {
@@ -137,7 +137,7 @@ defineEmits(['like'])
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #333;
+  color: var(--text-primary);
 }
 
 /* 이미지 4:3 비율 */
@@ -155,7 +155,7 @@ defineEmits(['like'])
 
 .feed-actions {
   padding: 12px 16px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--border-default);
   display: flex;
   align-items: center;
   gap: 20px;
@@ -168,7 +168,7 @@ defineEmits(['like'])
   padding: 0;
   border: none;
   background: none;
-  color: #666;
+  color: var(--c-text-500);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -176,11 +176,11 @@ defineEmits(['like'])
 }
 
 .action-btn:hover {
-  color: #7c3aed;
+  color: var(--c-brand-hover);
 }
 
 .action-btn.active {
-  color: #7c3aed;
+  color: var(--c-brand-hover);
 }
 
 .share-btn {

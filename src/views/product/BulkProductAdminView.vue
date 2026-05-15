@@ -50,17 +50,17 @@ const bulkFrame = ref(null)
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .page-header h2 {
-  color: #333;
+  color: var(--text-primary);
   font-size: 20px;
   font-weight: 700;
 }
 
 .header-desc {
-  color: #999;
+  color: var(--c-text-400);
   font-size: 13px;
   margin-top: 4px;
 }
@@ -83,7 +83,7 @@ const bulkFrame = ref(null)
 .btn-back {
   padding: 8px 16px;
   background: #f0f1f3;
-  color: #555;
+  color: var(--c-text-600);
   border: 1px solid #d0d5dd;
   border-radius: 8px;
   cursor: pointer;
@@ -99,7 +99,7 @@ const bulkFrame = ref(null)
 .iframe-wrapper {
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border-strong);
   box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
 }
 

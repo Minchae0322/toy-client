@@ -159,6 +159,12 @@ function formatNumber(num) {
 
 @media (min-width: 768px) { .hero-card { padding: 28px 32px; border-radius: 4px; } }
 
+/* 다크 모드: hero-card 의 inline tier.bgColor (옅은 톤) 가 다크에선 어색 → 카드 톤으로 override.
+   inline style 보다 우선해야 하므로 !important. */
+:root[data-theme="dark"] .hero-card {
+  background: var(--bg-elevated) !important;
+}
+
 .hero-content {
   display: flex;
   flex-direction: column;
@@ -173,7 +179,7 @@ function formatNumber(num) {
 .greeting-title {
   font-size: 16px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.3px;
   line-height: 1.25;
 }
@@ -184,7 +190,7 @@ function formatNumber(num) {
 
 .greeting-sub {
   font-size: 12.5px;
-  color: #475569;
+  color: var(--c-text-600);
   font-weight: 600;
   line-height: 1.4;
   letter-spacing: -0.1px;
@@ -211,7 +217,7 @@ function formatNumber(num) {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: white;
+  background: var(--bg-elevated);
   box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
 }
 
@@ -233,7 +239,7 @@ function formatNumber(num) {
 .level-pill {
   font-size: 22px;
   font-weight: 900;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.8px;
   line-height: 1;
 }
@@ -246,43 +252,43 @@ function formatNumber(num) {
   align-items: center;
   gap: 9px;
   padding: 9px 13px;
-  background: #FF6B35;
-  color: #0A0E1A;
-  border: 2px solid #0A0E1A;
+  background: var(--c-heat);
+  color: var(--text-primary);
+  border: 2px solid var(--c-ink-900);
   border-radius: 4px;
   flex-shrink: 0;
-  box-shadow: 3px 3px 0 #0A0E1A;
+  box-shadow: 3px 3px 0 var(--c-ink-900);
 }
 
-.streak-icon { color: #0A0E1A; flex-shrink: 0; }
+.streak-icon { color: var(--text-primary); flex-shrink: 0; }
 .streak-text { line-height: 1.2; }
 .streak-num { display: flex; align-items: baseline; gap: 4px; }
-.streak-num span { font-size: 18px; font-weight: 900; color: #0A0E1A; letter-spacing: -0.4px; line-height: 1; font-variant-numeric: tabular-nums; }
-.streak-num em { font-size: 10.5px; color: #0A0E1A; font-style: normal; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; }
-.streak-sub { font-size: 10px; color: #0A0E1A; margin-top: 3px; font-weight: 700; letter-spacing: 0.2px; text-transform: uppercase; opacity: 0.8; }
+.streak-num span { font-size: 18px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.4px; line-height: 1; font-variant-numeric: tabular-nums; }
+.streak-num em { font-size: 10.5px; color: var(--text-primary); font-style: normal; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; }
+.streak-sub { font-size: 10px; color: var(--text-primary); margin-top: 3px; font-weight: 700; letter-spacing: 0.2px; text-transform: uppercase; opacity: 0.8; }
 
 /* ===== EXP ===== */
 .exp-section {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 6px;
   padding: 14px 16px;
 }
 
 .exp-text {
   font-size: 13px;
-  color: #475569;
+  color: var(--c-text-600);
   font-weight: 600;
   margin-bottom: 10px;
   letter-spacing: -0.1px;
 }
 
-.exp-text strong { color: #0A0E1A; font-weight: 800; }
-.exp-text .exp-remain { color: #0A0E1A; font-variant-numeric: tabular-nums; font-weight: 900; }
+.exp-text strong { color: var(--text-primary); font-weight: 800; }
+.exp-text .exp-remain { color: var(--text-primary); font-variant-numeric: tabular-nums; font-weight: 900; }
 
 .progress-bar {
   height: 8px;
-  background: #F1F3F6;
-  border: 1.5px solid #0A0E1A;
+  background: var(--border-default);
+  border: 1.5px solid var(--c-ink-900);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -297,7 +303,7 @@ function formatNumber(num) {
 .season-summary {
   display: flex;
   align-items: center;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 6px;
   padding: 12px 4px;
 }
@@ -311,12 +317,12 @@ function formatNumber(num) {
   padding: 0 8px;
 }
 
-.divider { width: 1px; align-self: stretch; background: #E5E7EB; }
+.divider { width: 1px; align-self: stretch; background: var(--border-strong); }
 
 .summary-value {
   font-size: 18px;
   font-weight: 900;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.5px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -324,7 +330,7 @@ function formatNumber(num) {
 
 @media (min-width: 768px) { .summary-value { font-size: 20px; } }
 
-.summary-label { font-size: 10.5px; color: #64748B; font-weight: 700; letter-spacing: 0.2px; }
+.summary-label { font-size: 10.5px; color: var(--c-text-500); font-weight: 700; letter-spacing: 0.2px; }
 
 /* ===== 티켓 row ===== */
 .ticket-row {
@@ -333,7 +339,7 @@ function formatNumber(num) {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 6px;
   flex-wrap: wrap;
 }
@@ -349,24 +355,24 @@ function formatNumber(num) {
   width: 32px;
   height: 32px;
   border-radius: 4px;
-  background: #F1F3F6;
+  background: var(--border-default);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #475569;
+  color: var(--c-text-600);
   flex-shrink: 0;
 }
 
 .ticket-text { min-width: 0; }
-.ticket-title { font-size: 12.5px; font-weight: 700; color: #0A0E1A; line-height: 1.3; letter-spacing: -0.2px; }
-.ticket-title strong { color: #0A0E1A; font-weight: 900; }
-.ticket-desc { font-size: 11.5px; color: #94A3B8; margin-top: 2px; font-weight: 500; }
+.ticket-title { font-size: 12.5px; font-weight: 700; color: var(--text-primary); line-height: 1.3; letter-spacing: -0.2px; }
+.ticket-title strong { color: var(--text-primary); font-weight: 900; }
+.ticket-desc { font-size: 11.5px; color: var(--c-text-400); margin-top: 2px; font-weight: 500; }
 
 .ticket-btn {
   padding: 8px 15px;
   border: none;
   border-radius: 4px;
-  background: #0A0E1A;
+  background: var(--c-ink-900);
   color: white;
   font-size: 12.5px;
   font-weight: 800;
@@ -377,5 +383,5 @@ function formatNumber(num) {
   flex-shrink: 0;
 }
 
-.ticket-btn:hover { background: #1E293B; }
+.ticket-btn:hover { background: var(--c-ink-700); }
 </style>

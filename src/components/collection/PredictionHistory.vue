@@ -188,7 +188,7 @@ watch(() => props.userId, loadInitial)
 @media (min-width: 768px) { .prediction-layout { gap: 28px; } }
 
 .section-card {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   padding: 20px;
 }
@@ -207,14 +207,14 @@ watch(() => props.userId, loadInitial)
 .section-title {
   font-size: 16px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.3px;
   line-height: 1.2;
 }
 
 @media (min-width: 768px) { .section-title { font-size: 18px; } }
 
-.section-sub { font-size: 13px; color: #64748B; margin-top: 4px; font-weight: 500; }
+.section-sub { font-size: 13px; color: var(--c-text-500); margin-top: 4px; font-weight: 500; }
 
 /* ===== 통계 그리드 ===== */
 .summary-grid {
@@ -222,7 +222,7 @@ watch(() => props.userId, loadInitial)
   grid-template-columns: repeat(2, 1fr);
   gap: 0;
   margin-bottom: 20px;
-  border: 1px solid #F1F3F6;
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -234,8 +234,8 @@ watch(() => props.userId, loadInitial)
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-right: 1px solid #F1F3F6;
-  border-bottom: 1px solid #F1F3F6;
+  border-right: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
 }
 
 @media (min-width: 640px) {
@@ -248,14 +248,14 @@ watch(() => props.userId, loadInitial)
   .stat-cell:nth-last-child(-n+2) { border-bottom: none; }
 }
 
-.stat-cell.rate { background: #9333EA; }
+.stat-cell.rate { background: var(--c-brand); }
 .stat-cell.rate .stat-label { color: rgba(255, 255, 255, 0.75); }
 .stat-cell.rate .stat-value.rate-value { color: white; }
 .stat-cell.rate .stat-value em { color: rgba(255, 255, 255, 0.7); }
 
 .stat-label {
   font-size: 11px;
-  color: #64748B;
+  color: var(--c-text-500);
   font-weight: 600;
   letter-spacing: 0.4px;
   text-transform: uppercase;
@@ -264,7 +264,7 @@ watch(() => props.userId, loadInitial)
 .stat-value {
   font-size: 22px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   line-height: 1;
   letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
@@ -272,27 +272,27 @@ watch(() => props.userId, loadInitial)
 
 @media (min-width: 768px) { .stat-value { font-size: 24px; } }
 
-.stat-value.hit { color: #16A34A; }
-.stat-value.miss { color: #DC2626; }
-.stat-value.rate-value { color: #9333EA; }
-.stat-value em { font-size: 16px; color: #A78BFA; font-style: normal; font-weight: 700; margin-left: 2px; }
+.stat-value.hit { color: var(--c-success); }
+.stat-value.miss { color: var(--c-danger); }
+.stat-value.rate-value { color: var(--c-brand); }
+.stat-value em { font-size: 16px; color: var(--c-brand); font-style: normal; font-weight: 700; margin-left: 2px; }
 
 .rate-bar {
   height: 6px;
-  background: #F1F3F6;
+  background: var(--border-default);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .rate-bar-fill {
   height: 100%;
-  background: #9333EA;
+  background: var(--c-brand);
   border-radius: 3px;
   transition: width 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 /* ===== 필터 칩 ===== */
-.filter-chips { display: flex; gap: 4px; flex-wrap: wrap; padding: 3px; background: #F7F8FA; border-radius: 8px; }
+.filter-chips { display: flex; gap: 4px; flex-wrap: wrap; padding: 3px; background: var(--bg-subtle); border-radius: 8px; }
 
 .filter-chip {
   padding: 6px 12px;
@@ -301,22 +301,22 @@ watch(() => props.userId, loadInitial)
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
-  color: #64748B;
+  color: var(--c-text-500);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.filter-chip:hover { color: #0A0E1A; }
+.filter-chip:hover { color: var(--text-primary); }
 
 .filter-chip.active {
-  background: #9333EA;
+  background: var(--c-brand);
   color: white;
   box-shadow: 0 3px 8px rgba(147, 51, 234, 0.25);
 }
 
 /* ===== 히스토리 ===== */
-.empty { padding: 40px 0; text-align: center; font-size: 13px; color: #94A3B8; }
+.empty { padding: 40px 0; text-align: center; font-size: 13px; color: var(--c-text-400); }
 
 .history-list { list-style: none; padding: 0; margin: 0; }
 
@@ -325,7 +325,7 @@ watch(() => props.userId, loadInitial)
   align-items: center;
   gap: 12px;
   padding: 14px 0;
-  border-top: 1px solid #F1F3F6;
+  border-top: 1px solid var(--border-default);
 }
 
 @media (min-width: 768px) { .history-row { gap: 16px; } }
@@ -340,7 +340,7 @@ watch(() => props.userId, loadInitial)
   font-weight: 800;
   padding: 6px 11px;
   border-radius: 7px;
-  background: #EF4444;
+  background: var(--c-danger);
   color: white;
   flex-shrink: 0;
   letter-spacing: 0.2px;
@@ -350,7 +350,7 @@ watch(() => props.userId, loadInitial)
 }
 
 .result-tag.hit {
-  background: #16A34A;
+  background: var(--c-success);
   box-shadow: 0 3px 8px rgba(22, 163, 74, 0.22);
 }
 
@@ -359,7 +359,7 @@ watch(() => props.userId, loadInitial)
 .battle-title {
   font-size: 14px;
   font-weight: 700;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -367,13 +367,13 @@ watch(() => props.userId, loadInitial)
   letter-spacing: -0.2px;
 }
 
-.prediction-line { font-size: 12px; color: #64748B; font-weight: 500; }
-.prediction-line strong { color: #0A0E1A; font-weight: 700; margin: 0 2px; }
-.prediction-line .sep { margin: 0 6px; color: #CBD5E1; }
+.prediction-line { font-size: 12px; color: var(--c-text-500); font-weight: 500; }
+.prediction-line strong { color: var(--text-primary); font-weight: 700; margin: 0 2px; }
+.prediction-line .sep { margin: 0 6px; color: var(--c-text-300); }
 
 .history-date {
   font-size: 12px;
-  color: #94A3B8;
+  color: var(--c-text-400);
   font-weight: 600;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
@@ -383,7 +383,7 @@ watch(() => props.userId, loadInitial)
   text-align: center;
   padding: 18px 0 0;
   font-size: 12px;
-  color: #94A3B8;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
@@ -395,9 +395,9 @@ watch(() => props.userId, loadInitial)
 
 .load-more-btn {
   padding: 9px 20px;
-  border: 1px solid #E5E7EB;
-  background: white;
-  color: #0A0E1A;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-size: 13px;
   font-weight: 700;
   font-family: inherit;
@@ -406,5 +406,5 @@ watch(() => props.userId, loadInitial)
   transition: all 0.15s ease;
 }
 
-.load-more-btn:hover { border-color: #9333EA; color: #9333EA; background: #FAF5FF; }
+.load-more-btn:hover { border-color: var(--c-brand); color: var(--c-brand); background: var(--c-brand-soft); }
 </style>

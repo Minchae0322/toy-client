@@ -31,7 +31,7 @@
 
 .action-button {
   /* bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow */
-  background-color: white; /* bg-white */
+  background-color: var(--bg-elevated); /* bg-white */
   padding: 1.5rem; /* p-6 (6 * 0.25rem = 1.5rem) */
   border-radius: 0.75rem; /* rounded-xl */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */

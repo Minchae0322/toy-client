@@ -135,7 +135,7 @@ defineEmits(['like']);
 
 .meme-card {
   /* bg-white rounded-xl shadow-sm overflow-hidden */
-  background-color: white;
+  background-color: var(--bg-elevated);
   border-radius: 0.75rem; /* rounded-xl */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
   overflow: hidden;
@@ -246,6 +246,6 @@ defineEmits(['like']);
 }
 
 .share-button:hover {
-  color: #a855f7; /* hover:text-purple-500 */
+  color: var(--c-brand); /* hover:text-purple-500 */
 }
 </style>

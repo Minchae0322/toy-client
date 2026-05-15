@@ -212,7 +212,7 @@ const formatDate = (dateString) => {
 
 <style scoped>
 .product-card {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
@@ -226,7 +226,7 @@ const formatDate = (dateString) => {
 }
 
 .product-card.is-liked {
-  border: 2px solid #fbbf24;
+  border: 2px solid var(--c-warning);
   box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
@@ -241,7 +241,7 @@ const formatDate = (dateString) => {
   width: 100%;
   height: 200px;
   overflow: hidden;
-  background: #f8fafc;
+  background: var(--bg-subtle);
 }
 
 .grid-layout .product-image {
@@ -261,8 +261,8 @@ const formatDate = (dateString) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #cbd5e1;
-  background: #f1f5f9;
+  color: var(--c-text-300);
+  background: var(--bg-subtle);
 }
 
 .grid-layout .badges {
@@ -280,25 +280,25 @@ const formatDate = (dateString) => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--header-blur-bg);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .grid-layout .like-btn:hover {
-  background: white;
-  color: #ef4444;
+  background: var(--bg-elevated);
+  color: var(--c-danger);
   transform: scale(1.1);
 }
 
 .grid-layout .like-btn.active {
-  background: #fef2f2;
-  color: #ef4444;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 .grid-layout .info-section {
@@ -307,7 +307,7 @@ const formatDate = (dateString) => {
 
 .grid-layout .brand-name {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--c-text-500);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -317,7 +317,7 @@ const formatDate = (dateString) => {
 .grid-layout .product-name {
   font-size: 1rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--c-text-600);
   margin: 0 0 0.5rem 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -328,8 +328,8 @@ const formatDate = (dateString) => {
 
 .grid-layout .category {
   font-size: 0.75rem;
-  color: #3b82f6;
-  background: #eff6ff;
+  color: var(--c-info);
+  background: var(--c-info-soft);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   display: inline-block;
@@ -351,12 +351,12 @@ const formatDate = (dateString) => {
 .grid-layout .rating-text {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
 }
 
 .grid-layout .review-count {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .grid-layout .price-section {
@@ -366,14 +366,14 @@ const formatDate = (dateString) => {
 .grid-layout .buy-price {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--c-text-600);
 }
 
 .grid-layout .stats {
   display: flex;
   justify-content: space-between;
   padding-top: 0.75rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bg-subtle);
 }
 
 .grid-layout .stat-item {
@@ -381,7 +381,7 @@ const formatDate = (dateString) => {
   align-items: center;
   gap: 0.25rem;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 /* 리스트 모드 스타일 */
@@ -397,7 +397,7 @@ const formatDate = (dateString) => {
   flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
-  background: #f8fafc;
+  background: var(--bg-subtle);
 }
 
 .list-layout .product-image {
@@ -412,8 +412,8 @@ const formatDate = (dateString) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #cbd5e1;
-  background: #f1f5f9;
+  color: var(--c-text-300);
+  background: var(--bg-subtle);
 }
 
 .list-layout .info-section {
@@ -441,14 +441,14 @@ const formatDate = (dateString) => {
 
 .list-layout .brand-name {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--c-text-500);
   font-weight: 600;
 }
 
 .list-layout .category {
   font-size: 0.75rem;
-  color: #3b82f6;
-  background: #eff6ff;
+  color: var(--c-info);
+  background: var(--c-info-soft);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
 }
@@ -461,7 +461,7 @@ const formatDate = (dateString) => {
 .list-layout .product-name {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--c-text-600);
   margin: 0 0 0.75rem 0;
   line-height: 1.4;
 }
@@ -486,17 +486,17 @@ const formatDate = (dateString) => {
 .list-layout .rating-text {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
 }
 
 .list-layout .review-count {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .list-layout .release-date {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .list-layout .action-section {
@@ -514,7 +514,7 @@ const formatDate = (dateString) => {
 .list-layout .buy-price {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--c-text-600);
 }
 
 .list-layout .stats {
@@ -527,7 +527,7 @@ const formatDate = (dateString) => {
   align-items: center;
   gap: 0.25rem;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .list-layout .like-btn {
@@ -535,24 +535,24 @@ const formatDate = (dateString) => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .list-layout .like-btn:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--bg-subtle);
+  border-color: var(--c-text-300);
 }
 
 .list-layout .like-btn.active {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #ef4444;
+  background: var(--c-danger-soft);
+  border-color: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 /* 공통 배지 스타일 */
@@ -566,13 +566,13 @@ const formatDate = (dateString) => {
 }
 
 .badge.new {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .badge.top-rated {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
 }
 
 /* 반응형 */
@@ -612,27 +612,27 @@ const formatDate = (dateString) => {
 /* 포커스 접근성 */
 .product-card:focus,
 .like-btn:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--c-info);
   outline-offset: 2px;
 }
 
 /* 다크 모드 지원 */
 @media (prefers-color-scheme: dark) {
   .product-card {
-    background: #1f2937;
-    color: #f9fafb;
+    background: var(--c-ink-900);
+    color: var(--bg-subtle);
   }
 
   .product-name {
-    color: #f9fafb;
+    color: var(--bg-subtle);
   }
 
   .brand-name {
-    color: #9ca3af;
+    color: var(--c-text-400);
   }
 
   .buy-price {
-    color: #f9fafb;
+    color: var(--bg-subtle);
   }
 
   .category {
@@ -641,13 +641,13 @@ const formatDate = (dateString) => {
   }
 
   .like-btn {
-    background: #374151;
-    border-color: #4b5563;
-    color: #d1d5db;
+    background: var(--c-text-600);
+    border-color: var(--c-text-600);
+    color: var(--c-text-300);
   }
 
   .like-btn:hover {
-    background: #4b5563;
+    background: var(--c-text-600);
   }
 
   .like-btn.active {
@@ -657,16 +657,16 @@ const formatDate = (dateString) => {
   }
 
   .image-placeholder {
-    background: #374151;
+    background: var(--c-text-600);
   }
 
   .grid-layout .image-container,
   .list-layout .image-container {
-    background: #374151;
+    background: var(--c-text-600);
   }
 
   .grid-layout .stats {
-    border-top-color: #374151;
+    border-top-color: var(--c-text-600);
   }
 }
 

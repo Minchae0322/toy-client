@@ -1,0 +1,190 @@
+/* ============================================================
+   디자인 토큰 — Light(기본) + Dark 두 세트
+   ------------------------------------------------------------
+   원본 표: docs/design-system.md §1
+   사용 규칙:
+     - 컴포넌트 scoped CSS 에서는 hex 대신 var(--c-*) / var(--shadow-*) 사용
+     - 의미 기반 alias 가 있으면 그 쪽을 우선 사용
+         예) 페이지 배경  → var(--bg-base)
+             카드 배경    → var(--bg-elevated)
+             본문 텍스트  → var(--text-primary)
+     - 신규 색이 필요하면 hex 박지 말고 여기서 토큰 먼저 추가
+   다크 모드 활성화:
+     <html data-theme="dark">  (useTheme 컴포저블이 자동 토글)
+   ============================================================ */
+
+/* ===== Light theme (default) ===== */
+:root {
+    /* --- Brand --- */
+    --c-brand: #9333EA;
+    --c-brand-soft: #FAF5FF;
+    --c-brand-hover: #7C3AED;
+
+    /* --- Ink (강한 텍스트 / 다크 버튼) --- */
+    --c-ink-900: #0A0E1A;
+    --c-ink-700: #1E293B;
+
+    /* --- Text scale --- */
+    --c-text-600: #475569;
+    --c-text-500: #64748B;
+    --c-text-400: #94A3B8;
+    --c-text-300: #CBD5E1;
+
+    /* --- Surface (배경 단계) --- */
+    --c-surface: #FFFFFF;
+    --c-surface-subtle: #F7F8FA;
+    --c-surface-mute: #F2F4F6;
+
+    /* --- Border --- */
+    --c-border: #F1F3F6;
+    --c-border-strong: #E5E7EB;
+
+    /* --- Semantic --- */
+    --c-success: #16A34A;
+    --c-success-soft: #DCFCE7;
+    --c-warning: #EAB308;
+    --c-warning-soft: #FEF9C3;
+    --c-danger: #EF4444;
+    --c-danger-soft: #FEE2E2;
+    --c-heat: #F97316;
+    --c-heat-soft: #FFF7ED;
+
+    /* Info — 디자인 시스템 표 밖이지만 카테고리/배틀 디테일에서 자주 쓰이는 블루.
+       (브랜드 보라와 구분되는 정보/액션 컬러) */
+    --c-info: #4a6cf7;
+    --c-info-soft: #eff2ff;
+    --c-info-hover: #3a5ce7;
+
+    /* --- Medal --- */
+    --c-bronze: #D97706;
+    --c-bronze-soft: #FFEDD5;
+    --c-silver: #94A3B8;
+    --c-silver-soft: #F1F5F9;
+    --c-gold: #EAB308;
+    --c-gold-soft: #FEF9C3;
+
+    /* --- Shadow --- */
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 0 0 1px rgba(15, 23, 42, 0.05), 0 6px 20px rgba(15, 23, 42, 0.05);
+    --shadow-lg: 0 10px 28px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04);
+    --shadow-brand: 0 4px 12px rgba(147, 51, 234, 0.28);
+    --shadow-heat: 0 8px 20px rgba(249, 115, 22, 0.3);
+
+    /* --- Radius --- */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+
+    /* ===== Semantic alias =====
+       컴포넌트는 가급적 alias 사용. raw token (--c-surface 등) 은
+       알리아스로 표현 안 되는 경우(예: 메달 색)에만 직접 사용.
+
+       중요: --c-ink-900 / --c-ink-700 은 "검정 카드/검정 버튼 배경" 용도라
+       다크 모드에서도 검정 톤 유지. 본문 텍스트는 --text-primary 사용 (자동 반전). */
+    --bg-base: #FFFFFF;                     /* 페이지/헤더/푸터 배경 */
+    --bg-elevated: #FFFFFF;                 /* 카드 배경 */
+    --bg-subtle: #F7F8FA;                   /* 보조 섹션, 탭 트레이 */
+    --bg-mute: #F2F4F6;                     /* hover bg, dev bar */
+
+    --text-primary: #0A0E1A;                /* 본문 헤드라인 */
+    --text-secondary: #64748B;              /* 본문 */
+    --text-tertiary: #94A3B8;               /* 보조 설명, 메타 */
+    --text-disabled: #CBD5E1;
+
+    --border-default: #F1F3F6;
+    --border-strong: #E5E7EB;
+
+    /* 특수 색상: ink-900(검정) 배경 위에 올라가는 텍스트.
+       라이트/다크 모두 흰색 — 검정 카드는 다크에서도 검정 유지하므로 흰 글씨 유지. */
+    --text-on-ink: #FFFFFF;
+
+    /* sticky 헤더의 backdrop-blur 반투명 배경 (라이트/다크 톤 반전) */
+    --header-blur-bg: rgba(255, 255, 255, 0.92);
+}
+
+/* ===== Dark theme overrides =====
+   토큰만 다시 정의 → 컴포넌트는 동일한 var() 참조라 자동 적용.
+   배경/텍스트만 반전, 브랜드는 채도만 살짝 조정. */
+:root[data-theme="dark"] {
+    /* Surface 반전 — 검정 베이스, 단계별로 미세하게 밝아짐 */
+    --c-surface: #0F1218;
+    --c-surface-subtle: #161B26;
+    --c-surface-mute: #1E2533;
+
+    /* Ink — 다크에서도 검정 유지 (검정 카드/버튼 배경 용도).
+       본문 텍스트의 자동 반전은 --text-primary 가 담당. */
+    --c-ink-900: #0A0E1A;
+    --c-ink-700: #1E293B;
+
+    /* Text scale — 어두운 바닥에서도 위계 유지 */
+    --c-text-600: #D1D5DB;
+    --c-text-500: #9CA3AF;
+    --c-text-400: #6B7280;
+    --c-text-300: #4B5563;
+
+    /* Border — 약한 흰색 (hex 가 아니라 rgba 로 자연스럽게) */
+    --c-border: rgba(255, 255, 255, 0.08);
+    --c-border-strong: rgba(255, 255, 255, 0.16);
+
+    /* Brand — 다크 배경에서 살짝 밝게(채도↑명도↑) */
+    --c-brand: #A855F7;
+    --c-brand-soft: rgba(168, 85, 247, 0.16);
+    --c-brand-hover: #C084FC;
+
+    /* Semantic — accent color 는 살짝 밝게, soft 는 RGBA 로
+       (라이트의 단색 파스텔은 다크에선 너무 떠 보임) */
+    --c-success: #22C55E;
+    --c-success-soft: rgba(34, 197, 94, 0.16);
+    --c-warning: #FACC15;
+    --c-warning-soft: rgba(250, 204, 21, 0.16);
+    --c-danger: #F87171;
+    --c-danger-soft: rgba(248, 113, 113, 0.16);
+    --c-heat: #FB923C;
+    --c-heat-soft: rgba(251, 146, 60, 0.16);
+
+    /* Info — 다크에서 살짝 밝게 + soft 는 RGBA */
+    --c-info: #818cf8;
+    --c-info-soft: rgba(129, 140, 248, 0.16);
+    --c-info-hover: #a5b4fc;
+
+    --c-bronze: #F59E0B;
+    --c-bronze-soft: rgba(245, 158, 11, 0.16);
+    --c-silver: #CBD5E1;
+    --c-silver-soft: rgba(203, 213, 225, 0.16);
+    --c-gold: #FACC15;
+    --c-gold-soft: rgba(250, 204, 21, 0.16);
+
+    /* Shadow — 어두운 배경에선 그림자가 안 보이므로 더 진하게 */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 6px 20px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-brand: 0 4px 12px rgba(168, 85, 247, 0.35);
+    --shadow-heat: 0 8px 20px rgba(251, 146, 60, 0.35);
+
+    /* Semantic alias — 다크 값으로 override.
+       (alias 는 라이트 :root 에서 raw 값으로 정의돼 있어서 다크에서 다시 명시 필요) */
+    --bg-base: #0F1218;                     /* 페이지 배경 */
+    --bg-elevated: #161B26;                 /* 카드 — base 보다 한 단계 밝게 떠보임 */
+    --bg-subtle: #1E2533;                   /* 보조 섹션 */
+    --bg-mute: #2A3142;                     /* hover */
+
+    --text-primary: #F5F7FA;                /* 본문 헤드라인 - 다크에서 흰색 */
+    --text-secondary: #D1D5DB;
+    --text-tertiary: #9CA3AF;
+    --text-disabled: #6B7280;
+
+    --border-default: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    /* 검정 카드는 다크에서도 검정 유지하므로 흰 글씨 유지 (변하지 않음) */
+    --text-on-ink: #FFFFFF;
+
+    /* sticky 헤더 backdrop-blur 다크 톤 */
+    --header-blur-bg: rgba(15, 18, 24, 0.85);
+}
+
+/* ===== 배경/텍스트 전환 시 부드럽게 ===== */
+html {
+    transition: background-color 0.2s ease, color 0.2s ease;
+}

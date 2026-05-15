@@ -209,7 +209,7 @@ function mapErrorCode(code, fallback) {
   padding: 16px;
 }
 .report-modal {
-  background: #fff;
+  background: var(--bg-elevated);
   border-radius: 16px;
   width: 100%;
   max-width: 420px;
@@ -228,7 +228,7 @@ function mapErrorCode(code, fallback) {
 .report-title {
   font-size: 17px;
   font-weight: 800;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
@@ -237,18 +237,18 @@ function mapErrorCode(code, fallback) {
   height: 30px;
   border: none;
   background: transparent;
-  color: #9ca3af;
+  color: var(--c-text-400);
   font-size: 16px;
   cursor: pointer;
   border-radius: 50%;
   transition: background 0.15s;
 }
-.close-btn:hover:not(:disabled) { background: #f4f4f5; color: #52525b; }
+.close-btn:hover:not(:disabled) { background: var(--bg-mute); color: #52525b; }
 .close-btn:disabled { cursor: not-allowed; opacity: 0.5; }
 
 .report-sub {
   font-size: 13px;
-  color: #71717a;
+  color: var(--c-text-500);
   line-height: 1.5;
   margin: 0 0 16px;
 }
@@ -264,7 +264,7 @@ function mapErrorCode(code, fallback) {
 .reason-legend {
   font-size: 13px;
   font-weight: 700;
-  color: #3f3f46;
+  color: var(--c-text-600);
   margin-bottom: 6px;
   padding: 0;
 }
@@ -273,7 +273,7 @@ function mapErrorCode(code, fallback) {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border-strong);
   border-radius: 10px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -281,15 +281,15 @@ function mapErrorCode(code, fallback) {
   color: #27272a;
   font-weight: 500;
 }
-.reason-item:hover { border-color: #d4d4d8; }
+.reason-item:hover { border-color: var(--c-text-300); }
 .reason-item.selected {
-  border-color: #9333EA;
-  background: #faf5ff;
-  color: #6b21a8;
+  border-color: var(--c-brand);
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
   font-weight: 700;
 }
 .reason-item input[type="radio"] {
-  accent-color: #9333EA;
+  accent-color: var(--c-brand);
   width: 16px;
   height: 16px;
   flex-shrink: 0;
@@ -301,14 +301,14 @@ function mapErrorCode(code, fallback) {
   display: block;
   font-size: 13px;
   font-weight: 700;
-  color: #3f3f46;
+  color: var(--c-text-600);
   margin-bottom: 6px;
 }
-.detail-hint { font-weight: 500; color: #a1a1aa; margin-left: 4px; }
+.detail-hint { font-weight: 500; color: var(--c-text-400); margin-left: 4px; }
 .detail-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
@@ -318,17 +318,17 @@ function mapErrorCode(code, fallback) {
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
-  background: #fff;
+  background: var(--bg-elevated);
 }
 .detail-input:focus {
-  border-color: #9333EA;
+  border-color: var(--c-brand);
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.12);
 }
-.detail-input:disabled { background: #f9fafb; cursor: not-allowed; }
+.detail-input:disabled { background: var(--bg-subtle); cursor: not-allowed; }
 .detail-counter {
   margin-top: 4px;
   font-size: 11px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   text-align: right;
 }
 
@@ -338,17 +338,17 @@ function mapErrorCode(code, fallback) {
   gap: 10px;
   padding: 12px;
   margin: 0 0 12px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border-strong);
   border-radius: 10px;
-  background: #fafafa;
+  background: var(--bg-subtle);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
 
-.block-toggle:hover { border-color: #d4d4d8; background: #f4f4f5; }
+.block-toggle:hover { border-color: var(--c-text-300); background: var(--bg-mute); }
 
 .block-toggle input[type="checkbox"] {
-  accent-color: #9333EA;
+  accent-color: var(--c-brand);
   width: 16px;
   height: 16px;
   margin-top: 2px;
@@ -367,7 +367,7 @@ function mapErrorCode(code, fallback) {
 
 .block-toggle-desc {
   font-size: 12px;
-  color: #71717a;
+  color: var(--c-text-500);
   font-weight: 500;
   line-height: 1.4;
 }
@@ -375,8 +375,8 @@ function mapErrorCode(code, fallback) {
 .error-msg {
   margin: 0 0 12px;
   padding: 10px 12px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--c-danger-soft);
+  border: 1px solid var(--c-danger-soft);
   border-radius: 8px;
   color: #b91c1c;
   font-size: 13px;
@@ -400,16 +400,16 @@ function mapErrorCode(code, fallback) {
   transition: background 0.15s, opacity 0.15s;
 }
 .btn-cancel {
-  background: #f4f4f5;
+  background: var(--bg-mute);
   color: #52525b;
 }
-.btn-cancel:hover:not(:disabled) { background: #e4e4e7; }
+.btn-cancel:hover:not(:disabled) { background: var(--border-strong); }
 .btn-submit {
-  background: #9333EA;
+  background: var(--c-brand);
   color: #fff;
 }
-.btn-submit:hover:not(:disabled) { background: #7e22ce; }
-.btn-submit:disabled { background: #d8b4fe; cursor: not-allowed; }
+.btn-submit:hover:not(:disabled) { background: var(--c-brand); }
+.btn-submit:disabled { background: var(--c-brand-soft); cursor: not-allowed; }
 .btn-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .report-fade-enter-active,

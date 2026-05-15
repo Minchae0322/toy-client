@@ -330,7 +330,7 @@ const handleSendMessage = () => {
 </script>
 
 <style scoped>
-/* 색상: #191F28 / #4E5968 / #8B95A1 / #B0B8C1 (토스 계열) */
+/* 색상: var(--text-primary) / var(--c-text-600) / var(--c-text-400) / var(--c-text-300) (토스 계열) */
 /* 간격: 4px 그리드 */
 
 .info-section {
@@ -338,7 +338,7 @@ const handleSendMessage = () => {
   flex-direction: column;
   height: 100%;
   padding: 16px 20px 24px;
-  background: #fff;
+  background: var(--bg-elevated);
 }
 
 .info-content { flex: 1; }
@@ -353,10 +353,10 @@ const handleSendMessage = () => {
   margin-left: auto;
   font-size: 12px;
   font-weight: 600;
-  color: #8B95A1;
+  color: var(--c-text-400);
   letter-spacing: -0.01em;
 }
-.breadcrumb-arrow { margin: 0 2px; color: #B0B8C1; }
+.breadcrumb-arrow { margin: 0 2px; color: var(--c-text-300); }
 
 /* 뱃지 */
 .eval-badge {
@@ -364,17 +364,17 @@ const handleSendMessage = () => {
   padding: 6px 12px; border-radius: 100px;
   font-size: 12px; font-weight: 700;
 }
-.eval-badge.best { background-color: rgba(254,243,199,0.92); color: #92400e; }
-.eval-badge.good { background-color: rgba(220,252,231,0.92); color: #166534; }
-.eval-badge.okay { background-color: rgba(243,232,255,0.92); color: #6b21a8; }
-.eval-badge.bad { background-color: rgba(254,226,226,0.92); color: #991b1b; }
+.eval-badge.best { background-color: rgba(254,243,199,0.92); color: var(--c-warning); }
+.eval-badge.good { background-color: rgba(220,252,231,0.92); color: var(--c-success); }
+.eval-badge.okay { background-color: rgba(243,232,255,0.92); color: var(--c-brand); }
+.eval-badge.bad { background-color: rgba(254,226,226,0.92); color: var(--c-danger); }
 
 .eval-dot { width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; opacity: 0.6; }
 
 .trend-badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 6px 12px; border-radius: 100px;
-  background: #f43f5e;
+  background: var(--c-danger);
   font-size: 12px; font-weight: 700; color: white;
   animation: pulse-trend 2s ease-in-out infinite;
 }
@@ -387,10 +387,10 @@ const handleSendMessage = () => {
 .quote-wrapper { position: relative; padding-left: 28px; }
 .quote-icon {
   position: absolute; left: 0; top: 2px;
-  width: 18px; height: 18px; color: #9333EA; opacity: 0.3;
+  width: 18px; height: 18px; color: var(--c-brand); opacity: 0.3;
 }
 .review-text {
-  font-size: 16px; line-height: 1.7; color: #191F28;
+  font-size: 16px; line-height: 1.7; color: var(--text-primary);
   font-weight: 600; white-space: pre-line; margin: 0;
   letter-spacing: -0.02em; word-break: keep-all;
   overflow-wrap: anywhere;
@@ -399,35 +399,35 @@ const handleSendMessage = () => {
 /* 제품 배너 */
 .product-info-banner {
   display: flex; justify-content: space-between; align-items: center;
-  background: #F7F8FA; padding: 16px 20px; border-radius: 12px;
+  background: var(--bg-subtle); padding: 16px 20px; border-radius: 12px;
   margin-bottom: 16px; border: none;
   cursor: pointer; transition: all 0.15s ease;
 }
-.product-info-banner.is-clickable:hover { background: #F2F4F6; }
-.product-info-banner.is-clickable:active { transform: scale(0.98); background: #F2F4F6; }
+.product-info-banner.is-clickable:hover { background: var(--bg-mute); }
+.product-info-banner.is-clickable:active { transform: scale(0.98); background: var(--bg-mute); }
 
 /* 상태별 스타일 */
 .product-info-banner.status-pending {
-  background: #FFFBEB;
-  box-shadow: inset 0 0 0 1px #FDE68A;
+  background: var(--c-warning-soft);
+  box-shadow: inset 0 0 0 1px var(--c-warning);
 }
-.product-info-banner.status-pending .product-title { color: #92400E; }
+.product-info-banner.status-pending .product-title { color: var(--c-warning); }
 
 .product-info-banner.status-rejected,
 .product-info-banner.status-deleted {
-  background: #F9FAFB;
+  background: var(--bg-subtle);
 }
 .product-info-banner.status-rejected .product-title,
 .product-info-banner.status-deleted .product-title {
-  color: #6B7280;
+  color: var(--c-text-500);
   text-decoration: line-through;
 }
 
-.product-info-banner.is-custom { background: #F7F8FA; }
+.product-info-banner.is-custom { background: var(--bg-subtle); }
 .custom-tag {
   display: inline-flex; align-items: center;
   padding: 3px 8px; border-radius: 6px;
-  background: #E5E8EB; color: #4E5968;
+  background: var(--border-default); color: var(--c-text-600);
   font-size: 10.5px; font-weight: 700;
   letter-spacing: -0.1px; flex-shrink: 0; white-space: nowrap;
 }
@@ -437,18 +437,18 @@ const handleSendMessage = () => {
   margin-top: -8px; /* 배너와의 간격 살짝 좁게 */
   margin-bottom: 16px;
   padding: 14px 16px;
-  background: #ffffff;
-  border: 1px solid #F2F4F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-mute);
   border-radius: 12px;
 }
 .linked-product-card.status-pending {
-  background: #FFFBEB;
-  border-color: #FDE68A;
+  background: var(--c-warning-soft);
+  border-color: var(--c-warning);
 }
 .linked-product-card.status-rejected,
 .linked-product-card.status-deleted {
-  background: #F9FAFB;
-  border-color: #E5E8EB;
+  background: var(--bg-subtle);
+  border-color: var(--border-default);
 }
 
 .linked-product-header {
@@ -457,17 +457,17 @@ const handleSendMessage = () => {
 }
 .linked-product-label {
   font-size: 11px; font-weight: 700;
-  color: #8B95A1; letter-spacing: -0.1px;
+  color: var(--c-text-400); letter-spacing: -0.1px;
   text-transform: uppercase;
 }
 .linked-product-detail-btn {
   display: inline-flex; align-items: center; gap: 2px;
   padding: 4px 8px 4px 10px; border: none; border-radius: 6px;
-  background: transparent; color: #9333EA;
+  background: transparent; color: var(--c-brand);
   font-size: 12px; font-weight: 700; letter-spacing: -0.1px;
   cursor: pointer; transition: background 0.15s ease;
 }
-.linked-product-detail-btn:hover { background: #F3E8FF; }
+.linked-product-detail-btn:hover { background: var(--c-brand-soft); }
 .linked-product-detail-btn .arrow-icon { width: 14px; height: 14px; }
 
 .linked-product-body {
@@ -476,14 +476,14 @@ const handleSendMessage = () => {
 .linked-product-thumb {
   width: 60px; height: 60px;
   border-radius: 10px; object-fit: cover;
-  background: #F2F4F6; flex-shrink: 0;
-  border: 1px solid #F2F4F6;
+  background: var(--bg-mute); flex-shrink: 0;
+  border: 1px solid var(--bg-mute);
 }
 .linked-product-thumb.is-clickable { cursor: pointer; }
 .linked-product-thumb.is-clickable:hover { opacity: 0.92; }
 .linked-product-thumb-empty {
   display: flex; align-items: center; justify-content: center;
-  color: #B0B8C1;
+  color: var(--c-text-300);
 }
 .linked-product-thumb-empty svg { width: 24px; height: 24px; }
 
@@ -493,101 +493,101 @@ const handleSendMessage = () => {
 }
 .linked-product-brand {
   font-size: 11.5px; font-weight: 600;
-  color: #8B95A1; letter-spacing: -0.1px;
+  color: var(--c-text-400); letter-spacing: -0.1px;
 }
 .linked-product-name {
   font-size: 14px; font-weight: 700;
-  color: #191F28; letter-spacing: -0.01em;
+  color: var(--text-primary); letter-spacing: -0.01em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .linked-product-price {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 13px; font-weight: 700;
-  color: #191F28; letter-spacing: -0.01em;
+  color: var(--text-primary); letter-spacing: -0.01em;
   margin-top: 2px;
 }
 .linked-product-price-label {
   font-size: 10.5px; font-weight: 600;
-  color: #8B95A1; letter-spacing: -0.1px;
+  color: var(--c-text-400); letter-spacing: -0.1px;
 }
 
 .linked-product-status-help {
   margin: 12px 0 0;
   padding-top: 10px;
-  border-top: 1px dashed #E5E8EB;
+  border-top: 1px dashed var(--border-default);
   font-size: 11.5px; font-weight: 500;
-  color: #6B7280; letter-spacing: -0.01em;
+  color: var(--c-text-500); letter-spacing: -0.01em;
 }
 .linked-product-card.status-rejected .linked-product-name,
 .linked-product-card.status-deleted .linked-product-name {
-  color: #6B7280;
+  color: var(--c-text-500);
   text-decoration: line-through;
 }
 .product-main { min-width: 0; flex: 1; }
 .buy-place {
   display: flex; align-items: center; gap: 4px;
-  font-size: 12px; font-weight: 600; color: #9333EA; margin-bottom: 4px;
+  font-size: 12px; font-weight: 600; color: var(--c-brand); margin-bottom: 4px;
 }
 .place-icon { width: 13px; height: 13px; flex-shrink: 0; }
 .product-title-row {
   display: flex; align-items: center; gap: 8px; min-width: 0;
 }
 .product-title {
-  font-size: 16px; font-weight: 700; color: #191F28;
+  font-size: 16px; font-weight: 700; color: var(--text-primary);
   margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   letter-spacing: -0.02em; min-width: 0;
 }
 .price-area { text-align: right; flex-shrink: 0; margin-left: 16px; }
-.price-label { display: block; font-size: 11px; color: #8B95A1; margin-bottom: 2px; font-weight: 500; }
-.price-value { font-size: 17px; font-weight: 700; color: #9333EA; white-space: nowrap; letter-spacing: -0.02em; }
+.price-label { display: block; font-size: 11px; color: var(--c-text-400); margin-bottom: 2px; font-weight: 500; }
+.price-value { font-size: 17px; font-weight: 700; color: var(--c-brand); white-space: nowrap; letter-spacing: -0.02em; }
 
 /* 인터랙션 바 */
 .interaction-bar {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 20px; padding: 12px 0;
-  border-bottom: 1px solid #F2F4F6;
+  border-bottom: 1px solid var(--bg-mute);
 }
 .stat-group { display: flex; gap: 12px; }
 .stat-btn {
   display: flex; align-items: center; gap: 4px;
   background: none; border: none; padding: 0;
-  font-size: 14px; font-weight: 600; color: #8B95A1;
+  font-size: 14px; font-weight: 600; color: var(--c-text-400);
   cursor: pointer; transition: color 0.15s ease;
 }
 .stat-btn .icon { width: 20px; height: 20px; }
-.stat-btn.active { color: #f43f5e; }
+.stat-btn.active { color: var(--c-danger); }
 .bookmark-btn {
   background: none; border: none; padding: 0;
-  color: #8B95A1; cursor: pointer; transition: color 0.15s ease;
+  color: var(--c-text-400); cursor: pointer; transition: color 0.15s ease;
 }
 .bookmark-btn .icon { width: 22px; height: 22px; }
-.bookmark-btn.active { color: #9333EA; }
+.bookmark-btn.active { color: var(--c-brand); }
 
 /* 해시태그 */
 .hashtag-section { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
 .tag-chip {
   padding: 6px 12px; border-radius: 8px;
-  background: #F2F4F6; border: none;
-  font-size: 13px; font-weight: 500; color: #4E5968;
+  background: var(--bg-mute); border: none;
+  font-size: 13px; font-weight: 500; color: var(--c-text-600);
   cursor: pointer; transition: background 0.15s ease;
 }
-.tag-chip:active { background: #E5E8EB; }
+.tag-chip:active { background: var(--border-default); }
 
 /* 메타 */
 .post-meta {
   text-align: right;
-  font-size: 12px; color: #B0B8C1;
+  font-size: 12px; color: var(--c-text-300);
   font-weight: 400; margin-bottom: 12px;
 }
 
-.divider { height: 1px; background: #F2F4F6; margin-bottom: 16px; }
+.divider { height: 1px; background: var(--bg-mute); margin-bottom: 16px; }
 
 /* 작성자 */
 .author-section { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .author-click-zone { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; }
 .author-avatar {
   width: 44px; height: 44px; border-radius: 50%;
-  object-fit: cover; border: 1px solid #F2F4F6;
+  object-fit: cover; border: 1px solid var(--bg-mute);
   display: block;
   flex-shrink: 0;
 }
@@ -595,7 +595,7 @@ const handleSendMessage = () => {
 .nickname-row { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
 .author-name {
   font-size: 15px; font-weight: 700;
-  color: #191F28; letter-spacing: -0.01em;
+  color: var(--text-primary); letter-spacing: -0.01em;
 }
 .tier-meta {
   display: flex; align-items: center; gap: 4px;
@@ -607,16 +607,16 @@ const handleSendMessage = () => {
 .follow-btn {
   padding: 8px 16px; border-radius: 8px;
   font-size: 13px; font-weight: 700; border: none;
-  background: #191F28; color: #fff;
+  background: var(--c-ink-900); color: #ffffff;
   cursor: pointer; transition: all 0.15s ease;
 }
 .follow-btn:active { transform: scale(0.96); }
-.follow-btn.active { background: #F2F4F6; color: #8B95A1; }
+.follow-btn.active { background: var(--bg-mute); color: var(--c-text-400); }
 .message-btn {
   display: flex; align-items: center; gap: 4px;
   padding: 8px 16px; border-radius: 8px;
   font-size: 13px; font-weight: 700; border: none;
-  background: #9333EA; color: #fff;
+  background: var(--c-brand); color: #ffffff;
   cursor: pointer; transition: all 0.15s ease;
 }
 .message-btn:active { transform: scale(0.96); }

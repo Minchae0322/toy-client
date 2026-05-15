@@ -152,19 +152,19 @@ const handleDelete = () => {
   display: flex;
   gap: 12px;
   padding: 14px;
-  background: #fafbfc;
+  background: var(--bg-subtle);
   border-radius: 14px;
   margin-bottom: 10px;
   transition: all 0.15s;
 }
 
 .arg-card:hover {
-  background: #f5f7ff;
+  background: var(--c-info-soft);
 }
 
 .arg-card.best {
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
-  border: 1px solid #fde68a;
+  background: linear-gradient(135deg, var(--c-warning-soft), var(--c-warning-soft));
+  border: 1px solid var(--c-warning);
 }
 
 /* 아바타 */
@@ -172,13 +172,13 @@ const handleDelete = () => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  background: linear-gradient(135deg, var(--c-info-soft), #c7d2fe);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  color: #4a6cf7;
+  color: var(--c-info);
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -205,34 +205,34 @@ const handleDelete = () => {
 .arg-nickname {
   font-size: 12px;
   font-weight: 700;
-  color: #374151;
+  color: var(--c-text-600);
 }
 
 .best-badge {
   font-size: 10px;
   font-weight: 700;
-  color: #f59e0b;
-  background: #fffbeb;
+  color: var(--c-warning);
+  background: var(--c-warning-soft);
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--c-warning);
 }
 
 .edited-label {
   font-size: 10px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .arg-time {
   font-size: 10px;
-  color: #bbb;
+  color: var(--c-text-300);
   margin-left: auto;
 }
 
 .arg-text {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--c-text-600);
   line-height: 1.5;
   margin: 0 0 8px 0;
   word-break: break-word;
@@ -251,25 +251,25 @@ const handleDelete = () => {
   gap: 3px;
   padding: 4px 10px;
   border-radius: 20px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
 }
 
 .like-btn:hover:not(:disabled) {
-  border-color: #f43f5e;
-  color: #f43f5e;
-  background: #fff5f5;
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+  background: var(--c-danger-soft);
 }
 
 .like-btn.liked {
-  border-color: #f43f5e;
-  color: #f43f5e;
-  background: #fff5f5;
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+  background: var(--c-danger-soft);
 }
 
 .like-btn:disabled {
@@ -287,7 +287,7 @@ const handleDelete = () => {
   background: none;
   border: none;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   cursor: pointer;
   padding: 4px;
   transition: color 0.15s ease;
@@ -295,11 +295,11 @@ const handleDelete = () => {
 }
 
 .action-btn:hover {
-  color: #374151;
+  color: var(--c-text-600);
 }
 
 .action-btn.delete:hover {
-  color: #ef4444;
+  color: var(--c-danger);
 }
 
 /* 수정 폼 */
@@ -310,21 +310,21 @@ const handleDelete = () => {
 .edit-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border-strong);
   border-radius: 12px;
   font-size: 13px;
   font-family: inherit;
   outline: none;
   transition: all 0.2s;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .edit-input::placeholder {
-  color: #bbb;
+  color: var(--c-text-300);
 }
 
 .edit-input:focus {
-  border-color: #4a6cf7;
+  border-color: var(--c-info);
   box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.08);
 }
 
@@ -347,19 +347,19 @@ const handleDelete = () => {
 }
 
 .btn-cancel {
-  background: #f3f4f6;
+  background: var(--border-default);
   border: none;
-  color: #6b7280;
+  color: var(--c-text-500);
 }
 
 .btn-cancel:hover {
-  background: #e5e7eb;
+  background: var(--border-strong);
 }
 
 .btn-save {
-  background: #4a6cf7;
+  background: var(--c-info);
   border: none;
-  color: #fff;
+  color: #ffffff;
 }
 
 .btn-save:hover:not(:disabled) {
@@ -367,7 +367,7 @@ const handleDelete = () => {
 }
 
 .btn-save:disabled {
-  background: #d1d5db;
+  background: var(--c-text-300);
   cursor: not-allowed;
 }
 </style>

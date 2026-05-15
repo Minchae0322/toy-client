@@ -226,7 +226,7 @@ const shareNative = async () => {
 }
 
 .share-modal {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 20px 20px 0 0;
   width: 100%;
   max-width: 400px;
@@ -245,13 +245,13 @@ const shareNative = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 20px 20px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bg-subtle);
 }
 
 .share-title {
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .btn-close {
@@ -260,7 +260,7 @@ const shareNative = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f1f5f9;
+  background: var(--bg-subtle);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -268,13 +268,13 @@ const shareNative = async () => {
 }
 
 .btn-close:hover {
-  background: #e2e8f0;
+  background: var(--border-strong);
 }
 
 .btn-close .icon {
   width: 20px;
   height: 20px;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .share-content {
@@ -286,7 +286,7 @@ const shareNative = async () => {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f8fafc;
+  background: var(--bg-subtle);
   border-radius: 12px;
   margin-bottom: 20px;
 }
@@ -307,7 +307,7 @@ const shareNative = async () => {
 .preview-title {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -315,7 +315,7 @@ const shareNative = async () => {
 
 .preview-description {
   font-size: 12px;
-  color: #64748b;
+  color: var(--c-text-500);
   margin-top: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -344,13 +344,13 @@ const shareNative = async () => {
 }
 
 .share-btn:hover {
-  background: #f1f5f9;
+  background: var(--bg-subtle);
 }
 
 .share-btn span {
   font-size: 11px;
   font-weight: 500;
-  color: #475569;
+  color: var(--c-text-600);
 }
 
 .share-icon {
@@ -373,7 +373,7 @@ const shareNative = async () => {
 }
 
 .share-icon.twitter {
-  background: #0f172a;
+  background: var(--c-ink-900);
   color: white;
 }
 
@@ -383,13 +383,13 @@ const shareNative = async () => {
 }
 
 .share-icon.native {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--border-strong);
+  color: var(--c-text-600);
 }
 
 .copy-link-section {
   padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bg-subtle);
 }
 
 .link-input-wrapper {
@@ -397,7 +397,7 @@ const shareNative = async () => {
   align-items: center;
   gap: 8px;
   padding: 4px 4px 4px 16px;
-  background: #f1f5f9;
+  background: var(--bg-subtle);
   border-radius: 12px;
 }
 
@@ -408,7 +408,7 @@ const shareNative = async () => {
   background: transparent;
   border: none;
   font-size: 13px;
-  color: #475569;
+  color: var(--c-text-600);
   outline: none;
   font-family: inherit;
 }
@@ -418,7 +418,7 @@ const shareNative = async () => {
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  background: #0f172a;
+  background: var(--c-ink-900);
   color: white;
   border: none;
   border-radius: 8px;
@@ -431,7 +431,7 @@ const shareNative = async () => {
 }
 
 .btn-copy:hover {
-  background: #1e293b;
+  background: var(--c-ink-700);
 }
 
 .copy-icon {
@@ -440,7 +440,7 @@ const shareNative = async () => {
 }
 
 .copy-icon.copied {
-  color: #22c55e;
+  color: var(--c-success);
 }
 
 /* Transition */

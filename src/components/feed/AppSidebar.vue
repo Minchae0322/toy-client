@@ -4,37 +4,22 @@
       <!-- 메인 메뉴 섹션 -->
       <div class="nav-section">
         <router-link to="/" class="nav-item" active-class="active">
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-          </svg>
+          <Home class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">홈</span>
         </router-link>
 
         <router-link to="/feed" class="nav-item" active-class="active">
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14H7v-2h5v2zm3-4H7v-2h8v2zm0-4H7V7h8v2z"/>
-          </svg>
+          <MessageSquareText class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">피드</span>
         </router-link>
 
         <router-link to="/products" class="nav-item" active-class="active">
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/>
-          </svg>
+          <Flame class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">핫 아이템</span>
         </router-link>
 
         <router-link to="/battle" class="nav-item" active-class="active">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <!-- 1등 위의 별 -->
-            <path d="M12 3l1.3 2.7 3 .4-2.2 2.1.5 3L12 9.8l-2.6 1.4.5-3L7.7 6.1l3-.4z" fill="currentColor" stroke="none"/>
-            <!-- 시상대: 2등(좌), 1등(가운데 최고), 3등(우) — 동일 베이스라인 y=21 -->
-            <rect x="9" y="12" width="6" height="9" rx="0.5"/>
-            <rect x="3" y="15" width="6" height="6" rx="0.5"/>
-            <rect x="15" y="17" width="6" height="4" rx="0.5"/>
-            <!-- 바닥 라인 -->
-            <path d="M2 21h20"/>
-          </svg>
+          <Trophy class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">요거픽</span>
         </router-link>
 
@@ -45,11 +30,7 @@
           active-class="active"
           @click="!isLoggedIn && handleProtectedRoute('carrier')"
         >
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2"/>
-            <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
-            <circle cx="12" cy="15" r="2"/>
-          </svg>
+          <Luggage class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">캐리어 꾸미기</span>
         </component>
       </div>
@@ -57,9 +38,7 @@
       <!-- 커뮤니케이션 섹션 -->
       <div class="nav-section">
         <button class="nav-item" @click="handleProtectedRoute('collections')">
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM13 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z"/>
-          </svg>
+          <Sparkles class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">컬렉션</span>
         </button>
       </div>
@@ -67,11 +46,17 @@
       <!-- 마이페이지 섹션 (로그인 시에만 표시) -->
       <div v-if="isLoggedIn" class="nav-section">
         <button class="nav-item" @click="handleProtectedRoute('mypage')">
-          <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
-          </svg>
+          <UserCircle class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">마이페이지</span>
         </button>
+      </div>
+
+      <!-- 환경설정 (로그인 무관) -->
+      <div class="nav-section">
+        <router-link to="/settings" class="nav-item" active-class="active">
+          <Settings class="icon" :size="18" :stroke-width="1.8" />
+          <span class="nav-text">환경설정</span>
+        </router-link>
       </div>
     </nav>
 
@@ -134,6 +119,10 @@
 <script setup>
 import {ref} from 'vue';
 import {useRouter} from 'vue-router';
+import {
+  Home, MessageSquareText, Flame, Trophy, Luggage,
+  Sparkles, UserCircle, Settings
+} from 'lucide-vue-next';
 import {useAuth} from '@/composables/useAuth';
 import {useConfirmDialog} from '@/composables/useConfirmDialog';
 import FeedbackModal from '@/components/common/FeedbackModal.vue';
@@ -191,8 +180,8 @@ const handleProtectedRoute = async (routeName) => {
   width: 240px;
   height: calc(100vh - 66px);
   top: 66px;
-  background: #ffffff;
-  border-right: 1px solid #F1F3F6;
+  background: var(--bg-base);
+  border-right: 1px solid var(--border-default);
   padding: 24px 14px;
   display: none;
   flex-direction: column;
@@ -223,7 +212,7 @@ const handleProtectedRoute = async (routeName) => {
   flex-direction: column;
   gap: 2px;
   padding: 10px 0;
-  border-bottom: 1px solid #F1F3F6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .nav-section:last-child {
@@ -251,51 +240,51 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .nav-item:hover {
-  background: #F7F8FA;
+  background: var(--bg-subtle);
 }
 
 .nav-item.active {
-  background: #F3EAFD;
+  background: var(--c-brand-soft);
 }
 
 .nav-item .icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: #8B95A1;
+  color: var(--c-text-400);
   transition: color 0.15s ease;
 }
 
 .nav-item:hover .icon {
-  color: #4E5968;
+  color: var(--c-text-600);
 }
 
 .nav-item.active .icon {
-  color: #9333EA;
+  color: var(--c-brand);
 }
 
 .nav-text {
   font-size: 14px;
   font-weight: 500;
-  color: #4E5968;
+  color: var(--c-text-600);
   letter-spacing: -0.2px;
   transition: color 0.15s ease;
 }
 
 .nav-item:hover .nav-text {
-  color: #333D4B;
+  color: var(--text-primary);
 }
 
 .nav-item.active .nav-text {
-  color: #7C3AED;
+  color: var(--c-brand-hover);
   font-weight: 600;
 }
 
 .badge {
   margin-left: auto;
   padding: 2px 7px;
-  background: #F7F8FA;
-  color: #6B7684;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
   font-size: 11px;
   font-weight: 600;
   border-radius: 6px;
@@ -304,8 +293,8 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .badge-red {
-  background: #FEF2F2;
-  color: #DC2626;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
 }
 
 /* ===== 액션 버튼 ===== */
@@ -317,7 +306,7 @@ const handleProtectedRoute = async (routeName) => {
 
 .action-divider {
   height: 1px;
-  background: #F1F3F6;
+  background: var(--border-default);
   margin: 4px 0;
 }
 
@@ -335,47 +324,53 @@ const handleProtectedRoute = async (routeName) => {
 
 /* 보라 */
 .btn-purple {
-  background: #FAF5FF;
-  border: 1px solid #EDE5F7;
+  background: var(--c-brand-soft);
+  border: 1px solid var(--c-brand-soft);
 }
 
 .btn-purple:hover {
-  background: #F3EAFD;
-  border-color: #D8B4FE;
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand-soft);
 }
 
 .btn-purple .btn-text {
-  color: #7C3AED;
+  color: var(--c-brand-hover);
 }
 
 /* 주황 */
 .btn-orange {
-  background: #FFF7ED;
-  border: 1px solid #FEE4C8;
+  background: var(--c-heat-soft);
+  border: 1px solid var(--c-heat-soft);
 }
 
 .btn-orange:hover {
-  background: #FFEDD5;
-  border-color: #FDBA74;
+  background: var(--c-heat-soft);
+  border-color: var(--c-heat);
 }
 
 .btn-orange .btn-text {
-  color: #C2410C;
+  color: var(--c-heat);
 }
 
 /* 다크 */
 .btn-dark {
-  background: #F7F8FA;
-  border: 1px solid #E5E8EB;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
 }
 
 .btn-dark:hover {
-  background: #F2F4F6;
-  border-color: #D1D6DB;
+  background: var(--bg-mute);
+  border-color: var(--c-text-300);
 }
 
 .btn-dark .btn-text {
-  color: #333D4B;
+  color: var(--text-primary);
+}
+
+/* 다크 모드: soft 톤 배경 위에 같은 컬러 텍스트면 가독성 떨어짐 → 흰색으로 */
+:root[data-theme="dark"] .btn-purple .btn-text,
+:root[data-theme="dark"] .btn-orange .btn-text {
+  color: var(--text-primary);
 }
 
 /* 버튼 내부 */
@@ -397,7 +392,7 @@ const handleProtectedRoute = async (routeName) => {
 .btn-desc {
   font-size: 11px;
   font-weight: 500;
-  color: #8B95A1;
+  color: var(--c-text-400);
   letter-spacing: -0.1px;
   white-space: nowrap;
   overflow: hidden;
@@ -406,7 +401,7 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .btn-subtle:hover .btn-desc {
-  color: #6B7684;
+  color: var(--c-text-500);
 }
 
 /* + 아이콘 */
@@ -426,15 +421,15 @@ const handleProtectedRoute = async (routeName) => {
 }
 
 .btn-icon-purple {
-  background: #9333EA;
+  background: var(--c-brand);
 }
 
 .btn-icon-orange {
-  background: #F97316;
+  background: var(--c-heat);
 }
 
 .btn-icon-dark {
-  background: #333D4B;
+  background: var(--c-ink-900);
 }
 
 .btn-icon {
@@ -453,16 +448,16 @@ const handleProtectedRoute = async (routeName) => {
   padding: 8px 4px 0;
   background: transparent;
   border: none;
-  border-top: 1px solid #F1F3F6;
+  border-top: 1px solid var(--border-default);
   font-size: 12px;
   font-weight: 500;
-  color: #8B95A1;
+  color: var(--c-text-400);
   cursor: pointer;
   font-family: inherit;
   letter-spacing: -0.1px;
   transition: color 0.15s ease;
 }
-.feedback-link:hover { color: #4E5968; }
+.feedback-link:hover { color: var(--c-text-600); }
 .feedback-icon { width: 13px; height: 13px; flex-shrink: 0; }
-.feedback-anon { color: #B0B8C1; font-weight: 400; margin-left: 2px; }
+.feedback-anon { color: var(--c-text-300); font-weight: 400; margin-left: 2px; }
 </style>

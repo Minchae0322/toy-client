@@ -49,8 +49,8 @@ const tierColor = computed(() => getTierColor(props.userLevel))
 
 <style scoped>
 .section-card {
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 14px;
   padding: 18px;
   margin-bottom: 16px;
@@ -62,7 +62,7 @@ const tierColor = computed(() => getTierColor(props.userLevel))
 .section-title {
   font-size: 15px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin-bottom: 4px;
   letter-spacing: -0.2px;
 }
@@ -75,7 +75,7 @@ const tierColor = computed(() => getTierColor(props.userLevel))
   gap: 14px;
   margin-bottom: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--bg-subtle);
 }
 
 .tier-detail-avatar {
@@ -85,13 +85,13 @@ const tierColor = computed(() => getTierColor(props.userLevel))
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   flex-shrink: 0;
 }
 
 .tier-detail-emoji { font-size: 26px; line-height: 1; }
 
-.tier-description { font-size: 13px; color: #64748B; line-height: 1.5; margin-top: 4px; }
+.tier-description { font-size: 13px; color: var(--c-text-500); line-height: 1.5; margin-top: 4px; }
 
 .feature-list { margin-bottom: 16px; }
 .feature-list:last-of-type { margin-bottom: 0; }
@@ -99,7 +99,7 @@ const tierColor = computed(() => getTierColor(props.userLevel))
 .feature-heading {
   font-size: 12px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--c-text-400);
   margin-bottom: 10px;
   letter-spacing: 0.3px;
 }
@@ -110,11 +110,11 @@ const tierColor = computed(() => getTierColor(props.userLevel))
   gap: 10px;
   padding: 8px 0;
   font-size: 14px;
-  color: #334155;
+  color: var(--c-text-600);
   font-weight: 500;
 }
 
-.feature-item.restricted { color: #94a3b8; }
+.feature-item.restricted { color: var(--c-text-400); }
 
 .feature-icon { font-size: 14px; line-height: 1; flex-shrink: 0; }
 
@@ -123,11 +123,11 @@ const tierColor = computed(() => getTierColor(props.userLevel))
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  background: #FAF5FF;
+  background: var(--c-brand-soft);
   border-radius: 10px;
   margin-top: 16px;
 }
 
-.goal-icon { color: #9333EA; flex-shrink: 0; }
-.goal-text { font-size: 13.5px; font-weight: 600; color: #6d28d9; line-height: 1.4; }
+.goal-icon { color: var(--c-brand); flex-shrink: 0; }
+.goal-text { font-size: 13.5px; font-weight: 600; color: var(--c-brand-hover); line-height: 1.4; }
 </style>

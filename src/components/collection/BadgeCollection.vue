@@ -156,7 +156,7 @@ function formatDate(dateStr) {
 <style scoped>
 .section-card {
   padding: 20px;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
 }
 
@@ -170,13 +170,13 @@ function formatDate(dateStr) {
   gap: 8px;
   margin-bottom: 14px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #F1F3F6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .group-label {
   font-size: 11px;
   font-weight: 700;
-  color: #64748B;
+  color: var(--c-text-500);
   letter-spacing: 0.6px;
   text-transform: uppercase;
 }
@@ -184,12 +184,12 @@ function formatDate(dateStr) {
 .group-count {
   font-size: 13px;
   font-weight: 800;
-  color: #9333EA;
+  color: var(--c-brand);
   letter-spacing: -0.2px;
 }
 
 .group-count.hot {
-  color: #F97316;
+  color: var(--c-heat);
 }
 
 .badge-grid {
@@ -218,11 +218,11 @@ function formatDate(dateStr) {
 }
 
 .badge-card.earned:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08); }
-.badge-card.locked { background: #F7F8FA !important; opacity: 0.8; }
-.badge-card.locked:hover { opacity: 1; background: #EFF1F4 !important; }
+.badge-card.locked { background: var(--bg-subtle) !important; opacity: 0.8; }
+.badge-card.locked:hover { opacity: 1; background: var(--bg-mute) !important; }
 
 .badge-card.near {
-  background: white !important;
+  background: var(--bg-elevated) !important;
   border-width: 1.5px !important;
   border-style: solid !important;
 }
@@ -251,7 +251,7 @@ function formatDate(dateStr) {
   box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
 }
 
-.badge-icon-wrap.locked-bg { background: #EEF0F3 !important; box-shadow: none !important; }
+.badge-icon-wrap.locked-bg { background: var(--border-default) !important; box-shadow: none !important; }
 .badge-emoji { font-size: 22px; line-height: 1; }
 .badge-emoji.locked-emoji { filter: grayscale(1); opacity: 0.4; }
 
@@ -259,7 +259,7 @@ function formatDate(dateStr) {
   position: absolute;
   top: -4px;
   right: -6px;
-  background: #0A0E1A;
+  background: var(--c-ink-900);
   color: white;
   font-size: 9.5px;
   font-weight: 800;
@@ -276,7 +276,7 @@ function formatDate(dateStr) {
 .badge-name {
   font-size: 13px;
   font-weight: 700;
-  color: #0A0E1A;
+  color: var(--text-primary);
   letter-spacing: -0.2px;
   line-height: 1.2;
   overflow: hidden;
@@ -284,22 +284,22 @@ function formatDate(dateStr) {
   white-space: nowrap;
 }
 
-.badge-card.locked .badge-name { color: #64748B; }
+.badge-card.locked .badge-name { color: var(--c-text-500); }
 
 .badge-date {
   font-size: 11px;
-  color: #94A3B8;
+  color: var(--c-text-400);
   margin-top: 4px;
   font-weight: 500;
 }
 
-.badge-date.muted { color: #CBD5E1; }
+.badge-date.muted { color: var(--c-text-300); }
 
 .badge-progress { margin-top: 6px; }
 
 .badge-progress-bar {
   height: 3px;
-  background: #E2E8F0;
+  background: var(--border-strong);
   border-radius: 2px;
   overflow: hidden;
   margin-bottom: 3px;
@@ -307,14 +307,14 @@ function formatDate(dateStr) {
 
 .badge-progress-fill {
   height: 100%;
-  background: #9333EA;
+  background: var(--c-brand);
   border-radius: 2px;
   transition: width 0.4s ease;
 }
 
 .badge-progress-text {
   font-size: 10.5px;
-  color: #64748B;
+  color: var(--c-text-500);
   font-weight: 600;
   letter-spacing: -0.1px;
 }

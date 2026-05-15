@@ -13,17 +13,17 @@
   justify-content: center;
   padding: 80px 24px;
   text-align: center;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   margin: 24px 0;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
 }
 
 .loading-spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid #F3F4F6;
-  border-top: 4px solid #059669;
+  border: 4px solid var(--border-default);
+  border-top: 4px solid var(--c-success);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 20px;
@@ -35,7 +35,7 @@
 
 .auth-loading p {
   font-size: 15px;
-  color: #6B7280;
+  color: var(--c-text-500);
   font-weight: 500;
   letter-spacing: -0.01em;
 }

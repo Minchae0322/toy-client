@@ -128,8 +128,8 @@ function isTierLocked(tier) {
 
 <style scoped>
 .section-card {
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 14px;
   padding: 18px;
   margin-bottom: 16px;
@@ -139,7 +139,7 @@ function isTierLocked(tier) {
 .section-title {
   font-size: 15px;
   font-weight: 800;
-  color: #0A0E1A;
+  color: var(--text-primary);
   margin-bottom: 18px;
   letter-spacing: -0.2px;
 }
@@ -163,10 +163,10 @@ function isTierLocked(tier) {
 .divider-line {
   width: 2px;
   height: 16px;
-  background: #E5E7EB;
+  background: var(--border-strong);
   border-radius: 1px;
 }
-.divider-line.filled { background: #a855f7; }
+.divider-line.filled { background: var(--c-brand); }
 
 /* ===== 티어 헤더 ===== */
 .tier-header {
@@ -183,7 +183,7 @@ function isTierLocked(tier) {
 .tier-range {
   font-size: 11px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--c-text-400);
 }
 
 /* ===== 5색 랭크 프로그레션 ===== */
@@ -211,7 +211,7 @@ function isTierLocked(tier) {
   width: 38px;
   height: 38px;
   border-radius: 8px;
-  background: #F7F8FA;
+  background: var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -222,11 +222,11 @@ function isTierLocked(tier) {
 }
 
 .art-wrap.highlight {
-  background: white;
-  box-shadow: 0 0 0 2.5px #a855f7, 0 2px 8px rgba(168, 85, 247, 0.18);
+  background: var(--bg-elevated);
+  box-shadow: 0 0 0 2.5px var(--c-brand), 0 2px 8px rgba(168, 85, 247, 0.18);
 }
 
-.rank-cell.is-done .art-wrap { background: white; }
+.rank-cell.is-done .art-wrap { background: var(--bg-elevated); }
 
 .rank-cell.is-locked .art-wrap {
   opacity: 0.35;
@@ -236,16 +236,16 @@ function isTierLocked(tier) {
 .rank-lv {
   font-size: 10px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--c-text-400);
   letter-spacing: -0.2px;
 }
 
 .rank-cell.is-current .rank-lv {
-  color: #7c3aed;
+  color: var(--c-brand-hover);
   font-weight: 800;
 }
 
 .rank-cell.is-locked .rank-lv {
-  color: #cbd5e1;
+  color: var(--c-text-300);
 }
 </style>

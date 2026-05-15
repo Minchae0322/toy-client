@@ -291,13 +291,13 @@ const formatDate = (dateString) => {
 }
 
 .status-header.ready {
-  background: #f8fdfb;
-  border: 1px solid #d1fae5;
+  background: var(--bg-subtle);
+  border: 1px solid var(--c-success-soft);
 }
 
 .status-header.incomplete {
-  background: #fffef8;
-  border: 1px solid #fef3c7;
+  background: var(--bg-subtle);
+  border: 1px solid var(--c-warning-soft);
 }
 
 .status-icon {
@@ -311,13 +311,13 @@ const formatDate = (dateString) => {
 }
 
 .status-header.ready .status-icon {
-  background: #ecfdf5;
-  color: #059669;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .status-header.incomplete .status-icon {
-  background: #fefce8;
-  color: #ca8a04;
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
 }
 
 .status-content {
@@ -331,11 +331,11 @@ const formatDate = (dateString) => {
 }
 
 .status-header.ready .status-title {
-  color: #166534;
+  color: var(--c-success);
 }
 
 .status-header.incomplete .status-title {
-  color: #a16207;
+  color: var(--c-warning);
 }
 
 .status-desc {
@@ -344,19 +344,19 @@ const formatDate = (dateString) => {
 }
 
 .status-header.ready .status-desc {
-  color: #15803d;
+  color: var(--c-success);
 }
 
 .status-header.incomplete .status-desc {
-  color: #b45309;
+  color: var(--c-warning);
 }
 
 /* 체크리스트 카드 */
 .checklist-card,
 .summary-card {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-strong);
   overflow: hidden;
 }
 
@@ -365,18 +365,18 @@ const formatDate = (dateString) => {
   align-items: center;
   gap: 12px;
   padding: 20px 24px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .card-icon {
   width: 40px;
   height: 40px;
-  background: #f3f4f6;
+  background: var(--border-default);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--c-text-500);
   flex-shrink: 0;
 }
 
@@ -387,13 +387,13 @@ const formatDate = (dateString) => {
 .card-title {
   font-size: 15px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .card-subtitle {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 /* 프로그레스 링 */
@@ -411,13 +411,13 @@ const formatDate = (dateString) => {
 
 .progress-bg {
   fill: none;
-  stroke: #e5e7eb;
+  stroke: var(--border-strong);
   stroke-width: 3;
 }
 
 .progress-fill {
   fill: none;
-  stroke: #16a34a;
+  stroke: var(--c-success);
   stroke-width: 3;
   stroke-linecap: round;
   transition: stroke-dasharray 0.3s;
@@ -431,7 +431,7 @@ const formatDate = (dateString) => {
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 /* 체크리스트 아이템 */
@@ -451,15 +451,15 @@ const formatDate = (dateString) => {
 }
 
 .checklist-item:hover {
-  background: #f9fafb;
+  background: var(--bg-subtle);
 }
 
 .checklist-item.completed {
-  background: #f8fdfb;
+  background: var(--bg-subtle);
 }
 
 .checklist-item.completed:hover {
-  background: #f0fdf8;
+  background: var(--c-success-soft);
 }
 
 .item-check {
@@ -475,13 +475,13 @@ const formatDate = (dateString) => {
 }
 
 .checklist-item:not(.completed) .item-check {
-  background: #e5e7eb;
-  color: #6b7280;
+  background: var(--border-strong);
+  color: var(--c-text-500);
 }
 
 .checklist-item.completed .item-check {
-  background: #dcfce7;
-  color: #16a34a;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .item-number {
@@ -497,29 +497,29 @@ const formatDate = (dateString) => {
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin-bottom: 2px;
 }
 
 .item-value {
   display: block;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--c-text-500);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .item-value.empty {
-  color: #ca8a04;
+  color: var(--c-warning);
 }
 
 .checklist-item.completed .item-value {
-  color: #16a34a;
+  color: var(--c-success);
 }
 
 .item-action {
-  color: #9ca3af;
+  color: var(--c-text-400);
   flex-shrink: 0;
 }
 
@@ -529,8 +529,8 @@ const formatDate = (dateString) => {
   right: 12px;
   font-size: 10px;
   font-weight: 500;
-  color: #9ca3af;
-  background: #f3f4f6;
+  color: var(--c-text-400);
+  background: var(--border-default);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -549,7 +549,7 @@ const formatDate = (dateString) => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .summary-row:last-child {
@@ -558,27 +558,27 @@ const formatDate = (dateString) => {
 
 .summary-label {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--c-text-500);
 }
 
 .summary-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .summary-value.empty {
-  color: #d1d5db;
+  color: var(--c-text-300);
 }
 
 .duration-tag {
   font-size: 11px;
   font-weight: 600;
-  color: #15803d;
-  background: #f0fdf4;
+  color: var(--c-success);
+  background: var(--c-success-soft);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -588,20 +588,20 @@ const formatDate = (dateString) => {
   display: flex;
   gap: 14px;
   padding: 20px;
-  background: #fffefa;
-  border: 1px solid #fef3c7;
+  background: var(--bg-subtle);
+  border: 1px solid var(--c-warning-soft);
   border-radius: 12px;
 }
 
 .notice-icon {
   width: 36px;
   height: 36px;
-  background: #fefce8;
+  background: var(--c-warning-soft);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ca8a04;
+  color: var(--c-warning);
   flex-shrink: 0;
 }
 
@@ -612,7 +612,7 @@ const formatDate = (dateString) => {
 .notice-title {
   font-size: 14px;
   font-weight: 700;
-  color: #d97706;
+  color: var(--c-bronze);
   margin-bottom: 8px;
 }
 
@@ -623,7 +623,7 @@ const formatDate = (dateString) => {
 
 .notice-list li {
   font-size: 13px;
-  color: #b45309;
+  color: var(--c-warning);
   line-height: 1.6;
   margin-bottom: 4px;
 }
@@ -639,15 +639,15 @@ const formatDate = (dateString) => {
 /* 약관 동의 */
 .agreement-card {
   padding: 20px;
-  background: #f9fafb;
-  border: 2px solid #e5e7eb;
+  background: var(--bg-subtle);
+  border: 2px solid var(--border-strong);
   border-radius: 12px;
   transition: all 0.2s;
 }
 
 .agreement-card.checked {
-  background: #f0fdf4;
-  border-color: #d1fae5;
+  background: var(--c-success-soft);
+  border-color: var(--c-success-soft);
 }
 
 .agreement-label {
@@ -672,19 +672,19 @@ const formatDate = (dateString) => {
 .checkbox-custom {
   width: 24px;
   height: 24px;
-  border: 2px solid #d1d5db;
+  border: 2px solid var(--c-text-300);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .agreement-card.checked .checkbox-custom {
-  background: #d1fae5;
-  border-color: #a7f3d0;
-  color: #059669;
+  background: var(--c-success-soft);
+  border-color: var(--c-success);
+  color: var(--c-success);
 }
 
 .agreement-content {
@@ -695,14 +695,14 @@ const formatDate = (dateString) => {
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   line-height: 1.5;
 }
 
 .agreement-hint {
   display: block;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   margin-top: 4px;
 }
 

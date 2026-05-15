@@ -60,9 +60,9 @@ defineProps({
 
 <style scoped>
 .step-indicator {
-  background: white;
+  background: var(--bg-elevated);
   padding: 32px 0;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .steps-container {
@@ -93,14 +93,14 @@ defineProps({
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #F3F4F6;
-  border: 3px solid #E5E7EB;
+  background: var(--border-default);
+  border: 3px solid var(--border-strong);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
   font-weight: 700;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 2;
@@ -108,16 +108,16 @@ defineProps({
 }
 
 .step-item.active .step-circle {
-  background: #1A1A1A;
-  border-color: #1A1A1A;
+  background: var(--c-ink-900);
+  border-color: var(--c-ink-900);
   color: white;
   transform: scale(1.1);
   box-shadow: 0 4px 12px rgba(26, 26, 26, 0.15);
 }
 
 .step-item.completed .step-circle {
-  background: #10B981;
-  border-color: #10B981;
+  background: var(--c-success);
+  border-color: var(--c-success);
   color: white;
   animation: checkmark 0.4s ease;
 }
@@ -141,19 +141,19 @@ defineProps({
 .step-label {
   font-size: 14px;
   font-weight: 600;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   text-align: center;
   transition: all 0.3s;
   white-space: nowrap;
 }
 
 .step-item.active .step-label {
-  color: #1A1A1A;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .step-item.completed .step-label {
-  color: #6B7280;
+  color: var(--c-text-500);
 }
 
 .step-connector {
@@ -162,7 +162,7 @@ defineProps({
   left: 0;
   right: 0;
   height: 3px;
-  background: #E5E7EB;
+  background: var(--border-strong);
   z-index: 1;
   transition: background 0.3s;
 }
@@ -173,7 +173,7 @@ defineProps({
   left: 60px;
   right: 60px;
   height: 3px;
-  background: #E5E7EB;
+  background: var(--border-strong);
   border-radius: 2px;
   overflow: hidden;
   z-index: 1;
@@ -181,7 +181,7 @@ defineProps({
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+  background: linear-gradient(90deg, var(--c-success) 0%, var(--c-success) 100%);
   border-radius: 2px;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;

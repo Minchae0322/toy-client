@@ -149,14 +149,14 @@ const previewImageUrl = computed(() => {
 .preview-label {
   font-size: 14px;
   font-weight: 600;
-  color: #6B7280;
+  color: var(--c-text-500);
   margin-bottom: 16px;
 }
 
 .preview-card {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-strong);
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
@@ -175,13 +175,13 @@ const previewImageUrl = computed(() => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #f3f4f6;
+  background-color: var(--border-default);
 }
 
 .preview-visual-placeholder {
   font-size: 48px;
   opacity: 0.5;
-  color: #fff;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -206,14 +206,14 @@ const previewImageUrl = computed(() => {
 
 .preview-category {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   margin-bottom: 8px;
 }
 
 .preview-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: var(--text-primary);
   margin-bottom: 16px;
   min-height: 50px;
 }
@@ -223,8 +223,8 @@ const previewImageUrl = computed(() => {
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   padding: 16px 0;
-  border-top: 1px solid #F3F4F6;
-  border-bottom: 1px solid #F3F4F6;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .preview-stat {
@@ -234,12 +234,12 @@ const previewImageUrl = computed(() => {
 .preview-stat-value {
   font-size: 20px;
   font-weight: 700;
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 .preview-stat-label {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .preview-footer {
@@ -251,12 +251,12 @@ const previewImageUrl = computed(() => {
 
 .preview-creator {
   font-size: 13px;
-  color: #6B7280;
+  color: var(--c-text-500);
 }
 
 .preview-date {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 /* 모바일 토글 버튼 - 사용 안함 */

@@ -438,20 +438,20 @@ const removeImage = () => {
   align-items: flex-start;
   gap: 16px;
   padding: 20px 24px;
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-strong);
 }
 
 .intro-icon {
   width: 48px;
   height: 48px;
-  background: #f3f4f6;
+  background: var(--border-default);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--c-text-500);
   flex-shrink: 0;
 }
 
@@ -462,28 +462,28 @@ const removeImage = () => {
 .intro-title {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0 0 6px 0;
 }
 
 .intro-desc {
   font-size: 14px;
-  color: #64748b;
+  color: var(--c-text-500);
   margin: 0;
   line-height: 1.5;
 }
 
 /* 폼 카드 */
 .form-card {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-strong);
   overflow: hidden;
   transition: all 0.2s;
 }
 
 .form-card:hover {
-  border-color: #d1d5db;
+  border-color: var(--c-text-300);
 }
 
 .form-card.optional {
@@ -500,7 +500,7 @@ const removeImage = () => {
 .card-number {
   width: 28px;
   height: 28px;
-  background: #374151;
+  background: var(--c-text-600);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -512,8 +512,8 @@ const removeImage = () => {
 }
 
 .card-number.optional {
-  background: #e5e7eb;
-  color: #6b7280;
+  background: var(--border-strong);
+  color: var(--c-text-500);
 }
 
 .card-title-group {
@@ -526,20 +526,20 @@ const removeImage = () => {
   gap: 8px;
   font-size: 15px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .card-subtitle {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .optional-badge {
   font-size: 11px;
   font-weight: 500;
-  color: #9ca3af;
-  background: #f3f4f6;
+  color: var(--c-text-400);
+  background: var(--border-default);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -552,22 +552,22 @@ const removeImage = () => {
 .form-input {
   width: 100%;
   padding: 14px 16px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border-strong);
   border-radius: 10px;
   font-size: 15px;
   transition: all 0.2s;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #1a1a1a;
-  box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 3px var(--c-brand-soft);
 }
 
 .form-input.filled {
-  border-color: #d1fae5;
-  background: #f9fdfb;
+  border-color: var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .title-input {
@@ -583,11 +583,11 @@ const removeImage = () => {
 
 .char-count {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .char-count.warning {
-  color: #f59e0b;
+  color: var(--c-warning);
 }
 
 /* 카테고리 버튼 */
@@ -597,21 +597,21 @@ const removeImage = () => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  background: #f9fafb;
-  border: 1.5px solid #e5e7eb;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-strong);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .category-select-btn:hover {
-  border-color: #1a1a1a;
-  background: white;
+  border-color: var(--c-ink-900);
+  background: var(--bg-elevated);
 }
 
 .category-select-btn.selected {
-  border-color: #d1fae5;
-  background: #f9fdfb;
+  border-color: var(--c-success-soft);
+  background: var(--bg-subtle);
 }
 
 .category-btn-content {
@@ -623,32 +623,32 @@ const removeImage = () => {
 .category-icon {
   width: 36px;
   height: 36px;
-  background: #e5e7eb;
+  background: var(--border-strong);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--c-text-500);
 }
 
 .category-select-btn.selected .category-icon {
-  background: #d1fae5;
-  color: #059669;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .category-text {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .category-placeholder {
   font-size: 14px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .chevron-icon {
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 /* Category Inline Selection */
@@ -657,15 +657,15 @@ const removeImage = () => {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
+  background: var(--c-brand-soft);
+  border: 1px solid var(--c-brand-soft);
   border-radius: 10px;
   margin-bottom: 12px;
 }
 .selected-category-label {
   font-size: 14px;
   font-weight: 600;
-  color: #7c3aed;
+  color: var(--c-brand-hover);
 }
 .selected-category-clear {
   display: flex;
@@ -676,13 +676,13 @@ const removeImage = () => {
   background: transparent;
   border: none;
   border-radius: 50%;
-  color: #9ca3af;
+  color: var(--c-text-400);
   cursor: pointer;
   transition: all 0.15s;
 }
 .selected-category-clear:hover {
-  background: #f3e8ff;
-  color: #7c3aed;
+  background: var(--c-brand-soft);
+  color: var(--c-brand-hover);
 }
 
 .category-chips-section {
@@ -693,7 +693,7 @@ const removeImage = () => {
 .category-chips-title {
   font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--c-text-500);
   margin: 0;
 }
 .category-chips-list {
@@ -703,9 +703,9 @@ const removeImage = () => {
 }
 .category-chip {
   padding: 8px 14px;
-  background: #f9fafb;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
+  border: 1px solid var(--border-strong);
   border-radius: 20px;
   font-size: 13px;
   font-weight: 500;
@@ -714,34 +714,34 @@ const removeImage = () => {
   font-family: inherit;
 }
 .category-chip:hover {
-  border-color: #d8b4fe;
-  background: #faf5ff;
-  color: #7c3aed;
+  border-color: var(--c-brand-soft);
+  background: var(--c-brand-soft);
+  color: var(--c-brand-hover);
 }
 .category-chip.active {
-  background: #7c3aed;
+  background: var(--c-brand-hover);
   color: white;
-  border-color: #7c3aed;
+  border-color: var(--c-brand-hover);
 }
 .category-chip.more-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #7c3aed;
-  border-color: #e9d5ff;
-  background: #faf5ff;
+  color: var(--c-brand-hover);
+  border-color: var(--c-brand-soft);
+  background: var(--c-brand-soft);
   font-weight: 600;
 }
 .category-chip.more-btn:hover {
-  background: #f3e8ff;
-  border-color: #d8b4fe;
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand-soft);
 }
 
 /* 2뎁스 하위 카테고리 */
 .sub-category-section {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-strong);
 }
 .sub-category-list {
   display: flex;
@@ -750,9 +750,9 @@ const removeImage = () => {
 }
 .sub-category-chip {
   padding: 6px 12px;
-  background: white;
-  color: #888;
-  border: 1px solid #e5e5e5;
+  background: var(--bg-elevated);
+  color: var(--c-text-400);
+  border: 1px solid var(--border-strong);
   border-radius: 16px;
   font-size: 13px;
   font-weight: 500;
@@ -761,14 +761,14 @@ const removeImage = () => {
   font-family: inherit;
 }
 .sub-category-chip:hover {
-  background: #faf5ff;
-  border-color: #d8b4fe;
-  color: #7c3aed;
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand-soft);
+  color: var(--c-brand-hover);
 }
 .sub-category-chip.active {
-  background: #f3e8ff;
-  border-color: #7c3aed;
-  color: #7c3aed;
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand-hover);
+  color: var(--c-brand-hover);
 }
 
 /* 권한 옵션 */
@@ -783,8 +783,8 @@ const removeImage = () => {
   align-items: center;
   gap: 14px;
   padding: 16px;
-  background: white;
-  border: 1.5px solid #e5e7eb;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-strong);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
@@ -792,19 +792,19 @@ const removeImage = () => {
 }
 
 .permission-option:hover {
-  border-color: #9ca3af;
-  background: #f9fafb;
+  border-color: var(--c-text-400);
+  background: var(--bg-subtle);
 }
 
 .permission-option.selected {
-  border-color: #9ca3af;
-  background: #f9fafb;
+  border-color: var(--c-text-400);
+  background: var(--bg-subtle);
 }
 
 .option-radio {
   width: 20px;
   height: 20px;
-  border: 2px solid #d1d5db;
+  border: 2px solid var(--c-text-300);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -814,7 +814,7 @@ const removeImage = () => {
 }
 
 .permission-option.selected .option-radio {
-  border-color: #374151;
+  border-color: var(--c-text-600);
 }
 
 .radio-dot {
@@ -826,7 +826,7 @@ const removeImage = () => {
 }
 
 .permission-option.selected .radio-dot {
-  background: #374151;
+  background: var(--c-text-600);
 }
 
 .option-icon {
@@ -840,33 +840,33 @@ const removeImage = () => {
 }
 
 .option-icon.lock {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--border-default);
+  color: var(--c-text-500);
 }
 
 .option-icon.globe {
-  background: #eff6ff;
-  color: #3b82f6;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .option-icon.check-circle {
-  background: #ecfdf5;
-  color: #10b981;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .permission-option.selected .option-icon.lock {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--border-strong);
+  color: var(--c-text-600);
 }
 
 .permission-option.selected .option-icon.globe {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
 .permission-option.selected .option-icon.check-circle {
-  background: #d1fae5;
-  color: #059669;
+  background: var(--c-success-soft);
+  color: var(--c-success);
 }
 
 .option-content {
@@ -879,12 +879,12 @@ const removeImage = () => {
 .option-title {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .option-desc {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--c-text-500);
 }
 
 /* 날짜 선택 */
@@ -902,7 +902,7 @@ const removeImage = () => {
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--c-text-500);
   margin-bottom: 6px;
 }
 
@@ -919,14 +919,14 @@ const removeImage = () => {
 .date-icon {
   position: absolute;
   left: 14px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   pointer-events: none;
 }
 
 .date-input {
   width: 100%;
   padding: 12px 14px 12px 44px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   transition: all 0.2s;
@@ -934,11 +934,11 @@ const removeImage = () => {
 
 .date-input:focus {
   outline: none;
-  border-color: #1a1a1a;
+  border-color: var(--c-ink-900);
 }
 
 .date-separator {
-  color: #d1d5db;
+  color: var(--c-text-300);
   padding-bottom: 8px;
 }
 
@@ -948,8 +948,8 @@ const removeImage = () => {
   gap: 6px;
   margin-top: 14px;
   padding: 8px 14px;
-  background: #f0fdf4;
-  color: #059669;
+  background: var(--c-success-soft);
+  color: var(--c-success);
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
@@ -962,7 +962,7 @@ const removeImage = () => {
   gap: 6px;
   margin-top: 12px;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 /* 이미지 업로드 */
@@ -971,7 +971,7 @@ const removeImage = () => {
 }
 
 .upload-dropzone {
-  border: 2px dashed #e5e7eb;
+  border: 2px dashed var(--border-strong);
   border-radius: 12px;
   padding: 40px 24px;
   text-align: center;
@@ -980,8 +980,8 @@ const removeImage = () => {
 }
 
 .upload-dropzone:hover {
-  border-color: #9ca3af;
-  background: #f9fafb;
+  border-color: var(--c-text-400);
+  background: var(--bg-subtle);
 }
 
 .dropzone-content {
@@ -992,26 +992,26 @@ const removeImage = () => {
 }
 
 .dropzone-icon {
-  color: #9ca3af;
+  color: var(--c-text-400);
   margin-bottom: 4px;
 }
 
 .dropzone-text {
   font-size: 14px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--c-text-600);
 }
 
 .dropzone-hint {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .image-preview-box {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  background: #f3f4f6;
+  background: var(--border-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1068,7 +1068,7 @@ const removeImage = () => {
 }
 
 .btn-remove-image:hover {
-  background: #dc2626;
+  background: var(--c-danger);
   transform: scale(1.1);
 }
 

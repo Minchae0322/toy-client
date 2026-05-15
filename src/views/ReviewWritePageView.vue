@@ -388,7 +388,7 @@ onMounted(() => {
 <style scoped>
 .review-write-page {
   min-height: 100vh;
-  background: #FAFAFA;
+  background: var(--bg-subtle);
   /* iOS 홈 인디케이터 회피 */
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
@@ -398,8 +398,8 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  background: white;
-  border-bottom: 1px solid #F3F4F6;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-default);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -410,7 +410,7 @@ onMounted(() => {
   border: none;
   padding: 8px;
   cursor: pointer;
-  color: #374151;
+  color: var(--c-text-600);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -419,13 +419,13 @@ onMounted(() => {
 }
 
 .back-button:hover {
-  background: #F3F4F6;
+  background: var(--border-default);
 }
 
 .page-title {
   font-size: 18px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
@@ -438,16 +438,16 @@ onMounted(() => {
   display: flex;
   gap: 16px;
   padding: 24px;
-  background: white;
-  border-bottom: 1px solid #F3F4F6;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .product-image {
   width: 80px;
   height: 80px;
   border-radius: 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -462,7 +462,7 @@ onMounted(() => {
 }
 
 .image-placeholder {
-  color: #D1D5DB;
+  color: var(--c-text-300);
 }
 
 .product-details {
@@ -475,14 +475,14 @@ onMounted(() => {
 .product-name {
   font-size: 16px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.01em;
 }
 
 .product-brand {
   font-size: 14px;
-  color: #6B7280;
+  color: var(--c-text-500);
   margin: 0;
 }
 
@@ -500,18 +500,18 @@ onMounted(() => {
   display: block;
   font-size: 15px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 12px;
   letter-spacing: -0.01em;
 }
 
 .required {
-  color: #EF4444;
+  color: var(--c-danger);
   margin-left: 4px;
 }
 
 .optional {
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-weight: 500;
   font-size: 14px;
   margin-left: 4px;
@@ -543,31 +543,31 @@ onMounted(() => {
 .rating-text {
   font-size: 16px;
   font-weight: 600;
-  color: #F59E0B;
+  color: var(--c-warning);
   margin-top: 8px;
 }
 
 .form-textarea {
   width: 100%;
   padding: 16px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   font-size: 15px;
   font-family: inherit;
   line-height: 1.6;
   resize: vertical;
   transition: all 0.2s;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .form-textarea:focus {
   outline: none;
-  border-color: #059669;
+  border-color: var(--c-success);
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }
 
 .form-textarea.error {
-  border-color: #EF4444;
+  border-color: var(--c-danger);
 }
 
 .form-textarea.error:focus {
@@ -575,7 +575,7 @@ onMounted(() => {
 }
 
 .form-textarea::placeholder {
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .textarea-info {
@@ -587,23 +587,23 @@ onMounted(() => {
 
 .char-count {
   font-size: 13px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
 .char-count.limit {
-  color: #EF4444;
+  color: var(--c-danger);
 }
 
 .error-message {
   font-size: 13px;
-  color: #EF4444;
+  color: var(--c-danger);
   font-weight: 500;
 }
 
 .form-help {
   font-size: 13px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   margin-top: 8px;
   margin-bottom: 0;
 }
@@ -626,7 +626,7 @@ onMounted(() => {
   height: 100px;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
 }
 
 .image-preview-item img {
@@ -660,7 +660,7 @@ onMounted(() => {
 .upload-button {
   width: 100px;
   height: 100px;
-  border: 2px dashed #D1D5DB;
+  border: 2px dashed var(--c-text-300);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -669,14 +669,14 @@ onMounted(() => {
   gap: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-size: 13px;
   font-weight: 600;
 }
 
 .upload-button:hover {
-  border-color: #059669;
-  color: #059669;
+  border-color: var(--c-success);
+  color: var(--c-success);
   background: rgba(5, 150, 105, 0.05);
 }
 
@@ -686,7 +686,7 @@ onMounted(() => {
 
 .upload-limit {
   font-size: 11px;
-  color: #D1D5DB;
+  color: var(--c-text-300);
 }
 
 .form-actions {
@@ -696,32 +696,32 @@ onMounted(() => {
   margin-top: 40px;
   position: sticky;
   bottom: 0;
-  background: white;
+  background: var(--bg-elevated);
   padding: 20px 0;
-  border-top: 1px solid #F3F4F6;
+  border-top: 1px solid var(--border-default);
 }
 
 .btn-cancel {
   padding: 16px;
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
-  color: #6B7280;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
 }
 
 .btn-cancel:hover {
-  border-color: #D1D5DB;
-  background: #F9FAFB;
+  border-color: var(--c-text-300);
+  background: var(--bg-subtle);
 }
 
 .btn-submit {
   padding: 16px;
-  background: #059669;
+  background: var(--c-success);
   border: none;
   border-radius: 12px;
   font-size: 15px;
@@ -739,7 +739,7 @@ onMounted(() => {
 }
 
 .btn-submit:disabled {
-  background: #D1D5DB;
+  background: var(--c-text-300);
   cursor: not-allowed;
   transform: none;
 }

@@ -52,10 +52,10 @@ const emit = defineEmits(['update:keyword', 'search', 'clear'])
 
 <style scoped>
 .search-header {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
   display: flex;
   gap: 16px;
   align-items: center;
@@ -78,25 +78,25 @@ const emit = defineEmits(['update:keyword', 'search', 'clear'])
 .search-input {
   width: 100%;
   padding: 12px 48px 12px 48px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   transition: all 0.2s;
-  background: #FAFAFA;
-  color: #111827;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #059669;
-  background: white;
+  border-color: var(--c-success);
+  background: var(--bg-elevated);
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }
 
 .search-input::placeholder {
-  color: #9CA3AF;
+  color: var(--c-text-400);
 }
 
 .clear-btn {
@@ -108,8 +108,8 @@ const emit = defineEmits(['update:keyword', 'search', 'clear'])
   height: 24px;
   border-radius: 50%;
   border: none;
-  background: #E5E7EB;
-  color: #6B7280;
+  background: var(--border-strong);
+  color: var(--c-text-500);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -118,8 +118,8 @@ const emit = defineEmits(['update:keyword', 'search', 'clear'])
 }
 
 .clear-btn:hover {
-  background: #D1D5DB;
-  color: #374151;
+  background: var(--c-text-300);
+  color: var(--c-text-600);
 }
 
 .action-section {
@@ -132,7 +132,7 @@ const emit = defineEmits(['update:keyword', 'search', 'clear'])
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: #059669;
+  background: var(--c-success);
   color: white;
   border: none;
   border-radius: 10px;

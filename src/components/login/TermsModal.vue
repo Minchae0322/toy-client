@@ -387,7 +387,7 @@ const close = () => {
 
 /* ===================== 컨테이너 ===================== */
 .terms-container {
-  background: #ffffff;
+  background: var(--bg-elevated);
   border-radius: 16px;
   width: 100%;
   max-width: 640px;
@@ -406,7 +406,7 @@ const close = () => {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px 0;
-  border-bottom: 1px solid #f4f4f5;
+  border-bottom: 1px solid var(--bg-mute);
   flex-shrink: 0;
 }
 
@@ -419,7 +419,7 @@ const close = () => {
   padding: 10px 16px;
   font-size: 14px;
   font-weight: 500;
-  color: #71717a;
+  color: var(--c-text-500);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -432,8 +432,8 @@ const close = () => {
 }
 
 .tab-btn.active {
-  color: #9333ea;
-  border-bottom-color: #9333ea;
+  color: var(--c-brand);
+  border-bottom-color: var(--c-brand);
   font-weight: 600;
 }
 
@@ -445,7 +445,7 @@ const close = () => {
   justify-content: center;
   border: none;
   background: none;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   cursor: pointer;
   border-radius: 6px;
   transition: all 0.15s;
@@ -453,7 +453,7 @@ const close = () => {
 }
 
 .close-btn:hover {
-  background: #f4f4f5;
+  background: var(--bg-mute);
   color: #27272a;
 }
 
@@ -468,13 +468,13 @@ const close = () => {
 .terms-content h2 {
   font-size: 18px;
   font-weight: 700;
-  color: #18181b;
+  color: var(--text-primary);
   margin: 0 0 4px;
 }
 
 .terms-date {
   font-size: 13px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   margin: 0 0 24px;
 }
 
@@ -484,7 +484,7 @@ const close = () => {
   color: #27272a;
   margin: 24px 0 8px;
   padding-bottom: 6px;
-  border-bottom: 1px solid #f4f4f5;
+  border-bottom: 1px solid var(--bg-mute);
 }
 
 .terms-content p {
@@ -525,20 +525,20 @@ const close = () => {
 .terms-content table th,
 .terms-content table td {
   padding: 8px 10px;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--border-strong);
   text-align: left;
   color: #52525b;
 }
 
 .terms-content table th {
-  background: #fafafa;
+  background: var(--bg-subtle);
   font-weight: 600;
   color: #27272a;
 }
 
 .info-box {
-  background: #fafafa;
-  border: 1px solid #f4f4f5;
+  background: var(--bg-subtle);
+  border: 1px solid var(--bg-mute);
   border-radius: 8px;
   padding: 12px 14px;
   margin: 8px 0 16px;
@@ -553,14 +553,14 @@ const close = () => {
 .terms-footer {
   margin-top: 24px;
   font-size: 13px;
-  color: #a1a1aa;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
 /* ===================== 하단 버튼 ===================== */
 .terms-footer-bar {
   padding: 12px 20px;
-  border-top: 1px solid #f4f4f5;
+  border-top: 1px solid var(--bg-mute);
   display: flex;
   justify-content: flex-end;
   flex-shrink: 0;
@@ -568,7 +568,7 @@ const close = () => {
 
 .confirm-btn {
   padding: 10px 24px;
-  background-color: #18181b;
+  background-color: var(--c-ink-900);
   color: white;
   border: none;
   border-radius: 8px;
@@ -592,12 +592,12 @@ const close = () => {
 }
 
 .terms-body::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
+  background: var(--c-text-300);
   border-radius: 3px;
 }
 
 .terms-body::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa;
+  background: var(--c-text-400);
 }
 
 /* ===================== 트랜지션 ===================== */

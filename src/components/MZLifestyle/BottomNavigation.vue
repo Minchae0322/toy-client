@@ -36,7 +36,7 @@ const handleNavClick = (item) => {
 <style scoped>
 .bottom-navigation {
   /* bg-white border-t sticky bottom-0 */
-  background-color: white; /* bg-white */
+  background-color: var(--bg-elevated); /* bg-white */
   border-top: 1px solid #e5e7eb; /* border-t (border-gray-200, Tailwind default) */
   position: sticky; /* sticky */
   bottom: 0; /* bottom-0 */

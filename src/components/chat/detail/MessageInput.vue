@@ -256,8 +256,8 @@ defineExpose({ focus, setText })
 
 <style scoped>
 .message-input-container {
-  background: #FFFFFF;
-  border-top: 1px solid #f0f0f0;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--bg-subtle);
   position: relative;
 }
 
@@ -265,21 +265,21 @@ defineExpose({ focus, setText })
 .reply-preview {
   margin: 16px 16px 0 16px;
   padding: 12px 14px;
-  background: #faf5ff;
+  background: var(--c-brand-soft);
   border-radius: 14px;
-  border-left: 3px solid #a855f7;
+  border-left: 3px solid var(--c-brand);
 }
 
 .reply-content { display: flex; flex-direction: column; gap: 4px; }
 .reply-header { display: flex; justify-content: space-between; align-items: center; }
-.reply-to { font-size: 12px; color: #9333ea; font-weight: 600; }
+.reply-to { font-size: 12px; color: var(--c-brand); font-weight: 600; }
 
 .reply-close {
   width: 24px;
   height: 24px;
   border: none;
   background: none;
-  color: #9ca3af;
+  color: var(--c-text-400);
   cursor: pointer;
   border-radius: 6px;
   display: flex;
@@ -294,11 +294,11 @@ defineExpose({ focus, setText })
   height: 16px;
 }
 
-.reply-close:hover { background: #f3e8ff; color: #9333ea; }
+.reply-close:hover { background: var(--c-brand-soft); color: var(--c-brand); }
 
 .reply-text {
   font-size: 13px;
-  color: #64748b;
+  color: var(--c-text-500);
   max-height: 40px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -318,14 +318,14 @@ defineExpose({ focus, setText })
   width: 38px;
   height: 38px;
   border: none;
-  background: #f5f5f5;
+  background: var(--bg-subtle);
   border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  color: #64748b;
+  color: var(--c-text-500);
 }
 
 .toolbar-btn svg {
@@ -334,8 +334,8 @@ defineExpose({ focus, setText })
 }
 
 .toolbar-btn:hover:not(:disabled) {
-  background: #f3e8ff;
-  color: #9333ea;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
   transform: translateY(-1px);
 }
 
@@ -348,15 +348,15 @@ defineExpose({ focus, setText })
   gap: 12px;
   margin: 0 16px 16px 16px;
   padding: 12px 14px;
-  background: #f8fafc;
+  background: var(--bg-subtle);
   border-radius: 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-strong);
   transition: all 0.2s;
 }
 
 .input-area:focus-within {
-  background: #FFFFFF;
-  border-color: #a855f7;
+  background: var(--bg-elevated);
+  border-color: var(--c-brand);
   box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
 }
 
@@ -371,17 +371,17 @@ defineExpose({ focus, setText })
   min-height: 24px;
   max-height: 120px;
   font-family: inherit;
-  color: #1e293b;
+  color: var(--c-text-600);
 }
 
-.message-textarea::placeholder { color: #94a3b8; }
+.message-textarea::placeholder { color: var(--c-text-400); }
 .message-textarea:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .send-button {
   width: 42px;
   height: 42px;
   border: none;
-  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  background: linear-gradient(135deg, var(--c-brand) 0%, var(--c-brand) 100%);
   color: white;
   border-radius: 14px;
   cursor: pointer;
@@ -404,7 +404,7 @@ defineExpose({ focus, setText })
 }
 
 .send-button:disabled {
-  background: #e2e8f0;
+  background: var(--border-strong);
   box-shadow: none;
   cursor: not-allowed;
 }
@@ -415,7 +415,7 @@ defineExpose({ focus, setText })
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  color: #64748b;
+  color: var(--c-text-500);
   font-size: 12px;
 }
 
@@ -424,7 +424,7 @@ defineExpose({ focus, setText })
 .dot {
   width: 5px;
   height: 5px;
-  background: #a855f7;
+  background: var(--c-brand);
   border-radius: 50%;
   animation: typing-bounce 1.4s ease-in-out infinite both;
 }

@@ -176,7 +176,7 @@ onMounted(() => {
 <style scoped>
 .category-page {
   min-height: 100vh;
-  background: #fff;
+  background: var(--bg-elevated);
 }
 
 .page-header {
@@ -184,10 +184,10 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--bg-subtle);
   position: sticky;
   top: 0;
-  background: #fff;
+  background: var(--bg-elevated);
   z-index: 10;
 }
 
@@ -195,7 +195,7 @@ onMounted(() => {
   width: 36px;
   height: 36px;
   border: none;
-  background: #f5f5f5;
+  background: var(--bg-subtle);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -204,26 +204,26 @@ onMounted(() => {
 }
 
 .back-btn:hover {
-  background: #eee;
+  background: var(--border-strong);
 }
 
 .back-btn svg {
   width: 20px;
   height: 20px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .page-header h1 {
   font-size: 18px;
   font-weight: 700;
-  color: #111;
+  color: var(--text-primary);
   margin: 0;
 }
 
 /* 검색 */
 .search-section {
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--bg-subtle);
 }
 
 .search-box {
@@ -237,29 +237,29 @@ onMounted(() => {
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   pointer-events: none;
 }
 
 .search-input {
   width: 100%;
   padding: 12px 40px 12px 44px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   font-size: 15px;
   font-family: inherit;
-  color: #111;
-  background: #f9fafb;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #9933EA;
-  background: #fff;
+  border-color: var(--c-brand);
+  background: var(--bg-elevated);
 }
 
 .search-input::placeholder {
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .search-clear {
@@ -270,7 +270,7 @@ onMounted(() => {
   width: 24px;
   height: 24px;
   border: none;
-  background: #e5e7eb;
+  background: var(--border-strong);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -279,13 +279,13 @@ onMounted(() => {
 }
 
 .search-clear:hover {
-  background: #d1d5db;
+  background: var(--c-text-300);
 }
 
 .search-clear svg {
   width: 12px;
   height: 12px;
-  color: #666;
+  color: var(--c-text-500);
 }
 
 /* 로딩 */
@@ -298,8 +298,8 @@ onMounted(() => {
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #f0f0f0;
-  border-top-color: #9933EA;
+  border: 3px solid var(--bg-subtle);
+  border-top-color: var(--c-brand);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -316,7 +316,7 @@ onMounted(() => {
 .empty {
   padding: 40px 20px;
   text-align: center;
-  color: #9ca3af;
+  color: var(--c-text-400);
 }
 
 .search-result-item {
@@ -334,18 +334,18 @@ onMounted(() => {
 }
 
 .search-result-item:hover {
-  background: #f5f5f5;
+  background: var(--bg-subtle);
 }
 
 .result-parent {
-  color: #9ca3af;
+  color: var(--c-text-400);
   font-size: 14px;
 }
 
 .result-name {
   font-size: 15px;
   font-weight: 500;
-  color: #111;
+  color: var(--text-primary);
 }
 
 /* 카테고리 목록 */
@@ -372,24 +372,24 @@ onMounted(() => {
 }
 
 .category-header:hover {
-  background: #f5f5f5;
+  background: var(--bg-subtle);
 }
 
 .category-header.expanded {
-  background: #FAF5FF;
+  background: var(--c-brand-soft);
 }
 
 .category-name {
   flex: 1;
   font-size: 15px;
   font-weight: 600;
-  color: #111;
+  color: var(--text-primary);
 }
 
 .child-count {
   font-size: 12px;
-  color: #9ca3af;
-  background: #f3f4f6;
+  color: var(--c-text-400);
+  background: var(--border-default);
   padding: 2px 8px;
   border-radius: 10px;
 }
@@ -398,7 +398,7 @@ onMounted(() => {
 .arrow-icon {
   width: 18px;
   height: 18px;
-  color: #9ca3af;
+  color: var(--c-text-400);
   transition: transform 0.2s;
 }
 
@@ -421,17 +421,17 @@ onMounted(() => {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #555;
+  color: var(--c-text-600);
   transition: all 0.15s;
 }
 
 .sub-item:hover {
-  background: #f5f5f5;
-  color: #9933EA;
+  background: var(--bg-subtle);
+  color: var(--c-brand);
 }
 
 .sub-item.all {
-  color: #9933EA;
+  color: var(--c-brand);
   font-weight: 600;
 }
 

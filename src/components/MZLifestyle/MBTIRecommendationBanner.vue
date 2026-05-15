@@ -17,7 +17,7 @@ import { Sparkles } from 'lucide-vue-next';
 <style scoped>
 .mbti-banner-container {
   /* bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 m-4 rounded-xl */
-  background: linear-gradient(to right, #a855f7, #ec4899); /* purple-500 to pink-500 */
+  background: linear-gradient(to right, var(--c-brand), #ec4899); /* purple-500 to pink-500 */
   color: white; /* text-white */
   padding: 1rem; /* p-4 (1rem = 16px) */
   margin: 1rem; /* m-4 */

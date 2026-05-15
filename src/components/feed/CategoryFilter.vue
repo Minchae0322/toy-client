@@ -166,7 +166,7 @@ watch(() => props.initialCategoryId, (newId) => {
 
 <style scoped>
 .category-filter {
-  background: var(--card, #fff);
+  background: var(--card, var(--bg-elevated));
   border-bottom: 1px solid var(--border, #eee);
 }
 
@@ -196,7 +196,7 @@ watch(() => props.initialCategoryId, (newId) => {
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: var(--bg, #f5f5f5);
+  background: var(--bg, var(--bg-subtle));
   border-radius: 12px;
   overflow-x: auto;
   scrollbar-width: none;
@@ -227,7 +227,7 @@ watch(() => props.initialCategoryId, (newId) => {
 }
 
 .category-tab.active {
-  background: #fff;
+  background: var(--bg-elevated);
   color: var(--primary, #111);
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -236,7 +236,7 @@ watch(() => props.initialCategoryId, (newId) => {
 /* View Toggle */
 .view-toggle {
   display: none;
-  background: var(--bg, #f5f5f5);
+  background: var(--bg, var(--bg-subtle));
   border-radius: 12px;
   padding: 4px;
   gap: 4px;
@@ -270,7 +270,7 @@ watch(() => props.initialCategoryId, (newId) => {
 }
 
 .view-btn.active {
-  background: white;
+  background: var(--bg-elevated);
   color: var(--primary, #111);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -332,13 +332,13 @@ watch(() => props.initialCategoryId, (newId) => {
 }
 
 .sub-tab:hover {
-  background: var(--hover, #f5f5f5);
+  background: var(--hover, var(--bg-subtle));
   color: var(--primary, #111);
 }
 
 .sub-tab.active {
-  background: var(--accent-bg, #f3e8ff);
-  color: var(--accent, #7c3aed);
+  background: var(--accent-bg, var(--c-brand-soft));
+  color: var(--accent, var(--c-brand-hover));
   font-weight: 600;
 }
 

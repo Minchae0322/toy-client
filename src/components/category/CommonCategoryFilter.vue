@@ -379,11 +379,11 @@ watch(() => props.contentType, () => {
 
 <style scoped>
 .filter-container {
-  background: #ffffff;
+  background: var(--bg-base);
   padding: 16px 0;
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid #f2f2f7;
+  border-bottom: 1px solid var(--bg-mute);
 }
 
 /* 1뎁스 컨테이너: 스크롤 영역 + 항상 보이는 더보기 버튼 */
@@ -418,9 +418,9 @@ watch(() => props.contentType, () => {
   gap: 5px;
   padding: 7px 12px 7px 10px;
   border-radius: 999px;
-  background: #ffffff;
-  color: #4b5563;
-  border: 1.5px solid #e5e7eb;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-strong);
   font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
@@ -443,15 +443,15 @@ watch(() => props.contentType, () => {
 }
 
 .category-tab:hover {
-  background: #fafafa;
-  border-color: #d1d5db;
+  background: var(--bg-subtle);
+  border-color: var(--c-text-300);
   transform: translateY(-1px);
 }
 
 .category-tab.active {
-  background: #9333EA;
+  background: var(--c-brand);
   color: #ffffff;
-  border-color: #9333EA;
+  border-color: var(--c-brand);
   box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25);
   transform: translateY(-1px);
 }
@@ -463,12 +463,12 @@ watch(() => props.contentType, () => {
 .category-tab.more-btn {
   padding: 8px 10px;
   background: transparent;
-  color: #8e8e93;
+  color: var(--c-text-400);
 }
 
 .category-tab.more-btn:hover {
-  background: #f2f2f7;
-  color: #3a3a3c;
+  background: var(--bg-mute);
+  color: var(--c-text-600);
 }
 
 .category-tab.more-btn svg {
@@ -478,9 +478,9 @@ watch(() => props.contentType, () => {
 
 .category-tab.more-btn.more-btn-text {
   padding: 8px 12px;
-  background: #ffffff;
-  color: #9333ea;
-  border: 1px dashed #c084fc;
+  background: var(--bg-elevated);
+  color: var(--c-brand);
+  border: 1px dashed var(--c-brand);
   font-size: 12px;
   font-weight: 700;
   display: inline-flex;
@@ -489,8 +489,8 @@ watch(() => props.contentType, () => {
 }
 
 .category-tab.more-btn.more-btn-text:hover {
-  background: #faf5ff;
-  border-color: #9333ea;
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand);
 }
 
 .more-chevron {
@@ -509,7 +509,7 @@ watch(() => props.contentType, () => {
 .loading-dot {
   width: 4px;
   height: 4px;
-  background: #d1d1d6;
+  background: var(--c-text-300);
   border-radius: 50%;
   animation: loading-pulse 1.2s ease-in-out infinite;
 }
@@ -532,8 +532,8 @@ watch(() => props.contentType, () => {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f2f2f7;
-  color: #3a3a3c;
+  background: var(--bg-mute);
+  color: var(--c-text-600);
   border: none;
   border-radius: 6px;
   font-size: 12px;
@@ -550,12 +550,12 @@ watch(() => props.contentType, () => {
   width: 14px;
   height: 14px;
   margin-left: 4px;
-  color: #8e8e93;
+  color: var(--c-text-400);
   cursor: pointer;
 }
 
 .chip-clear:hover {
-  color: #3a3a3c;
+  color: var(--c-text-600);
 }
 
 /* 2뎁스 하위 카테고리 */
@@ -565,7 +565,7 @@ watch(() => props.contentType, () => {
   align-items: center;
   margin: 10px 20px 0;
   padding-top: 10px;
-  border-top: 1px solid #f2f2f7;
+  border-top: 1px solid var(--bg-mute);
   flex-wrap: wrap;
 }
 
@@ -573,7 +573,7 @@ watch(() => props.contentType, () => {
   padding: 6px 12px;
   border-radius: 6px;
   background: transparent;
-  color: #8e8e93;
+  color: var(--c-text-400);
   border: none;
   font-size: 12px;
   font-weight: 600;
@@ -583,12 +583,12 @@ watch(() => props.contentType, () => {
 }
 
 .sub-category-tab:hover {
-  background: #f2f2f7;
-  color: #3a3a3c;
+  background: var(--bg-mute);
+  color: var(--c-text-600);
 }
 
 .sub-category-tab.active {
-  background: #3a3a3c;
+  background: var(--c-text-600);
   color: #ffffff;
 }
 

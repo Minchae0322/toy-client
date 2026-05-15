@@ -172,14 +172,14 @@ const formatSavedTime = (date) => {
 
 <style scoped>
 .create-header {
-  background: #FFFFFF;
+  background: var(--bg-elevated);
   padding: 0;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--border-strong);
   position: sticky;
   top: 0;
   z-index: 100;
   backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--header-blur-bg);
 }
 
 .header-content {
@@ -208,15 +208,15 @@ const formatSavedTime = (date) => {
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #6B7280;
+  color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .back-btn:hover {
-  background: #F3F4F6;
-  color: #1A1A1A;
+  background: var(--border-default);
+  color: var(--text-primary);
 }
 
 .back-btn:active {
@@ -226,14 +226,14 @@ const formatSavedTime = (date) => {
 .divider {
   width: 1px;
   height: 20px;
-  background: #E5E7EB;
+  background: var(--border-strong);
   flex-shrink: 0;
 }
 
 .page-title {
   font-size: 16px;
   font-weight: 700;
-  color: #1A1A1A;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
@@ -264,35 +264,35 @@ const formatSavedTime = (date) => {
 }
 
 .step-item:hover .step-label {
-  color: #1A1A1A;
+  color: var(--text-primary);
 }
 
 .step-circle {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #F3F4F6;
-  border: 2px solid #E5E7EB;
+  background: var(--border-default);
+  border: 2px solid var(--border-strong);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .step-item.active .step-circle {
-  background: #1A1A1A;
-  border-color: #1A1A1A;
+  background: var(--c-ink-900);
+  border-color: var(--c-ink-900);
   color: white;
   transform: scale(1.05);
 }
 
 .step-item.completed .step-circle {
-  background: #10B981;
-  border-color: #10B981;
+  background: var(--c-success);
+  border-color: var(--c-success);
   color: white;
 }
 
@@ -303,30 +303,30 @@ const formatSavedTime = (date) => {
 .step-label {
   font-size: 13px;
   font-weight: 500;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   transition: all 0.25s;
   white-space: nowrap;
 }
 
 .step-item.active .step-label {
-  color: #1A1A1A;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .step-item.completed .step-label {
-  color: #6B7280;
+  color: var(--c-text-500);
 }
 
 .step-line {
   width: 40px;
   height: 2px;
-  background: #E5E7EB;
+  background: var(--border-strong);
   transition: background 0.25s;
   flex-shrink: 0;
 }
 
 .step-line.completed {
-  background: #10B981;
+  background: var(--c-success);
 }
 
 /* ===== 우측: 액션 버튼 ===== */
@@ -339,7 +339,7 @@ const formatSavedTime = (date) => {
 
 .save-status {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   white-space: nowrap;
 }
 
@@ -348,10 +348,10 @@ const formatSavedTime = (date) => {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: white;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  color: #374151;
+  color: var(--c-text-600);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -361,8 +361,8 @@ const formatSavedTime = (date) => {
 }
 
 .save-draft-btn:hover:not(:disabled) {
-  border-color: #D1D5DB;
-  background: #F9FAFB;
+  border-color: var(--c-text-300);
+  background: var(--bg-subtle);
 }
 
 .save-draft-btn:active:not(:disabled) {
@@ -375,7 +375,7 @@ const formatSavedTime = (date) => {
 }
 
 .save-draft-btn.saving {
-  color: #6B7280;
+  color: var(--c-text-500);
 }
 
 .save-draft-btn svg {

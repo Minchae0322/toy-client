@@ -258,53 +258,53 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: 32px 20px;
-  border: 2px dashed #D1D5DB;
+  border: 2px dashed var(--c-text-300);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  background: #FAFAFA;
+  background: var(--bg-subtle);
   min-height: 150px;
 }
 
 .upload-area:hover:not(.disabled) {
-  border-color: #059669;
-  background: #F0FDF4;
+  border-color: var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .upload-area.dragover {
-  border-color: #059669;
-  background: #ECFDF5;
+  border-color: var(--c-success);
+  background: var(--c-success-soft);
 }
 
 .upload-area.disabled {
-  background: #F9FAFB;
-  border-color: #E5E7EB;
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
   cursor: not-allowed;
   opacity: 0.8;
 }
 
 .upload-icon {
-  color: #9CA3AF;
+  color: var(--c-text-400);
   margin-bottom: 12px;
 }
 
 .upload-text {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--c-text-600);
   text-align: center;
   margin-bottom: 8px;
   letter-spacing: -0.01em;
 }
 
 .upload-text strong {
-  color: #059669;
+  color: var(--c-success);
   font-weight: 600;
 }
 
 .upload-hint {
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   text-align: center;
   display: flex;
   align-items: center;
@@ -314,7 +314,7 @@ defineExpose({
 .upload-count {
   display: inline-block;
   padding: 2px 8px;
-  background: #059669;
+  background: var(--c-success);
   color: white;
   border-radius: 10px;
   font-weight: 600;
@@ -329,23 +329,23 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: #FAFAFA;
+  background: var(--bg-subtle);
   border-radius: 10px 10px 0 0;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
   border-bottom: none;
 }
 
 .preview-title {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--c-text-600);
 }
 
 .preview-count {
   font-size: 13px;
   font-weight: 600;
-  color: #059669;
-  background: #ECFDF5;
+  color: var(--c-success);
+  background: var(--c-success-soft);
   padding: 4px 10px;
   border-radius: 10px;
 }
@@ -355,17 +355,17 @@ defineExpose({
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 16px;
   padding: 16px;
-  background: white;
-  border: 1px solid #F3F4F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-radius: 0 0 10px 10px;
 }
 
 .preview-item {
   position: relative;
-  border: 1px solid #F3F4F6;
+  border: 1px solid var(--border-default);
   border-radius: 10px;
   overflow: hidden;
-  background: white;
+  background: var(--bg-elevated);
 }
 
 .image-number {
@@ -390,7 +390,7 @@ defineExpose({
   width: 100%;
   height: 120px;
   object-fit: contain;
-  background: #f3f4f6;
+  background: var(--border-default);
 }
 
 .remove-btn {
@@ -412,7 +412,7 @@ defineExpose({
 }
 
 .remove-btn:hover:not(:disabled) {
-  background: #DC2626;
+  background: var(--c-danger);
   transform: scale(1.1);
 }
 
@@ -424,13 +424,13 @@ defineExpose({
 .file-info {
   padding: 8px;
   text-align: center;
-  background: #FAFAFA;
+  background: var(--bg-subtle);
 }
 
 .file-name {
   font-size: 12px;
   font-weight: 500;
-  color: #374151;
+  color: var(--c-text-600);
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -439,14 +439,14 @@ defineExpose({
 
 .file-size {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--c-text-400);
   font-weight: 500;
 }
 
 .error-message {
   margin-top: 8px;
   font-size: 13px;
-  color: #DC2626;
+  color: var(--c-danger);
   font-weight: 500;
 }
 

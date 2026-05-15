@@ -72,7 +72,7 @@ function formatDate(dateStr) {
 }
 
 .modal-card {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 20px;
   padding: 24px;
   width: 100%;
@@ -102,7 +102,7 @@ function formatDate(dateStr) {
   position: absolute;
   top: -4px;
   right: -6px;
-  background: #ef4444;
+  background: var(--c-danger);
   color: white;
   font-size: 10px;
   font-weight: 700;
@@ -116,13 +116,13 @@ function formatDate(dateStr) {
   background: none;
   border: none;
   font-size: 24px;
-  color: #64748B;
+  color: var(--c-text-500);
   cursor: pointer;
   padding: 0;
   line-height: 1;
 }
 
-.modal-badge-name { font-size: 18px; font-weight: 700; color: #222; margin-bottom: 4px; }
+.modal-badge-name { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
 
 .modal-badge-type {
   display: inline-block;
@@ -133,38 +133,38 @@ function formatDate(dateStr) {
   margin-bottom: 12px;
 }
 
-.modal-badge-type.basic { background: #eff6ff; color: #3b82f6; }
-.modal-badge-type.special { background: #faf5ff; color: #9333ea; }
+.modal-badge-type.basic { background: var(--c-info-soft); color: var(--c-info); }
+.modal-badge-type.special { background: var(--c-brand-soft); color: var(--c-brand); }
 
-.modal-description { font-size: 13px; color: #64748B; line-height: 1.6; margin-bottom: 16px; }
+.modal-description { font-size: 13px; color: var(--c-text-500); line-height: 1.6; margin-bottom: 16px; }
 
 .modal-info-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   padding: 10px 0;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--border-default);
   gap: 8px;
 }
 
-.modal-info-label { font-size: 12px; font-weight: 600; color: #64748B; white-space: nowrap; flex-shrink: 0; }
-.modal-info-value { font-size: 13px; color: #222; text-align: right; }
+.modal-info-label { font-size: 12px; font-weight: 600; color: var(--c-text-500); white-space: nowrap; flex-shrink: 0; }
+.modal-info-value { font-size: 13px; color: var(--text-primary); text-align: right; }
 
 .modal-earned {
   text-align: center;
   padding: 12px;
   margin-top: 12px;
-  background: #f0fdf4;
+  background: var(--c-success-soft);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  color: #16a34a;
+  color: var(--c-success);
 }
 
 .modal-progress-detail {
   margin-top: 12px;
   padding: 12px;
-  background: #f8fafc;
+  background: var(--bg-subtle);
   border-radius: 10px;
 }
 
@@ -173,20 +173,20 @@ function formatDate(dateStr) {
   justify-content: space-between;
   font-size: 12px;
   font-weight: 600;
-  color: #64748B;
+  color: var(--c-text-500);
   margin-bottom: 8px;
 }
 
 .progress-bar {
   height: 8px;
-  background: #e5e7eb;
+  background: var(--border-strong);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: #9333ea;
+  background: var(--c-brand);
   border-radius: 4px;
   transition: width 0.4s ease;
 }

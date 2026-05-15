@@ -27,8 +27,8 @@ const emit = defineEmits(['retry'])
 .error-container {
   padding: 80px 24px;
   text-align: center;
-  background: white;
-  border: 1px solid #F3F4F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
   border-top: none;
   border-radius: 0 0 12px 12px;
 }
@@ -40,20 +40,20 @@ const emit = defineEmits(['retry'])
 .error-container h3 {
   font-size: 18px;
   font-weight: 700;
-  color: #DC2626;
+  color: var(--c-danger);
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
 
 .error-container p {
   font-size: 14px;
-  color: #6B7280;
+  color: var(--c-text-500);
   margin-bottom: 24px;
 }
 
 .retry-btn {
   padding: 12px 24px;
-  background: #059669;
+  background: var(--c-success);
   color: white;
   border: none;
   border-radius: 8px;

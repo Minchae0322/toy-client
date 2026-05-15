@@ -202,8 +202,8 @@ const formatCount = (count) => {
 }
 
 .sidebar-card {
-  background: #ffffff;
-  border: 1px solid #F2F4F6;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-mute);
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -215,12 +215,12 @@ const formatCount = (count) => {
   gap: 8px;
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #F2F4F6;
+  border-bottom: 1px solid var(--bg-mute);
 }
 
-.sidebar-icon { width: 16px; height: 16px; color: #9333EA; }
+.sidebar-icon { width: 16px; height: 16px; color: var(--c-brand); }
 
-.sidebar-title { font-size: 13px; font-weight: 700; color: #191F28; letter-spacing: -0.01em; }
+.sidebar-title { font-size: 13px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
 
 /* Hashtag Pagination */
 .hashtag-pagination {
@@ -234,17 +234,17 @@ const formatCount = (count) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #E5E8EB;
+  background: var(--border-default);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .pagination-dot:hover {
-  background: #B0B8C1;
+  background: var(--c-text-300);
 }
 
 .pagination-dot.active {
-  background: #9333EA;
+  background: var(--c-brand);
   width: 16px;
   border-radius: 3px;
 }
@@ -300,7 +300,7 @@ const formatCount = (count) => {
   font-family: inherit;
 }
 
-.hashtag-item:hover { background: #F7F8FA; }
+.hashtag-item:hover { background: var(--bg-subtle); }
 
 .hashtag-rank {
   width: 18px;
@@ -308,20 +308,20 @@ const formatCount = (count) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F2F4F6;
+  background: var(--bg-mute);
   border-radius: 4px;
   font-size: 10px;
   font-weight: 700;
-  color: #8B95A1;
+  color: var(--c-text-400);
 }
 
-.hashtag-rank.rank-gold { background: #fef3c7; color: #d97706; }
-.hashtag-rank.rank-silver { background: #e5e7eb; color: #4b5563; }
-.hashtag-rank.rank-bronze { background: #fed7aa; color: #c2410c; }
+.hashtag-rank.rank-gold { background: var(--c-warning-soft); color: var(--c-bronze); }
+.hashtag-rank.rank-silver { background: var(--border-strong); color: var(--c-text-600); }
+.hashtag-rank.rank-bronze { background: var(--c-heat-soft); color: var(--c-heat); }
 
-.hashtag-name { flex: 1; font-size: 13px; font-weight: 500; color: #191F28; }
+.hashtag-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-primary); }
 
-.hashtag-count { font-size: 11px; color: #B0B8C1; }
+.hashtag-count { font-size: 11px; color: var(--c-text-300); }
 
 /* Trending List */
 .trending-list { display: flex; flex-direction: column; gap: 2px; }
@@ -341,20 +341,20 @@ const formatCount = (count) => {
   font-family: inherit;
 }
 
-.trending-item:hover { background: #F7F8FA; }
+.trending-item:hover { background: var(--bg-subtle); }
 
 .trending-emoji { font-size: 18px; }
 
 .trending-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
 
-.trending-name { font-size: 12px; font-weight: 600; color: #191F28; }
+.trending-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 
-.trending-desc { font-size: 10px; color: #B0B8C1; }
+.trending-desc { font-size: 10px; color: var(--c-text-300); }
 
 .trending-badge {
   padding: 2px 5px;
-  background: #fef2f2;
-  color: #ef4444;
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
   border-radius: 4px;
   font-size: 9px;
   font-weight: 700;
@@ -372,13 +372,13 @@ const formatCount = (count) => {
   transition: background 0.15s;
 }
 
-.user-item:hover { background: #F7F8FA; }
+.user-item:hover { background: var(--bg-subtle); }
 
 .user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #9333EA, #7C3AED);
+  background: linear-gradient(135deg, var(--c-brand), var(--c-brand-hover));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -392,24 +392,24 @@ const formatCount = (count) => {
 
 .user-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
 
-.user-name { font-size: 12px; font-weight: 600; color: #191F28; }
+.user-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 
-.user-stats { font-size: 10px; color: #B0B8C1; }
+.user-stats { font-size: 10px; color: var(--c-text-300); }
 
 .follow-btn {
   padding: 5px 10px;
-  background: #F2F4F6;
-  border: 1px solid #F2F4F6;
+  background: var(--bg-mute);
+  border: 1px solid var(--bg-mute);
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #4E5968;
+  color: var(--c-text-600);
   cursor: pointer;
   transition: all 0.15s;
   font-family: inherit;
 }
 
-.follow-btn:hover { background: #191F28; color: white; border-color: #191F28; }
+.follow-btn:hover { background: var(--c-ink-900); color: white; border-color: var(--c-ink-900); }
 
 /* 1024px 이하에서 숨김 */
 @media (max-width: 1024px) {

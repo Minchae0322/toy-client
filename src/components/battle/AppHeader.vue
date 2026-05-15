@@ -37,7 +37,7 @@ defineEmits(['create']);
 
 <style scoped>
 .app-header {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--header-blur-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid #EAEAEA;
@@ -69,7 +69,7 @@ defineEmits(['create']);
   gap: 6px;
   padding: 8px 14px;
   background: #0A0A0A;
-  color: #FFFFFF;
+  color: #ffffff;
   border: none;
   border-radius: 7px;
   font-size: 13px;
@@ -82,7 +82,7 @@ defineEmits(['create']);
 }
 
 .create-button:hover {
-  background: #1A1A1A;
+  background: var(--c-ink-900);
   transform: translateY(-0.5px) scale(1.01);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
