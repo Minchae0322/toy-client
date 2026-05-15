@@ -164,6 +164,12 @@ const routes = [
     meta: { requiresAuth: false, public: true, title: '프로필', description: '사용자 프로필과 활동 내역을 확인하세요.' }
   },
   {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('@/views/SettingsView.vue'),
+    meta: { requiresAuth: false, public: true, title: '환경설정' }
+  },
+  {
     path: '/settings/notifications',
     name: 'NotificationSettings',
     component: () => import('@/views/NotificationSettingsView.vue'),

@@ -542,16 +542,17 @@ watch(() => route.params.userId, (newId, oldId) => {
 
 .profile {
   background: var(--bg-elevated);
+  border-radius: 16px;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
 
 .profile-wrap {
-  padding: 24px 0 20px;
+  padding: 24px 20px 20px;
 }
 
 @media (min-width: 768px) {
   .profile-wrap {
-    padding: 40px 0 28px;
+    padding: 40px 32px 28px;
   }
 }
 

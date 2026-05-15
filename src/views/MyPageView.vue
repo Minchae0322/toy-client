@@ -139,58 +139,22 @@
             </template>
           </div>
 
-          <!-- Theme Section -->
-          <div class="theme-section">
-            <div class="theme-section-head">
-              <span class="theme-section-title">화면 모드</span>
-            </div>
-            <div class="theme-segment" role="radiogroup" aria-label="화면 모드 선택">
-              <button
-                v-for="opt in themeOptions"
-                :key="opt.value"
-                class="theme-segment-item"
-                :class="{ active: themeMode === opt.value }"
-                role="radio"
-                :aria-checked="themeMode === opt.value"
-                @click="setThemeMode(opt.value)"
-              >
-                <component :is="opt.icon" :size="16" />
-                <span>{{ opt.label }}</span>
-              </button>
-            </div>
-          </div>
-
           <!-- Menu Section -->
           <div class="menu-section">
-            <button class="menu-item" @click="goToProfile">
-              <div class="menu-left">
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
-                </svg>
-                <span>프로필</span>
-              </div>
-              <ChevronRight :size="18" />
-            </button>
             <button class="menu-item" @click="goToMyFeeds">
-              <div class="menu-left"><FileText :size="18" /><span>내 피드</span></div>
+              <div class="menu-left"><MessageSquareText :size="18" /><span>내 피드</span></div>
               <ChevronRight :size="18" />
             </button>
             <button class="menu-item" @click="goToMyProducts">
-              <div class="menu-left">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-                </svg>
-                <span>내 상품</span>
-              </div>
-              <ChevronRight :size="18" />
-            </button>
-            <button class="menu-item" @click="goToNotificationSettings">
-              <div class="menu-left"><Bell :size="18" /><span>알림 설정</span></div>
+              <div class="menu-left"><Package :size="18" /><span>내 상품</span></div>
               <ChevronRight :size="18" />
             </button>
             <button class="menu-item" @click="goToAccountSettings">
-              <div class="menu-left"><Settings :size="18" /><span>계정 설정</span></div>
+              <div class="menu-left"><UserCog :size="18" /><span>계정 설정</span></div>
+              <ChevronRight :size="18" />
+            </button>
+            <button class="menu-item" @click="goToAppSettings">
+              <div class="menu-left"><Palette :size="18" /><span>환경설정</span></div>
               <ChevronRight :size="18" />
             </button>
           </div>
@@ -212,11 +176,9 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  Camera, Calendar, Mail, FileText,
-  Bell, Settings, ChevronRight, LogOut,
-  Sun, Moon, Monitor
+  Camera, Calendar, Mail, MessageSquareText, Package,
+  UserCog, Palette, ChevronRight, LogOut
 } from 'lucide-vue-next'
-import { useTheme } from '@/composables/useTheme'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
@@ -233,13 +195,6 @@ const router = useRouter()
 const userService = useUser()
 const fileService = useFile()
 const { open } = useConfirmDialog()
-const { mode: themeMode, setMode: setThemeMode } = useTheme()
-
-const themeOptions = [
-  { value: 'light', label: '라이트', icon: Sun },
-  { value: 'dark', label: '다크', icon: Moon },
-  { value: 'auto', label: '시스템', icon: Monitor },
-]
 
 // ==================== State ====================
 const loading = ref(true)
@@ -531,11 +486,10 @@ const handleImageError = (e) => {
 
 const showFollowers = () => console.log('팔로워 목록')
 const showFollowings = () => console.log('팔로잉 목록')
-const goToProfile = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToMyFeeds = () => router.push({name: 'UserFeedList', params: {userId: profile.userId}})
 const goToMyProducts = () => router.push({name: 'MyProducts'})
-const goToNotificationSettings = () => router.push({ name: 'NotificationSettings' })
 const goToAccountSettings = () => router.push({ name: 'AccountSettings' })
+const goToAppSettings = () => router.push({ name: 'Settings' })
 
 const handleLogout = async () => {
   const confirmed = await open({ type: 'confirm', title: '로그아웃', message: '로그아웃 하시겠습니까?' })
@@ -1056,67 +1010,6 @@ onMounted(() => {
 .meta-item svg {
   color: var(--secondary);
   opacity: 0.7;
-}
-
-/* Theme Section — 토큰 기반 (다크 모드 대응) */
-.theme-section {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-.theme-section-head {
-  margin-bottom: 10px;
-}
-
-.theme-section-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  letter-spacing: -0.2px;
-}
-
-.theme-segment {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  background: var(--bg-subtle);
-  padding: 4px;
-  border-radius: 12px;
-}
-
-.theme-segment-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 9px 10px;
-  border: none;
-  background: transparent;
-  color: var(--text-tertiary);
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  font-family: inherit;
-  letter-spacing: -0.2px;
-}
-
-.theme-segment-item:hover:not(.active) {
-  color: var(--text-secondary);
-}
-
-.theme-segment-item.active {
-  background: var(--bg-elevated);
-  color: var(--c-brand);
-  box-shadow: var(--shadow-sm);
-}
-
-.theme-segment-item svg {
-  flex-shrink: 0;
 }
 
 /* Menu Section */

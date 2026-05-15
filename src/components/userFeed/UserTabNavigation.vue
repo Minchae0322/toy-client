@@ -97,7 +97,9 @@ const getIcon = (value) => {
   position: sticky;
   top: 0;
   z-index: 10;
-  border-top: 1px solid #DBDBDB;
+  border-radius: 16px;
+  margin-top: 12px;
+  overflow: hidden;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
 
@@ -126,7 +128,7 @@ const getIcon = (value) => {
   border: none;
   cursor: pointer;
   font-family: inherit;
-  color: #8E8E8E;
+  color: var(--text-tertiary);
   transition: color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
@@ -153,24 +155,26 @@ const getIcon = (value) => {
   line-height: 1;
 }
 
-/* Active — 상단 1px 잉크 인디케이터 (인스타 시그니처) */
+/* Active — 카드 내부 하단 underline (라운드 카드와 어울리도록) */
 .tab.active {
   color: var(--text-primary);
 }
 
-.tab.active::before {
+.tab.active::after {
   content: '';
   position: absolute;
-  top: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--c-ink-900);
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
 }
 
 /* Hover (비활성) */
 .tab:hover:not(.active) {
-  color: var(--c-text-600);
+  color: var(--text-secondary);
 }
 
 /* 모바일: 라벨 유지하되 살짝 축소 */
