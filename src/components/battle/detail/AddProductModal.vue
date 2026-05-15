@@ -578,7 +578,7 @@ watch(activeTab, async (newTab) => {
 .modal-title {
   font-size: 18px;
   font-weight: 800;
-  color: #0a0a0a;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -600,7 +600,7 @@ watch(activeTab, async (newTab) => {
 .close-icon {
   width: 18px;
   height: 18px;
-  color: #52525b;
+  color: var(--text-secondary);
 }
 
 /* Tab Navigation — 세그먼트 컨트롤 */
@@ -631,7 +631,7 @@ watch(activeTab, async (newTab) => {
 }
 
 .tab-btn:hover {
-  color: #27272a;
+  color: var(--text-primary);
   background: var(--border-strong);
 }
 
@@ -682,7 +682,7 @@ watch(activeTab, async (newTab) => {
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
-  color: #0a0a0a;
+  color: var(--text-primary);
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -745,7 +745,7 @@ watch(activeTab, async (newTab) => {
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  color: #0a0a0a;
+  color: var(--text-primary);
   transition: border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
 }
@@ -947,7 +947,7 @@ watch(activeTab, async (newTab) => {
 .upload-icon-svg {
   width: 24px;
   height: 24px;
-  color: #52525b;
+  color: var(--text-secondary);
   transition: color 0.15s;
 }
 
@@ -992,7 +992,7 @@ watch(activeTab, async (newTab) => {
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
-  color: #0a0a0a;
+  color: var(--text-primary);
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
 }
@@ -1047,7 +1047,7 @@ watch(activeTab, async (newTab) => {
   border-radius: 12px;
   font-size: 14px;
   font-family: inherit;
-  color: #0a0a0a;
+  color: var(--text-primary);
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
 }
@@ -1083,7 +1083,7 @@ watch(activeTab, async (newTab) => {
 .search-clear svg {
   width: 12px;
   height: 12px;
-  color: #52525b;
+  color: var(--text-secondary);
 }
 
 /* Search Results */
@@ -1236,7 +1236,7 @@ watch(activeTab, async (newTab) => {
 .product-name {
   font-size: 14px;
   font-weight: 700;
-  color: #0a0a0a;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
   margin: 0 0 3px 0;
   overflow: hidden;
@@ -1258,7 +1258,7 @@ watch(activeTab, async (newTab) => {
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
-  color: #52525b;
+  color: var(--text-secondary);
   flex-shrink: 0;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   letter-spacing: -0.01em;
