@@ -2108,6 +2108,7 @@ export default {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .youtube-modal-close:hover {
@@ -2178,10 +2179,11 @@ export default {
 }
 
 @media (max-width: 640px) {
+  /* 터치 타깃을 Apple HIG 권장(44pt) 이상으로 유지 */
   .youtube-modal-close {
-    top: -44px;
-    width: 36px;
-    height: 36px;
+    top: -52px;
+    width: 44px;
+    height: 44px;
   }
 
   .youtube-modal-info {

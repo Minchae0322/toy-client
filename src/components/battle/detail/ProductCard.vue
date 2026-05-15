@@ -104,7 +104,13 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
             </svg>
           </button>
-          <div class="lightbox-image-wrapper" @click.stop>
+          <div
+              class="lightbox-image-wrapper"
+              @click.stop
+              @touchstart.passive="onLightboxTouchStart"
+              @touchmove.passive="onLightboxTouchMove"
+              @touchend.passive="onLightboxTouchEnd"
+          >
             <img :src="itemImage" :alt="itemName" class="lightbox-image" draggable="false" />
           </div>
         </div>
@@ -220,6 +226,31 @@ const openLightbox = () => {
 const closeLightbox = () => {
   lightboxOpen.value = false
   document.body.style.overflow = ''
+}
+
+// 아래로 80px 이상 스와이프 시 닫기 (인스타·트위터식)
+const lbStartX = ref(0)
+const lbStartY = ref(0)
+const lbVertical = ref(false)
+const onLightboxTouchStart = (e) => {
+  if (e.touches.length !== 1) return
+  lbStartX.value = e.touches[0].clientX
+  lbStartY.value = e.touches[0].clientY
+  lbVertical.value = false
+}
+const onLightboxTouchMove = (e) => {
+  if (e.touches.length !== 1) return
+  const dx = e.touches[0].clientX - lbStartX.value
+  const dy = e.touches[0].clientY - lbStartY.value
+  if (!lbVertical.value && Math.abs(dy) > Math.abs(dx) && dy > 10) {
+    lbVertical.value = true
+  }
+}
+const onLightboxTouchEnd = (e) => {
+  if (!lbVertical.value) return
+  const dy = e.changedTouches[0].clientY - lbStartY.value
+  if (dy > 80) closeLightbox()
+  lbVertical.value = false
 }
 
 const onKeydown = (e) => {
@@ -945,7 +976,7 @@ defineExpose({ setCommentSubmitting })
 
 .lightbox-close {
   position: absolute;
-  top: 16px;
+  top: calc(16px + env(safe-area-inset-top));
   right: 16px;
   z-index: 10;
   width: 44px;
@@ -959,6 +990,7 @@ defineExpose({ setCommentSubmitting })
   color: #ffffff;
   cursor: pointer;
   transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .lightbox-close:hover {
@@ -995,11 +1027,14 @@ defineExpose({ setCommentSubmitting })
 
 @media (max-width: 640px) {
   .lightbox-image-wrapper {
-    padding: 50px 0;
+    padding: 60px 0;
   }
+  /* 노치 아래 안전 영역으로 내리고 터치 타깃 확대 */
   .lightbox-close {
-    top: 12px;
+    top: calc(12px + env(safe-area-inset-top));
     right: 12px;
+    width: 48px;
+    height: 48px;
   }
 }
 </style>

@@ -226,47 +226,60 @@ const lightboxNext = () => {
   if (lightboxIndex.value < props.images.length - 1) lightboxIndex.value++
 }
 
-// Lightbox touch swipe
+// Lightbox touch swipe (좌우 = 이전/다음, 아래로 스와이프 = 닫기)
 const lbTouchStartX = ref(0)
-const lbSwiping = ref(false)
+const lbTouchStartY = ref(0)
+const lbSwipeMode = ref(null) // 'horizontal' | 'vertical-down' | null
 const lbPinching = ref(false)
 
 const onLightboxTouchStart = (e) => {
   if (e.touches.length >= 2) { lbPinching.value = true; return }
   lbTouchStartX.value = e.touches[0].clientX
-  lbSwiping.value = false
+  lbTouchStartY.value = e.touches[0].clientY
+  lbSwipeMode.value = null
   lbPinching.value = false
 }
 
 const onLightboxTouchMove = (e) => {
   if (e.touches.length >= 2) { lbPinching.value = true; return }
   if (lbPinching.value || !lbTouchStartX.value) return
-  const diffX = Math.abs(e.touches[0].clientX - lbTouchStartX.value)
-  if (diffX > 10) {
-    lbSwiping.value = true
+  const dx = e.touches[0].clientX - lbTouchStartX.value
+  const dy = e.touches[0].clientY - lbTouchStartY.value
+  if (lbSwipeMode.value) return
+  if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+    if (Math.abs(dx) > Math.abs(dy)) {
+      lbSwipeMode.value = 'horizontal'
+    } else if (dy > 0) {
+      lbSwipeMode.value = 'vertical-down'
+    }
   }
 }
 
 const onLightboxTouchEnd = (e) => {
-  if (lbPinching.value || !lbSwiping.value) {
+  if (lbPinching.value || !lbSwipeMode.value) {
     lbPinching.value = false
     lbTouchStartX.value = 0
-    lbSwiping.value = false
+    lbTouchStartY.value = 0
+    lbSwipeMode.value = null
     return
   }
 
   const touchEndX = e.changedTouches[0].clientX
-  const diff = lbTouchStartX.value - touchEndX
+  const touchEndY = e.changedTouches[0].clientY
+  const diffX = lbTouchStartX.value - touchEndX
+  const diffY = touchEndY - lbTouchStartY.value // 양수 = 아래로
   const threshold = 50
 
-  if (diff > threshold) {
-    lightboxNext()
-  } else if (diff < -threshold) {
-    lightboxPrev()
+  if (lbSwipeMode.value === 'horizontal') {
+    if (diffX > threshold) lightboxNext()
+    else if (diffX < -threshold) lightboxPrev()
+  } else if (lbSwipeMode.value === 'vertical-down' && diffY > 80) {
+    closeLightbox()
   }
 
   lbTouchStartX.value = 0
-  lbSwiping.value = false
+  lbTouchStartY.value = 0
+  lbSwipeMode.value = null
 }
 
 // Keyboard navigation
@@ -423,7 +436,7 @@ onUnmounted(() => {
 
 .lightbox-close {
   position: absolute;
-  top: 16px;
+  top: calc(16px + env(safe-area-inset-top));
   right: 16px;
   z-index: 10;
   width: 44px;
@@ -437,6 +450,7 @@ onUnmounted(() => {
   color: #ffffff;
   cursor: pointer;
   transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .lightbox-close:hover {
@@ -556,12 +570,15 @@ onUnmounted(() => {
   }
 
   .lightbox-image-wrapper {
-    padding: 50px 0;
+    padding: 60px 0;
   }
 
+  /* 노치 아래 안전 영역으로 내리고 터치 타깃 확대 */
   .lightbox-close {
-    top: 12px;
+    top: calc(12px + env(safe-area-inset-top));
     right: 12px;
+    width: 48px;
+    height: 48px;
   }
 }
 </style>
