@@ -1,6 +1,11 @@
 <template>
   <router-link :to="{ name: 'FeedDetail', params: { id: feed.feedId } }" class="post-card">
-    <div class="post-image-container" @dblclick.prevent="handleDoubleTapLike">
+    <div
+        class="post-image-container"
+        @dblclick.prevent="handleDoubleTapLike"
+        @touchstart.passive="onImageTouchStart"
+        @touchend.passive="onImageTouchEnd"
+    >
       <img
           :src="feed.thumbnailUrl?.fileUrl || 'https://placehold.co/400x300?text=No+Image'"
           :alt="feed.productName"
@@ -159,6 +164,26 @@ const handleDoubleTapLike = () => {
   }
   if (!localIsLiked.value) {
     handleLike();
+  }
+};
+
+// 가로 스와이프 감지: 인스타식 캐러셀 대신 상세 페이지로 유도.
+// (탭은 router-link 가 처리하지만 스와이프는 click 이 발화하지 않아 별도 핸들링 필요)
+const swipeData = { x: 0, y: 0, t: 0 };
+const onImageTouchStart = (e) => {
+  const t = e.touches[0];
+  swipeData.x = t.clientX;
+  swipeData.y = t.clientY;
+  swipeData.t = Date.now();
+};
+const onImageTouchEnd = (e) => {
+  const t = e.changedTouches[0];
+  const dx = t.clientX - swipeData.x;
+  const dy = t.clientY - swipeData.y;
+  const dt = Date.now() - swipeData.t;
+  // 가로 50px+ · 가로가 세로의 1.5배 이상 · 600ms 이내면 스와이프로 판정
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 600) {
+    router.push({ name: 'FeedDetail', params: { id: props.feed.feedId } });
   }
 };
 
