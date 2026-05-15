@@ -232,7 +232,7 @@ const permissionType = computed(() => {
   padding: 24px 40px 36px;
   width: 100%;
   box-sizing: border-box;
-  background: var(--bg-elevated);
+  background: transparent;
   font-family: 'SUIT', -apple-system, "system-ui", "Segoe UI", sans-serif;
 }
 
