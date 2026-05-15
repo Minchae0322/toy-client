@@ -165,7 +165,7 @@
             :disabled="!connectionState.connected"
             @keypress.enter="sendMessage"
             @input="handleTyping"
-            @focus="inputFocused = true"
+            @focus="handleInputFocus"
             @blur="inputFocused = false"
         />
       </div>
@@ -287,9 +287,10 @@ const canSend = computed(() => newMessage.value.trim() && connectionState.value.
 
 const goBack = () => {
   emit('back-to-list')
-  // router.back()은 브라우저 히스토리상 이전 페이지(메뉴 등)로 돌아갈 수 있어
-  // 명시적으로 채팅방 목록 URL로 이동
-  router.push({ name: 'Chat' })
+  // /chat/:id → /chat 으로 replace.
+  // push 를 쓰면 히스토리에 디테일이 남아 외부(피드 등)에서 진입했을 때
+  // 브라우저 back 으로 디테일로 돌아오는 어색한 동작이 생긴다.
+  router.replace({ name: 'Chat' })
 }
 
 const goToFeed = () => { if (feedInfo.value.id) router.push(`/feed/${feedInfo.value.id}`) }
@@ -378,7 +379,7 @@ const sendMessage = async () => {
   messages.value.push(tempMsg)
   replyTo.value = null
   await nextTick()
-  scrollToBottom()
+  scrollToBottom('smooth')
 
   try {
     await webSocketService.sendMessage(actualRoomId.value, { content, type: 'TEXT', replyToMessageId: tempMsg.replyToMessageId })
@@ -394,8 +395,10 @@ const sendMessage = async () => {
 const handleNewMessage = (msg) => {
   if (msg.senderId === currentUserId.value) return
   if (messages.value.find(m => m.messageId === msg.messageId)) return
+  const wasAtBottom = isAtBottom()
   messages.value.push(chatService.transformMessageResponse(msg))
-  nextTick(() => { if (isAtBottom()) scrollToBottom() })
+  // 이미 아래에 있던 경우에만 자동 스크롤 (위쪽을 읽고 있는데 점프하면 어색)
+  nextTick(() => { if (wasAtBottom) scrollToBottom('smooth') })
   emit('new-message', msg)
 }
 
@@ -426,11 +429,28 @@ const handleScroll = () => {
   }
 }
 
-const scrollToBottom = () => { if (messagesArea.value) messagesArea.value.scrollTop = messagesArea.value.scrollHeight }
+const scrollToBottom = (behavior = 'auto') => {
+  if (!messagesArea.value) return
+  messagesArea.value.scrollTo({ top: messagesArea.value.scrollHeight, behavior })
+}
 const isAtBottom = () => {
   if (!messagesArea.value) return true
   const { scrollTop, scrollHeight, clientHeight } = messagesArea.value
   return scrollTop + clientHeight >= scrollHeight - 50
+}
+
+// 입력창 포커스 → 모바일 키보드 펼침. 키보드 애니메이션이 끝난 뒤 맨 아래로 부드럽게.
+const handleInputFocus = () => {
+  inputFocused.value = true
+  setTimeout(() => scrollToBottom('smooth'), 260)
+}
+
+// 모바일 키보드 핸들링: visualViewport API 가 키보드 만큼 줄어든 가시 높이를 알려준다.
+// CSS 에서 var(--chat-vh) 로 받아 컨테이너 높이를 동적으로 줄여 입력창이 키보드 위에 항상 보이게.
+const updateChatViewportHeight = () => {
+  const vv = window.visualViewport
+  if (!vv) return
+  document.documentElement.style.setProperty('--chat-vh', `${vv.height}px`)
 }
 
 const reconnectWebSocket = async () => {
@@ -528,12 +548,24 @@ const getSampleMessages = () => [
 onMounted(() => {
   currentUserId.value = getCurrentUserId()
   initializeChatRoom()
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateChatViewportHeight)
+    window.visualViewport.addEventListener('scroll', updateChatViewportHeight)
+    updateChatViewportHeight()
+  }
 })
 
 onUnmounted(() => {
   if (typingTimer.value) clearTimeout(typingTimer.value)
   const roomId = actualRoomId.value
   if (roomId) webSocketService.leaveChatRoom?.(roomId)
+
+  if (window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', updateChatViewportHeight)
+    window.visualViewport.removeEventListener('scroll', updateChatViewportHeight)
+  }
+  document.documentElement.style.removeProperty('--chat-vh')
 })
 
 watch(actualRoomId, (newVal, oldVal) => {
@@ -1182,4 +1214,53 @@ watch(actualRoomId, (newVal, oldVal) => {
 .slide-up-enter-from, .slide-up-leave-to { transform: translateY(100%); }
 .message-enter-active { transition: all 0.3s ease; }
 .message-enter-from { opacity: 0; transform: translateY(20px); }
+
+/* ============ 모바일 풀-블리드 (인스타 스타일) ============ */
+@media (max-width: 767px) {
+  /* 컨테이너는 좌우 패딩 0 — 메시지/입력창이 화면 끝까지 */
+  .chat-detail-container {
+    padding: 0 0 env(safe-area-inset-bottom);
+  }
+
+  /* 헤더/피드 프리뷰는 자체적으로 좌우 여백을 가짐 */
+  .detail-header {
+    padding: 12px 12px;
+  }
+
+  .feed-preview {
+    margin: 8px 12px 0;
+  }
+
+  /* 메시지 영역: 카드 룩 제거, 풀-블리드. 헤더와는 얇은 라인으로만 구분 */
+  .messages-area {
+    margin: 0;
+    padding: 12px 12px;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid var(--border-default);
+  }
+
+  /* 답장 프리뷰도 풀-블리드 */
+  .reply-preview {
+    padding: 10px 12px;
+  }
+
+  /* 입력창: 카드 룩 제거. 메시지와 얇은 라인으로만 구분
+     (하단 safe-area 는 .chat-detail-container 의 padding 에서 일괄 처리) */
+  .input-area {
+    padding: 10px 12px;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid var(--border-default);
+    background: var(--bg-elevated);
+  }
+
+  /* 뒤로/메뉴 버튼은 미니멀 톤(테두리 제거) */
+  .back-btn,
+  .icon-btn,
+  .attach-btn {
+    border: none;
+    background: transparent;
+  }
+}
 </style>

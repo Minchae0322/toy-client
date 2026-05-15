@@ -324,13 +324,13 @@ onMounted(() => {
 /* 전체 컨테이너 (디자인 시스템: 배경은 흰색, 카드가 자체 컬러) */
 .chat-container {
   width: 100%;
-  min-height: 100vh;
+  /* 헤더(66px + safe-area-top)와 BottomNavigation(약 84px + safe-area-bottom) 사이의
+     가시 영역을 채워 빈 상태에서 불필요한 페이지 스크롤이 생기지 않도록. */
+  min-height: calc(100dvh - 66px - env(safe-area-inset-top));
   background: var(--bg-elevated);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
-  /* iOS 홈 인디케이터 회피 */
-  padding-bottom: calc(48px + env(safe-area-inset-bottom));
 }
 
 /* content-inner — AppSidebar와 붙어 시작하도록 left-align */
@@ -754,7 +754,7 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--bg-mute);
-  border-top-color: #1a1a1c;
+  border-top-color: var(--text-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 16px;
@@ -786,7 +786,7 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-.state-title { font-size: 16px; font-weight: 700; color: #1a1a1c; margin: 0 0 6px; }
+.state-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
 .state-text { font-size: 14px; color: var(--c-text-400); margin: 0 0 24px; }
 
 .btn-primary {

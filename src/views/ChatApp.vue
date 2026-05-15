@@ -381,10 +381,14 @@ onBeforeUnmount(async () => {
     padding-left: 0;
   }
 
-  /* 모바일 채팅방 진입 시: 한 화면으로 잠가 페이지 스크롤 제거 */
+  /* 모바일 채팅방 진입 시: 한 화면으로 잠가 페이지 스크롤 제거.
+     글로벌 헤더(66px)는 padding-top: env(safe-area-inset-top) 만큼 추가로 차지하므로
+     iOS 노치/상태바 영역도 함께 빼야 입력창이 뷰포트 안에 머문다.
+     키보드가 올라오면 ChatDetailView 가 visualViewport 로 --chat-vh 를 업데이트해
+     컨테이너가 자동으로 줄어들면서 입력창이 키보드 바로 위에 붙는다. */
   .app-container.chat-detail-mode {
     min-height: 0;
-    height: calc(100dvh - 66px);
+    height: calc(var(--chat-vh, 100dvh) - 66px - env(safe-area-inset-top));
     padding: 0;
     overflow: hidden;
   }
