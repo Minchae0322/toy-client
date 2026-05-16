@@ -4,26 +4,23 @@
       <!-- 메인 메뉴 섹션 -->
       <div class="nav-section">
         <router-link to="/" class="nav-item" active-class="active">
-          <HomeOutline class="icon icon-line" />
-          <HomeSolid class="icon icon-solid" />
+          <Home class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">홈</span>
         </router-link>
 
         <router-link to="/feed" class="nav-item" active-class="active">
-          <FeedOutline class="icon icon-line" />
-          <FeedSolid class="icon icon-solid" />
+          <MessageSquareText class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">피드</span>
         </router-link>
 
         <router-link to="/products" class="nav-item" active-class="active">
-          <HotOutline class="icon icon-line" />
-          <HotSolid class="icon icon-solid" />
+          <Flame class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">핫 아이템</span>
         </router-link>
 
         <router-link to="/battle" class="nav-item" active-class="active">
-          <PickOutline class="icon icon-line" />
-          <PickSolid class="icon icon-solid" />
+          <Trophy class="icon icon-line" :size="18" :stroke-width="1.8" />
+          <TrophySolid class="icon icon-solid" />
           <span class="nav-text">요거픽</span>
         </router-link>
 
@@ -34,26 +31,23 @@
           active-class="active"
           @click="!isLoggedIn && handleProtectedRoute('carrier')"
         >
-          <CarrierOutline class="icon icon-line" />
-          <CarrierSolid class="icon icon-solid" />
+          <Luggage class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">캐리어 꾸미기</span>
         </component>
       </div>
 
       <!-- 커뮤니케이션 섹션 -->
       <div class="nav-section">
-        <button class="nav-item" :class="{ active: isCollectionsActive }" @click="handleProtectedRoute('collections')">
-          <CollectionOutline class="icon icon-line" />
-          <CollectionSolid class="icon icon-solid" />
+        <button class="nav-item" @click="handleProtectedRoute('collections')">
+          <Sparkles class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">컬렉션</span>
         </button>
       </div>
 
       <!-- 마이페이지 섹션 (로그인 시에만 표시) -->
       <div v-if="isLoggedIn" class="nav-section">
-        <button class="nav-item" :class="{ active: isMyPageActive }" @click="handleProtectedRoute('mypage')">
-          <MyOutline class="icon icon-line" />
-          <MySolid class="icon icon-solid" />
+        <button class="nav-item" @click="handleProtectedRoute('mypage')">
+          <UserCircle class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">마이페이지</span>
         </button>
       </div>
@@ -61,8 +55,7 @@
       <!-- 환경설정 (로그인 무관) -->
       <div class="nav-section">
         <router-link to="/settings" class="nav-item" active-class="active">
-          <SettingsOutline class="icon icon-line" />
-          <SettingsSolid class="icon icon-solid" />
+          <Settings class="icon" :size="18" :stroke-width="1.8" />
           <span class="nav-text">환경설정</span>
         </router-link>
       </div>
@@ -126,36 +119,17 @@
 
 <script setup>
 import {ref} from 'vue';
-import {useRouter, useRoute} from 'vue-router';
-import {computed} from 'vue';
+import {useRouter} from 'vue-router';
 import {
-  HomeIcon as HomeOutline,
-  ChatBubbleLeftRightIcon as FeedOutline,
-  FireIcon as HotOutline,
-  TrophyIcon as PickOutline,
-  SparklesIcon as CollectionOutline,
-  UserCircleIcon as MyOutline,
-  Cog6ToothIcon as SettingsOutline
-} from '@heroicons/vue/24/outline';
-import {
-  HomeIcon as HomeSolid,
-  ChatBubbleLeftRightIcon as FeedSolid,
-  FireIcon as HotSolid,
-  TrophyIcon as PickSolid,
-  SparklesIcon as CollectionSolid,
-  UserCircleIcon as MySolid,
-  Cog6ToothIcon as SettingsSolid
-} from '@heroicons/vue/24/solid';
-import CarrierOutline from '@/components/icons/CarrierLineIcon.vue';
-import CarrierSolid from '@/components/icons/CarrierSolidIcon.vue';
+  Home, MessageSquareText, Flame, Trophy, Luggage,
+  Sparkles, UserCircle, Settings
+} from 'lucide-vue-next';
+import { TrophyIcon as TrophySolid } from '@heroicons/vue/24/solid';
 import {useAuth} from '@/composables/useAuth';
 import {useConfirmDialog} from '@/composables/useConfirmDialog';
 import FeedbackModal from '@/components/common/FeedbackModal.vue';
 
 const router = useRouter();
-const route = useRoute();
-const isCollectionsActive = computed(() => route.path.startsWith('/collection'));
-const isMyPageActive = computed(() => route.path.startsWith('/mypage'));
 const {isLoggedIn, userId} = useAuth();
 const {open, openLoginRequired} = useConfirmDialog();
 
@@ -271,8 +245,24 @@ const handleProtectedRoute = async (routeName) => {
   background: var(--bg-subtle);
 }
 
+.nav-item {
+  position: relative;
+}
+
 .nav-item.active {
   background: var(--c-brand-soft);
+}
+/* 좌측 accent bar */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--c-brand);
+  border-radius: 0 3px 3px 0;
 }
 
 .nav-item .icon {
@@ -282,10 +272,6 @@ const handleProtectedRoute = async (routeName) => {
   color: var(--c-text-400);
   transition: color 0.15s ease;
 }
-/* 활성 상태: outline 숨기고 solid 표시 */
-.nav-item .icon-solid { display: none; }
-.nav-item.active .icon-line { display: none; }
-.nav-item.active .icon-solid { display: block; }
 
 .nav-item:hover .icon {
   color: var(--c-text-600);
@@ -293,7 +279,12 @@ const handleProtectedRoute = async (routeName) => {
 
 .nav-item.active .icon {
   color: var(--c-brand);
+  fill: currentColor;
 }
+/* 솔리드 아이콘은 평소 숨김 → 활성 시에만 표시 (Trophy 같은 디테일 많은 아이콘용) */
+.nav-item .icon-solid { display: none; }
+.nav-item.active .icon-line { display: none; }
+.nav-item.active .icon-solid { display: block; }
 
 .nav-text {
   font-size: 14px;
