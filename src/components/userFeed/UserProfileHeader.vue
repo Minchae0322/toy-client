@@ -32,7 +32,14 @@
     <div v-else class="profile-wrap">
       <!-- 모바일: 세로 중앙 정렬 -->
       <div class="mobile">
-        <div class="avatar-wrap">
+        <div
+          class="avatar-wrap"
+          :class="{ 'avatar-editable': isOwnProfile }"
+          @click="isOwnProfile && handleEditProfile()"
+          :role="isOwnProfile ? 'button' : null"
+          :tabindex="isOwnProfile ? 0 : null"
+          :aria-label="isOwnProfile ? '프로필 편집' : null"
+        >
           <img
               v-if="profileData.profilePicture?.fileUrl"
               :src="profileData.profilePicture.fileUrl"
@@ -44,6 +51,11 @@
               <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
             </svg>
           </div>
+          <span v-if="isOwnProfile" class="avatar-edit-badge" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+            </svg>
+          </span>
         </div>
 
         <h1 class="username">{{ profileData.nickname || '사용자' }}</h1>
@@ -128,7 +140,14 @@
 
       <!-- PC/태블릿: 아바타 | 인포 (카드·그림자·컬러 바 없음) -->
       <div class="desktop">
-        <div class="avatar-wrap">
+        <div
+          class="avatar-wrap"
+          :class="{ 'avatar-editable': isOwnProfile }"
+          @click="isOwnProfile && handleEditProfile()"
+          :role="isOwnProfile ? 'button' : null"
+          :tabindex="isOwnProfile ? 0 : null"
+          :aria-label="isOwnProfile ? '프로필 편집' : null"
+        >
           <img
               v-if="profileData.profilePicture?.fileUrl"
               :src="profileData.profilePicture.fileUrl"
@@ -140,6 +159,11 @@
               <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
             </svg>
           </div>
+          <span v-if="isOwnProfile" class="avatar-edit-badge" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+            </svg>
+          </span>
         </div>
 
         <div class="info">
@@ -599,7 +623,34 @@ watch(() => route.params.userId, (newId, oldId) => {
 }
 
 /* ============ 아바타 (링/그림자 없음) ============ */
-.avatar-wrap { flex-shrink: 0; }
+.avatar-wrap { flex-shrink: 0; position: relative; }
+.avatar-wrap.avatar-editable {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.avatar-wrap.avatar-editable:hover .avatar,
+.avatar-wrap.avatar-editable:focus-visible .avatar {
+  filter: brightness(0.92);
+}
+.avatar-wrap.avatar-editable:active {
+  transform: scale(0.97);
+}
+.avatar-edit-badge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--c-brand);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-elevated);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
 
 .avatar {
   width: 96px;

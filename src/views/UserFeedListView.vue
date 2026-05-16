@@ -7,14 +7,7 @@
         <!-- 프로필 헤더 컴포넌트 (자체 로드) -->
         <UserProfileHeader />
 
-        <!-- 탭 네비게이션 컴포넌트 (sticky underline) -->
-        <UserTabNavigation
-            v-model="activeMenu"
-            :menu-items="menuItems"
-            class="tab-nav"
-        />
-
-        <!-- 피드 리스트 -->
+        <!-- 피드 리스트 (게시물 탭만 — 좋아요/저장은 추후 활성화) -->
         <section class="feed-shell">
           <FeedList
               ref="feedListRef"
@@ -48,7 +41,6 @@ import { useFeed } from '@/services/FeedService';
 import AppSidebar from '@/components/feed/AppSidebar.vue';
 import FeedList from '@/components/feed/FeedList.vue';
 import UserProfileHeader from '@/components/userFeed/UserProfileHeader.vue';
-import UserTabNavigation from '@/components/userFeed/UserTabNavigation.vue';
 import BottomNavigation from '@/components/common/BottomNavigation.vue';
 
 const router = useRouter();
@@ -77,14 +69,6 @@ const getStoredViewMode = () => {
 };
 
 const viewMode = ref(getStoredViewMode());
-const activeMenu = ref('feeds');
-
-const menuItems = [
-  { label: '게시물', value: 'feeds' },
-  { label: '좋아요', value: 'liked' },
-  { label: '저장', value: 'saved' }
-];
-
 const feedListRef = ref(null);
 
 // viewMode 변경 감지 및 저장

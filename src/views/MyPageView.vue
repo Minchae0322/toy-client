@@ -24,7 +24,7 @@
           <!-- Profile Card -->
           <div class="profile-card">
             <div class="profile-header">
-              <!-- Avatar -->
+              <!-- Avatar — 카메라 버튼 항시 노출 -->
               <div class="avatar-wrapper">
                 <div class="avatar">
                   <img
@@ -36,22 +36,43 @@
                   />
                   <span v-else class="avatar-initial">{{ profile.nickname?.charAt(0) || '?' }}</span>
                 </div>
-                <label v-if="isEditing" class="avatar-edit">
-                  <Camera :size="14" />
-                  <input type="file" accept="image/*" @change="handleImageChange" />
+                <label class="avatar-edit" :class="{ uploading: uploadingImage }" :aria-label="uploadingImage ? '업로드 중' : '프로필 사진 변경'">
+                  <div v-if="uploadingImage" class="avatar-spinner"></div>
+                  <Camera v-else :size="14" />
+                  <input type="file" accept="image/*" @change="handleImageChange" :disabled="uploadingImage" />
                 </label>
               </div>
 
               <!-- Info -->
               <div class="profile-info">
                 <div class="info-top">
-                  <div>
-                    <h3 class="nickname">{{ profile.nickname }}</h3>
+                  <div class="name-block">
+                    <!-- 닉네임 인라인 편집 -->
+                    <div v-if="editingNickname" class="inline-edit-row">
+                      <input
+                          v-model="nicknameDraft"
+                          type="text"
+                          maxlength="20"
+                          class="inline-edit-input"
+                          ref="nicknameInputRef"
+                          @keydown.enter="saveNickname"
+                          @keydown.esc="cancelEditNickname"
+                      />
+                      <div class="inline-edit-actions">
+                        <button class="btn-cancel" :disabled="savingNickname" @click="cancelEditNickname">취소</button>
+                        <button class="btn-save" :disabled="savingNickname" @click="saveNickname">
+                          {{ savingNickname ? '저장 중...' : '저장' }}
+                        </button>
+                      </div>
+                    </div>
+                    <div v-else class="name-row">
+                      <h3 class="nickname">{{ profile.nickname }}</h3>
+                      <button class="icon-edit-btn" @click="startEditNickname" aria-label="닉네임 수정">
+                        <Pencil :size="15" :stroke-width="2.2" />
+                      </button>
+                    </div>
                     <p v-if="displayEmail" class="email">{{ displayEmail }}</p>
                   </div>
-                  <button v-if="!isEditing" class="btn-edit" @click="startEditing">
-                    프로필 편집
-                  </button>
                 </div>
 
                 <div class="follow-stats">
@@ -96,47 +117,44 @@
               </div>
             </div>
 
-            <!-- Edit Mode -->
-            <div v-if="isEditing" class="edit-form">
-              <div class="form-group">
-                <label>닉네임</label>
-                <input v-model="editForm.nickname" type="text" maxlength="20" />
-                <span class="char-count">{{ editForm.nickname?.length || 0 }}/20</span>
-              </div>
-
-              <div class="form-group">
-                <label>소개</label>
-                <textarea
-                    v-model="editForm.description"
-                    maxlength="100"
-                    placeholder="자신을 소개해보세요"
-                />
-                <span class="char-count">{{ editForm.description?.length || 0 }}/100</span>
-              </div>
-
-              <div class="edit-actions">
-                <button class="btn-cancel" @click="cancelEditing" :disabled="saving">취소</button>
-                <button class="btn-save" @click="saveProfile" :disabled="saving">
-                  {{ saving ? '저장 중...' : '저장' }}
+            <!-- 소개 — 인라인 편집 -->
+            <div class="bio-section">
+              <div class="bio-header">
+                <h4>소개</h4>
+                <button v-if="!editingDescription" class="icon-edit-btn" @click="startEditDescription" aria-label="소개 수정">
+                  <Pencil :size="15" :stroke-width="2.2" />
                 </button>
               </div>
-            </div>
-
-            <!-- View Mode -->
-            <template v-else>
-              <div class="bio-section">
-                <h4>소개</h4>
-                <p v-if="profile.description">{{ profile.description }}</p>
-                <p v-else class="empty">소개가 없습니다</p>
-              </div>
-
-              <div class="meta-section">
-                <div class="meta-item">
-                  <Calendar :size="16" />
-                  <span>{{ formatDate(profile.createdAt) }} 가입</span>
+              <div v-if="editingDescription" class="bio-edit">
+                <textarea
+                    v-model="descriptionDraft"
+                    maxlength="100"
+                    placeholder="자신을 소개해보세요"
+                    class="inline-edit-textarea"
+                    ref="descriptionInputRef"
+                />
+                <div class="bio-edit-footer">
+                  <span class="char-count">{{ descriptionDraft?.length || 0 }}/100</span>
+                  <div class="bio-edit-actions">
+                    <button class="btn-cancel" :disabled="savingDescription" @click="cancelEditDescription">취소</button>
+                    <button class="btn-save" :disabled="savingDescription" @click="saveDescription">
+                      {{ savingDescription ? '저장 중...' : '저장' }}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </template>
+              <template v-else>
+                <p v-if="profile.description">{{ profile.description }}</p>
+                <p v-else class="empty">소개가 없습니다</p>
+              </template>
+            </div>
+
+            <div class="meta-section">
+              <div class="meta-item">
+                <Calendar :size="16" />
+                <span>{{ formatDate(profile.createdAt) }} 가입</span>
+              </div>
+            </div>
           </div>
 
           <!-- Menu Section -->
@@ -169,6 +187,18 @@
 
     <!-- Bottom Navigation -->
     <BottomNavigation />
+
+    <!-- 저장 완료 미니 토스트 -->
+    <Teleport to="body">
+      <div class="saved-burst-layer" aria-hidden="true">
+        <TransitionGroup name="saved-burst" tag="div" class="saved-burst-stack">
+          <div v-for="b in savedBursts" :key="b.id" class="saved-burst">
+            <Check :size="14" stroke-width="2.6" class="saved-burst-icon" />
+            <span>{{ b.msg }}</span>
+          </div>
+        </TransitionGroup>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -177,8 +207,9 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Camera, Calendar, Mail, MessageSquareText, Package,
-  UserCog, Palette, ChevronRight, LogOut
+  UserCog, Palette, ChevronRight, LogOut, Pencil, Check
 } from 'lucide-vue-next'
+import { nextTick } from 'vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
@@ -198,14 +229,21 @@ const { open } = useConfirmDialog()
 
 // ==================== State ====================
 const loading = ref(true)
-const saving = ref(false)
 const error = ref(null)
-const isEditing = ref(false)
 const previewImage = ref(null)
-const selectedFile = ref(null)
-const uploadedProfileImgInfo = ref(null) // 업로드 완료된 정보
 const uploadingImage = ref(false)
 const imageKey = ref(Date.now())
+
+// 인라인 필드 편집
+const editingNickname = ref(false)
+const nicknameDraft = ref('')
+const savingNickname = ref(false)
+const nicknameInputRef = ref(null)
+
+const editingDescription = ref(false)
+const descriptionDraft = ref('')
+const savingDescription = ref(false)
+const descriptionInputRef = ref(null)
 
 const profile = reactive({
   userId: null,
@@ -217,11 +255,6 @@ const profile = reactive({
   profilePicture: null,
   createdAt: null,
   updatedAt: null
-})
-
-const editForm = reactive({
-  nickname: '',
-  description: ''
 })
 
 // ==================== 보상 데이터 (레벨/뱃지) ====================
@@ -334,100 +367,97 @@ const loadProfile = async () => {
   }
 }
 
-const startEditing = () => {
-  editForm.nickname = profile.nickname
-  editForm.description = profile.description || ''
-  previewImage.value = null
-  selectedFile.value = null
-  isEditing.value = true
+// 저장 성공 미니 토스트 (EXP burst 스타일 — 가볍게 떴다가 사라짐)
+const savedBursts = ref([])
+let burstSeq = 0
+const showSavedToast = (msg = '저장되었습니다') => {
+  const id = ++burstSeq
+  savedBursts.value.push({ id, msg })
+  setTimeout(() => {
+    savedBursts.value = savedBursts.value.filter(b => b.id !== id)
+  }, 1600)
 }
 
-const cancelEditing = () => {
-  editForm.nickname = profile.nickname
-  editForm.description = profile.description || ''
-  previewImage.value = null
-  selectedFile.value = null
-  uploadedProfileImgInfo.value = null
-  isEditing.value = false
+// ===== 닉네임 인라인 편집 =====
+const startEditNickname = async () => {
+  nicknameDraft.value = profile.nickname || ''
+  editingNickname.value = true
+  await nextTick()
+  nicknameInputRef.value?.focus()
+  nicknameInputRef.value?.select()
 }
-
-const saveProfile = async () => {
-  if (!editForm.nickname?.trim()) {
+const cancelEditNickname = () => {
+  editingNickname.value = false
+  nicknameDraft.value = ''
+}
+const saveNickname = async () => {
+  const next = nicknameDraft.value?.trim()
+  if (!next) {
     await open({ type: 'alert', title: '입력 확인', message: '닉네임을 입력해주세요.' })
     return
   }
-
-  // 이미지 업로드 중이면 대기
-  if (uploadingImage.value) {
-    await open({ type: 'alert', title: '업로드 중', message: '이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.' })
+  if (next === profile.nickname) {
+    cancelEditNickname()
     return
   }
-
-  saving.value = true
-
+  savingNickname.value = true
   try {
-    let profileImgInfo = null
-
-    // 1. 이미 업로드된 정보 사용 또는 재업로드
-    if (uploadedProfileImgInfo.value) {
-      // 이미 업로드 완료된 경우
-      profileImgInfo = uploadedProfileImgInfo.value
-      console.log('[PROFILE] 이미 업로드된 이미지 사용:', profileImgInfo)
-    } else if (selectedFile.value) {
-      // 업로드 실패 후 재시도
-      console.log('[PROFILE] 프로필 이미지 재업로드 시작...')
-
-      const uploadResult = await fileService.upload(selectedFile.value, {
-        fileCode: 'PROFILE'
-      })
-
-      if (!uploadResult.success || !uploadResult.data) {
-        const errorMsg = uploadResult.message || '이미지 업로드에 실패했습니다.'
-        console.error('[PROFILE] 이미지 업로드 실패:', errorMsg)
-        await open({ type: 'alert', title: '오류', message: errorMsg })
-        return
-      }
-
-      profileImgInfo = {
-        fileId: uploadResult.data.id,
-        storedPath: uploadResult.data.fileUrl,
-        originName: uploadResult.data.orgFileNm,
-        fileSize: uploadResult.data.fileSize,
-        contentType: uploadResult.data.contentType || uploadResult.data.fileExt,
-        fileExplain: '프로필 이미지'
-      }
-      console.log('[PROFILE] 프로필 이미지 업로드 완료:', profileImgInfo)
-    }
-
-    // 2. 프로필 업데이트
-    const updateDto = {
-      nickname: editForm.nickname,
-      description: editForm.description,
-      profileImgInfo
-    }
-
-    console.log('[PROFILE] 프로필 업데이트 요청:', updateDto)
-
-    const response = await userService.updateUser(profile.userId, updateDto)
-
-    if (!response.success) {
-      throw new Error(response.message || '프로필 수정에 실패했습니다.')
-    }
-
-    // 3. 성공 시 페이지 새로고침
-    console.log('[PROFILE] 프로필 저장 완료')
-    window.location.reload()
-
+    const res = await userService.updateUser(profile.userId, {
+      nickname: next,
+      description: profile.description ?? '',
+      profileImgInfo: null,
+    })
+    if (!res.success) throw new Error(res.message || '닉네임 수정 실패')
+    profile.nickname = next
+    editingNickname.value = false
+    showSavedToast()
   } catch (err) {
-    console.error('[PROFILE] 프로필 저장 실패:', err)
-    await open({ type: 'alert', title: '오류', message: err.message || '프로필 저장에 실패했습니다.' })
+    console.error('[PROFILE] 닉네임 저장 실패:', err)
+    await open({ type: 'alert', title: '오류', message: err.message || '닉네임 저장에 실패했습니다.' })
   } finally {
-    saving.value = false
+    savingNickname.value = false
+  }
+}
+
+// ===== 소개 인라인 편집 =====
+const startEditDescription = async () => {
+  descriptionDraft.value = profile.description || ''
+  editingDescription.value = true
+  await nextTick()
+  descriptionInputRef.value?.focus()
+}
+const cancelEditDescription = () => {
+  editingDescription.value = false
+  descriptionDraft.value = ''
+}
+const saveDescription = async () => {
+  const next = descriptionDraft.value?.trim() ?? ''
+  if (next === (profile.description ?? '')) {
+    cancelEditDescription()
+    return
+  }
+  savingDescription.value = true
+  try {
+    const res = await userService.updateUser(profile.userId, {
+      nickname: profile.nickname,
+      description: next,
+      profileImgInfo: null,
+    })
+    if (!res.success) throw new Error(res.message || '소개 수정 실패')
+    profile.description = next
+    editingDescription.value = false
+    showSavedToast()
+  } catch (err) {
+    console.error('[PROFILE] 소개 저장 실패:', err)
+    await open({ type: 'alert', title: '오류', message: err.message || '소개 저장에 실패했습니다.' })
+  } finally {
+    savingDescription.value = false
   }
 }
 
 const handleImageChange = async (e) => {
   const file = e.target.files[0]
+  e.target.value = '' // 같은 파일 재선택 가능하도록
   if (!file) return
 
   if (file.size > 10 * 1024 * 1024) {
@@ -439,41 +469,45 @@ const handleImageChange = async (e) => {
     return
   }
 
-  // 로컬 미리보기 먼저 설정
-  selectedFile.value = file
+  // 로컬 미리보기 즉시
   previewImage.value = URL.createObjectURL(file)
-  uploadedProfileImgInfo.value = null
-
-  // Presigned URL로 바로 업로드
   uploadingImage.value = true
+
   try {
-    console.log('[PROFILE] 프로필 이미지 업로드 시작...')
     const uploadResult = await fileService.upload(file, { fileCode: 'PROFILE' })
-
-    if (uploadResult.success && uploadResult.data) {
-      const serverUrl = uploadResult.data.fileUrl || uploadResult.data.storedPath
-      // 서버 URL로 미리보기 교체
-      if (previewImage.value && previewImage.value.startsWith('blob:')) {
-        URL.revokeObjectURL(previewImage.value)
-      }
-      previewImage.value = serverUrl
-
-      uploadedProfileImgInfo.value = {
-        fileId: uploadResult.data.id,
-        storedPath: uploadResult.data.fileUrl,
-        originName: uploadResult.data.orgFileNm || file.name,
-        fileSize: uploadResult.data.fileSize || file.size,
-        contentType: uploadResult.data.contentType || file.type,
-        fileExplain: '프로필 이미지'
-      }
-      console.log('[PROFILE] 프로필 이미지 업로드 완료:', uploadedProfileImgInfo.value)
-    } else {
-      throw new Error(uploadResult.error || '업로드 실패')
+    if (!uploadResult.success || !uploadResult.data) {
+      throw new Error(uploadResult.message || '업로드 실패')
     }
+
+    const profileImgInfo = {
+      fileId: uploadResult.data.id,
+      storedPath: uploadResult.data.fileUrl,
+      originName: uploadResult.data.orgFileNm || file.name,
+      fileSize: uploadResult.data.fileSize || file.size,
+      contentType: uploadResult.data.contentType || file.type,
+      fileExplain: '프로필 이미지',
+    }
+
+    // 업로드 직후 바로 프로필 PUT
+    const res = await userService.updateUser(profile.userId, {
+      nickname: profile.nickname,
+      description: profile.description ?? '',
+      profileImgInfo,
+    })
+    if (!res.success) throw new Error(res.message || '프로필 사진 저장 실패')
+
+    // 서버 URL로 교체 + 캐시 무효화
+    profile.profilePicture = { fileUrl: uploadResult.data.fileUrl }
+    if (previewImage.value?.startsWith('blob:')) URL.revokeObjectURL(previewImage.value)
+    previewImage.value = null
+    imageKey.value = Date.now()
+    showSavedToast('프로필 사진이 변경되었습니다')
   } catch (err) {
-    console.error('[PROFILE] 프로필 이미지 업로드 실패:', err)
-    await open({ type: 'alert', title: '오류', message: '이미지 업로드에 실패했습니다. 다시 시도해주세요.' })
-    // 실패해도 로컬 미리보기는 유지, 저장 시 재업로드 시도
+    console.error('[PROFILE] 프로필 사진 변경 실패:', err)
+    await open({ type: 'alert', title: '오류', message: err.message || '이미지 업로드에 실패했습니다.' })
+    // 실패 시 로컬 미리보기 해제
+    if (previewImage.value?.startsWith('blob:')) URL.revokeObjectURL(previewImage.value)
+    previewImage.value = null
   } finally {
     uploadingImage.value = false
   }
@@ -682,17 +716,172 @@ onMounted(() => {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   background: var(--accent);
-  border: 2px solid white;
+  border: 2px solid var(--card);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: transform 0.15s ease;
 }
+.avatar-edit:hover { transform: scale(1.08); }
+.avatar-edit.uploading { cursor: progress; }
+.avatar-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 인라인 편집 (닉네임 / 소개) ===== */
+.name-block { min-width: 0; }
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.icon-edit-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+.icon-edit-btn:hover {
+  background: var(--c-brand);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(147, 51, 234, 0.25);
+}
+.icon-edit-btn:active {
+  transform: translateY(0);
+}
+
+.inline-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.inline-edit-input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--card);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.inline-edit-input:focus { border-color: var(--c-brand); }
+
+.inline-edit-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.inline-edit-actions .btn-cancel,
+.inline-edit-actions .btn-save {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--c-text-600);
+  transition: all 0.15s ease;
+}
+.inline-edit-actions .btn-cancel:hover { background: var(--bg-subtle); }
+.inline-edit-actions .btn-save {
+  background: var(--c-brand);
+  color: #fff;
+  border-color: var(--c-brand);
+}
+.inline-edit-actions .btn-save:hover:not(:disabled) { background: var(--c-brand-hover); }
+.inline-edit-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.bio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.bio-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.inline-edit-textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--card);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+.inline-edit-textarea:focus { border-color: var(--c-brand); }
+.bio-edit-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.bio-edit-actions { display: flex; gap: 6px; }
+.bio-edit .char-count {
+  font-size: 11px;
+  color: var(--c-text-400);
+}
+.bio-edit .btn-cancel,
+.bio-edit .btn-save {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--c-text-600);
+}
+.bio-edit .btn-save {
+  background: var(--c-brand);
+  color: #fff;
+  border-color: var(--c-brand);
+}
+.bio-edit .btn-save:hover:not(:disabled) { background: var(--c-brand-hover); }
+.bio-edit .btn-cancel:hover { background: var(--bg-subtle); }
+.bio-edit button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .avatar-edit input {
   display: none;
@@ -1087,6 +1276,60 @@ onMounted(() => {
 
 .btn-logout svg {
   color: currentColor;
+}
+
+/* ===== 저장 미니 토스트 (EXP burst 스타일) ===== */
+.saved-burst-layer {
+  position: fixed;
+  left: 50%;
+  bottom: 32%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 9999;
+}
+.saved-burst-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.saved-burst {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: #FFFFFF;
+  border: 1.5px solid #9333EA;
+  border-radius: 100px;
+  box-shadow: 0 10px 28px rgba(147, 51, 234, 0.18), 0 4px 8px rgba(15, 23, 42, 0.06);
+  color: #0A0E1A;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.2px;
+}
+.saved-burst-icon { color: #9333EA; }
+
+.saved-burst-enter-active {
+  transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.3s ease-out;
+}
+.saved-burst-leave-active {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 1, 1), opacity 0.4s ease-in;
+}
+.saved-burst-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(0.92);
+}
+.saved-burst-enter-to {
+  opacity: 1;
+  transform: translateY(-20px) scale(1);
+}
+.saved-burst-leave-from {
+  opacity: 1;
+  transform: translateY(-20px);
+}
+.saved-burst-leave-to {
+  opacity: 0;
+  transform: translateY(-40px);
 }
 
 </style>
