@@ -14,7 +14,8 @@
       <!-- 피드 -->
       <router-link to="/feed" class="nav-tab" :class="{ active: isActive('/feed') }">
         <span class="icon-slot">
-          <MessageSquareText class="nav-icon" :stroke-width="1.8" />
+          <FeedOutline class="nav-icon icon-line" />
+          <FeedSolid class="nav-icon icon-solid" />
         </span>
         <span class="nav-label">피드</span>
       </router-link>
@@ -22,7 +23,8 @@
       <!-- 핫 아이템 -->
       <router-link to="/products" class="nav-tab" :class="{ active: isActive('/products') }">
         <span class="icon-slot">
-          <Flame class="nav-icon" :stroke-width="1.8" />
+          <HotOutline class="nav-icon icon-line" />
+          <HotSolid class="nav-icon icon-solid" />
         </span>
         <span class="nav-label">핫 아이템</span>
       </router-link>
@@ -30,7 +32,8 @@
       <!-- 요거픽 -->
       <router-link to="/battle" class="nav-tab" :class="{ active: isActive('/battle') }">
         <span class="icon-slot">
-          <Trophy class="nav-icon" :stroke-width="1.8" />
+          <PickOutline class="nav-icon icon-line" />
+          <PickSolid class="nav-icon icon-solid" />
         </span>
         <span class="nav-label">요거픽</span>
       </router-link>
@@ -38,7 +41,8 @@
       <!-- 캐꾸 (캐리어 꾸미기) -->
       <button class="nav-tab" :class="{ active: isActive('/carrier') }" @click="handleCarrier">
         <span class="icon-slot">
-          <Luggage class="nav-icon" :stroke-width="1.8" />
+          <CarrierOutline class="nav-icon icon-line" />
+          <CarrierSolid class="nav-icon icon-solid" />
         </span>
         <span class="nav-label">캐꾸</span>
       </button>
@@ -46,7 +50,8 @@
       <!-- 더보기 -->
       <button class="nav-tab" :class="{ active: isMoreMenuOpen || isActive('/mypage') || isActive('/chat') }" @click="toggleMoreMenu">
         <span class="icon-slot">
-          <MoreHorizontal class="nav-icon" :stroke-width="1.8" />
+          <MoreOutline class="nav-icon icon-line" />
+          <MoreSolid class="nav-icon icon-solid" />
         </span>
         <span class="nav-label">더보기</span>
       </button>
@@ -185,6 +190,20 @@ import {
   PenSquare, Package, Home, MessageCircle, Sparkles,
   Settings, MessageSquare, LayoutGrid, UserCircle, LogOut
 } from 'lucide-vue-next';
+import {
+  ChatBubbleLeftRightIcon as FeedOutline,
+  FireIcon as HotOutline,
+  TrophyIcon as PickOutline,
+  EllipsisHorizontalIcon as MoreOutline
+} from '@heroicons/vue/24/outline';
+import {
+  ChatBubbleLeftRightIcon as FeedSolid,
+  FireIcon as HotSolid,
+  TrophyIcon as PickSolid,
+  EllipsisHorizontalIcon as MoreSolid
+} from '@heroicons/vue/24/solid';
+import CarrierOutline from '@/components/icons/CarrierLineIcon.vue';
+import CarrierSolid from '@/components/icons/CarrierSolidIcon.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
 import FeedbackModal from '@/components/common/FeedbackModal.vue';
@@ -400,6 +419,10 @@ onBeforeUnmount(() => {
   width: 22px;
   height: 22px;
 }
+/* 활성 상태: outline 숨기고 solid 표시 */
+.nav-tab .icon-solid { display: none; }
+.nav-tab.active .icon-line { display: none; }
+.nav-tab.active .icon-solid { display: block; }
 
 .nav-label {
   font-size: 10.5px;
