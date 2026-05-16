@@ -26,6 +26,7 @@ dist-ssr
 # Capacitor 서명 키 (앱 배포용 keystore는 절대 커밋 금지)
 *.keystore
 !android/app/debug.keystore
+android/keystore.properties
 
 # Firebase 설정 (API 키 포함)
 ios/App/App/GoogleService-Info.plist
@@ -64,3 +65,7 @@ android/.gradle/
 android/local.properties
 android/app/build/
 android/build/
+android/.idea/
+android/captures/
+android/app/release/
+android/app/build/outputs/
