@@ -33,16 +33,28 @@
 
 ## 프로젝트 구조 요약
 
-- **프레임워크**: Vue 3 (Composition API `<script setup>`) + Vite + Pinia + Vue Router
-- **UI 라이브러리**: Tailwind 4.x (유틸), `lucide-vue-next` (아이콘)
-- **HTTP**: Axios (`src/api/client.js`)
+- **프레임워크**: Vue 3.5 (Composition API `<script setup>`) + Vite 6.x + Pinia 3.x + Vue Router 4.x
+- **모바일 앱**: Capacitor 7.x (iOS / Android) — `npm run cap:ios`, `npm run cap:android`
+- **UI 라이브러리**: Tailwind 4.x (유틸), `lucide-vue-next` (아이콘), `@heroicons/vue`
+- **HTTP**: Axios (`src/api/client.js` + 인터셉터 `src/api/interceptors.js`)
+- **실시간**: STOMP + SockJS (`src/services/webSocketService.js`)
+- **푸시 알림**: Firebase FCM 11.x (`src/services/fcmService.js`, `src/services/pushNotificationService.js`)
 - **주요 디렉토리**:
-  - `src/views/` — 라우트 단위 페이지
-  - `src/components/` — 도메인별 재사용 컴포넌트 (`feed/`, `battle/`, `collection/`, `identity/`, `chat/` ...)
-  - `src/api/` — axios 클라이언트 + 도메인별 서비스
-  - `src/data/` — mock 데이터 (백엔드 미배포 시)
+  - `src/views/` — 라우트 단위 페이지 (`admin/`, `battle/`, `carrier/`, `category/`, `feed/`, `product/` 하위 포함)
+  - `src/components/` — 도메인별 재사용 컴포넌트
+    - `feed/`, `battle/`, `collection/`, `identity/`, `chat/`, `notification/`, `product/`
+    - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
+  - `src/services/` — 도메인별 서비스 클래스 (API 호출 계층, `Index.js`로 일괄 export)
+  - `src/api/` — Axios 클라이언트·인터셉터·레거시 API 파일 (`rewardsApi.js`)
+  - `src/stores/` — Pinia 스토어 (`auth.js`, `counter.js`, `userBlock.js`)
+  - `src/composables/` — Vue 컴포저블 (`useAuth`, `useChat`, `useTheme`, `useNotification` 등)
+  - `src/router/` — 라우터 설정 + `guards/` (네비게이션 가드)
+  - `src/capacitor/` — Capacitor 네이티브 브릿지 코드
+  - `src/config/` — 환경 설정 (`env.js`, `ads.js`)
+  - `src/data/` — mock 데이터 (백엔드 미배포 기능용)
   - `src/utils/` — 헬퍼 (아이콘 매핑 등)
-  - `docs/` — 디자인 시스템·스펙 문서
+  - `src/assets/` — 정적 자산 (폰트 등)
+  - `docs/` — 디자인 시스템·스펙 문서 (`design-system.md`, `reward-system-v2-exp-spec.md` 등)
 
 ## 리워드 시스템 (현재 상태)
 
@@ -75,3 +87,17 @@
 - `Co-Authored-By: Claude ...` 라인 넣지 말 것
 - `🤖 Generated with [Claude Code](...)` 라인 넣지 말 것
 - 메시지는 변경 내용만 간결하게 작성
+
+---
+
+## 주요 변경사항 (최근 이력)
+
+- **마이페이지 인라인 편집**: 프로필 필드를 인라인으로 편집하고 미니 저장 토스트로 피드백 (`feat(mypage)`)
+- **Android 출시 서명 / SDK 36**: AGP 8.9.1 업그레이드, 버전 1.0.4 배포 준비 (`chore(android)`)
+- **네비게이션 아이콘 개선**: 활성 탭에 fill 아이콘 적용, 커스텀 캐리어 아이콘 추가, 버전 1.0.3 (`feat(nav)`)
+- **피드 카드 스와이프**: 가로 스와이프로 상세 페이지 진입 지원 (`feat(feed)`)
+- **모바일 채팅 UX**: 인스타그램 스타일로 채팅 UX 개선 (`feat(chat)`)
+- **다크 모드 전면 지원**: 전체 페이지(알림·관리자·상품·배틀·피드 등)에 다크 모드 적용 (`feat(theme)`)
+- **환경설정 페이지 신설**: 설정 화면 추가, 메뉴 아이콘 Lucide 통일 (`feat(settings)`)
+- **iOS 네이버/Apple 로그인**: 네이티브 딥링크 + Apple 로그인 앱 노출 (`feat(auth/ios)`)
+- **iOS APNs production 환경 적용**: 푸시 알림 production 빌드 대응 (`fix(ios/push)`)
