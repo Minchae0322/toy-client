@@ -40,21 +40,33 @@
 - **실시간**: STOMP + SockJS (`src/services/webSocketService.js`)
 - **푸시 알림**: Firebase FCM 11.x (`src/services/fcmService.js`, `src/services/pushNotificationService.js`)
 - **주요 디렉토리**:
-  - `src/views/` — 라우트 단위 페이지 (`admin/`, `battle/`, `carrier/`, `category/`, `feed/`, `product/` 하위 포함)
+  - `src/views/` — 라우트 단위 페이지
+    - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView` 등
+    - 서브폴더: `admin/`, `battle/`, `carrier/`(자체 `components/` 서브폴더 포함), `category/`, `feed/`, `product/`
   - `src/components/` — 도메인별 재사용 컴포넌트
     - `feed/`, `battle/`, `collection/`, `identity/`, `chat/`, `notification/`, `product/`
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
-  - `src/services/` — 도메인별 서비스 클래스 (API 호출 계층, `Index.js`로 일괄 export)
-  - `src/api/` — Axios 클라이언트·인터셉터·레거시 API 파일 (`rewardsApi.js`)
+    - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
+  - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
+    - `AuthService`, `FeedService`, `BattleService`, `ProductService`, `ProductReviewService`, `ChatService`, `NotificationService`, `NotificationSettingService`, `RewardsService`, `CarrierService`, `UserService`, `FeedbackService`, `FileService`, `DashboardService`, `CategoryService`
+    - **`RewardsService.js`는 실 API 호출용** — mock 스위치(`USE_MOCK`)는 `src/api/rewardsApi.js`에 있음 (별개)
+  - `src/api/` — Axios 클라이언트·인터셉터·레거시 mock API (`rewardsApi.js`)
   - `src/stores/` — Pinia 스토어 (`auth.js`, `counter.js`, `userBlock.js`)
-  - `src/composables/` — Vue 컴포저블 (`useAuth`, `useChat`, `useTheme`, `useNotification` 등)
-  - `src/router/` — 라우터 설정 + `guards/` (네비게이션 가드)
+  - `src/composables/` — Vue 컴포저블
+    - `useAuth`, `useChat`, `useTheme`, `useNotification`, `useCarrier`, `useBattleDraft`
+    - `useProduct`, `useCategoryCache`, `useUserBlock`, `useConfirmDialog`, `useLoginPrompt`, `useExpToast`
+  - `src/router/` — 라우터 설정 + `guards/authGuard.js`
   - `src/capacitor/` — Capacitor 네이티브 브릿지 코드
   - `src/config/` — 환경 설정 (`env.js`, `ads.js`)
-  - `src/data/` — mock 데이터 (백엔드 미배포 기능용)
-  - `src/utils/` — 헬퍼 (아이콘 매핑 등)
+  - `src/data/` — mock 데이터 (`levelSystemData.js`)
+  - `src/utils/` — 헬퍼 (`auth.js`, `categoryIcon.js`, `collectionIcons.js`, `chatUtils.js`, `youtubeEmbed.js`, `defaultAvatar.js`)
   - `src/assets/` — 정적 자산 (폰트 등)
-  - `docs/` — 디자인 시스템·스펙 문서 (`design-system.md`, `reward-system-v2-exp-spec.md` 등)
+  - `docs/` — 설계 문서
+    - `design-system.md` — 디자인 대원칙·토큰·컴포넌트 가이드
+    - `reward-system-v2-exp-spec.md` — EXP/레벨/티어 스펙
+    - `user-block-system.md` — 차단 시스템 스펙 (Apple 심사 필수)
+    - `community-list-style.md` — 모바일 커뮤니티 리스트 레이아웃 패턴
+    - `mobile-fcm-setup.md` — FCM·safe-area 이슈 변경 기록
 
 ## 리워드 시스템 (현재 상태)
 
@@ -67,6 +79,30 @@
 ## 테스트 유저 셀렉터
 
 `CollectionView.vue` 상단 `.dev-bar`는 개발용. 백엔드 연동 시 로그인 유저 고정으로 전환하며 해당 블록 삭제.
+
+## 전역 UI 패턴 — 반드시 재사용
+
+### 확인/삭제/알림 다이얼로그
+`useConfirmDialog` composable + `GlobalConfirmDialog.vue` (`common/`에 전역 마운트됨):
+```js
+const { open } = useConfirmDialog()
+await open({ type: 'danger', title: '삭제', message: '정말 삭제할까요?' })
+// type: 'confirm' | 'alert' | 'danger' | 'login'
+```
+직접 `window.confirm()` 또는 인라인 커스텀 모달 사용 금지.
+
+### 로그인 게이트
+`useLoginPrompt` composable + `LoginPromptModal.vue`:
+```js
+const { openLoginPrompt } = useLoginPrompt()
+await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
+```
+
+### 차단 기능
+`useUserBlock` composable (`src/stores/userBlock.js` 래퍼). **Apple App Store 심사 필수 기능.**
+스펙 전체는 `docs/user-block-system.md` 참조.
+
+---
 
 ## 빌드 / 검증
 
