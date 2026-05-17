@@ -54,7 +54,7 @@
           <svg v-else class="register-toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
-          <span class="register-toggle-text">{{ registerAsProduct ? '새 아이템으로 등록 중' : '새 아이템으로 등록' }}</span>
+          <span class="register-toggle-text">{{ registerAsProduct ? '아이템 정보 입력 중' : '이 아이템 새로 등록하기 (선택)' }}</span>
           <span v-if="registerAsProduct" class="register-toggle-close" aria-hidden="true">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
@@ -69,7 +69,7 @@
         v-if="showRegisterToggle && !registerAsProduct"
         class="register-toggle-hint"
       >
-        찾는 아이템이 없나요? 새 아이템으로 등록하면 요거픽·핫아이템에 연동돼요
+        검색해도 안 보이는 새 아이템이라면, 한 번만 등록해 보세요. 다른 분들도 찾아서 쓸 수 있어요.
       </p>
 
       <!-- 검색 결과 (등록 모드에서는 숨김) -->
@@ -106,9 +106,10 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <span class="register-help-tooltip" role="tooltip">
-              <span class="register-help-row">• 다른 분들도 검색해서 쓸 수 있게 돼요</span>
-              <span class="register-help-row">• 요거픽, 핫아이템에도 연동돼요</span>
-              <span class="register-help-row">• 관리자 승인 후 공개 · 중복 시 삭제될 수 있어요</span>
+              <span class="register-help-row">• 글 쓰는 데 꼭 필요한 건 아니에요</span>
+              <span class="register-help-row">• 등록하면 다른 분들도 검색에서 찾을 수 있어요</span>
+              <span class="register-help-row">• 핫아이템·요거픽 배틀에서도 쓸 수 있게 돼요</span>
+              <span class="register-help-row">• 관리자 검수 후 공개 · 중복 시 삭제될 수 있어요</span>
             </span>
           </button>
         </div>
@@ -131,12 +132,26 @@
             type="text"
             inputmode="numeric"
             class="form-input brand-input"
-            placeholder="예: 4500"
+            :placeholder="noPriceInfo ? '가격 정보 없음' : '예: 4500'"
             maxlength="9"
             v-model="productPriceCustom"
             @input="handleProductPriceInput"
-            :disabled="disabled"
+            :disabled="disabled || noPriceInfo"
           />
+          <button
+            type="button"
+            class="quick-toggle"
+            :class="{ active: noPriceInfo }"
+            :disabled="disabled"
+            @click="toggleNoPriceInfo"
+          >
+            <span class="quick-toggle-check" :class="{ on: noPriceInfo }">
+              <svg v-if="noPriceInfo" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </span>
+            <span>가격 정보 없음</span>
+          </button>
         </div>
 
         <div class="register-field" v-if="allowCustomProductImage">
@@ -262,7 +277,7 @@ const props = defineProps({
   disabled: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['error', 'price-change'])
+const emit = defineEmits(['error', 'price-change', 'brand-change'])
 
 // 내부 상태
 const selectedProduct = ref(props.initialProduct || null)
@@ -272,9 +287,21 @@ const hasSearchedProducts = ref(false)
 const registerAsProduct = ref(false)
 const productBrandCustom = ref('')
 const productPriceCustom = ref('')
+const noPriceInfo = ref(false)
+
+function toggleNoPriceInfo() {
+  noPriceInfo.value = !noPriceInfo.value
+  if (noPriceInfo.value) productPriceCustom.value = ''
+}
 
 // 정가 변경 시 부모에 전달 (피드 구매가 자동 입력용)
-watch(productPriceCustom, (v) => emit('price-change', v))
+// "가격 정보 없음" 토글 상태면 null 을 emit → 부모가 "정보 없음" 토글 자동 활성화
+watch([productPriceCustom, noPriceInfo], ([v, unknown]) => {
+  emit('price-change', unknown ? null : v)
+})
+
+// 브랜드/구매처 변경 시 부모에 전달 (피드 구매처 자동 입력용)
+watch(productBrandCustom, (v) => emit('brand-change', v))
 const productImageMode = ref('feed') // 'feed' | 'custom'
 const customProductImage = ref(null) // { preview, attachmentInfo, uploading, uploadFailed, file }
 
@@ -352,6 +379,7 @@ const handleProductSelect = (product) => {
   registerAsProduct.value = false
   productBrandCustom.value = ''
   productPriceCustom.value = ''
+  noPriceInfo.value = false
   hasSearchedProducts.value = false
   resetCustomProductImage()
   productImageMode.value = 'feed'
@@ -366,6 +394,7 @@ const clearSelectedProduct = () => {
   registerAsProduct.value = false
   productBrandCustom.value = ''
   productPriceCustom.value = ''
+  noPriceInfo.value = false
   resetCustomProductImage()
   productImageMode.value = 'feed'
 }
@@ -496,7 +525,8 @@ const getSubmitState = () => ({
   productNameCustom: productNameCustom.value || '',
   registerAsProduct: registerAsProduct.value,
   productBrandCustom: productBrandCustom.value,
-  productPriceCustom: productPriceCustom.value,
+  // "가격 정보 없음" 토글 시 null 로 전송
+  productPriceCustom: noPriceInfo.value ? null : productPriceCustom.value,
   productImageMode: productImageMode.value,
   customAttachmentInfo: customProductImage.value?.attachmentInfo || null,
   customUploading: !!customProductImage.value?.uploading,
@@ -765,6 +795,56 @@ defineExpose({
 }
 .product-suggestion-arrow { width: 16px; height: 16px; color: var(--c-text-300); flex-shrink: 0; }
 .product-suggestion-item:hover .product-suggestion-arrow { color: var(--c-brand); }
+
+/* 가격 정보 없음 toggle chip */
+.quick-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 10px 5px 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-500);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  align-self: flex-start;
+}
+.quick-toggle:hover:not(:disabled) {
+  background: var(--bg-subtle);
+  border-color: var(--c-text-300);
+  color: var(--c-text-600);
+}
+.quick-toggle.active {
+  background: var(--c-brand);
+  border-color: var(--c-brand);
+  color: #ffffff;
+}
+.quick-toggle.active:hover:not(:disabled) {
+  background: var(--c-brand-hover);
+}
+.quick-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+.quick-toggle-check {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  opacity: 0.55;
+}
+.quick-toggle-check.on {
+  background: #ffffff;
+  color: var(--c-brand);
+  border-color: #ffffff;
+  opacity: 1;
+}
 
 /* 새 제품 정보 블록 */
 .brand-input-block {

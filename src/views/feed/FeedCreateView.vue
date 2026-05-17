@@ -111,6 +111,7 @@
             :feed-thumbnail-url="selectedPhotos[0]?.preview ?? null"
             @error="showError"
             @price-change="onProductPriceChange"
+            @brand-change="onProductBrandChange"
           />
         </div>
         <div class="form-group">
@@ -144,7 +145,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            구매처
+            구매처/브랜드
           </label>
           <div class="quick-store-list">
             <button
@@ -190,9 +191,10 @@
             <span class="price-toggle-group">
               <button type="button" class="btn-toggle" :class="{ active: formData.priceGift }" @click="togglePriceGift">선물받음</button>
               <button type="button" class="btn-toggle" :class="{ active: formData.priceHidden }" @click="togglePriceHidden">비공개</button>
+              <button type="button" class="btn-toggle" :class="{ active: formData.priceUnknown }" @click="togglePriceUnknown">정보 없음</button>
             </span>
           </label>
-          <div v-if="!formData.priceHidden && !formData.priceGift" class="feed-price-wrap">
+          <div v-if="!formData.priceHidden && !formData.priceGift && !formData.priceUnknown" class="feed-price-wrap">
             <div class="feed-price-line" :class="{ valued: formData.buyPrice }">
               <input
                 type="text"
@@ -209,6 +211,9 @@
           </div>
           <p v-if="formData.priceHidden" class="price-hidden-notice">
             가격이 비공개로 설정됩니다
+          </p>
+          <p v-if="formData.priceUnknown" class="price-hidden-notice">
+            가격 정보 없음으로 표시돼요
           </p>
           <p v-if="formData.priceGift" class="price-hidden-notice">
             선물받은 걸로 표시돼요
@@ -343,7 +348,28 @@ const dragOverIndex = ref(null)
 const productSectionRef = ref(null)
 
 // 정가 입력 시 구매가도 동일하게 동기화 (비공개/선물 토글 시 무시)
+// 제품 섹션 구매처/브랜드 → 추가 정보의 구매처 자동 동기화
+// "모름" 토글이 켜져있지 않을 때만 자동 채움
+const onProductBrandChange = (raw) => {
+  const v = String(raw || '').trim()
+  if (!v) return
+  if (formData.value.storeUnknown) return
+  formData.value.store = v
+}
+
 const onProductPriceChange = (raw) => {
+  // null = 제품 섹션에서 "가격 정보 없음" 토글이 켜진 상태 → 구매가도 "정보 없음"으로 동기화
+  if (raw === null) {
+    if (!formData.value.priceUnknown) {
+      formData.value.priceUnknown = true
+      formData.value.priceHidden = false
+      formData.value.priceGift = false
+      formData.value.buyPrice = null
+    }
+    return
+  }
+  // 일반 입력값이 들어오면 "정보 없음" 자동 해제
+  if (formData.value.priceUnknown) formData.value.priceUnknown = false
   if (formData.value.priceHidden || formData.value.priceGift) return
   const num = Number(String(raw || '').replace(/[^0-9]/g, ''))
   formData.value.buyPrice = num > 0 ? num : null
@@ -360,6 +386,7 @@ const formData = ref({
   buyPrice: null,
   priceHidden: false,
   priceGift: false,
+  priceUnknown: false,
   evaluation: 'BEST',
   hashtags: []
 })
@@ -380,7 +407,7 @@ const evaluations = [
   { value: 'BAD', label: '비추천' }
 ]
 
-const quickStores = ['무신사', '쿠팡', '네이버', '올리브영', '29CM', 'SSG']
+const quickStores = ['GS25', 'CU', '무신사', '쿠팡', '네이버', '올리브영', '29CM', 'SSG']
 
 const selectStore = (store) => {
   if (formData.value.storeUnknown) return
@@ -420,6 +447,7 @@ const togglePriceHidden = () => {
   formData.value.priceHidden = !formData.value.priceHidden
   if (formData.value.priceHidden) {
     formData.value.priceGift = false
+    formData.value.priceUnknown = false
     formData.value.buyPrice = null
   }
 }
@@ -428,8 +456,18 @@ const togglePriceGift = () => {
   formData.value.priceGift = !formData.value.priceGift
   if (formData.value.priceGift) {
     formData.value.priceHidden = false
+    formData.value.priceUnknown = false
     formData.value.buyPrice = 0
   } else {
+    formData.value.buyPrice = null
+  }
+}
+
+const togglePriceUnknown = () => {
+  formData.value.priceUnknown = !formData.value.priceUnknown
+  if (formData.value.priceUnknown) {
+    formData.value.priceHidden = false
+    formData.value.priceGift = false
     formData.value.buyPrice = null
   }
 }
@@ -884,7 +922,11 @@ const handleSubmit = async () => {
       subCategoryId: formData.value.subCategoryId,
       review: formData.value.review.trim(),
       buyPlace: formData.value.store.trim(),
-      buyPrice: formData.value.priceGift ? 0 : (formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null),
+      buyPrice: formData.value.priceUnknown
+          ? null
+          : (formData.value.priceGift
+              ? 0
+              : (formData.value.buyPrice ? parseInt(formData.value.buyPrice) : null)),
       evaluation: formData.value.evaluation,
       hashtags: formData.value.hashtags,
       thumbnailAttachmentInfo,
