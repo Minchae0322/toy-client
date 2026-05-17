@@ -445,12 +445,16 @@ const handleInputFocus = () => {
   setTimeout(() => scrollToBottom('smooth'), 260)
 }
 
-// 모바일 키보드 핸들링: visualViewport API 가 키보드 만큼 줄어든 가시 높이를 알려준다.
-// CSS 에서 var(--chat-vh) 로 받아 컨테이너 높이를 동적으로 줄여 입력창이 키보드 위에 항상 보이게.
+// 모바일 키보드 핸들링: visualViewport.height = 실제 보이는 영역(키보드 제외).
+// 키보드 높이 = window.innerHeight - visualViewport.height.
+// CSS 에서 var(--chat-kb-h) 로 받아 fixed 컨테이너의 bottom 을 키보드 위로 끌어올린다.
 const updateChatViewportHeight = () => {
   const vv = window.visualViewport
   if (!vv) return
-  document.documentElement.style.setProperty('--chat-vh', `${vv.height}px`)
+  const keyboardHeight = Math.max(0, window.innerHeight - vv.height)
+  document.documentElement.style.setProperty('--chat-kb-h', `${keyboardHeight}px`)
+  // iOS 가 입력창 포커스 시 페이지를 자동으로 스크롤시키는 동작을 되돌린다 (fixed 컨테이너와 충돌 방지)
+  if (window.scrollY !== 0) window.scrollTo(0, 0)
 }
 
 const reconnectWebSocket = async () => {
@@ -565,7 +569,7 @@ onUnmounted(() => {
     window.visualViewport.removeEventListener('resize', updateChatViewportHeight)
     window.visualViewport.removeEventListener('scroll', updateChatViewportHeight)
   }
-  document.documentElement.style.removeProperty('--chat-vh')
+  document.documentElement.style.removeProperty('--chat-kb-h')
 })
 
 watch(actualRoomId, (newVal, oldVal) => {
