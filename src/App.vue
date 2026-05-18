@@ -2,6 +2,7 @@
 import {RouterLink, RouterView, useRoute, useRouter} from 'vue-router'
 import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {webSocketService} from '@/services/webSocketService.js'
+import {chatService} from '@/services/ChatService.js'
 import {useAuth} from '@/composables/useAuth'
 import GlobalConfirmDialog from '@/components/common/GlobalConfirmDialog.vue'
 import LoginPromptModal from '@/components/common/LoginPromptModal.vue'
@@ -40,6 +41,23 @@ const isAuthPage = computed(() =>
 )
 
 const isChatRoute = computed(() => route.path.startsWith('/chat'))
+
+// ===== 채팅 미확인 메시지 =====
+const hasUnreadChat = ref(false)
+
+async function fetchChatUnreadCount() {
+  if (!isLoggedIn.value) {
+    hasUnreadChat.value = false
+    return
+  }
+  try {
+    const res = await chatService.getChatRooms()
+    const rooms = Array.isArray(res?.data) ? res.data : (res?.data?.content || [])
+    hasUnreadChat.value = rooms.some(r => (r.unreadCount || 0) > 0)
+  } catch (e) {
+    // 조용히 실패 — 다음 갱신 시 재시도
+  }
+}
 
 const profileImageUrl = computed(() => {
   return user.value?.profilePicture?.fileUrl || null
@@ -221,11 +239,21 @@ onMounted(() => {
   if (isLoggedIn.value) {
     webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
     loadHeaderRewards()
+    fetchChatUnreadCount()
     registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
     userBlockStore.load(userId.value)
   }
   runSplashFlow()
   setupAppLifecycle()
+})
+
+// /chat 진입 시 즉시 클리어, /chat 떠날 때 다시 조회
+watch(() => route.path, (newPath, oldPath) => {
+  if (newPath?.startsWith('/chat')) {
+    hasUnreadChat.value = false
+  } else if (oldPath?.startsWith('/chat')) {
+    fetchChatUnreadCount()
+  }
 })
 
 // userId 기준 watch — logout(A→null) / login(null→B) / switch(A→B) 모두 처리
@@ -237,6 +265,7 @@ watch(userId, (newId, oldId) => {
   if (oldId != null) {
     userLevel.value = null
     userBadges.value = []
+    hasUnreadChat.value = false
     userBlockStore.clear()
     unregisterFcm().catch(e => console.warn('[FCM] 해제 실패:', e))
     webSocketService.disconnect()
@@ -245,6 +274,7 @@ watch(userId, (newId, oldId) => {
   // 새 유저 setup
   if (newId != null) {
     loadHeaderRewards()
+    fetchChatUnreadCount()
     webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
     registerFcm().catch(e => console.warn('[FCM] 등록 실패:', e))
     userBlockStore.load(newId)
@@ -289,6 +319,7 @@ onUnmounted(() => {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
           </svg>
+          <span v-if="isLoggedIn && hasUnreadChat" class="msg-unread-dot" aria-label="읽지 않은 메시지 있음"></span>
         </button>
 
         <template v-if="!isLoggedIn">
@@ -351,6 +382,7 @@ onUnmounted(() => {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
           </svg>
+          <span v-if="isLoggedIn && hasUnreadChat" class="msg-unread-dot" aria-label="읽지 않은 메시지 있음"></span>
         </button>
         <div v-if="isLoggedIn" class="mobile-avatar-wrap" @click="goToProfile">
           <div class="mobile-avatar" :class="{ connected: wsConnected, connecting: wsConnecting }">
@@ -626,6 +658,7 @@ onUnmounted(() => {
 
 /* ===================== 메시지 버튼 ===================== */
 .msg-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -650,6 +683,7 @@ onUnmounted(() => {
 }
 
 .mobile-msg-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -661,6 +695,19 @@ onUnmounted(() => {
   color: var(--c-text-500);
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.msg-unread-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-danger, #ef4444);
+  border: 2px solid var(--bg-base);
+  box-sizing: content-box;
+  pointer-events: none;
 }
 
 .mobile-msg-btn svg {

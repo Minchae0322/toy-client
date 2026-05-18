@@ -38,10 +38,11 @@
           </svg>
           <span>이미지 처리 중...</span>
         </div>
-        <div v-if="selectedPhotos.length > 0" class="photo-grid">
+        <TransitionGroup v-if="selectedPhotos.length > 0" name="photo-shift" tag="div" class="photo-grid">
           <div
-              v-for="(photo, index) in selectedPhotos"
+              v-for="(photo, index) in displayedPhotos"
               :key="photo.id"
+              :data-photo-index="index"
               class="photo-item"
               draggable="true"
               @dragstart="handleDragStart($event, index)"
@@ -49,7 +50,11 @@
               @drop="handleDrop($event, index)"
               @dragenter="handleDragEnter(index)"
               @dragleave="handleDragLeave"
-              :class="{ 'drag-over': dragOverIndex === index, 'uploading': photo.uploading, 'upload-failed': photo.uploadFailed }"
+              @touchstart="handleTouchStart($event, index, photo.id)"
+              @touchmove="handleTouchMove"
+              @touchend="handleTouchEnd"
+              @touchcancel="handleTouchEnd"
+              :class="{ 'drag-over': dragOverIndex === index && draggedIndex !== null, 'touch-dragging': draggedPhotoId === photo.id, 'uploading': photo.uploading, 'upload-failed': photo.uploadFailed }"
           >
             <img :src="photo.preview" :alt="`Photo ${index + 1}`" />
             <div v-if="photo.uploading" class="upload-overlay">
@@ -70,7 +75,7 @@
             </button>
             <div class="photo-order">{{ index + 1 }}</div>
           </div>
-        </div>
+        </TransitionGroup>
         <div class="photo-actions">
           <label class="btn-photo-action" :class="{ disabled: selectedPhotos.length >= 5 || isProcessingImage }">
             <input type="file" accept="image/*" multiple @change="handleFileSelect" style="display: none;" :disabled="selectedPhotos.length >= 5 || isProcessingImage" />
@@ -88,7 +93,7 @@
             <span>카메라</span>
           </label>
         </div>
-        <p class="hint-text">사진을 드래그하여 순서를 변경할 수 있습니다 (최대 1920px로 자동 최적화)</p>
+        <p class="hint-text">사진을 끌어서 순서를 바꿀 수 있어요 (최대 1920px로 자동 최적화)</p>
 
         <!-- 한줄평 (사진 카드에 통합) -->
         <div class="review-inline">
@@ -345,6 +350,22 @@ const errorMessage = ref('')
 const hashtagInput = ref('')
 const draggedIndex = ref(null)
 const dragOverIndex = ref(null)
+const touchDragIndex = ref(null)
+const draggedPhotoId = ref(null)
+
+// 터치 드래그 중에는 사진들이 실시간으로 자리를 비켜서 최종 순서를 미리 보여줌
+const displayedPhotos = computed(() => {
+  if (touchDragIndex.value === null || dragOverIndex.value === null) {
+    return selectedPhotos.value
+  }
+  if (touchDragIndex.value === dragOverIndex.value) {
+    return selectedPhotos.value
+  }
+  const photos = [...selectedPhotos.value]
+  const [moved] = photos.splice(touchDragIndex.value, 1)
+  photos.splice(dragOverIndex.value, 0, moved)
+  return photos
+})
 const productSectionRef = ref(null)
 
 // 정가 입력 시 구매가도 동일하게 동기화 (비공개/선물 토글 시 무시)
@@ -580,6 +601,44 @@ const handleDrop = (e, dropIndex) => {
   selectedPhotos.value = photos
   draggedIndex.value = null
   dragOverIndex.value = null
+}
+
+// 모바일 터치 드래그 (long-press 없이 바로 순서 변경, 라이브 리오더)
+const handleTouchStart = (e, index, photoId) => {
+  // × 버튼 등 인터랙티브 요소 터치 시 드래그 시작 안 함
+  if (e.target.closest('.btn-remove')) return
+  touchDragIndex.value = index
+  dragOverIndex.value = index
+  draggedPhotoId.value = photoId
+}
+
+const handleTouchMove = (e) => {
+  if (touchDragIndex.value === null) return
+  // 드래그 중 스크롤 방지
+  if (e.cancelable) e.preventDefault()
+  const touch = e.touches[0]
+  if (!touch) return
+  const el = document.elementFromPoint(touch.clientX, touch.clientY)
+  if (!el) return
+  const item = el.closest('[data-photo-index]')
+  if (!item) return
+  const idx = Number(item.dataset.photoIndex)
+  if (Number.isNaN(idx)) return
+  if (idx !== dragOverIndex.value) {
+    dragOverIndex.value = idx
+  }
+}
+
+const handleTouchEnd = () => {
+  if (touchDragIndex.value === null) {
+    draggedPhotoId.value = null
+    return
+  }
+  // 화면에 보이던 순서를 그대로 확정
+  selectedPhotos.value = displayedPhotos.value
+  touchDragIndex.value = null
+  dragOverIndex.value = null
+  draggedPhotoId.value = null
 }
 
 const handleFileSelect = async (e) => {
@@ -1133,11 +1192,35 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   overflow: hidden;
   cursor: move;
+  /* 모바일 드래그 중 스크롤·long-press 메뉴 차단 */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
-.photo-item img { width: 100%; height: 100%; object-fit: contain; background: var(--border-default); }
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--border-default);
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
 .photo-item.drag-over { border: 2px dashed var(--accent); opacity: 0.5; }
+.photo-item.touch-dragging {
+  transform: scale(1.06);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22), 0 0 0 3px var(--accent);
+  z-index: 2;
+  opacity: 0.95;
+}
 .photo-item.uploading { opacity: 0.7; }
 .photo-item.upload-failed { border: 2px solid var(--c-danger); }
+
+/* 라이브 리오더 — 비켜주는 사진들이 부드럽게 이동 */
+.photo-shift-move {
+  transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
 
 /* 업로드 중 오버레이 */
 .upload-overlay {
