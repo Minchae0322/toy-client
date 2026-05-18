@@ -1,5 +1,14 @@
 <template>
-  <div class="detail-container">
+  <div
+      ref="containerRef"
+      class="detail-container"
+      :class="{ 'is-swiping': isSwipingBack, 'is-animating': isAnimating }"
+      :style="swipeStyle"
+      @touchstart.capture="onTouchStartCapture"
+      @touchmove.capture="onTouchMoveCapture"
+      @touchend.capture="onTouchEndCapture"
+      @touchcancel.capture="onTouchEndCapture"
+  >
     <!-- Loading -->
     <div v-if="loading" class="loading-container">
       <div class="spinner"></div>
@@ -105,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { feedService } from '@/services/FeedService.js'
 import { chatService } from '@/services/ChatService.js'
@@ -551,6 +560,143 @@ watch(() => route.params.id, (newId, oldId) => {
   loadFeedDetail()
 })
 
+// ===== 엣지 스와이프 백 제스처 =====
+// 좌측 가장자리에서 시작하는 터치만 인식. 컨테이너를 직접 translate 하면서
+// 뒤로 가는 시각적 피드백을 제공 — 라우트 전환 직전까지 흰 배경이 자연스레 노출되어
+// "까만 화면" 플리커를 없앤다.
+const containerRef = ref(null)
+const isSwipingBack = ref(false)
+const isAnimating = ref(false)
+const swipeOffset = ref(0)
+const swipeOpacity = ref(1)
+let swipeStartX = 0
+let swipeStartY = 0
+let swipeStartT = 0
+let gestureActive = false
+let pendingDirectionCheck = false
+
+const EDGE_THRESHOLD_PX = 24            // 좌측 24px 안에서 시작
+const DIRECTION_LOCK_DX = 8             // dx 8px 이상부터 방향 결정
+const COMMIT_RATIO = 0.32               // 화면폭 32% 넘게 끌면 뒤로
+const COMMIT_VELOCITY = 0.55            // 또는 px/ms 빠른 플릭
+const MAX_RELEASE_MS = 220
+
+const swipeStyle = computed(() => {
+  if (swipeOffset.value === 0 && !isAnimating.value) return null
+  return {
+    transform: `translate3d(${swipeOffset.value}px, 0, 0)`,
+    opacity: swipeOpacity.value,
+    transition: isAnimating.value
+        ? `transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 220ms ease`
+        : 'none'
+  }
+})
+
+const updateOffset = (dx) => {
+  const clamped = Math.max(0, dx)
+  swipeOffset.value = clamped
+  // 살짝 페이드 — 완전 투명 직전에 멈춰서 끝까지 보이게
+  const ratio = Math.min(1, clamped / window.innerWidth)
+  swipeOpacity.value = 1 - ratio * 0.15
+}
+
+const finishCommit = () => {
+  isAnimating.value = true
+  swipeOffset.value = window.innerWidth
+  swipeOpacity.value = 0.92
+  setTimeout(() => {
+    // 라우트 전환 — 켭얼라이브된 FeedHomeView 가 즉시 자리에 들어옴
+    router.back()
+  }, MAX_RELEASE_MS - 40)
+}
+
+const finishCancel = () => {
+  isAnimating.value = true
+  swipeOffset.value = 0
+  swipeOpacity.value = 1
+  setTimeout(() => {
+    isAnimating.value = false
+  }, MAX_RELEASE_MS)
+}
+
+const resetGesture = () => {
+  gestureActive = false
+  isSwipingBack.value = false
+  pendingDirectionCheck = false
+  swipeStartT = 0
+}
+
+const onTouchStartCapture = (e) => {
+  if (e.touches.length !== 1) return
+  if (isAnimating.value) return
+  const t = e.touches[0]
+  if (t.clientX > EDGE_THRESHOLD_PX) return
+  swipeStartX = t.clientX
+  swipeStartY = t.clientY
+  swipeStartT = Date.now()
+  gestureActive = true
+  pendingDirectionCheck = true
+  isSwipingBack.value = false
+}
+
+const onTouchMoveCapture = (e) => {
+  if (!gestureActive) return
+  const t = e.touches[0]
+  const dx = t.clientX - swipeStartX
+  const dy = t.clientY - swipeStartY
+
+  if (pendingDirectionCheck) {
+    // 방향 결정 — 가로가 우세하고 오른쪽으로 움직일 때만 백 제스처로 채택
+    if (Math.abs(dx) < DIRECTION_LOCK_DX && Math.abs(dy) < DIRECTION_LOCK_DX) return
+    if (dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+      pendingDirectionCheck = false
+      isSwipingBack.value = true
+      // 채택 시점부터 자식 가로 스와이프(이미지 캐러셀) 가로채기
+      try { e.stopPropagation() } catch {}
+    } else {
+      // 세로 스크롤 등 다른 제스처로 양보
+      resetGesture()
+      return
+    }
+  }
+
+  if (isSwipingBack.value) {
+    // 뷰의 가로/세로 스크롤·캐러셀과 충돌 안 나도록 기본 동작 차단
+    if (e.cancelable) e.preventDefault()
+    try { e.stopPropagation() } catch {}
+    updateOffset(dx)
+  }
+}
+
+const onTouchEndCapture = (e) => {
+  if (!gestureActive) return
+  if (!isSwipingBack.value) {
+    resetGesture()
+    return
+  }
+
+  const t = e.changedTouches?.[0]
+  const endX = t ? t.clientX : swipeStartX + swipeOffset.value
+  const dx = Math.max(0, endX - swipeStartX)
+  const dt = Math.max(1, Date.now() - swipeStartT)
+  const velocity = dx / dt
+  const commitDistance = window.innerWidth * COMMIT_RATIO
+
+  try { e.stopPropagation() } catch {}
+
+  if (dx >= commitDistance || velocity >= COMMIT_VELOCITY) {
+    finishCommit()
+  } else {
+    finishCancel()
+  }
+  resetGesture()
+}
+
+onBeforeUnmount(() => {
+  // 라우트 전환 직후 다음 페이지에 잔재가 남지 않도록 정리
+  resetGesture()
+})
+
 onMounted(() => loadFeedDetail())
 </script>
 
@@ -563,6 +709,35 @@ onMounted(() => loadFeedDetail())
   color: var(--text-primary);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   letter-spacing: -0.2px;
+  /* 백그라운드가 노출돼도 흰색만 보이도록 — body/html 이 같은 색이지만
+     기기에 따라 잠깐 깜빡일 수 있어 컨테이너 자체에 고정 */
+  position: relative;
+  z-index: 1;
+}
+
+/* 스와이프 중 — 컴포지트 레이어 힌트 + 가로 스크롤 차단 */
+.detail-container.is-swiping {
+  will-change: transform, opacity;
+  touch-action: pan-y;
+  overflow-x: hidden;
+}
+
+.detail-container.is-animating {
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+/* 스와이프가 끝까지 가는 동안에도 좌측에 검은 띠가 보이지 않도록 — body 의 흰
+   배경이 노출되지만, 다크모드 등에서 약간 어두워 보일 수 있어 명시적 보강.
+   ::before 가 가장자리에 흰 배경을 한 줄 덧대어 부드러운 가장자리 보장. */
+.detail-container.is-swiping::before,
+.detail-container.is-animating::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--bg-base);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .loading-container,
