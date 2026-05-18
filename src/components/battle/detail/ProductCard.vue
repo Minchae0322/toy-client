@@ -50,7 +50,7 @@
                 v-for="r in [1, 2, 3]"
                 :key="r"
                 @click="onVote(r)"
-                :disabled="submitting || !canVote || isRankDisabled(r)"
+                :disabled="submitting || !canVote"
                 :class="['rank-chip', `rank-${r}`, { active: productRank === r }]"
             >
               {{ r }}위
@@ -156,11 +156,6 @@ const props = defineProps({
   percentage: {
     type: [Number, String],
     required: true
-  },
-  // 가중치 모드에서 순서 강제(1→2→3)에 사용
-  selectedRanks: {
-    type: Object,
-    default: () => ({ 1: null, 2: null, 3: null })
   }
 })
 
@@ -285,17 +280,6 @@ const handleImageClick = () => {
 
 const onVote = (rank) => {
   emit('vote', props.item.id, rank)
-}
-
-// 가중치 모드 순서 강제: 1위 → 2위 → 3위 순서로만 선택 가능
-// (자기 자신이 active인 rank는 해제 가능하도록 항상 enabled)
-const isRankDisabled = (rank) => {
-  if (!props.isWeightedVote) return false
-  if (props.productRank === rank) return false
-  if (props.selectedRanks[rank] != null) return true
-  if (rank === 2 && !props.selectedRanks[1]) return true
-  if (rank === 3 && (!props.selectedRanks[1] || !props.selectedRanks[2])) return true
-  return false
 }
 
 const handleSubmitComment = (content) => {

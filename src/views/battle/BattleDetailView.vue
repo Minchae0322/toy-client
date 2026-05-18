@@ -53,7 +53,6 @@
               :can-vote="canVote"
               :submitting="submitting"
               :percentage="getPercentage(item)"
-              :selected-ranks="selectedRanks"
               @vote="handleVote"
               @open-comments="scrollToComments"
               @submit-comment="handleInlineComment"
@@ -697,34 +696,30 @@ export default {
           newRanks[rank] = itemId
         }
 
-        // 순서 강제 cascade: 1위 비면 2·3위 해제, 2위 비면 3위 해제
-        if (!newRanks[1]) {
-          newRanks[2] = null
-          newRanks[3] = null
-        } else if (!newRanks[2]) {
-          newRanks[3] = null
-        }
+        // Auto-compact: 빈 rank가 있으면 아래 rank를 위로 promote
+        // (1→2→3 비즈니스 룰을 시스템이 자동 유지, 사용자는 자유롭게 클릭)
+        this.selectedRanks = this.compactRanks(newRanks)
       } else {
         newRanks[1] = this.selectedRanks[1] === itemId ? null : itemId
+        this.selectedRanks = newRanks
       }
-
-      this.selectedRanks = newRanks
     },
 
     handleRemoveRank(rank) {
       if (this.submitting) return
       const newRanks = { ...this.selectedRanks }
       newRanks[rank] = null
+      this.selectedRanks = this.compactRanks(newRanks)
+    },
 
-      // 순서 강제 cascade
-      if (!newRanks[1]) {
-        newRanks[2] = null
-        newRanks[3] = null
-      } else if (!newRanks[2]) {
-        newRanks[3] = null
-      }
-
-      this.selectedRanks = newRanks
+    // 빈 rank가 있으면 아래 rank를 위로 끌어올림 (1→2→3 순서 자동 유지)
+    compactRanks(ranks) {
+      const result = { 1: null, 2: null, 3: null }
+      let next = 1
+      if (ranks[1]) result[next++] = ranks[1]
+      if (ranks[2]) result[next++] = ranks[2]
+      if (ranks[3]) result[next++] = ranks[3]
+      return result
     },
 
     async submitVote(argumentText = '') {
