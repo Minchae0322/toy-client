@@ -3,24 +3,24 @@
     <!-- 헤더 (PC·모바일 통일 톤) -->
     <div class="mranking-header">
       <div class="mranking-header-main">
-        <h2 class="mranking-title">
-          실시간 <span class="mranking-accent">제품 랭킹</span>
-          <span class="mranking-live"><span class="mranking-live-dot"></span>LIVE</span>
-        </h2>
-        <p class="mranking-sub">지금 가장 주목받는 아이템</p>
-        <span class="sort-indicator mranking-sort">
-          <span class="sort-dot" style="width:10px;height:10px;background:#7c3aed;"></span>
-          <span class="sort-dot" style="width:8px;height:8px;background:#a78bfa;"></span>
-          <span class="sort-dot" style="width:6px;height:6px;background:#c4b5fd;"></span>
-          <span class="sort-label">크면 인기 많은 제품</span>
-        </span>
+        <router-link :to="{ name: 'ProductRanking' }" class="mranking-title-link">
+          <h2 class="mranking-title">
+            실시간 <span class="mranking-accent">제품 랭킹</span>
+            <svg class="mranking-title-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </h2>
+        </router-link>
+        <div class="mranking-sub-row">
+          <p class="mranking-sub">지금 가장 주목받는 아이템</p>
+          <span class="sort-indicator mranking-sort">
+            <span class="sort-dot" style="width:10px;height:10px;background:#7c3aed;"></span>
+            <span class="sort-dot" style="width:8px;height:8px;background:#a78bfa;"></span>
+            <span class="sort-dot" style="width:6px;height:6px;background:#c4b5fd;"></span>
+            <span class="sort-label">크면 핫한 아이템</span>
+          </span>
+        </div>
       </div>
-      <router-link :to="{ name: 'ProductRanking' }" class="mranking-more">
-        <span>전체보기</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      </router-link>
     </div>
 
     <!-- 캐꾸 안내 배너 -->
@@ -485,42 +485,43 @@ onUnmounted(() => {
   margin-bottom: 1.25rem;
 }
 .mranking-header-main { flex: 1; min-width: 0; }
+.mranking-title-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.mranking-title-link:active { opacity: 0.6; }
 .mranking-title {
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--text-primary);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   letter-spacing: -0.03em;
   margin: 0;
 }
 .mranking-accent { color: var(--c-brand); }
-.mranking-live {
+.mranking-title-arrow {
+  color: var(--c-text-400);
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+.mranking-sub-row {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  color: var(--c-danger);
-  font-weight: 700;
-  margin-left: 4px;
-}
-.mranking-live-dot {
-  width: 5px;
-  height: 5px;
-  background-color: var(--c-danger);
-  border-radius: 50%;
-  animation: mranking-pulse 1.5s infinite;
-}
-@keyframes mranking-pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.2); }
-  100% { opacity: 1; transform: scale(1); }
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0 8px;
 }
 .mranking-sub {
-  font-size: 13px;
-  color: var(--c-text-500);
-  margin: 4px 0 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--c-text-600);
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 .mranking-more {
   font-size: 13px;
@@ -870,7 +871,7 @@ onUnmounted(() => {
     border-bottom: 1px solid var(--border-default);
     box-shadow: none;
     border-radius: 0;
-    padding: 16px 0.625rem 24px 0.625rem;
+    padding: 16px 0 20px;
     margin: 0;
   }
 

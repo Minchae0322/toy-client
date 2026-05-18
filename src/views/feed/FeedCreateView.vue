@@ -345,6 +345,8 @@ const selectedPhotos = ref([])
 const showCancelDialog = ref(false)
 const showSuccessToast = ref(false)
 const isSubmitting = ref(false)
+// 비반응성 락 — 더블탭/이벤트 중복 발화 등 reactive update가 늦어도 절대 두 번 안 들어가게
+let submitInFlight = false
 const isProcessingImage = ref(false)
 const errorMessage = ref('')
 const hashtagInput = ref('')
@@ -886,7 +888,10 @@ const confirmCancel = () => {
 }
 
 const handleSubmit = async () => {
+  // 동기적 락 먼저 — Vue reactive update 기다리지 않고 즉시 차단
+  if (submitInFlight) return
   if (!canSubmit.value || isSubmitting.value) return
+  submitInFlight = true
   isSubmitting.value = true
 
   try {
@@ -1014,6 +1019,7 @@ const handleSubmit = async () => {
     showError(error.message || '게시글 등록에 실패했습니다.')
   } finally {
     isSubmitting.value = false
+    submitInFlight = false
   }
 }
 

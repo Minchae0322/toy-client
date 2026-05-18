@@ -163,13 +163,35 @@
             <button class="chip-remove" type="button" aria-label="삭제" @click="removeTag(i)">×</button>
           </span>
         </div>
-        <button class="share-save-btn" @click="downloadCarrierImage">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button
+          class="share-save-btn"
+          :class="{ saving: isSaving, saved: justSaved }"
+          :disabled="isSaving"
+          @click="downloadCarrierImage"
+        >
+          <svg v-if="isSaving" class="save-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10" opacity="0.25"/>
+            <path d="M12 2a10 10 0 0 1 10 10"/>
+          </svg>
+          <svg v-else-if="justSaved" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          이미지로 저장하기
+          {{ isSaving ? '저장 중...' : (justSaved ? '저장 완료!' : '이미지로 저장하기') }}
         </button>
       </div>
+
+      <!-- 저장 완료 미니 토스트 (EXP burst 스타일) -->
+      <Transition name="saved-burst">
+        <div v-if="justSaved" class="saved-burst" aria-live="polite">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>이미지가 저장됐어요</span>
+        </div>
+      </Transition>
     </div>
   </Teleport>
 </template>
@@ -194,6 +216,9 @@ defineEmits(['update:visible', 'update:shareNickname'])
 
 const hashtagInput = ref('')
 const tags = ref([])
+const isSaving = ref(false)
+const justSaved = ref(false)
+let savedResetTimer = null
 
 function tagWidth(tag) {
   let w = 18
@@ -285,23 +310,117 @@ async function saveOrShareBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+function markSaved() {
+  justSaved.value = true
+  if (savedResetTimer) clearTimeout(savedResetTimer)
+  // 3초 후 다시 저장 가능 상태로 되돌림
+  savedResetTimer = setTimeout(() => {
+    justSaved.value = false
+    savedResetTimer = null
+  }, 3000)
+}
+
 async function downloadCarrierImage() {
+  // 처리 중(중복 저장 방지)만 차단. 저장 완료 후엔 즉시 다시 누를 수 있음.
+  if (isSaving.value) return
   const svgEl = document.querySelector('[data-share-svg]')
   if (!svgEl) return
-  const inlined = await inlineExternalImages(svgEl)
-  const canvas = document.createElement('canvas')
-  canvas.width = 760; canvas.height = 1040
-  const ctx = canvas.getContext('2d')
-  const svgData = new XMLSerializer().serializeToString(inlined)
-  const img = new Image()
-  const filename = props.shareNickname ? `${props.shareNickname}-carrier.png` : 'my-carrier.png'
-  img.onload = async () => {
-    ctx.fillStyle = props.shareBg; ctx.fillRect(0, 0, 760, 1040)
-    ctx.drawImage(img, 0, 0, 760, 1040)
-    const blob = await canvasToBlob(canvas)
-    if (!blob) return
-    await saveOrShareBlob(blob, filename)
+  isSaving.value = true
+  try {
+    const inlined = await inlineExternalImages(svgEl)
+    const canvas = document.createElement('canvas')
+    canvas.width = 760; canvas.height = 1040
+    const ctx = canvas.getContext('2d')
+    const svgData = new XMLSerializer().serializeToString(inlined)
+    const filename = props.shareNickname ? `${props.shareNickname}-carrier.png` : 'my-carrier.png'
+
+    await new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = async () => {
+        try {
+          ctx.fillStyle = props.shareBg; ctx.fillRect(0, 0, 760, 1040)
+          ctx.drawImage(img, 0, 0, 760, 1040)
+          const blob = await canvasToBlob(canvas)
+          if (!blob) return reject(new Error('blob 변환 실패'))
+          await saveOrShareBlob(blob, filename)
+          resolve()
+        } catch (e) {
+          reject(e)
+        }
+      }
+      img.onerror = reject
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+    })
+
+    markSaved()
+  } catch (e) {
+    console.error('[SHARE] 이미지 저장 실패:', e)
+  } finally {
+    isSaving.value = false
   }
-  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
 }
 </script>
+
+<style scoped>
+/* 저장 버튼 상태 추가 (.share-save-btn 베이스는 CarrierView.vue에 있음) */
+.share-save-btn.saving,
+.share-save-btn.saved {
+  opacity: 1;
+  cursor: default;
+}
+.share-save-btn.saved {
+  background: var(--c-success, #16a34a) !important;
+}
+.share-save-btn:disabled { cursor: not-allowed; }
+
+.save-spinner {
+  animation: save-spin 0.8s linear infinite;
+}
+@keyframes save-spin { to { transform: rotate(360deg); } }
+
+/* 저장 완료 미니 burst (EXP burst 스타일) */
+.saved-burst {
+  position: fixed;
+  left: 50%;
+  bottom: calc(40% + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: #FFFFFF;
+  border: 1.5px solid #9333EA;
+  border-radius: 100px;
+  box-shadow: 0 10px 28px rgba(147, 51, 234, 0.22), 0 4px 8px rgba(15, 23, 42, 0.06);
+  color: #0A0E1A;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.2px;
+  z-index: 1100;
+  pointer-events: none;
+}
+.saved-burst svg { color: #9333EA; }
+
+.saved-burst-enter-active {
+  transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.3s ease-out;
+}
+.saved-burst-leave-active {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 1, 1), opacity 0.4s ease-in;
+}
+.saved-burst-enter-from {
+  opacity: 0;
+  transform: translateX(-50%) translateY(12px) scale(0.92);
+}
+.saved-burst-enter-to {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-20px) scale(1);
+}
+.saved-burst-leave-from {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-20px);
+}
+.saved-burst-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-40px);
+}
+</style>

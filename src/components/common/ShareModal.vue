@@ -63,22 +63,28 @@
 
             <!-- 링크 복사 -->
             <div class="copy-link-section">
-              <div class="link-input-wrapper">
+              <p class="copy-link-label">링크</p>
+              <div class="link-input-wrapper" :class="{ copied }">
+                <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
                 <input
                     type="text"
                     :value="shareUrl"
                     readonly
                     class="link-input"
                     ref="linkInput"
+                    @click="$event.target.select()"
                 />
-                <button class="btn-copy" @click="copyLink">
-                  <svg v-if="!copied" class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                <button class="btn-copy" @click="copyLink" :class="{ copied }">
+                  <svg v-if="!copied" class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                   </svg>
-                  <svg v-else class="copy-icon copied" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  <svg v-else class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  {{ copied ? '복사됨' : '복사' }}
+                  <span>{{ copied ? '복사됨' : '복사' }}</span>
                 </button>
               </div>
             </div>
@@ -216,12 +222,13 @@ const shareNative = async () => {
   align-items: flex-end;
   justify-content: center;
   z-index: 1000;
-  padding: 16px;
+  padding: 0;
 }
 
 @media (min-width: 640px) {
   .share-overlay {
     align-items: center;
+    padding: 16px;
   }
 }
 
@@ -229,14 +236,16 @@ const shareNative = async () => {
   background: var(--bg-elevated);
   border-radius: 20px 20px 0 0;
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
   max-height: 90vh;
   overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 @media (min-width: 640px) {
   .share-modal {
     border-radius: 20px;
+    padding-bottom: 0;
   }
 }
 
@@ -278,7 +287,10 @@ const shareNative = async () => {
 }
 
 .share-content {
-  padding: 20px;
+  padding: 20px 16px;
+}
+@media (min-width: 640px) {
+  .share-content { padding: 20px; }
 }
 
 .share-preview {
@@ -325,8 +337,8 @@ const shareNative = async () => {
 .share-buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 4px;
+  margin-bottom: 24px;
 }
 
 .share-btn {
@@ -334,7 +346,8 @@ const shareNative = async () => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 12px 8px;
+  padding: 10px 2px;
+  min-width: 0;
   background: transparent;
   border: none;
   border-radius: 12px;
@@ -343,29 +356,31 @@ const shareNative = async () => {
   font-family: inherit;
 }
 
-.share-btn:hover {
-  background: var(--bg-subtle);
-}
+.share-btn:hover { background: var(--bg-subtle); }
+.share-btn:active { transform: scale(0.96); }
 
 .share-btn span {
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 11.5px;
+  font-weight: 600;
   color: var(--c-text-600);
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .share-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.share-icon svg {
-  width: 24px;
-  height: 24px;
-}
+.share-icon svg { width: 22px; height: 22px; }
 
 .share-icon.kakao {
   background: #fee500;
@@ -388,60 +403,79 @@ const shareNative = async () => {
 }
 
 .copy-link-section {
-  padding-top: 16px;
+  padding-top: 18px;
   border-top: 1px solid var(--bg-subtle);
+}
+
+.copy-link-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-text-500);
+  letter-spacing: -0.2px;
+  margin: 0 0 8px 2px;
 }
 
 .link-input-wrapper {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 4px 4px 16px;
-  background: var(--bg-subtle);
+  padding: 5px 5px 5px 12px;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--bg-subtle);
   border-radius: 12px;
+  transition: border-color 0.2s ease;
+}
+.link-input-wrapper:focus-within {
+  border-color: var(--c-brand);
+}
+.link-input-wrapper.copied {
+  border-color: var(--c-success);
+}
+
+.link-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--c-text-400);
+  flex-shrink: 0;
 }
 
 .link-input {
   flex: 1;
   min-width: 0;
-  padding: 8px 0;
+  padding: 10px 0;
   background: transparent;
   border: none;
   font-size: 13px;
+  font-weight: 500;
   color: var(--c-text-600);
   outline: none;
   font-family: inherit;
+  letter-spacing: -0.1px;
 }
 
 .btn-copy {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: var(--c-ink-900);
-  color: white;
+  gap: 5px;
+  padding: 9px 14px;
+  background: var(--c-brand);
+  color: #ffffff;
   border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.18s ease, transform 0.1s ease;
   white-space: nowrap;
   font-family: inherit;
+  letter-spacing: -0.2px;
+  flex-shrink: 0;
 }
+.btn-copy:hover { background: var(--c-brand-hover); }
+.btn-copy:active { transform: scale(0.97); }
+.btn-copy.copied { background: var(--c-success); }
 
-.btn-copy:hover {
-  background: var(--c-ink-700);
-}
-
-.copy-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.copy-icon.copied {
-  color: var(--c-success);
-}
+.copy-icon { width: 14px; height: 14px; }
 
 /* Transition */
 .modal-enter-active,

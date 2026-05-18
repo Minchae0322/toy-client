@@ -3,18 +3,16 @@
     <!-- 헤더 (PC·모바일 통일 톤) -->
     <div class="mpick-header">
       <div class="mpick-header-main">
-        <h2 class="mpick-title">
-          실시간 <span class="mpick-accent">요거픽</span>
-          <span class="mpick-live"><span class="mpick-live-dot"></span>LIVE</span>
-        </h2>
+        <router-link :to="{ name: 'BattleList' }" class="mpick-title-link">
+          <h2 class="mpick-title">
+            실시간 <span class="mpick-accent">요거픽</span>
+            <svg class="mpick-title-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </h2>
+        </router-link>
         <p class="mpick-sub">유저들이 직접 고르는 인기 승부</p>
       </div>
-      <router-link :to="{ name: 'BattleList' }" class="mpick-more">
-        <span>전체보기</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      </router-link>
     </div>
 
     <!-- 로딩 -->
@@ -184,7 +182,7 @@ onMounted(() => {
     border-bottom: 1px solid var(--border-default);
     border-radius: 0;
     box-shadow: none;
-    padding: 22px 0.625rem 24px 0.625rem;
+    padding: 18px 0 20px;
     margin-bottom: 0;
   }
 }
@@ -198,42 +196,36 @@ onMounted(() => {
   padding: 0 4px;
 }
 .mpick-header-main { flex: 1; min-width: 0; }
+.mpick-title-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.mpick-title-link:active { opacity: 0.6; }
 .mpick-title {
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--text-primary);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   letter-spacing: -0.03em;
   margin: 0;
 }
 .mpick-accent { color: var(--c-brand); }
-.mpick-live {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  color: var(--c-danger);
-  font-weight: 700;
-  margin-left: 4px;
-}
-.mpick-live-dot {
-  width: 5px;
-  height: 5px;
-  background-color: var(--c-danger);
-  border-radius: 50%;
-  animation: mpick-pulse 1.5s infinite;
-}
-@keyframes mpick-pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.2); }
-  100% { opacity: 1; transform: scale(1); }
+.mpick-title-arrow {
+  color: var(--c-text-400);
+  flex-shrink: 0;
+  margin-left: 2px;
 }
 .mpick-sub {
-  font-size: 13px;
-  color: var(--c-text-500);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--c-text-600);
   margin: 4px 0 0;
+  letter-spacing: -0.01em;
 }
 .mpick-more {
   font-size: 13px;

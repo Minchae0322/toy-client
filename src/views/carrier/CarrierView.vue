@@ -1577,20 +1577,34 @@ onBeforeRouteLeave(async () => {
   background: rgba(0,0,0,0.5);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 20px;
+  padding: 0;
+}
+@media (min-width: 640px) {
+  .share-modal-overlay {
+    align-items: center;
+    padding: 20px;
+  }
 }
 .share-modal {
   background: var(--bg-elevated);
-  border-radius: 20px;
+  border-radius: 20px 20px 0 0;
   padding: 0;
-  max-width: 420px;
+  max-width: 440px;
   width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
   box-shadow: 0 24px 64px rgba(0,0,0,0.2);
   animation: modalIn .25s ease;
-  overflow: hidden;
   position: relative;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@media (min-width: 640px) {
+  .share-modal {
+    border-radius: 20px;
+    padding-bottom: 0;
+  }
 }
 .modal-close {
   position: absolute;
@@ -1615,86 +1629,140 @@ onBeforeRouteLeave(async () => {
 .modal-close:hover { background: var(--header-blur-bg); }
 
 .share-preview {
-  padding: 28px 24px 20px;
+  padding: 24px 16px 16px;
   display: flex;
   justify-content: center;
   transition: background .3s;
 }
-.share-svg-wrap { width: 380px; height: 520px; }
-
-.share-nickname-row {
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  margin-top: 16px;
+@media (min-width: 640px) {
+  .share-preview { padding: 28px 24px 20px; }
 }
-.share-nickname-input {
-  flex: 1;
-  padding: 12px 16px;
-  border: 2px solid var(--c-brand);
-  border-radius: 12px;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--c-brand);
-  background: var(--bg-elevated);
-  outline: none;
-  text-align: center;
-  letter-spacing: 0.3px;
-  transition: box-shadow .2s;
-  box-sizing: border-box;
-  font-family: 'HancomMalangMalang', 'SUIT', sans-serif;
-}
-.share-nickname-input::placeholder {
-  color: #c9aef0;
-  font-family: 'HancomMalangMalang', 'SUIT', sans-serif;
-  font-weight: 500;
-}
-.share-nickname-input:focus {
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.15);
+.share-svg-wrap {
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 380 / 520;
 }
 
+/* ====== 공유 모달 — 입력 필드 통합 디자인 ====== */
+.share-nickname-row,
 .share-hashtag-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 20px;
-  margin-top: 8px;
+  padding: 0 16px;
 }
+.share-nickname-row { margin-top: 14px; }
+.share-hashtag-row { margin-top: 10px; }
+@media (min-width: 640px) {
+  .share-nickname-row, .share-hashtag-row { padding: 0 20px; }
+}
+
+/* 닉네임 입력 — 첫 입력이라 살짝 강조 (가운데 정렬 + 약간 큰 폰트) */
+.share-nickname-input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border-default);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  outline: none;
+  text-align: center;
+  letter-spacing: -0.2px;
+  transition: border-color .15s, background .15s;
+  box-sizing: border-box;
+  font-family: 'SUIT', sans-serif;
+}
+.share-nickname-input::placeholder {
+  color: var(--c-text-400);
+  font-weight: 500;
+  letter-spacing: -0.1px;
+}
+.share-nickname-input:focus {
+  border-color: var(--c-brand);
+  background: var(--bg-elevated);
+}
+
+/* 해시태그 입력 + 추가 버튼 — 닉네임 입력과 시각 통일 */
+.share-hashtag-input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border-default);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  outline: none;
+  letter-spacing: -0.2px;
+  transition: border-color .15s, background .15s;
+  box-sizing: border-box;
+  font-family: 'SUIT', sans-serif;
+}
+.share-hashtag-input::placeholder {
+  color: var(--c-text-400);
+  font-weight: 500;
+}
+.share-hashtag-input:focus {
+  border-color: var(--c-brand);
+  background: var(--bg-elevated);
+}
+.share-hashtag-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .hashtag-add-btn {
   flex-shrink: 0;
-  padding: 0 14px;
-  height: 40px;
+  height: 44px;
+  padding: 0 18px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--c-brand);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   font-family: 'SUIT', sans-serif;
-  transition: background .2s, opacity .2s;
+  letter-spacing: -0.2px;
+  transition: background .15s, transform .1s;
 }
-.hashtag-add-btn:hover:not(:disabled) { background: var(--c-brand); }
-.hashtag-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.hashtag-add-btn:hover:not(:disabled) { background: var(--c-brand-hover); }
+.hashtag-add-btn:active:not(:disabled) { transform: scale(0.97); }
+.hashtag-add-btn:disabled {
+  background: var(--bg-mute);
+  color: var(--c-text-400);
+  cursor: not-allowed;
+}
 
+/* 해시태그 칩 */
 .share-hashtag-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 0 20px;
-  margin-top: 8px;
+  padding: 0 16px;
+  margin-top: 10px;
+}
+@media (min-width: 640px) {
+  .share-hashtag-chips { padding: 0 20px; }
 }
 .hashtag-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 6px 4px 10px;
-  background: #f3edff;
+  padding: 5px 6px 5px 12px;
+  background: var(--c-brand-soft);
   color: var(--c-brand-hover);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
   font-family: 'SUIT', sans-serif;
+  letter-spacing: -0.2px;
 }
 .chip-remove {
   width: 18px;
@@ -1703,39 +1771,16 @@ onBeforeRouteLeave(async () => {
   border-radius: 50%;
   background: rgba(91, 33, 182, 0.15);
   color: var(--c-brand-hover);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  transition: background .15s;
 }
 .chip-remove:hover { background: rgba(91, 33, 182, 0.3); }
-.share-hashtag-input {
-  flex: 1;
-  padding: 10px 14px;
-  border: 1.5px solid #e8e0f5;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--c-brand-hover);
-  background: var(--bg-elevated);
-  outline: none;
-  text-align: left;
-  letter-spacing: 0.3px;
-  transition: border-color .2s, box-shadow .2s;
-  box-sizing: border-box;
-  font-family: 'SUIT', sans-serif;
-}
-.share-hashtag-input::placeholder {
-  color: #c9aef0;
-  font-weight: 500;
-}
-.share-hashtag-input:focus {
-  border-color: var(--c-brand);
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.12);
-}
 
 .share-save-btn {
   width: calc(100% - 40px);

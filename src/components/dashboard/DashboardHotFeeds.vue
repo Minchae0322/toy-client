@@ -3,16 +3,16 @@
   <section class="content-section hot-feeds-section">
     <div class="section-header">
       <div class="title-with-badge">
-        <h2 class="section-title">
-          지금 뜨는 <span class="title-accent">핫-기록</span>
-          <span class="title-live"><span class="title-live-dot"></span>LIVE</span>
-        </h2>
+        <router-link :to="{ name: 'FeedHome' }" class="section-title-link">
+          <h2 class="section-title">
+            지금 뜨는 <span class="title-accent">핫-기록</span>
+            <svg class="section-title-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </h2>
+        </router-link>
         <span class="sub-title">실시간으로 가장 많이 본 인기 리뷰</span>
       </div>
-      <router-link :to="{ name: 'FeedHome' }" class="view-all-link">
-        전체보기
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6" /></svg>
-      </router-link>
     </div>
 
     <div v-if="loading" class="dashboard-feed-scroll">
@@ -59,18 +59,16 @@
   <section class="content-section mhot-section">
     <div class="mhot-header">
       <div class="mhot-header-main">
-        <h2 class="mhot-title">
-          지금 뜨는 <span class="mhot-accent">핫-기록</span>
-          <span class="mhot-live"><span class="mhot-live-dot"></span>LIVE</span>
-        </h2>
+        <router-link :to="{ name: 'FeedHome' }" class="mhot-title-link">
+          <h2 class="mhot-title">
+            지금 뜨는 <span class="mhot-accent">핫-기록</span>
+            <svg class="mhot-title-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </h2>
+        </router-link>
         <p class="mhot-sub">실시간으로 가장 많이 본 인기 리뷰</p>
       </div>
-      <router-link :to="{ name: 'FeedHome' }" class="mhot-more">
-        <span>전체보기</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      </router-link>
     </div>
 
     <div v-if="loading" class="mhot-scroll">
@@ -147,38 +145,31 @@ const handleImageError = (event) => {
 
 .title-with-badge { display: flex; flex-direction: column; gap: 4px; }
 
+.section-title-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+.section-title-link:hover .section-title-arrow { transform: translateX(2px); }
+
 .section-title {
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.03em;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
 }
 .section-title .title-accent { color: var(--c-brand-hover); }
 
-.title-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  color: var(--c-danger);
-  font-weight: 700;
-  margin-left: 4px;
-}
-.title-live-dot {
-  width: 5px;
-  height: 5px;
-  background-color: var(--c-danger);
-  border-radius: 50%;
-  animation: hf-live-pulse 1.5s infinite;
-}
-@keyframes hf-live-pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.2); }
-  100% { opacity: 1; transform: scale(1); }
+.section-title-arrow {
+  color: var(--c-text-400);
+  flex-shrink: 0;
+  margin-left: 2px;
+  transition: transform 0.18s ease;
 }
 
 @media (min-width: 1280px) {
@@ -399,7 +390,7 @@ const handleImageError = (event) => {
     border-bottom: 1px solid var(--border-default);
     box-shadow: none;
     border-radius: 0;
-    padding: 22px 0.625rem 24px 0.625rem;
+    padding: 18px 0 20px;
     margin: 0;
   }
 
@@ -410,47 +401,40 @@ const handleImageError = (event) => {
     margin-bottom: 20px;
   }
 
+  .mhot-title-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mhot-title-link:active { opacity: 0.6; }
+
   .mhot-title {
     font-size: 1.25rem;
     font-weight: 800;
     color: var(--text-primary);
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 2px;
     letter-spacing: -0.03em;
     margin: 0;
   }
 
   .mhot-accent { color: var(--c-brand-hover); }
 
-  .mhot-live {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    color: var(--c-danger);
-    font-weight: 700;
-    margin-left: 4px;
-  }
-
-  .mhot-live-dot {
-    width: 5px;
-    height: 5px;
-    background-color: var(--c-danger);
-    border-radius: 50%;
-    animation: mhot-pulse 1.5s infinite;
-  }
-
-  @keyframes mhot-pulse {
-    0% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(1.2); }
-    100% { opacity: 1; transform: scale(1); }
+  .mhot-title-arrow {
+    color: var(--c-text-400);
+    flex-shrink: 0;
+    margin-left: 2px;
   }
 
   .mhot-sub {
-    font-size: 13px;
-    color: var(--c-text-500);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--c-text-600);
     margin: 4px 0 0;
+    letter-spacing: -0.01em;
   }
 
   .mhot-more {

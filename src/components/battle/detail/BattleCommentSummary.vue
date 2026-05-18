@@ -653,7 +653,7 @@ div.ba-avatar {
   }
 
   .ba-text {
-    font-size: 10px;
+    font-size: 11px;
     line-height: 1.3;
     -webkit-line-clamp: 1;
   }
