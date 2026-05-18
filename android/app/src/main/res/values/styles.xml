@@ -13,6 +13,10 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- WebView 라우트 전환 중 보이는 윈도우 배경을 흰색으로 강제 — 뒤로가기 시
+             까만 플리커 제거 (DayNight 테마라 다크 모드도 동일 흰색이지만,
+             현재 안드로이드 native 다크모드 전환은 미지원이라 영향 없음) -->
+        <item name="android:windowBackground">@color/white</item>
     </style>
 
 

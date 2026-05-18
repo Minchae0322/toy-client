@@ -2,6 +2,13 @@
   "appId": "com.jmcabc0322.yogurt",
   "appName": "요거뜨",
   "webDir": "dist",
+  "backgroundColor": "#ffffff",
+  "ios": {
+    "backgroundColor": "#ffffff"
+  },
+  "android": {
+    "backgroundColor": "#ffffff"
+  },
   "server": {
     "hostname": "app.yogurtte.com",
     "androidScheme": "https",
