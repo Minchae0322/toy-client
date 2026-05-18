@@ -439,10 +439,23 @@ const isAtBottom = () => {
   return scrollTop + clientHeight >= scrollHeight - 50
 }
 
-// 입력창 포커스 → 모바일 키보드 펼침. 키보드 애니메이션이 끝난 뒤 맨 아래로 부드럽게.
+// iOS Safari/WKWebView 는 폼 액세서리 바(Previous/Next/Done, 약 44pt)를 키보드 위에 띄우는데
+// visualViewport.height 가 이를 항상 제외해 주지는 않아 입력창이 그 뒤에 가려질 수 있다.
+// 안전 여백을 더해 입력창이 시스템 UI 위에 반드시 보이도록 한다.
+const isIOS = typeof navigator !== 'undefined' &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+const IOS_ACCESSORY_BAR_FALLBACK = 44
+
+// 입력창 포커스 → 모바일 키보드 펼침.
+// iOS 는 키보드 애니메이션 + visualViewport 업데이트 타이밍이 단계적이라
+// 단일 setTimeout 으로는 최신 메시지로 스크롤이 어긋날 수 있다. 여러 시점에 걸쳐 보정한다.
 const handleInputFocus = () => {
   inputFocused.value = true
-  setTimeout(() => scrollToBottom('smooth'), 260)
+  const scroll = (behavior = 'auto') => scrollToBottom(behavior)
+  scroll()
+  setTimeout(() => scroll('auto'), 100)
+  setTimeout(() => scroll('auto'), 300)
+  setTimeout(() => scroll('smooth'), 500)
 }
 
 // 모바일 키보드 핸들링: visualViewport.height = 실제 보이는 영역(키보드 제외).
@@ -451,10 +464,20 @@ const handleInputFocus = () => {
 const updateChatViewportHeight = () => {
   const vv = window.visualViewport
   if (!vv) return
-  const keyboardHeight = Math.max(0, window.innerHeight - vv.height)
+  let keyboardHeight = Math.max(0, window.innerHeight - vv.height)
+  // iOS 에서 키보드가 펼쳐졌을 때만 액세서리 바 여유분을 더한다 (가려짐 방지).
+  if (isIOS && keyboardHeight > 0) {
+    keyboardHeight += IOS_ACCESSORY_BAR_FALLBACK
+  }
+  const prevKb = parseInt(document.documentElement.style.getPropertyValue('--chat-kb-h'), 10) || 0
   document.documentElement.style.setProperty('--chat-kb-h', `${keyboardHeight}px`)
   // iOS 가 입력창 포커스 시 페이지를 자동으로 스크롤시키는 동작을 되돌린다 (fixed 컨테이너와 충돌 방지)
   if (window.scrollY !== 0) window.scrollTo(0, 0)
+  // 키보드 높이가 바뀌면 메시지 영역 가시 영역이 줄어드는데 scrollTop 은 그대로라
+  // 이전에 맨 아래였더라도 화면상 위쪽으로 밀린다. 최신 메시지를 다시 맨 아래로 정렬.
+  if (keyboardHeight !== prevKb) {
+    nextTick(() => scrollToBottom('auto'))
+  }
 }
 
 const reconnectWebSocket = async () => {
@@ -1037,7 +1060,12 @@ watch(actualRoomId, (newVal, oldVal) => {
   border-top: none;
   border-radius: 0 0 16px 16px;
   flex-shrink: 0;
+  /* 메시지 영역(z:1) 위에 항상 올라와 마지막 메시지가 입력창 뒤로 비치지 않도록. */
+  position: relative;
+  z-index: 2;
 }
+
+.messages-area { position: relative; z-index: 1; }
 
 .attach-btn {
   width: 40px;
