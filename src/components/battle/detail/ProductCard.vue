@@ -50,7 +50,7 @@
                 v-for="r in [1, 2, 3]"
                 :key="r"
                 @click="onVote(r)"
-                :disabled="submitting || !canVote"
+                :disabled="submitting || !canVote || isRankDisabled(r)"
                 :class="['rank-chip', `rank-${r}`, { active: productRank === r }]"
             >
               {{ r }}위
@@ -156,6 +156,11 @@ const props = defineProps({
   percentage: {
     type: [Number, String],
     required: true
+  },
+  // 가중치 모드에서 순서 강제(1→2→3)에 사용
+  selectedRanks: {
+    type: Object,
+    default: () => ({ 1: null, 2: null, 3: null })
   }
 })
 
@@ -280,6 +285,17 @@ const handleImageClick = () => {
 
 const onVote = (rank) => {
   emit('vote', props.item.id, rank)
+}
+
+// 가중치 모드 순서 강제: 1위 → 2위 → 3위 순서로만 선택 가능
+// (자기 자신이 active인 rank는 해제 가능하도록 항상 enabled)
+const isRankDisabled = (rank) => {
+  if (!props.isWeightedVote) return false
+  if (props.productRank === rank) return false
+  if (props.selectedRanks[rank] != null) return true
+  if (rank === 2 && !props.selectedRanks[1]) return true
+  if (rank === 3 && (!props.selectedRanks[1] || !props.selectedRanks[2])) return true
+  return false
 }
 
 const handleSubmitComment = (content) => {
@@ -609,14 +625,15 @@ defineExpose({ setCommentSubmitting })
 
 /* 1위 - 골드 */
 .rank-chip.rank-1 {
-  border: 1.5px solid var(--c-warning);
-  background: var(--c-warning-soft);
-  color: var(--c-warning);
+  border: 1.5px solid #e8a830;
+  background: rgba(232, 168, 48, 0.14);
+  color: #a87018;
 }
 
 .rank-chip.rank-1:hover:not(:disabled) {
-  background: var(--c-warning-soft);
+  background: var(--c-warning);
   border-color: var(--c-warning);
+  color: #ffffff;
 }
 
 .rank-chip.rank-1.active {
@@ -627,14 +644,15 @@ defineExpose({ setCommentSubmitting })
 
 /* 2위 - 실버 */
 .rank-chip.rank-2 {
-  border: 1.5px solid var(--c-text-300);
-  background: var(--bg-subtle);
-  color: var(--c-text-600);
+  border: 1.5px solid #8c9bb0;
+  background: rgba(140, 155, 176, 0.16);
+  color: #5e6b80;
 }
 
 .rank-chip.rank-2:hover:not(:disabled) {
-  background: var(--border-default);
-  border-color: var(--c-text-400);
+  background: var(--c-text-500);
+  border-color: var(--c-text-500);
+  color: #ffffff;
 }
 
 .rank-chip.rank-2.active {
@@ -645,14 +663,15 @@ defineExpose({ setCommentSubmitting })
 
 /* 3위 - 브론즈 */
 .rank-chip.rank-3 {
-  border: 1.5px solid var(--c-heat-soft);
-  background: var(--c-heat-soft);
-  color: var(--c-heat);
+  border: 1.5px solid #d4784a;
+  background: rgba(212, 120, 74, 0.14);
+  color: #985229;
 }
 
 .rank-chip.rank-3:hover:not(:disabled) {
-  background: var(--c-heat-soft);
-  border-color: #fdba74;
+  background: var(--c-heat);
+  border-color: var(--c-heat);
+  color: #ffffff;
 }
 
 .rank-chip.rank-3.active {
@@ -924,7 +943,7 @@ defineExpose({ setCommentSubmitting })
   }
 
   .rank-chip {
-    padding: 8px 0;
+    padding: 6px 0;
     font-size: 11px;
     border-radius: 6px;
     border-width: 1px;

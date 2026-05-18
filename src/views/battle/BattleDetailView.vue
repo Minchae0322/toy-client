@@ -53,6 +53,7 @@
               :can-vote="canVote"
               :submitting="submitting"
               :percentage="getPercentage(item)"
+              :selected-ranks="selectedRanks"
               @vote="handleVote"
               @open-comments="scrollToComments"
               @submit-comment="handleInlineComment"
@@ -695,6 +696,14 @@ export default {
         } else {
           newRanks[rank] = itemId
         }
+
+        // 순서 강제 cascade: 1위 비면 2·3위 해제, 2위 비면 3위 해제
+        if (!newRanks[1]) {
+          newRanks[2] = null
+          newRanks[3] = null
+        } else if (!newRanks[2]) {
+          newRanks[3] = null
+        }
       } else {
         newRanks[1] = this.selectedRanks[1] === itemId ? null : itemId
       }
@@ -706,6 +715,15 @@ export default {
       if (this.submitting) return
       const newRanks = { ...this.selectedRanks }
       newRanks[rank] = null
+
+      // 순서 강제 cascade
+      if (!newRanks[1]) {
+        newRanks[2] = null
+        newRanks[3] = null
+      } else if (!newRanks[2]) {
+        newRanks[3] = null
+      }
+
       this.selectedRanks = newRanks
     },
 
