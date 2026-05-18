@@ -41,15 +41,20 @@
 - **푸시 알림**: Firebase FCM 11.x (`src/services/fcmService.js`, `src/services/pushNotificationService.js`)
 - **주요 디렉토리**:
   - `src/views/` — 라우트 단위 페이지
-    - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView` 등
+    - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView` 등
     - 서브폴더: `admin/`, `battle/`, `carrier/`(자체 `components/` 서브폴더 포함), `category/`, `feed/`, `product/`
   - `src/components/` — 도메인별 재사용 컴포넌트
     - `feed/`, `battle/`, `collection/`, `identity/`, `chat/`, `notification/`, `product/`
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
+    - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
     - `AuthService`, `FeedService`, `BattleService`, `ProductService`, `ProductReviewService`, `ChatService`, `NotificationService`, `NotificationSettingService`, `RewardsService`, `CarrierService`, `UserService`, `FeedbackService`, `FileService`, `DashboardService`, `CategoryService`
     - **`RewardsService.js`는 실 API 호출용** — mock 스위치(`USE_MOCK`)는 `src/api/rewardsApi.js`에 있음 (별개)
+    - `presenceService.js` — presence 비콘 전용. 앱 백그라운드/탭 비활성/종료 시 `POST /api/connection/offline`으로 오프라인 통보. **Index.js export 제외** (직접 import)
+    - `BaseApiService.js` — Fetch API 기반 공통 기반 클래스 (401 자동 갱신). Axios `interceptors.js`와 별개
+    - `apiService.js` — Auth/Chat 서버 통합 API 서비스 (Fetch 기반, `BaseApiService` 확장)
+    - `nativeAuth.js` — 네이티브 빌드(iOS/Android) Apple/Google 소셜 로그인 처리. 오류 코드 체계: `ERR-A1xx`~`ERR-G3xx`
   - `src/api/` — Axios 클라이언트·인터셉터·레거시 mock API (`rewardsApi.js`)
   - `src/stores/` — Pinia 스토어 (`auth.js`, `counter.js`, `userBlock.js`)
   - `src/composables/` — Vue 컴포저블
@@ -128,6 +133,9 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.0.5 통일**: iOS 빌드 8, Android versionCode 5로 버전 일치 (`chore`)
+- **Presence 비콘 + 피드 작성 UX**: `presenceService.js` 신설 — 앱 종료/백그라운드 시 오프라인 통보, `FeedCreateView` 및 `FeedProductSection` 다듬기 (`feat`)
+- **채팅 키보드 레이아웃**: 모바일 채팅 디테일을 `position: fixed`로 잠그고 키보드 높이로 bottom 동적 조정 (`fix(chat)`)
 - **마이페이지 인라인 편집**: 프로필 필드를 인라인으로 편집하고 미니 저장 토스트로 피드백 (`feat(mypage)`)
 - **Android 출시 서명 / SDK 36**: AGP 8.9.1 업그레이드, 버전 1.0.4 배포 준비 (`chore(android)`)
 - **네비게이션 아이콘 개선**: 활성 탭에 fill 아이콘 적용, 커스텀 캐리어 아이콘 추가, 버전 1.0.3 (`feat(nav)`)
