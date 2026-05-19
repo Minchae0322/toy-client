@@ -62,7 +62,7 @@
 
         <div v-if="userLevel != null" class="identity-row">
           <div class="tier-chip" :style="{ color: tierMeta?.color }">
-            <YogurtTierArt :tier="tierArt" :color="tierColor" :size="14" />
+            <YogurtTierArt :tier="tierArt" :color="tierColor" :size="17" />
             <span class="tier-name">{{ tierName }}</span>
             <span class="tier-sep">·</span>
             <span class="tier-level">Lv.{{ userLevel }}</span>
@@ -222,7 +222,7 @@
 
           <div v-if="userLevel != null" class="identity-row">
             <div class="tier-chip" :style="{ color: tierMeta?.color }">
-              <YogurtTierArt :tier="tierArt" :color="tierColor" :size="14" />
+              <YogurtTierArt :tier="tierArt" :color="tierColor" :size="17" />
               <span class="tier-name">{{ tierName }}</span>
               <span class="tier-sep">·</span>
               <span class="tier-level">Lv.{{ userLevel }}</span>
@@ -775,12 +775,12 @@ watch(() => route.params.userId, (newId, oldId) => {
 .tier-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px 3px 6px;
+  gap: 6px;
+  padding: 5px 12px 5px 8px;
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--border-default);
   border-radius: 999px;
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.2px;
   line-height: 1;
