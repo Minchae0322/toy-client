@@ -224,6 +224,28 @@
         </section>
       </main>
 
+      <!-- 모바일 플로팅: 필터 활성 시 전체 PICK 빠른 해제 -->
+      <button
+          v-if="selectedItemFilter"
+          class="mobile-floating-filter"
+          @click="clearItemFilter"
+      >
+        <img
+            v-if="getItemImageById(selectedItemFilter)"
+            :src="getItemImageById(selectedItemFilter)"
+            :alt="filteredItemName"
+            class="floating-filter-thumb"
+        />
+        <span class="floating-filter-name">{{ filteredItemName }}</span>
+        <span class="floating-filter-divider"></span>
+        <span class="floating-filter-action">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          전체 PICK
+        </span>
+      </button>
+
       <!-- Add Product Modal -->
       <AddProductModal
           v-if="showAddModal"
@@ -1595,6 +1617,71 @@ export default {
   font-size: 14px;
   color: var(--c-text-400);
   margin-top: 4px;
+}
+
+/* 모바일 플로팅: 필터 해제 */
+.mobile-floating-filter {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-floating-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0) + 64px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 12px 6px 6px;
+    background: var(--c-brand);
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    box-shadow: 0 6px 18px rgba(168, 85, 247, 0.42), 0 2px 4px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    z-index: 900;
+    max-width: calc(100vw - 24px);
+    transition: transform 0.2s, box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-floating-filter:active {
+    transform: translateX(-50%) scale(0.96);
+  }
+
+  .floating-filter-thumb {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+  }
+
+  .floating-filter-name {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .floating-filter-divider {
+    width: 1px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.35);
+    flex-shrink: 0;
+  }
+
+  .floating-filter-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
 }
 
 /* 필터 배너 */
