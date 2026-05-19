@@ -580,12 +580,16 @@ export default {
   },
   mounted() {
     this._lastScrollY = window.scrollY || 0
+    this._programmaticScrollUntil = 0
     this._onWindowScroll = () => {
       if (this._scrollRaf) return
       this._scrollRaf = requestAnimationFrame(() => {
         this._scrollRaf = null
         const y = window.scrollY || 0
         const dy = y - this._lastScrollY
+        this._lastScrollY = y
+        // 프로그램이 트리거한 smooth-scroll 중에는 자동 숨김 비활성 — 필터를 막 켰는데 숨어버리는 문제 방지
+        if (Date.now() < this._programmaticScrollUntil) return
         if (y < 80) {
           this.floatingFilterHidden = false
         } else if (dy > 6) {
@@ -593,7 +597,6 @@ export default {
         } else if (dy < -6) {
           this.floatingFilterHidden = false
         }
-        this._lastScrollY = y
       })
     }
     window.addEventListener('scroll', this._onWindowScroll, { passive: true })
@@ -1003,12 +1006,17 @@ export default {
     scrollToComments(item) {
       // 해당 아이템으로 필터 설정
       this.selectedItemFilter = item?.id || null
+      // 필터를 막 켰으니 플로팅 버튼이 바로 보이도록 명시적으로 해제
+      this.floatingFilterHidden = false
 
       if (this.$refs.argumentsSection) {
         const element = this.$refs.argumentsSection
         const headerOffset = 80
         const elementPosition = element.getBoundingClientRect().top
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+
+        // smooth-scroll 동안 스크롤 핸들러가 dy>0 으로 다시 숨기는 것 방지
+        this._programmaticScrollUntil = Date.now() + 900
 
         window.scrollTo({
           top: offsetPosition,

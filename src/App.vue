@@ -978,10 +978,8 @@ onUnmounted(() => {
   .logo-image {
     margin-left: 0;
   }
+  /* 모바일에서는 푸터를 숨김 — 고객 지원 / 설정에서 약관·개인정보처리방침 접근 가능 */
   .site-footer {
-    padding-bottom: 100px;
-  }
-  .site-footer.hide-on-mobile-chat {
     display: none;
   }
 }
