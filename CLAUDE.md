@@ -42,11 +42,19 @@
 - **주요 디렉토리**:
   - `src/views/` — 라우트 단위 페이지
     - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView` 등
-    - 서브폴더: `admin/`, `battle/`, `carrier/`(자체 `components/` 서브폴더 포함), `category/`, `feed/`, `product/`
+    - 서브폴더:
+      - `admin/` — `CollectionAdminView`
+      - `battle/` — `BattleListView`, `BattleDetailView`, `BattleCreateView`
+      - `carrier/` — `CarrierView` + 자체 `components/` (CarrierCanvas, CarrierItemList, MobileStickerTray, ShareModal, SkinCarousel, StickerPackPanel)
+      - `category/` — `CategoryListView`
+      - `feed/` — `FeedHomeView`, `FeedCreateView`, `FeedDetailView`
+      - `product/` — `BulkProductAdminView`, `MyProductView`, `ProductAdminView`, `ProductCreateView`, `ProductDetailView`, `ProductRankingView`
   - `src/components/` — 도메인별 재사용 컴포넌트
-    - `feed/`, `battle/`, `collection/`, `identity/`, `chat/`, `notification/`, `product/`
+    - `feed/` (+ `detail/` 서브폴더), `battle/` (+ `create/`, `detail/` 서브폴더), `collection/`, `identity/`, `chat/` (+ `detail/` 서브폴더), `notification/`, `product/` (+ `create/`, `detail/` 서브폴더)
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
+    - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용
+    - `MZLifestyle/` — `AIMemeGeneratorPromo`, `BottomNavigation`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection`
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
     - `AuthService`, `FeedService`, `BattleService`, `ProductService`, `ProductReviewService`, `ChatService`, `NotificationService`, `NotificationSettingService`, `RewardsService`, `CarrierService`, `UserService`, `FeedbackService`, `FileService`, `DashboardService`, `CategoryService`
@@ -133,15 +141,15 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.0.6**: iOS 빌드 9, Android versionCode 6 (`chore`)
+- **캐리어 공유 모달 강화 + 피드 더블탭 가드 + iOS 넓은 스와이프 뒤로가기**: `common/ShareModal.vue` 전면 개편, `FeedCreateView` 중복 제출 방지, `AppViewController.swift` 전체 너비 엣지 스와이프 지원 (`feat`)
+- **전역 뒤로가기 까만 플리커 제거**: Android `styles.xml`, `capacitor.config.json`, `index.html`, `main.css` 다층 수정 (`fix`)
+- **피드 상세 좌측 엣지 스와이프 백**: `FeedDetailView` 내장 제스처 핸들러로 플리커 없이 뒤로가기 (`feat(feed)`)
+- **배틀 투표 UX 개선**: `VoteSelectionBar` 가중치 투표 + 다크모드 대응, `ProductCard` always-enabled + auto-compact 정책 (`feat(battle)`, `refactor(battle)`)
+- **헤더 채팅 빨간점 + 피드 사진 라이브 리오더**: `App.vue` 미읽은 채팅 표시, `FeedCreateView` 사진 순서 드래그 재정렬 (`feat`)
+- **채팅 입력창 가려짐 수정**: `ChatDetailView` 포커스 시 최신 메시지 자동 표시 (`fix(chat)`)
 - **버전 1.0.5 통일**: iOS 빌드 8, Android versionCode 5로 버전 일치 (`chore`)
 - **Presence 비콘 + 피드 작성 UX**: `presenceService.js` 신설 — 앱 종료/백그라운드 시 오프라인 통보, `FeedCreateView` 및 `FeedProductSection` 다듬기 (`feat`)
 - **채팅 키보드 레이아웃**: 모바일 채팅 디테일을 `position: fixed`로 잠그고 키보드 높이로 bottom 동적 조정 (`fix(chat)`)
 - **마이페이지 인라인 편집**: 프로필 필드를 인라인으로 편집하고 미니 저장 토스트로 피드백 (`feat(mypage)`)
 - **Android 출시 서명 / SDK 36**: AGP 8.9.1 업그레이드, 버전 1.0.4 배포 준비 (`chore(android)`)
-- **네비게이션 아이콘 개선**: 활성 탭에 fill 아이콘 적용, 커스텀 캐리어 아이콘 추가, 버전 1.0.3 (`feat(nav)`)
-- **피드 카드 스와이프**: 가로 스와이프로 상세 페이지 진입 지원 (`feat(feed)`)
-- **모바일 채팅 UX**: 인스타그램 스타일로 채팅 UX 개선 (`feat(chat)`)
-- **다크 모드 전면 지원**: 전체 페이지(알림·관리자·상품·배틀·피드 등)에 다크 모드 적용 (`feat(theme)`)
-- **환경설정 페이지 신설**: 설정 화면 추가, 메뉴 아이콘 Lucide 통일 (`feat(settings)`)
-- **iOS 네이버/Apple 로그인**: 네이티브 딥링크 + Apple 로그인 앱 노출 (`feat(auth/ios)`)
-- **iOS APNs production 환경 적용**: 푸시 알림 production 빌드 대응 (`fix(ios/push)`)
