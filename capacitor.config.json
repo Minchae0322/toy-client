@@ -19,8 +19,8 @@
       "enabled": true
     },
     "SplashScreen": {
-      "launchShowDuration": 3000,
-      "launchAutoHide": false,
+      "launchShowDuration": 0,
+      "launchAutoHide": true,
       "backgroundColor": "#ffffff",
       "showSpinner": false,
       "splashFullScreen": true,
