@@ -17,6 +17,7 @@ import {rewardsService} from '@/services/RewardsService.js'
 import {getTierByLevel, getTierColor} from '@/data/levelSystemData.js'
 import {registerFcm, unregisterFcm} from '@/services/fcmService.js'
 import {useUserBlockStore} from '@/stores/userBlock.js'
+import {useChatDetailMode} from '@/composables/useChatDetailMode.js'
 import {Capacitor} from '@capacitor/core'
 import {SplashScreen} from '@capacitor/splash-screen'
 import {App as CapApp} from '@capacitor/app'
@@ -27,6 +28,7 @@ const router = useRouter()
 const {user, isLoggedIn, isAdmin, logout, userId} = useAuth()
 const {open, openLoginRequired} = useConfirmDialog()
 const userBlockStore = useUserBlockStore()
+const {isChatDetailOpen} = useChatDetailMode()
 
 const isLoggingOut = ref(false)
 const wsStatus = ref('disconnected') // 'disconnected' | 'connecting' | 'connected' | 'error'
@@ -302,7 +304,7 @@ onUnmounted(() => {
   </transition>
 
   <!-- 헤더 -->
-  <header v-if="!isAuthPage" class="header">
+  <header v-if="!isAuthPage" class="header" :class="{ 'hide-on-mobile-chat-detail': isChatDetailOpen }">
     <div class="header-content">
       <!-- 로고 -->
       <RouterLink to="/" class="logo">
@@ -980,6 +982,10 @@ onUnmounted(() => {
   }
   /* 모바일에서는 푸터를 숨김 — 고객 지원 / 설정에서 약관·개인정보처리방침 접근 가능 */
   .site-footer {
+    display: none;
+  }
+  /* 채팅방 진입 시 글로벌 헤더 숨김 — 좁은 화면에서 채팅 영역을 최대로 확보 */
+  .header.hide-on-mobile-chat-detail {
     display: none;
   }
 }

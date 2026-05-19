@@ -78,6 +78,9 @@ import ChatRoomView from '@/views/ChatRoomView.vue'
 import ChatDetailView from '@/views/ChatDetailView.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import { webSocketService } from '@/services/webSocketService.js'
+import { useChatDetailMode } from '@/composables/useChatDetailMode.js'
+
+const { isChatDetailOpen } = useChatDetailMode()
 
 const props = defineProps({
   initialRoomId: { type: [String, Number], default: null }
@@ -317,18 +320,25 @@ const setBodyScrollLock = (lock) => {
 
 watch(
     () => !!selectedRoom.value,
-    (isDetail) => setBodyScrollLock(isDetail)
+    (isDetail) => {
+      setBodyScrollLock(isDetail)
+      isChatDetailOpen.value = isDetail
+    }
 )
 
 onMounted(async () => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
   await initializeApp()
   // 초기 진입이 디테일 라우트일 수 있어 한 번 더 동기화
-  if (selectedRoom.value) setBodyScrollLock(true)
+  if (selectedRoom.value) {
+    setBodyScrollLock(true)
+    isChatDetailOpen.value = true
+  }
 })
 
 onBeforeUnmount(async () => {
   setBodyScrollLock(false)
+  isChatDetailOpen.value = false
   dismissToast()
   await handleBackToList()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
@@ -383,16 +393,16 @@ onBeforeUnmount(async () => {
 
   /* 모바일 채팅방 진입 시: 채팅 컨테이너를 position: fixed 로 잠가
      페이지 자체가 스크롤되는 현상(iOS 키보드 띄울 때 뷰포트 점프 등)을 차단.
-     - top: 글로벌 헤더(66px + safe-area-inset-top) 바로 아래
-     - bottom: 키보드 높이만큼 위로 (키보드가 없을 땐 0)
+     - 글로벌 헤더(요거뜨 로고)는 채팅방에서 숨기므로 top = safe-area-inset-top
+     - bottom: 키보드 높이 또는 홈 인디케이터(safe-area-bottom) 중 더 큰 쪽
      ChatDetailView 가 visualViewport 로 --chat-kb-h(키보드 높이) 를 업데이트하면
      컨테이너의 bottom 이 자동으로 줄어들어 입력창이 키보드 바로 위에 붙는다. */
   .app-container.chat-detail-mode {
     position: fixed;
-    top: calc(66px + env(safe-area-inset-top));
+    top: env(safe-area-inset-top);
     left: 0;
     right: 0;
-    bottom: var(--chat-kb-h, 0px);
+    bottom: max(var(--chat-kb-h, 0px), env(safe-area-inset-bottom));
     height: auto;
     min-height: 0;
     padding: 0;
