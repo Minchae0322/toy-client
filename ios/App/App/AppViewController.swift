@@ -133,7 +133,8 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
         let progress = min(1.0, max(0, translation.x / backSwipeMinDistance))
         // 손가락의 0.4 비율로 따라옴 — Chrome iOS 와 비슷한 감각
         let xPos = max(indicatorHiddenX, min(indicatorHiddenX + (translation.x * 0.4), 20))
-        let yPos = swipeStartLocation.y - indicatorSize / 2
+        // Y는 손가락 위치 무관, 화면 세로 중앙 (Chrome iOS 와 동일)
+        let yPos = view.bounds.midY - indicatorSize / 2
 
         indicator.frame.origin = CGPoint(x: xPos, y: yPos)
         indicator.alpha = progress
