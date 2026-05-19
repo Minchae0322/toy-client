@@ -28,7 +28,7 @@
           <input
             type="text"
             class="product-search-input"
-            placeholder="이름을 적거나 검색해보세요 (예: 두쫀쿠)"
+            placeholder="이름이나 키워드를 적어보세요 (예: 두쫀쿠)"
             v-model="productNameCustom"
             @input="handleProductNameInput"
             maxlength="40"

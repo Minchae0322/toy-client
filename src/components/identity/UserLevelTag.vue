@@ -1,5 +1,5 @@
 <template>
-  <span class="user-level-tag" :class="[size, { 'icon-only': !showLevel }]" :style="tagStyle">
+  <span class="user-level-tag" :class="[size, variant === 'dark' ? 'is-dark' : '', { 'icon-only': !showLevel }]" :style="tagStyle">
     <YogurtTierArt :tier="tier.art" :color="tierColor" :size="artSize" />
     <span v-if="showLevel" class="lv-text">Lv.{{ level }}</span>
   </span>
@@ -34,11 +34,8 @@ const tagStyle = computed(() => {
     return { background: tier.value.bgColor, color: tier.value.color }
   }
   if (props.variant === 'dark') {
-    return {
-      background: '#0A0E1A',
-      color: '#ffffff',
-      borderRadius: '999px',
-    }
+    // 배경/텍스트/라운드는 CSS class (.is-dark)로 처리해 다크 모드 분기 가능하게
+    return {}
   }
   return {
     background: 'transparent',
@@ -86,4 +83,16 @@ const tagStyle = computed(() => {
 .user-level-tag.icon-only.xs { padding: 3px; border-radius: 999px; }
 .user-level-tag.icon-only.sm { padding: 4px; border-radius: 999px; }
 .user-level-tag.icon-only.md { padding: 5px; border-radius: 999px; }
+
+/* ===== Dark variant — 닉네임 옆 작은 레벨 칩 ===== */
+.user-level-tag.is-dark {
+  background: #0A0E1A;
+  color: #ffffff;
+  border-radius: 999px;
+}
+
+/* 다크 모드 — 페이지(#0F1218)와 거의 같던 #0A0E1A 검정 → 한 단계 떠 보이는 톤으로 */
+:root[data-theme="dark"] .user-level-tag.is-dark {
+  background: #2A3142;
+}
 </style>

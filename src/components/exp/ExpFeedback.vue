@@ -66,28 +66,28 @@ function textFor(p) {
   align-items: center;
   gap: 6px;
   padding: 10px 18px;
-  background: #FFFFFF;
-  border: 1.5px solid #9333EA;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--c-brand);
   border-radius: 100px;
-  box-shadow: 0 10px 28px rgba(147, 51, 234, 0.18), 0 4px 8px rgba(15, 23, 42, 0.06);
-  color: #0A0E1A;
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
   font-weight: 800;
   letter-spacing: -0.3px;
   font-variant-numeric: tabular-nums;
 }
 
 .exp-burst-icon {
-  color: #9333EA;
+  color: var(--c-brand);
 }
 
 .exp-burst-amount {
   font-size: 17px;
-  color: #9333EA;
+  color: var(--c-brand);
 }
 
 .exp-burst-label {
   font-size: 12px;
-  color: #475569;
+  color: var(--c-text-500);
   font-weight: 700;
   letter-spacing: 0.3px;
 }
@@ -164,6 +164,13 @@ function textFor(p) {
   pointer-events: auto;
 }
 
+/* 다크 모드 — 페이지가 어두우니 토스트는 살짝 밝은 톤으로 떠 보이게 + 보더로 분리감 */
+:root[data-theme="dark"] .exp-pill {
+  background: rgba(70, 78, 95, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
 .exp-pill-icon {
   flex-shrink: 0;
 }
@@ -186,6 +193,13 @@ function textFor(p) {
 }
 .exp-pill-cap-only .exp-pill-icon {
   color: #0A0E1A;
+}
+
+/* 다크 모드에서 cap toast — 노란 배경 유지하되 그림자 강화 */
+:root[data-theme="dark"] .exp-pill-capped-hit,
+:root[data-theme="dark"] .exp-pill-cap-only {
+  background: rgba(250, 204, 21, 0.96);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
 }
 
 .exp-pill-enter-active {
