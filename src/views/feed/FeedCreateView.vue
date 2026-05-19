@@ -1488,7 +1488,7 @@ onBeforeUnmount(() => {
   font-family: inherit;
 }
 
-.quick-store-btn:hover:not(:disabled) {
+.quick-store-btn:hover:not(:disabled):not(.active) {
   border-color: var(--accent);
   color: var(--accent);
 }
