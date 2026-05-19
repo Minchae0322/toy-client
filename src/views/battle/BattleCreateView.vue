@@ -202,6 +202,13 @@ const previewVoteTypeName = computed(() => {
   return type ? type.title : '';
 });
 
+// 투표 시작일은 항상 배틀 시작일과 동일하게 유지 (UI에서 숨김)
+watch(() => battleForm.value.startDate, (newStart) => {
+  if (newStart && battleForm.value.participationStartDate !== newStart) {
+    battleForm.value.participationStartDate = newStart;
+  }
+});
+
 const dateDiff = computed(() => {
   if (!battleForm.value.startDate || !battleForm.value.endDate) return 0;
   const start = new Date(battleForm.value.startDate);

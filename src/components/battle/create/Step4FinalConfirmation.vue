@@ -14,8 +14,8 @@
         </svg>
       </div>
       <div class="status-content">
-        <h2 class="status-title">{{ isAllCompleted ? '요거픽 생성 준비 완료' : '필수 항목을 완료해주세요' }}</h2>
-        <p class="status-desc">{{ isAllCompleted ? '모든 필수 항목이 완료되었습니다. 최종 확인 후 요거픽을 생성하세요.' : `아직 ${incompleteCount}개의 필수 항목이 남아있습니다.` }}</p>
+        <h2 class="status-title">{{ isAllCompleted ? '생성 준비 완료' : '필수 항목이 비어있어요' }}</h2>
+        <p class="status-desc">{{ isAllCompleted ? '내용 확인 후 아래 [생성] 버튼을 눌러주세요' : `${incompleteCount}개 남았어요` }}</p>
       </div>
     </div>
 
@@ -133,10 +133,10 @@
         </svg>
       </div>
       <div class="notice-content">
-        <div class="notice-title">요거픽 생성 후 주의사항</div>
+        <div class="notice-title">생성 후 주의사항</div>
         <ul class="notice-list">
-          <li>첫 투표가 등록된 이후에는 <strong>카테고리, 기간, 투표 방식</strong>을 수정할 수 없습니다.</li>
-          <li>제목, 설명, 아이템은 투표가 시작된 후에도 수정할 수 있습니다.</li>
+          <li>첫 투표 등록 후엔 <strong>카테고리·기간·투표 방식</strong>을 바꿀 수 없어요</li>
+          <li>제목·설명·아이템은 언제든 수정할 수 있어요</li>
         </ul>
       </div>
     </div>
@@ -158,8 +158,8 @@
           </div>
         </div>
         <div class="agreement-content">
-          <span class="agreement-text">요거픽 생성 규칙과 가이드라인을 확인했으며, 이에 동의합니다</span>
-          <span class="agreement-hint">요거픽 생성 후 발생하는 모든 책임은 생성자에게 있습니다</span>
+          <span class="agreement-text">생성 규칙에 동의합니다</span>
+          <span class="agreement-hint">생성 후 발생하는 모든 책임은 생성자에게 있어요</span>
         </div>
       </label>
     </div>
@@ -371,12 +371,13 @@ const formatDate = (dateString) => {
 .card-icon {
   width: 40px;
   height: 40px;
-  background: var(--border-default);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--c-text-500);
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
@@ -393,7 +394,7 @@ const formatDate = (dateString) => {
 
 .card-subtitle {
   font-size: 13px;
-  color: var(--c-text-400);
+  color: var(--text-secondary);
 }
 
 /* 프로그레스 링 */
@@ -475,8 +476,9 @@ const formatDate = (dateString) => {
 }
 
 .checklist-item:not(.completed) .item-check {
-  background: var(--border-strong);
-  color: var(--c-text-500);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
 }
 
 .checklist-item.completed .item-check {
@@ -504,7 +506,7 @@ const formatDate = (dateString) => {
 .item-value {
   display: block;
   font-size: 13px;
-  color: var(--c-text-500);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -519,7 +521,7 @@ const formatDate = (dateString) => {
 }
 
 .item-action {
-  color: var(--c-text-400);
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 
@@ -529,8 +531,8 @@ const formatDate = (dateString) => {
   right: 12px;
   font-size: 10px;
   font-weight: 500;
-  color: var(--c-text-400);
-  background: var(--border-default);
+  color: var(--text-tertiary);
+  background: var(--bg-subtle);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -558,7 +560,7 @@ const formatDate = (dateString) => {
 
 .summary-label {
   font-size: 13px;
-  color: var(--c-text-500);
+  color: var(--text-secondary);
 }
 
 .summary-value {
@@ -571,7 +573,7 @@ const formatDate = (dateString) => {
 }
 
 .summary-value.empty {
-  color: var(--c-text-300);
+  color: var(--text-tertiary);
 }
 
 .duration-tag {
@@ -612,7 +614,7 @@ const formatDate = (dateString) => {
 .notice-title {
   font-size: 14px;
   font-weight: 700;
-  color: var(--c-bronze);
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -623,7 +625,7 @@ const formatDate = (dateString) => {
 
 .notice-list li {
   font-size: 13px;
-  color: var(--c-warning);
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 4px;
 }
@@ -672,7 +674,7 @@ const formatDate = (dateString) => {
 .checkbox-custom {
   width: 24px;
   height: 24px;
-  border: 2px solid var(--c-text-300);
+  border: 2px solid var(--border-strong);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -702,7 +704,7 @@ const formatDate = (dateString) => {
 .agreement-hint {
   display: block;
   font-size: 12px;
-  color: var(--c-text-400);
+  color: var(--text-tertiary);
   margin-top: 4px;
 }
 

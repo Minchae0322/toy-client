@@ -1,10 +1,22 @@
 <template>
   <div class="form-section">
-    <div class="form-group">
-      <label class="form-label">
-        요거픽 아이템 선택 <span class="required">*</span>
-      </label>
-      <div class="form-hint">최소 1개, 최대 20개까지 선택 가능합니다</div>
+    <!-- 상단 안내: 아이템이 뭔지 설명 -->
+    <div class="step-intro">
+      <div class="intro-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+          <line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+      </div>
+      <div class="intro-content">
+        <h2 class="intro-title">어떤 아이템으로 대결할까요?</h2>
+        <p class="intro-desc">
+          요거픽에 올릴 <strong>선택지(아이템)</strong>를 추가해보세요.
+          직접 찍은 <strong>사진</strong>, 요거뜨에 이미 등록된 <strong>제품</strong>,
+          <strong>YouTube 영상</strong> 무엇이든 가능해요.
+        </p>
+        <p class="intro-meta">최소 1개 · 최대 20개</p>
+      </div>
     </div>
 
     <!-- 입력 방식 탭 -->
@@ -19,6 +31,16 @@
         <span class="tab-icon" v-html="tab.icon"></span>
         <span class="tab-label">{{ tab.label }}</span>
       </button>
+    </div>
+
+    <!-- 활성 탭 설명 -->
+    <div class="tab-hint">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      <span>{{ activeTabHint }}</span>
     </div>
 
     <!-- YouTube 링크 입력 -->
@@ -56,14 +78,14 @@
             <input
                 v-model="youtubePreview.customName"
                 type="text"
-                placeholder="아이템 이름 (필수)"
+                placeholder="아이템명 (필수)"
                 class="preview-input"
                 maxlength="30"
             >
             <input
                 v-model="youtubePreview.customBrand"
                 type="text"
-                placeholder="브랜드/채널 (선택)"
+                placeholder="추가 설명 (선택)"
                 class="preview-input small"
                 maxlength="20"
             >
@@ -99,13 +121,19 @@
               @change="handleFileSelect"
           >
           <div class="drop-content">
+            <div class="drop-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              한 번에 여러 장 선택 가능
+            </div>
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
               <circle cx="8.5" cy="8.5" r="1.5"/>
               <polyline points="21 15 16 10 5 21"/>
             </svg>
-            <p class="drop-title">이미지를 드래그하거나 클릭하여 선택</p>
-            <p class="drop-hint">여러 장 동시 업로드 가능 (최대 10MB/장)</p>
+            <p class="drop-title">사진을 끌어다 놓거나 탭하여 선택</p>
+            <p class="drop-hint">파일 선택 창에서 여러 장을 한꺼번에 골라보세요 · 최대 10MB/장</p>
           </div>
         </label>
 
@@ -113,7 +141,7 @@
         <div v-if="pendingImages.length > 0" class="pending-images">
           <div class="pending-header">
             <span class="pending-title">업로드된 이미지 ({{ pendingImages.length }})</span>
-            <button class="add-all-btn" @click="addAllImages" :disabled="!canAddAllImages">
+            <button class="add-all-btn" @click="addAllImages">
               전체 추가
             </button>
           </div>
@@ -143,14 +171,21 @@
                 <input
                     v-model="img.customName"
                     type="text"
-                    placeholder="아이템 이름 (필수)"
+                    placeholder="아이템명 (필수)"
                     class="card-input"
+                    :class="{ 'has-error': submitAttempted && !img.customName?.trim() }"
                     maxlength="30"
                 >
+                <p
+                    v-if="submitAttempted && !img.customName?.trim()"
+                    class="input-error"
+                >
+                  아이템명을 입력하세요
+                </p>
                 <input
                     v-model="img.customBrand"
                     type="text"
-                    placeholder="브랜드 (선택)"
+                    placeholder="추가 설명 (선택)"
                     class="card-input small"
                     maxlength="20"
                 >
@@ -252,9 +287,13 @@
             v-if="selectedItems.length === 0"
             class="empty-state"
         >
-          <div class="empty-icon">📦</div>
-          <div class="empty-title">아이템을 추가해주세요</div>
-          <div class="empty-desc">위 탭에서 YouTube, 이미지 업로드, 또는 검색으로 추가하세요</div>
+          <div class="empty-icon-svg">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/>
+            </svg>
+          </div>
+          <div class="empty-title">아직 추가된 아이템이 없어요</div>
+          <div class="empty-desc">위 탭에서 사진, 등록된 제품, YouTube 영상 중 골라 추가하세요</div>
         </div>
 
         <!-- Selected Items Grid -->
@@ -353,13 +392,8 @@ const emit = defineEmits(['update:battleForm', 'update:selectedItems']);
 const fileService = useFile();
 const { open } = useConfirmDialog();
 
-// 탭 정의
+// 탭 정의 — 모바일에서 가장 많이 쓰는 이미지 업로드를 맨 앞에 배치
 const tabs = [
-  {
-    id: 'youtube',
-    label: 'YouTube',
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>'
-  },
   {
     id: 'image',
     label: '이미지 업로드',
@@ -369,10 +403,23 @@ const tabs = [
     id: 'search',
     label: '요거뜨 아이템',
     icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'
+  },
+  {
+    id: 'youtube',
+    label: 'YouTube',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>'
   }
 ];
 
-const activeTab = ref('youtube');
+const activeTab = ref('image');
+
+// 활성 탭별 친절한 안내 문구
+const tabHints = {
+  image: '직접 찍은 사진을 추가해요. 한 번에 여러 장 선택할 수 있고, 등록 안 된 신상품도 OK!',
+  search: '요거뜨에 이미 등록된 제품을 검색해서 빠르게 추가할 수 있어요.',
+  youtube: 'YouTube 영상 링크를 붙여넣으면 썸네일까지 자동으로 가져와요.'
+};
+const activeTabHint = computed(() => tabHints[activeTab.value] || '');
 
 // 요거뜨 아이템 검색 (피드 등록과 동일 방식)
 const productSearchQuery = ref('');
@@ -391,6 +438,7 @@ const currentYoutubeId = ref(null);
 // 이미지 업로드 관련
 const isDragging = ref(false);
 const pendingImages = ref([]);
+const submitAttempted = ref(false);
 
 // YouTube URL에서 Video ID 추출
 const extractYoutubeId = (url) => {
@@ -498,6 +546,8 @@ const handleFileDrop = (event) => {
 
 const processFiles = async (files) => {
   const imageFiles = files.filter(file => file.type.startsWith('image/'));
+  // 새 업로드 시작 시 이전 검증 에러 초기화
+  if (imageFiles.length > 0) submitAttempted.value = false;
 
   for (const file of imageFiles) {
     if (file.size > 10 * 1024 * 1024) {
@@ -570,8 +620,23 @@ const canAddAllImages = computed(() => {
 });
 
 const addAllImages = async () => {
-  if (!canAddAllImages.value) return;
+  submitAttempted.value = true;
 
+  // 1. 아이템명 빈 칸 검증 — 빈 칸 있으면 인라인 에러만 띄우고 중단
+  const hasMissingName = pendingImages.value.some(img => !img.customName?.trim());
+  if (hasMissingName) return;
+
+  // 2. 업로드 진행 중 체크
+  if (pendingImages.value.some(img => img.uploading)) {
+    await open({
+      type: 'alert',
+      title: '업로드 중',
+      message: '이미지 업로드가 끝날 때까지 잠시만 기다려주세요'
+    });
+    return;
+  }
+
+  // 3. 슬롯 초과 체크
   const availableSlots = 20 - props.selectedItems.length;
   if (pendingImages.value.length > availableSlots) {
     await open({
@@ -594,6 +659,7 @@ const addAllImages = async () => {
 
   emit('update:selectedItems', [...props.selectedItems, ...newItems]);
   pendingImages.value = [];
+  submitAttempted.value = false;
 };
 
 // 대기 이미지 삭제
@@ -740,6 +806,82 @@ const handleImageError = (event) => {
   box-sizing: border-box;
 }
 
+/* ===== 상단 안내 ===== */
+.step-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  background: var(--bg-subtle);
+  border-radius: 14px;
+  border: 1px solid var(--border-strong);
+}
+
+.intro-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.intro-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.intro-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.intro-desc {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.intro-desc strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.intro-meta {
+  margin: 10px 0 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+/* ===== 활성 탭 설명 ===== */
+.tab-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: -8px 0 20px;
+  padding: 10px 14px;
+  background: var(--c-brand-soft);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-brand-hover);
+  line-height: 1.5;
+}
+
+.tab-hint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 .form-group {
   margin-bottom: 24px;
 }
@@ -765,10 +907,11 @@ const handleImageError = (event) => {
 /* ===== 입력 방식 탭 ===== */
 .input-tabs {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   margin-bottom: 20px;
   padding: 4px;
-  background: var(--border-default);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
 }
 
@@ -780,23 +923,25 @@ const handleImageError = (event) => {
   gap: 8px;
   padding: 12px 16px;
   background: transparent;
-  border: none;
-  border-radius: 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--c-text-500);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
-.tab-btn:hover {
-  color: var(--c-text-600);
+.tab-btn:hover:not(.active) {
+  color: var(--text-primary);
+  background: var(--bg-mute);
 }
 
 .tab-btn.active {
   background: var(--bg-elevated);
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-color: var(--border-strong);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .tab-icon {
@@ -978,7 +1123,21 @@ const handleImageError = (event) => {
   text-align: center;
 }
 
-.drop-content svg {
+.drop-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  margin-bottom: 14px;
+  background: var(--c-brand);
+  color: white;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  letter-spacing: -0.1px;
+}
+
+.drop-content > svg {
   color: var(--c-text-400);
   margin-bottom: 12px;
 }
@@ -1148,6 +1307,25 @@ const handleImageError = (event) => {
   outline: none;
   border-color: var(--c-brand);
   box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.1);
+}
+
+.card-input.has-error {
+  border-color: var(--c-danger);
+  background: var(--c-danger-soft);
+}
+
+.card-input.has-error:focus {
+  box-shadow: 0 0 0 2px var(--c-danger-soft);
+}
+
+.input-error {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -2px 0 0 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--c-danger);
 }
 
 .card-input.small {
@@ -1362,6 +1540,18 @@ const handleImageError = (event) => {
 .empty-icon {
   font-size: 48px;
   margin-bottom: 12px;
+}
+
+.empty-icon-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 12px;
+  background: var(--bg-subtle);
+  border-radius: 50%;
+  color: var(--c-text-400);
 }
 
 .empty-title {
@@ -1590,6 +1780,38 @@ const handleImageError = (event) => {
     padding: 24px 20px;
   }
 
+  .step-intro {
+    padding: 14px 16px;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .intro-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .intro-title {
+    font-size: 15px;
+    margin-bottom: 5px;
+  }
+
+  .intro-desc {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .intro-meta {
+    font-size: 11.5px;
+    margin-top: 8px;
+  }
+
+  .tab-hint {
+    font-size: 13px;
+    padding: 10px 12px;
+    line-height: 1.5;
+  }
+
   .input-tabs {
     flex-wrap: wrap;
   }
@@ -1663,28 +1885,57 @@ const handleImageError = (event) => {
     font-size: 14px;
   }
 
+  /* 업로드 직후 입력 카드 — 모바일에선 가로 레이아웃으로 컴팩트하게 */
   .pending-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    padding: 16px;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .pending-card {
+    display: flex;
+    flex-direction: row;
+    border-radius: 10px;
+  }
+
+  .pending-card-image {
+    width: 92px;
+    height: 92px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
   }
 
   .pending-card-inputs {
-    padding: 10px;
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    gap: 6px;
   }
 
   .card-input {
-    padding: 8px 10px;
-    font-size: 12px;
+    padding: 7px 10px;
+    font-size: 12.5px;
+    border-radius: 6px;
+  }
+
+  .card-input.small {
+    padding: 6px 10px;
+    font-size: 11.5px;
   }
 
   .card-add-btn {
-    padding: 8px 12px;
+    padding: 7px 12px;
     font-size: 12px;
+    margin-top: 0;
+    border-radius: 6px;
   }
 
   .card-remove-btn {
     opacity: 1;
+    width: 22px;
+    height: 22px;
+    top: 4px;
+    right: 4px;
   }
 }
 
@@ -1725,14 +1976,5 @@ const handleImageError = (event) => {
     font-size: 28px;
   }
 
-  .pending-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 12px;
-  }
-
-  .pending-card-image {
-    aspect-ratio: 16/9;
-  }
 }
 </style>

@@ -8,8 +8,8 @@
         </svg>
       </div>
       <div class="intro-content">
-        <h2 class="intro-title">요거픽 기본 정보</h2>
-        <p class="intro-desc">제목, 카테고리, 진행 기간 등 요거픽의 핵심 정보를 설정하세요.</p>
+        <h2 class="intro-title">요거픽 만들기</h2>
+        <p class="intro-desc">제목과 카테고리, 진행 기간을 정해주세요</p>
       </div>
     </div>
 
@@ -18,7 +18,7 @@
       <div class="card-header">
         <div class="card-number">1</div>
         <div class="card-title-group">
-          <label class="card-title">요거픽 제목</label>
+          <label class="card-title required">요거픽 제목</label>
           <span class="card-subtitle">사람들의 관심을 끌 수 있는 제목을 작성해보세요</span>
         </div>
       </div>
@@ -46,7 +46,7 @@
       <div class="card-header">
         <div class="card-number">2</div>
         <div class="card-title-group">
-          <label class="card-title">카테고리</label>
+          <label class="card-title required">카테고리</label>
           <span class="card-subtitle">요거픽 주제에 맞는 카테고리를 선택해주세요</span>
         </div>
       </div>
@@ -110,11 +110,23 @@
       <div class="card-header">
         <div class="card-number">4</div>
         <div class="card-title-group">
-          <label class="card-title">요거픽 기간</label>
+          <label class="card-title required">요거픽 기간</label>
           <span class="card-subtitle">요거픽이 진행될 기간을 설정해주세요</span>
         </div>
       </div>
       <div class="card-body">
+        <div class="duration-presets">
+          <button
+              v-for="preset in durationPresets"
+              :key="preset.value"
+              type="button"
+              class="preset-chip"
+              :class="{ active: activePreset === preset.value }"
+              @click="applyDurationPreset(preset.value)"
+          >
+            {{ preset.label }}
+          </button>
+        </div>
         <div class="date-range-picker">
           <div class="date-field">
             <label class="date-field-label">시작일</label>
@@ -164,41 +176,6 @@
           </svg>
           <span>{{ dateDuration }}일간 진행</span>
         </div>
-      </div>
-    </div>
-
-    <!-- 투표 시작일 -->
-    <div class="form-card">
-      <div class="card-header">
-        <div class="card-number">5</div>
-        <div class="card-title-group">
-          <label class="card-title">투표 시작일</label>
-          <span class="card-subtitle">언제부터 투표를 받을 수 있게 할까요?</span>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="date-input-wrapper single">
-          <svg class="date-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-          <input
-              :value="battleForm.participationStartDate"
-              @input="$emit('update:battleForm', { ...battleForm, participationStartDate: $event.target.value })"
-              type="date"
-              class="date-input"
-          >
-        </div>
-        <p class="field-hint">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-          투표 시작 전까지는 아이템만 등록할 수 있습니다
-        </p>
       </div>
     </div>
 
@@ -318,6 +295,59 @@ const dateDuration = computed(() => {
   const end = new Date(props.battleForm.endDate);
   const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
   return diff > 0 ? diff : null;
+});
+
+// 기간 프리셋
+const durationPresets = [
+  { value: 'week', label: '1주일', days: 7 },
+  { value: 'month', label: '1개월', months: 1 },
+  { value: 'sixMonths', label: '6개월', months: 6 }
+];
+
+const toDateInput = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const applyDurationPreset = (presetValue) => {
+  const preset = durationPresets.find(p => p.value === presetValue);
+  if (!preset) return;
+
+  const startStr = props.battleForm.startDate || toDateInput(new Date());
+  const start = new Date(startStr);
+  const end = new Date(start);
+
+  if (preset.days) {
+    end.setDate(end.getDate() + preset.days);
+  } else if (preset.months) {
+    end.setMonth(end.getMonth() + preset.months);
+  }
+
+  emit('update:battleForm', {
+    ...props.battleForm,
+    startDate: startStr,
+    endDate: toDateInput(end)
+  });
+};
+
+// 현재 선택된 startDate/endDate가 어떤 프리셋과 일치하는지
+const activePreset = computed(() => {
+  if (!props.battleForm.startDate || !props.battleForm.endDate) return null;
+  const start = new Date(props.battleForm.startDate);
+  for (const preset of durationPresets) {
+    const expected = new Date(start);
+    if (preset.days) {
+      expected.setDate(expected.getDate() + preset.days);
+    } else if (preset.months) {
+      expected.setMonth(expected.getMonth() + preset.months);
+    }
+    if (toDateInput(expected) === props.battleForm.endDate) {
+      return preset.value;
+    }
+  }
+  return null;
 });
 
 // 카테고리 선택 처리
@@ -446,12 +476,13 @@ const removeImage = () => {
 .intro-icon {
   width: 48px;
   height: 48px;
-  background: var(--border-default);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--c-text-500);
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
@@ -468,9 +499,21 @@ const removeImage = () => {
 
 .intro-desc {
   font-size: 14px;
-  color: var(--c-text-500);
+  color: var(--text-secondary);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+.intro-desc strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.intro-meta {
+  margin: 10px 0 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
 }
 
 /* 폼 카드 */
@@ -528,6 +571,13 @@ const removeImage = () => {
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 4px;
+}
+
+.card-title.required::after {
+  content: '*';
+  color: var(--c-brand);
+  margin-left: 2px;
+  font-weight: 700;
 }
 
 .card-subtitle {
@@ -887,6 +937,38 @@ const removeImage = () => {
   color: var(--c-text-500);
 }
 
+/* 기간 프리셋 */
+.duration-presets {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.preset-chip {
+  padding: 7px 14px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.preset-chip:hover {
+  background: var(--bg-mute);
+  color: var(--text-primary);
+}
+
+.preset-chip.active {
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+  border-color: var(--c-brand);
+}
+
 /* 날짜 선택 */
 .date-range-picker {
   display: flex;
@@ -1095,10 +1177,17 @@ const removeImage = () => {
 
   .intro-title {
     font-size: 16px;
+    margin-bottom: 5px;
   }
 
   .intro-desc {
     font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .intro-meta {
+    font-size: 11.5px;
+    margin-top: 8px;
   }
 
   .card-header {

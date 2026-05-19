@@ -10,7 +10,7 @@
       </div>
       <div class="intro-content">
         <h2 class="intro-title">상세 설정</h2>
-        <p class="intro-desc">투표 방식과 요거픽에 대한 설명을 설정하세요.</p>
+        <p class="intro-desc">투표 방식과 설명을 정해주세요</p>
       </div>
     </div>
 
@@ -131,26 +131,15 @@
             @focus="isTextareaFocused = true"
             @blur="handleDescriptionBlur"
             class="description-textarea"
-            placeholder="예: 이 요거픽은 2024년에 출시된 무선 이어폰 중 가성비가 좋은 제품을 선정하기 위한 투표입니다. 가격 대비 음질, 착용감, 배터리 등을 종합적으로 고려해주세요."
+            placeholder="예: 가성비 좋은 무선 이어폰을 골라주세요"
             maxlength="200"
           ></textarea>
           <div class="textarea-footer">
             <div class="char-count">{{ descriptionCharCount }} / 200</div>
           </div>
         </div>
-        <p class="field-hint">
-          비워둬도 괜찮아요. 작성하면 참여자들이 투표 기준을 더 쉽게 이해할 수 있어요
-        </p>
+        <p class="field-hint">비워둬도 괜찮아요</p>
       </div>
-    </div>
-
-    <!-- 완료 안내 -->
-    <div class="completion-hint" v-if="battleForm.voteType">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-      </svg>
-      <span>투표 방식이 선택되었습니다. 다음 단계로 진행하세요.</span>
     </div>
   </div>
 </template>
@@ -225,12 +214,13 @@ const descriptionCharCount = computed(() => {
 .intro-icon {
   width: 48px;
   height: 48px;
-  background: var(--border-default);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--c-text-500);
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
@@ -247,7 +237,7 @@ const descriptionCharCount = computed(() => {
 
 .intro-desc {
   font-size: 14px;
-  color: var(--c-text-500);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.5;
 }
@@ -311,7 +301,7 @@ const descriptionCharCount = computed(() => {
 
 .card-subtitle {
   font-size: 13px;
-  color: var(--c-text-400);
+  color: var(--text-secondary);
 }
 
 .optional-badge {
@@ -457,8 +447,8 @@ const descriptionCharCount = computed(() => {
 
 .option-desc {
   font-size: 13px;
-  color: var(--c-text-500);
-  line-height: 1.4;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 /* 점수 계산 안내 */
@@ -489,11 +479,11 @@ const descriptionCharCount = computed(() => {
 }
 
 .score-info.single .score-header {
-  color: var(--c-text-500);
+  color: var(--text-secondary);
 }
 
 .score-info.multiple .score-header {
-  color: var(--c-text-500);
+  color: var(--text-secondary);
 }
 
 .score-content {
@@ -538,7 +528,7 @@ const descriptionCharCount = computed(() => {
 .score-text {
   font-size: 13px;
   font-weight: 600;
-  color: var(--c-text-600);
+  color: var(--text-primary);
 }
 
 /* 텍스트 에어리어 */
@@ -576,7 +566,7 @@ const descriptionCharCount = computed(() => {
 }
 
 .description-textarea::placeholder {
-  color: var(--c-text-400);
+  color: var(--text-tertiary);
 }
 
 .textarea-footer {
@@ -590,7 +580,7 @@ const descriptionCharCount = computed(() => {
 
 .char-count {
   font-size: 12px;
-  color: var(--c-text-400);
+  color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -600,21 +590,7 @@ const descriptionCharCount = computed(() => {
   gap: 6px;
   margin-top: 12px;
   font-size: 13px;
-  color: var(--c-text-400);
-}
-
-/* 완료 안내 */
-.completion-hint {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 20px;
-  background: var(--c-success-soft);
-  border: 1px solid var(--c-success-soft);
-  border-radius: 12px;
-  color: var(--c-success);
-  font-size: 14px;
-  font-weight: 500;
+  color: var(--text-tertiary);
 }
 
 /* 반응형 */
@@ -639,6 +615,7 @@ const descriptionCharCount = computed(() => {
 
   .intro-desc {
     font-size: 13px;
+    line-height: 1.55;
   }
 
   .card-header {
@@ -701,9 +678,5 @@ const descriptionCharCount = computed(() => {
     padding: 8px 14px;
   }
 
-  .completion-hint {
-    padding: 14px 16px;
-    font-size: 13px;
-  }
 }
 </style>
