@@ -228,6 +228,7 @@
       <button
           v-if="selectedItemFilter"
           class="mobile-floating-filter"
+          :class="{ 'is-hidden': floatingFilterHidden }"
           @click="clearItemFilter"
       >
         <img
@@ -417,7 +418,9 @@ export default {
       // YouTube 플레이어
       showYoutubePlayer: false,
       currentYoutubeItem: null,
-      currentYoutubeEmbedUrl: null
+      currentYoutubeEmbedUrl: null,
+      // 모바일 플로팅 필터 자동 숨김
+      floatingFilterHidden: false
     }
   },
   computed: {
@@ -574,6 +577,26 @@ export default {
       this.error = '배틀 ID가 없습니다.'
       this.loading = false
     }
+  },
+  mounted() {
+    this._lastScrollY = window.scrollY || 0
+    this._onWindowScroll = () => {
+      if (this._scrollRaf) return
+      this._scrollRaf = requestAnimationFrame(() => {
+        this._scrollRaf = null
+        const y = window.scrollY || 0
+        const dy = y - this._lastScrollY
+        if (y < 80) {
+          this.floatingFilterHidden = false
+        } else if (dy > 6) {
+          this.floatingFilterHidden = true
+        } else if (dy < -6) {
+          this.floatingFilterHidden = false
+        }
+        this._lastScrollY = y
+      })
+    }
+    window.addEventListener('scroll', this._onWindowScroll, { passive: true })
   },
   methods: {
     resetBattleState() {
@@ -1391,6 +1414,12 @@ export default {
     if (this.newProduct.imagePreview && this.newProduct.imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(this.newProduct.imagePreview)
     }
+    if (this._onWindowScroll) {
+      window.removeEventListener('scroll', this._onWindowScroll)
+    }
+    if (this._scrollRaf) {
+      cancelAnimationFrame(this._scrollRaf)
+    }
   }
 }
 </script>
@@ -1630,7 +1659,7 @@ export default {
     align-items: center;
     gap: 8px;
     position: fixed;
-    top: calc(env(safe-area-inset-top, 0) + 64px);
+    bottom: calc(env(safe-area-inset-bottom, 0) + 16px);
     left: 50%;
     transform: translateX(-50%);
     padding: 6px 12px 6px 6px;
@@ -1645,12 +1674,20 @@ export default {
     cursor: pointer;
     z-index: 900;
     max-width: calc(100vw - 24px);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.25s ease, opacity 0.25s ease, box-shadow 0.2s;
     -webkit-tap-highlight-color: transparent;
+    will-change: transform, opacity;
   }
 
   .mobile-floating-filter:active {
     transform: translateX(-50%) scale(0.96);
+  }
+
+  /* 스크롤 다운 시 자동 숨김 (탭 통과 가능하도록 pointer-events 제거) */
+  .mobile-floating-filter.is-hidden {
+    transform: translateX(-50%) translateY(calc(100% + env(safe-area-inset-bottom, 0) + 24px));
+    opacity: 0;
+    pointer-events: none;
   }
 
   .floating-filter-thumb {
@@ -2093,30 +2130,9 @@ export default {
     font-size: 18px;
   }
 
+  /* 모바일에서는 필터 배너 숨김 — 하단 플로팅 [전체 PICK]으로 대체 */
   .filter-banner {
-    flex-direction: column;
-    gap: 12px;
-    padding: 12px 16px;
-  }
-
-  .filter-banner-content {
-    width: 100%;
-  }
-
-  .filter-item-img {
-    width: 36px;
-    height: 36px;
-  }
-
-  .filter-name {
-    font-size: 14px;
-  }
-
-  .clear-filter-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 10px 16px;
-    font-size: 13px;
+    display: none;
   }
 
   .pc-tab-header {
