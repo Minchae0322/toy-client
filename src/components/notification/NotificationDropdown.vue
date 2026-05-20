@@ -252,6 +252,8 @@ const handleScroll = () => {
 }
 
 const handleClickOutside = (event) => {
+  // 같은 페이지에 desktop/mobile 두 인스턴스가 마운트돼 있어, 닫힌 인스턴스가 공유 ref(isNotificationPanelOpen)를 덮어쓰는 걸 방지
+  if (!isOpen.value) return
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
     closeDropdown()
   }
@@ -295,7 +297,10 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('keydown', handleKeyDown)
-  isNotificationPanelOpen.value = false
+  // 이 인스턴스가 열어둔 상태였을 때만 공유 ref 정리 (다른 인스턴스가 열어둔 걸 꺼버리지 않도록)
+  if (isOpen.value) {
+    isNotificationPanelOpen.value = false
+  }
 })
 </script>
 
