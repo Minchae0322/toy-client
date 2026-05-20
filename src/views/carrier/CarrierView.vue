@@ -742,8 +742,9 @@ onBeforeRouteLeave(async () => {
 
 /* ==================== 헤더 (PC 전용) ==================== */
 .carrier-top-header {
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-strong);
+  /* --bg-base 와 일치 — 다크모드에서 elevated 와 base 사이 색띠 안 보이게 (글로벌 .header 와 동일 패턴) */
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-default);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -771,7 +772,7 @@ onBeforeRouteLeave(async () => {
   transition: background 0.15s;
   flex-shrink: 0;
 }
-.carrier-top-header .back-btn:hover { background: #ede9fe; }
+.carrier-top-header .back-btn:hover { background: var(--c-brand-soft); filter: brightness(0.96); }
 .header-title-area {
   flex: 1;
   min-width: 0;

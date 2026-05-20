@@ -689,14 +689,15 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border: none;
   background: transparent;
-  border-radius: 7px;
-  color: var(--c-text-500);
+  border-radius: 10px;
+  /* NotificationDropdown 트리거와 같은 톤으로 통일 */
+  color: var(--c-text-600);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .msg-unread-dot {
@@ -713,13 +714,13 @@ onUnmounted(() => {
 }
 
 .mobile-msg-btn svg {
-  width: 17px;
-  height: 17px;
+  width: 20px;
+  height: 20px;
 }
 
 .mobile-msg-btn:hover {
-  color: var(--c-brand-hover);
-  background: var(--c-brand-soft);
+  color: var(--text-primary);
+  background: var(--bg-subtle);
 }
 
 /* ===================== 유저 메뉴 (데스크톱) ===================== */
@@ -831,8 +832,14 @@ onUnmounted(() => {
 
 .nav-mobile .mobile-msg-btn,
 .nav-mobile :deep(.notification-trigger) {
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+
+.nav-mobile :deep(.notification-trigger svg) {
+  width: 20px;
+  height: 20px;
 }
 
 .mobile-avatar-wrap {
@@ -1004,12 +1011,13 @@ onUnmounted(() => {
   }
   .nav-mobile .mobile-msg-btn,
   .nav-mobile :deep(.notification-trigger) {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
   }
-  .mobile-msg-btn svg {
-    width: 15px;
-    height: 15px;
+  .mobile-msg-btn svg,
+  .nav-mobile :deep(.notification-trigger svg) {
+    width: 19px;
+    height: 19px;
   }
   .mobile-avatar {
     width: 30px;
