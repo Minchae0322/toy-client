@@ -12,6 +12,8 @@ html, body {
   min-height: 100vh;
   /* 모바일/Capacitor WebView: 탭 시 회색 박스 제거 (PC 영향 없음) */
   -webkit-tap-highlight-color: transparent;
+  /* iOS/Android 더블탭 확대 + 핀치 줌 방지 — viewport meta 와 함께 2중 방어 */
+  touch-action: manipulation;
 }
 
 /* 다크 모드에서 input/textarea/select 의 user agent 기본 흰 배경 자동 반전.

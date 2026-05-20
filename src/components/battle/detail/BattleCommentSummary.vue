@@ -3,17 +3,18 @@
     <!-- 코멘트가 있을 때 -->
     <template v-if="commentSummary">
       <div class="arg-header">
-        <span class="label" @click="$emit('open-comments')">
-          <svg class="chat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#4a6cf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <button type="button" class="label" @click="$emit('open-comments')">
+          <svg class="chat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
           </svg>
           PICK 한마디
-          <span class="cnt">{{ commentCount }}개</span>
-        </span>
-        <button class="write-btn" @click.stop="toggleInput">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <span class="cnt">{{ commentCount }}</span>
+        </button>
+        <button type="button" class="write-pill" @click.stop="toggleInput">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
           </svg>
+          쓰기
         </button>
       </div>
 
@@ -74,19 +75,22 @@
 
     <!-- 코멘트가 없을 때 -->
     <template v-else>
-      <div class="empty-header">
-        <div class="empty-state" @click.stop="toggleInput">
-          <svg class="empty-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <button type="button" class="empty-cta" @click.stop="toggleInput">
+        <span class="empty-cta-icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
           </svg>
-          <span class="empty-text">첫 PICK 한마디를 남겨보세요!</span>
-        </div>
-        <button class="write-btn" @click.stop="toggleInput">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </span>
+        <span class="empty-cta-text">
+          <span class="empty-cta-title">첫 PICK 한마디 남기기</span>
+          <span class="empty-cta-sub">이 아이템이 왜 최고인지 알려주세요</span>
+        </span>
+        <span class="empty-cta-plus" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
           </svg>
-        </button>
-      </div>
+        </span>
+      </button>
 
       <!-- PC 인라인 입력창 (빈 상태) -->
       <transition name="slide">
@@ -118,41 +122,40 @@
 
             <!-- 헤더 -->
             <div class="bottomsheet-header">
-              <h3>픽 한마디 남기기</h3>
+              <h3>PICK 한마디</h3>
+              <button class="bs-close" @click="closeBottomSheet" aria-label="닫기">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
             </div>
 
-            <!-- 아이템 카드 -->
+            <!-- 아이템 -->
             <div class="bottomsheet-item-card">
               <img v-if="itemImage" :src="itemImage" :alt="itemName" class="item-thumb" />
               <div class="item-info">
-                <span class="item-badge">선택한 아이템</span>
+                <span class="item-badge">한마디 남길 아이템</span>
                 <span class="item-name">{{ itemName }}</span>
               </div>
             </div>
 
             <!-- 입력 영역 -->
             <div class="bottomsheet-body">
-              <div class="input-wrapper">
-                <textarea
-                  ref="bottomSheetInputRef"
-                  v-model="inputText"
-                  class="bottomsheet-input"
-                  placeholder="이 아이템이 최고인 이유를 알려주세요!"
-                  maxlength="100"
-                  rows="3"
-                ></textarea>
-                <div class="input-footer">
-                  <span class="hint-text">다른 사용자들에게 도움이 돼요</span>
-                  <span class="char-count" :class="{ 'near-limit': inputText.length > 80 }">{{ inputText.length }}/100</span>
-                </div>
+              <textarea
+                ref="bottomSheetInputRef"
+                v-model="inputText"
+                class="bottomsheet-input"
+                placeholder="자유롭게 한마디 남겨주세요 (최대 100자)"
+                maxlength="100"
+                rows="4"
+              ></textarea>
+              <div class="input-footer">
+                <span class="char-count" :class="{ 'near-limit': inputText.length > 80 }">{{ inputText.length }}/100</span>
               </div>
             </div>
 
             <!-- 버튼 영역 -->
             <div class="bottomsheet-footer">
-              <button class="cancel-btn" @click="closeBottomSheet">
-                다음에 할게요
-              </button>
               <button
                 class="bottomsheet-submit"
                 :disabled="!inputText.trim() || submitting"
@@ -160,12 +163,10 @@
               >
                 <template v-if="submitting">
                   <span class="spinner"></span>
+                  등록 중...
                 </template>
                 <template v-else>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                  </svg>
-                  등록하기
+                  한마디 남기기
                 </template>
               </button>
             </div>
@@ -302,53 +303,73 @@ defineExpose({ closeInput })
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .arg-header .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
   font-size: 12px;
   font-weight: 700;
-  color: var(--c-text-600);
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  color: var(--text-primary);
   cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.01em;
   transition: color 0.15s;
 }
 
 .arg-header .label:hover {
-  color: var(--c-info);
+  color: var(--c-brand);
 }
 
 .arg-header .chat-icon {
   flex-shrink: 0;
+  color: var(--c-brand);
 }
 
 .arg-header .cnt {
-  font-size: 11px;
-  color: var(--c-text-400);
-  font-weight: 600;
-  margin-left: 4px;
-}
-
-/* 작성 버튼 */
-.write-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: var(--border-default);
-  border-radius: 8px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  color: var(--c-text-500);
-  transition: all 0.15s;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--c-brand);
+  background: var(--c-brand-soft);
+  border-radius: 8px;
+  margin-left: 2px;
 }
 
-.write-btn:hover {
-  background: var(--c-info);
+/* 컴팩트 작성 pill — 솔리드 브랜드 chip (눈에 잘 띄게) */
+.write-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 11px;
+  border: none;
+  background: var(--c-brand);
   color: #ffffff;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.write-pill:hover {
+  background: var(--c-brand-hover);
+}
+
+.write-pill:active {
+  transform: scale(0.95);
 }
 
 /* 인라인 입력창 */
@@ -418,41 +439,41 @@ defineExpose({ closeInput })
   transform: translateY(-8px);
 }
 
-/* BEST 변론 카드 */
+/* BEST 변론 카드 — 노란 톤 (요거뜨 시그니처) */
 .best-arg {
   display: flex;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 10px 12px;
   background: var(--c-warning-soft);
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid var(--c-warning);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: filter 0.15s;
 }
 
 .best-arg:hover {
-  background: var(--c-warning-soft);
+  filter: brightness(0.98);
 }
 
 img.ba-avatar {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   flex-shrink: 0;
   object-fit: cover;
 }
 
 div.ba-avatar {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: var(--c-info-soft);
+  background: var(--bg-elevated);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--c-info);
+  color: var(--c-warning);
   flex-shrink: 0;
 }
 
@@ -464,38 +485,42 @@ div.ba-avatar {
 .ba-top {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 2px;
+  gap: 6px;
+  margin-bottom: 3px;
 }
 
 .ba-nick {
   font-size: 11px;
   font-weight: 700;
-  color: var(--c-text-600);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .best-badge {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 9px;
+  font-weight: 800;
   color: var(--c-warning);
-  background: var(--c-warning-soft);
+  background: var(--bg-elevated);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
   border: 1px solid var(--c-warning);
 }
 
 .ba-text {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--c-text-600);
-  line-height: 1.4;
+  line-height: 1.45;
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  letter-spacing: -0.01em;
 }
 
 .ba-likes {
+  margin-left: auto;
   font-size: 10px;
   color: var(--c-danger);
   display: inline-flex;
@@ -513,63 +538,103 @@ div.ba-avatar {
 .view-all button {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   background: none;
   border: none;
   font-size: 11px;
-  font-weight: 600;
-  color: var(--c-info);
+  font-weight: 700;
+  color: var(--c-brand);
   cursor: pointer;
   font-family: inherit;
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  letter-spacing: -0.01em;
   transition: background 0.15s;
 }
 
 .view-all button:hover {
-  background: var(--c-info-soft);
+  background: var(--c-brand-soft);
 }
 
-/* 빈 상태 */
-.empty-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.empty-state {
+/* 빈 상태 — 부드러운 브랜드 톤 CTA (따뜻한 인상) */
+.empty-cta {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 0;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--c-brand-soft);
+  border: 1px solid transparent;
+  border-radius: 12px;
   cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: filter 0.15s, transform 0.1s;
 }
 
-.empty-icon {
-  color: var(--c-text-400);
+.empty-cta:hover {
+  filter: brightness(0.97);
+}
+
+.empty-cta:active {
+  transform: scale(0.99);
+}
+
+.empty-cta-icon {
   flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  color: var(--c-brand);
 }
 
-.empty-text {
-  font-size: 12px;
+.empty-cta-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.empty-cta-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.empty-cta-sub {
+  font-size: 10.5px;
   font-weight: 500;
-  color: var(--c-text-400);
+  color: var(--c-text-500);
+  letter-spacing: -0.01em;
 }
 
-.empty-state:hover .empty-icon,
-.empty-state:hover .empty-text {
-  color: var(--c-info);
+.empty-cta-plus {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-brand);
+  color: #ffffff;
 }
 
 /* 모바일 최적화 */
 @media (max-width: 480px) {
   .pc-card-arguments {
-    padding: 8px 10px;
-    min-height: 70px;
+    padding: 10px 12px;
+    min-height: 76px;
   }
 
   .arg-header {
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
 
   .arg-header .label {
@@ -582,18 +647,18 @@ div.ba-avatar {
   }
 
   .arg-header .cnt {
-    font-size: 10px;
+    font-size: 9.5px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 4px;
   }
 
-  .write-btn {
-    width: 26px;
-    height: 26px;
+  .write-pill {
+    padding: 4px 9px;
+    font-size: 10.5px;
+    gap: 2px;
   }
-
-  .write-btn svg {
-    width: 12px;
-    height: 12px;
-  }
+  .write-pill svg { width: 10px; height: 10px; }
 
   /* 모바일 인라인 입력창 - 한 줄에 입력+버튼, 넘치면 스크롤 없이 맞춤 */
   .inline-input-wrap {
@@ -628,63 +693,63 @@ div.ba-avatar {
   }
 
   .best-arg {
-    padding: 5px 6px;
-    gap: 5px;
-    border-radius: 6px;
+    padding: 8px 10px;
+    gap: 8px;
+    border-radius: 10px;
   }
 
   img.ba-avatar,
   div.ba-avatar {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
   }
 
   div.ba-avatar {
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .ba-nick {
-    font-size: 9px;
+    font-size: 10.5px;
   }
 
   .best-badge {
-    font-size: 7px;
-    padding: 1px 3px;
+    font-size: 8.5px;
+    padding: 1.5px 5px;
   }
 
   .ba-text {
-    font-size: 11px;
-    line-height: 1.3;
-    -webkit-line-clamp: 1;
+    font-size: 11.5px;
+    line-height: 1.35;
+    -webkit-line-clamp: 2;
   }
 
   .ba-likes {
-    font-size: 8px;
-    margin-top: 2px;
+    font-size: 9.5px;
   }
 
   .ba-likes svg {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
   }
 
   .view-all {
-    margin-top: 4px;
+    margin-top: 6px;
   }
 
   .view-all button {
-    font-size: 9px;
-    padding: 2px 6px;
+    font-size: 10.5px;
+    padding: 4px 10px;
   }
 
-  .empty-icon {
-    width: 12px;
-    height: 12px;
+  /* 빈 상태 CTA — 모바일에서 약간 컴팩트하게 */
+  .empty-cta {
+    padding: 10px 12px;
+    gap: 9px;
   }
-
-  .empty-text {
-    font-size: 10px;
-  }
+  .empty-cta-icon { width: 26px; height: 26px; }
+  .empty-cta-title { font-size: 11.5px; }
+  .empty-cta-sub { font-size: 10px; }
+  .empty-cta-plus { width: 20px; height: 20px; }
 }
 
 /* PC 최적화 */
@@ -733,204 +798,190 @@ div.ba-avatar {
 }
 
 .bottomsheet-handle {
-  width: 40px;
-  height: 5px;
+  width: 36px;
+  height: 4px;
   background: var(--border-strong);
-  border-radius: 3px;
-  margin: 12px auto 0;
+  border-radius: 999px;
+  margin: 10px auto 0;
 }
 
 /* 헤더 */
 .bottomsheet-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px 20px 12px;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
 }
 
 .bottomsheet-header h3 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.bs-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.bs-close:hover {
+  background: var(--border-default);
   color: var(--text-primary);
 }
 
-/* 아이템 카드 */
+/* 아이템 — 가벼운 중립 카드 + 작은 썸네일 */
 .bottomsheet-item-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin: 0 20px 16px;
-  padding: 14px 16px;
-  background: var(--c-brand-soft);
-  border: 1.5px solid var(--c-brand-soft);
-  border-radius: 16px;
+  gap: 12px;
+  margin: 0 20px 14px;
+  padding: 10px 12px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
 }
 
 .bottomsheet-item-card .item-thumb {
-  width: 72px;
-  height: 72px;
-  border-radius: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
   object-fit: cover;
   background: var(--bg-elevated);
-  border: 2px solid var(--bg-elevated);
-  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.15);
+  flex-shrink: 0;
 }
 
 .bottomsheet-item-card .item-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .bottomsheet-item-card .item-badge {
-  display: inline-block;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
-  color: var(--c-brand);
-  margin-bottom: 4px;
+  color: var(--c-text-500);
+  letter-spacing: -0.01em;
 }
 
 .bottomsheet-item-card .item-name {
-  display: block;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--c-brand);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
-/* 입력 영역 */
+/* 입력 영역 — 한 줄 깔끔한 textarea, 글자수만 우측 정렬 */
 .bottomsheet-body {
-  padding: 0 20px 16px;
-}
-
-.input-wrapper {
-  background: var(--bg-subtle);
-  border-radius: 16px;
-  padding: 4px;
+  padding: 0 20px 12px;
 }
 
 .bottomsheet-input {
   width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 14px;
+  font-size: 15px;
   font-family: inherit;
   resize: none;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
   background: var(--bg-elevated);
+  color: var(--text-primary);
   line-height: 1.5;
-  border: 2px solid transparent;
+  letter-spacing: -0.01em;
 }
 
 .bottomsheet-input:focus {
   border-color: var(--c-brand);
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.12);
 }
 
 .bottomsheet-input::placeholder {
   color: var(--c-text-400);
+  font-weight: 500;
 }
 
 .input-footer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px 6px;
-}
-
-.hint-text {
-  font-size: 12px;
-  color: var(--c-text-400);
+  justify-content: flex-end;
+  padding: 8px 4px 0;
 }
 
 .char-count {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--c-text-400);
   font-weight: 600;
   transition: color 0.2s;
+  font-variant-numeric: tabular-nums;
 }
 
 .char-count.near-limit {
   color: var(--c-warning);
 }
 
-/* 버튼 영역 */
+/* 버튼 영역 — full-width 솔리드 CTA, 그림자 절제 */
 .bottomsheet-footer {
-  display: flex;
-  gap: 10px;
   padding: 8px 20px 20px;
   padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }
 
-.cancel-btn {
-  flex: 1;
-  padding: 16px 12px;
-  background: var(--border-default);
-  color: var(--c-text-500);
-  border: none;
-  border-radius: 14px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s;
-}
-
-.cancel-btn:hover {
-  background: var(--border-strong);
-}
-
-.cancel-btn:active {
-  transform: scale(0.98);
-}
-
 .bottomsheet-submit {
-  flex: 2;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 16px 20px;
+  padding: 15px 20px;
   background: var(--c-brand);
   color: #ffffff;
   border: none;
   border-radius: 14px;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.3);
+  letter-spacing: -0.01em;
+  transition: background 0.15s, transform 0.1s;
 }
 
 .bottomsheet-submit:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
-  transform: translateY(-1px);
+  background: var(--c-brand-hover);
 }
 
 .bottomsheet-submit:active:not(:disabled) {
-  transform: scale(0.98);
-  box-shadow: 0 2px 10px rgba(147, 51, 234, 0.3);
+  transform: scale(0.99);
 }
 
 .bottomsheet-submit:disabled {
-  background: var(--c-text-300);
-  box-shadow: none;
+  background: var(--border-strong);
+  color: var(--c-text-400);
   cursor: not-allowed;
 }
 
 .bottomsheet-submit .spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
   border-top-color: #ffffff;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {

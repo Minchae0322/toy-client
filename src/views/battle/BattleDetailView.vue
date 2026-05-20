@@ -109,14 +109,32 @@
             </div>
 
             <div class="pc-tab-content">
-              <!-- 인라인 작성창 — 아이템(필터) 선택 시에만 활성 -->
+              <!-- 아이템 선택 안내 (필터 없을 때) — 사용자에게 다음 액션을 명확히 안내 -->
+              <button
+                v-if="!selectedItemFilter"
+                type="button"
+                class="comment-picker-prompt"
+                @click="scrollToFirstItem"
+              >
+                <span class="picker-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"/>
+                  </svg>
+                </span>
+                <span class="picker-text">
+                  <span class="picker-title">어떤 아이템에 한마디 남길까요?</span>
+                  <span class="picker-sub">위 아이템 카드의 <strong>‘PICK 한마디’</strong> 영역을 눌러 선택해 주세요</span>
+                </span>
+                <span class="picker-cta">아이템 보러가기</span>
+              </button>
+
+              <!-- 인라인 작성창 — 아이템(필터) 선택 시에만 표시 -->
               <form
+                v-else
                 class="inline-comment-form"
-                :class="{ 'is-disabled': !selectedItemFilter }"
                 @submit.prevent="submitInlineComment"
               >
                 <img
-                  v-if="selectedItemFilter"
                   :src="getItemImageById(selectedItemFilter)"
                   :alt="filteredItemName"
                   class="inline-comment-thumb"
@@ -125,16 +143,14 @@
                   v-model="inlineCommentText"
                   type="text"
                   class="inline-comment-input"
-                  :placeholder="selectedItemFilter
-                    ? `${filteredItemName}에 PICK 한마디 남기기 (100자 이내)`
-                    : '위에서 아이템을 선택하면 PICK 한마디를 작성할 수 있어요'"
-                  :disabled="!selectedItemFilter || submittingInlineComment"
+                  :placeholder="`${filteredItemName}에 한마디 남기기 (100자 이내)`"
+                  :disabled="submittingInlineComment"
                   maxlength="100"
                 />
                 <button
                   type="submit"
                   class="inline-comment-submit"
-                  :disabled="!selectedItemFilter || !inlineCommentText.trim() || submittingInlineComment"
+                  :disabled="!inlineCommentText.trim() || submittingInlineComment"
                 >
                   {{ submittingInlineComment ? '작성 중...' : '작성' }}
                 </button>
@@ -1035,6 +1051,12 @@ export default {
       this.selectedItemFilter = null
     },
 
+    // 안내 카드 → 첫 아이템 카드 위치로 스크롤 (사용자가 코멘트 대상 고르도록)
+    scrollToFirstItem() {
+      const firstItem = this.sortedItems?.[0]
+      if (firstItem) this.scrollToItem(firstItem.id)
+    },
+
     // 아이템 카드로 스크롤
     scrollToItem(itemId) {
       const cardRef = this.productCardRefs[itemId]
@@ -1534,6 +1556,102 @@ export default {
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: 20px;
+}
+
+/* ── 빈 상태 안내 카드 (필터 없을 때) — 부드러운 브랜드 톤 ── */
+.comment-picker-prompt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  margin: 0 0 18px;
+  background: var(--c-brand-soft);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.comment-picker-prompt:hover {
+  filter: brightness(0.97);
+}
+
+.comment-picker-prompt:active {
+  transform: scale(0.99);
+}
+
+.comment-picker-prompt .picker-icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  color: var(--c-brand);
+  animation: pickerBob 1.6s ease-in-out infinite;
+}
+
+@keyframes pickerBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.comment-picker-prompt .picker-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.comment-picker-prompt .picker-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.comment-picker-prompt .picker-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-text-500);
+  letter-spacing: -0.01em;
+}
+
+.comment-picker-prompt .picker-sub strong {
+  color: var(--c-brand);
+  font-weight: 700;
+}
+
+.comment-picker-prompt .picker-cta {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--c-brand);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .comment-picker-prompt {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .comment-picker-prompt .picker-icon { width: 32px; height: 32px; }
+  .comment-picker-prompt .picker-title { font-size: 13px; }
+  .comment-picker-prompt .picker-sub { font-size: 11px; }
+  .comment-picker-prompt .picker-cta {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
 }
 
 /* ── 인라인 PICK 한마디 작성 ── */
