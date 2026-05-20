@@ -134,6 +134,7 @@ import {
 } from 'lucide-vue-next'
 import { useNotification } from '@/composables/useNotification'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { useNotificationPanelMode } from '@/composables/useNotificationPanelMode'
 import { notificationService } from '@/services/NotificationService'
 
 const {
@@ -152,6 +153,7 @@ const {
 } = useNotification()
 
 const { open: openConfirm } = useConfirmDialog()
+const { isNotificationPanelOpen } = useNotificationPanelMode()
 
 const isOpen = ref(false)
 const dropdownRef = ref(null)
@@ -200,6 +202,7 @@ const getTypeClass = (type) => {
 
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
+  isNotificationPanelOpen.value = isOpen.value
   if (isOpen.value) {
     fetchUnreadCount()
   }
@@ -207,6 +210,7 @@ const toggleDropdown = () => {
 
 const closeDropdown = () => {
   isOpen.value = false
+  isNotificationPanelOpen.value = false
 }
 
 const handleItemClick = async (notification) => {
@@ -291,6 +295,7 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('keydown', handleKeyDown)
+  isNotificationPanelOpen.value = false
 })
 </script>
 

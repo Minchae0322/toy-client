@@ -1,7 +1,7 @@
 <template>
   <nav class="bottom-nav">
-    <!-- 플로팅 등록 버튼 (알약 위 우측) -->
-    <div v-if="!isMoreMenuOpen && !isOnCarrier" class="fab-wrap">
+    <!-- 플로팅 등록 버튼 (알약 위 우측) — 알림 패널 열려 있을 땐 가림 -->
+    <div v-if="!isMoreMenuOpen && !isOnCarrier && !isNotificationPanelOpen" class="fab-wrap">
       <button class="fab" :class="{ open: isCreateMenuOpen, collapsed: isFabCollapsed }" @click="toggleCreateMenu" aria-label="글쓰기">
         <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
@@ -189,12 +189,14 @@ import {
 import { TrophyIcon as TrophySolid } from '@heroicons/vue/24/solid';
 import { useAuth } from '@/composables/useAuth';
 import { useConfirmDialog } from '@/composables/useConfirmDialog';
+import { useNotificationPanelMode } from '@/composables/useNotificationPanelMode';
 import FeedbackModal from '@/components/common/FeedbackModal.vue';
 
 const router = useRouter();
 const route = useRoute();
 const { isLoggedIn, isAdmin, logout } = useAuth();
 const { openLoginRequired, open } = useConfirmDialog();
+const { isNotificationPanelOpen } = useNotificationPanelMode();
 const isCreateMenuOpen = ref(false);
 const isMoreMenuOpen = ref(false);
 const showFeedback = ref(false);
