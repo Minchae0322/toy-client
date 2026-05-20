@@ -176,7 +176,12 @@ class WebSocketService {
       const socketUrl = this.wsURL
       console.log('🔌 [WebSocket] Connecting to:', socketUrl)
 
-      const socket = new SockJS(socketUrl)
+      // JSONP transport 차단 — 서버 chat-service 가 application/javascript Content-Type 으로 응답할 때
+      // Spring 이 LinkedHashMap 직렬화 못 해서 HttpMessageNotWritableException 워닝 발생.
+      // websocket 우선, fallback 은 xhr 계열만 허용.
+      const socket = new SockJS(socketUrl, null, {
+        transports: ['websocket', 'xhr-streaming', 'xhr-polling']
+      })
 
       this.client = new Client({
         webSocketFactory: () => socket,
