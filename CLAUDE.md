@@ -68,6 +68,7 @@
   - `src/composables/` — Vue 컴포저블
     - `useAuth`, `useChat`, `useTheme`, `useNotification`, `useCarrier`, `useBattleDraft`
     - `useProduct`, `useCategoryCache`, `useUserBlock`, `useConfirmDialog`, `useLoginPrompt`, `useExpToast`
+    - `useChatDetailMode` — 모바일 채팅 디테일 진입 시 전역 헤더 숨기기용 모듈 스코프 공유 상태 (`isChatDetailOpen`). `App.vue`와 `ChatApp.vue`에서 같이 사용
   - `src/router/` — 라우터 설정 + `guards/authGuard.js`
   - `src/capacitor/` — Capacitor 네이티브 브릿지 코드
   - `src/config/` — 환경 설정 (`env.js`, `ads.js`)
@@ -141,6 +142,12 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.0.7**: iOS 빌드 10, Android versionCode 7 (`chore`)
+- **모바일 채팅방 글로벌 헤더 숨김**: `useChatDetailMode` composable 신설 — 채팅 디테일 진입 시 전역 헤더 숨기고 입력창 하단 빈공간 제거 (`fix(chat)`)
+- **배틀 모바일 플로팅 [전체 PICK] 버튼 개선**: 하단 이동 + 스크롤 시 자동 숨김, 아이템 필터 활성 시 썸네일·이름 확인하며 한 번에 해제 가능 (`feat(battle)`)
+- **배틀 생성 플로우 다듬기**: Step1~4 기간 프리셋·필수 표시·카피 간결화 (`feat(battle)`)
+- **iOS 뒤로가기 스와이프 개선**: Chrome 스타일 화살표 인디케이터 + 다크모드 배경 매칭, 화살표 위치 화면 중앙 고정 (`feat(ios)`, `fix(ios)`)
+- **스플래시 화면 2번 뜨는 문제 수정**: `capacitor.config.json` 오버레이 자동 숨김으로 변경, 네이티브 런치 스크린만 표시 (`fix(capacitor)`)
 - **버전 1.0.6**: iOS 빌드 9, Android versionCode 6 (`chore`)
 - **캐리어 공유 모달 강화 + 피드 더블탭 가드 + iOS 넓은 스와이프 뒤로가기**: `common/ShareModal.vue` 전면 개편, `FeedCreateView` 중복 제출 방지, `AppViewController.swift` 전체 너비 엣지 스와이프 지원 (`feat`)
 - **전역 뒤로가기 까만 플리커 제거**: Android `styles.xml`, `capacitor.config.json`, `index.html`, `main.css` 다층 수정 (`fix`)
