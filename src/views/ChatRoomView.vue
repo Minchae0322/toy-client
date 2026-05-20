@@ -327,7 +327,8 @@ onMounted(() => {
   /* 헤더(66px + safe-area-top)와 BottomNavigation(약 84px + safe-area-bottom) 사이의
      가시 영역을 채워 빈 상태에서 불필요한 페이지 스크롤이 생기지 않도록. */
   min-height: calc(100dvh - 66px - env(safe-area-inset-top));
-  background: var(--bg-elevated);
+  /* 페이지 본문(--bg-base)과 일치 — 다크모드에서 elevated(#161B26) vs base(#0F1218) 색띠 안 보이도록 */
+  background: var(--bg-base);
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
