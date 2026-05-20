@@ -238,8 +238,10 @@
                 <div class="rank-brand">{{ product.brand }}</div>
               </div>
               <div class="rank-stats">
-                <div class="rank-rating"><svg class="star-icon" width="12" height="12" viewBox="0 0 14 14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.16666L8.795 4.81249L12.8333 5.40166L9.91667 8.24916L10.59 12.2717L7 10.3792L3.41 12.2717L4.08333 8.24916L1.16667 5.40166L5.205 4.81249L7 1.16666Z"/></svg> {{ formatRating(product.averageRating) }}</div>
-                <div class="rank-review">{{ formatCount(product.reviewCount) }}개</div>
+                <div class="rank-heat">
+                  <Flame class="heat-icon" :size="16" :stroke-width="2.2" />
+                  <span class="heat-value">{{ formatCount(getPopularityScore(product)) }}</span>
+                </div>
               </div>
               <div class="rank-bar">
                 <div class="rank-bar-fill" :style="{ width: getScorePercent(product) + '%' }"></div>
@@ -279,6 +281,7 @@ import { useRouter, useRoute } from 'vue-router'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'
 import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'
+import { Flame } from 'lucide-vue-next'
 import { productService } from '@/services/ProductService.js'
 import { carrierService } from '@/services/CarrierService.js'
 import { useCategoryCache } from '@/composables/useCategoryCache.js'
@@ -1330,8 +1333,22 @@ onUnmounted(() => {
 .rank-brand { font-size: 11px; color: var(--c-text-400); }
 
 .rank-stats { text-align: right; flex-shrink: 0; }
-.rank-rating { font-size: 12px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 2px; }
-.rank-review { font-size: 10px; color: var(--c-text-400); }
+.rank-heat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--c-heat, #F97316);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+.rank-heat .heat-icon {
+  color: var(--c-heat, #F97316);
+  flex-shrink: 0;
+}
+.rank-heat .heat-value { line-height: 1; }
 
 .rank-bar { width: 50px; height: 4px; background: var(--border-default); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
 .rank-bar-fill { height: 100%; border-radius: 2px; background: #9b7be8; transition: width 0.3s; }
