@@ -1,17 +1,7 @@
 import UIKit
 import Capacitor
 import WebKit
-
-// WKWebView 의 inputAccessoryView 를 제거해서 텍스트 입력 시 키보드 위에 뜨는
-// 회색 도구막대(이전/다음 필드 화살표 + Done ✓) 를 숨긴다. 카톡처럼 입력창이
-// 키보드 바로 위에 붙도록 — visualViewport.height 가 도구막대 높이만큼 늘어나
-// --chat-kb-h(키보드 높이) 가 자동으로 줄어들면서 ChatDetailView 의 입력창이
-// 키보드 상단에 정확히 정렬된다.
-extension WKWebView {
-    open override var inputAccessoryView: UIView? {
-        return nil
-    }
-}
+import ObjectiveC.runtime
 
 class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
 
@@ -37,6 +27,46 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
         self.webView?.allowsBackForwardNavigationGestures = false
         installWiderBackSwipeGesture()
         setupSwipeIndicator()
+        hideKeyboardAccessoryBar()
+    }
+
+    // 키보드 위 시스템 도구막대(이전/다음 필드 화살표 + Done ✓) 제거.
+    // WKWebView 의 첫 응답자는 내부 WKContentView 라서 WKWebView 에 직접
+    // inputAccessoryView 를 override 해도 적용되지 않는다.
+    // 런타임에 WKContentView 를 서브클래싱해서 inputAccessoryView 가 nil 을
+    // 반환하도록 만들고, 기존 인스턴스의 클래스를 새 서브클래스로 교체한다.
+    // 결과: visualViewport.height 가 도구막대 높이만큼 커져 --chat-kb-h 가 줄어들고
+    // 채팅 입력창이 카톡처럼 키보드 바로 위에 붙는다.
+    private func hideKeyboardAccessoryBar() {
+        guard let webView = self.webView else { return }
+        guard let WKContentViewClass = NSClassFromString("WKContentView") else { return }
+
+        let subclassName = "NoAccessoryBarWKContentView"
+        var subclass: AnyClass? = NSClassFromString(subclassName)
+
+        if subclass == nil {
+            guard let newClass = objc_allocateClassPair(WKContentViewClass, subclassName, 0) else { return }
+            let selector = NSSelectorFromString("inputAccessoryView")
+            let block: @convention(block) (AnyObject) -> UIView? = { _ in nil }
+            let imp = imp_implementationWithBlock(block)
+            let typeEncoding = "@@:"
+            class_addMethod(newClass, selector, imp, typeEncoding)
+            objc_registerClassPair(newClass)
+            subclass = newClass
+        }
+
+        guard let finalClass = subclass else { return }
+
+        // 현재 WKContentView 인스턴스(들)의 클래스를 동적으로 교체.
+        // scrollView 의 첫 깊이에 보통 있지만, iOS 버전에 따라 위치가 달라질 수 있어
+        // webView 트리 전체에서 탐색.
+        func reclassify(_ view: UIView) {
+            if String(describing: type(of: view)).contains("WKContentView") {
+                object_setClass(view, finalClass)
+            }
+            view.subviews.forEach(reclassify)
+        }
+        reclassify(webView)
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
