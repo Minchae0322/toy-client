@@ -16,18 +16,9 @@
     <!-- 패널 -->
     <Transition name="dropdown">
       <div v-if="isOpen" class="dropdown-panel">
-        <!-- 헤더: 제목 + 모두 읽음 -->
+        <!-- 헤더: 제목 -->
         <header class="dropdown-header">
           <h3 class="dropdown-title">알림</h3>
-          <button
-            v-if="hasUnread"
-            class="header-action"
-            :disabled="isMarkingAllRead"
-            @click="handleMarkAllAsRead"
-          >
-            <CheckCheck :size="14" :stroke-width="2.2" />
-            <span>모두 읽음</span>
-          </button>
         </header>
 
         <!-- 세그먼트 컨트롤 필터 -->
@@ -108,9 +99,18 @@
           </template>
         </div>
 
-        <!-- 풋터: 모두 비우기 -->
+        <!-- 풋터: 모두 읽음 + 모두 비우기 -->
         <footer v-if="notifications.length > 0" class="dropdown-footer">
-          <button class="footer-clear" @click="handleDeleteAll">
+          <button
+            class="footer-action read-all"
+            :disabled="!hasUnread || isMarkingAllRead"
+            @click="handleMarkAllAsRead"
+          >
+            <CheckCheck :size="14" :stroke-width="2.2" />
+            <span>모두 읽음</span>
+          </button>
+          <span class="footer-divider" aria-hidden="true"></span>
+          <button class="footer-action clear-all" @click="handleDeleteAll">
             <Trash2 :size="14" :stroke-width="2" />
             <span>모두 비우기</span>
           </button>
@@ -366,7 +366,6 @@ onUnmounted(() => {
 .dropdown-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 18px 20px 12px 20px;
 }
 
@@ -376,32 +375,6 @@ onUnmounted(() => {
   font-weight: 800;
   color: var(--text-primary, #0A0E1A);
   letter-spacing: -0.4px;
-}
-
-.header-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 30px;
-  padding: 0 12px;
-  background: var(--bg-subtle, #F7F8FA);
-  border: none;
-  border-radius: 999px;
-  color: var(--c-text-600, #475569);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.header-action:hover {
-  background: var(--c-brand-soft, #FAF5FF);
-  color: var(--c-brand, #9333EA);
-}
-
-.header-action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* ==================== 세그먼트 컨트롤 ==================== */
@@ -643,30 +616,57 @@ onUnmounted(() => {
 /* ==================== 풋터 ==================== */
 .dropdown-footer {
   display: flex;
-  justify-content: center;
-  padding: 10px 16px 14px 16px;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 8px 10px 8px;
   border-top: 1px solid var(--bg-subtle, #F7F8FA);
+  background: var(--bg-elevated, #fff);
+  flex-shrink: 0;
 }
 
-.footer-clear {
+.footer-action {
+  flex: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 14px;
+  height: 36px;
+  padding: 0 12px;
   background: transparent;
   border: none;
-  border-radius: 999px;
-  color: var(--c-text-500, #64748B);
-  font-size: 12px;
-  font-weight: 600;
+  border-radius: 10px;
+  color: var(--c-text-600, #475569);
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.footer-clear:hover {
+.footer-action:hover:not(:disabled) {
+  background: var(--bg-subtle, #F7F8FA);
+  color: var(--text-primary, #0A0E1A);
+}
+
+.footer-action.read-all:hover:not(:disabled) {
+  background: var(--c-brand-soft, #FAF5FF);
+  color: var(--c-brand, #9333EA);
+}
+
+.footer-action.clear-all:hover:not(:disabled) {
   background: var(--c-danger-soft, #FEE2E2);
   color: var(--c-danger, #EF4444);
+}
+
+.footer-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.footer-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--bg-mute, #F2F4F6);
+  flex-shrink: 0;
 }
 
 /* ==================== 트랜지션 ==================== */
@@ -690,7 +690,14 @@ onUnmounted(() => {
     right: 12px;
     width: auto;
     max-width: none;
-    max-height: calc(100vh - 100px);
+    /* BottomNavigation(약 84px) + safe-area-bottom + 여유 16px 확보 */
+    max-height: calc(
+      100vh
+      - 60px
+      - env(safe-area-inset-top, 0px)
+      - 100px
+      - env(safe-area-inset-bottom, 0px)
+    );
     border-radius: 16px;
   }
 
@@ -707,7 +714,15 @@ onUnmounted(() => {
   }
 
   .notification-list {
-    max-height: calc(100vh - 240px);
+    /* 패널 max-height 에 맞춰 자동으로 늘어남 — 헤더(56) + 세그먼트(46) + 풋터(54) ≈ 156 */
+    max-height: calc(
+      100vh
+      - 60px
+      - env(safe-area-inset-top, 0px)
+      - 100px
+      - env(safe-area-inset-bottom, 0px)
+      - 156px
+    );
     padding: 4px 6px 6px 6px;
   }
 
