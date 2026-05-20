@@ -67,6 +67,7 @@
               <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
               </svg>
+              <button type="button" class="retry-upload-btn" @click.stop="retryPhotoUpload(photo.id)">다시 시도</button>
             </div>
             <button class="btn-remove" @click="removePhoto(index)" :disabled="photo.uploading">
               <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
@@ -685,6 +686,31 @@ const removePhoto = (index) => {
   selectedPhotos.value.splice(index, 1)
 }
 
+// 실패한 사진 재업로드
+const retryPhotoUpload = async (photoId) => {
+  const photo = selectedPhotos.value.find(p => p.id === photoId)
+  if (!photo || !photo.file || photo.uploading) return
+  photo.uploadFailed = false
+  photo.uploading = true
+  try {
+    const result = await fileService.upload(photo.file, { fileCode: 'FEED' })
+    if (result?.success && result?.data) {
+      const serverUrl = result.data.fileUrl || result.data.storedPath
+      if (photo.preview?.startsWith('blob:')) URL.revokeObjectURL(photo.preview)
+      photo.preview = serverUrl || photo.preview
+      photo.attachmentInfo = feedService.convertToAttachmentInfo(result.data)
+      photo.uploadFailed = false
+    } else {
+      photo.uploadFailed = true
+    }
+  } catch (e) {
+    console.error('❌ 재업로드 실패:', e)
+    photo.uploadFailed = true
+  } finally {
+    photo.uploading = false
+  }
+}
+
 
 // Hashtags
 const addHashtag = () => {
@@ -1207,20 +1233,39 @@ onBeforeUnmount(() => {
   animation: spin 1s linear infinite;
 }
 
-/* 업로드 실패 오버레이 */
+/* 업로드 실패 오버레이 — 전체 덮고 다시 시도 버튼 표시 */
 .upload-failed-overlay {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(239, 68, 68, 0.9);
-  border-radius: 50%;
-  padding: 8px;
+  inset: 0;
+  background: rgba(239, 68, 68, 0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 12px;
 }
 .upload-failed-overlay .icon {
   width: 24px;
   height: 24px;
   color: white;
+}
+.upload-failed-overlay .retry-upload-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1.5px solid white;
+  background: transparent;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: background 0.15s, color 0.15s;
+}
+.upload-failed-overlay .retry-upload-btn:hover {
+  background: white;
+  color: var(--c-danger);
 }
 
 .btn-remove {

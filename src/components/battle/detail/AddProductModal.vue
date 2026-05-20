@@ -1,73 +1,279 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="true" class="modal-overlay" @click.self="$emit('close')">
+      <div class="modal-overlay" @click.self="$emit('close')">
         <div class="modal-container">
           <!-- Modal Header -->
           <div class="modal-header">
             <h3 class="modal-title">아이템 추가하기</h3>
-            <button @click="$emit('close')" class="btn-close" type="button">
-              <svg class="close-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            <button @click="$emit('close')" class="btn-close" type="button" aria-label="닫기">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
-            </button>
-          </div>
-
-          <!-- Tab Navigation -->
-          <div class="tab-nav">
-            <button
-              v-for="tab in tabs"
-              :key="tab.id"
-              class="tab-btn"
-              :class="{ active: activeTab === tab.id }"
-              @click="activeTab = tab.id"
-              type="button"
-            >
-              <span class="tab-icon" v-html="tab.icon"></span>
-              <span class="tab-label">{{ tab.label }}</span>
             </button>
           </div>
 
           <!-- Modal Body -->
           <div class="modal-body">
+            <!-- 입력 방식 탭 -->
+            <div class="input-tabs">
+              <button
+                v-for="tab in tabs"
+                :key="tab.id"
+                class="tab-btn"
+                :class="{ active: activeTab === tab.id }"
+                @click="activeTab = tab.id"
+                type="button"
+              >
+                <span class="tab-icon" v-html="tab.icon"></span>
+                <span class="tab-label">{{ tab.label }}</span>
+              </button>
+            </div>
 
-            <!-- YouTube Tab -->
-            <div v-if="activeTab === 'youtube'" class="tab-panel">
+            <!-- 활성 탭 설명 -->
+            <div class="tab-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              <span>{{ activeTabHint }}</span>
+            </div>
+
+            <!-- 이미지 업로드 탭 — 다중 지원 -->
+            <div v-if="activeTab === 'image'" class="input-panel">
+              <div class="image-upload-section">
+                <!-- 드롭존 -->
+                <label
+                  class="drop-zone"
+                  :class="{ 'drag-over': isDragging }"
+                  @dragover.prevent="isDragging = true"
+                  @dragleave.prevent="isDragging = false"
+                  @drop.prevent="handleDrop"
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    class="hidden-input"
+                    @change="handleFileSelect"
+                  />
+                  <div class="drop-content">
+                    <div class="drop-badge">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      한 번에 여러 장 선택 가능
+                    </div>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    <p class="drop-title">사진을 끌어다 놓거나 탭하여 선택</p>
+                    <p class="drop-hint">파일 선택 창에서 여러 장을 한꺼번에 골라보세요 · 최대 10MB/장</p>
+                  </div>
+                </label>
+
+                <!-- 대기 이미지 목록 -->
+                <div v-if="pendingImages.length > 0" class="pending-images">
+                  <div class="pending-header">
+                    <span class="pending-title">업로드된 이미지 ({{ pendingImages.length }})</span>
+                    <button
+                      type="button"
+                      class="add-all-btn"
+                      :disabled="!canAddAll"
+                      @click="addAllImages"
+                    >
+                      전체 추가
+                    </button>
+                  </div>
+                  <div class="pending-grid">
+                    <div
+                      v-for="img in pendingImages"
+                      :key="img.id"
+                      class="pending-card"
+                      :class="{ 'is-failed': img.failed }"
+                    >
+                      <div class="pending-card-image">
+                        <img :src="img.previewUrl" :alt="img.customName || '이미지'" />
+                        <div v-if="img.uploading" class="upload-overlay">
+                          <div class="spinner"></div>
+                          <span>업로드 중...</span>
+                        </div>
+                        <div v-else-if="img.failed" class="upload-overlay failed">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                          </svg>
+                          <span>업로드 실패</span>
+                          <button type="button" class="retry-btn" @click.stop="retryUpload(img.id)">다시 시도</button>
+                        </div>
+                        <button
+                          class="card-remove-btn"
+                          type="button"
+                          aria-label="삭제"
+                          @click="removePendingImage(img.id)"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                          </svg>
+                        </button>
+                      </div>
+                      <div class="pending-card-inputs">
+                        <input
+                          v-model="img.customName"
+                          type="text"
+                          placeholder="아이템명 (필수)"
+                          class="card-input"
+                          :class="{ 'has-error': img.errorName }"
+                          maxlength="30"
+                        />
+                        <p v-if="img.errorName" class="input-error">아이템명을 입력하세요</p>
+                        <input
+                          v-model="img.customBrand"
+                          type="text"
+                          placeholder="추가 설명 (선택)"
+                          class="card-input small"
+                          maxlength="20"
+                        />
+                        <button
+                          type="button"
+                          class="card-add-btn"
+                          :disabled="!canAddSingle(img)"
+                          @click="addSingleImage(img.id)"
+                        >
+                          <svg v-if="img.submitting" width="14" height="14" viewBox="0 0 24 24" class="card-add-spinner">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" opacity="0.3"/>
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/>
+                          </svg>
+                          <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                          {{ img.submitting ? '추가 중...' : '추가' }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 제품 검색 탭 -->
+            <div v-if="activeTab === 'search'" class="input-panel">
+              <div class="product-search-wrapper">
+                <div class="product-search-bar">
+                  <svg class="product-search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    ref="searchInput"
+                    v-model="searchKeyword"
+                    type="text"
+                    class="product-search-input"
+                    placeholder="제품명을 검색하세요 (예: 나이키 조던 4)"
+                    @input="handleSearchInput"
+                    @keyup.enter="handleSearch"
+                  />
+                  <div v-if="searching" class="product-search-spinner">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                </div>
+
+                <div v-if="products.length > 0" class="product-suggestions">
+                  <button
+                    v-for="p in products"
+                    :key="p.productId || p.id"
+                    type="button"
+                    class="product-suggestion-item"
+                    :disabled="submittingProductId === (p.productId || p.id)"
+                    @click="selectProduct(p)"
+                  >
+                    <img
+                      :src="getProductImage(p)"
+                      :alt="p.name"
+                      class="product-suggestion-thumb"
+                      @error="handleImageError"
+                    />
+                    <div class="product-suggestion-info">
+                      <p class="product-suggestion-name">{{ p.name }}</p>
+                      <p class="product-suggestion-brand">{{ p.brand }}</p>
+                    </div>
+                    <span
+                      v-if="submittingProductId === (p.productId || p.id)"
+                      class="product-suggestion-badge"
+                    >추가 중...</span>
+                    <svg v-else class="product-suggestion-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+
+                <p v-if="!searchKeyword.trim() && !searching" class="product-search-hint">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  제품명을 입력하면 등록된 아이템을 자동으로 찾아드려요
+                </p>
+                <p v-else-if="searchKeyword.trim() && !searching && products.length === 0" class="product-search-hint">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  검색 결과가 없어요. "이미지 업로드" 탭에서 새 아이템을 만들 수 있어요
+                </p>
+              </div>
+            </div>
+
+            <!-- YouTube 탭 -->
+            <div v-if="activeTab === 'youtube'" class="input-panel">
               <div class="youtube-input-section">
                 <div class="input-row">
                   <input
                     v-model="youtubeUrl"
                     type="text"
                     placeholder="YouTube 링크를 붙여넣으세요"
-                    class="youtube-url-input"
+                    class="youtube-input"
                     @input="handleYoutubeInput"
                     @keyup.enter="submitYoutubeItem"
                   />
+                  <button
+                    class="add-btn"
+                    :disabled="!isYoutubeValid || submittingYoutube"
+                    @click="submitYoutubeItem"
+                    type="button"
+                  >
+                    <span v-if="submittingYoutube" class="btn-loading">
+                      <span class="spinner-tiny"></span>
+                    </span>
+                    <span v-else>추가</span>
+                  </button>
                 </div>
 
-                <!-- YouTube Preview -->
                 <div v-if="youtubePreview" class="youtube-preview">
                   <div class="preview-thumbnail">
-                    <img :src="youtubePreview.thumbnail" alt="YouTube 영상" />
+                    <img :src="youtubePreview.thumbnail" :alt="youtubePreview.customName || 'YouTube 영상'" />
                     <div class="play-overlay">
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
+                      <svg width="44" height="44" viewBox="0 0 24 24" fill="white">
                         <path d="M8 5v14l11-7z"/>
                       </svg>
                     </div>
                   </div>
-                  <div class="preview-inputs">
+                  <div class="preview-info">
                     <input
                       v-model="youtubePreview.customName"
                       type="text"
-                      placeholder="아이템 이름 (필수)"
+                      placeholder="아이템명 (필수)"
                       class="preview-input"
                       maxlength="30"
                     />
-                    <div class="char-count-inline">{{ (youtubePreview.customName || '').length }}/30</div>
                     <input
                       v-model="youtubePreview.customBrand"
                       type="text"
-                      placeholder="브랜드/채널 (선택)"
+                      placeholder="추가 설명 (선택)"
                       class="preview-input small"
                       maxlength="20"
                     />
@@ -75,248 +281,14 @@
                 </div>
 
                 <div v-else class="youtube-empty">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
                     <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
                   </svg>
-                  <p>YouTube 링크를 입력하면<br/>썸네일과 함께 아이템으로 추가됩니다</p>
-                </div>
-
-                <!-- Submit -->
-                <button
-                  @click="submitYoutubeItem"
-                  :disabled="!isYoutubeValid || submitting"
-                  class="btn-submit"
-                  type="button"
-                >
-                  <span v-if="submitting" class="btn-loading">
-                    <span class="spinner-tiny"></span>
-                    등록 중...
-                  </span>
-                  <span v-else>아이템 등록하기</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Image Upload Tab -->
-            <div v-if="activeTab === 'image'" class="tab-panel">
-              <!-- Image Upload Section -->
-              <div class="form-section">
-                <label class="form-label">
-                  아이템 사진
-                  <span class="required">*</span>
-                </label>
-
-                <div class="image-upload-area">
-                  <!-- Image Preview -->
-                  <div v-if="imagePreview" class="image-preview-wrapper" :class="{ uploading: imageUploading, 'upload-failed': uploadFailed }">
-                    <img :src="imagePreview" alt="Preview" class="preview-image" />
-
-                    <!-- Uploading Overlay -->
-                    <div v-if="imageUploading" class="upload-overlay">
-                      <div class="spinner-small"></div>
-                      <span class="overlay-text">업로드 중...</span>
-                    </div>
-
-                    <!-- Upload Failed Overlay -->
-                    <div v-if="uploadFailed" class="upload-failed-overlay">
-                      <svg class="failed-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                      </svg>
-                      <span class="overlay-text">업로드 실패</span>
-                    </div>
-
-                    <!-- Remove Button -->
-                    <button
-                      @click="$emit('clear-image')"
-                      class="btn-remove-image"
-                      :disabled="imageUploading"
-                      type="button"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                      </svg>
-                    </button>
-                  </div>
-
-                  <!-- Upload Area -->
-                  <label v-else class="image-upload-label">
-                    <div class="upload-icon-wrapper">
-                      <svg class="upload-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                      </svg>
-                    </div>
-                    <div class="upload-text-wrapper">
-                      <span class="upload-text-main">이미지 업로드</span>
-                      <span class="upload-text-hint">클릭하여 선택 (최대 10MB)</span>
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      @change="handleImageChange"
-                      class="hidden-input"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <!-- Product Name -->
-              <div class="form-section">
-                <label class="form-label">
-                  아이템명
-                  <span class="required">*</span>
-                </label>
-                <div class="input-wrapper">
-                  <input
-                    :value="name"
-                    @input="$emit('update:name', $event.target.value)"
-                    type="text"
-                    placeholder="예: AirPods Pro 2"
-                    maxlength="30"
-                    class="form-input"
-                  />
-                  <span class="char-count">{{ name.length }}/30</span>
-                </div>
-              </div>
-
-              <!-- Brand -->
-              <div class="form-section">
-                <label class="form-label">
-                  브랜드
-                  <span class="optional">(선택)</span>
-                </label>
-                <div class="input-wrapper">
-                  <input
-                    :value="brand"
-                    @input="$emit('update:brand', $event.target.value)"
-                    type="text"
-                    placeholder="예: Apple"
-                    maxlength="20"
-                    class="form-input"
-                  />
-                  <span class="char-count">{{ brand.length }}/20</span>
-                </div>
-              </div>
-
-              <!-- Submit Button -->
-              <button
-                @click="$emit('submit')"
-                :disabled="submitting || !isCustomValid"
-                class="btn-submit"
-                type="button"
-              >
-                <span v-if="submitting" class="btn-loading">
-                  <span class="spinner-tiny"></span>
-                  등록 중...
-                </span>
-                <span v-else>아이템 등록하기</span>
-              </button>
-            </div>
-
-            <!-- Product Search Tab -->
-            <div v-if="activeTab === 'search'" class="tab-panel">
-              <!-- Search Input -->
-              <div class="search-section">
-                <div class="search-wrapper">
-                  <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.35-4.35"/>
-                  </svg>
-                  <input
-                    ref="searchInput"
-                    v-model="searchKeyword"
-                    type="text"
-                    placeholder="아이템명, 브랜드로 검색..."
-                    class="search-input"
-                    @keyup.enter="handleSearch"
-                    @input="handleSearchInput"
-                  />
-                  <button
-                    v-if="searchKeyword"
-                    type="button"
-                    class="search-clear"
-                    @click="clearSearch"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Search Results -->
-              <div class="search-results">
-                <!-- Loading -->
-                <div v-if="searching" class="results-loading">
-                  <div class="spinner-medium"></div>
-                  <span>검색 중...</span>
-                </div>
-
-                <!-- Empty State (initial) -->
-                <div v-else-if="!searchKeyword && products.length === 0" class="results-empty">
-                  <div class="empty-illustration">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <circle cx="11" cy="11" r="8"/>
-                      <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                  </div>
-                  <p class="empty-title">아이템을 검색해보세요</p>
-                  <p class="empty-desc">아이템명이나 브랜드로 검색할 수 있어요</p>
-                </div>
-
-                <!-- No Results -->
-                <div v-else-if="searchKeyword && products.length === 0 && !searching" class="results-empty">
-                  <div class="empty-illustration warning">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <circle cx="12" cy="12" r="10"/>
-                      <line x1="12" y1="8" x2="12" y2="12"/>
-                      <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                  </div>
-                  <p class="empty-title">"{{ searchKeyword }}" 검색 결과가 없어요</p>
-                  <p class="empty-desc">이미지 업로드 탭에서 직접 추가해보세요</p>
-                  <button type="button" class="btn-switch-mode" @click="activeTab = 'image'">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                      <circle cx="8.5" cy="8.5" r="1.5"/>
-                      <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                    이미지로 직접 추가
-                  </button>
-                </div>
-
-                <!-- Product List -->
-                <div v-else class="product-list">
-                  <p class="results-count">검색 결과 {{ products.length }}개</p>
-                  <button
-                    v-for="product in products"
-                    :key="product.productId || product.id"
-                    type="button"
-                    class="product-item"
-                    @click="selectProduct(product)"
-                  >
-                    <img
-                      :src="getProductImage(product)"
-                      :alt="product.name"
-                      class="product-image"
-                      @error="handleImageError"
-                    />
-                    <div class="product-info">
-                      <p class="product-name">{{ product.name }}</p>
-                      <p class="product-brand">{{ product.brand }}</p>
-                    </div>
-                    <div class="select-badge">선택</div>
-                  </button>
+                  <p>YouTube 링크를 입력하면 썸네일과 함께 아이템으로 추가됩니다</p>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -325,80 +297,307 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick, watch, onBeforeUnmount } from 'vue'
 import { productService } from '@/services/ProductService.js'
+import { fileService } from '@/services/FileService.js'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
-const props = defineProps({
-  imagePreview: {
-    type: String,
-    default: null
-  },
-  imageUploading: {
-    type: Boolean,
-    default: false
-  },
-  uploadFailed: {
-    type: Boolean,
-    default: false
-  },
-  name: {
-    type: String,
-    default: ''
-  },
-  brand: {
-    type: String,
-    default: ''
-  },
-  submitting: {
-    type: Boolean,
-    default: false
-  }
-})
+const emit = defineEmits(['close', 'submit-image', 'select-product', 'submit-youtube'])
 
-const emit = defineEmits(['close', 'update:image', 'clear-image', 'update:name', 'update:brand', 'submit', 'select-product', 'submit-youtube'])
+const { open } = useConfirmDialog()
 
-// Tab definitions
 const tabs = [
   {
-    id: 'youtube',
-    label: 'YouTube',
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>'
-  },
-  {
     id: 'image',
-    label: '사진',
+    label: '이미지 업로드',
     icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
   },
   {
     id: 'search',
-    label: '제품검색',
+    label: '요거뜨 아이템',
     icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'
+  },
+  {
+    id: 'youtube',
+    label: 'YouTube',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>'
   }
 ]
 
-const activeTab = ref('youtube')
+const activeTab = ref('image')
+const isDragging = ref(false)
 
-// YouTube state
-const youtubeUrl = ref('')
-const youtubePreview = ref(null)
+const tabHints = {
+  image: '한 번에 여러 장도 OK — 각 사진에 이름을 적고 "추가" 버튼을 눌러주세요.',
+  search: '요거뜨에 이미 등록된 제품을 검색해서 빠르게 추가할 수 있어요.',
+  youtube: 'YouTube 영상 링크를 붙여넣으면 썸네일까지 자동으로 가져와요.'
+}
 
-// Search state
+const activeTabHint = computed(() => tabHints[activeTab.value])
+
+// ===== 다중 이미지 상태 =====
+const pendingImages = ref([])
+let nextImageId = 1
+
+function makeImageEntry(file, previewUrl) {
+  return {
+    id: nextImageId++,
+    file,
+    previewUrl,
+    customName: '',
+    customBrand: '',
+    uploading: true,
+    uploadedUrl: null,
+    failed: false,
+    submitting: false,
+    errorName: false
+  }
+}
+
+const canAddSingle = (img) => {
+  return !img.uploading && !img.failed && img.uploadedUrl && img.customName.trim().length > 0 && !img.submitting
+}
+
+const canAddAll = computed(() => {
+  return pendingImages.value.some(canAddSingle) && !pendingImages.value.some(i => i.submitting)
+})
+
+// 이미지 리사이징 (메모리 효율 + S3 비용 절감)
+function resizeImage(file, maxSize = 1920, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+
+      let { width, height } = img
+      if (width <= maxSize && height <= maxSize) {
+        resolve(file)
+        return
+      }
+
+      if (width > height) {
+        height = Math.round((height / width) * maxSize)
+        width = maxSize
+      } else {
+        width = Math.round((width / height) * maxSize)
+        height = maxSize
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const resized = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            })
+            resolve(resized)
+          } else {
+            reject(new Error('이미지 변환 실패'))
+          }
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('이미지 로드 실패'))
+    }
+
+    img.src = objectUrl
+  })
+}
+
+async function uploadOne(entry) {
+  entry.uploading = true
+  entry.failed = false
+  try {
+    const result = await fileService.uploadFiles(entry.file, { fileCode: 'BATTLE_ITEM' })
+    if (result?.success && result?.data?.fileUrl) {
+      entry.uploadedUrl = result.data.fileUrl
+      entry.uploading = false
+      entry.failed = false
+    } else {
+      entry.uploading = false
+      entry.failed = true
+      console.warn('[AddProductModal] 업로드 응답 비정상:', result)
+    }
+  } catch (error) {
+    entry.uploading = false
+    entry.failed = true
+    console.error('[AddProductModal] 이미지 업로드 실패:', error)
+  }
+}
+
+async function ingestFiles(files) {
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue
+    if (file.size > 10 * 1024 * 1024) {
+      await open({ type: 'alert', title: '파일 크기 초과', message: `${file.name}은(는) 10MB를 초과합니다.` })
+      continue
+    }
+
+    let resized
+    try {
+      resized = await resizeImage(file, 1920, 0.85)
+    } catch (e) {
+      console.error('[AddProductModal] 리사이즈 실패:', e)
+      resized = file
+    }
+
+    const previewUrl = URL.createObjectURL(resized)
+    const entry = makeImageEntry(resized, previewUrl)
+    pendingImages.value.push(entry)
+    // 업로드는 병렬 시작 (각 카드는 자기 자신만 watch)
+    uploadOne(entry)
+  }
+}
+
+const handleFileSelect = async (event) => {
+  const files = Array.from(event.target.files || [])
+  event.target.value = ''
+  await ingestFiles(files)
+}
+
+const handleDrop = async (e) => {
+  isDragging.value = false
+  const files = Array.from(e.dataTransfer?.files || [])
+  await ingestFiles(files)
+}
+
+const removePendingImage = (id) => {
+  const idx = pendingImages.value.findIndex(i => i.id === id)
+  if (idx === -1) return
+  const item = pendingImages.value[idx]
+  if (item.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(item.previewUrl)
+  pendingImages.value.splice(idx, 1)
+}
+
+const retryUpload = (id) => {
+  const entry = pendingImages.value.find(i => i.id === id)
+  if (!entry) return
+  uploadOne(entry)
+}
+
+const addSingleImage = (id) => {
+  const entry = pendingImages.value.find(i => i.id === id)
+  if (!entry) return
+  if (!entry.customName.trim()) {
+    entry.errorName = true
+    return
+  }
+  entry.errorName = false
+  if (!canAddSingle(entry)) return
+  entry.submitting = true
+  emit('submit-image', {
+    id: entry.id,
+    customName: entry.customName.trim(),
+    customBrand: entry.customBrand.trim() || null,
+    customImageUrl: entry.uploadedUrl
+  })
+}
+
+const addAllImages = () => {
+  pendingImages.value
+    .filter(canAddSingle)
+    .forEach(img => addSingleImage(img.id))
+}
+
+// 부모가 호출 — 단건 추가 성공/실패
+function markItemSuccess(id) {
+  removePendingImage(id)
+}
+function markItemFailure(id) {
+  const entry = pendingImages.value.find(i => i.id === id)
+  if (entry) entry.submitting = false
+}
+
+// ===== 제품 검색 =====
 const searchInput = ref(null)
 const searchKeyword = ref('')
 const products = ref([])
 const searching = ref(false)
+const submittingProductId = ref(null)
 let searchTimeout = null
 
-// Computed
-const isCustomValid = computed(() => {
-  return props.imagePreview && props.name.trim().length > 0 && !props.imageUploading && !props.uploadFailed
-})
+const handleSearchInput = () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  if (searchKeyword.value.trim().length === 0) {
+    products.value = []
+    return
+  }
+  searchTimeout = setTimeout(handleSearch, 300)
+}
+
+const handleSearch = async () => {
+  const keyword = searchKeyword.value.trim()
+  if (!keyword) {
+    products.value = []
+    return
+  }
+  searching.value = true
+  try {
+    const response = await productService.getProducts(
+      { keyword, status: 'APPROVED' },
+      { page: 0, size: 20, sort: 'createdAt,DESC' }
+    )
+    if (response.success && response.data) {
+      products.value = response.data.content || response.data || []
+    } else {
+      products.value = []
+    }
+  } catch (error) {
+    console.error('아이템 검색 실패:', error)
+    products.value = []
+  } finally {
+    searching.value = false
+  }
+}
+
+const selectProduct = (product) => {
+  const id = product.productId || product.id
+  if (submittingProductId.value) return
+  submittingProductId.value = id
+  emit('select-product', {
+    productId: id,
+    name: product.name,
+    brand: product.brand,
+    thumbnailUrl: getProductImage(product)
+  })
+}
+
+function markProductDone() {
+  submittingProductId.value = null
+}
+
+const getProductImage = (product) => {
+  return product.thumbnailDto?.fileUrl || product.thumbnailUrl || '/default-product.png'
+}
+
+const handleImageError = (e) => {
+  e.target.src = '/default-product.png'
+}
+
+// ===== YouTube =====
+const youtubeUrl = ref('')
+const youtubePreview = ref(null)
+const submittingYoutube = ref(false)
 
 const isYoutubeValid = computed(() => {
   return youtubePreview.value && youtubePreview.value.customName?.trim().length > 0
 })
 
-// YouTube methods
 const extractYoutubeId = (url) => {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
@@ -411,9 +610,7 @@ const extractYoutubeId = (url) => {
   return null
 }
 
-const getYoutubeThumbnail = (videoId) => {
-  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-}
+const getYoutubeThumbnail = (videoId) => `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
 
 const handleYoutubeInput = () => {
   const videoId = extractYoutubeId(youtubeUrl.value)
@@ -430,7 +627,8 @@ const handleYoutubeInput = () => {
 }
 
 const submitYoutubeItem = () => {
-  if (!isYoutubeValid.value) return
+  if (!isYoutubeValid.value || submittingYoutube.value) return
+  submittingYoutube.value = true
   emit('submit-youtube', {
     customName: youtubePreview.value.customName.trim(),
     customBrand: youtubePreview.value.customBrand?.trim() || '',
@@ -438,101 +636,37 @@ const submitYoutubeItem = () => {
     youtubeVideoId: youtubePreview.value.videoId,
     contentUrl: `https://www.youtube.com/watch?v=${youtubePreview.value.videoId}`
   })
-  // Reset
-  youtubeUrl.value = ''
-  youtubePreview.value = null
 }
 
-// Image methods
-const handleImageChange = (e) => {
-  emit('update:image', e)
-}
-
-// Search methods
-const handleSearchInput = () => {
-  if (searchTimeout) clearTimeout(searchTimeout)
-
-  if (searchKeyword.value.trim().length === 0) {
-    products.value = []
-    return
+function markYoutubeDone(success) {
+  submittingYoutube.value = false
+  if (success) {
+    youtubeUrl.value = ''
+    youtubePreview.value = null
   }
-
-  searchTimeout = setTimeout(() => {
-    handleSearch()
-  }, 500)
-}
-
-const handleSearch = async () => {
-  const keyword = searchKeyword.value.trim()
-  if (!keyword) {
-    products.value = []
-    return
-  }
-
-  searching.value = true
-
-  try {
-    const response = await productService.getProducts(
-      { keyword, status: 'APPROVED' },
-      { page: 0, size: 20, sort: 'createdAt,DESC' }
-    )
-
-    if (response.success && response.data) {
-      if (response.data.content && Array.isArray(response.data.content)) {
-        products.value = response.data.content
-      } else if (Array.isArray(response.data)) {
-        products.value = response.data
-      } else {
-        products.value = []
-      }
-    } else {
-      products.value = []
-    }
-  } catch (error) {
-    console.error('아이템 검색 실패:', error)
-    products.value = []
-  } finally {
-    searching.value = false
-  }
-}
-
-const clearSearch = () => {
-  searchKeyword.value = ''
-  products.value = []
-  if (searchTimeout) clearTimeout(searchTimeout)
-}
-
-const selectProduct = (product) => {
-  emit('select-product', {
-    productId: product.productId || product.id,
-    name: product.name,
-    brand: product.brand,
-    thumbnailUrl: getProductImage(product)
-  })
-}
-
-const getProductImage = (product) => {
-  return product.thumbnailDto?.fileUrl || product.thumbnailUrl || '/default-product.png'
-}
-
-const handleImageError = (e) => {
-  e.target.src = '/default-product.png'
 }
 
 // Focus search input when switching to search tab
 watch(activeTab, async (newTab) => {
   if (newTab === 'search') {
     await nextTick()
-    if (searchInput.value) {
-      searchInput.value.focus()
-    }
+    if (searchInput.value) searchInput.value.focus()
   }
 })
+
+onBeforeUnmount(() => {
+  pendingImages.value.forEach(img => {
+    if (img.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(img.previewUrl)
+  })
+  if (searchTimeout) clearTimeout(searchTimeout)
+})
+
+defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDone })
 </script>
 
 <style scoped>
 /* ============================= */
-/* 대기업 톤 — zinc 뉴트럴 기반    */
+/* 배틀 만들기 Step2 와 동일한 톤  */
 /* ============================= */
 .modal-overlay {
   position: fixed;
@@ -553,7 +687,7 @@ watch(activeTab, async (newTab) => {
   background: var(--bg-elevated);
   border-radius: 20px 20px 0 0;
   width: 100%;
-  max-width: 460px;
+  max-width: 560px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -571,7 +705,7 @@ watch(activeTab, async (newTab) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 24px 16px;
+  padding: 20px 24px 12px;
   flex-shrink: 0;
 }
 
@@ -580,73 +714,26 @@ watch(activeTab, async (newTab) => {
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .btn-close {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-mute);
+  background: var(--bg-subtle);
   border: none;
-  border-radius: 10px;
+  border-radius: 999px;
   cursor: pointer;
-  transition: background 0.15s;
-}
-
-.btn-close:hover { background: var(--border-strong); }
-
-.close-icon {
-  width: 18px;
-  height: 18px;
-  color: var(--text-secondary);
-}
-
-/* Tab Navigation — 세그먼트 컨트롤 */
-.tab-nav {
-  display: flex;
-  gap: 4px;
-  padding: 0 24px 16px;
-  flex-shrink: 0;
-}
-
-.tab-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 12px;
-  background: var(--bg-mute);
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
   color: var(--c-text-500);
-  cursor: pointer;
   transition: background 0.15s, color 0.15s;
-  letter-spacing: -0.01em;
-  font-family: inherit;
 }
 
-.tab-btn:hover {
+.btn-close:hover {
+  background: var(--border-default);
   color: var(--text-primary);
-  background: var(--border-strong);
-}
-
-.tab-btn.active {
-  background: var(--c-ink-900);
-  color: #ffffff;
-}
-
-.tab-icon {
-  display: flex;
-  align-items: center;
-}
-
-.tab-label {
-  white-space: nowrap;
 }
 
 /* Body */
@@ -656,17 +743,571 @@ watch(activeTab, async (newTab) => {
   padding: 0 24px 24px;
 }
 
-.tab-panel {
+/* ===== 탭 ===== */
+.input-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 4px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
 }
 
-/* ===== YouTube Tab ===== */
+.tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover:not(.active) {
+  color: var(--text-primary);
+  background: var(--bg-mute);
+}
+
+.tab-btn.active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.tab-icon { display: flex; align-items: center; }
+.tab-label { white-space: nowrap; }
+
+/* ===== 탭 안내 ===== */
+.tab-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: var(--c-brand-soft);
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--c-brand-hover);
+  line-height: 1.5;
+}
+
+.tab-hint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ===== 입력 패널 공통 ===== */
+.input-panel {
+  padding: 20px;
+  background: var(--bg-subtle);
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+}
+
+/* ===== 이미지 업로드 ===== */
+.image-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 24px;
+  border: 2px dashed var(--c-text-300);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-elevated);
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: var(--c-brand);
+  background: var(--c-brand-soft);
+}
+
+.hidden-input { display: none; }
+
+.drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.drop-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  margin-bottom: 14px;
+  background: var(--c-brand);
+  color: white;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  letter-spacing: -0.1px;
+}
+
+.drop-content > svg {
+  color: var(--c-text-400);
+  margin-bottom: 12px;
+}
+
+.drop-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-600);
+  margin: 0 0 4px 0;
+}
+
+.drop-hint {
+  font-size: 12px;
+  color: var(--c-text-400);
+  margin: 0;
+}
+
+/* ===== 대기 이미지 목록 ===== */
+.pending-images {
+  background: var(--bg-elevated);
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  overflow: hidden;
+}
+
+.pending-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.pending-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text-600);
+}
+
+.add-all-btn {
+  padding: 7px 14px;
+  background: var(--c-brand);
+  border: none;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.add-all-btn:hover:not(:disabled) {
+  background: var(--c-brand-hover);
+}
+
+.add-all-btn:disabled {
+  background: var(--border-strong);
+  color: var(--c-text-400);
+  cursor: not-allowed;
+}
+
+.pending-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.pending-card {
+  display: flex;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.pending-card.is-failed {
+  border-color: var(--c-danger);
+}
+
+.pending-card-image {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  flex-shrink: 0;
+  background: var(--border-default);
+  overflow: hidden;
+}
+
+.pending-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  z-index: 2;
+}
+
+.card-remove-btn:hover {
+  background: var(--c-danger);
+}
+
+.upload-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(147, 51, 234, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: white;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.upload-overlay.failed {
+  background: rgba(239, 68, 68, 0.85);
+  gap: 4px;
+}
+
+.upload-overlay .retry-btn {
+  margin-top: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1.5px solid white;
+  background: transparent;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+
+.upload-overlay .retry-btn:hover {
+  background: white;
+  color: var(--c-danger);
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.pending-card-inputs {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 5px 8px;
+  align-items: center;
+}
+
+.pending-card-inputs .card-input { grid-column: 1 / 2; }
+.pending-card-inputs .card-input.small { grid-column: 1 / 2; }
+.pending-card-inputs .input-error { grid-column: 1 / -1; }
+.pending-card-inputs .card-add-btn {
+  grid-column: 2 / 3;
+  grid-row: 1 / span 2;
+  margin-top: 0;
+  align-self: stretch;
+  width: auto;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.card-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.card-input::placeholder {
+  color: var(--c-text-400);
+  font-weight: 500;
+}
+
+.card-input:focus {
+  outline: none;
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.1);
+}
+
+.card-input.has-error {
+  border-color: var(--c-danger);
+  background: var(--c-danger-soft);
+}
+
+.card-input.small {
+  font-size: 11.5px;
+  padding: 6px 10px;
+}
+
+.input-error {
+  margin: -2px 0 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-danger);
+}
+
+.card-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px 14px;
+  background: var(--c-brand);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: background 0.15s;
+  margin-top: 2px;
+}
+
+.card-add-btn:hover:not(:disabled) {
+  background: var(--c-brand-hover);
+}
+
+.card-add-btn:disabled {
+  background: var(--border-strong);
+  color: var(--c-text-400);
+  cursor: not-allowed;
+}
+
+.card-add-spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ===== 제품 검색 ===== */
+.product-search-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.product-search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-default);
+  border-radius: 12px;
+  transition: all 0.15s ease;
+}
+
+.product-search-bar:focus-within {
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.08);
+}
+
+.product-search-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--c-text-400);
+  margin-left: 14px;
+  flex-shrink: 0;
+}
+
+.product-search-input {
+  flex: 1;
+  padding: 13px 14px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-primary);
+}
+
+.product-search-input::placeholder {
+  color: var(--c-text-300);
+  font-weight: 400;
+}
+
+.product-search-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.product-search-spinner svg {
+  width: 18px;
+  height: 18px;
+  color: var(--c-brand);
+  animation: spin 0.8s linear infinite;
+}
+
+.product-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.product-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+}
+
+.product-suggestion-item:hover:not(:disabled) {
+  border-color: var(--c-brand);
+  background: var(--c-brand-soft);
+}
+
+.product-suggestion-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.product-suggestion-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: var(--bg-mute);
+}
+
+.product-suggestion-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.product-suggestion-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-suggestion-brand {
+  font-size: 12px;
+  color: var(--c-text-500);
+  font-weight: 500;
+  margin: 0;
+}
+
+.product-suggestion-arrow {
+  width: 16px;
+  height: 16px;
+  color: var(--c-text-400);
+  flex-shrink: 0;
+}
+
+.product-suggestion-item:hover .product-suggestion-arrow {
+  color: var(--c-brand);
+}
+
+.product-suggestion-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.product-search-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 16px;
+  margin: 0;
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--c-text-500);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.product-search-hint svg {
+  flex-shrink: 0;
+  color: var(--c-text-400);
+}
+
+/* ===== YouTube ===== */
 .youtube-input-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .input-row {
@@ -674,27 +1315,69 @@ watch(activeTab, async (newTab) => {
   gap: 10px;
 }
 
-.youtube-url-input {
+.youtube-input {
   flex: 1;
+  min-width: 0;
   padding: 13px 16px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-strong);
+  border: 2px solid var(--border-strong);
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
-  color: var(--text-primary);
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
-}
-
-.youtube-url-input:focus {
-  outline: none;
   background: var(--bg-elevated);
-  border-color: var(--c-ink-900);
-  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
+  color: var(--text-primary);
+  transition: all 0.2s;
+  box-sizing: border-box;
 }
 
-.youtube-url-input::placeholder {
+.youtube-input:focus {
+  outline: none;
+  border-color: #FF0000;
+  box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.1);
+}
+
+.youtube-input::placeholder {
   color: var(--c-text-400);
+}
+
+.add-btn {
+  flex-shrink: 0;
+  padding: 13px 22px;
+  background: var(--c-brand);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: background 0.15s;
+}
+
+.add-btn:hover:not(:disabled) {
+  background: var(--c-brand-hover);
+}
+
+.add-btn:disabled {
+  background: var(--border-strong);
+  color: var(--c-text-400);
+  cursor: not-allowed;
+}
+
+.btn-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.spinner-tiny {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 .youtube-preview {
@@ -702,7 +1385,7 @@ watch(activeTab, async (newTab) => {
   flex-direction: column;
   gap: 12px;
   padding: 14px;
-  background: var(--bg-subtle);
+  background: var(--bg-elevated);
   border-radius: 12px;
   border: 1px solid var(--border-strong);
 }
@@ -713,6 +1396,7 @@ watch(activeTab, async (newTab) => {
   aspect-ratio: 16/9;
   border-radius: 8px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .preview-thumbnail img {
@@ -724,613 +1408,68 @@ watch(activeTab, async (newTab) => {
 .play-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.85;
 }
 
-.preview-inputs {
+.preview-info {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  position: relative;
 }
 
 .preview-input {
-  width: 100%;
-  padding: 12px 14px;
-  background: var(--bg-elevated);
+  padding: 10px 12px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
+  background: var(--bg-subtle);
   color: var(--text-primary);
-  transition: border-color 0.15s, box-shadow 0.15s;
-  box-sizing: border-box;
+  transition: border-color 0.15s;
 }
 
 .preview-input:focus {
   outline: none;
-  border-color: var(--c-ink-900);
-  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
+  border-color: var(--c-brand);
 }
 
 .preview-input.small {
   font-size: 13px;
-  padding: 10px 14px;
-}
-
-.char-count-inline {
-  position: absolute;
-  right: 12px;
-  top: 12px;
-  font-size: 11px;
-  color: var(--c-text-400);
-  font-weight: 500;
-  pointer-events: none;
+  padding: 8px 12px;
 }
 
 .youtube-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 24px;
   color: var(--c-text-400);
   text-align: center;
+  background: var(--bg-elevated);
+  border-radius: 12px;
+  border: 1px dashed var(--border-strong);
 }
 
 .youtube-empty svg {
-  margin-bottom: 12px;
-  color: var(--c-text-300);
+  margin-bottom: 10px;
+  opacity: 0.6;
 }
 
 .youtube-empty p {
   font-size: 13px;
   margin: 0;
-  line-height: 1.6;
   font-weight: 500;
 }
 
-/* ===== Image Upload Tab ===== */
-.form-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.form-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  letter-spacing: -0.01em;
-}
-
-.required {
-  color: var(--c-danger);
-}
-
-.optional {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--c-text-400);
-}
-
-.image-upload-area {
-  width: 100%;
-}
-
-.image-preview-wrapper {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border-strong);
-  transition: border-color 0.15s;
-}
-
-.image-preview-wrapper.uploading {
-  border-color: var(--c-ink-900);
-}
-
-.image-preview-wrapper.upload-failed {
-  border-color: var(--c-danger);
-}
-
-.preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.upload-overlay,
-.upload-failed-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.upload-overlay {
-  background: rgba(24, 24, 27, 0.75);
-}
-
-.upload-failed-overlay {
-  background: rgba(239, 68, 68, 0.8);
-}
-
-.overlay-text {
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-}
-
-.failed-icon-svg {
-  width: 24px;
-  height: 24px;
-  color: #ffffff;
-}
-
-.btn-remove-image {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 26px;
-  height: 26px;
-  background: rgba(0, 0, 0, 0.65);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
-}
-
-.btn-remove-image:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.85);
-}
-
-.btn-remove-image:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-remove-image svg {
-  width: 14px;
-  height: 14px;
-  color: #ffffff;
-}
-
-.image-upload-label {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 18px;
-  border: 1.5px dashed var(--c-text-300);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-  background: var(--bg-subtle);
-}
-
-.image-upload-label:hover {
-  border-color: var(--c-ink-900);
-  background: var(--bg-mute);
-}
-
-.upload-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: border-color 0.15s;
-}
-
-.image-upload-label:hover .upload-icon-wrapper {
-  border-color: var(--c-ink-900);
-}
-
-.upload-icon-svg {
-  width: 24px;
-  height: 24px;
-  color: var(--text-secondary);
-  transition: color 0.15s;
-}
-
-.image-upload-label:hover .upload-icon-svg {
-  color: var(--text-primary);
-}
-
-.upload-text-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.upload-text-main {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.upload-text-hint {
-  font-size: 12px;
-  color: var(--c-text-400);
-  font-weight: 500;
-}
-
-.hidden-input {
-  display: none;
-}
-
-/* Input */
-.input-wrapper {
-  position: relative;
-}
-
-.form-input {
-  width: 100%;
-  padding: 13px 16px;
-  padding-right: 60px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  font-size: 14px;
-  font-family: inherit;
-  color: var(--text-primary);
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
-  box-sizing: border-box;
-}
-
-.form-input:focus {
-  outline: none;
-  background: var(--bg-elevated);
-  border-color: var(--c-ink-900);
-  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
-}
-
-.form-input::placeholder {
-  color: var(--c-text-400);
-}
-
-.char-count {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 11px;
-  color: var(--c-text-400);
-  font-weight: 500;
-  pointer-events: none;
-}
-
-/* ===== Search Tab ===== */
-.search-section {
-  margin-bottom: 16px;
-}
-
-.search-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-icon-svg {
-  position: absolute;
-  left: 16px;
-  width: 18px;
-  height: 18px;
-  color: var(--c-text-400);
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  padding: 14px 48px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
-  font-size: 14px;
-  font-family: inherit;
-  color: var(--text-primary);
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
-  box-sizing: border-box;
-}
-
-.search-input:focus {
-  outline: none;
-  background: var(--bg-elevated);
-  border-color: var(--c-ink-900);
-  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
-}
-
-.search-input::placeholder {
-  color: var(--c-text-400);
-}
-
-.search-clear {
-  position: absolute;
-  right: 12px;
-  width: 26px;
-  height: 26px;
-  background: var(--border-strong);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
-}
-
-.search-clear:hover { background: var(--c-text-300); }
-
-.search-clear svg {
-  width: 12px;
-  height: 12px;
-  color: var(--text-secondary);
-}
-
-/* Search Results */
-.search-results {
-  flex: 1;
-  min-height: 200px;
-}
-
-.results-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 48px 20px;
-  color: var(--c-text-500);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.results-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 20px;
-  text-align: center;
-}
-
-.empty-illustration {
-  width: 56px;
-  height: 56px;
-  background: var(--bg-mute);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-.empty-illustration svg {
-  width: 24px;
-  height: 24px;
-  color: var(--c-text-400);
-}
-
-.empty-illustration.warning {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-strong);
-}
-
-.empty-illustration.warning svg {
-  color: var(--c-text-500);
-}
-
-.empty-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 6px 0;
-  letter-spacing: -0.01em;
-}
-
-.empty-desc {
-  font-size: 13px;
-  color: var(--c-text-400);
-  font-weight: 500;
-  margin: 0 0 16px 0;
-}
-
-.btn-switch-mode {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  background: var(--c-ink-900);
-  border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #ffffff;
-  cursor: pointer;
-  transition: background 0.15s;
-  letter-spacing: -0.01em;
-  font-family: inherit;
-}
-
-.btn-switch-mode svg {
-  width: 14px;
-  height: 14px;
-}
-
-.btn-switch-mode:hover { background: #27272a; }
-
-/* Product List */
-.product-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.results-count {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--c-text-400);
-  margin: 0 0 8px 0;
-  letter-spacing: -0.01em;
-}
-
-.product-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-  text-align: left;
-  width: 100%;
-  font-family: inherit;
-}
-
-.product-item:hover {
-  background: var(--bg-subtle);
-  border-color: var(--c-ink-900);
-}
-
-.product-item:hover .select-badge {
-  background: var(--c-ink-900);
-  color: #ffffff;
-  border-color: var(--c-ink-900);
-}
-
-.product-image {
-  width: 52px;
-  height: 52px;
-  object-fit: cover;
-  border-radius: 8px;
-  flex-shrink: 0;
-  background: var(--bg-mute);
-}
-
-.product-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.product-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-  margin: 0 0 3px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.product-brand {
-  font-size: 12px;
-  color: var(--c-text-500);
-  font-weight: 500;
-  margin: 0;
-}
-
-.select-badge {
-  padding: 5px 12px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  letter-spacing: -0.01em;
-}
-
-/* ===== Submit Button ===== */
-.btn-submit {
-  width: 100%;
-  padding: 14px 24px;
-  background: var(--c-ink-900);
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
-  cursor: pointer;
-  transition: background 0.15s;
-  font-family: inherit;
-  letter-spacing: -0.01em;
-  margin-top: 4px;
-}
-
-.btn-submit:hover:not(:disabled) {
-  background: #27272a;
-}
-
-.btn-submit:disabled {
-  background: var(--border-strong);
-  color: var(--c-text-400);
-  cursor: not-allowed;
-}
-
-.btn-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-/* Spinners */
-.spinner-tiny {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.spinner-small {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.spinner-medium {
-  width: 28px;
-  height: 28px;
-  border: 2.5px solid var(--bg-mute);
-  border-top-color: var(--text-primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
+/* ===== Transition ===== */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* Transition */
 .modal-enter-active,
 .modal-leave-active {
   transition: opacity 0.25s ease;
@@ -1366,59 +1505,14 @@ watch(activeTab, async (newTab) => {
   }
 }
 
-/* Mobile optimizations */
+/* ===== Mobile ===== */
 @media (max-width: 480px) {
-  .modal-header {
-    padding: 20px 20px 12px;
-  }
-
-  .tab-nav {
-    padding: 0 20px 12px;
-  }
-
-  .tab-btn {
-    padding: 8px 8px;
-    font-size: 12px;
-    gap: 4px;
-  }
-
-  .modal-body {
-    padding: 0 20px 20px;
-  }
-
-  .image-preview-wrapper {
-    width: 100px;
-    height: 100px;
-  }
-
-  .image-upload-label {
-    padding: 16px;
-    gap: 14px;
-  }
-
-  .upload-icon-wrapper {
-    width: 48px;
-    height: 48px;
-  }
-
-  .upload-icon-svg {
-    width: 24px;
-    height: 24px;
-  }
-
-  .form-input {
-    padding: 12px 14px;
-    padding-right: 54px;
-    font-size: 14px;
-  }
-
-  .product-item {
-    padding: 12px;
-  }
-
-  .product-image {
-    width: 48px;
-    height: 48px;
-  }
+  .modal-header { padding: 18px 20px 10px; }
+  .modal-body { padding: 0 20px 20px; }
+  .tab-btn { padding: 9px 8px; font-size: 12px; gap: 6px; }
+  .input-panel { padding: 16px; }
+  .drop-zone { padding: 28px 18px; }
+  .youtube-input { padding: 12px 14px; font-size: 13px; }
+  .add-btn { padding: 12px 18px; font-size: 13px; }
 }
 </style>

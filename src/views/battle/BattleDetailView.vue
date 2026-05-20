@@ -266,18 +266,9 @@
       <!-- Add Product Modal -->
       <AddProductModal
           v-if="showAddModal"
-          :image-preview="newProduct.imagePreview"
-          :image-uploading="newProduct.imageUploading"
-          :upload-failed="newProduct.uploadFailed"
-          :name="newProduct.name"
-          :brand="newProduct.brand"
-          :submitting="submitting"
+          ref="addModalRef"
           @close="closeAddModal"
-          @update:image="handleImageUpload"
-          @clear-image="clearImage"
-          @update:name="newProduct.name = $event"
-          @update:brand="newProduct.brand = $event"
-          @submit="submitNewProduct"
+          @submit-image="submitImageItem"
           @select-product="submitSelectedProduct"
           @submit-youtube="submitYoutubeProduct"
       />
@@ -364,7 +355,6 @@
 
 <script>
 import { battleService } from '@/services/BattleService.js'
-import { fileService } from '@/services/FileService.js'
 import { getUserId, getCurrentUser } from '@/utils/auth.js'
 import { normalizeYoutubeEmbedUrl } from '@/utils/youtubeEmbed.js'
 import { Capacitor } from '@capacitor/core'
@@ -406,15 +396,6 @@ export default {
       hasVoted: false,
       submitting: false,
       showAddModal: false,
-      newProduct: {
-        name: '',
-        brand: '',
-        imageFile: null,
-        imagePreview: null,
-        imageUploading: false,
-        uploadFailed: false,
-        uploadedImageUrl: null
-      },
       showShareModal: false,
       showReportModal: false,
       showCommentModal: false,
@@ -626,10 +607,6 @@ export default {
       this.hasVoted = false
       this.submitting = false
       this.showAddModal = false
-      this.newProduct = {
-        name: '', brand: '', imageFile: null, imagePreview: null,
-        imageUploading: false, uploadFailed: false, uploadedImageUrl: null
-      }
       this.showShareModal = false
       this.showCommentModal = false
       this.selectedCommentItem = null
@@ -841,62 +818,33 @@ export default {
       }
     },
 
-    async submitNewProduct() {
-      if (this.submitting) return
-
-      // 업로드 중인 경우 대기
-      if (this.newProduct.imageUploading) {
-        await this.open({ type: 'alert', title: '잠시만요', message: '이미지 업로드가 진행 중입니다. 잠시 후 다시 시도해주세요.' })
-        return
-      }
-
-      // 업로드 실패한 경우
-      if (this.newProduct.uploadFailed || !this.newProduct.uploadedImageUrl) {
-        await this.open({ type: 'alert', title: '이미지 오류', message: '이미지를 다시 업로드해주세요.' })
-        return
-      }
-
-      if (!this.newProduct.name) {
-        await this.open({ type: 'alert', title: '입력 필요', message: '아이템명을 입력해주세요' })
-        return
-      }
-
-      this.submitting = true
-
+    // 모달에서 이미지 1장 추가 — 모달은 닫지 않음 (여러 장 연달아 추가 가능)
+    async submitImageItem(data) {
       try {
-        // 이미 업로드된 URL 사용
         const itemData = {
           items: [{
             itemType: 'CUSTOM',
-            customName: this.newProduct.name,
-            customBrand: this.newProduct.brand || null,
-            customImageUrl: this.newProduct.uploadedImageUrl
+            customName: data.customName,
+            customBrand: data.customBrand || null,
+            customImageUrl: data.customImageUrl
           }]
         }
-
         const response = await battleService.addBattleItems(this.battleId, itemData)
-
         if (response.success) {
-          showExpGrant(response.data, { mode: 'full' })
-          await this.open({ type: 'alert', title: '등록 완료', message: '아이템이 등록되었습니다!' })
-          this.closeAddModal()
+          showExpGrant(response.data, { mode: 'burst-only' })
+          this.$refs.addModalRef?.markItemSuccess(data.id)
           await this.loadBattle()
         } else {
           throw new Error(response.message || '아이템 등록에 실패했습니다.')
         }
       } catch (err) {
         console.error('아이템 등록 실패:', err)
+        this.$refs.addModalRef?.markItemFailure(data.id)
         await this.open({ type: 'alert', title: '오류', message: err.message || '아이템 등록에 실패했습니다.' })
-      } finally {
-        this.submitting = false
       }
     },
 
     async submitSelectedProduct(product) {
-      if (this.submitting) return
-
-      this.submitting = true
-
       try {
         const itemData = {
           items: [{
@@ -904,13 +852,9 @@ export default {
             productId: product.productId
           }]
         }
-
         const response = await battleService.addBattleItems(this.battleId, itemData)
-
         if (response.success) {
-          showExpGrant(response.data, { mode: 'full' })
-          await this.open({ type: 'alert', title: '등록 완료', message: '아이템이 등록되었습니다!' })
-          this.closeAddModal()
+          showExpGrant(response.data, { mode: 'burst-only' })
           await this.loadBattle()
         } else {
           throw new Error(response.message || '아이템 등록에 실패했습니다.')
@@ -919,15 +863,12 @@ export default {
         console.error('아이템 등록 실패:', err)
         await this.open({ type: 'alert', title: '오류', message: err.message || '아이템 등록에 실패했습니다.' })
       } finally {
-        this.submitting = false
+        this.$refs.addModalRef?.markProductDone()
       }
     },
 
     async submitYoutubeProduct(youtubeData) {
-      if (this.submitting) return
-
-      this.submitting = true
-
+      let succeeded = false
       try {
         const itemData = {
           items: [{
@@ -938,13 +879,10 @@ export default {
             contentUrl: youtubeData.contentUrl || null
           }]
         }
-
         const response = await battleService.addBattleItems(this.battleId, itemData)
-
         if (response.success) {
-          showExpGrant(response.data, { mode: 'full' })
-          await this.open({ type: 'alert', title: '등록 완료', message: '아이템이 등록되었습니다!' })
-          this.closeAddModal()
+          succeeded = true
+          showExpGrant(response.data, { mode: 'burst-only' })
           await this.loadBattle()
         } else {
           throw new Error(response.message || '아이템 등록에 실패했습니다.')
@@ -953,7 +891,7 @@ export default {
         console.error('YouTube 아이템 등록 실패:', err)
         await this.open({ type: 'alert', title: '오류', message: err.message || '아이템 등록에 실패했습니다.' })
       } finally {
-        this.submitting = false
+        this.$refs.addModalRef?.markYoutubeDone(succeeded)
       }
     },
 
@@ -1236,132 +1174,8 @@ export default {
       }
     },
 
-    // 이미지 리사이징 유틸 함수
-    resizeImage(file, maxSize = 1920, quality = 0.85) {
-      return new Promise((resolve, reject) => {
-        const img = new Image()
-        const objectUrl = URL.createObjectURL(file)
-
-        img.onload = () => {
-          URL.revokeObjectURL(objectUrl)
-
-          let { width, height } = img
-
-          // 이미 충분히 작으면 원본 반환
-          if (width <= maxSize && height <= maxSize) {
-            resolve(file)
-            return
-          }
-
-          // 비율 유지하면서 리사이징
-          if (width > height) {
-            height = Math.round((height / width) * maxSize)
-            width = maxSize
-          } else {
-            width = Math.round((width / height) * maxSize)
-            height = maxSize
-          }
-
-          const canvas = document.createElement('canvas')
-          canvas.width = width
-          canvas.height = height
-
-          const ctx = canvas.getContext('2d')
-          ctx.imageSmoothingEnabled = true
-          ctx.imageSmoothingQuality = 'high'
-          ctx.drawImage(img, 0, 0, width, height)
-
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const resizedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
-                  type: 'image/jpeg',
-                  lastModified: Date.now()
-                })
-                resolve(resizedFile)
-              } else {
-                reject(new Error('이미지 변환 실패'))
-              }
-            },
-            'image/jpeg',
-            quality
-          )
-        }
-
-        img.onerror = () => {
-          URL.revokeObjectURL(objectUrl)
-          reject(new Error('이미지 로드 실패'))
-        }
-
-        img.src = objectUrl
-      })
-    },
-
-    async handleImageUpload(e) {
-      const file = e.target.files?.[0]
-      if (!file) return
-
-      if (file.size > 10 * 1024 * 1024) {
-        await this.open({ type: 'alert', title: '파일 크기 초과', message: '파일 크기는 10MB 이하여야 합니다.' })
-        return
-      }
-
-      // 상태 초기화
-      this.newProduct.uploadFailed = false
-      this.newProduct.uploadedImageUrl = null
-
-      try {
-        // 1. 이미지 리사이징
-        const resizedFile = await this.resizeImage(file, 1920, 0.85)
-
-        // 2. 로컬 미리보기 생성
-        this.newProduct.imageFile = resizedFile
-        this.newProduct.imagePreview = URL.createObjectURL(resizedFile)
-        this.newProduct.imageUploading = true
-
-        // 3. S3 업로드
-        const uploadResult = await fileService.uploadFiles(resizedFile, { fileCode: 'BATTLE_ITEM' })
-
-        if (uploadResult.success && uploadResult.data) {
-          this.newProduct.uploadedImageUrl = uploadResult.data.fileUrl
-          this.newProduct.imageUploading = false
-          console.log('✅ 배틀 아이템 이미지 업로드 완료:', uploadResult.data.fileUrl)
-        } else {
-          throw new Error(uploadResult.error || '업로드 실패')
-        }
-      } catch (error) {
-        console.error('❌ 이미지 업로드 실패:', error)
-        this.newProduct.imageUploading = false
-        this.newProduct.uploadFailed = true
-        await this.open({ type: 'alert', title: '업로드 실패', message: '이미지 업로드에 실패했습니다. 다시 시도해주세요.' })
-      }
-    },
-
-    clearImage() {
-      if (this.newProduct.imagePreview && this.newProduct.imagePreview.startsWith('blob:')) {
-        URL.revokeObjectURL(this.newProduct.imagePreview)
-      }
-      this.newProduct.imageFile = null
-      this.newProduct.imagePreview = null
-      this.newProduct.imageUploading = false
-      this.newProduct.uploadFailed = false
-      this.newProduct.uploadedImageUrl = null
-    },
-
     closeAddModal() {
       this.showAddModal = false
-      if (this.newProduct.imagePreview && this.newProduct.imagePreview.startsWith('blob:')) {
-        URL.revokeObjectURL(this.newProduct.imagePreview)
-      }
-      this.newProduct = {
-        name: '',
-        brand: '',
-        imageFile: null,
-        imagePreview: null,
-        imageUploading: false,
-        uploadFailed: false,
-        uploadedImageUrl: null
-      }
     },
 
     async handleAddProduct() {
@@ -1441,9 +1255,6 @@ export default {
     }
   },
   beforeUnmount() {
-    if (this.newProduct.imagePreview && this.newProduct.imagePreview.startsWith('blob:')) {
-      URL.revokeObjectURL(this.newProduct.imagePreview)
-    }
     if (this._onWindowScroll) {
       window.removeEventListener('scroll', this._onWindowScroll)
     }

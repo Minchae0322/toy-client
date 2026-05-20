@@ -151,11 +151,20 @@
                 :key="index"
                 class="pending-card"
             >
-              <div class="pending-card-image">
+              <div class="pending-card-image" :class="{ 'is-failed': img.failed }">
                 <img :src="img.previewUrl" :alt="img.customName || '이미지'">
                 <div v-if="img.uploading" class="upload-overlay">
                   <div class="spinner"></div>
                   <span>업로드 중...</span>
+                </div>
+                <div v-else-if="img.failed" class="upload-overlay failed">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <span>업로드 실패</span>
+                  <button type="button" class="retry-btn" @click.stop="retryUpload(index)">다시 시도</button>
                 </div>
                 <button
                     class="card-remove-btn"
@@ -191,7 +200,7 @@
                 >
                 <button
                     class="card-add-btn"
-                    :disabled="!img.customName?.trim() || img.uploading"
+                    :disabled="!img.customName?.trim() || img.uploading || img.failed || !img.uploadedUrl"
                     @click="addSingleImage(index)"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -544,6 +553,33 @@ const handleFileDrop = (event) => {
   processFiles(files);
 };
 
+async function uploadOne(imageData) {
+  imageData.uploading = true;
+  imageData.failed = false;
+  try {
+    const result = await fileService.upload(imageData.file, { fileCode: 'BATTLE_ITEM' });
+    if (result?.success && result?.data && (result.data.fileUrl || result.data.storedPath)) {
+      imageData.uploadedUrl = result.data.fileUrl || result.data.storedPath;
+      imageData.attachmentInfo = {
+        fileId: result.data.id,
+        storedPath: result.data.fileUrl,
+        originName: result.data.orgFileNm || imageData.file.name,
+        fileSize: result.data.fileSize || imageData.file.size,
+        contentType: result.data.contentType || imageData.file.type
+      };
+      imageData.failed = false;
+    } else {
+      imageData.failed = true;
+      console.warn('이미지 업로드 응답 비정상:', result);
+    }
+  } catch (error) {
+    imageData.failed = true;
+    console.error('이미지 업로드 실패:', error);
+  } finally {
+    imageData.uploading = false;
+  }
+}
+
 const processFiles = async (files) => {
   const imageFiles = files.filter(file => file.type.startsWith('image/'));
   // 새 업로드 시작 시 이전 검증 에러 초기화
@@ -555,7 +591,6 @@ const processFiles = async (files) => {
       continue;
     }
 
-    // 로컬 프리뷰 생성
     const previewUrl = URL.createObjectURL(file);
     const imageData = {
       file,
@@ -564,30 +599,19 @@ const processFiles = async (files) => {
       customBrand: '',
       uploading: true,
       uploadedUrl: null,
-      attachmentInfo: null
+      attachmentInfo: null,
+      failed: false
     };
 
     pendingImages.value.push(imageData);
-
-    // 서버 업로드
-    try {
-      const result = await fileService.upload(file, { fileCode: 'BATTLE_ITEM' });
-      if (result.success && result.data) {
-        imageData.uploadedUrl = result.data.fileUrl || result.data.storedPath;
-        imageData.attachmentInfo = {
-          fileId: result.data.id,
-          storedPath: result.data.fileUrl,
-          originName: result.data.orgFileNm || file.name,
-          fileSize: result.data.fileSize || file.size,
-          contentType: result.data.contentType || file.type
-        };
-      }
-    } catch (error) {
-      console.error('이미지 업로드 실패:', error);
-    } finally {
-      imageData.uploading = false;
-    }
+    // 병렬 업로드 — 카드별 독립
+    uploadOne(imageData);
   }
+};
+
+const retryUpload = (index) => {
+  const item = pendingImages.value[index];
+  if (item) uploadOne(item);
 };
 
 // 이미지 개별 추가
@@ -1271,6 +1295,36 @@ const handleImageError = (event) => {
   color: white;
   font-size: 12px;
   font-weight: 500;
+}
+
+.upload-overlay.failed {
+  background: rgba(239, 68, 68, 0.88);
+  gap: 4px;
+}
+
+.upload-overlay .retry-btn {
+  margin-top: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1.5px solid white;
+  background: transparent;
+  color: white;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: background 0.15s, color 0.15s;
+}
+
+.upload-overlay .retry-btn:hover {
+  background: white;
+  color: var(--c-danger);
+}
+
+.pending-card-image.is-failed {
+  outline: 1.5px solid var(--c-danger);
+  outline-offset: -1.5px;
 }
 
 .spinner {
