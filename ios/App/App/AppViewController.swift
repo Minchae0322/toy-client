@@ -1,5 +1,17 @@
 import UIKit
 import Capacitor
+import WebKit
+
+// WKWebView 의 inputAccessoryView 를 제거해서 텍스트 입력 시 키보드 위에 뜨는
+// 회색 도구막대(이전/다음 필드 화살표 + Done ✓) 를 숨긴다. 카톡처럼 입력창이
+// 키보드 바로 위에 붙도록 — visualViewport.height 가 도구막대 높이만큼 늘어나
+// --chat-kb-h(키보드 높이) 가 자동으로 줄어들면서 ChatDetailView 의 입력창이
+// 키보드 상단에 정확히 정렬된다.
+extension WKWebView {
+    open override var inputAccessoryView: UIView? {
+        return nil
+    }
+}
 
 class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
 
