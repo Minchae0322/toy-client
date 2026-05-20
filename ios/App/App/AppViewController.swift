@@ -20,7 +20,9 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         applyAdaptiveBackground()
-        self.webView?.allowsBackForwardNavigationGestures = true
+        // 네이티브 WKWebView 엣지 제스처는 비활성. 커스텀 pan 하나가 chevron + 페이지 슬라이드 + goBack 까지 단독 처리.
+        // 둘 다 켜면 같은 스와이프에 둘 다 commit 되어 두 페이지 뒤로 점프(검은 화면 / "이상한 화면으로 순간이동")가 발생함.
+        self.webView?.allowsBackForwardNavigationGestures = false
         installWiderBackSwipeGesture()
         setupSwipeIndicator()
     }
@@ -101,6 +103,7 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
 
         case .changed:
             updateSwipeIndicator(translation: translation)
+            updateWebViewOffset(translation: translation)
 
         case .ended, .cancelled:
             let isFromLeftEdge = swipeStartLocation.x <= backSwipeEdgeWidth
@@ -109,16 +112,60 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
             let shouldGoBack = isFromLeftEdge && isHorizontalDominant && isFarEnough
 
             if shouldGoBack {
-                animateIndicatorOut(success: true) { [weak webView] in
-                    webView?.goBack()
-                }
+                commitBack()
             } else {
-                animateIndicatorOut(success: false, completion: nil)
+                cancelBack()
             }
 
         default:
             break
         }
+    }
+
+    // Chrome iOS 처럼 손가락을 따라 페이지가 함께 밀려가도록 webView 자체에 translationX 적용.
+    // 멈추면 그 자리에 정지(스프링 백 없이) — 손가락이 떨어질 때 commit/cancel 분기에서 부드럽게 정리.
+    private func updateWebViewOffset(translation: CGPoint) {
+        guard let webView = self.webView else { return }
+        let isFromLeftEdge = swipeStartLocation.x <= backSwipeEdgeWidth
+        if !isFromLeftEdge || translation.x <= 0 {
+            webView.transform = .identity
+            return
+        }
+        // 약간의 저항 — 화면 폭의 80% 지점부터 추가 끌림이 줄어들어 자연스러운 한계감
+        let width = view.bounds.width
+        let dx = max(0, translation.x)
+        let soft: CGFloat
+        if dx <= width * 0.6 {
+            soft = dx
+        } else {
+            let over = dx - width * 0.6
+            soft = width * 0.6 + over * 0.55
+        }
+        webView.transform = CGAffineTransform(translationX: min(soft, width), y: 0)
+    }
+
+    private func commitBack() {
+        guard let webView = self.webView else { return }
+        animateIndicatorOut(success: true, completion: nil)
+        let width = view.bounds.width
+        UIView.animate(withDuration: 0.22, delay: 0, options: [.curveEaseOut], animations: {
+            webView.transform = CGAffineTransform(translationX: width, y: 0)
+        }, completion: { _ in
+            // 페이지를 우측으로 완전히 밀어낸 직후 goBack — 새 페이지는 즉시 identity 위치에 들어옴.
+            // 한 runloop 띄워서 transform 리셋 → 잔상/플리커 방지.
+            webView.goBack()
+            DispatchQueue.main.async {
+                webView.transform = .identity
+            }
+        })
+    }
+
+    private func cancelBack() {
+        guard let webView = self.webView else { return }
+        animateIndicatorOut(success: false, completion: nil)
+        UIView.animate(withDuration: 0.22, delay: 0, options: [.curveEaseOut], animations: {
+            webView.transform = .identity
+        })
     }
 
     private func updateSwipeIndicator(translation: CGPoint) {

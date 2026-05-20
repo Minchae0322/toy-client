@@ -1,129 +1,61 @@
 <template>
   <Teleport to="body">
-    <TransitionGroup name="toast" tag="div" class="toast-container">
-      <div
+    <TransitionGroup name="toast" tag="div" class="toast-stack">
+      <button
         v-for="toast in toasts"
         :key="toast._toastId"
-        class="toast-item"
+        type="button"
+        class="toast-card"
         @click="handleClick(toast)"
       >
-        <!-- 타입 아이콘 -->
-        <div class="toast-icon" :class="getTypeClass(toast.type)">
-          <component :is="getTypeIcon(toast.type)" class="icon" />
-        </div>
-
-        <!-- 내용 -->
-        <div class="toast-content">
-          <div class="toast-header">
-            <span class="toast-type-label">{{ getTypeLabel(toast.type) }}</span>
-            <span class="toast-time">방금 전</span>
-          </div>
-          <p class="toast-title">{{ toast.title }}</p>
-          <p class="toast-body">{{ toast.content }}</p>
-        </div>
-
-        <!-- 닫기 버튼 -->
-        <button class="toast-close" @click.stop="removeToast(toast._toastId)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-
-        <!-- 프로그레스 바 (단색) -->
-        <div class="toast-progress" :style="{ animationDuration: `${duration}ms` }"></div>
-      </div>
+        <span class="toast-icon" :class="getTypeClass(toast.type)">
+          <component :is="getTypeIcon(toast.type)" :size="18" :stroke-width="2.2" />
+        </span>
+        <span class="toast-body">
+          <span class="toast-title">{{ toast.title || getTypeLabel(toast.type) }}</span>
+          <span v-if="toast.content" class="toast-preview">{{ toast.content }}</span>
+        </span>
+      </button>
     </TransitionGroup>
   </Teleport>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, h } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { MessageCircle, Heart, UserPlus, MessageSquare, Bell, Trophy } from 'lucide-vue-next'
 import webSocketService from '@/services/webSocketService.js'
 import { notificationService } from '@/services/NotificationService.js'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// 토스트 목록
 const toasts = ref([])
-const duration = 5000
+const duration = 4500
 const maxToasts = 3
 
 let toastId = 0
 
-// ==================== 타입별 아이콘 ====================
-
-const IconComment = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
-    ])
-  }
-}
-
-const IconHeart = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'currentColor' }, [
-      h('path', { d: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' })
-    ])
-  }
-}
-
-const IconUser = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
-      h('circle', { cx: '12', cy: '7', r: '4' })
-    ])
-  }
-}
-
-const IconMessage = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z' }),
-      h('polyline', { points: '22,6 12,13 2,6' })
-    ])
-  }
-}
-
-const IconBell = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' }),
-      h('path', { d: 'M13.73 21a2 2 0 0 1-3.46 0' })
-    ])
-  }
-}
-
-const IconStar = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'currentColor' }, [
-      h('polygon', { points: '12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' })
-    ])
-  }
-}
-
 const getTypeIcon = (type) => {
   const iconMap = {
-    'COMMENT': IconComment,
-    'FEED_COMMENT': IconComment,
-    'LIKE': IconHeart,
-    'FEED_LIKE': IconHeart,
-    'FOLLOW': IconUser,
-    'CHAT': IconMessage,
-    'SYSTEM': IconBell,
-    'BATTLE': IconStar,
-    'BATTLE_VOTE': IconStar
+    'COMMENT': MessageCircle,
+    'FEED_COMMENT': MessageCircle,
+    'BATTLE_ITEM_COMMENT': MessageCircle,
+    'LIKE': Heart,
+    'FEED_LIKE': Heart,
+    'FOLLOW': UserPlus,
+    'CHAT': MessageSquare,
+    'SYSTEM': Bell,
+    'BATTLE': Trophy,
+    'BATTLE_VOTE': Trophy
   }
-  return iconMap[type] || IconBell
+  return iconMap[type] || Bell
 }
 
 const getTypeClass = (type) => {
   const classMap = {
     'COMMENT': 'type-comment',
     'FEED_COMMENT': 'type-comment',
+    'BATTLE_ITEM_COMMENT': 'type-comment',
     'LIKE': 'type-like',
     'FEED_LIKE': 'type-like',
     'FOLLOW': 'type-follow',
@@ -137,14 +69,14 @@ const getTypeClass = (type) => {
 
 const getTypeLabel = (type) => {
   const labelMap = {
-    'COMMENT': '댓글',
-    'FEED_COMMENT': '피드 댓글',
-    'LIKE': '좋아요',
-    'FEED_LIKE': '피드 좋아요',
-    'FOLLOW': '팔로우',
-    'CHAT': '채팅',
-    'SYSTEM': '시스템',
-    'BATTLE': '배틀',
+    'COMMENT': '새 댓글',
+    'FEED_COMMENT': '새 댓글',
+    'LIKE': '새 좋아요',
+    'FEED_LIKE': '새 좋아요',
+    'FOLLOW': '새 팔로워',
+    'CHAT': '새 메시지',
+    'SYSTEM': '알림',
+    'BATTLE': '배틀 소식',
     'BATTLE_VOTE': '배틀 투표',
     'BATTLE_ITEM_COMMENT': '요거픽 댓글'
   }
@@ -222,243 +154,159 @@ defineExpose({ addToast })
 </script>
 
 <style scoped>
-.toast-container {
+/* 스택 — PC: 우상단, 모바일: 상단 중앙 */
+.toast-stack {
   position: fixed;
-  top: 80px;
+  top: calc(20px + env(safe-area-inset-top, 0px));
   right: 20px;
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 10px;
   pointer-events: none;
+  /* iOS safe-area + 글로벌 헤더 회피 */
 }
 
-.toast-item {
+/* 카드 — 화이트 / 헤어라인 / soft shadow, 좌측 컬러 아이콘 + 1줄 제목 + 1줄 본문 */
+.toast-card {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  width: 380px;
-  padding: 16px 18px;
-  background: var(--bg-elevated);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--border-strong);
-  cursor: pointer;
+  align-items: center;
+  gap: 12px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 16px;
+  background: var(--bg-elevated, #ffffff);
+  border: 1px solid var(--border-strong, #f1f3f6);
+  border-radius: 16px;
+  box-shadow:
+    0 10px 28px rgba(15, 23, 42, 0.08),
+    0 4px 8px rgba(15, 23, 42, 0.04);
   pointer-events: auto;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+  letter-spacing: -0.2px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.toast-item:hover {
-  transform: translateX(-4px);
-  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
+.toast-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 34px rgba(15, 23, 42, 0.1),
+    0 6px 10px rgba(15, 23, 42, 0.05);
 }
 
-/* 타입 아이콘 */
+.toast-card:active {
+  transform: translateY(0);
+  box-shadow:
+    0 6px 16px rgba(15, 23, 42, 0.08),
+    0 2px 4px rgba(15, 23, 42, 0.04);
+}
+
+/* 아이콘 — 솔리드 soft bg + 타입 컬러 stroke */
 .toast-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.toast-icon .icon {
-  width: 18px;
-  height: 18px;
-}
+.type-comment { background: var(--c-info-soft, #E0F2FE); color: var(--c-info, #0284C7); }
+.type-like { background: var(--c-danger-soft, #FEE2E2); color: var(--c-danger, #EF4444); }
+.type-follow { background: var(--c-success-soft, #DCFCE7); color: var(--c-success, #16A34A); }
+.type-chat { background: var(--c-brand-soft, #FAF5FF); color: var(--c-brand, #9333EA); }
+.type-system { background: var(--bg-subtle, #F7F8FA); color: var(--c-text-600, #475569); }
+.type-battle { background: var(--c-warning-soft, #FEF9C3); color: var(--c-bronze, #D97706); }
+.type-default { background: var(--bg-subtle, #F7F8FA); color: var(--c-text-600, #475569); }
 
-.type-comment {
-  background: var(--c-info-soft);
-  color: var(--c-info);
-}
-
-.type-like {
-  background: var(--c-danger-soft);
-  color: var(--c-danger);
-}
-
-.type-follow {
-  background: var(--c-success-soft);
-  color: var(--c-success);
-}
-
-.type-chat {
-  background: var(--c-brand-soft);
-  color: var(--c-brand);
-}
-
-.type-system {
-  background: var(--bg-subtle);
-  color: var(--c-text-600);
-}
-
-.type-battle {
-  background: var(--c-warning-soft);
-  color: var(--c-bronze);
-}
-
-.type-default {
-  background: var(--bg-subtle);
-  color: var(--c-text-600);
-}
-
-/* 내용 */
-.toast-content {
+/* 텍스트 — 굵은 제목 1줄 + 회색 본문 1줄 */
+.toast-body {
   flex: 1;
   min-width: 0;
-  padding-right: 24px;
-}
-
-.toast-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.toast-type-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--c-text-500);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.toast-time {
-  font-size: 11px;
-  color: var(--c-text-400);
+  flex-direction: column;
+  gap: 2px;
 }
 
 .toast-title {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 3px 0;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  font-weight: 700;
+  color: var(--text-primary, #0A0E1A);
+  line-height: 1.35;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.toast-body {
+.toast-preview {
   font-size: 13px;
-  color: var(--c-text-600);
-  margin: 0;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  font-weight: 500;
+  color: var(--c-text-500, #64748B);
+  line-height: 1.4;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* 닫기 버튼 */
-.toast-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 26px;
-  height: 26px;
-  border: none;
-  background: transparent;
-  color: #d4d4d4;
-  cursor: pointer;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-}
-
-.toast-close svg {
-  width: 12px;
-  height: 12px;
-}
-
-.toast-close:hover {
-  background: var(--bg-subtle);
-  color: var(--c-text-500);
-}
-
-/* 프로그레스 바 (단색) */
-.toast-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background: var(--c-brand);
-  animation: progress linear forwards;
-  border-radius: 0 0 0 12px;
-}
-
-@keyframes progress {
-  from { width: 100%; }
-  to { width: 0%; }
-}
-
-/* 트랜지션 */
+/* 트랜지션 — 위에서 살짝 튕기며 슬라이드 다운 */
 .toast-enter-active {
-  transition: all 0.3s ease-out;
+  transition:
+    transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    opacity 0.25s ease-out;
 }
 
 .toast-leave-active {
-  transition: all 0.2s ease-in;
+  transition: transform 0.22s ease-in, opacity 0.22s ease-in;
+  position: absolute;
+  right: 0;
 }
 
 .toast-enter-from {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateY(-16px) scale(0.96);
 }
 
 .toast-leave-to {
   opacity: 0;
-  transform: translateX(100%) scale(0.95);
+  transform: translateY(-8px) scale(0.96);
 }
 
 .toast-move {
-  transition: transform 0.3s ease;
+  transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-/* 모바일 */
-@media (max-width: 480px) {
-  .toast-container {
-    top: 70px;
-    right: 12px;
-    left: 12px;
+/* 모바일 — 상단 중앙, 좌우 16px 마진 */
+@media (max-width: 640px) {
+  .toast-stack {
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    right: 16px;
+    left: 16px;
+    align-items: stretch;
   }
 
-  .toast-item {
+  .toast-card {
     width: auto;
-    padding: 14px 16px;
-    gap: 12px;
+    max-width: none;
+    padding: 12px 14px;
+    border-radius: 14px;
   }
 
   .toast-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
   }
 
-  .toast-icon .icon {
-    width: 16px;
-    height: 16px;
-  }
+  .toast-title { font-size: 13px; }
+  .toast-preview { font-size: 12px; }
 
-  .toast-title {
-    font-size: 13px;
-  }
-
-  .toast-body {
-    font-size: 12px;
-  }
-
-  .toast-type-label,
-  .toast-time {
-    font-size: 10px;
+  .toast-leave-active {
+    right: 16px;
+    left: 16px;
   }
 }
 </style>

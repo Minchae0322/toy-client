@@ -1,173 +1,141 @@
 <template>
   <div class="notification-dropdown" ref="dropdownRef">
-    <!-- 알림 버튼 (배지 포함) -->
+    <!-- 트리거 (벨 + 미읽음 dot) -->
     <button
       class="notification-trigger"
       @click="toggleDropdown"
       :title="`알림 ${unreadCount}개`"
+      :aria-label="`알림 ${unreadCount}개`"
     >
-      <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-      </svg>
+      <Bell :size="18" :stroke-width="2" />
       <span v-if="hasUnread" class="notification-badge">
         {{ unreadCountDisplay }}
       </span>
     </button>
 
-    <!-- 드롭다운 패널 -->
+    <!-- 패널 -->
     <Transition name="dropdown">
       <div v-if="isOpen" class="dropdown-panel">
-        <!-- 헤더 -->
-        <div class="dropdown-header">
-          <div class="header-top">
-            <h3 class="dropdown-title">알림</h3>
-            <div class="dropdown-actions">
-              <button
-                v-if="hasUnread"
-                @click="handleMarkAllAsRead"
-                class="action-btn"
-                title="전체 읽음"
-                :disabled="isMarkingAllRead"
-              >
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                <span class="action-text">모두 읽음</span>
-              </button>
-              <button
-                v-if="notifications.length > 0"
-                @click="handleDeleteAll"
-                class="action-btn danger"
-                title="전체 삭제"
-              >
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-                <span class="action-text">전체 삭제</span>
-              </button>
-              <button
-                @click="closeDropdown"
-                class="action-btn close"
-                title="닫기"
-              >
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <!-- 읽지 않은 알림 수 안내 -->
-          <p v-if="hasUnread" class="unread-summary">
-            읽지 않은 알림 {{ unreadCountDisplay }}개
-          </p>
-          <!-- 필터 탭 -->
-          <div class="filter-tabs">
-            <button
-              class="filter-tab"
-              :class="{ active: activeFilter === 'all' }"
-              @click="activeFilter = 'all'"
-            >
-              전체
-            </button>
-            <button
-              class="filter-tab"
-              :class="{ active: activeFilter === 'unread' }"
-              @click="activeFilter = 'unread'"
-            >
-              읽지 않음
-              <span v-if="hasUnread" class="tab-count">{{ unreadCountDisplay }}</span>
-            </button>
-          </div>
+        <!-- 헤더: 제목 + 모두 읽음 -->
+        <header class="dropdown-header">
+          <h3 class="dropdown-title">알림</h3>
+          <button
+            v-if="hasUnread"
+            class="header-action"
+            :disabled="isMarkingAllRead"
+            @click="handleMarkAllAsRead"
+          >
+            <CheckCheck :size="14" :stroke-width="2.2" />
+            <span>모두 읽음</span>
+          </button>
+        </header>
+
+        <!-- 세그먼트 컨트롤 필터 -->
+        <div class="filter-segment" role="tablist">
+          <button
+            class="seg-btn"
+            :class="{ active: activeFilter === 'all' }"
+            role="tab"
+            :aria-selected="activeFilter === 'all'"
+            @click="activeFilter = 'all'"
+          >
+            전체
+          </button>
+          <button
+            class="seg-btn"
+            :class="{ active: activeFilter === 'unread' }"
+            role="tab"
+            :aria-selected="activeFilter === 'unread'"
+            @click="activeFilter = 'unread'"
+          >
+            <span>읽지 않음</span>
+            <span v-if="hasUnread" class="seg-count">{{ unreadCountDisplay }}</span>
+          </button>
         </div>
 
-        <!-- 알림 목록 -->
+        <!-- 목록 -->
         <div class="notification-list" ref="listRef" @scroll="handleScroll">
-          <!-- 로딩 상태 (초기) -->
-          <div v-if="isLoading && notifications.length === 0" class="loading-state">
-            <div class="loading-spinner"></div>
-            <span class="loading-text">알림을 불러오는 중...</span>
+          <!-- 로딩 -->
+          <div v-if="isLoading && notifications.length === 0" class="state-block">
+            <div class="state-spinner"></div>
+            <p class="state-text">알림을 불러오는 중…</p>
           </div>
 
           <!-- 빈 상태 -->
-          <div v-else-if="filteredNotifications.length === 0" class="empty-state">
-            <div class="empty-icon-wrapper">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
+          <div v-else-if="filteredNotifications.length === 0" class="state-block empty">
+            <div class="empty-illust">
+              <Bell :size="28" :stroke-width="1.6" />
             </div>
-            <p class="empty-title">
-              {{ activeFilter === 'unread' ? '읽지 않은 알림이 없습니다' : '알림이 없습니다' }}
+            <p class="state-title">
+              {{ activeFilter === 'unread' ? '읽지 않은 알림이 없어요' : '아직 알림이 없어요' }}
             </p>
-            <p class="empty-desc">
-              {{ activeFilter === 'unread' ? '모든 알림을 확인했습니다' : '새로운 소식이 있으면 여기에 표시됩니다' }}
+            <p class="state-text">
+              {{ activeFilter === 'unread' ? '모두 확인했어요!' : '새 소식이 오면 여기에 표시돼요' }}
             </p>
           </div>
 
-          <!-- 알림 아이템 목록 -->
+          <!-- 아이템 -->
           <template v-else>
-            <div
+            <button
               v-for="notification in filteredNotifications"
               :key="notification.id"
-              class="notification-item"
+              type="button"
+              class="notif-row"
               :class="{ unread: !notification.isRead }"
               @click="handleItemClick(notification)"
             >
-              <!-- 타입 아이콘 -->
-              <div class="notification-icon-wrapper" :class="getTypeClass(notification.type)">
-                <component :is="getTypeIcon(notification.type)" class="type-icon" />
-              </div>
+              <span class="unread-dot" aria-hidden="true"></span>
 
-              <!-- 알림 내용 -->
-              <div class="notification-content">
-                <p class="notification-title" v-html="formatTitle(notification)"></p>
-                <p class="notification-body">{{ notification.content }}</p>
-                <div class="notification-meta">
-                  <span class="notification-type-label">{{ getTypeLabel(notification.type) }}</span>
-                  <span class="meta-separator"></span>
-                  <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
-                </div>
-              </div>
+              <span class="notif-icon" :class="getTypeClass(notification.type)">
+                <component :is="getTypeIcon(notification.type)" :size="16" :stroke-width="2.2" />
+              </span>
 
-              <!-- 삭제 버튼 -->
-              <button
-                class="delete-btn"
-                @click.stop="handleRemove(notification.id)"
-                title="삭제"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            </div>
+              <span class="notif-content">
+                <span class="notif-title" v-html="formatTitle(notification)"></span>
+                <span v-if="notification.content" class="notif-preview">{{ notification.content }}</span>
+              </span>
 
-            <!-- 더 보기 로딩 -->
+              <span class="notif-time">{{ formatTime(notification.createdAt) }}</span>
+            </button>
+
             <div v-if="isLoading && notifications.length > 0" class="loading-more">
-              <div class="loading-spinner small"></div>
+              <div class="state-spinner small"></div>
             </div>
 
-            <!-- 더 이상 알림 없음 -->
-            <div v-if="!hasMore && notifications.length > 0" class="no-more">
-              모든 알림을 확인했습니다
+            <div v-if="!hasMore && notifications.length > 0" class="end-cap">
+              모두 확인했어요
             </div>
           </template>
         </div>
+
+        <!-- 풋터: 모두 비우기 -->
+        <footer v-if="notifications.length > 0" class="dropdown-footer">
+          <button class="footer-clear" @click="handleDeleteAll">
+            <Trash2 :size="14" :stroke-width="2" />
+            <span>모두 비우기</span>
+          </button>
+        </footer>
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, h } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import {
+  Bell,
+  CheckCheck,
+  Trash2,
+  MessageCircle,
+  Heart,
+  UserPlus,
+  MessageSquare,
+  Trophy,
+} from 'lucide-vue-next'
 import { useNotification } from '@/composables/useNotification'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { notificationService } from '@/services/NotificationService'
 
-// Composables
 const {
   notifications,
   unreadCount,
@@ -178,22 +146,18 @@ const {
   unreadCountDisplay,
   loadMoreNotifications,
   markAllAsRead,
-  removeNotification,
   deleteAllNotifications,
   handleNotificationClick,
-  fetchUnreadCount
+  fetchUnreadCount,
 } = useNotification()
 
 const { open: openConfirm } = useConfirmDialog()
 
-// 로컬 상태
 const isOpen = ref(false)
 const dropdownRef = ref(null)
 const listRef = ref(null)
 const isMarkingAllRead = ref(false)
 const activeFilter = ref('all')
-
-// ==================== 필터링된 알림 목록 ====================
 
 const filteredNotifications = computed(() => {
   if (activeFilter.value === 'unread') {
@@ -202,110 +166,40 @@ const filteredNotifications = computed(() => {
   return sortedNotifications.value
 })
 
-// ==================== 타입별 아이콘 ====================
-
-const IconComment = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' })
-    ])
-  }
-}
-
-const IconHeart = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'currentColor' }, [
-      h('path', { d: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' })
-    ])
-  }
-}
-
-const IconUser = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
-      h('circle', { cx: '12', cy: '7', r: '4' })
-    ])
-  }
-}
-
-const IconMessage = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z' }),
-      h('polyline', { points: '22,6 12,13 2,6' })
-    ])
-  }
-}
-
-const IconBell = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' }),
-      h('path', { d: 'M13.73 21a2 2 0 0 1-3.46 0' })
-    ])
-  }
-}
-
-const IconStar = {
-  render() {
-    return h('svg', { viewBox: '0 0 24 24', fill: 'currentColor' }, [
-      h('polygon', { points: '12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' })
-    ])
-  }
-}
-
 const getTypeIcon = (type) => {
   const iconMap = {
-    'COMMENT': IconComment,
-    'FEED_COMMENT': IconComment,
-    'LIKE': IconHeart,
-    'FEED_LIKE': IconHeart,
-    'FOLLOW': IconUser,
-    'CHAT': IconMessage,
-    'SYSTEM': IconBell,
-    'BATTLE': IconStar,
-    'BATTLE_VOTE': IconStar
+    'COMMENT': MessageCircle,
+    'FEED_COMMENT': MessageCircle,
+    'BATTLE_ITEM_COMMENT': MessageCircle,
+    'LIKE': Heart,
+    'FEED_LIKE': Heart,
+    'FOLLOW': UserPlus,
+    'CHAT': MessageSquare,
+    'SYSTEM': Bell,
+    'BATTLE': Trophy,
+    'BATTLE_VOTE': Trophy,
   }
-  return iconMap[type] || IconBell
+  return iconMap[type] || Bell
 }
 
 const getTypeClass = (type) => {
   const classMap = {
     'COMMENT': 'type-comment',
     'FEED_COMMENT': 'type-comment',
+    'BATTLE_ITEM_COMMENT': 'type-comment',
     'LIKE': 'type-like',
     'FEED_LIKE': 'type-like',
     'FOLLOW': 'type-follow',
     'CHAT': 'type-chat',
     'SYSTEM': 'type-system',
     'BATTLE': 'type-battle',
-    'BATTLE_VOTE': 'type-battle'
+    'BATTLE_VOTE': 'type-battle',
   }
   return classMap[type] || 'type-default'
 }
 
-const getTypeLabel = (type) => {
-  const labelMap = {
-    'COMMENT': '댓글',
-    'FEED_COMMENT': '피드 댓글',
-    'LIKE': '좋아요',
-    'FEED_LIKE': '피드 좋아요',
-    'FOLLOW': '팔로우',
-    'CHAT': '채팅',
-    'SYSTEM': '시스템',
-    'BATTLE': '배틀',
-    'BATTLE_VOTE': '배틀 투표',
-    'BATTLE_ITEM_COMMENT': '요거픽 댓글'
-  }
-  return labelMap[type] || '알림'
-}
-
-// ==================== 드롭다운 토글 ====================
-
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
-
   if (isOpen.value) {
     fetchUnreadCount()
   }
@@ -315,20 +209,13 @@ const closeDropdown = () => {
   isOpen.value = false
 }
 
-// ==================== 이벤트 핸들러 ====================
-
 const handleItemClick = async (notification) => {
   await handleNotificationClick(notification)
   closeDropdown()
 }
 
-const handleRemove = (notificationId) => {
-  removeNotification(notificationId)
-}
-
 const handleMarkAllAsRead = async () => {
   if (isMarkingAllRead.value) return
-
   try {
     isMarkingAllRead.value = true
     await markAllAsRead()
@@ -340,32 +227,25 @@ const handleMarkAllAsRead = async () => {
 const handleDeleteAll = async () => {
   const confirmed = await openConfirm({
     type: 'danger',
-    title: '전체 삭제',
-    message: '모든 알림을 삭제하시겠습니까?\n삭제된 알림은 복구할 수 없습니다.',
-    confirmText: '삭제',
-    cancelText: '취소'
+    title: '모두 비우기',
+    message: '모든 알림을 비울까요?\n비운 알림은 복구할 수 없어요.',
+    confirmText: '비우기',
+    cancelText: '취소',
   })
-
   if (confirmed) {
     await deleteAllNotifications()
   }
 }
 
-// ==================== 무한 스크롤 ====================
-
 const handleScroll = () => {
   const el = listRef.value
   if (!el) return
-
   const threshold = 50
   const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
-
   if (isNearBottom && hasMore.value && !isLoading.value) {
     loadMoreNotifications()
   }
 }
-
-// ==================== 외부 클릭 감지 ====================
 
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
@@ -373,15 +253,11 @@ const handleClickOutside = (event) => {
   }
 }
 
-// ==================== 키보드 이벤트 ====================
-
 const handleKeyDown = (event) => {
   if (event.key === 'Escape' && isOpen.value) {
     closeDropdown()
   }
 }
-
-// ==================== 유틸리티 ====================
 
 const formatTime = (dateString) => {
   return notificationService.formatRelativeTime(dateString)
@@ -390,9 +266,7 @@ const formatTime = (dateString) => {
 const formatTitle = (notification) => {
   const title = notification.title || ''
   const actorName = notification.actor?.nickname
-
   if (actorName && title.includes(actorName)) {
-    // actorName을 bold 처리 (XSS 방지를 위해 escape 처리)
     const escapedTitle = escapeHtml(title)
     const escapedActorName = escapeHtml(actorName)
     return escapedTitle.replace(
@@ -400,7 +274,6 @@ const formatTitle = (notification) => {
       `<strong class="actor-name">${escapedActorName}</strong>`
     )
   }
-
   return escapeHtml(title)
 }
 
@@ -409,8 +282,6 @@ const escapeHtml = (text) => {
   div.textContent = text
   return div.innerHTML
 }
-
-// ==================== 라이프사이클 ====================
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
@@ -428,471 +299,332 @@ onUnmounted(() => {
   position: relative;
 }
 
-/* 트리거 버튼 */
+/* ==================== 트리거 ==================== */
 .notification-trigger {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border: none;
   background: transparent;
-  border-radius: 7px;
+  color: var(--c-text-600, #475569);
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .notification-trigger:hover {
-  background: var(--c-brand-soft);
+  background: var(--bg-subtle, #F7F8FA);
+  color: var(--text-primary, #0A0E1A);
 }
 
-.notification-icon {
-  width: 17px;
-  height: 17px;
-  color: var(--c-text-500);
-  transition: color 0.15s ease;
-}
-
-.notification-trigger:hover .notification-icon {
-  color: var(--c-brand-hover);
-}
-
-/* 배지 */
 .notification-badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  background: var(--c-danger);
-  color: white;
-  font-size: 11px;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--c-danger, #EF4444);
+  color: #fff;
+  font-size: 10px;
   font-weight: 700;
-  border-radius: 10px;
-  display: flex;
+  border-radius: 9px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  border: 2px solid var(--bg-elevated);
+  border: 2px solid var(--bg-elevated, #fff);
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+  letter-spacing: -0.2px;
 }
 
-/* 드롭다운 패널 */
+/* ==================== 패널 ==================== */
 .dropdown-panel {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
-  width: 400px;
+  width: 380px;
   max-height: 560px;
-  background: var(--bg-elevated);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated, #ffffff);
+  border: 1px solid var(--border-strong, #f1f3f6);
+  border-radius: 18px;
+  box-shadow:
+    0 14px 36px rgba(15, 23, 42, 0.1),
+    0 4px 10px rgba(15, 23, 42, 0.04);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   z-index: 1000;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+  letter-spacing: -0.2px;
 }
 
-/* 헤더 */
+/* ==================== 헤더 ==================== */
 .dropdown-header {
-  padding: 0;
-  border-bottom: 1px solid var(--border-strong);
-}
-
-.header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 0 20px;
+  padding: 18px 20px 12px 20px;
 }
 
 .dropdown-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.02em;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary, #0A0E1A);
+  letter-spacing: -0.4px;
 }
 
-.dropdown-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.action-btn {
-  display: flex;
+.header-action {
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 12px;
-  border: 1px solid var(--border-strong);
-  background: var(--bg-elevated);
-  color: var(--c-text-600);
+  height: 30px;
+  padding: 0 12px;
+  background: var(--bg-subtle, #F7F8FA);
+  border: none;
+  border-radius: 999px;
+  color: var(--c-text-600, #475569);
   font-size: 12px;
-  font-weight: 500;
-  border-radius: 6px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.action-btn:hover {
-  background: var(--bg-subtle);
-  border-color: #d4d4d4;
-  color: var(--text-primary);
+.header-action:hover {
+  background: var(--c-brand-soft, #FAF5FF);
+  color: var(--c-brand, #9333EA);
 }
 
-.action-btn:disabled {
-  opacity: 0.4;
+.header-action:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.action-btn.danger:hover {
-  background: var(--c-danger-soft);
-  border-color: var(--c-danger-soft);
-  color: var(--c-danger);
-}
-
-.action-btn.close {
-  padding: 6px;
-  border: none;
-  background: var(--bg-subtle);
-}
-
-.action-btn.close:hover {
-  background: var(--border-strong);
-  color: var(--text-primary);
-}
-
-.action-icon {
-  width: 14px;
-  height: 14px;
-}
-
-.action-text {
-  display: inline;
-}
-
-/* 읽지 않은 알림 수 안내 */
-.unread-summary {
-  margin: 8px 20px 0 20px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--c-brand);
-}
-
-/* 필터 탭 */
-.filter-tabs {
+/* ==================== 세그먼트 컨트롤 ==================== */
+.filter-segment {
   display: flex;
-  gap: 0;
-  padding: 0 20px;
-  margin-top: 12px;
+  gap: 4px;
+  margin: 0 16px 8px 16px;
+  padding: 4px;
+  background: var(--bg-subtle, #F7F8FA);
+  border-radius: 12px;
 }
 
-.filter-tab {
-  display: flex;
+.seg-btn {
+  flex: 1;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 10px 16px;
+  height: 34px;
+  padding: 0 10px;
+  background: transparent;
   border: none;
-  background: none;
-  color: var(--c-text-500);
+  border-radius: 9px;
+  color: var(--c-text-500, #64748B);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
-  position: relative;
-  transition: color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.filter-tab:hover {
-  color: var(--text-primary);
+.seg-btn:hover {
+  color: var(--text-primary, #0A0E1A);
 }
 
-.filter-tab.active {
-  color: var(--text-primary);
-  font-weight: 600;
+.seg-btn.active {
+  background: var(--bg-elevated, #fff);
+  color: var(--text-primary, #0A0E1A);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
-.filter-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 16px;
-  right: 16px;
-  height: 2px;
-  background: var(--text-primary);
-  border-radius: 1px;
-}
-
-.tab-count {
+.seg-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 18px;
   height: 18px;
-  padding: 0 5px;
-  background: var(--c-brand);
-  color: #ffffff;
+  padding: 0 6px;
+  background: var(--c-brand, #9333EA);
+  color: #fff;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 800;
   border-radius: 9px;
   line-height: 1;
 }
 
-/* 알림 목록 */
+/* ==================== 목록 ==================== */
 .notification-list {
   flex: 1;
   overflow-y: auto;
   max-height: 420px;
+  padding: 4px 8px 8px 8px;
 }
 
-/* 알림 아이템 */
-.notification-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 14px 20px;
+/* row 자체가 button — 키보드 접근성 + 클릭 영역 일관 */
+.notif-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 8px 36px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  letter-spacing: -0.2px;
   transition: background 0.15s ease;
-  position: relative;
-  border-bottom: 1px solid var(--bg-subtle);
 }
 
-.notification-item:last-child {
-  border-bottom: none;
+.notif-row:hover {
+  background: var(--bg-subtle, #F7F8FA);
 }
 
-.notification-item:hover {
-  background: var(--bg-subtle);
+.notif-row:active {
+  background: var(--bg-mute, #F2F4F6);
 }
 
-.notification-item.unread {
-  background: var(--c-brand-soft);
+/* unread 좌측 보라 점 — 배경 전체 칠하지 않음 */
+.unread-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+  justify-self: center;
 }
 
-.notification-item.unread:hover {
-  background: var(--c-brand-soft);
+.notif-row.unread .unread-dot {
+  background: var(--c-brand, #9333EA);
 }
 
-/* 타입 아이콘 */
-.notification-icon-wrapper {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
+/* 아이콘 박스 */
+.notif-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.notification-icon-wrapper .type-icon {
-  width: 18px;
-  height: 18px;
-}
+.type-comment { background: var(--c-info-soft, #E0F2FE); color: var(--c-info, #0284C7); }
+.type-like { background: var(--c-danger-soft, #FEE2E2); color: var(--c-danger, #EF4444); }
+.type-follow { background: var(--c-success-soft, #DCFCE7); color: var(--c-success, #16A34A); }
+.type-chat { background: var(--c-brand-soft, #FAF5FF); color: var(--c-brand, #9333EA); }
+.type-system { background: var(--bg-subtle, #F7F8FA); color: var(--c-text-600, #475569); }
+.type-battle { background: var(--c-warning-soft, #FEF9C3); color: var(--c-bronze, #D97706); }
+.type-default { background: var(--bg-subtle, #F7F8FA); color: var(--c-text-600, #475569); }
 
-.type-comment {
-  background: var(--c-info-soft);
-  color: var(--c-info);
-}
-
-.type-like {
-  background: var(--c-danger-soft);
-  color: var(--c-danger);
-}
-
-.type-follow {
-  background: var(--c-success-soft);
-  color: var(--c-success);
-}
-
-.type-chat {
-  background: var(--c-brand-soft);
-  color: var(--c-brand);
-}
-
-.type-system {
-  background: var(--bg-subtle);
-  color: var(--c-text-600);
-}
-
-.type-battle {
-  background: var(--c-warning-soft);
-  color: var(--c-bronze);
-}
-
-.type-default {
-  background: var(--bg-subtle);
-  color: var(--c-text-600);
-}
-
-/* 알림 내용 */
-.notification-content {
-  flex: 1;
+/* 텍스트 */
+.notif-content {
   min-width: 0;
-  padding-right: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.notification-title {
+.notif-title {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);
-  margin: 0 0 3px 0;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  color: var(--text-primary, #0A0E1A);
+  line-height: 1.35;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.notification-title :deep(.actor-name) {
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.notification-item.unread .notification-title {
-  font-weight: 600;
-}
-
-.notification-item.unread .notification-title :deep(.actor-name) {
+.notif-row.unread .notif-title {
   font-weight: 700;
 }
 
-.notification-body {
+.notif-title :deep(.actor-name) {
+  font-weight: 700;
+  color: var(--text-primary, #0A0E1A);
+}
+
+.notif-preview {
   font-size: 13px;
-  color: var(--c-text-600);
-  margin: 0 0 6px 0;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  font-weight: 500;
+  color: var(--c-text-500, #64748B);
+  line-height: 1.4;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* 알림 메타 정보 (타입 라벨 + 시간) */
-.notification-meta {
-  display: flex;
-  align-items: center;
-  gap: 0;
+.notif-time {
+  flex-shrink: 0;
   font-size: 12px;
-  line-height: 1;
-}
-
-.notification-type-label {
-  color: var(--c-brand);
   font-weight: 600;
+  color: var(--c-text-400, #94A3B8);
+  font-variant-numeric: tabular-nums;
+  align-self: flex-start;
+  padding-top: 2px;
 }
 
-.notification-type-label::before {
-  content: '[';
-}
-
-.notification-type-label::after {
-  content: ']';
-}
-
-.meta-separator {
-  display: inline-block;
-  width: 3px;
-  height: 3px;
-  background: #d4d4d4;
-  border-radius: 50%;
-  margin: 0 8px;
-}
-
-.notification-time {
-  color: var(--c-text-400);
-}
-
-/* 삭제 버튼 */
-.delete-btn {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: transparent;
-  color: #d4d4d4;
-  cursor: pointer;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: all 0.15s ease;
-}
-
-.delete-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-.notification-item:hover .delete-btn {
-  opacity: 1;
-}
-
-.delete-btn:hover {
-  background: var(--c-danger-soft);
-  color: var(--c-danger);
-}
-
-/* 빈 상태 */
-.empty-state,
-.loading-state {
+/* ==================== 상태 ==================== */
+.state-block {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: 56px 24px;
+  text-align: center;
 }
 
-.empty-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 16px;
-  color: #d4d4d4;
+.empty-illust {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: var(--bg-subtle, #F7F8FA);
+  color: var(--c-text-400, #94A3B8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
 }
 
-.empty-icon-wrapper svg {
-  width: 100%;
-  height: 100%;
-}
-
-.empty-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--c-text-600);
+.state-title {
   margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary, #0A0E1A);
+  letter-spacing: -0.3px;
 }
 
-.empty-desc {
-  font-size: 13px;
-  color: var(--c-text-400);
+.state-text {
   margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text-500, #64748B);
 }
 
-/* 로딩 */
-.loading-spinner {
+.state-spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid var(--border-strong);
-  border-top-color: var(--c-brand);
+  border: 2.5px solid var(--bg-mute, #F2F4F6);
+  border-top-color: var(--c-brand, #9333EA);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
   margin-bottom: 12px;
 }
 
-.loading-spinner.small {
-  width: 20px;
-  height: 20px;
+.state-spinner.small {
+  width: 18px;
+  height: 18px;
   border-width: 2px;
   margin-bottom: 0;
 }
 
-.loading-text {
-  font-size: 13px;
-  color: var(--c-text-400);
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .loading-more {
   display: flex;
@@ -900,104 +632,99 @@ onUnmounted(() => {
   padding: 16px;
 }
 
-.no-more {
+.end-cap {
   text-align: center;
-  padding: 16px;
+  padding: 14px 16px 6px 16px;
   font-size: 12px;
-  color: var(--c-text-400);
+  font-weight: 500;
+  color: var(--c-text-400, #94A3B8);
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* ==================== 풋터 ==================== */
+.dropdown-footer {
+  display: flex;
+  justify-content: center;
+  padding: 10px 16px 14px 16px;
+  border-top: 1px solid var(--bg-subtle, #F7F8FA);
 }
 
-/* 애니메이션 */
+.footer-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  color: var(--c-text-500, #64748B);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.footer-clear:hover {
+  background: var(--c-danger-soft, #FEE2E2);
+  color: var(--c-danger, #EF4444);
+}
+
+/* ==================== 트랜지션 ==================== */
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: all 0.2s ease;
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .dropdown-enter-from,
 .dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-6px) scale(0.98);
 }
 
-/* 모바일 반응형 */
-@media (max-width: 480px) {
+/* ==================== 모바일 ==================== */
+@media (max-width: 640px) {
   .dropdown-panel {
     position: fixed;
-    top: 66px;
-    left: auto;
-    right: 8px;
-    width: calc(100vw - 16px);
-    max-width: 380px;
-    max-height: calc(100vh - 80px);
-    border-radius: 12px;
+    top: calc(60px + env(safe-area-inset-top, 0px));
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    max-height: calc(100vh - 100px);
+    border-radius: 16px;
   }
 
-  .header-top {
-    padding: 14px 16px 0 16px;
+  .dropdown-header {
+    padding: 16px 18px 10px 18px;
   }
 
   .dropdown-title {
-    font-size: 16px;
+    font-size: 17px;
   }
 
-  .unread-summary {
-    margin: 6px 16px 0 16px;
-    font-size: 12px;
+  .filter-segment {
+    margin: 0 14px 6px 14px;
   }
 
-  .filter-tabs {
-    padding: 0 16px;
-    margin-top: 10px;
+  .notification-list {
+    max-height: calc(100vh - 240px);
+    padding: 4px 6px 6px 6px;
   }
 
-  .filter-tab {
-    padding: 8px 12px;
-    font-size: 12px;
+  .notif-row {
+    padding: 11px 10px;
+    grid-template-columns: 8px 34px 1fr auto;
+    gap: 10px;
   }
 
-  .notification-item {
-    padding: 12px 16px;
-    gap: 12px;
+  .notif-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
   }
 
-  .notification-icon-wrapper {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-  }
-
-  .notification-icon-wrapper .type-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .notification-title {
-    font-size: 13px;
-  }
-
-  .notification-body {
-    font-size: 12px;
-  }
-
-  .notification-meta {
-    font-size: 11px;
-  }
-
-  .action-text {
-    display: none;
-  }
-
-  .action-btn {
-    padding: 6px 8px;
-  }
-
-  /* 모바일에서는 삭제 버튼 항상 표시 */
-  .delete-btn {
-    opacity: 0.6;
-  }
+  .notif-title { font-size: 13px; }
+  .notif-preview { font-size: 12px; }
+  .notif-time { font-size: 11px; }
 }
 </style>
