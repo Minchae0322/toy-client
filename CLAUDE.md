@@ -69,6 +69,7 @@
     - `useAuth`, `useChat`, `useTheme`, `useNotification`, `useCarrier`, `useBattleDraft`
     - `useProduct`, `useCategoryCache`, `useUserBlock`, `useConfirmDialog`, `useLoginPrompt`, `useExpToast`
     - `useChatDetailMode` — 모바일 채팅 디테일 진입 시 전역 헤더 숨기기용 모듈 스코프 공유 상태 (`isChatDetailOpen`). `App.vue`와 `ChatApp.vue`에서 같이 사용
+    - `useNotificationPanelMode` — 알림 패널 열림 시 모바일 FAB(글쓰기) 겹침 방지용 모듈 스코프 공유 상태 (`isNotificationPanelOpen`). `NotificationDropdown.vue`와 `BottomNavigation.vue`에서 사용
   - `src/router/` — 라우터 설정 + `guards/authGuard.js`
   - `src/capacitor/` — Capacitor 네이티브 브릿지 코드
   - `src/config/` — 환경 설정 (`env.js`, `ads.js`)
@@ -142,6 +143,13 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.0.8**: iOS 빌드 11, Android versionCode 8 (`chore`)
+- **알림 패널 모바일 UX 개선**: `useNotificationPanelMode` composable 신설 — 알림 패널 열릴 때 모바일 FAB(글쓰기) 자동 숨김. `NotificationDropdown` desktop/mobile 두 인스턴스 공유 ref 덮어쓰기 버그 수정 (`fix(notification)`)
+- **배틀 아이템 다중 추가 + 업로드 실패 처리 일관화**: `Step2ItemSetup`, `AddProductModal` 개선 — 아이템 다중 선택 추가 및 업로드 실패 핸들링 통일 (`feat(battle/feed)`)
+- **배틀 PICK 한마디 UI 정돈 + 더블탭 줌 차단**: `BattleCommentSummary` 리팩터링, `index.html`·`main.css` 더블탭 줌 방지 (`fix(battle)`)
+- **iOS 키보드 도구막대(✓ Done) 숨김**: `AppViewController.swift`에서 `WKContentView` 런타임 서브클래싱으로 제거 — 채팅 입력창이 키보드에 완전히 붙도록 (`fix(chat)`)
+- **SockJS jsonp transport 제외**: `webSocketService.js` — chat-service `HttpMessageNotWritableException` 워닝 차단 (`fix(ws)`)
+- **핫 아이템 인기지수 강조**: `ProductRankingView` 우측 컬럼에서 별점·리뷰 수 제거, 인기지수만 표시 (`feat(ranking)`)
 - **버전 1.0.7**: iOS 빌드 10, Android versionCode 7 (`chore`)
 - **모바일 채팅방 글로벌 헤더 숨김**: `useChatDetailMode` composable 신설 — 채팅 디테일 진입 시 전역 헤더 숨기고 입력창 하단 빈공간 제거 (`fix(chat)`)
 - **배틀 모바일 플로팅 [전체 PICK] 버튼 개선**: 하단 이동 + 스크롤 시 자동 숨김, 아이템 필터 활성 시 썸네일·이름 확인하며 한 번에 해제 가능 (`feat(battle)`)
