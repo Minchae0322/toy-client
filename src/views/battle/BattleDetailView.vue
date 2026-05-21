@@ -114,16 +114,23 @@
                 v-if="!selectedItemFilter"
                 type="button"
                 class="comment-picker-prompt"
+                :class="{ 'is-expanded': pickerExpanded }"
                 @click="scrollToFirstItem"
               >
-                <span class="picker-icon" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="18 15 12 9 6 15"/>
-                  </svg>
-                </span>
                 <span class="picker-text">
-                  <span class="picker-title">어떤 아이템에 한마디 남길까요?</span>
+                  <span class="picker-title">한마디 남길 아이템 선택</span>
                   <span class="picker-sub">위 아이템 카드의 <strong>‘PICK 한마디’</strong> 영역을 눌러 선택해 주세요</span>
+                </span>
+                <span
+                  class="picker-toggle"
+                  role="button"
+                  :aria-label="pickerExpanded ? '설명 접기' : '설명 펼치기'"
+                  :aria-expanded="pickerExpanded ? 'true' : 'false'"
+                  @click.stop="pickerExpanded = !pickerExpanded"
+                >
+                  <svg class="toggle-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
                 </span>
                 <span class="picker-cta">아이템 보러가기</span>
               </button>
@@ -417,7 +424,9 @@ export default {
       currentYoutubeItem: null,
       currentYoutubeEmbedUrl: null,
       // 모바일 플로팅 필터 자동 숨김
-      floatingFilterHidden: false
+      floatingFilterHidden: false,
+      // 모바일 — picker prompt sub 설명 펼침 토글
+      pickerExpanded: false
     }
   },
   computed: {
@@ -1394,24 +1403,6 @@ export default {
   transform: scale(0.99);
 }
 
-.comment-picker-prompt .picker-icon {
-  flex-shrink: 0;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-elevated);
-  color: var(--c-brand);
-  animation: pickerBob 1.6s ease-in-out infinite;
-}
-
-@keyframes pickerBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
 .comment-picker-prompt .picker-text {
   flex: 1;
   display: flex;
@@ -1451,14 +1442,59 @@ export default {
   white-space: nowrap;
 }
 
+/* PC 에선 sub 가 늘 보이므로 toggle 숨김 */
+.comment-picker-prompt .picker-toggle {
+  display: none;
+}
+
 @media (max-width: 767px) {
   .comment-picker-prompt {
     padding: 12px 14px;
-    gap: 12px;
+    gap: 10px;
+    /* 펼침 시 세로 stack 가능하도록 wrap 허용 */
+    flex-wrap: wrap;
   }
-  .comment-picker-prompt .picker-icon { width: 32px; height: 32px; }
-  .comment-picker-prompt .picker-title { font-size: 13px; }
-  .comment-picker-prompt .picker-sub { font-size: 11px; }
+  .comment-picker-prompt .picker-title {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* sub 는 기본 숨김 — toggle 펼침 시 노출 */
+  .comment-picker-prompt .picker-sub {
+    display: none;
+    font-size: 11px;
+    margin-top: 4px;
+    /* 펼치면 행 전체 차지 */
+    flex-basis: 100%;
+    line-height: 1.45;
+  }
+  .comment-picker-prompt.is-expanded .picker-sub {
+    display: block;
+  }
+  /* toggle (꺽새) — 모바일에서만 노출 */
+  .comment-picker-prompt .picker-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    color: var(--c-brand);
+    background: var(--bg-elevated);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .comment-picker-prompt .picker-toggle:active {
+    background: var(--c-brand-soft);
+  }
+  .comment-picker-prompt .toggle-chevron {
+    transition: transform 0.2s ease;
+  }
+  .comment-picker-prompt.is-expanded .toggle-chevron {
+    transform: rotate(180deg);
+  }
   .comment-picker-prompt .picker-cta {
     padding: 6px 10px;
     font-size: 11px;

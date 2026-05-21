@@ -10,11 +10,10 @@
           PICK 한마디
           <span class="cnt">{{ commentCount }}</span>
         </button>
-        <button type="button" class="write-pill" @click.stop="toggleInput">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <button type="button" class="write-pill" aria-label="쓰기" @click.stop="toggleInput">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 5v14M5 12h14"/>
           </svg>
-          쓰기
         </button>
       </div>
 
@@ -62,9 +61,14 @@
         </div>
       </div>
 
-      <div v-if="remainingCount > 0" class="view-all" @click="$emit('open-comments')">
-        <button>
-          {{ remainingCount }}개 더보기
+      <!-- 더보기 영역은 댓글 1개일 때도 공간 reserve (visibility hidden) — 카드 간 높이 통일 -->
+      <div
+        class="view-all"
+        :class="{ 'is-placeholder': remainingCount <= 0 }"
+        @click="remainingCount > 0 && $emit('open-comments')"
+      >
+        <button :tabindex="remainingCount > 0 ? 0 : -1" :aria-hidden="remainingCount <= 0 ? 'true' : null">
+          {{ remainingCount > 0 ? `${remainingCount}개 더보기` : '더보기' }}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M6 9l6 6 6-6"/>
             <path d="M6 4l6 6 6-6"/>
@@ -82,7 +86,7 @@
           </svg>
         </span>
         <span class="empty-cta-text">
-          <span class="empty-cta-title">첫 PICK 한마디 남기기</span>
+          <span class="empty-cta-title"><span class="title-prefix">첫 </span>PICK 한마디<span class="title-suffix"> 남기기</span></span>
           <span class="empty-cta-sub">이 아이템이 왜 최고인지 알려주세요</span>
         </span>
         <span class="empty-cta-plus" aria-hidden="true">
@@ -348,19 +352,19 @@ defineExpose({ closeInput })
 
 /* 컴팩트 작성 pill — 솔리드 브랜드 chip (눈에 잘 띄게) */
 .write-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 5px 11px;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
   border: none;
   background: var(--c-brand);
   color: #ffffff;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: inherit;
-  letter-spacing: -0.01em;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  padding: 0;
+  font-family: inherit;
   transition: background 0.15s, transform 0.1s;
 }
 
@@ -535,6 +539,12 @@ div.ba-avatar {
   margin-top: 8px;
 }
 
+/* 댓글 1개일 때 — 공간만 reserve, 시각/클릭 모두 비활성 */
+.view-all.is-placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .view-all button {
   display: inline-flex;
   align-items: center;
@@ -619,10 +629,11 @@ div.ba-avatar {
   text-overflow: ellipsis;
 }
 
+/* write-pill 과 동일한 원형 + 아이콘으로 통일 */
 .empty-cta-plus {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -659,11 +670,10 @@ div.ba-avatar {
   }
 
   .write-pill {
-    padding: 4px 9px;
-    font-size: 10.5px;
-    gap: 2px;
+    width: 22px;
+    height: 22px;
   }
-  .write-pill svg { width: 10px; height: 10px; }
+  .write-pill svg { width: 12px; height: 12px; }
 
   /* 모바일 인라인 입력창 - 한 줄에 입력+버튼, 넘치면 스크롤 없이 맞춤 */
   .inline-input-wrap {
@@ -749,20 +759,27 @@ div.ba-avatar {
   /* 빈 상태 CTA — 모바일에서는 title 한 줄만 노출되므로 한 줄 높이에 맞게 컴팩트 */
   .empty-cta {
     padding: 11px 12px;
-    gap: 10px;
+    gap: 9px;
     align-items: center;
   }
   .empty-cta-icon { width: 26px; height: 26px; }
   .empty-cta-text {
-    /* sub 가 숨겨졌으니 column 정렬 의미 없음 — 단일 라인으로 깔끔하게 */
     justify-content: center;
   }
   .empty-cta-title {
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.3;
+    word-break: keep-all;
   }
-  .empty-cta-sub { display: none; } /* 모바일은 좁아서 title만 노출 */
-  .empty-cta-plus { width: 22px; height: 22px; }
+  /* 모바일은 "PICK 한마디" 만 노출 — 좌우 단어 모두 숨김 */
+  .empty-cta-title .title-prefix,
+  .empty-cta-title .title-suffix { display: none; }
+  .empty-cta-sub { display: none; }
+  .empty-cta-plus {
+    width: 22px;
+    height: 22px;
+  }
+  .empty-cta-plus svg { width: 12px; height: 12px; }
 }
 
 /* PC 최적화 */

@@ -528,7 +528,8 @@ defineExpose({ setCommentSubmitting })
 }
 
 .info-content {
-  /* 컨텐츠 높이에 맞춤 */
+  display: flex;
+  flex-direction: column;
 }
 
 .brand {
@@ -564,7 +565,7 @@ defineExpose({ setCommentSubmitting })
 }
 
 .vote-actions {
-  padding-top: 8px;
+  padding-top: 6px;
 }
 
 /* 탭하라는 힌트 */
@@ -830,7 +831,7 @@ defineExpose({ setCommentSubmitting })
 
 @media (max-width: 768px) {
   .vote-actions {
-    padding-top: 6px;
+    padding-top: 5px;
   }
 }
 
@@ -904,22 +905,22 @@ defineExpose({ setCommentSubmitting })
   }
 
   .info-box {
-    padding: 6px;
+    padding: 10px;
   }
 
   .brand {
-    font-size: 8px;
-    margin: 0 0 1px;
+    font-size: 12.5px;
+    margin: 0 0 3px;
   }
 
   .name {
-    font-size: 13px;
-    line-height: 1.25;
+    font-size: 16.5px;
+    line-height: 1.3;
     -webkit-line-clamp: 2;
   }
 
   .vote-actions {
-    padding-top: 3px;
+    padding-top: 5px;
   }
 
   .rank-selector {
