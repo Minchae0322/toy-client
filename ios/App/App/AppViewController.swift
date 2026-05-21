@@ -28,6 +28,53 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
         installWiderBackSwipeGesture()
         setupSwipeIndicator()
         hideKeyboardAccessoryBar()
+        observeKeyboardForChatInput()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    // 채팅 입력창을 키보드 위에 붙이기 위해 키보드 높이를 CSS 변수(--chat-kb-h)로 푸시.
+    // visualViewport JS API 는 iOS WKWebView 에서 resize 이벤트가 누락되는 경우가 있어
+    // (특히 한/영 자판 전환, 도구막대 제거 후) 입력창이 키보드 뒤에 갇히는 현상이 발생.
+    // UIResponder 키보드 노티피케이션을 직접 관찰해 정확한 키보드 높이를 전달한다.
+    private func observeKeyboardForChatInput() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleKeyboardFrameChange(_:)),
+            name: UIResponder.keyboardWillChangeFrameNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleKeyboardHide(_:)),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleKeyboardFrameChange(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let endFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
+            return
+        }
+        // 키보드 frame 은 window(스크린) 좌표계. 뷰 좌표계로 변환해 안전하게 계산.
+        let keyboardFrameInView = view.convert(endFrame, from: nil)
+        let height = max(0, view.bounds.height - keyboardFrameInView.origin.y)
+        setChatKeyboardHeight(height)
+    }
+
+    @objc private func handleKeyboardHide(_ notification: Notification) {
+        setChatKeyboardHeight(0)
+    }
+
+    private func setChatKeyboardHeight(_ height: CGFloat) {
+        let px = Int(height.rounded())
+        let js = "document.documentElement.style.setProperty('--chat-kb-h', '\(px)px');"
+        DispatchQueue.main.async { [weak self] in
+            self?.webView?.evaluateJavaScript(js, completionHandler: nil)
+        }
     }
 
     // 키보드 위 시스템 도구막대(이전/다음 필드 화살표 + Done ✓) 제거.
