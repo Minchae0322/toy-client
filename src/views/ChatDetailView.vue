@@ -454,12 +454,28 @@ const handleInputFocus = () => {
 // 모바일 키보드 핸들링: visualViewport.height = 실제 보이는 영역(키보드 제외).
 // 키보드 높이 = window.innerHeight - visualViewport.height.
 // CSS 에서 var(--chat-kb-h) 로 받아 fixed 컨테이너의 bottom 을 키보드 위로 끌어올린다.
+//
+// iOS Capacitor 에서는 WKWebView 의 visualViewport resize 이벤트가 누락되거나
+// stale 0 을 보고하는 케이스가 있어 (한/영 자판 전환, 도구막대 제거 등),
+// 네이티브(AppViewController.swift) 가 UIResponder 키보드 노티피케이션을 직접
+// 관찰해 --chat-kb-h 를 셋팅한다. JS 는 그 값을 덮어쓰지 않고 스크롤 보정만 한다.
+const isCapacitorIOS = (() => {
+  if (typeof window === 'undefined') return false
+  const cap = window.Capacitor
+  if (!cap) return false
+  const platform = typeof cap.getPlatform === 'function' ? cap.getPlatform() : cap.platform
+  return platform === 'ios'
+})()
+
 const updateChatViewportHeight = () => {
   const vv = window.visualViewport
   if (!vv) return
   const keyboardHeight = Math.max(0, window.innerHeight - vv.height)
   const prevKb = parseInt(document.documentElement.style.getPropertyValue('--chat-kb-h'), 10) || 0
-  document.documentElement.style.setProperty('--chat-kb-h', `${keyboardHeight}px`)
+  // 네이티브 iOS 는 Swift 측에서 --chat-kb-h 를 권위있게 셋팅. JS 가 0 으로 덮어쓰면 입력창이 다시 키보드 뒤로 갇힘.
+  if (!isCapacitorIOS) {
+    document.documentElement.style.setProperty('--chat-kb-h', `${keyboardHeight}px`)
+  }
   // iOS 가 입력창 포커스 시 페이지를 자동으로 스크롤시키는 동작을 되돌린다 (fixed 컨테이너와 충돌 방지)
   if (window.scrollY !== 0) window.scrollTo(0, 0)
   // 키보드 높이가 바뀌면 메시지 영역 가시 영역이 줄어드는데 scrollTop 은 그대로라
