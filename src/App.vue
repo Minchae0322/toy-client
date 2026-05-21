@@ -18,6 +18,7 @@ import {getTierByLevel, getTierColor} from '@/data/levelSystemData.js'
 import {registerFcm, unregisterFcm} from '@/services/fcmService.js'
 import {useUserBlockStore} from '@/stores/userBlock.js'
 import {useChatDetailMode} from '@/composables/useChatDetailMode.js'
+import {useTheme} from '@/composables/useTheme.js'
 import {Capacitor} from '@capacitor/core'
 import {SplashScreen} from '@capacitor/splash-screen'
 import {App as CapApp} from '@capacitor/app'
@@ -29,6 +30,18 @@ const {user, isLoggedIn, isAdmin, logout, userId} = useAuth()
 const {open, openLoginRequired} = useConfirmDialog()
 const userBlockStore = useUserBlockStore()
 const {isChatDetailOpen} = useChatDetailMode()
+const {resolved: resolvedTheme} = useTheme()
+
+// 테마에 맞춰 네이티브 StatusBar 적용
+// light: 흰 배경 + 검은 아이콘(Style.Light) / dark: #0F1218 배경 + 흰 아이콘(Style.Dark)
+async function applyStatusBarTheme() {
+  if (!Capacitor.isNativePlatform()) return
+  const isDark = resolvedTheme.value === 'dark'
+  try {
+    await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light })
+    await StatusBar.setBackgroundColor({ color: isDark ? '#0F1218' : '#ffffff' })
+  } catch {}
+}
 
 const isLoggingOut = ref(false)
 const wsStatus = ref('disconnected') // 'disconnected' | 'connecting' | 'connected' | 'error'
@@ -193,15 +206,10 @@ const beforeUnloadHandler = () => {
 
 async function setupAppLifecycle() {
   if (Capacitor.isNativePlatform()) {
-    try {
-      await StatusBar.setStyle({ style: Style.Light })
-      await StatusBar.setBackgroundColor({ color: '#ffffff' })
-    } catch (e) {
-      console.warn('[StatusBar] 스타일 적용 실패:', e)
-    }
+    await applyStatusBarTheme()
     const stateHandle = await CapApp.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
-        StatusBar.setStyle({ style: Style.Light }).catch(() => {})
+        applyStatusBarTheme()
         ensureWsConnected()
       } else {
         webSocketService.disconnect()
@@ -247,6 +255,11 @@ onMounted(() => {
   }
   runSplashFlow()
   setupAppLifecycle()
+})
+
+// 테마 변경 시 네이티브 StatusBar 같이 토글
+watch(resolvedTheme, () => {
+  applyStatusBarTheme()
 })
 
 // /chat 진입 시 즉시 클리어, /chat 떠날 때 다시 조회
