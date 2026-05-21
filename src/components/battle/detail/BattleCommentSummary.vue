@@ -605,6 +605,8 @@ div.ba-avatar {
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
+  word-break: keep-all;
+  line-height: 1.35;
 }
 
 .empty-cta-sub {
@@ -612,6 +614,9 @@ div.ba-avatar {
   font-weight: 500;
   color: var(--c-text-500);
   letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .empty-cta-plus {
@@ -741,15 +746,23 @@ div.ba-avatar {
     padding: 4px 10px;
   }
 
-  /* 빈 상태 CTA — 모바일에서 약간 컴팩트하게 */
+  /* 빈 상태 CTA — 모바일에서는 title 한 줄만 노출되므로 한 줄 높이에 맞게 컴팩트 */
   .empty-cta {
-    padding: 10px 12px;
-    gap: 9px;
+    padding: 11px 12px;
+    gap: 10px;
+    align-items: center;
   }
   .empty-cta-icon { width: 26px; height: 26px; }
-  .empty-cta-title { font-size: 11.5px; }
-  .empty-cta-sub { font-size: 10px; }
-  .empty-cta-plus { width: 20px; height: 20px; }
+  .empty-cta-text {
+    /* sub 가 숨겨졌으니 column 정렬 의미 없음 — 단일 라인으로 깔끔하게 */
+    justify-content: center;
+  }
+  .empty-cta-title {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  .empty-cta-sub { display: none; } /* 모바일은 좁아서 title만 노출 */
+  .empty-cta-plus { width: 22px; height: 22px; }
 }
 
 /* PC 최적화 */
