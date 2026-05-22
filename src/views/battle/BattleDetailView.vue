@@ -321,6 +321,76 @@
           @comment-created="handleCommentCreated"
       />
 
+      <!-- Winner Celebration Modal (종료된 배틀, 세션당 1회) -->
+      <Teleport to="body">
+        <Transition name="winner-modal">
+          <div
+              v-if="showWinnerModal && displayWinnerData"
+              class="winner-modal-overlay"
+              @click.self="closeWinnerModal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="winner-modal-title"
+          >
+            <div :class="['winner-modal-card', `tier-${winnerEffectTier}`]">
+              <div v-if="showConfetti" class="confetti-layer" aria-hidden="true">
+                <span
+                    v-for="piece in confettiPieces"
+                    :key="piece.id"
+                    class="confetti-piece"
+                    :style="piece.style"
+                ></span>
+              </div>
+
+              <button class="winner-modal-close" @click="closeWinnerModal" aria-label="닫기">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+
+              <div class="winner-modal-header">
+                <component :is="tierIconComponent" class="winner-modal-trophy" :size="22" :stroke-width="2.5" />
+                <span class="winner-modal-label">{{ tierLabel }}</span>
+                <span id="winner-modal-title" class="winner-modal-sub">{{ tierSubLabel }}</span>
+              </div>
+
+              <div class="winner-modal-body">
+                <div class="winner-modal-img-wrap">
+                  <img :src="getItemImage(displayWinnerData.item)" :alt="getItemName(displayWinnerData.item)" class="winner-modal-img" />
+                  <span v-if="winnerEffectTier !== 'consolation'" class="winner-modal-crown" aria-hidden="true">
+                    <Crown v-if="winnerEffectTier === 'gold'" :size="18" :stroke-width="2.5" />
+                    <span v-else class="rank-num">{{ displayWinnerData.rank }}</span>
+                  </span>
+                </div>
+                <div v-if="displayWinnerData.isMyPick" class="winner-modal-mypick-tag">MY PICK</div>
+                <div class="winner-modal-name">{{ getItemName(displayWinnerData.item) }}</div>
+                <div class="winner-modal-stats">
+                  <span class="winner-modal-pct">{{ getPercentage(displayWinnerData.item) }}%</span>
+                  <span class="winner-modal-divider"></span>
+                  <span class="winner-modal-count">
+                    {{ isWeightedVote ? `${displayWinnerData.item.totalScore || 0}점` : `${displayWinnerData.item.voteCount || 0}표` }}
+                  </span>
+                  <span class="winner-modal-divider"></span>
+                  <span class="winner-modal-rank">{{ displayWinnerData.rank }}위</span>
+                </div>
+              </div>
+
+              <button class="winner-modal-cta" @click="closeWinnerModal">
+                결과 확인하기
+              </button>
+
+              <button
+                  type="button"
+                  class="winner-modal-mute"
+                  @click="dismissWinnerModalForWeek"
+              >
+                일주일간 다시 보지 않기
+              </button>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+
       <!-- YouTube Player Modal -->
       <Teleport to="body">
         <Transition name="modal">
@@ -376,6 +446,7 @@ import ProductCard from '@/components/battle/detail/ProductCard.vue'
 import AddProductModal from '@/components/battle/detail/AddProductModal.vue'
 import BattleCommentModal from '@/components/battle/detail/BattleCommentModal.vue'
 import BattleCreatorPanel from '@/components/battle/detail/BattleCreatorPanel.vue'
+import { Trophy, Crown, Award, Medal, Heart } from 'lucide-vue-next'
 
 export default {
   name: 'BattleDetail',
@@ -387,7 +458,12 @@ export default {
     ProductCard,
     AddProductModal,
     BattleCommentModal,
-    BattleCreatorPanel
+    BattleCreatorPanel,
+    Trophy,
+    Crown,
+    Award,
+    Medal,
+    Heart
   },
   setup() {
     const { open, openLoginRequired } = useConfirmDialog()
@@ -426,7 +502,11 @@ export default {
       // 모바일 플로팅 필터 자동 숨김
       floatingFilterHidden: false,
       // 모바일 — picker prompt sub 설명 펼침 토글
-      pickerExpanded: false
+      pickerExpanded: false,
+      // 우승자 셀러브레이션 모달 (종료된 배틀, 세션당 1회)
+      showWinnerModal: false,
+      showConfetti: false,
+      confettiPieces: []
     }
   },
   computed: {
@@ -558,6 +638,95 @@ export default {
     filteredItemName() {
       if (!this.selectedItemFilter) return null
       return this.getItemNameById(this.selectedItemFilter)
+    },
+    // 자연 종료된 배틀만 우승자 셀러브레이션 대상 (SUSPENDED 제외)
+    // NORMAL/ACTIVE 상태라도 endDate가 지났으면 종료로 간주 (서버의 상태 전이가 lazy함)
+    isEnded() {
+      if (!this.battle) return false
+      const status = this.battle.status?.title || this.battle.status
+      if (status === 'SUSPENDED') return false
+      if (status === 'CLOSED' || status === 'ENDED' || status === 'EARLY_CLOSED') return true
+      if (status === 'NORMAL' || status === 'ACTIVE') {
+        if (!this.battle.endDate) return false
+        return new Date(this.battle.endDate) <= new Date()
+      }
+      return false
+    },
+    winnerItem() {
+      if (!this.isEnded) return null
+      const top = this.sortedItems[0]
+      if (!top) return null
+      // 투표가 1건도 없으면 우승자 의미가 없어서 표시하지 않음
+      return this.calculateItemScore(top) > 0 ? top : null
+    },
+    // 내가 픽한 아이템들 (정렬된 상태에서 userBattleVote 가 있는 것)
+    userPickedItems() {
+      return this.sortedItems.filter(item => item.userBattleVote)
+    },
+    // 내 픽 중 최종 결과가 가장 좋은 것 (rank 가 가장 낮은)
+    bestUserPickItem() {
+      if (!this.userPickedItems.length) return null
+      const withRank = this.userPickedItems.map((item, idx) => ({
+        item,
+        finalRank: item.rank || (this.sortedItems.indexOf(item) + 1)
+      }))
+      withRank.sort((a, b) => a.finalRank - b.finalRank)
+      return withRank[0]
+    },
+    // 모달에 보여줄 아이템·등수·"내 픽 여부"
+    displayWinnerData() {
+      if (this.bestUserPickItem) {
+        return {
+          item: this.bestUserPickItem.item,
+          rank: this.bestUserPickItem.finalRank,
+          isMyPick: true
+        }
+      }
+      if (this.winnerItem) {
+        return { item: this.winnerItem, rank: 1, isMyPick: false }
+      }
+      return null
+    },
+    // 이펙트 톤: gold(1위) · silver(2위) · bronze(3위) · consolation(4위 이하)
+    winnerEffectTier() {
+      const data = this.displayWinnerData
+      if (!data) return null
+      if (data.rank === 1) return 'gold'
+      if (data.rank === 2) return 'silver'
+      if (data.rank === 3) return 'bronze'
+      return 'consolation'
+    },
+    tierIconComponent() {
+      switch (this.winnerEffectTier) {
+        case 'gold': return 'Trophy'
+        case 'silver': return 'Award'
+        case 'bronze': return 'Medal'
+        default: return 'Heart'
+      }
+    },
+    tierLabel() {
+      const data = this.displayWinnerData
+      if (!data) return ''
+      const isMine = data.isMyPick
+      switch (this.winnerEffectTier) {
+        case 'gold':   return isMine ? 'WINNER' : 'WINNER'
+        case 'silver': return isMine ? '2위' : '2위'
+        case 'bronze': return isMine ? '3위' : '3위'
+        default:       return isMine ? `${data.rank}위` : `${data.rank}위`
+      }
+    },
+    tierSubLabel() {
+      const data = this.displayWinnerData
+      if (!data) return ''
+      if (data.isMyPick) {
+        switch (this.winnerEffectTier) {
+          case 'gold':   return '내 픽이 우승했어요!'
+          case 'silver': return '아쉽게 2위, 잘했어요!'
+          case 'bronze': return '입상! 3위로 마무리'
+          default:       return '아쉽지만 다음 픽은 더 좋을 거예요'
+        }
+      }
+      return '종료된 픽의 최종 결과'
     }
   },
   watch: {
@@ -631,6 +800,9 @@ export default {
       this.showYoutubePlayer = false
       this.currentYoutubeItem = null
       this.currentYoutubeEmbedUrl = null
+      this.showWinnerModal = false
+      this.showConfetti = false
+      this.confettiPieces = []
     },
     async loadBattle() {
       this.loading = true
@@ -642,6 +814,8 @@ export default {
         if (response.success && response.data) {
           this.battle = response.data
           this.checkUserVote()
+          // 종료된 배틀이면 우승자 컨페티 1회 트리거 (세션 가드)
+          this.maybeTriggerWinnerConfetti()
           // 전체 PICK 한마디 로드 (getAllComments API 사용)
           this.loadAllComments(true)
         } else {
@@ -1261,6 +1435,81 @@ export default {
       this.showYoutubePlayer = false
       this.currentYoutubeItem = null
       this.currentYoutubeEmbedUrl = null
+    },
+
+    // 종료된 배틀 진입 시 우승자 셀러브레이션 모달 1회 트리거
+    // - 세션당 배틀별 1회 (sessionStorage)
+    // - 사용자가 "일주일간 다시 보지 않기" 누른 경우 만료 시각까지 스킵 (localStorage)
+    maybeTriggerWinnerConfetti() {
+      if (!this.isEnded || !this.displayWinnerData) return
+      const sessionKey = `battle-winner-modal-${this.battleId}`
+      const muteKey = `battle-winner-modal-mute-${this.battleId}`
+      try {
+        if (sessionStorage.getItem(sessionKey)) return
+        const muteUntil = parseInt(localStorage.getItem(muteKey) || '0', 10)
+        if (muteUntil && Date.now() < muteUntil) return
+        sessionStorage.setItem(sessionKey, '1')
+      } catch (_) { /* private mode 등 — 그냥 진행 */ }
+
+      const tier = this.winnerEffectTier
+      this.showWinnerModal = true
+
+      // consolation(4위 이하)은 confetti 생략 — 위로 톤
+      if (tier !== 'consolation') {
+        this.confettiPieces = this.buildConfettiPieces(tier)
+        this.showConfetti = true
+        if (this._confettiTimer) clearTimeout(this._confettiTimer)
+        this._confettiTimer = setTimeout(() => {
+          this.showConfetti = false
+          this.confettiPieces = []
+        }, 3200)
+      }
+    },
+
+    closeWinnerModal() {
+      this.showWinnerModal = false
+      this.showConfetti = false
+      this.confettiPieces = []
+      if (this._confettiTimer) {
+        clearTimeout(this._confettiTimer)
+        this._confettiTimer = null
+      }
+    },
+
+    // 이 배틀의 우승자 모달을 일주일 동안 다시 보지 않도록 localStorage에 만료 시각 저장
+    dismissWinnerModalForWeek() {
+      try {
+        const expiry = Date.now() + 7 * 24 * 60 * 60 * 1000
+        localStorage.setItem(`battle-winner-modal-mute-${this.battleId}`, String(expiry))
+      } catch (_) { /* private mode / quota — 무시 */ }
+      this.closeWinnerModal()
+    },
+
+    buildConfettiPieces(tier = 'gold') {
+      // tier별 팔레트·개수 차등 (그라데이션 X — 솔리드만)
+      const palettes = {
+        gold:   { count: 40, colors: ['#EAB308', '#F59E0B', '#FACC15', '#9333EA', '#F97316', '#16A34A'] },
+        silver: { count: 26, colors: ['#94A3B8', '#CBD5E1', '#9333EA', '#3B82F6', '#E5E7EB'] },
+        bronze: { count: 18, colors: ['#B45309', '#D97706', '#F59E0B', '#9333EA', '#FBBF24'] }
+      }
+      const palette = palettes[tier] || palettes.gold
+      const pieces = []
+      for (let i = 0; i < palette.count; i++) {
+        const size = 6 + Math.random() * 6
+        pieces.push({
+          id: i,
+          style: {
+            left: `${Math.random() * 100}%`,
+            width: `${size}px`,
+            height: `${size * 1.6}px`,
+            background: palette.colors[i % palette.colors.length],
+            animationDelay: `${Math.random() * 0.4}s`,
+            animationDuration: `${1.8 + Math.random() * 1.2}s`,
+            transform: `rotate(${Math.random() * 360}deg)`
+          }
+        })
+      }
+      return pieces
     }
   },
   beforeUnmount() {
@@ -1269,6 +1518,9 @@ export default {
     }
     if (this._scrollRaf) {
       cancelAnimationFrame(this._scrollRaf)
+    }
+    if (this._confettiTimer) {
+      clearTimeout(this._confettiTimer)
     }
   }
 }
@@ -1334,6 +1586,389 @@ export default {
 .content-wrapper {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* ============================= */
+/* 우승자 셀러브레이션 모달 (종료된 배틀, 세션당 1회) */
+/* ============================= */
+.winner-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 20, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 20px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.winner-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 28px 24px 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28), 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.confetti-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -16px;
+  border-radius: 2px;
+  opacity: 0;
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.3, 0.6, 0.6, 1);
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(520px) rotate(720deg); opacity: 0; }
+}
+
+.winner-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  transition: background 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.winner-modal-close:hover {
+  background: var(--border-default);
+  color: var(--text-primary);
+}
+
+.winner-modal-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.winner-modal-trophy {
+  color: var(--c-warning);
+  flex-shrink: 0;
+}
+
+.winner-modal-label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--c-warning);
+}
+
+/* ── tier 별 톤 ── */
+/* gold (1위) — 현재 기본값(워닝 옐로우) */
+
+/* silver (2위) — 차분한 슬레이트 */
+.winner-modal-card.tier-silver .winner-modal-trophy,
+.winner-modal-card.tier-silver .winner-modal-label,
+.winner-modal-card.tier-silver .winner-modal-pct {
+  color: #64748B;
+}
+.winner-modal-card.tier-silver .winner-modal-img {
+  border-color: #E2E8F0;
+}
+.winner-modal-card.tier-silver .winner-modal-crown {
+  background: #94A3B8;
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.4);
+}
+
+/* bronze (3위) — 따뜻한 동색 */
+.winner-modal-card.tier-bronze .winner-modal-trophy,
+.winner-modal-card.tier-bronze .winner-modal-label,
+.winner-modal-card.tier-bronze .winner-modal-pct {
+  color: #B45309;
+}
+.winner-modal-card.tier-bronze .winner-modal-img {
+  border-color: #FED7AA;
+}
+.winner-modal-card.tier-bronze .winner-modal-crown {
+  background: #D97706;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+}
+
+/* consolation (4위 이하) — 위로 톤, 중성 그레이 + 브랜드 살짝 */
+.winner-modal-card.tier-consolation .winner-modal-trophy {
+  color: #EF4444;
+}
+.winner-modal-card.tier-consolation .winner-modal-label {
+  color: var(--c-text-600);
+  letter-spacing: 0.4px;
+}
+.winner-modal-card.tier-consolation .winner-modal-pct {
+  color: var(--c-text-600);
+}
+.winner-modal-card.tier-consolation .winner-modal-img {
+  border-color: var(--border-default);
+  filter: saturate(0.8);
+}
+
+.winner-modal-sub {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-400);
+}
+
+.winner-modal-body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.winner-modal-img-wrap {
+  position: relative;
+}
+
+.winner-modal-img {
+  width: 132px;
+  height: 132px;
+  border-radius: 20px;
+  object-fit: cover;
+  border: 3px solid var(--c-warning-soft);
+  background: var(--bg-mute);
+}
+
+.winner-modal-crown {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 38px;
+  height: 38px;
+  background: var(--c-warning);
+  color: #ffffff;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.5);
+  border: 3px solid #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.winner-modal-crown .rank-num {
+  line-height: 1;
+}
+
+.winner-modal-mypick-tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--c-brand);
+  background: var(--c-brand-soft);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.winner-modal-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  width: 100%;
+}
+
+.winner-modal-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.winner-modal-pct {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--c-warning);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.6px;
+  line-height: 1;
+}
+
+.winner-modal-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border-strong);
+  align-self: center;
+}
+
+.winner-modal-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-text-500);
+  font-variant-numeric: tabular-nums;
+}
+
+.winner-modal-rank {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-text-500);
+  font-variant-numeric: tabular-nums;
+}
+
+.winner-modal-cta {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 14px;
+  background: var(--c-brand);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  margin-top: 4px;
+}
+
+.winner-modal-cta:hover {
+  background: var(--c-brand-hover);
+}
+
+.winner-modal-cta:active {
+  transform: scale(0.98);
+}
+
+.winner-modal-mute {
+  position: relative;
+  z-index: 2;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-400);
+  padding: 6px 8px;
+  margin-top: -4px;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--border-strong);
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.winner-modal-mute:hover {
+  color: var(--text-primary);
+  text-decoration-color: var(--c-text-500);
+}
+
+/* 모달 트랜지션 */
+.winner-modal-enter-active,
+.winner-modal-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.winner-modal-enter-active .winner-modal-card,
+.winner-modal-leave-active .winner-modal-card {
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2), opacity 0.22s ease;
+}
+
+.winner-modal-enter-from,
+.winner-modal-leave-to {
+  opacity: 0;
+}
+
+.winner-modal-enter-from .winner-modal-card,
+.winner-modal-leave-to .winner-modal-card {
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+}
+
+/* ── 다크모드 대응 — 카드 배경이 흰색 하드코딩이라 본문 텍스트(var(--text-primary)=거의 흰색)가 묻히는 문제 ── */
+:root[data-theme="dark"] .winner-modal-card {
+  background: var(--bg-elevated);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="dark"] .winner-modal-crown {
+  border-color: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .winner-modal-close {
+  background: var(--bg-subtle);
+  color: var(--c-text-500);
+}
+
+:root[data-theme="dark"] .winner-modal-close:hover {
+  background: var(--bg-mute);
+  color: var(--text-primary);
+}
+
+@media (max-width: 480px) {
+  .winner-modal-card {
+    max-width: 340px;
+    padding: 24px 20px 18px;
+    border-radius: 22px;
+  }
+  .winner-modal-img { width: 116px; height: 116px; border-radius: 18px; }
+  .winner-modal-crown { width: 34px; height: 34px; top: -8px; right: -8px; }
+  .winner-modal-name { font-size: 16px; }
+  .winner-modal-pct { font-size: 28px; }
+  .winner-modal-label { font-size: 13px; }
+  .winner-modal-sub { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .winner-modal-enter-active .winner-modal-card,
+  .winner-modal-leave-active .winner-modal-card {
+    transition: opacity 0.15s ease;
+    transform: none;
+  }
+  .winner-modal-enter-from .winner-modal-card,
+  .winner-modal-leave-to .winner-modal-card {
+    transform: none;
+  }
+  .confetti-piece { display: none; }
 }
 
 /* PC Grid - 3열 */
