@@ -143,6 +143,12 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.0.10**: iOS 빌드 13, Android versionCode 10 (`chore`)
+- **배틀 모바일 PICK 한마디·아이템 카드 UX 다듬기**: `BattleDetailView`, `BattleCommentSummary`, `ProductCard` — 빈 상태 CTA 모바일 컴팩트 정리 포함 (`feat(battle)`, `fix(battle)`)
+- **네이티브 StatusBar 다크모드 대응**: `App.vue` + `capacitor/bootstrap.js` — 테마 변경 시 iOS/Android StatusBar 스타일 토글 (`feat(theme)`)
+- **Android 앱 아이콘·스플래시 yogurtte 로고로 교체**: 흰 배경 + 가운데 50% 비율 (`feat(android)`)
+- **버전 1.0.9**: iOS 빌드 12, Android versionCode 9 (`chore`)
+- **iOS 채팅 입력창 키보드 노티피케이션 관찰**: `AppViewController.swift` + `ChatDetailView.vue` — 키보드 show/hide 네이티브 노티피케이션으로 입력창이 키보드 바로 위에 붙도록 (`fix(chat)`)
 - **버전 1.0.8**: iOS 빌드 11, Android versionCode 8 (`chore`)
 - **알림 패널 모바일 UX 개선**: `useNotificationPanelMode` composable 신설 — 알림 패널 열릴 때 모바일 FAB(글쓰기) 자동 숨김. `NotificationDropdown` desktop/mobile 두 인스턴스 공유 ref 덮어쓰기 버그 수정 (`fix(notification)`)
 - **배틀 아이템 다중 추가 + 업로드 실패 처리 일관화**: `Step2ItemSetup`, `AddProductModal` 개선 — 아이템 다중 선택 추가 및 업로드 실패 핸들링 통일 (`feat(battle/feed)`)
