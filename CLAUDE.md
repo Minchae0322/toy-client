@@ -143,6 +143,7 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **배틀 종료 우승자 셀러브레이션 모달**: `BattleDetailView` 인라인 winner-spotlight 제거 → `<Teleport to="body">` 이벤트 모달로 전환. 내 픽 있으면 최고 등수, 없으면 전체 1위 표시. 1·2·3·4위+ tier별 아이콘·라벨·컬러·confetti 차등화(gold/silver/bronze/consolation). **세션당 배틀별 1회** (`sessionStorage`) + "일주일간 다시 보지 않기" (`localStorage` 만료 키). 다크모드 대응 (`feat(battle)`)
 - **버전 1.0.10**: iOS 빌드 13, Android versionCode 10 (`chore`)
 - **배틀 모바일 PICK 한마디·아이템 카드 UX 다듬기**: `BattleDetailView`, `BattleCommentSummary`, `ProductCard` — 빈 상태 CTA 모바일 컴팩트 정리 포함 (`feat(battle)`, `fix(battle)`)
 - **네이티브 StatusBar 다크모드 대응**: `App.vue` + `capacitor/bootstrap.js` — 테마 변경 시 iOS/Android StatusBar 스타일 토글 (`feat(theme)`)
