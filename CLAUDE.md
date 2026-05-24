@@ -34,11 +34,12 @@
 ## 프로젝트 구조 요약
 
 - **프레임워크**: Vue 3.5 (Composition API `<script setup>`) + Vite 6.x + Pinia 3.x + Vue Router 4.x
-- **모바일 앱**: Capacitor 7.x (iOS / Android) — `npm run cap:ios`, `npm run cap:android`
+- **모바일 앱**: Capacitor 7.x (iOS / Android) + `@capgo/capacitor-social-login` (Apple/Google 소셜 로그인) — `npm run cap:ios`, `npm run cap:android`
 - **UI 라이브러리**: Tailwind 4.x (유틸), `lucide-vue-next` (아이콘), `@heroicons/vue`
 - **HTTP**: Axios (`src/api/client.js` + 인터셉터 `src/api/interceptors.js`)
 - **실시간**: STOMP + SockJS (`src/services/webSocketService.js`)
 - **푸시 알림**: Firebase FCM 11.x (`src/services/fcmService.js`, `src/services/pushNotificationService.js`)
+- **날짜 유틸**: `date-fns 4.x`
 - **주요 디렉토리**:
   - `src/views/` — 라우트 단위 페이지
     - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView` 등
