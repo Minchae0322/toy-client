@@ -51,7 +51,7 @@
         <div class="dash-thumb">
           <img v-if="battle.thumbnailDto?.fileUrl" :src="battle.thumbnailDto.fileUrl" :alt="battle.title" @error="handleImageError" />
           <div v-else class="thumb-none">Y</div>
-          <span class="dday-mini">{{ getDdayText(battle.endDate) }}</span>
+          <span v-if="getDdayText(battle.endDate)" class="dday-mini">{{ getDdayText(battle.endDate) }}</span>
         </div>
 
         <!-- 정보 -->
@@ -132,12 +132,13 @@ const getEtcPercent = (topItems) => {
 }
 
 const getDdayText = (endDate) => {
-  if (!endDate) return '진행중'
+  if (!endDate) return ''
   const end = new Date(endDate)
   const now = new Date()
   const diffTime = end - now
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  if (diffDays < 0) return '종료'
+  // 7일 초과 또는 이미 종료된 배틀은 D-day 미표시
+  if (diffDays < 0 || diffDays > 7) return ''
   if (diffDays === 0) return 'D-Day'
   return `D-${diffDays}`
 }
