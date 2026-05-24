@@ -239,19 +239,22 @@ const dDayText = computed(() => {
 })
 
 const showDeadline = computed(() => {
+  const days = dDay.value
+  if (days === null) return false
+  // 마감 임박(7일 이하)인 진행중 배틀에만 D-day 배지 노출
+  if (days < 0 || days > 7) return false
+
   const status = props.battle?.status?.title || props.battle?.status
 
-  // status가 NORMAL인 경우 endDate가 있으면 항상 D-day 배지 표시
   if (status === 'NORMAL') {
-    return dDay.value !== null
+    return isActiveByEndDate.value
   }
 
-  // isActive 필드를 우선 사용하고, 없으면 기존 status로 폴백
   if (props.battle?.isActive !== undefined) {
-    return props.battle.isActive && dDay.value !== null
+    return props.battle.isActive
   }
 
-  return status === 'ACTIVE' && dDay.value !== null
+  return status === 'ACTIVE'
 })
 
 const ddayClass = computed(() => {
