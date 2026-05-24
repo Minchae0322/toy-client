@@ -15,37 +15,54 @@
       <!-- 중앙: 스텝 인디케이터 -->
       <div class="steps-wrapper">
         <div class="steps">
-          <template v-for="(step, index) in steps" :key="index">
-            <div
+          <template v-for="(step, index) in enrichedSteps" :key="index">
+            <button
+                type="button"
                 class="step-item"
                 :class="{
                   active: currentStep === index + 1,
                   completed: maxStepReached > index + 1 && currentStep !== index + 1
                 }"
+                :aria-label="`${index + 1}단계 ${step.label}`"
+                :aria-current="currentStep === index + 1 ? 'step' : undefined"
                 @click="handleStepClick(index + 1)"
             >
               <div class="step-circle">
                 <svg
                     v-if="maxStepReached > index + 1 && currentStep !== index + 1"
-                    width="12"
-                    height="12"
+                    class="step-icon"
+                    width="16"
+                    height="16"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="3"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
                 >
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                <span v-else class="step-number">{{ index + 1 }}</span>
+                <component
+                    v-else
+                    :is="step.icon"
+                    class="step-icon"
+                    :size="16"
+                    :stroke-width="2.25"
+                    aria-hidden="true"
+                />
+                <span class="step-badge">{{ index + 1 }}</span>
               </div>
-              <span class="step-label">{{ step }}</span>
-            </div>
+              <span class="step-label">
+                <span class="step-label-full">{{ step.label }}</span>
+                <span class="step-label-short">{{ step.shortLabel }}</span>
+              </span>
+            </button>
             <div
-                v-if="index < steps.length - 1"
+                v-if="index < enrichedSteps.length - 1"
                 class="step-line"
                 :class="{ completed: maxStepReached > index + 1 }"
+                aria-hidden="true"
             ></div>
           </template>
         </div>
@@ -102,6 +119,9 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { FileText, Package, Settings2, ClipboardCheck } from 'lucide-vue-next';
+
 const props = defineProps({
   steps: {
     type: Array,
@@ -127,34 +147,40 @@ const props = defineProps({
 
 const emit = defineEmits(['back', 'save-draft', 'go-to-step']);
 
-/**
- * 스텝 클릭 핸들러 - 모든 스텝으로 이동 가능
- */
+const STEP_META = [
+  { icon: FileText, shortLabel: '기본' },
+  { icon: Package, shortLabel: '아이템' },
+  { icon: Settings2, shortLabel: '설정' },
+  { icon: ClipboardCheck, shortLabel: '확인' }
+];
+
+const enrichedSteps = computed(() =>
+    props.steps.map((label, i) => ({
+      label,
+      shortLabel: STEP_META[i]?.shortLabel ?? label,
+      icon: STEP_META[i]?.icon ?? FileText
+    }))
+);
+
 const handleStepClick = (stepNumber) => {
   emit('go-to-step', stepNumber);
 };
 
-/**
- * 저장 시간 포맷
- */
 const formatSavedTime = (date) => {
   if (!date) return ''
 
   const now = new Date()
   const diff = now - date
 
-  // 1분 이내
   if (diff < 60000) {
     return '방금 전 저장됨'
   }
 
-  // 1시간 이내
   if (diff < 3600000) {
     const minutes = Math.floor(diff / 60000)
     return `${minutes}분 전 저장됨`
   }
 
-  // 오늘
   if (date.toDateString() === now.toDateString()) {
     const hours = date.getHours()
     const minutes = date.getMinutes().toString().padStart(2, '0')
@@ -163,7 +189,6 @@ const formatSavedTime = (date) => {
     return `오늘 ${period} ${hour12}:${minutes}`
   }
 
-  // 그 외
   const month = date.getMonth() + 1
   const day = date.getDate()
   return `${month}/${day} 저장됨`
@@ -248,19 +273,24 @@ const formatSavedTime = (date) => {
 .steps {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .step-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 10px;
+  transition: opacity 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .step-item:hover .step-circle {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .step-item:hover .step-label {
@@ -268,19 +298,41 @@ const formatSavedTime = (date) => {
 }
 
 .step-circle {
-  width: 28px;
-  height: 28px;
+  position: relative;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--border-default);
   border: 2px solid var(--border-strong);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
   color: var(--c-text-400);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
+}
+
+.step-icon {
+  flex-shrink: 0;
+}
+
+.step-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-strong);
+  color: var(--c-text-500);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  transition: all 0.25s;
 }
 
 .step-item.active .step-circle {
@@ -288,6 +340,13 @@ const formatSavedTime = (date) => {
   border-color: var(--c-ink-900);
   color: white;
   transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(10, 14, 26, 0.18);
+}
+
+.step-item.active .step-badge {
+  background: var(--c-ink-900);
+  border-color: var(--c-ink-900);
+  color: white;
 }
 
 .step-item.completed .step-circle {
@@ -296,16 +355,23 @@ const formatSavedTime = (date) => {
   color: white;
 }
 
-.step-number {
-  font-variant-numeric: tabular-nums;
+.step-item.completed .step-badge {
+  background: var(--c-success);
+  border-color: var(--c-success);
+  color: white;
 }
 
 .step-label {
+  display: inline-flex;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--c-text-400);
   transition: all 0.25s;
   white-space: nowrap;
+}
+
+.step-label-short {
+  display: none;
 }
 
 .step-item.active .step-label {
@@ -318,9 +384,10 @@ const formatSavedTime = (date) => {
 }
 
 .step-line {
-  width: 40px;
+  width: 32px;
   height: 2px;
   background: var(--border-strong);
+  border-radius: 2px;
   transition: background 0.25s;
   flex-shrink: 0;
 }
@@ -394,58 +461,43 @@ const formatSavedTime = (date) => {
 /* ===== 반응형 ===== */
 @media (max-width: 1200px) {
   .header-content {
-    gap: 32px;
-  }
-
-  .step-label {
-    display: none;
+    gap: 24px;
   }
 
   .step-line {
-    width: 32px;
+    width: 20px;
   }
 }
 
 @media (max-width: 1024px) {
   .header-content {
-    padding: 16px 24px;
+    padding: 14px 20px;
     grid-template-columns: 1fr auto;
-    gap: 16px;
+    gap: 12px;
   }
 
   .steps-wrapper {
     grid-column: 1 / -1;
     order: 3;
-    margin-top: 8px;
+    margin-top: 4px;
     padding-top: 12px;
-    border-top: 1px solid #F0F0F3;
-  }
-
-  .step-label {
-    display: block;
-  }
-
-  .step-line {
-    width: 24px;
+    border-top: 1px solid var(--border-default);
   }
 }
 
 @media (max-width: 640px) {
   .header-content {
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    padding: 10px 12px;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
   }
 
   .header-left {
     flex-shrink: 0;
+    gap: 0;
   }
 
-  .page-title {
-    display: none;
-  }
-
+  .page-title,
   .divider {
     display: none;
   }
@@ -457,35 +509,76 @@ const formatSavedTime = (date) => {
 
   .steps-wrapper {
     flex: 1;
-    justify-content: center;
     grid-column: unset;
     order: unset;
     margin-top: 0;
     padding-top: 0;
     border-top: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  .steps {
-    justify-content: center;
-  }
-
-  .step-circle {
-    width: 30px;
-    height: 30px;
-    font-size: 12px;
-  }
-
-  .step-label {
+  .steps-wrapper::-webkit-scrollbar {
     display: none;
   }
 
+  .steps {
+    gap: 2px;
+    padding: 2px;
+    justify-content: center;
+    min-width: 100%;
+  }
+
+  .step-item {
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 2px;
+    min-width: 56px;
+  }
+
+  .step-circle {
+    width: 34px;
+    height: 34px;
+  }
+
+  .step-item.active .step-circle {
+    transform: scale(1.08);
+  }
+
+  .step-badge {
+    top: -3px;
+    right: -3px;
+    min-width: 14px;
+    height: 14px;
+    font-size: 9px;
+    line-height: 11px;
+    border-width: 1.5px;
+  }
+
+  .step-label {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .step-label-full {
+    display: none;
+  }
+
+  .step-label-short {
+    display: inline;
+  }
+
   .step-line {
-    width: 20px;
+    width: 12px;
+    align-self: flex-start;
+    margin-top: 18px;
   }
 
   .header-right {
-    flex-shrink: 0;
-    margin-left: auto;
+    margin-left: 0;
   }
 
   .save-status {
@@ -504,30 +597,18 @@ const formatSavedTime = (date) => {
   }
 }
 
-@media (max-width: 480px) {
-  .header-content {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-
-  .back-btn {
-    width: 32px;
-    height: 32px;
+@media (max-width: 380px) {
+  .step-item {
+    min-width: 50px;
   }
 
   .step-circle {
-    width: 28px;
-    height: 28px;
-    font-size: 11px;
+    width: 32px;
+    height: 32px;
   }
 
   .step-line {
-    width: 16px;
-  }
-
-  .save-draft-btn {
-    width: 32px;
-    height: 32px;
+    width: 8px;
   }
 }
 </style>
