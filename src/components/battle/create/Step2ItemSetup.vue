@@ -2,21 +2,24 @@
   <div class="form-section">
     <!-- 상단 안내: 아이템이 뭔지 설명 -->
     <div class="step-intro">
-      <div class="intro-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-          <line x1="7" y1="7" x2="7.01" y2="7"/>
-        </svg>
-      </div>
-      <div class="intro-content">
+      <div class="intro-header">
+        <div class="intro-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+        </div>
         <h2 class="intro-title">어떤 아이템으로 대결할까요?</h2>
-        <p class="intro-desc">
-          요거픽에 올릴 <strong>선택지(아이템)</strong>를 추가해보세요.
-          직접 찍은 <strong>사진</strong>, 요거뜨에 이미 등록된 <strong>제품</strong>,
-          <strong>YouTube 영상</strong> 무엇이든 가능해요.
-        </p>
-        <p class="intro-meta">최소 1개 · 최대 20개</p>
+        <span class="intro-meta">최소 1개 · 최대 20개</span>
       </div>
+      <p class="intro-desc">
+        아래 <strong>3가지 방법</strong> 중 골라서 아이템을 추가하세요.
+      </p>
+      <ul class="intro-methods">
+        <li><span class="method-dot method-photo"></span>직접 찍은 <strong>사진</strong>으로 추가</li>
+        <li><span class="method-dot method-item"></span>요거뜨에 등록된 <strong>아이템</strong> 검색</li>
+        <li><span class="method-dot method-youtube"></span><strong>YouTube 영상</strong> 링크 붙여넣기</li>
+      </ul>
     </div>
 
     <!-- 입력 방식 탭 -->
@@ -30,6 +33,7 @@
       >
         <span class="tab-icon" v-html="tab.icon"></span>
         <span class="tab-label">{{ tab.label }}</span>
+        <span class="tab-label-short">{{ tab.shortLabel }}</span>
       </button>
     </div>
 
@@ -405,17 +409,20 @@ const { open } = useConfirmDialog();
 const tabs = [
   {
     id: 'image',
-    label: '이미지 업로드',
+    label: '사진 업로드',
+    shortLabel: '사진',
     icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
   },
   {
     id: 'search',
-    label: '요거뜨 아이템',
+    label: '등록 아이템',
+    shortLabel: '아이템',
     icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'
   },
   {
     id: 'youtube',
     label: 'YouTube',
+    shortLabel: 'YouTube',
     icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>'
   }
 ];
@@ -832,58 +839,111 @@ const handleImageError = (event) => {
 
 /* ===== 상단 안내 ===== */
 .step-intro {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 18px 20px;
+  padding: 20px 22px;
   margin-bottom: 20px;
-  background: var(--bg-subtle);
+  background: var(--bg-elevated);
   border-radius: 14px;
   border: 1px solid var(--border-strong);
 }
 
+.intro-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
 .intro-icon {
-  width: 40px;
-  height: 40px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
+  width: 36px;
+  height: 36px;
+  background: #FAF5FF;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary);
+  color: #9333EA;
   flex-shrink: 0;
 }
 
-.intro-content {
-  flex: 1;
-  min-width: 0;
-}
-
 .intro-title {
-  font-size: 16px;
-  font-weight: 700;
+  flex: 1;
+  font-size: 19px;
+  font-weight: 800;
   color: var(--text-primary);
-  margin: 0 0 6px 0;
-}
-
-.intro-desc {
-  font-size: 13.5px;
-  color: var(--text-secondary);
   margin: 0;
-  line-height: 1.6;
-}
-
-.intro-desc strong {
-  color: var(--text-primary);
-  font-weight: 700;
+  letter-spacing: -0.4px;
 }
 
 .intro-meta {
-  margin: 10px 0 0 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-tertiary);
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--bg-subtle);
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: -0.2px;
+}
+
+.intro-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+  letter-spacing: -0.2px;
+}
+
+.intro-desc strong {
+  color: #9333EA;
+  font-weight: 700;
+}
+
+.intro-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  margin: 0;
+  list-style: none;
+  background: var(--bg-subtle);
+  border-radius: 10px;
+}
+
+.intro-methods li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: -0.2px;
+  line-height: 1.5;
+}
+
+.intro-methods strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.method-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.method-dot.method-photo {
+  background: #9333EA;
+}
+
+.method-dot.method-item {
+  background: #3B82F6;
+}
+
+.method-dot.method-youtube {
+  background: #EF4444;
 }
 
 /* ===== 활성 탭 설명 ===== */
@@ -971,6 +1031,10 @@ const handleImageError = (event) => {
 .tab-icon {
   display: flex;
   align-items: center;
+}
+
+.tab-label-short {
+  display: none;
 }
 
 /* ===== 입력 패널 공통 ===== */
@@ -1835,29 +1899,44 @@ const handleImageError = (event) => {
   }
 
   .step-intro {
-    padding: 14px 16px;
-    gap: 12px;
+    padding: 16px 16px;
     margin-bottom: 16px;
   }
 
+  .intro-header {
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
   .intro-icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
   }
 
   .intro-title {
-    font-size: 15px;
-    margin-bottom: 5px;
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .intro-meta {
+    font-size: 11px;
+    padding: 3px 9px;
   }
 
   .intro-desc {
     font-size: 13px;
-    line-height: 1.55;
+    line-height: 1.5;
+    margin-bottom: 10px;
   }
 
-  .intro-meta {
-    font-size: 11.5px;
-    margin-top: 8px;
+  .intro-methods {
+    padding: 10px 12px;
+    gap: 5px;
+  }
+
+  .intro-methods li {
+    font-size: 12.5px;
   }
 
   .tab-hint {
@@ -1867,17 +1946,14 @@ const handleImageError = (event) => {
   }
 
   .input-tabs {
-    flex-wrap: wrap;
+    gap: 4px;
   }
 
   .tab-btn {
-    flex: 1 1 calc(50% - 4px);
-    padding: 10px 12px;
+    flex: 1;
+    padding: 10px 8px;
     font-size: 12px;
-  }
-
-  .tab-btn:last-child {
-    flex: 1 1 100%;
+    gap: 6px;
   }
 
   .input-panel {
@@ -1998,10 +2074,18 @@ const handleImageError = (event) => {
     display: none;
   }
 
+  .tab-label-short {
+    display: inline;
+  }
+
   .tab-btn {
     flex: 1;
-    padding: 12px;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 6px;
+    font-size: 11.5px;
     justify-content: center;
+    letter-spacing: -0.2px;
   }
 
   .items-grid {
