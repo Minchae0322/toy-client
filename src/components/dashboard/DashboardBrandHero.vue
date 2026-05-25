@@ -53,16 +53,56 @@
             </div>
           </template>
 
-          <!-- 캐꾸: 피드 사진을 캐리어 형태로 컴포지트 + 스티커 느낌 그림자 -->
+          <!-- 캐꾸: 실제 캐리어 스킨(핑크리본) + 스티커 -->
           <template v-else-if="slide.key === 'carrier'">
             <div class="carrier-stack">
-              <div class="carrier-photo">
-                <img v-if="feedImages[3] || feedImages[0]" :src="feedImages[3] || feedImages[0]" alt="" @error="onImgError" />
-                <div v-else class="img-fallback fallback-violet"></div>
-                <span class="carrier-sticker sticker-a">★</span>
-                <span class="carrier-sticker sticker-b">HEY</span>
-                <span class="carrier-sticker sticker-c">♥</span>
-              </div>
+              <svg class="carrier-svg" viewBox="0 0 300 400" fill="none" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                <defs>
+                  <linearGradient id="hero-carrier-body" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#ffffff"/>
+                    <stop offset="100%" stop-color="#fff8f9"/>
+                  </linearGradient>
+                </defs>
+                <!-- 본체 -->
+                <rect x="30" y="50" width="240" height="320" rx="20" fill="url(#hero-carrier-body)" stroke="#dc2626" stroke-width="3"/>
+                <!-- 중앙 라이트 라인 -->
+                <line x1="52" y1="122" x2="52" y2="289" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".3"/>
+                <!-- 손잡이 -->
+                <rect x="122" y="18" width="8" height="35" rx="3" fill="#fca5a5" stroke="#dc2626" stroke-width="1.5"/>
+                <rect x="170" y="18" width="8" height="35" rx="3" fill="#fca5a5" stroke="#dc2626" stroke-width="1.5"/>
+                <rect x="116" y="6" width="68" height="18" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="2.5"/>
+                <!-- 홈 그루브 -->
+                <rect x="98" y="80" width="22" height="250" rx="11" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+                <rect x="139" y="80" width="22" height="250" rx="11" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+                <rect x="180" y="80" width="22" height="250" rx="11" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+                <!-- 큰 리본 -->
+                <g transform="translate(220, 90)">
+                  <path d="M-20 0C-20-15-4-15 0 0C4-15 20-15 20 0C20 15 4 15 0 0C-4 15-20 15-20 0Z" fill="#dc2626" stroke="#222" stroke-width="1.5"/>
+                  <circle r="5" fill="#dc2626" stroke="#222" stroke-width="1.2"/>
+                </g>
+                <!-- 작은 하트 5개 -->
+                <g transform="translate(75, 120)"><path d="M0 7C-2 5-9 1-9-4C-9-8-5-10 0-6C5-10 9-8 9-4C9 1 2 5 0 7Z" fill="#fca5a5" stroke="#f87171" stroke-width="1"/></g>
+                <g transform="translate(180, 160)"><path d="M0 7C-2 5-9 1-9-4C-9-8-5-10 0-6C5-10 9-8 9-4C9 1 2 5 0 7Z" fill="#fca5a5" stroke="#f87171" stroke-width="1"/></g>
+                <g transform="translate(95, 210)"><path d="M0 7C-2 5-9 1-9-4C-9-8-5-10 0-6C5-10 9-8 9-4C9 1 2 5 0 7Z" fill="#fca5a5" stroke="#f87171" stroke-width="1"/></g>
+                <g transform="translate(220, 230)"><path d="M0 7C-2 5-9 1-9-4C-9-8-5-10 0-6C5-10 9-8 9-4C9 1 2 5 0 7Z" fill="#fca5a5" stroke="#f87171" stroke-width="1"/></g>
+                <g transform="translate(140, 270)"><path d="M0 7C-2 5-9 1-9-4C-9-8-5-10 0-6C5-10 9-8 9-4C9 1 2 5 0 7Z" fill="#fca5a5" stroke="#f87171" stroke-width="1"/></g>
+                <!-- 추가 이모지 스티커 (유저가 직접 붙인 느낌) -->
+                <g transform="translate(120, 200)">
+                  <circle r="18" fill="#FFFFFF" stroke="#FCD34D" stroke-width="2"/>
+                  <text y="6" font-size="20" text-anchor="middle" font-family="sans-serif">🎀</text>
+                </g>
+                <g transform="translate(195, 295)">
+                  <circle r="16" fill="#FFFFFF" stroke="#A78BFA" stroke-width="2"/>
+                  <text y="5" font-size="18" text-anchor="middle" font-family="sans-serif">✨</text>
+                </g>
+                <!-- 바퀴 -->
+                <rect x="62" y="365" width="16" height="8" rx="3" fill="#fca5a5" stroke="#dc2626" stroke-width="1.5"/>
+                <circle cx="70" cy="382" r="10" fill="#fca5a5" stroke="#dc2626" stroke-width="2"/>
+                <circle cx="70" cy="382" r="2" fill="#dc2626"/>
+                <rect x="222" y="365" width="16" height="8" rx="3" fill="#fca5a5" stroke="#dc2626" stroke-width="1.5"/>
+                <circle cx="230" cy="382" r="10" fill="#fca5a5" stroke="#dc2626" stroke-width="2"/>
+                <circle cx="230" cy="382" r="2" fill="#dc2626"/>
+              </svg>
             </div>
           </template>
 
@@ -180,7 +220,7 @@ const slides = [
 
 const activeIndex = ref(0)
 const paused = ref(false)
-const AUTO_MS = 5500
+const AUTO_MS = 3200
 let timer = null
 
 const trackStyle = computed(() => ({
@@ -570,64 +610,23 @@ onBeforeUnmount(() => { stop() })
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.38);
 }
 
-/* === 캐꾸: 큰 사진 + 스티커 === */
+/* === 캐꾸: 캐리어 SVG === */
 .carrier-stack {
   position: absolute;
-  right: 4%;
+  right: -2%;
   top: 50%;
-  transform: translateY(-50%);
-  width: 50%;
-  height: 88%;
-}
-.carrier-photo {
-  position: relative;
-  width: 78%;
-  height: 100%;
-  margin-left: auto;
-  border-radius: 18px;
-  overflow: hidden;
-  background: #4338CA;
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
-  transform: rotate(-4deg);
-}
-.carrier-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.carrier-sticker {
-  position: absolute;
+  transform: translateY(-50%) rotate(-6deg);
+  width: 46%;
+  height: 124%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  font-weight: 800;
-  font-family: 'SUIT', sans-serif;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
 }
-.sticker-a {
-  width: 44px; height: 44px;
-  top: -10px; left: -16px;
-  background: #FFE066; color: #0A0E1A;
-  font-size: 22px;
-  transform: rotate(-14deg);
-}
-.sticker-b {
-  width: 56px; height: 32px;
-  border-radius: 8px;
-  top: 38%; right: -22px;
-  background: #FF8FAB; color: #fff;
-  font-size: 11px;
-  letter-spacing: 0.8px;
-  transform: rotate(10deg);
-}
-.sticker-c {
-  width: 36px; height: 36px;
-  bottom: 10%; left: -10px;
-  background: #74C0FC; color: #fff;
-  font-size: 18px;
-  transform: rotate(-6deg);
+.carrier-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.35));
 }
 
 /* === 핫아템: 1·2·3위 카드 === */
@@ -768,7 +767,7 @@ onBeforeUnmount(() => { stop() })
   transform-origin: left center;
 }
 .indicator-fill.animate {
-  animation: fill 5.5s linear forwards;
+  animation: fill 3.2s linear forwards;
 }
 @keyframes fill {
   from { transform: translateX(-100%); }
@@ -810,7 +809,7 @@ onBeforeUnmount(() => { stop() })
   }
   .vs-stack { width: 50%; right: -6%; }
   .collage-stack { width: 50%; right: 0; }
-  .carrier-stack { width: 46%; right: 0; }
+  .carrier-stack { width: 42%; right: -2%; height: 130%; }
   .rank-stack { width: 52%; right: -4%; }
 }
 
