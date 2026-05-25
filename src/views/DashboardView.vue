@@ -3,12 +3,28 @@
     <AppSidebar />
 
     <main class="main-content">
-      <!-- 대시보드 요약 -->
+      <!-- 페이지 인트로 -->
+      <header class="dash-intro">
+        <div class="dash-intro-text">
+          <h1 class="dash-intro-title">
+            오늘의 <span class="intro-accent">요거픽</span>
+          </h1>
+          <p class="dash-intro-sub">유저가 직접 한 표 던지는 라이브 픽 — 지금 진행 중인 픽에 참여해보세요</p>
+        </div>
+        <router-link :to="{ name: 'BattleList' }" class="dash-intro-cta">
+          전체 픽 보기
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </router-link>
+      </header>
+
+      <!-- 메인: 요거픽 (PC/모바일 공통 최상단) -->
+      <DashboardBattles />
+
+      <!-- PC 보조: 실시간 요거 봄 + 광고 (모바일 숨김) -->
       <div class="dash-top-area">
         <div class="dash-top-main">
-          <DashboardTrendBanner :top-trend-name="topTrendName" />
-
-          <!-- 실시간 요거 봄 섹션 -->
           <DashboardYogurtBom :hot-feed-ids="hotFeedIds" />
         </div>
 
@@ -25,9 +41,6 @@
       <div class="dashboard-content">
         <!-- 핫 피드 섹션 -->
         <DashboardHotFeeds :feeds="hotFeeds" :loading="feedsLoading" />
-
-        <!-- 실시간 배틀 섹션 -->
-        <DashboardBattles />
 
         <!-- 실시간 제품 랭킹 섹션 (버블 차트) -->
         <DashboardRanking @products-loaded="onProductsLoaded" />
@@ -47,7 +60,6 @@ import DashboardBattles from '@/components/dashboard/DashboardBattles.vue'
 import DashboardYogurtBom from '@/components/dashboard/DashboardYogurtBom.vue'
 import DashboardHotFeeds from '@/components/dashboard/DashboardHotFeeds.vue'
 import DashboardRanking from '@/components/dashboard/DashboardRanking.vue'
-import DashboardTrendBanner from '@/components/dashboard/DashboardTrendBanner.vue'
 import { ADS_ENABLED, AD_SLOTS } from '@/config/ads'
 import { feedService } from '@/services/FeedService'
 
@@ -76,13 +88,6 @@ const loadHotFeeds = async () => {
 const onProductsLoaded = (products) => {
   hotProducts.value = products
 }
-
-const topTrendName = computed(() => {
-  let name = '트렌드'
-  if (hotFeeds.value.length > 0) name = hotFeeds.value[0].productName || '인기 피드'
-  else if (hotProducts.value.length > 0) name = hotProducts.value[0].name || '인기 제품'
-  return name.length > 12 ? name.slice(0, 12) + '…' : name
-})
 
 onMounted(() => {
   loadHotFeeds()
@@ -149,11 +154,100 @@ onMounted(() => {
   }
 }
 
+/* 페이지 인트로 */
+.dash-intro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 0 1.25rem;
+}
+
+.dash-intro-text {
+  min-width: 0;
+}
+
+.dash-intro-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.intro-accent {
+  color: var(--c-brand);
+}
+
+.dash-intro-sub {
+  font-size: 0.875rem;
+  color: var(--c-text-500);
+  margin: 0.5rem 0 0;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+}
+
+.dash-intro-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.5rem 0.875rem;
+  background: var(--bg-subtle);
+  border-radius: 100px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text-600);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.dash-intro-cta:hover {
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+}
+
+@media (max-width: 767px) {
+  .dash-intro {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.625rem;
+    padding: 1rem 0 0.875rem;
+  }
+  .dash-intro-title {
+    font-size: 1.5rem;
+  }
+  .dash-intro-sub {
+    font-size: 0.8125rem;
+    margin-top: 0.375rem;
+  }
+  .dash-intro-cta {
+    align-self: flex-start;
+    padding: 0.4375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .dash-intro-title { font-size: 2rem; }
+  .dash-intro-sub { font-size: 0.9375rem; }
+}
+
 /* 상단 2컬럼 레이아웃 */
 .dash-top-area {
   display: flex;
   align-items: stretch;
   gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  .dash-top-area {
+    display: none;
+  }
 }
 
 .dash-top-main {
