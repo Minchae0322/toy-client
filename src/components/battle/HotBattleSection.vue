@@ -58,16 +58,10 @@
             <Flame v-if="getDdayMeta(battle).urgent" :size="10" :stroke-width="2.6" />
             <span>{{ getDdayMeta(battle).text }}</span>
           </span>
-
-          <!-- 상대 인기도 메터 -->
-          <div class="heat-meter" aria-hidden="true">
-            <span class="heat-fill" :style="{ width: heatRatio(battle.totalVotes) + '%' }"></span>
-          </div>
         </div>
 
         <!-- 정보 -->
         <div class="info">
-          <span class="category-chip">{{ getCategoryName(battle) }}</span>
           <h3 class="title">{{ battle.title }}</h3>
           <div class="stats-row">
             <span class="stat">
@@ -111,24 +105,6 @@ const imageErrors = reactive(new Set())
 
 // Top 5 슬라이스
 const topBattles = computed(() => props.battles.slice(0, 5))
-
-// 상대 인기도 (1위 totalVotes 대비 비율)
-const maxHotVotes = computed(() => {
-  return topBattles.value.reduce((max, b) => Math.max(max, b.totalVotes || 0), 0) || 1
-})
-
-const heatRatio = (votes) => {
-  const r = ((votes || 0) / maxHotVotes.value) * 100
-  // 최소 10% 보이게 (시각적 hint)
-  return Math.max(Math.min(r, 100), 10)
-}
-
-// 카테고리 추출
-const getCategoryName = (battle) => {
-  return battle?.subCategoryDetail?.subCategoryName
-      || battle?.categoryName
-      || '기타'
-}
 
 // D-Day 메타 (≤7일 진행중일 때만)
 const getDdayMeta = (battle) => {
@@ -536,55 +512,9 @@ const handleImageError = (battleId) => {
   display: block;
 }
 
-/* 상대 인기도 메터 */
-.heat-meter {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: rgba(15, 18, 24, 0.18);
-}
-
-.heat-fill {
-  display: block;
-  height: 100%;
-  background: var(--c-heat);
-  transform-origin: left center;
-  animation: heat-grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.is-top .heat-fill {
-  box-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
-}
-
-@keyframes heat-grow {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
 /* 정보 */
 .info {
   padding: 10px 11px 12px;
-}
-
-.category-chip {
-  display: inline-flex;
-  align-items: center;
-  height: 19px;
-  padding: 0 7px;
-  margin-bottom: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--c-text-500);
-  background: var(--bg-subtle);
-  border-radius: 999px;
-  line-height: 1;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .title {
@@ -716,19 +646,8 @@ const handleImageError = (battleId) => {
     padding: 5px 10px;
   }
 
-  .heat-meter {
-    height: 4px;
-  }
-
   .info {
     padding: 12px 14px 14px;
-  }
-
-  .category-chip {
-    height: 22px;
-    font-size: 11px;
-    padding: 0 9px;
-    margin-bottom: 8px;
   }
 
   .title {
@@ -796,8 +715,7 @@ const handleImageError = (battleId) => {
 @media (prefers-reduced-motion: reduce) {
   .hot-card,
   .thumb img,
-  .live-dot,
-  .heat-fill {
+  .live-dot {
     animation: none;
     transition: none;
   }
