@@ -18,123 +18,89 @@
         :tabindex="idx === activeIndex ? 0 : -1"
         :aria-label="slide.aria"
       >
-        <div class="slide-content">
-          <div class="slide-text">
-            <span class="slide-tag">
-              <span class="tag-dot"></span>
-              {{ slide.tag }}
-            </span>
-            <h2 class="slide-title" v-html="slide.title"></h2>
-            <p class="slide-sub">{{ slide.sub }}</p>
-            <span class="slide-cta">
-              {{ slide.cta }}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </span>
-          </div>
-          <div class="slide-art" aria-hidden="true">
-            <!-- 요거픽: 두 카드 VS 구도 -->
-            <svg v-if="slide.key === 'yogurpick'" viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-              <g transform="translate(28, 36)">
-                <rect width="76" height="108" rx="14" fill="#FFFFFF" opacity="0.95"/>
-                <circle cx="38" cy="36" r="20" fill="#B4FF39" opacity="0.35"/>
-                <rect x="14" y="68" width="48" height="6" rx="3" fill="#0A0E1A" opacity="0.55"/>
-                <rect x="14" y="80" width="32" height="5" rx="2.5" fill="#0A0E1A" opacity="0.25"/>
-                <rect x="14" y="92" width="48" height="5" rx="2.5" fill="#0A0E1A" opacity="0.1"/>
-                <rect x="14" y="92" width="36" height="5" rx="2.5" fill="#B4FF39"/>
-              </g>
-              <g transform="translate(132, 30) rotate(6)">
-                <rect width="76" height="108" rx="14" fill="#FFFFFF" opacity="0.85"/>
-                <circle cx="38" cy="36" r="20" fill="#FFFFFF" opacity="0.3"/>
-                <rect x="14" y="68" width="48" height="6" rx="3" fill="#0A0E1A" opacity="0.45"/>
-                <rect x="14" y="80" width="32" height="5" rx="2.5" fill="#0A0E1A" opacity="0.2"/>
-                <rect x="14" y="92" width="48" height="5" rx="2.5" fill="#0A0E1A" opacity="0.1"/>
-                <rect x="14" y="92" width="18" height="5" rx="2.5" fill="#FFFFFF" opacity="0.6"/>
-              </g>
-              <g transform="translate(124, 88)">
-                <circle r="22" fill="#B4FF39"/>
-                <text y="6" font-size="15" font-weight="800" fill="#0A0E1A" text-anchor="middle" font-family="SUIT, sans-serif" letter-spacing="0.5">VS</text>
-              </g>
-            </svg>
+        <!-- 슬라이드별 실제 이미지 아트 -->
+        <div class="slide-art" aria-hidden="true">
+          <!-- 요거픽: 두 배틀 썸네일 VS 구도 -->
+          <template v-if="slide.key === 'yogurpick'">
+            <div class="vs-stack">
+              <div class="vs-card vs-card-left">
+                <img v-if="battleImages[0]" :src="battleImages[0]" alt="" @error="onImgError" />
+                <div v-else class="img-fallback fallback-lime"></div>
+              </div>
+              <div class="vs-card vs-card-right">
+                <img v-if="battleImages[1]" :src="battleImages[1]" alt="" @error="onImgError" />
+                <div v-else class="img-fallback fallback-dark"></div>
+              </div>
+              <span class="vs-badge">VS</span>
+            </div>
+          </template>
 
-            <!-- 핫피드: 말풍선 + 좋아요 -->
-            <svg v-else-if="slide.key === 'hotfeed'" viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-              <g transform="translate(20, 26)">
-                <rect width="120" height="68" rx="18" fill="#FFFFFF"/>
-                <circle cx="20" cy="22" r="10" fill="#FFB4A2"/>
-                <rect x="36" y="14" width="60" height="5" rx="2.5" fill="#0F172A" opacity="0.7"/>
-                <rect x="36" y="24" width="38" height="4" rx="2" fill="#0F172A" opacity="0.35"/>
-                <rect x="14" y="42" width="92" height="4" rx="2" fill="#0F172A" opacity="0.18"/>
-                <rect x="14" y="52" width="74" height="4" rx="2" fill="#0F172A" opacity="0.18"/>
-                <path d="M14 68 L20 78 L26 68 Z" fill="#FFFFFF"/>
-              </g>
-              <g transform="translate(108, 86)">
-                <rect width="110" height="62" rx="18" fill="#FFFFFF" opacity="0.92"/>
-                <circle cx="20" cy="22" r="10" fill="#A78BFA"/>
-                <rect x="36" y="14" width="50" height="5" rx="2.5" fill="#0F172A" opacity="0.7"/>
-                <rect x="36" y="24" width="32" height="4" rx="2" fill="#0F172A" opacity="0.35"/>
-                <rect x="14" y="42" width="82" height="4" rx="2" fill="#0F172A" opacity="0.18"/>
-                <path d="M96 62 L96 72 L86 62 Z" fill="#FFFFFF" opacity="0.92"/>
-              </g>
-              <g transform="translate(178, 30)">
-                <circle r="18" fill="#FFFFFF"/>
-                <path d="M-7 -2 C-7 -7 -2 -8 0 -3 C2 -8 7 -7 7 -2 C7 4 0 8 0 8 C0 8 -7 4 -7 -2 Z" fill="#FF4D6D"/>
-              </g>
-            </svg>
+          <!-- 핫피드: 피드 사진 3장 콜라주 -->
+          <template v-else-if="slide.key === 'hotfeed'">
+            <div class="collage-stack">
+              <div class="collage-tile tile-back">
+                <img v-if="feedImages[2]" :src="feedImages[2]" alt="" @error="onImgError" />
+                <div v-else class="img-fallback fallback-rose"></div>
+              </div>
+              <div class="collage-tile tile-mid">
+                <img v-if="feedImages[1]" :src="feedImages[1]" alt="" @error="onImgError" />
+                <div v-else class="img-fallback fallback-rose"></div>
+              </div>
+              <div class="collage-tile tile-front">
+                <img v-if="feedImages[0]" :src="feedImages[0]" alt="" @error="onImgError" />
+                <div v-else class="img-fallback fallback-rose"></div>
+              </div>
+            </div>
+          </template>
 
-            <!-- 캐꾸: 캐리어 + 스티커 -->
-            <svg v-else-if="slide.key === 'carrier'" viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-              <g transform="translate(64, 26)">
-                <!-- 캐리어 손잡이 -->
-                <rect x="40" y="0" width="30" height="14" rx="6" fill="#0F172A" opacity="0.35"/>
-                <rect x="46" y="6" width="18" height="14" rx="3" fill="#0F172A" opacity="0.55"/>
-                <!-- 캐리어 본체 -->
-                <rect x="0" y="14" width="110" height="130" rx="16" fill="#FFFFFF"/>
-                <rect x="0" y="14" width="110" height="130" rx="16" fill="none" stroke="#0F172A" stroke-width="2" opacity="0.18"/>
-                <!-- 가운데 분리선 -->
-                <line x1="55" y1="22" x2="55" y2="138" stroke="#0F172A" stroke-width="1.5" opacity="0.15" stroke-dasharray="3 4"/>
-                <!-- 바퀴 -->
-                <circle cx="14" cy="148" r="6" fill="#0F172A" opacity="0.45"/>
-                <circle cx="96" cy="148" r="6" fill="#0F172A" opacity="0.45"/>
-              </g>
-              <!-- 스티커들 -->
-              <g transform="translate(58, 56) rotate(-14)">
-                <circle r="16" fill="#FFE066"/>
-                <text y="5" font-size="14" font-weight="800" fill="#0F172A" text-anchor="middle" font-family="SUIT, sans-serif">★</text>
-              </g>
-              <g transform="translate(168, 84) rotate(10)">
-                <rect x="-18" y="-12" width="36" height="24" rx="6" fill="#FF8FAB"/>
-                <text y="4" font-size="9" font-weight="800" fill="#FFFFFF" text-anchor="middle" font-family="SUIT, sans-serif" letter-spacing="0.5">HEY</text>
-              </g>
-              <g transform="translate(110, 124) rotate(-6)">
-                <circle r="14" fill="#74C0FC"/>
-                <path d="M-5 -1 C-5 -5 -1 -6 0 -2 C1 -6 5 -5 5 -1 C5 3 0 6 0 6 C0 6 -5 3 -5 -1 Z" fill="#FFFFFF"/>
-              </g>
-            </svg>
+          <!-- 캐꾸: 피드 사진을 캐리어 형태로 컴포지트 + 스티커 느낌 그림자 -->
+          <template v-else-if="slide.key === 'carrier'">
+            <div class="carrier-stack">
+              <div class="carrier-photo">
+                <img v-if="feedImages[3] || feedImages[0]" :src="feedImages[3] || feedImages[0]" alt="" @error="onImgError" />
+                <div v-else class="img-fallback fallback-violet"></div>
+                <span class="carrier-sticker sticker-a">★</span>
+                <span class="carrier-sticker sticker-b">HEY</span>
+                <span class="carrier-sticker sticker-c">♥</span>
+              </div>
+            </div>
+          </template>
 
-            <!-- 핫아템: 불꽃 + 랭킹 차트 -->
-            <svg v-else-if="slide.key === 'hotitem'" viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-              <!-- 랭킹 막대 -->
-              <g transform="translate(24, 56)">
-                <rect x="0" y="44" width="32" height="56" rx="6" fill="#FFFFFF" opacity="0.45"/>
-                <rect x="40" y="24" width="32" height="76" rx="6" fill="#FFFFFF" opacity="0.7"/>
-                <rect x="80" y="0" width="32" height="100" rx="6" fill="#FFFFFF"/>
-                <text x="16" y="92" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle" font-family="SUIT, sans-serif" opacity="0.8">3</text>
-                <text x="56" y="92" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle" font-family="SUIT, sans-serif" opacity="0.9">2</text>
-                <text x="96" y="92" font-size="16" font-weight="800" fill="#FF6B35" text-anchor="middle" font-family="SUIT, sans-serif">1</text>
-              </g>
-              <!-- 불꽃 (1위 위) -->
-              <g transform="translate(120, 32)">
-                <path d="M0 -18 C8 -10 12 -2 12 6 C12 14 6 20 0 20 C-6 20 -12 14 -12 6 C-12 0 -8 -4 -4 -6 C-2 -2 0 -4 -2 -8 C-1 -12 0 -16 0 -18 Z" fill="#FFD60A"/>
-                <path d="M0 -10 C4 -4 6 0 6 6 C6 12 3 16 0 16 C-3 16 -6 12 -6 6 C-6 2 -4 0 -2 -2 C0 0 2 -2 0 -6 C0 -8 0 -10 0 -10 Z" fill="#FF6B35"/>
-              </g>
-              <!-- 상승 화살표 -->
-              <g transform="translate(184, 82)">
-                <rect x="-22" y="-13" width="44" height="26" rx="13" fill="#FFFFFF"/>
-                <path d="M-12 4 L-6 -2 L-1 1 L8 -8" stroke="#FF4D00" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M3 -8 L8 -8 L8 -3" stroke="#FF4D00" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              </g>
-            </svg>
-          </div>
+          <!-- 핫아템: 1위 큰 카드 + 뒤에 2·3위 -->
+          <template v-else-if="slide.key === 'hotitem'">
+            <div class="rank-stack">
+              <div class="rank-card rank-3">
+                <img v-if="productImages[2]" :src="productImages[2]" alt="" @error="onImgError" />
+                <div v-else class="img-fallback fallback-orange"></div>
+                <span class="rank-num">3</span>
+              </div>
+              <div class="rank-card rank-2">
+                <img v-if="productImages[1]" :src="productImages[1]" alt="" @error="onImgError" />
+                <div v-else class="img-fallback fallback-orange"></div>
+                <span class="rank-num">2</span>
+              </div>
+              <div class="rank-card rank-1">
+                <img v-if="productImages[0]" :src="productImages[0]" alt="" @error="onImgError" />
+                <div v-else class="img-fallback fallback-orange"></div>
+                <span class="rank-num gold">1</span>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- 글로 가리는 그라데이션 + 텍스트 -->
+        <div class="slide-veil"></div>
+        <div class="slide-text">
+          <span class="slide-tag">
+            <span class="tag-dot"></span>
+            {{ slide.tag }}
+          </span>
+          <h2 class="slide-title" v-html="slide.title"></h2>
+          <p class="slide-sub">{{ slide.sub }}</p>
+          <span class="slide-cta">
+            {{ slide.cta }}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </span>
         </div>
       </router-link>
     </div>
@@ -169,6 +135,9 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { battleService } from '@/services/BattleService'
+import { feedService } from '@/services/FeedService'
+import { productService } from '@/services/ProductService'
 
 const slides = [
   {
@@ -211,7 +180,7 @@ const slides = [
 
 const activeIndex = ref(0)
 const paused = ref(false)
-const AUTO_MS = 5000
+const AUTO_MS = 5500
 let timer = null
 
 const trackStyle = computed(() => ({
@@ -233,11 +202,8 @@ const start = () => {
     }
   }, AUTO_MS)
 }
-const stop = () => {
-  if (timer) { clearInterval(timer); timer = null }
-}
+const stop = () => { if (timer) { clearInterval(timer); timer = null } }
 const restart = () => { start() }
-
 const pause = () => { paused.value = true }
 const resume = () => { paused.value = false }
 
@@ -262,7 +228,80 @@ const onTouchEnd = () => {
   resume()
 }
 
-onMounted(() => { start() })
+// ===== 실제 이미지 로드 =====
+const battleImages = ref([])
+const feedImages = ref([])
+const productImages = ref([])
+
+const onImgError = (e) => {
+  e.target.style.display = 'none'
+}
+
+const pickUrl = (...candidates) => {
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.startsWith('http')) return c
+  }
+  return null
+}
+
+const loadAll = async () => {
+  // 배틀 썸네일 (요거픽)
+  try {
+    const res = await battleService.getHotBattleList({ size: 4 })
+    const list = res?.data?.content || res?.data || []
+    const urls = []
+    for (const b of list) {
+      const u = pickUrl(b?.thumbnailDto?.fileUrl, b?.thumbnailUrl)
+      if (u) urls.push(u)
+      if (urls.length >= 2) break
+    }
+    // 1개만 있으면 다른 자리에 피드 사진 채워서 VS 구도 유지
+    battleImages.value = urls
+  } catch (e) { /* noop */ }
+
+  // 핫피드 이미지
+  try {
+    const res = await feedService.getHotFeeds({ size: 6, sort: 'hotScore,desc' })
+    const list = res?.data?.content || res?.data || []
+    const urls = []
+    for (const f of list) {
+      const u = pickUrl(f?.hotFeedThumbnailDto?.fileUrl, f?.thumbnailDto?.fileUrl, f?.thumbnailUrl, f?.imageUrl)
+      if (u) urls.push(u)
+      if (urls.length >= 4) break
+    }
+    feedImages.value = urls
+    // 배틀 이미지가 부족하면 피드 사진으로 보충
+    if (battleImages.value.length < 2 && urls.length >= 2) {
+      const fill = [...battleImages.value]
+      for (const u of urls) {
+        if (fill.length >= 2) break
+        if (!fill.includes(u)) fill.push(u)
+      }
+      battleImages.value = fill
+    }
+  } catch (e) { /* noop */ }
+
+  // 핫아템: 제품 랭킹 (인기 점수)
+  try {
+    const res = await productService.getProducts(
+      { status: 'APPROVED' },
+      { size: 3, sort: 'popularityScore,DESC' }
+    )
+    const list = res?.data?.content || res?.data || []
+    const urls = []
+    for (const p of list) {
+      const u = pickUrl(p?.thumbnailUrl, p?.thumbnailDto?.fileUrl, p?.imageUrl)
+      if (u) urls.push(u)
+      if (urls.length >= 3) break
+    }
+    productImages.value = urls
+  } catch (e) { /* noop */ }
+}
+
+onMounted(() => {
+  start()
+  loadAll()
+})
 onBeforeUnmount(() => { stop() })
 </script>
 
@@ -272,8 +311,8 @@ onBeforeUnmount(() => { stop() })
   border-radius: 18px;
   overflow: hidden;
   margin: 1rem 0 1.125rem;
-  min-height: 168px;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+  min-height: 200px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
 }
 
 .hero-track {
@@ -289,25 +328,30 @@ onBeforeUnmount(() => { stop() })
   text-decoration: none;
   color: #fff;
   display: block;
+  position: relative;
+  min-height: 200px;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
 }
 
-.slide-content {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.5rem 1.625rem;
-  min-height: 168px;
-}
+/* 슬라이드별 배경 */
+.theme-yogurpick { background: #0A0E1A; }
+.theme-hotfeed   { background: #BE123C; }
+.theme-carrier   { background: #5B4FE0; }
+.theme-hotitem   { background: #DC2626; }
 
+/* 텍스트 */
 .slide-text {
+  position: relative;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 0.5rem;
   min-width: 0;
-  flex: 1;
+  padding: 1.625rem 1.625rem 1.5rem;
+  max-width: 60%;
+  min-height: 200px;
 }
 
 .slide-tag {
@@ -320,8 +364,15 @@ onBeforeUnmount(() => { stop() })
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.18);
   color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.theme-yogurpick .slide-tag {
+  background: rgba(180, 255, 57, 0.22);
+  color: #B4FF39;
 }
 
 .tag-dot {
@@ -345,18 +396,24 @@ onBeforeUnmount(() => { stop() })
   line-height: 1.22;
   margin: 0;
   color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
 .slide-title :deep(.t-accent) {
   color: var(--slide-accent, #B4FF39);
 }
 
+.theme-hotfeed   { --slide-accent: #FFE066; }
+.theme-carrier   { --slide-accent: #FFE066; }
+.theme-hotitem   { --slide-accent: #FFD60A; }
+
 .slide-sub {
   font-size: 0.8125rem;
-  opacity: 0.85;
+  opacity: 0.92;
   line-height: 1.5;
   font-weight: 500;
   margin: 0;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
 }
 
 .slide-cta {
@@ -367,68 +424,279 @@ onBeforeUnmount(() => { stop() })
   margin-top: 6px;
   padding: 7px 13px;
   border-radius: 100px;
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0A0E1A;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.005em;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.2s;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
 }
 
 .hero-slide:hover .slide-cta {
-  background: rgba(255, 255, 255, 0.28);
+  background: #fff;
+  transform: translateY(-1px);
 }
 
+/* 이미지 어둡게 가리는 그라데이션 (텍스트 가독성) */
+.slide-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(90deg,
+    rgba(0,0,0,0.55) 0%,
+    rgba(0,0,0,0.35) 38%,
+    rgba(0,0,0,0.05) 60%,
+    rgba(0,0,0,0) 78%);
+  pointer-events: none;
+}
+
+/* 슬라이드 아트 (우측 이미지 영역) */
 .slide-art {
-  flex-shrink: 0;
-  width: 240px;
-  max-width: 42%;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.img-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+.fallback-lime   { background: #1F2937; }
+.fallback-dark   { background: #111827; }
+.fallback-rose   { background: #9F1239; }
+.fallback-violet { background: #4338CA; }
+.fallback-orange { background: #B91C1C; }
+
+/* === 요거픽: VS 두 카드 === */
+.vs-stack {
+  position: absolute;
+  right: -4%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56%;
+  height: 86%;
+}
+.vs-card {
+  position: absolute;
+  width: 52%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #1F2937;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+}
+.vs-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.vs-card-left {
+  left: 0;
+  transform: rotate(-5deg);
+  top: 4%;
+}
+.vs-card-right {
+  right: 0;
+  transform: rotate(5deg);
+  top: 0;
+}
+.vs-badge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #B4FF39;
+  color: #0A0E1A;
+  font-size: 14px;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 18px rgba(180, 255, 57, 0.35);
+  z-index: 2;
 }
 
-.slide-art svg {
+/* === 핫피드: 3장 콜라주 === */
+.collage-stack {
+  position: absolute;
+  right: 4%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52%;
+  height: 88%;
+}
+.collage-tile {
+  position: absolute;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #FFFFFF;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+}
+.collage-tile img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.18));
+}
+.tile-back {
+  width: 60%;
+  height: 78%;
+  right: 0;
+  top: 0;
+  transform: rotate(7deg);
+  opacity: 0.92;
+}
+.tile-mid {
+  width: 56%;
+  height: 76%;
+  right: 14%;
+  top: 12%;
+  transform: rotate(-3deg);
+}
+.tile-front {
+  width: 58%;
+  height: 78%;
+  right: 28%;
+  top: 6%;
+  transform: rotate(-9deg);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.38);
 }
 
-/* 슬라이드별 테마 */
-.theme-yogurpick {
-  background: #0A0E1A;
-  --slide-accent: #B4FF39;
+/* === 캐꾸: 큰 사진 + 스티커 === */
+.carrier-stack {
+  position: absolute;
+  right: 4%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50%;
+  height: 88%;
 }
-.theme-yogurpick .slide-tag {
-  background: rgba(180, 255, 57, 0.18);
-  color: #B4FF39;
+.carrier-photo {
+  position: relative;
+  width: 78%;
+  height: 100%;
+  margin-left: auto;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #4338CA;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+  transform: rotate(-4deg);
+}
+.carrier-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.carrier-sticker {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 800;
+  font-family: 'SUIT', sans-serif;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+.sticker-a {
+  width: 44px; height: 44px;
+  top: -10px; left: -16px;
+  background: #FFE066; color: #0A0E1A;
+  font-size: 22px;
+  transform: rotate(-14deg);
+}
+.sticker-b {
+  width: 56px; height: 32px;
+  border-radius: 8px;
+  top: 38%; right: -22px;
+  background: #FF8FAB; color: #fff;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  transform: rotate(10deg);
+}
+.sticker-c {
+  width: 36px; height: 36px;
+  bottom: 10%; left: -10px;
+  background: #74C0FC; color: #fff;
+  font-size: 18px;
+  transform: rotate(-6deg);
 }
 
-.theme-hotfeed {
-  background: #E11D48;
-  --slide-accent: #FFE066;
+/* === 핫아템: 1·2·3위 카드 === */
+.rank-stack {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56%;
+  height: 88%;
 }
-.theme-hotfeed .slide-tag {
-  background: rgba(255, 255, 255, 0.22);
+.rank-card {
+  position: absolute;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #1F2937;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
 }
-
-.theme-carrier {
-  background: #6C5CE7;
-  --slide-accent: #FFE066;
+.rank-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
-.theme-carrier .slide-tag {
-  background: rgba(255, 255, 255, 0.22);
+.rank-num {
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
-
-.theme-hotitem {
-  background: #FF6B35;
-  --slide-accent: #FFD60A;
+.rank-num.gold {
+  background: #FFD60A;
+  color: #1F1300;
+  font-size: 16px;
+  padding: 3px 10px;
+  box-shadow: 0 4px 10px rgba(255, 214, 10, 0.4);
 }
-.theme-hotitem .slide-tag {
-  background: rgba(255, 255, 255, 0.22);
+.rank-1 {
+  right: 14%;
+  top: 4%;
+  width: 50%;
+  height: 92%;
+  transform: rotate(-4deg);
+  z-index: 3;
+}
+.rank-2 {
+  right: 50%;
+  top: 18%;
+  width: 38%;
+  height: 64%;
+  transform: rotate(-9deg);
+  z-index: 2;
+  opacity: 0.95;
+}
+.rank-3 {
+  right: -2%;
+  top: 22%;
+  width: 36%;
+  height: 60%;
+  transform: rotate(7deg);
+  z-index: 1;
+  opacity: 0.92;
 }
 
 /* 화살표 */
@@ -446,22 +714,15 @@ onBeforeUnmount(() => { stop() })
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 4;
+  z-index: 5;
   opacity: 0;
   transition: opacity 0.2s, background 0.2s;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
-
-.hero-carousel:hover .nav-arrow {
-  opacity: 1;
-}
-
-.nav-arrow:hover {
-  background: #fff;
-}
-
+.hero-carousel:hover .nav-arrow { opacity: 1; }
+.nav-arrow:hover { background: #fff; }
 .nav-prev { left: 12px; }
 .nav-next { right: 12px; }
 
@@ -477,32 +738,28 @@ onBeforeUnmount(() => { stop() })
   transform: translateX(-50%);
   display: flex;
   gap: 6px;
-  z-index: 4;
+  z-index: 5;
 }
-
 .indicator {
   background: transparent;
   border: none;
   padding: 6px 0;
   cursor: pointer;
 }
-
 .indicator-bar {
   display: block;
   width: 26px;
   height: 3px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.32);
   position: relative;
   overflow: hidden;
   transition: width 0.3s, background 0.2s;
 }
-
 .indicator.active .indicator-bar {
   width: 38px;
   background: rgba(255, 255, 255, 0.4);
 }
-
 .indicator-fill {
   position: absolute;
   inset: 0;
@@ -510,11 +767,9 @@ onBeforeUnmount(() => { stop() })
   transform: translateX(-100%);
   transform-origin: left center;
 }
-
 .indicator-fill.animate {
-  animation: fill 5s linear forwards;
+  animation: fill 5.5s linear forwards;
 }
-
 @keyframes fill {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
@@ -525,63 +780,54 @@ onBeforeUnmount(() => { stop() })
   .hero-carousel {
     margin: 0.75rem 0 0.875rem;
     border-radius: 16px;
-    min-height: 144px;
+    min-height: 168px;
     -webkit-user-select: none;
     user-select: none;
   }
-  .slide-content {
+  .hero-slide { min-height: 168px; }
+  .slide-text {
     padding: 1.125rem 1.125rem 1.75rem;
-    min-height: 144px;
-    gap: 0.625rem;
+    max-width: 64%;
+    min-height: 168px;
+    gap: 0.4375rem;
   }
-  .slide-title {
-    font-size: 1.1875rem;
-    line-height: 1.25;
-  }
-  .slide-sub {
-    font-size: 0.75rem;
-  }
-  .slide-cta {
-    font-size: 11px;
-    padding: 6px 11px;
-  }
-  .slide-art {
-    width: 130px;
-    max-width: 40%;
-  }
-  .hero-indicators {
-    bottom: 10px;
-  }
+  .slide-title { font-size: 1.1875rem; line-height: 1.25; }
+  .slide-sub { font-size: 0.75rem; }
+  .slide-cta { font-size: 11px; padding: 6px 11px; }
+  .hero-indicators { bottom: 10px; }
   .indicator-bar { width: 20px; }
   .indicator.active .indicator-bar { width: 30px; }
+
+  .slide-veil {
+    background: linear-gradient(180deg,
+      rgba(0,0,0,0) 30%,
+      rgba(0,0,0,0.35) 75%,
+      rgba(0,0,0,0.6) 100%),
+      linear-gradient(90deg,
+      rgba(0,0,0,0.55) 0%,
+      rgba(0,0,0,0.2) 50%,
+      rgba(0,0,0,0) 70%);
+  }
+  .vs-stack { width: 50%; right: -6%; }
+  .collage-stack { width: 50%; right: 0; }
+  .carrier-stack { width: 46%; right: 0; }
+  .rank-stack { width: 52%; right: -4%; }
 }
 
 @media (min-width: 1280px) {
-  .hero-carousel {
-    min-height: 196px;
+  .hero-carousel { min-height: 240px; }
+  .hero-slide { min-height: 240px; }
+  .slide-text {
+    padding: 2rem 2rem 1.75rem;
+    min-height: 240px;
   }
-  .slide-content {
-    padding: 1.75rem 2rem;
-    min-height: 196px;
-  }
-  .slide-title {
-    font-size: 1.875rem;
-  }
-  .slide-sub {
-    font-size: 0.9375rem;
-  }
-  .slide-art {
-    width: 280px;
-  }
+  .slide-title { font-size: 1.875rem; }
+  .slide-sub { font-size: 0.9375rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-track {
-    transition: none;
-  }
+  .hero-track { transition: none; }
   .tag-dot,
-  .indicator-fill.animate {
-    animation: none;
-  }
+  .indicator-fill.animate { animation: none; }
 }
 </style>
