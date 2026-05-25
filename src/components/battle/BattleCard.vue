@@ -20,31 +20,40 @@
         </svg>
       </div>
 
-      <!-- 상태 배지 -->
+      <!-- 상태 배지 (glass pill) -->
       <div class="badges-top">
-        <span class="status-badge" :class="statusClass">{{ statusText }}</span>
+        <span class="status-badge" :class="statusClass">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span class="status-text">{{ statusText }}</span>
+        </span>
+        <span v-if="battle.voteType === 'MULTIPLE'" class="vote-type-badge">
+          <ListOrdered :size="11" :stroke-width="2.6" />
+          <span>순위</span>
+        </span>
         <span v-if="isNew" class="new-badge" aria-label="새 배틀">NEW</span>
-        <span v-if="battle.voteType === 'MULTIPLE'" class="vote-type-badge">순위</span>
       </div>
 
       <!-- D-Day -->
       <span v-if="showDeadline" class="dday-badge" :class="ddayClass">
-        {{ dDayText }}
+        <Flame v-if="ddayClass === 'urgent'" :size="11" :stroke-width="2.6" />
+        <span>{{ dDayText }}</span>
       </span>
     </div>
 
     <!-- 컨텐츠 영역 -->
     <div class="card-content">
-      <p class="category">{{ categoryName }}</p>
+      <span class="category-chip">{{ categoryName }}</span>
       <h3 class="title">{{ battle.title }}</h3>
 
       <div class="stats">
         <span class="stat">
+          <Users :size="12" :stroke-width="2.4" class="stat-icon" />
           <strong class="stat-num">{{ formatNumber(battle.totalVotes) }}</strong>
           <span class="stat-label">투표</span>
         </span>
-        <span class="stat-dot">·</span>
+        <span class="stat-divider" aria-hidden="true"></span>
         <span class="stat">
+          <Eye :size="12" :stroke-width="2.4" class="stat-icon" />
           <strong class="stat-num">{{ formatNumber(battle.totalViews || 0) }}</strong>
           <span class="stat-label">조회</span>
         </span>
@@ -81,6 +90,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { Eye, Users, Flame, ListOrdered } from 'lucide-vue-next'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 
@@ -290,19 +300,29 @@ const daysLeftText = computed(() => {
 
 <style scoped>
 .battle-card {
+  position: relative;
   background: var(--bg-elevated);
   border-radius: 16px;
-  border: 1px solid var(--bg-mute);
+  border: 1px solid var(--border-default);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s ease;
   text-decoration: none;
   color: inherit;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 0.22s ease,
+              box-shadow 0.22s ease;
+  will-change: transform;
 }
 
 .battle-card:hover {
-  border-color: var(--border-default);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  border-color: transparent;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04);
+}
+
+.battle-card:focus-visible {
+  outline: 2px solid var(--c-brand);
+  outline-offset: 2px;
 }
 
 /* 썸네일 */
@@ -317,6 +337,11 @@ const daysLeftText = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.battle-card:hover .thumbnail-image {
+  transform: scale(1.045);
 }
 
 .thumbnail-placeholder {
@@ -328,101 +353,154 @@ const daysLeftText = computed(() => {
   color: var(--c-text-300);
 }
 
-/* 배지 */
+/* 배지 — glass pill 톤 */
 .badges-top {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 10px;
+  left: 10px;
   display: flex;
-  gap: 4px;
+  gap: 5px;
+  align-items: center;
 }
 
 .status-badge {
-  padding: 3px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 6px;
-}
-
-.status-badge.active {
-  background: var(--c-success);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px 4px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  border-radius: 999px;
   color: #ffffff;
+  background: rgba(15, 18, 24, 0.62);
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-.status-badge.scheduled {
-  background: var(--c-warning);
-  color: #ffffff;
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--c-text-300);
+  flex-shrink: 0;
 }
 
-.status-badge.ended {
-  background: var(--c-text-400);
-  color: #ffffff;
+.status-badge.active .status-dot {
+  background: #34d399;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.22);
+  animation: status-pulse 1.8s ease-out infinite;
 }
 
-.status-badge.suspended {
-  background: var(--c-danger);
-  color: #ffffff;
+.status-badge.scheduled .status-dot {
+  background: #fbbf24;
 }
 
-.status-badge.draft {
-  background: var(--border-default);
-  color: var(--c-text-400);
+.status-badge.ended .status-dot {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.status-badge.suspended .status-dot {
+  background: #f87171;
+}
+
+@keyframes status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45); }
+  60% { box-shadow: 0 0 0 5px rgba(52, 211, 153, 0); }
 }
 
 .new-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 8px;
+  padding: 4px 7px;
   border-radius: 999px;
-  background: var(--bg-elevated);
-  color: var(--c-danger);
-  font-size: 10px;
+  background: var(--c-danger);
+  color: #ffffff;
+  font-size: 9.5px;
   font-weight: 800;
   font-family: inherit;
   letter-spacing: 0.5px;
   line-height: 1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
 }
 
 .vote-type-badge {
-  padding: 2px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3.5px 7px 3.5px 6px;
   font-size: 10px;
-  font-weight: 600;
-  border-radius: 6px;
-  background: var(--c-brand-soft);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
   color: var(--c-brand);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.vote-type-badge svg {
+  display: block;
 }
 
 .dday-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 2px 7px;
-  font-size: 10px;
-  font-weight: 600;
-  border-radius: 6px;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  border-radius: 999px;
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
 }
 
 .dday-badge.normal {
-  background: var(--header-blur-bg);
-  color: var(--c-text-600);
+  background: rgba(15, 18, 24, 0.62);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .dday-badge.urgent {
   background: var(--c-danger);
   color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.32);
+}
+
+.dday-badge svg {
+  display: block;
 }
 
 /* 컨텐츠 */
 .card-content {
-  padding: 16px;
+  padding: 14px 16px 16px;
 }
 
-.category {
-  font-size: 12px;
-  color: var(--c-text-400);
-  margin: 0 0 4px;
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-text-500);
+  background: var(--bg-subtle);
+  border-radius: 999px;
+  line-height: 1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .title {
@@ -430,7 +508,7 @@ const daysLeftText = computed(() => {
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.35;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -438,11 +516,16 @@ const daysLeftText = computed(() => {
   letter-spacing: -0.035em;
   min-height: calc(1.35em * 2);
   word-break: keep-all;
+  transition: color 0.18s ease;
+}
+
+.battle-card:hover .title {
+  color: var(--c-brand);
 }
 
 .stats {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   font-size: 12px;
   color: var(--c-text-400);
@@ -452,33 +535,46 @@ const daysLeftText = computed(() => {
 
 .stats .stat {
   display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
+  align-items: center;
+  gap: 4px;
+}
+
+.stats .stat-icon {
+  color: var(--c-text-400);
+  flex-shrink: 0;
 }
 
 .stats .stat-num {
   font-size: 12.5px;
-  font-weight: 600;
-  color: var(--c-text-500);
+  font-weight: 700;
+  color: var(--c-text-600);
   letter-spacing: -0.02em;
+  line-height: 1;
 }
 
 .stats .stat-label {
-  font-weight: 400;
+  font-weight: 500;
   color: var(--c-text-400);
+  line-height: 1;
 }
 
-.stats .stat-dot {
-  color: var(--border-default);
-  font-weight: 600;
+.stats .stat-divider {
+  width: 1px;
+  height: 10px;
+  background: var(--border-default);
+  flex-shrink: 0;
 }
 
 .stats .days-left {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--c-brand);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
+  padding: 2px 7px;
+  background: var(--c-brand-soft);
+  border-radius: 999px;
+  line-height: 1;
 }
 
 /* 푸터 */
@@ -488,15 +584,16 @@ const daysLeftText = computed(() => {
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid var(--bg-mute);
+  border-top: 1px solid var(--border-default);
 }
 
 .creator {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   border-radius: 6px;
   outline: none;
+  min-width: 0;
 }
 
 .creator.is-clickable {
@@ -504,9 +601,7 @@ const daysLeftText = computed(() => {
 }
 
 .creator.is-clickable:hover .creator-name {
-  color: var(--c-text-600);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  color: var(--text-primary);
 }
 
 .creator.is-clickable:focus-visible {
@@ -514,11 +609,13 @@ const daysLeftText = computed(() => {
 }
 
 .creator-avatar {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   overflow: hidden;
-  background: var(--border-default);
+  background: var(--bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--border-default);
+  flex-shrink: 0;
 }
 
 .creator-avatar img {
@@ -529,7 +626,14 @@ const daysLeftText = computed(() => {
 
 .creator-name {
   font-size: 12px;
-  color: var(--c-text-400);
+  font-weight: 600;
+  color: var(--c-text-500);
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+  transition: color 0.18s ease;
 }
 
 .action-hint {
@@ -537,10 +641,10 @@ const daysLeftText = computed(() => {
   align-items: center;
   gap: 2px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--c-text-400);
-  opacity: 0.7;
-  transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .arrow-icon {
@@ -550,12 +654,11 @@ const daysLeftText = computed(() => {
 }
 
 .battle-card:hover .action-hint {
-  opacity: 1;
   color: var(--c-brand);
 }
 
 .battle-card:hover .arrow-icon {
-  transform: translateX(2px);
+  transform: translateX(3px);
 }
 
 /* 모바일 */
@@ -564,47 +667,78 @@ const daysLeftText = computed(() => {
     border-radius: 12px;
   }
 
+  .battle-card:hover {
+    transform: none;
+  }
+
+  .battle-card:hover .thumbnail-image {
+    transform: none;
+  }
+
   .card-thumbnail {
     aspect-ratio: 4 / 3;
   }
 
   .badges-top {
-    top: 6px;
-    left: 6px;
-    gap: 3px;
+    top: 7px;
+    left: 7px;
+    gap: 4px;
   }
 
   .status-badge {
-    padding: 2px 5px;
-    font-size: 9px;
+    padding: 3px 7px 3px 6px;
+    font-size: 9.5px;
+    gap: 4px;
+  }
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
   }
 
   .vote-type-badge {
-    padding: 2px 5px;
+    padding: 3px 6px 3px 5px;
     font-size: 9px;
+  }
+
+  .vote-type-badge svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  .new-badge {
+    padding: 3px 5px;
+    font-size: 8.5px;
   }
 
   .dday-badge {
-    top: 6px;
-    right: 6px;
-    padding: 2px 5px;
-    font-size: 9px;
+    top: 7px;
+    right: 7px;
+    padding: 3px 7px;
+    font-size: 9.5px;
+  }
+
+  .dday-badge svg {
+    width: 9px;
+    height: 9px;
   }
 
   .card-content {
-    padding: 10px;
+    padding: 10px 10px 12px;
   }
 
-  .category {
+  .category-chip {
+    height: 19px;
+    padding: 0 7px;
     font-size: 10px;
-    margin-bottom: 2px;
+    margin-bottom: 6px;
   }
 
   .title {
-    font-size: 15px;
+    font-size: 14.5px;
     font-weight: 800;
     line-height: 1.3;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     -webkit-line-clamp: 2;
     min-height: calc(1.3em * 2);
   }
@@ -617,31 +751,38 @@ const daysLeftText = computed(() => {
   }
 
   .stats .stat,
-  .stats .stat-dot,
+  .stats .stat-divider,
   .stats .days-left {
     white-space: nowrap;
+  }
+
+  .stats .stat-icon {
+    width: 11px;
+    height: 11px;
   }
 
   .stats .stat-num {
     font-size: 11.5px;
   }
 
+  .stats .days-left {
+    font-size: 10.5px;
+    padding: 2px 6px;
+  }
+
   .card-footer {
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
   }
 
   .creator-avatar {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
   }
 
   .creator-name {
-    font-size: 10px;
-    max-width: 60px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 11px;
+    max-width: 70px;
   }
 
   .action-hint {
@@ -656,33 +797,52 @@ const daysLeftText = computed(() => {
   }
 
   .badges-top {
-    top: 9px;
-    left: 9px;
-    gap: 5px;
+    top: 12px;
+    left: 12px;
+    gap: 6px;
   }
 
   .status-badge {
-    font-size: 12px;
-    padding: 4px 9px;
+    font-size: 11.5px;
+    padding: 5px 11px 5px 10px;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .vote-type-badge {
+    font-size: 11px;
+    padding: 4.5px 9px 4.5px 8px;
+  }
+
+  .new-badge {
+    font-size: 10.5px;
+    padding: 5px 8px;
   }
 
   .dday-badge {
-    top: 9px;
-    right: 9px;
-    font-size: 11px;
+    top: 12px;
+    right: 12px;
+    font-size: 11.5px;
+    padding: 5px 11px;
   }
 
   .card-content {
-    padding: 18px;
+    padding: 18px 20px 20px;
   }
 
-  .category {
-    font-size: 13px;
+  .category-chip {
+    height: 24px;
+    font-size: 12px;
+    padding: 0 11px;
+    margin-bottom: 10px;
   }
 
   .title {
-    font-size: 18px;
-    margin-bottom: 10px;
+    font-size: 18.5px;
+    margin-bottom: 14px;
   }
 
   .stats {
@@ -690,26 +850,41 @@ const daysLeftText = computed(() => {
     font-size: 13px;
   }
 
+  .stats .stat-icon {
+    width: 13px;
+    height: 13px;
+  }
+
   .stats .stat-num {
     font-size: 13.5px;
   }
 
+  .stats .stat-divider {
+    height: 11px;
+  }
+
+  .stats .days-left {
+    font-size: 12.5px;
+    padding: 3px 9px;
+  }
+
   .card-footer {
-    margin-top: 12px;
-    padding-top: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
   }
 
   .creator-avatar {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
   }
 
   .creator-name {
     font-size: 13px;
+    max-width: 140px;
   }
 
   .action-hint {
-    font-size: 13px;
+    font-size: 12.5px;
   }
 }
 
