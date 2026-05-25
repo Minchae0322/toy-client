@@ -48,15 +48,19 @@
       <div class="stats">
         <div class="stats-left">
           <span class="stat">
-            <Users :size="12" :stroke-width="2.4" class="stat-icon" />
-            <strong class="stat-num">{{ formatNumber(battle.totalVotes) }}</strong>
-            <span class="stat-label">투표</span>
+            <Users :size="13" :stroke-width="2.2" class="stat-icon" />
+            <span class="stat-text">
+              <strong>{{ formatNumber(battle.totalVotes) }}</strong>
+              <span class="stat-label">투표</span>
+            </span>
           </span>
           <span class="stat-divider" aria-hidden="true"></span>
           <span class="stat">
-            <Eye :size="12" :stroke-width="2.4" class="stat-icon" />
-            <strong class="stat-num">{{ formatNumber(battle.totalViews || 0) }}</strong>
-            <span class="stat-label">조회</span>
+            <Eye :size="13" :stroke-width="2.2" class="stat-icon" />
+            <span class="stat-text">
+              <strong>{{ formatNumber(battle.totalViews || 0) }}</strong>
+              <span class="stat-label">조회</span>
+            </span>
           </span>
         </div>
         <span v-if="showDeadline" class="days-left" :class="{ urgent: ddayClass === 'urgent' }">
@@ -533,24 +537,24 @@ const daysLeftText = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  height: 16px;
   font-size: 12px;
   color: var(--c-text-400);
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .stats-left {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
 }
 
 .stats .stat {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   line-height: 1;
 }
 
@@ -560,24 +564,29 @@ const daysLeftText = computed(() => {
   flex-shrink: 0;
 }
 
-.stats .stat-num {
-  font-size: 12.5px;
+.stats .stat-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 12px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats .stat-text strong {
   font-weight: 700;
   color: var(--c-text-600);
-  letter-spacing: -0.02em;
-  line-height: 1;
+  letter-spacing: -0.01em;
 }
 
 .stats .stat-label {
-  font-size: 12px;
   font-weight: 500;
   color: var(--c-text-400);
-  line-height: 1;
 }
 
 .stats .stat-divider {
   width: 1px;
-  height: 10px;
+  height: 11px;
   background: var(--border-strong);
   flex-shrink: 0;
 }
@@ -772,14 +781,17 @@ const daysLeftText = computed(() => {
 
   .stats {
     gap: 6px;
-    height: 14px;
     font-size: 11px;
     flex-wrap: nowrap;
     overflow: hidden;
   }
 
   .stats-left {
-    gap: 6px;
+    gap: 8px;
+  }
+
+  .stats .stat {
+    gap: 4px;
   }
 
   .stats .stat,
@@ -789,16 +801,16 @@ const daysLeftText = computed(() => {
   }
 
   .stats .stat-icon {
-    width: 11px;
-    height: 11px;
+    width: 12px;
+    height: 12px;
   }
 
-  .stats .stat-num {
-    font-size: 11.5px;
-  }
-
-  .stats .stat-label {
+  .stats .stat-text {
     font-size: 11px;
+  }
+
+  .stats .stat-divider {
+    height: 10px;
   }
 
   .stats .days-left {
@@ -887,29 +899,28 @@ const daysLeftText = computed(() => {
 
   .stats {
     gap: 10px;
-    height: 18px;
     font-size: 13px;
   }
 
   .stats-left {
-    gap: 10px;
+    gap: 12px;
+  }
+
+  .stats .stat {
+    gap: 6px;
   }
 
   .stats .stat-icon {
-    width: 13px;
-    height: 13px;
+    width: 14px;
+    height: 14px;
   }
 
-  .stats .stat-num {
-    font-size: 13.5px;
-  }
-
-  .stats .stat-label {
+  .stats .stat-text {
     font-size: 13px;
   }
 
   .stats .stat-divider {
-    height: 11px;
+    height: 12px;
   }
 
   .stats .days-left {
