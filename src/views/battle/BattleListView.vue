@@ -20,7 +20,12 @@
         <section class="battles-section">
           <header class="battle-list-title">
             <div class="title-with-badge">
-              <h2 class="section-title">전체 <span class="title-accent">요거픽</span></h2>
+              <h2 class="section-title">
+                <span class="title-accent-icon" aria-hidden="true">
+                  <Trophy :size="16" :stroke-width="2.4" />
+                </span>
+                전체 <span class="title-accent">요거픽</span>
+              </h2>
               <span class="sub-title">사용자들이 직접 고르는 승부</span>
             </div>
           </header>
@@ -147,7 +152,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronDown, Check } from 'lucide-vue-next'
+import { ChevronDown, Check, Trophy } from 'lucide-vue-next'
 import { battleService } from '@/services/BattleService.js'
 import { useCategoryCache } from '@/composables/useCategoryCache.js'
 import { useAuthStore } from '@/stores/auth.js'
@@ -541,55 +546,106 @@ onUnmounted(() => {
   }
 }
 
-/* 배틀 섹션 */
+/* 배틀 섹션 (HOT 섹션과의 간격을 넉넉히) */
 .battles-section {
-  margin-top: 0;
-  padding: 20px 0;
+  margin-top: 36px;
+  padding: 0 0 20px;
 }
 
 @media (min-width: 768px) {
   .battles-section {
-    padding: 24px 0;
+    margin-top: 44px;
+    padding: 0 0 24px;
   }
 }
 
-/* 배틀 리스트 제목 (대시보드 톤 일치) */
+@media (min-width: 1280px) {
+  .battles-section {
+    margin-top: 56px;
+  }
+}
+
+/* 배틀 리스트 제목 (HOT 섹션과 톤 일치 — 아이콘 + 굵은 타이포) */
 .battle-list-title {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .title-with-badge {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding-left: 0.75rem;
-  border-left: 3px solid var(--c-text-400);
+  gap: 4px;
+  min-width: 0;
 }
 
 .section-title {
-  font-size: 1.125rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 1.1875rem;
+  font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1.2;
+}
+
+.title-accent-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .section-title .title-accent {
   color: var(--c-brand);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.25rem;
+  }
+  .title-accent-icon {
+    width: 26px;
+    height: 26px;
+  }
 }
 
 @media (min-width: 1280px) {
   .section-title {
-    font-size: 1.3125rem;
+    font-size: 1.4375rem;
+  }
+  .title-accent-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
   }
 }
 
 .sub-title {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--c-text-400);
-  letter-spacing: -0.1px;
+  letter-spacing: -0.02em;
+  padding-left: 32px;
+}
+
+@media (min-width: 768px) {
+  .sub-title {
+    padding-left: 34px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .sub-title {
+    font-size: 13px;
+    padding-left: 38px;
+  }
 }
 
 /* 제목 아래 카테고리 필터 — 여백 살짝 */
@@ -615,12 +671,15 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 640px) {
   .section-header {
     margin-bottom: 0.75rem;
+    gap: 8px;
   }
 }
 

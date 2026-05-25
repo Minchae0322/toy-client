@@ -3,14 +3,22 @@
     <!-- 헤더 -->
     <div class="section-header">
       <div class="title-with-badge">
-        <h2 class="section-title">실시간 <span class="title-accent">HOT</span></h2>
-        <span class="sub-title">유저들이 직접 고르는 승부</span>
+        <h2 class="section-title">
+          <span class="title-accent-icon" aria-hidden="true">
+            <Flame :size="16" :stroke-width="2.4" />
+          </span>
+          실시간 <span class="title-accent">HOT</span>
+        </h2>
+        <span class="sub-title">지금 가장 뜨거운 승부</span>
       </div>
-      <button class="view-all-btn" @click="$emit('view-all')">더보기</button>
+      <button class="view-all-btn" @click="$emit('view-all')">
+        <span>더보기</span>
+        <ChevronRight :size="14" :stroke-width="2.2" />
+      </button>
     </div>
 
     <!-- 배틀 리스트 -->
-    <div class="hot-scroll">
+    <div ref="scrollRef" class="hot-scroll" @scroll.passive="updateScrollProgress">
       <router-link
           v-for="(battle, index) in battles.slice(0, 5)"
           :key="battle.id || battle.battleId"
@@ -72,13 +80,24 @@
         </div>
       </router-link>
     </div>
+
+    <!-- 모바일 스크롤 진행 인디케이터 (4개 이상일 때) -->
+    <div v-if="showScrollDots" class="scroll-dots" aria-hidden="true">
+      <span
+          v-for="i in dotCount"
+          :key="`dot-${i}`"
+          class="scroll-dot"
+          :class="{ active: activeDot === i - 1 }"
+      ></span>
+    </div>
   </section>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { Flame, ChevronRight } from 'lucide-vue-next'
 
-defineProps({
+const props = defineProps({
   battles: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false }
 })
@@ -86,6 +105,37 @@ defineProps({
 const emit = defineEmits(['battle-click', 'view-all'])
 
 const imageErrors = reactive(new Set())
+
+// 스크롤 진행 인디케이터 (모바일 한정)
+const scrollRef = ref(null)
+const scrollProgress = ref(0)
+
+const visibleCount = computed(() => Math.min(props.battles.length, 5))
+const dotCount = computed(() => Math.max(visibleCount.value, 1))
+const showScrollDots = computed(() => visibleCount.value >= 2)
+const activeDot = computed(() => {
+  if (dotCount.value <= 1) return 0
+  const idx = Math.round(scrollProgress.value * (dotCount.value - 1))
+  return Math.min(Math.max(idx, 0), dotCount.value - 1)
+})
+
+const updateScrollProgress = () => {
+  const el = scrollRef.value
+  if (!el) return
+  const max = el.scrollWidth - el.clientWidth
+  scrollProgress.value = max > 0 ? el.scrollLeft / max : 0
+}
+
+const handleResize = () => nextTick(updateScrollProgress)
+
+onMounted(() => {
+  nextTick(updateScrollProgress)
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 const formatNumber = (num) => {
   if (!num || num === 0) return '0'
@@ -127,61 +177,105 @@ const handleImageError = (battleId) => {
 /* 헤더 */
 .section-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  gap: 12px;
 }
 
 .title-with-badge {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 4px;
+  min-width: 0;
 }
 
 .section-title {
-  font-size: 1.0625rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 1.1875rem;
+  font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1.2;
 }
 
+.title-accent-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--c-heat-soft);
+  color: var(--c-heat);
+}
+
 .section-title .title-accent {
-  color: var(--c-brand);
+  color: var(--c-heat);
+  font-weight: 800;
+  letter-spacing: -0.04em;
 }
 
 .sub-title {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--c-text-400);
-  padding-left: 0;
+  padding-left: 32px;
+  letter-spacing: -0.02em;
 }
 
 @media (min-width: 768px) {
   .section-title {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
+  }
+  .title-accent-icon {
+    width: 26px;
+    height: 26px;
+  }
+  .sub-title {
+    padding-left: 34px;
   }
 }
 
 @media (min-width: 1280px) {
   .section-title {
-    font-size: 1.3125rem;
+    font-size: 1.4375rem;
+  }
+  .title-accent-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+  .sub-title {
+    font-size: 13px;
+    padding-left: 38px;
   }
 }
 
 .view-all-btn {
-  font-size: 11px;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--c-text-400);
   background: none;
   border: none;
+  padding: 6px 4px 6px 8px;
   cursor: pointer;
   font-family: inherit;
+  letter-spacing: -0.02em;
+  border-radius: 8px;
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
 }
 
 .view-all-btn:hover {
-  color: var(--c-text-500);
+  color: var(--text-primary);
+  background: var(--bg-subtle);
 }
 
 /* 스크롤 - 항상 가로 한 줄 */
@@ -289,21 +383,21 @@ const handleImageError = (battleId) => {
 }
 
 .rank-badge.first {
-  background: linear-gradient(135deg, #ffd700 0%, #ffb800 100%);
+  background: var(--c-gold);
   color: #ffffff;
-  box-shadow: 0 2px 4px rgba(255, 184, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(234, 179, 8, 0.28);
 }
 
 .rank-badge.second {
-  background: linear-gradient(135deg, var(--border-strong) 0%, #c0c0c0 100%);
+  background: var(--c-silver);
   color: #ffffff;
-  box-shadow: 0 2px 4px rgba(192, 192, 192, 0.3);
+  box-shadow: 0 2px 6px rgba(148, 163, 184, 0.28);
 }
 
 .rank-badge.third {
-  background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+  background: var(--c-bronze);
   color: #ffffff;
-  box-shadow: 0 2px 4px rgba(205, 127, 50, 0.3);
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.28);
 }
 
 /* HOT 뱃지 */
@@ -311,12 +405,14 @@ const handleImageError = (battleId) => {
   position: absolute;
   top: 8px;
   right: 8px;
-  padding: 2px 6px;
+  padding: 3px 7px;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.4px;
   color: #ffffff;
-  background: var(--c-brand);
-  border-radius: 4px;
+  background: var(--c-heat);
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.25);
 }
 
 /* 정보 */
@@ -357,6 +453,34 @@ const handleImageError = (battleId) => {
   width: 12px;
   height: 12px;
   flex-shrink: 0;
+}
+
+/* 스크롤 진행 인디케이터 (모바일 한정) */
+.scroll-dots {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.scroll-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--c-text-300);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.scroll-dot.active {
+  width: 16px;
+  background: var(--c-heat);
+}
+
+@media (max-width: 767px) {
+  .scroll-dots {
+    display: flex;
+  }
 }
 
 /* 스켈레톤 */
@@ -406,11 +530,7 @@ const handleImageError = (battleId) => {
 /* 큰 화면 */
 @media (min-width: 1280px) {
   .section-header {
-    margin-bottom: 16px;
-  }
-
-  .section-title {
-    font-size: 1.3125rem;
+    margin-bottom: 18px;
   }
 
   .hot-scroll {
