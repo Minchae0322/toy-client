@@ -537,19 +537,25 @@ const daysLeftText = computed(() => {
   align-items: center;
   gap: 2px;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--c-brand);
-  opacity: 0;
-  transition: opacity 0.2s;
+  font-weight: 600;
+  color: var(--c-text-400);
+  opacity: 0.7;
+  transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
 }
 
 .arrow-icon {
   width: 14px;
   height: 14px;
+  transition: transform 0.2s ease;
 }
 
 .battle-card:hover .action-hint {
   opacity: 1;
+  color: var(--c-brand);
+}
+
+.battle-card:hover .arrow-icon {
+  transform: translateX(2px);
 }
 
 /* 모바일 */
