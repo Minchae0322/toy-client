@@ -146,7 +146,7 @@ defineExpose({ observerTarget })
   background: var(--bg-elevated);
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid var(--bg-subtle);
+  border: 1px solid var(--border-default);
   pointer-events: none;
 }
 
@@ -203,12 +203,12 @@ defineExpose({ observerTarget })
 }
 
 .skeleton-category {
-  width: 50px;
-  height: 11px;
-  background-color: var(--border-strong);
+  width: 60px;
+  height: 22px;
+  background-color: var(--bg-subtle);
   animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  border-radius: 4px;
-  margin-bottom: 6px;
+  border-radius: 999px;
+  margin-bottom: 8px;
 }
 
 .skeleton-title {
@@ -250,7 +250,7 @@ defineExpose({ observerTarget })
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid var(--bg-subtle);
+  border-top: 1px solid var(--border-default);
 }
 
 .skeleton-creator {
@@ -482,9 +482,10 @@ defineExpose({ observerTarget })
   }
 
   .skeleton-category {
-    width: 40px;
-    height: 10px;
-    margin-bottom: 4px;
+    width: 50px;
+    height: 19px;
+    margin-bottom: 6px;
+    border-radius: 999px;
   }
 
   .skeleton-title {
