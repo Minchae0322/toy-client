@@ -46,18 +46,23 @@
       <h3 class="title">{{ battle.title }}</h3>
 
       <div class="stats">
-        <span class="stat">
-          <Users :size="12" :stroke-width="2.4" class="stat-icon" />
-          <strong class="stat-num">{{ formatNumber(battle.totalVotes) }}</strong>
-          <span class="stat-label">투표</span>
+        <div class="stats-left">
+          <span class="stat">
+            <Users :size="12" :stroke-width="2.4" class="stat-icon" />
+            <strong class="stat-num">{{ formatNumber(battle.totalVotes) }}</strong>
+            <span class="stat-label">투표</span>
+          </span>
+          <span class="stat-divider" aria-hidden="true"></span>
+          <span class="stat">
+            <Eye :size="12" :stroke-width="2.4" class="stat-icon" />
+            <strong class="stat-num">{{ formatNumber(battle.totalViews || 0) }}</strong>
+            <span class="stat-label">조회</span>
+          </span>
+        </div>
+        <span v-if="showDeadline" class="days-left" :class="{ urgent: ddayClass === 'urgent' }">
+          <Clock :size="11" :stroke-width="2.6" class="days-left-icon" />
+          <span>{{ daysLeftText }}</span>
         </span>
-        <span class="stat-divider" aria-hidden="true"></span>
-        <span class="stat">
-          <Eye :size="12" :stroke-width="2.4" class="stat-icon" />
-          <strong class="stat-num">{{ formatNumber(battle.totalViews || 0) }}</strong>
-          <span class="stat-label">조회</span>
-        </span>
-        <span v-if="isActive && daysLeftText" class="days-left">{{ daysLeftText }}</span>
       </div>
 
       <div v-if="!hideCreator" class="card-footer">
@@ -90,7 +95,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Eye, Users, Flame, ListOrdered } from 'lucide-vue-next'
+import { Eye, Users, Flame, ListOrdered, Clock } from 'lucide-vue-next'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 
@@ -526,20 +531,31 @@ const daysLeftText = computed(() => {
 .stats {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  height: 16px;
   font-size: 12px;
   color: var(--c-text-400);
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
 }
 
+.stats-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .stats .stat {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  line-height: 1;
 }
 
 .stats .stat-icon {
+  display: block;
   color: var(--c-text-400);
   flex-shrink: 0;
 }
@@ -553,6 +569,7 @@ const daysLeftText = computed(() => {
 }
 
 .stats .stat-label {
+  font-size: 12px;
   font-weight: 500;
   color: var(--c-text-400);
   line-height: 1;
@@ -561,20 +578,30 @@ const daysLeftText = computed(() => {
 .stats .stat-divider {
   width: 1px;
   height: 10px;
-  background: var(--border-default);
+  background: var(--border-strong);
   flex-shrink: 0;
 }
 
 .stats .days-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   margin-left: auto;
   font-size: 11.5px;
-  color: var(--c-brand);
   font-weight: 700;
   letter-spacing: -0.01em;
-  padding: 2px 7px;
-  background: var(--c-brand-soft);
-  border-radius: 999px;
   line-height: 1;
+  color: var(--c-text-500);
+  flex-shrink: 0;
+}
+
+.stats .days-left.urgent {
+  color: var(--c-danger);
+}
+
+.stats .days-left-icon {
+  display: block;
+  flex-shrink: 0;
 }
 
 /* 푸터 */
@@ -745,9 +772,14 @@ const daysLeftText = computed(() => {
 
   .stats {
     gap: 6px;
+    height: 14px;
     font-size: 11px;
     flex-wrap: nowrap;
     overflow: hidden;
+  }
+
+  .stats-left {
+    gap: 6px;
   }
 
   .stats .stat,
@@ -765,9 +797,17 @@ const daysLeftText = computed(() => {
     font-size: 11.5px;
   }
 
+  .stats .stat-label {
+    font-size: 11px;
+  }
+
   .stats .days-left {
     font-size: 10.5px;
-    padding: 2px 6px;
+  }
+
+  .stats .days-left-icon {
+    width: 10px;
+    height: 10px;
   }
 
   .card-footer {
@@ -847,7 +887,12 @@ const daysLeftText = computed(() => {
 
   .stats {
     gap: 10px;
+    height: 18px;
     font-size: 13px;
+  }
+
+  .stats-left {
+    gap: 10px;
   }
 
   .stats .stat-icon {
@@ -859,13 +904,21 @@ const daysLeftText = computed(() => {
     font-size: 13.5px;
   }
 
+  .stats .stat-label {
+    font-size: 13px;
+  }
+
   .stats .stat-divider {
     height: 11px;
   }
 
   .stats .days-left {
     font-size: 12.5px;
-    padding: 3px 9px;
+  }
+
+  .stats .days-left-icon {
+    width: 12px;
+    height: 12px;
   }
 
   .card-footer {
