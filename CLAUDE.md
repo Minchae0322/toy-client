@@ -144,6 +144,9 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **배틀 step2 탭 라벨 항시 노출**: `Step2ItemSetup.vue` — 모바일 아이템 입력 탭에 텍스트 라벨 항시 표시. ≤480px에서 아이콘 위 라벨 스택 레이아웃. 상단 안내 헤더(아이콘+제목+칩)+설명+방법 리스트로 재구성 (`feat(battle)`)
+- **배틀 생성 스텝 인디케이터 아이콘+이름 표시**: `BattleCreateHeader.vue` — 배틀 생성 진행 단계 인디케이터에 단계별 아이콘과 이름 항시 노출 (`feat(battle)`)
+- **D-day 배지 표시 조건 변경**: `BattleCard.vue`, `DashboardBattles.vue` — 마감 **7일 이하**인 **진행중** 배틀에만 D-day 배지 표시. 종료 배틀·마감 여유 있는 배틀에는 미표시 (`fix(battle)`)
 - **버전 1.1.0**: iOS 빌드 14, Android versionCode 11 (`chore`)
 - **배틀 종료 우승자 셀러브레이션 모달**: `BattleDetailView` 인라인 winner-spotlight 제거 → `<Teleport to="body">` 이벤트 모달로 전환. 내 픽 있으면 최고 등수, 없으면 전체 1위 표시. 1·2·3·4위+ tier별 아이콘·라벨·컬러·confetti 차등화(gold/silver/bronze/consolation). **세션당 배틀별 1회** (`sessionStorage`) + "일주일간 다시 보지 않기" (`localStorage` 만료 키). 다크모드 대응 (`feat(battle)`)
 - **버전 1.0.10**: iOS 빌드 13, Android versionCode 10 (`chore`)
