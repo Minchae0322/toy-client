@@ -38,6 +38,30 @@
       <p class="category">{{ categoryName }}</p>
       <h3 class="title">{{ battle.title }}</h3>
 
+      <!-- 아이템 미리보기 스트립 -->
+      <div v-if="itemThumbs.length > 0" class="items-strip" aria-label="포함된 아이템">
+        <div
+            v-for="(src, i) in itemThumbs.slice(0, maxItemThumbs)"
+            :key="`item-${i}`"
+            class="item-thumb"
+        >
+          <img
+              :src="src"
+              alt=""
+              loading="lazy"
+              @error="handleItemImageError(i)"
+              v-if="!itemImageErrors.has(i)"
+          />
+          <div v-else class="item-thumb-placeholder">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z"/>
+            </svg>
+          </div>
+        </div>
+        <div v-if="extraItemCount > 0" class="item-more">+{{ extraItemCount }}</div>
+        <span class="item-vs-label">{{ itemCountLabel }}</span>
+      </div>
+
       <div class="stats">
         <span class="stat">
           <strong class="stat-num">{{ formatNumber(battle.totalVotes) }}</strong>
@@ -100,6 +124,41 @@ const props = defineProps({
 
 const imageError = ref(false)
 const avatarError = ref(false)
+const itemImageErrors = ref(new Set())
+
+const handleItemImageError = (index) => {
+  const next = new Set(itemImageErrors.value)
+  next.add(index)
+  itemImageErrors.value = next
+}
+
+// 카드 너비별 표시 개수 (모바일에서는 좁아서 3개로 제한)
+const maxItemThumbs = 4
+
+const itemThumbs = computed(() => {
+  const raw = props.battle?.topItemImages
+  if (!Array.isArray(raw)) return []
+  return raw.filter(Boolean)
+})
+
+const totalItemCount = computed(() => {
+  return props.battle?.itemCount
+      || props.battle?.items?.length
+      || props.battle?.options?.length
+      || itemThumbs.value.length
+      || 0
+})
+
+const extraItemCount = computed(() => {
+  const shown = Math.min(itemThumbs.value.length, maxItemThumbs)
+  return Math.max(0, totalItemCount.value - shown)
+})
+
+const itemCountLabel = computed(() => {
+  const n = totalItemCount.value
+  if (n <= 1) return ''
+  return `${n}개 아이템`
+})
 
 // 생성 후 3일 이내인 배틀에 NEW 뱃지
 const isNew = computed(() => {
@@ -440,6 +499,71 @@ const daysLeftText = computed(() => {
   word-break: keep-all;
 }
 
+/* 아이템 미리보기 스트립 */
+.items-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  min-height: 28px;
+}
+
+.item-thumb {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-subtle);
+  border: 1px solid var(--c-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.item-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-300);
+}
+
+.item-more {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--c-surface-mute);
+  color: var(--c-text-500);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.item-vs-label {
+  margin-left: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--c-text-400);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .stats {
   display: flex;
   align-items: baseline;
@@ -609,6 +733,31 @@ const daysLeftText = computed(() => {
     min-height: calc(1.3em * 2);
   }
 
+  .items-strip {
+    gap: 4px;
+    margin-bottom: 6px;
+    min-height: 22px;
+  }
+
+  .item-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+  }
+
+  .item-more {
+    height: 22px;
+    min-width: 22px;
+    padding: 0 5px;
+    border-radius: 6px;
+    font-size: 10px;
+  }
+
+  .item-vs-label {
+    font-size: 10.5px;
+    margin-left: 2px;
+  }
+
   .stats {
     gap: 6px;
     font-size: 11px;
@@ -683,6 +832,29 @@ const daysLeftText = computed(() => {
   .title {
     font-size: 18px;
     margin-bottom: 10px;
+  }
+
+  .items-strip {
+    gap: 7px;
+    margin-bottom: 12px;
+    min-height: 32px;
+  }
+
+  .item-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
+  .item-more {
+    height: 32px;
+    min-width: 32px;
+    border-radius: 9px;
+    font-size: 12px;
+  }
+
+  .item-vs-label {
+    font-size: 12.5px;
   }
 
   .stats {
