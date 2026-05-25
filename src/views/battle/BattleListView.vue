@@ -546,22 +546,22 @@ onUnmounted(() => {
   }
 }
 
-/* 배틀 섹션 (HOT 섹션과의 간격을 넉넉히) */
+/* 배틀 섹션 (HOT 섹션과의 간격) */
 .battles-section {
-  margin-top: 36px;
+  margin-top: 20px;
   padding: 0 0 20px;
 }
 
 @media (min-width: 768px) {
   .battles-section {
-    margin-top: 44px;
+    margin-top: 26px;
     padding: 0 0 24px;
   }
 }
 
 @media (min-width: 1280px) {
   .battles-section {
-    margin-top: 56px;
+    margin-top: 32px;
   }
 }
 

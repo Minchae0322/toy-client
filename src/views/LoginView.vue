@@ -3,7 +3,7 @@
     <div class="auth-container">
       <div class="logo-area">
         <RouterLink to="/">
-          <img src="/images/yogodde02.png" alt="요거뜨" class="logo-image" />
+          <img src="/images/logo_name2.png" alt="요거뜨" class="logo-image" />
         </RouterLink>
       </div>
 

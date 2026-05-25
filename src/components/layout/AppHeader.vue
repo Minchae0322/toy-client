@@ -12,7 +12,7 @@
     <div class="header-container">
       <div class="logo">
         <RouterLink to="/" class="mz-title">
-          <img src="/images/logo4.png" alt="요거뜨" class="logo-image" />
+          <img src="/images/logo_name2.png" alt="요거뜨" class="logo-image" />
         </RouterLink>
       </div>
 

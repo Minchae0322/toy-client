@@ -11,7 +11,7 @@
             </svg>
           </h2>
         </router-link>
-        <p class="mpick-sub">유저들이 직접 한 표 던지는 라이브 픽</p>
+        <p class="mpick-sub">이거 vs 저거, 투표로 가리는 진짜 1픽</p>
       </div>
       <span v-if="!loading && hotBattles.length > 0" class="mpick-count-chip">
         <span class="chip-dot"></span>
@@ -547,6 +547,10 @@ onMounted(() => {
 .skeleton-hero {
   pointer-events: none;
   margin-bottom: 16px;
+}
+
+@media (min-width: 1280px) {
+  .mpick-title { font-size: 1.375rem; }
 }
 
 @media (max-width: 640px) {

@@ -321,7 +321,7 @@ onUnmounted(() => {
     <div class="header-content">
       <!-- 로고 -->
       <RouterLink to="/" class="logo">
-        <img src="/images/logo5.png" alt="요거뜨" class="logo-image" />
+        <img src="/images/logo_name2.png" alt="요거뜨" class="logo-image" />
       </RouterLink>
 
       <!-- 데스크톱 네비게이션 -->
@@ -513,7 +513,7 @@ onUnmounted(() => {
 }
 
 .logo-image {
-  height: 37px;
+  height: 44px;
   width: auto;
   object-fit: contain;
   margin-left: 14px;
@@ -1016,7 +1016,7 @@ onUnmounted(() => {
     height: 56px;
   }
   .logo-image {
-    height: 30px;
+    height: 36px;
     margin-left: 0;
   }
   .nav-mobile {
