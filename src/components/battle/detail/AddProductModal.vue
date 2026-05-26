@@ -459,8 +459,9 @@ async function ingestFiles(files) {
     const previewUrl = URL.createObjectURL(resized)
     const entry = makeImageEntry(resized, previewUrl)
     pendingImages.value.push(entry)
-    // 업로드는 병렬 시작 (각 카드는 자기 자신만 watch)
-    uploadOne(entry)
+    // 배열에 push 된 reactive proxy 를 넘겨야 .uploading 변경이 화면에 반영됨
+    // (로컬 plain object 를 그대로 넘기면 mutation 이 reactive 시스템 밖에서 일어남)
+    uploadOne(pendingImages.value[pendingImages.value.length - 1])
   }
 }
 
