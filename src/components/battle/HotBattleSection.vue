@@ -369,7 +369,9 @@ const handleImageError = (battleId) => {
 .hot-scroll::-webkit-scrollbar { display: none; }
 
 /* ---------- 카드 (사진 풀블리드) ---------- */
-.hot-card {
+.hot-card,
+.hot-card:link,
+.hot-card:visited {
   position: relative;
   flex-shrink: 0;
   width: 172px;
@@ -378,7 +380,7 @@ const handleImageError = (battleId) => {
   overflow: hidden;
   cursor: pointer;
   text-decoration: none;
-  color: inherit;
+  color: #ffffff;
   background: #0A0E1A;
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.06),
@@ -390,11 +392,23 @@ const handleImageError = (battleId) => {
 }
 
 @media (min-width: 768px) {
-  .hot-card { width: 192px; border-radius: 20px; }
+  .hot-card,
+  .hot-card:link,
+  .hot-card:visited {
+    width: 198px;
+    border-radius: 20px;
+    aspect-ratio: 3 / 4;
+  }
 }
 
 @media (min-width: 1280px) {
-  .hot-card { width: 212px; border-radius: 22px; }
+  .hot-card,
+  .hot-card:link,
+  .hot-card:visited {
+    width: 218px;
+    border-radius: 22px;
+    aspect-ratio: 3 / 4;
+  }
 }
 
 @media (hover: hover) {
@@ -455,11 +469,12 @@ const handleImageError = (battleId) => {
   inset: 0;
   background:
     linear-gradient(180deg,
-      rgba(0, 0, 0, 0.35) 0%,
-      rgba(0, 0, 0, 0) 26%,
-      rgba(0, 0, 0, 0) 48%,
-      rgba(0, 0, 0, 0.55) 78%,
-      rgba(0, 0, 0, 0.88) 100%);
+      rgba(0, 0, 0, 0.4) 0%,
+      rgba(0, 0, 0, 0) 22%,
+      rgba(0, 0, 0, 0) 38%,
+      rgba(0, 0, 0, 0.55) 64%,
+      rgba(0, 0, 0, 0.85) 84%,
+      rgba(0, 0, 0, 0.95) 100%);
   pointer-events: none;
 }
 
@@ -578,72 +593,84 @@ const handleImageError = (battleId) => {
   right: 0;
   bottom: 0;
   z-index: 2;
-  padding: 30px 12px 12px;
-  color: #fff;
+  padding: 36px 13px 13px;
+  color: #ffffff;
 }
 
 .title {
-  margin: 0 0 8px;
-  font-size: 13.5px;
+  margin: 0 0 9px;
+  font-size: 15px;
   font-weight: 800;
-  color: #fff;
-  line-height: 1.32;
-  letter-spacing: -0.025em;
+  color: #ffffff;
+  line-height: 1.3;
+  letter-spacing: -0.028em;
   word-break: keep-all;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6),
+               0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 @media (min-width: 768px) {
-  .title { font-size: 14.5px; }
+  .title { font-size: 16.5px; margin-bottom: 10px; }
 }
 
 @media (min-width: 1280px) {
-  .title { font-size: 15.5px; }
+  .title { font-size: 18px; margin-bottom: 11px; }
 }
 
 .stats-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   line-height: 1;
 }
 
 .stat {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.92);
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #ffffff;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 }
 
 .stat-icon {
   display: block;
-  color: rgba(255, 255, 255, 0.75);
+  color: #ffffff;
+  opacity: 0.95;
   flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
-.stat-value { line-height: 1; }
+.stat-value {
+  line-height: 1;
+  color: #ffffff;
+}
 
 .stat-divider {
   width: 1px;
-  height: 9px;
-  background: rgba(255, 255, 255, 0.28);
+  height: 11px;
+  background: rgba(255, 255, 255, 0.4);
   flex-shrink: 0;
 }
 
-@media (min-width: 1280px) {
-  .stat { font-size: 11.5px; }
+@media (min-width: 768px) {
+  .stat { font-size: 13px; gap: 6px; }
   .stat-icon { width: 12px; height: 12px; }
-  .stat-divider { height: 10px; }
+  .stat-divider { height: 12px; }
+}
+
+@media (min-width: 1280px) {
+  .stat { font-size: 13.5px; }
+  .stat-icon { width: 13px; height: 13px; }
+  .stat-divider { height: 13px; }
 }
 
 /* ---------- 스크롤 도트 (모바일) ---------- */
