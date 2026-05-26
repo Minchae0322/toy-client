@@ -7,140 +7,120 @@
       :to="{ name: 'BattleList' }"
     />
 
-    <!-- 본문: PC 1024+ 2열 (hero 좌 / 리스트 우), 그 이하는 세로 스택 -->
-    <div class="pick-body">
-      <!-- 히어로: 1번째 요거픽 큰 카드 -->
-      <router-link
-        v-if="!loading && featuredBattle"
-        :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
-        class="pick-hero"
-      >
-        <div class="hero-visual">
-          <img v-if="featuredBattle.thumbnailDto?.fileUrl" :src="featuredBattle.thumbnailDto.fileUrl" :alt="featuredBattle.title" @error="handleImageError" />
-          <div v-else class="hero-thumb-none">Y</div>
-          <div class="hero-overlay-top">
-            <span v-if="getDdayText(featuredBattle.endDate)" class="hero-dday">{{ getDdayText(featuredBattle.endDate) }}</span>
-          </div>
-          <div class="hero-overlay-bottom">
-            <h3 class="hero-title">{{ featuredBattle.title }}</h3>
-            <div class="hero-stats">
-              <span class="hero-stat"><b>{{ formatNumber(featuredBattle.totalVotes) }}</b>명 참여중</span>
-            </div>
-          </div>
+    <!-- 히어로 (1번째 요거픽) -->
+    <router-link
+      v-if="!loading && featuredBattle"
+      :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
+      class="pick-hero"
+    >
+      <!-- 큰 배경 비주얼 -->
+      <div class="hero-visual">
+        <img
+          v-if="featuredBattle.thumbnailDto?.fileUrl"
+          :src="featuredBattle.thumbnailDto.fileUrl"
+          :alt="featuredBattle.title"
+          @error="handleImageError"
+        />
+        <div v-else class="hero-thumb-none">Y</div>
+
+        <!-- 상단 메타 칩 -->
+        <div class="hero-meta-row">
+          <span class="hero-tag live"><span class="dot"></span>LIVE</span>
+          <span v-if="getDdayText(featuredBattle.endDate)" class="hero-tag">{{ getDdayText(featuredBattle.endDate) }}</span>
         </div>
 
-        <div class="hero-vote-area" v-if="featuredBattle.topItems?.length > 0">
-          <!-- 1·2위 양옆 배치 — 시선이 좌↔우 흐름으로 자연스럽게 비교 -->
-          <div class="hero-rank-row">
-            <div class="hero-rank-side rank-left">
-              <span class="hero-rank-name">{{ truncateName(featuredBattle.topItems[0]?.displayName, 10) }}</span>
-              <span class="hero-rank-pct">{{ formatPercent(featuredBattle.topItems[0]?.votePercentage) }}%</span>
-            </div>
-            <div class="hero-rank-side rank-right" v-if="featuredBattle.topItems[1]">
-              <span class="hero-rank-pct rank-pct-sub">{{ formatPercent(featuredBattle.topItems[1]?.votePercentage) }}%</span>
-              <span class="hero-rank-name">{{ truncateName(featuredBattle.topItems[1]?.displayName, 10) }}</span>
-            </div>
+        <!-- 하단 제목 + 참여자 -->
+        <div class="hero-title-row">
+          <h3 class="hero-title">{{ featuredBattle.title }}</h3>
+          <span class="hero-votes">{{ formatNumber(featuredBattle.totalVotes) }}명 참여</span>
+        </div>
+      </div>
+
+      <!-- 1·2위 후보 비교 (스택형) -->
+      <div class="hero-compare" v-if="featuredBattle.topItems?.length > 0">
+        <div class="cmp-row cmp-leader">
+          <div class="cmp-info">
+            <span class="cmp-badge">1</span>
+            <span class="cmp-name">{{ truncateName(featuredBattle.topItems[0]?.displayName, 18) }}</span>
           </div>
-          <div class="hero-gauge">
-            <div class="hero-g-bar b1" :style="{ width: formatPercent(featuredBattle.topItems[0]?.votePercentage) + '%' }"></div>
-            <div class="hero-g-bar b2" v-if="featuredBattle.topItems[1]" :style="{ width: formatPercent(featuredBattle.topItems[1]?.votePercentage) + '%' }"></div>
+          <span class="cmp-pct">{{ formatPercent(featuredBattle.topItems[0]?.votePercentage) }}%</span>
+        </div>
+        <div class="cmp-track">
+          <div class="cmp-fill is-lead" :style="{ width: formatPercent(featuredBattle.topItems[0]?.votePercentage) + '%' }"></div>
+        </div>
+
+        <div class="cmp-row cmp-runner" v-if="featuredBattle.topItems[1]">
+          <div class="cmp-info">
+            <span class="cmp-badge runner">2</span>
+            <span class="cmp-name">{{ truncateName(featuredBattle.topItems[1]?.displayName, 18) }}</span>
           </div>
-          <div class="hero-cta">
-            한 표 던지러 가기
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m9 18 6-6-6-6" />
-            </svg>
+          <span class="cmp-pct runner">{{ formatPercent(featuredBattle.topItems[1]?.votePercentage) }}%</span>
+        </div>
+        <div class="cmp-track" v-if="featuredBattle.topItems[1]">
+          <div class="cmp-fill" :style="{ width: formatPercent(featuredBattle.topItems[1]?.votePercentage) + '%' }"></div>
+        </div>
+
+        <div class="hero-cta">
+          한 표 던지러 가기
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </div>
+      </div>
+    </router-link>
+
+    <!-- 히어로 로딩 스켈레톤 -->
+    <div v-else-if="loading" class="pick-hero skeleton-hero">
+      <div class="skeleton hero-sk-img"></div>
+      <div class="hero-sk-body">
+        <div class="skeleton" style="height: 14px; width: 50%; margin-bottom: 12px;"></div>
+        <div class="skeleton" style="height: 8px; width: 100%; border-radius: 10px; margin-bottom: 14px;"></div>
+        <div class="skeleton" style="height: 14px; width: 40%; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="height: 8px; width: 100%; border-radius: 10px;"></div>
+      </div>
+    </div>
+
+    <!-- 엠티 -->
+    <div v-else-if="hotBattles.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+      </div>
+      <p class="empty-text">진행 중인 요거픽이 없어요</p>
+      <router-link :to="{ name: 'BattleList' }" class="empty-cta">요거픽 둘러보기</router-link>
+    </div>
+
+    <!-- 더 많은 픽 — 컴팩트 카드 그리드 -->
+    <div v-if="restBattles.length > 0" class="rest-grid">
+      <router-link
+        v-for="battle in restBattles"
+        :key="battle.id"
+        :to="{ name: 'BattleDetail', params: { id: battle.id } }"
+        class="rest-card"
+      >
+        <div class="rest-thumb">
+          <img
+            v-if="battle.thumbnailDto?.fileUrl"
+            :src="battle.thumbnailDto.fileUrl"
+            :alt="battle.title"
+            loading="lazy"
+            @error="handleImageError"
+          />
+          <div v-else class="rest-thumb-none">Y</div>
+          <span v-if="getDdayText(battle.endDate)" class="rest-dday">{{ getDdayText(battle.endDate) }}</span>
+        </div>
+        <div class="rest-body">
+          <h4 class="rest-title">{{ battle.title }}</h4>
+          <div class="rest-meta">
+            <span class="rest-votes">{{ formatNumber(battle.totalVotes) }}명 참여</span>
+            <span v-if="battle.topItems?.[0]" class="rest-lead-pct">{{ formatPercent(battle.topItems[0].votePercentage) }}%</span>
+          </div>
+          <div class="rest-track" v-if="battle.topItems?.[0]">
+            <div class="rest-fill" :style="{ width: formatPercent(battle.topItems[0].votePercentage) + '%' }"></div>
           </div>
         </div>
       </router-link>
-
-      <!-- 히어로 로딩 스켈레톤 -->
-      <div v-else-if="loading" class="pick-hero skeleton-hero">
-        <div class="skeleton" style="width: 100%; aspect-ratio: 16/9; border-radius: 14px 14px 0 0;"></div>
-        <div style="padding: 14px;">
-          <div class="skeleton" style="height: 8px; width: 100%; border-radius: 10px; margin-bottom: 10px;"></div>
-          <div class="skeleton" style="height: 12px; width: 70%;"></div>
-        </div>
-      </div>
-
-      <!-- 우측(또는 하단) 컬럼: 더 많은 픽 / 엠티 / 로딩 행 -->
-      <div
-        v-if="loading || hotBattles.length === 0 || restBattles.length > 0"
-        class="pick-list-col"
-      >
-        <!-- 로딩 행 -->
-        <div v-if="loading" class="dash-list">
-          <div v-for="i in 3" :key="i" class="dash-row skeleton-row">
-            <div class="dash-thumb"><div class="skeleton skeleton-thumb"></div></div>
-            <div class="dash-info">
-              <div class="info-top">
-                <div class="skeleton" style="height: 15px; width: 60%;"></div>
-                <div class="skeleton" style="height: 11px; width: 80px;"></div>
-              </div>
-              <div class="skeleton" style="height: 6px; width: 100%; border-radius: 10px; margin-top: 12px;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 엠티 -->
-        <div v-else-if="hotBattles.length === 0" class="empty-state">
-          <div class="empty-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-          </div>
-          <p class="empty-text">진행 중인 요거픽이 없습니다</p>
-          <router-link :to="{ name: 'BattleList' }" class="empty-cta">요거픽 둘러보기</router-link>
-        </div>
-
-        <!-- 리스트 (히어로 제외한 나머지) -->
-        <div v-else-if="restBattles.length > 0" class="dash-list">
-          <p class="rest-label">더 많은 픽</p>
-          <router-link
-            v-for="battle in restBattles"
-            :key="battle.id"
-            :to="{ name: 'BattleDetail', params: { id: battle.id } }"
-            class="dash-row"
-          >
-            <!-- 이미지 -->
-            <div class="dash-thumb">
-              <img v-if="battle.thumbnailDto?.fileUrl" :src="battle.thumbnailDto.fileUrl" :alt="battle.title" @error="handleImageError" />
-              <div v-else class="thumb-none">Y</div>
-              <span v-if="getDdayText(battle.endDate)" class="dday-mini">{{ getDdayText(battle.endDate) }}</span>
-            </div>
-
-            <!-- 정보 -->
-            <div class="dash-info">
-              <h3 class="battle-ttl">{{ battle.title }}</h3>
-              <span class="vote-line"><b>{{ formatNumber(battle.totalVotes) }}</b>명 참여중</span>
-
-              <div class="dash-gauge-area" v-if="battle.topItems?.length > 0">
-                <!-- 이름: 양쪽 끝 정렬 -->
-                <div class="rank-names">
-                  <span class="rank-name r-name-1">{{ truncateName(battle.topItems[0]?.displayName, 7) }}</span>
-                  <span v-if="battle.topItems[1]" class="rank-name r-name-2">{{ truncateName(battle.topItems[1]?.displayName, 7) }}</span>
-                </div>
-                <!-- 게이지 + 각 바 시작점에 % 라벨 -->
-                <div class="gauge-stack">
-                  <div class="gauge-marks">
-                    <span class="g-mark g-mark-1">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
-                    <span
-                      v-if="battle.topItems[1]"
-                      class="g-mark g-mark-2"
-                      :class="markEdgeClass(battle)"
-                      :style="markStyle(battle)"
-                    >{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
-                  </div>
-                  <div class="gauge-track">
-                    <div class="g-bar b1" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
-                    <div class="g-bar b2" v-if="battle.topItems[1]" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </router-link>
-        </div>
-      </div>
     </div>
   </section>
 </template>
@@ -154,7 +134,7 @@ const hotBattles = ref([])
 const loading = ref(true)
 
 const featuredBattle = computed(() => hotBattles.value[0] || null)
-const restBattles = computed(() => hotBattles.value.slice(1, 4))
+const restBattles = computed(() => hotBattles.value.slice(1, 5))
 
 const loadHotBattles = async () => {
   loading.value = true
@@ -188,31 +168,14 @@ const getDdayText = (endDate) => {
   const now = new Date()
   const diffTime = end - now
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  // 7일 초과 또는 이미 종료된 배틀은 D-day 미표시
   if (diffDays < 0 || diffDays > 7) return ''
   if (diffDays === 0) return 'D-Day'
   return `D-${diffDays}`
 }
 
-const truncateName = (name, maxLength = 6) => {
+const truncateName = (name, maxLength = 12) => {
   if (!name) return '-'
   return name.length > maxLength ? name.slice(0, maxLength) + '…' : name
-}
-
-// 2위 % 라벨 위치: 1위 바가 끝나는 지점(= 2위 바 시작점)에 anchor
-// 좁아질 때 충돌(1위 라벨과 겹침) 또는 우측 오버플로우를 방지
-const markStyle = (battle) => {
-  const p1 = formatPercent(battle.topItems[0]?.votePercentage)
-  return { left: p1 + '%' }
-}
-const markEdgeClass = (battle) => {
-  const p1 = formatPercent(battle.topItems[0]?.votePercentage)
-  const p2 = formatPercent(battle.topItems[1]?.votePercentage)
-  // 1위 바가 너무 짧으면 → 2위 라벨이 1위 라벨과 충돌
-  if (p1 < 18) return 'g-mark-collide'
-  // 1·2위 합이 90% 이상이면 → 2위 라벨이 우측 오버플로우
-  if (p1 + p2 > 90) return 'g-mark-edge'
-  return ''
 }
 
 const handleImageError = (event) => {
@@ -225,56 +188,47 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 컨테이너 — 외곽선 카드 없이 콘텐츠만 */
 .dashboard-pick {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 0;
-  margin: 0;
-}
-
-@keyframes chip-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-/* 본문 wrapper — 모바일·태블릿은 세로 스택, PC 1024+는 2열 그리드 */
-.pick-body {
+  width: 100%;
   display: flex;
   flex-direction: column;
+  gap: 24px;
 }
 
-/* ===== 히어로 카드 (1번째 요거픽) ===== */
+@media (min-width: 768px) {
+  .dashboard-pick { gap: 28px; }
+}
+
+/* ===== 히어로 카드 ===== */
 .pick-hero {
   display: block;
   background: var(--bg-base);
   border: 1px solid var(--border-default, #F1F3F6);
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
   transition: transform 0.2s ease, border-color 0.2s ease;
-  margin-bottom: 16px;
 }
-.pick-hero:hover {
-  border-color: var(--border-strong, #E5E7EB);
-}
+
+.pick-hero:hover { border-color: var(--border-strong, #E5E7EB); }
 .pick-hero:active { transform: scale(0.995); }
 
+/* 상단 비주얼 */
 .hero-visual {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: var(--bg-mute);
+  background: var(--bg-mute, #F2F4F6);
   overflow: hidden;
 }
+
 .hero-visual img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .hero-thumb-none {
   width: 100%;
   height: 100%;
@@ -287,111 +241,127 @@ onMounted(() => {
   background: var(--bg-mute);
 }
 
-.hero-overlay-top {
+.hero-meta-row {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
+  top: 14px;
+  left: 14px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 6px;
   z-index: 2;
 }
-.hero-live {
+
+.hero-tag {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 9px;
-  background: var(--c-danger);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  border-radius: 6px;
-}
-.hero-live-dot {
-  width: 5px;
-  height: 5px;
-  background: #fff;
-  border-radius: 50%;
-  animation: chip-pulse 1.6s infinite;
-}
-.hero-dday {
-  padding: 4px 9px;
+  padding: 4px 10px;
   background: rgba(10, 14, 26, 0.78);
   color: #fff;
   font-size: 11px;
   font-weight: 800;
-  border-radius: 6px;
+  border-radius: 100px;
   letter-spacing: 0.02em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
-.hero-overlay-bottom {
+.hero-tag.live {
+  background: var(--c-danger, #EF4444);
+}
+
+.hero-tag.live .dot {
+  width: 5px;
+  height: 5px;
+  background: #fff;
+  border-radius: 50%;
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.hero-title-row {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 36px 16px 14px;
-  background: linear-gradient(to top, rgba(10, 14, 26, 0.85) 0%, rgba(10, 14, 26, 0.45) 60%, transparent 100%);
+  padding: 40px 18px 16px;
+  background: linear-gradient(to top, rgba(10, 14, 26, 0.85) 0%, rgba(10, 14, 26, 0.4) 55%, transparent 100%);
   color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 1;
 }
+
 .hero-title {
   font-size: 17px;
   font-weight: 800;
-  margin: 0 0 6px;
-  line-height: 1.35;
+  margin: 0;
+  line-height: 1.3;
   letter-spacing: -0.02em;
+  flex: 1;
+  min-width: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.hero-stats {
+
+.hero-votes {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 1·2위 비교 영역 */
+.hero-compare {
+  padding: 20px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cmp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.cmp-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.85);
-  font-variant-numeric: tabular-nums;
+  gap: 9px;
+  min-width: 0;
 }
-.hero-stat b {
-  color: #fff;
-  font-weight: 700;
-}
-.hero-stat-sep {
-  width: 2px;
-  height: 2px;
+
+.cmp-badge {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-brand);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
 }
 
-.hero-vote-area {
-  padding: 16px 16px 18px;
+.cmp-badge.runner {
+  background: var(--c-text-400, #94A3B8);
 }
 
-/* 1·2위 양옆 한 줄 — 시선이 좌↔우로 자연스럽게 비교되도록 */
-.hero-rank-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-.hero-rank-side {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-.hero-rank-side.rank-left {
-  flex: 1;
-  min-width: 0;
-}
-.hero-rank-side.rank-right {
-  flex: 0 0 auto;
-  justify-content: flex-end;
-}
-.hero-rank-name {
+.cmp-name {
   font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
@@ -401,38 +371,43 @@ onMounted(() => {
   text-overflow: ellipsis;
   min-width: 0;
 }
-.rank-right .hero-rank-name {
-  color: var(--c-text-500);
-  font-weight: 600;
-}
-.hero-rank-pct {
+
+.cmp-pct {
   font-size: 22px;
   font-weight: 800;
   color: var(--c-brand);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
   flex-shrink: 0;
-}
-.hero-rank-pct.rank-pct-sub {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--c-gold);
+  line-height: 1;
 }
 
-.hero-gauge {
-  display: flex;
-  height: 10px;
-  background: var(--bg-mute);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 16px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+.cmp-pct.runner {
+  font-size: 16px;
+  color: var(--c-text-500, #64748B);
 }
-.hero-g-bar { height: 100%; transition: width 0.8s ease-out; }
-.hero-g-bar.b1 { background: var(--c-brand); }
-.hero-g-bar.b2 {
-  background: var(--c-gold);
-  box-shadow: inset 2px 0 0 var(--bg-elevated);
+
+.cmp-track {
+  height: 8px;
+  background: var(--bg-subtle, #F7F8FA);
+  border-radius: 100px;
+  overflow: hidden;
+  margin: -2px 0 6px;
+}
+
+.cmp-fill {
+  height: 100%;
+  background: var(--c-text-300, #CBD5E1);
+  border-radius: 100px;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cmp-fill.is-lead {
+  background: var(--c-brand);
+}
+
+.cmp-row.cmp-runner {
+  margin-top: 4px;
 }
 
 .hero-cta {
@@ -441,29 +416,225 @@ onMounted(() => {
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 12px 16px;
-  background: var(--c-brand);
+  margin-top: 8px;
+  padding: 13px 16px;
+  background: var(--c-ink-900, #0A0E1A);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
-  border-radius: 10px;
+  border-radius: 12px;
   letter-spacing: -0.01em;
   transition: background 0.15s ease;
 }
+
 .pick-hero:hover .hero-cta {
-  background: var(--c-brand-hover, #7e22ce);
+  background: var(--c-ink-700, #1E293B);
 }
 
-.rest-label {
-  font-size: 12px;
-  font-weight: 700;
+/* ===== 더 많은 픽 — 컴팩트 카드 그리드 ===== */
+.rest-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .rest-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rest-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+}
+
+.rest-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--bg-base);
+  border: 1px solid var(--border-default, #F1F3F6);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.rest-card:hover {
+  border-color: var(--border-strong, #E5E7EB);
+  transform: translateY(-2px);
+}
+
+.rest-card:active {
+  transform: scale(0.98);
+}
+
+.rest-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-mute, #F2F4F6);
+  overflow: hidden;
+}
+
+.rest-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.rest-card:hover .rest-thumb img {
+  transform: scale(1.04);
+}
+
+.rest-thumb-none {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
   color: var(--c-text-400);
-  margin: 4px 4px 6px;
+  font-size: 28px;
+}
+
+.rest-dday {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  background: rgba(10, 14, 26, 0.78);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 100px;
   letter-spacing: 0.02em;
+  backdrop-filter: blur(4px);
+}
+
+.rest-body {
+  padding: 12px 14px 14px;
+}
+
+.rest-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(14px * 1.35 * 2);
+}
+
+.rest-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.rest-votes {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--c-text-400);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rest-lead-pct {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--c-brand);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.rest-track {
+  height: 5px;
+  background: var(--bg-subtle, #F7F8FA);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.rest-fill {
+  height: 100%;
+  background: var(--c-brand);
+  border-radius: 100px;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ===== 스켈레톤 ===== */
+.skeleton {
+  background: linear-gradient(90deg, var(--border-default, #F1F3F6) 25%, #E8EAED 37%, var(--border-default, #F1F3F6) 63%);
+  background-size: 400% 100%;
+  animation: pick-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+@keyframes pick-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.skeleton-hero {
+  pointer-events: none;
+}
+
+.hero-sk-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
+}
+
+.hero-sk-body {
+  padding: 20px;
+}
+
+/* ===== Empty ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  background: var(--bg-subtle, #F7F8FA);
+  border-radius: 16px;
+  gap: 10px;
+}
+
+.empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-400);
+}
+
+.empty-text {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--c-text-500);
+  margin: 0;
 }
 
 .empty-cta {
-  margin-top: 10px;
+  margin-top: 6px;
   padding: 8px 16px;
   background: var(--c-brand);
   color: #fff;
@@ -473,300 +644,81 @@ onMounted(() => {
   text-decoration: none;
 }
 
-.skeleton-hero {
-  pointer-events: none;
-  margin-bottom: 16px;
-}
-
-/* 리스트 */
-.dash-list { display: flex; flex-direction: column; }
-
-.dash-row {
-  display: flex;
-  gap: 16px;
-  padding: 16px 12px;
-  text-decoration: none;
-  border-bottom: 1px solid var(--bg-mute);
-  border-radius: 10px;
-  transition: background 0.15s ease;
-}
-.dash-row:last-child { border-bottom: none; }
-.dash-row:hover { background: var(--bg-subtle); }
-
-/* 이미지 */
-.dash-thumb {
-  position: relative;
-  width: 72px;
-  height: 72px;
-  border-radius: 12px;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: var(--bg-mute);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-.dash-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.thumb-none {
-  width: 100%; height: 100%; background: var(--bg-mute);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 900; color: var(--c-text-400);
-  font-size: 24px;
-}
-.dday-mini {
-  position: absolute; bottom: 0; width: 100%;
-  background: rgba(0,0,0,0.6);
-  color: #ffffff;
-  font-size: 10px; font-weight: 800; text-align: center; padding: 3px 0;
-  letter-spacing: 0.3px;
-}
-
-/* 정보 */
-.dash-info {
-  flex: 1; min-width: 0;
-  display: flex; flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-}
-.battle-ttl {
-  font-size: 15px;
-  font-weight: 700; color: var(--text-primary);
-  margin: 0; line-height: 1.35;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  letter-spacing: -0.015em;
-  min-width: 0;
-}
-.vote-line {
-  font-size: 11px;
-  color: var(--c-text-400);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-.vote-line b { color: var(--c-text-600); font-weight: 700; }
-
-/* 게이지 + 1·2위 한 줄 */
-.dash-gauge-area {
-  margin-top: 6px;
-}
-.rank-names {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-  margin-bottom: 4px;
-}
-.rank-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-  max-width: 84px;
-}
-.r-name-2 {
-  color: var(--c-text-500);
-  font-weight: 500;
-}
-
-/* 게이지 + 시작점 % 라벨 */
-.gauge-stack { position: relative; }
-.gauge-marks {
-  position: relative;
-  height: 15px;
-  margin-bottom: 3px;
-}
-.g-mark {
-  position: absolute;
-  top: 0;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-}
-.g-mark-1 {
-  left: 0;
-  color: var(--c-brand);
-}
-.g-mark-2 {
-  color: var(--c-text-700);
-  font-weight: 700;
-  /* 1·2위 바 경계선 바로 우측에 살짝 띄움 */
-  transform: translateX(3px);
-}
-/* 1·2위 합이 90% 이상 → 우측 오버플로우 방지 (오른쪽 끝 고정) */
-.g-mark-2.g-mark-edge {
-  left: auto !important;
-  right: 0;
-  transform: none;
-}
-/* 1위 바가 너무 짧음 → 1위 라벨과 충돌 방지 (오른쪽 끝 고정) */
-.g-mark-2.g-mark-collide {
-  left: auto !important;
-  right: 0;
-  transform: none;
-}
-
-.gauge-track {
-  display: flex;
-  height: 7px;
-  background: var(--bg-mute);
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-.g-bar { height: 100%; transition: width 0.8s ease-out; }
-.g-bar.b1 { background: var(--c-brand); }
-.g-bar.b2 {
-  background: var(--c-gold);
-  box-shadow: inset 2px 0 0 var(--bg-elevated);
-}
-
-/* 스켈레톤 */
-.skeleton {
-  background: linear-gradient(90deg, var(--border-default) 25%, #e8eaed 37%, var(--border-default) 63%);
-  background-size: 400% 100%;
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
-  border-radius: 4px;
-}
-.skeleton-thumb { width: 100%; height: 100%; border-radius: 12px; }
-.skeleton-row { pointer-events: none; }
-@keyframes skeleton-shimmer {
-  0% { background-position: 100% 50%; }
-  100% { background-position: 0 50%; }
-}
-
-/* 엠티 */
-.empty-state {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 32px 16px; color: var(--c-text-400); gap: 10px;
-}
-.empty-icon {
-  width: 44px; height: 44px; border-radius: 50%; background: var(--bg-mute);
-  display: flex; align-items: center; justify-content: center; color: var(--c-text-400);
-}
-.empty-text { font-size: 13px; font-weight: 500; margin: 0; }
-
-/* 태블릿(768~1023): 썸네일 확대 + 히어로 가로 레이아웃 (full-width) */
+/* ===== PC 와이드: 히어로를 가로 2열 (이미지 좌 / 비교 우)로 ===== */
 @media (min-width: 768px) {
-  .dash-thumb { width: 96px; height: 96px; border-radius: 14px; }
-  .dash-row { gap: 18px; padding: 18px 14px; }
-  .battle-ttl { font-size: 16px; }
-
   .pick-hero {
     display: grid;
-    grid-template-columns: minmax(320px, 1.2fr) 1fr;
-    border-radius: 20px;
-    margin-bottom: 20px;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   }
+
   .hero-visual {
     aspect-ratio: 4 / 3;
-    border-radius: 0;
+    height: 100%;
   }
-  .hero-vote-area {
-    display: flex;
-    flex-direction: column;
+
+  .hero-compare {
+    padding: 26px 28px;
     justify-content: center;
-    padding: 24px 28px;
-    gap: 4px;
-  }
-  .hero-title { font-size: 20px; }
-  .hero-rank-name { font-size: 15px; }
-  .hero-rank-pct { font-size: 26px; }
-  .hero-rank-pct.rank-pct-sub { font-size: 20px; }
-  .hero-cta { padding: 14px 18px; font-size: 15px; }
-}
-
-/* PC 1024+: hero(좌) + 더 많은 픽(우) 2열 그리드. hero 내부는 세로 스택으로 변경 */
-@media (min-width: 1024px) {
-  .pick-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    gap: 24px;
-    align-items: start;
   }
 
-  /* 좁아진 컬럼에 맞춰 hero는 세로 스택, 이미지 비율도 16/9로 축소 */
-  .pick-hero {
-    display: block;
-    grid-template-columns: none;
-    margin-bottom: 0;
-  }
-  .skeleton-hero { margin-bottom: 0; }
-
-  .hero-visual { aspect-ratio: 16 / 9; }
-  .hero-vote-area { padding: 18px 22px 20px; }
-  .hero-title { font-size: 18px; }
-  .hero-rank-pct { font-size: 24px; }
-  .hero-rank-pct.rank-pct-sub { font-size: 19px; }
-
-  /* 우측 리스트 컬럼: 가로 간격이 좁아진 만큼 row padding 축소 */
-  .pick-list-col .dash-row { padding: 14px 12px; gap: 14px; }
-  .pick-list-col .dash-thumb { width: 84px; height: 84px; border-radius: 12px; }
-  .pick-list-col .battle-ttl { font-size: 15px; }
-
-  /* 엣지 케이스: hero 또는 리스트 단독 렌더링 시 전체 너비 사용 */
-  .pick-body > .pick-hero:only-child {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: minmax(320px, 1.2fr) 1fr;
-  }
-  .pick-body > .pick-hero:only-child .hero-visual { aspect-ratio: 4 / 3; }
-  .pick-body > .pick-hero:only-child .hero-vote-area { padding: 24px 28px; }
-  .pick-body > .pick-list-col:only-child { grid-column: 1 / -1; }
+  .hero-title { font-size: 19px; }
+  .cmp-name { font-size: 15px; }
+  .cmp-pct { font-size: 26px; }
+  .cmp-pct.runner { font-size: 18px; }
 }
 
 @media (min-width: 1280px) {
-  .dash-thumb { width: 104px; height: 104px; border-radius: 16px; }
-  .dash-row { gap: 20px; padding: 20px 16px; }
-
-  /* 우측 컬럼은 카드형 외관과 별개로 컴팩트 유지 */
-  .pick-list-col .dash-thumb { width: 92px; height: 92px; }
-  .pick-list-col .dash-row { padding: 16px 14px; gap: 16px; }
-}
-
-/* ===== 모바일 가독성 최적화 (≤ 767px) ===== */
-@media (max-width: 767px) {
-  /* 히어로: 카드 라운드 줄이고 좌우 여백 0 */
   .pick-hero {
-    border-radius: 14px;
-    margin-bottom: 14px;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   }
-  .hero-visual { aspect-ratio: 16 / 10; }
-  .hero-overlay-bottom { padding: 32px 14px 12px; }
-  .hero-title { font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
-  .hero-stats { font-size: 11.5px; }
-
-  .hero-vote-area { padding: 14px 14px 14px; }
-  .hero-rank-row { margin-bottom: 8px; gap: 10px; }
-  .hero-rank-name { font-size: 13px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .hero-rank-pct { font-size: 20px; }
-  .hero-rank-pct.rank-pct-sub { font-size: 17px; }
-  .hero-gauge { margin-bottom: 12px; height: 7px; }
-  .hero-cta { padding: 11px 14px; font-size: 13.5px; border-radius: 10px; }
-
-  /* 리스트 행: 컴팩트 + 시각 위계 강화 */
-  .dash-row { padding: 12px 4px; gap: 12px; border-radius: 8px; }
-  .dash-thumb { width: 68px; height: 68px; border-radius: 10px; }
-  .dash-info { gap: 3px; }
-  .battle-ttl { font-size: 14px; }
-  .vote-line { font-size: 10.5px; }
-  .dash-gauge-area { margin-top: 4px; }
-  .rank-names { margin-bottom: 3px; gap: 6px; }
-  .rank-name { font-size: 11.5px; max-width: 64px; }
-  .gauge-marks { height: 13px; margin-bottom: 2px; }
-  .g-mark { font-size: 11.5px; }
-  .rest-label { font-size: 11px; margin: 4px 4px; }
+  .hero-compare { padding: 32px 32px; gap: 12px; }
+  .hero-title { font-size: 22px; }
+  .cmp-pct { font-size: 30px; }
 }
 
-/* 좁은 화면 (≤ 400px): 이름 더 짧게, 2위 이름 숨김 */
-@media (max-width: 400px) {
-  .dash-thumb { width: 60px; height: 60px; }
-  .dash-row { gap: 10px; padding: 11px 2px; }
-  .rank-name { max-width: 52px; }
-  .r-name-2 { display: none; }
-  .hero-rank-name { max-width: 80px; }
+/* ===== 모바일 ≤ 767px ===== */
+@media (max-width: 767px) {
+  .pick-hero { border-radius: 16px; }
+  .hero-visual { aspect-ratio: 16 / 10; }
+  .hero-title-row { padding: 32px 14px 14px; }
+  .hero-title { font-size: 15.5px; }
+  .hero-votes { font-size: 11.5px; }
+  .hero-meta-row { top: 12px; left: 12px; }
+  .hero-tag { font-size: 10.5px; padding: 3px 9px; }
+
+  .hero-compare { padding: 16px 16px 18px; gap: 8px; }
+  .cmp-name { font-size: 13px; }
+  .cmp-pct { font-size: 20px; }
+  .cmp-pct.runner { font-size: 15px; }
+  .hero-cta { padding: 12px 14px; font-size: 13.5px; }
+
+  .rest-card { border-radius: 12px; }
+  .rest-body { padding: 10px 12px 12px; }
+  .rest-title { font-size: 13px; min-height: calc(13px * 1.35 * 2); }
+  .rest-votes { font-size: 11px; }
+  .rest-lead-pct { font-size: 12.5px; }
+}
+
+@media (max-width: 380px) {
+  .rest-grid { gap: 10px; }
+  .rest-body { padding: 8px 10px 10px; }
+  .rest-title { font-size: 12.5px; }
+}
+
+@media (hover: none) {
+  .pick-hero:hover,
+  .rest-card:hover {
+    transform: none;
+    border-color: var(--border-default, #F1F3F6);
+  }
+  .rest-card:hover .rest-thumb img {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-tag.live .dot { animation: none; }
+  .skeleton { animation: none; background: var(--bg-subtle); }
+  .cmp-fill, .rest-fill { transition: none; }
 }
 </style>
