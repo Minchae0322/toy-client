@@ -11,12 +11,8 @@
             </svg>
           </h2>
         </router-link>
-        <p class="mpick-sub">이거 vs 저거, 투표로 가리는 진짜 1픽</p>
+        <p class="mpick-sub">투표로 가리는 진짜 1픽</p>
       </div>
-      <span v-if="!loading && hotBattles.length > 0" class="mpick-count-chip">
-        <span class="chip-dot"></span>
-        {{ hotBattles.length }}개 진행중
-      </span>
     </div>
 
     <!-- 본문: PC 1024+ 2열 (hero 좌 / 리스트 우), 그 이하는 세로 스택 -->
@@ -31,38 +27,31 @@
           <img v-if="featuredBattle.thumbnailDto?.fileUrl" :src="featuredBattle.thumbnailDto.fileUrl" :alt="featuredBattle.title" @error="handleImageError" />
           <div v-else class="hero-thumb-none">Y</div>
           <div class="hero-overlay-top">
-            <span class="hero-live">
-              <span class="hero-live-dot"></span>
-              LIVE
-            </span>
             <span v-if="getDdayText(featuredBattle.endDate)" class="hero-dday">{{ getDdayText(featuredBattle.endDate) }}</span>
           </div>
           <div class="hero-overlay-bottom">
             <h3 class="hero-title">{{ featuredBattle.title }}</h3>
             <div class="hero-stats">
-              <span class="hero-stat"><b>{{ formatNumber(featuredBattle.totalVotes) }}</b>명 참여</span>
-              <span class="hero-stat-sep"></span>
-              <span class="hero-stat"><b>{{ formatNumber(featuredBattle.totalViews || 0) }}</b> 조회</span>
+              <span class="hero-stat"><b>{{ formatNumber(featuredBattle.totalVotes) }}</b>명 참여중</span>
             </div>
           </div>
         </div>
 
         <div class="hero-vote-area" v-if="featuredBattle.topItems?.length > 0">
+          <!-- 1·2위 양옆 배치 — 시선이 좌↔우 흐름으로 자연스럽게 비교 -->
+          <div class="hero-rank-row">
+            <div class="hero-rank-side rank-left">
+              <span class="hero-rank-name">{{ truncateName(featuredBattle.topItems[0]?.displayName, 10) }}</span>
+              <span class="hero-rank-pct">{{ formatPercent(featuredBattle.topItems[0]?.votePercentage) }}%</span>
+            </div>
+            <div class="hero-rank-side rank-right" v-if="featuredBattle.topItems[1]">
+              <span class="hero-rank-pct rank-pct-sub">{{ formatPercent(featuredBattle.topItems[1]?.votePercentage) }}%</span>
+              <span class="hero-rank-name">{{ truncateName(featuredBattle.topItems[1]?.displayName, 10) }}</span>
+            </div>
+          </div>
           <div class="hero-gauge">
             <div class="hero-g-bar b1" :style="{ width: formatPercent(featuredBattle.topItems[0]?.votePercentage) + '%' }"></div>
             <div class="hero-g-bar b2" v-if="featuredBattle.topItems[1]" :style="{ width: formatPercent(featuredBattle.topItems[1]?.votePercentage) + '%' }"></div>
-          </div>
-          <div class="hero-rank-summary">
-            <div class="hero-rank-unit">
-              <span class="hero-dot d1"></span>
-              <span class="hero-name">{{ truncateName(featuredBattle.topItems[0]?.displayName, 10) }}</span>
-              <span class="hero-pct">{{ formatPercent(featuredBattle.topItems[0]?.votePercentage) }}%</span>
-            </div>
-            <div class="hero-rank-unit" v-if="featuredBattle.topItems[1]">
-              <span class="hero-dot d2"></span>
-              <span class="hero-name">{{ truncateName(featuredBattle.topItems[1]?.displayName, 10) }}</span>
-              <span class="hero-pct">{{ formatPercent(featuredBattle.topItems[1]?.votePercentage) }}%</span>
-            </div>
           </div>
           <div class="hero-cta">
             한 표 던지러 가기
@@ -130,33 +119,19 @@
 
             <!-- 정보 -->
             <div class="dash-info">
-              <div class="info-top">
-                <h3 class="battle-ttl">{{ battle.title }}</h3>
-                <span class="stat-line">
-                  <span class="stat"><b>{{ formatNumber(battle.totalVotes) }}</b> 투표</span>
-                  <span class="stat-sep"></span>
-                  <span class="stat"><b>{{ formatNumber(battle.totalViews || 0) }}</b> 조회</span>
-                </span>
-              </div>
+              <h3 class="battle-ttl">{{ battle.title }}</h3>
+              <span class="vote-line"><b>{{ formatNumber(battle.totalVotes) }}</b>명 참여중</span>
 
               <div class="dash-gauge-area" v-if="battle.topItems?.length > 0">
+                <div class="rank-row">
+                  <span class="rank-name rank-left-name">{{ truncateName(battle.topItems[0]?.displayName, 7) }}</span>
+                  <span class="rank-pct rank-left-pct">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
+                  <span v-if="battle.topItems[1]" class="rank-pct rank-right-pct">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
+                  <span v-if="battle.topItems[1]" class="rank-name rank-right-name">{{ truncateName(battle.topItems[1]?.displayName, 7) }}</span>
+                </div>
                 <div class="gauge-track">
                   <div class="g-bar b1" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
                   <div class="g-bar b2" v-if="battle.topItems[1]" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
-                </div>
-
-                <div class="rank-summary">
-                  <div class="rank-unit">
-                    <span class="dot d1"></span>
-                    <span class="name">{{ truncateName(battle.topItems[0]?.displayName, 6) }}</span>
-                    <span class="pct">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
-                  </div>
-                  <div class="rank-unit" v-if="battle.topItems[1]">
-                    <span class="dot d2"></span>
-                    <span class="name">{{ truncateName(battle.topItems[1]?.displayName, 6) }}</span>
-                    <span class="pct">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
-                  </div>
-                  <span class="etc-mini">외 {{ getEtcPercent(battle.topItems) }}%</span>
                 </div>
               </div>
             </div>
@@ -201,13 +176,6 @@ const formatNumber = (num) => {
 const formatPercent = (votePercentage) => {
   if (!votePercentage) return 0
   return Math.round(votePercentage * 100)
-}
-
-const getEtcPercent = (topItems) => {
-  if (!topItems || topItems.length === 0) return 0
-  const first = topItems[0]?.votePercentage || 0
-  const second = topItems[1]?.votePercentage || 0
-  return Math.max(0, Math.round((1 - first - second) * 100))
 }
 
 const getDdayText = (endDate) => {
@@ -472,56 +440,70 @@ onMounted(() => {
 }
 
 .hero-vote-area {
-  padding: 14px 16px 16px;
+  padding: 16px 16px 18px;
 }
+
+/* 1·2위 양옆 한 줄 — 시선이 좌↔우로 자연스럽게 비교되도록 */
+.hero-rank-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.hero-rank-side {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.hero-rank-side.rank-left {
+  flex: 1;
+  min-width: 0;
+}
+.hero-rank-side.rank-right {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+.hero-rank-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.rank-right .hero-rank-name {
+  color: var(--c-text-500);
+  font-weight: 600;
+}
+.hero-rank-pct {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  flex-shrink: 0;
+}
+.hero-rank-pct.rank-pct-sub {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--c-text-500);
+}
+
 .hero-gauge {
   display: flex;
   height: 8px;
   background: var(--bg-subtle);
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 .hero-g-bar { height: 100%; transition: width 0.8s ease-out; }
-.hero-g-bar.b1 { background: var(--c-brand); }
-.hero-g-bar.b2 { background: var(--c-brand-soft); border-left: 1px solid var(--bg-base); }
-
-.hero-rank-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-.hero-rank-unit {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-}
-.hero-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.hero-dot.d1 { background: var(--c-brand); }
-.hero-dot.d2 { background: var(--c-brand-soft); border: 1.5px solid var(--c-brand); }
-.hero-name {
-  flex: 1;
-  min-width: 0;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: -0.01em;
-}
-.hero-pct {
-  color: var(--text-primary);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
+.hero-g-bar.b1 { background: var(--c-brand-soft); }
+.hero-g-bar.b2 { background: var(--c-brand); border-left: 1px solid var(--bg-base); }
 
 .hero-cta {
   display: flex;
@@ -620,74 +602,75 @@ onMounted(() => {
   flex: 1; min-width: 0;
   display: flex; flex-direction: column;
   justify-content: center;
-}
-.info-top {
-  display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
-  margin-bottom: 8px;
+  gap: 4px;
 }
 .battle-ttl {
   font-size: 15px;
   font-weight: 700; color: var(--text-primary);
-  margin: 0; line-height: 1.4;
+  margin: 0; line-height: 1.35;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  letter-spacing: -0.01em;
-  flex: 1; min-width: 0;
+  letter-spacing: -0.015em;
+  min-width: 0;
 }
-
-/* 통계 — 투표 + 조회 (인라인 도트 구분) */
-.stat-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.vote-line {
   font-size: 11px;
   color: var(--c-text-400);
-  flex-shrink: 0;
-  margin-top: 2px;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
-.stat { white-space: nowrap; }
-.stat b { color: var(--c-text-600); font-weight: 700; }
-.stat-sep {
-  width: 2px; height: 2px; border-radius: 50%;
-  background: var(--c-text-300);
+.vote-line b { color: var(--c-text-600); font-weight: 700; }
+
+/* 게이지 + 1·2위 한 줄 */
+.dash-gauge-area {
+  margin-top: 6px;
+}
+.rank-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.rank-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 80px;
+}
+.rank-pct {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
   flex-shrink: 0;
 }
+.rank-left-name { flex: 1; }
+.rank-right-pct {
+  margin-left: auto;
+  color: var(--c-text-500);
+  font-weight: 700;
+}
+.rank-right-name {
+  color: var(--c-text-500);
+  font-weight: 500;
+  max-width: 64px;
+  flex: 0 0 auto;
+}
 
-/* 게이지 + 랭킹 */
 .gauge-track {
   display: flex;
   height: 6px;
   background: var(--bg-subtle);
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 8px;
 }
 .g-bar { height: 100%; transition: width 0.8s ease-out; }
-.g-bar.b1 { background: var(--c-brand); }
-.g-bar.b2 { background: var(--c-brand-soft); }
-
-.rank-summary { display: flex; align-items: center; gap: 14px; }
-.rank-unit {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 600;
-  min-width: 0;
-}
-.dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-.d1 { background: var(--c-brand); }
-.d2 { background: var(--c-brand-soft); }
-.name {
-  color: var(--c-text-600); max-width: 70px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.pct {
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-.etc-mini {
-  margin-left: auto; font-size: 10px; color: var(--c-text-400); font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
+.g-bar.b1 { background: var(--c-brand-soft); }
+.g-bar.b2 { background: var(--c-brand); }
 
 /* 스켈레톤 */
 .skeleton {
@@ -738,8 +721,9 @@ onMounted(() => {
     gap: 4px;
   }
   .hero-title { font-size: 20px; }
-  .hero-rank-summary { margin-bottom: 18px; }
-  .hero-rank-unit { font-size: 14px; }
+  .hero-rank-name { font-size: 15px; }
+  .hero-rank-pct { font-size: 26px; }
+  .hero-rank-pct.rank-pct-sub { font-size: 20px; }
   .hero-cta { padding: 14px 18px; font-size: 15px; }
 }
 
@@ -763,7 +747,8 @@ onMounted(() => {
   .hero-visual { aspect-ratio: 16 / 9; }
   .hero-vote-area { padding: 18px 22px 20px; }
   .hero-title { font-size: 18px; }
-  .hero-rank-summary { margin-bottom: 14px; }
+  .hero-rank-pct { font-size: 24px; }
+  .hero-rank-pct.rank-pct-sub { font-size: 19px; }
 
   /* 우측 리스트 컬럼: 가로 간격이 좁아진 만큼 row padding 축소 */
   .pick-list-col .dash-row { padding: 14px 12px; gap: 14px; }
@@ -790,11 +775,47 @@ onMounted(() => {
   .pick-list-col .dash-row { padding: 16px 14px; gap: 16px; }
 }
 
-/* 좁은 화면 */
+/* ===== 모바일 가독성 최적화 (≤ 767px) ===== */
+@media (max-width: 767px) {
+  /* 히어로: 카드 라운드 줄이고 좌우 여백 0 (배경 transparent 라 가운데 정렬) */
+  .pick-hero {
+    border-radius: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  }
+  .hero-visual { aspect-ratio: 16 / 10; }
+  .hero-overlay-bottom { padding: 32px 14px 12px; }
+  .hero-title { font-size: 16px; line-height: 1.3; margin-bottom: 4px; }
+  .hero-stats { font-size: 11.5px; }
+
+  .hero-vote-area { padding: 14px 14px 14px; }
+  .hero-rank-row { margin-bottom: 8px; gap: 10px; }
+  .hero-rank-name { font-size: 13px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hero-rank-pct { font-size: 20px; }
+  .hero-rank-pct.rank-pct-sub { font-size: 17px; }
+  .hero-gauge { margin-bottom: 12px; height: 7px; }
+  .hero-cta { padding: 11px 14px; font-size: 13.5px; border-radius: 10px; }
+
+  /* 리스트 행: 컴팩트 + 시각 위계 강화 */
+  .dash-row { padding: 12px 4px; gap: 12px; border-radius: 8px; }
+  .dash-thumb { width: 68px; height: 68px; border-radius: 10px; }
+  .dash-info { gap: 3px; }
+  .battle-ttl { font-size: 14px; }
+  .vote-line { font-size: 10.5px; }
+  .dash-gauge-area { margin-top: 4px; }
+  .rank-row { margin-bottom: 5px; gap: 5px; }
+  .rank-name { font-size: 11.5px; max-width: 64px; }
+  .rank-pct { font-size: 12.5px; }
+  .rest-label { font-size: 11px; margin: 4px 4px; }
+}
+
+/* 좁은 화면 (≤ 400px): 이름 더 짧게, 2위 이름 숨김 */
 @media (max-width: 400px) {
   .dash-thumb { width: 60px; height: 60px; }
-  .dash-row { gap: 12px; }
-  .name { max-width: 50px; }
-  .rank-unit:nth-child(2) { display: none; }
+  .dash-row { gap: 10px; padding: 11px 2px; }
+  .rank-row { gap: 4px; }
+  .rank-name { max-width: 52px; }
+  .rank-right-name { display: none; }
+  .hero-rank-name { max-width: 80px; }
 }
 </style>
