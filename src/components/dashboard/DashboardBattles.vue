@@ -123,19 +123,26 @@
               <span class="vote-line"><b>{{ formatNumber(battle.totalVotes) }}</b>명 참여중</span>
 
               <div class="dash-gauge-area" v-if="battle.topItems?.length > 0">
-                <div class="rank-row" :class="{ 'rank-row-single': !battle.topItems[1] }">
-                  <div class="rank-side rank-1">
-                    <span class="rank-name">{{ truncateName(battle.topItems[0]?.displayName, 7) }}</span>
-                    <span class="rank-pct">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
-                  </div>
-                  <div v-if="battle.topItems[1]" class="rank-side rank-2">
-                    <span class="rank-pct">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
-                    <span class="rank-name">{{ truncateName(battle.topItems[1]?.displayName, 7) }}</span>
-                  </div>
+                <!-- 이름: 양쪽 끝 정렬 -->
+                <div class="rank-names">
+                  <span class="rank-name r-name-1">{{ truncateName(battle.topItems[0]?.displayName, 7) }}</span>
+                  <span v-if="battle.topItems[1]" class="rank-name r-name-2">{{ truncateName(battle.topItems[1]?.displayName, 7) }}</span>
                 </div>
-                <div class="gauge-track">
-                  <div class="g-bar b1" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
-                  <div class="g-bar b2" v-if="battle.topItems[1]" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
+                <!-- 게이지 + 각 바 시작점에 % 라벨 -->
+                <div class="gauge-stack">
+                  <div class="gauge-marks">
+                    <span class="g-mark g-mark-1">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
+                    <span
+                      v-if="battle.topItems[1]"
+                      class="g-mark g-mark-2"
+                      :class="markEdgeClass(battle)"
+                      :style="markStyle(battle)"
+                    >{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
+                  </div>
+                  <div class="gauge-track">
+                    <div class="g-bar b1" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
+                    <div class="g-bar b2" v-if="battle.topItems[1]" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -197,6 +204,22 @@ const getDdayText = (endDate) => {
 const truncateName = (name, maxLength = 6) => {
   if (!name) return '-'
   return name.length > maxLength ? name.slice(0, maxLength) + '…' : name
+}
+
+// 2위 % 라벨 위치: 1위 바가 끝나는 지점(= 2위 바 시작점)에 anchor
+// 좁아질 때 충돌(1위 라벨과 겹침) 또는 우측 오버플로우를 방지
+const markStyle = (battle) => {
+  const p1 = formatPercent(battle.topItems[0]?.votePercentage)
+  return { left: p1 + '%' }
+}
+const markEdgeClass = (battle) => {
+  const p1 = formatPercent(battle.topItems[0]?.votePercentage)
+  const p2 = formatPercent(battle.topItems[1]?.votePercentage)
+  // 1위 바가 너무 짧으면 → 2위 라벨이 1위 라벨과 충돌
+  if (p1 < 18) return 'g-mark-collide'
+  // 1·2위 합이 90% 이상이면 → 2위 라벨이 우측 오버플로우
+  if (p1 + p2 > 90) return 'g-mark-edge'
+  return ''
 }
 
 const handleImageError = (event) => {
@@ -632,20 +655,13 @@ onMounted(() => {
 .dash-gauge-area {
   margin-top: 6px;
 }
-.rank-row {
+.rank-names {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
   gap: 10px;
-  margin-bottom: 6px;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
-}
-.rank-side {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
+  margin-bottom: 4px;
 }
 .rank-name {
   font-size: 12px;
@@ -657,24 +673,49 @@ onMounted(() => {
   min-width: 0;
   max-width: 84px;
 }
-.rank-pct {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--c-brand);
-  flex-shrink: 0;
-  line-height: 1;
-}
-.rank-2 .rank-name {
+.r-name-2 {
   color: var(--c-text-500);
   font-weight: 500;
 }
-.rank-2 .rank-pct {
-  color: var(--c-text-600);
-  font-weight: 700;
+
+/* 게이지 + 시작점 % 라벨 */
+.gauge-stack { position: relative; }
+.gauge-marks {
+  position: relative;
+  height: 15px;
+  margin-bottom: 3px;
 }
-.rank-row-single .rank-1 {
-  flex: 1;
-  justify-content: space-between;
+.g-mark {
+  position: absolute;
+  top: 0;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.g-mark-1 {
+  left: 0;
+  color: var(--c-brand);
+}
+.g-mark-2 {
+  color: var(--c-text-700);
+  font-weight: 700;
+  /* 1·2위 바 경계선 바로 우측에 살짝 띄움 */
+  transform: translateX(3px);
+}
+/* 1·2위 합이 90% 이상 → 우측 오버플로우 방지 (오른쪽 끝 고정) */
+.g-mark-2.g-mark-edge {
+  left: auto !important;
+  right: 0;
+  transform: none;
+}
+/* 1위 바가 너무 짧음 → 1위 라벨과 충돌 방지 (오른쪽 끝 고정) */
+.g-mark-2.g-mark-collide {
+  left: auto !important;
+  right: 0;
+  transform: none;
 }
 
 .gauge-track {
@@ -823,9 +864,10 @@ onMounted(() => {
   .battle-ttl { font-size: 14px; }
   .vote-line { font-size: 10.5px; }
   .dash-gauge-area { margin-top: 4px; }
-  .rank-row { margin-bottom: 5px; gap: 5px; }
+  .rank-names { margin-bottom: 3px; gap: 6px; }
   .rank-name { font-size: 11.5px; max-width: 64px; }
-  .rank-pct { font-size: 12.5px; }
+  .gauge-marks { height: 13px; margin-bottom: 2px; }
+  .g-mark { font-size: 11.5px; }
   .rest-label { font-size: 11px; margin: 4px 4px; }
 }
 
@@ -833,9 +875,8 @@ onMounted(() => {
 @media (max-width: 400px) {
   .dash-thumb { width: 60px; height: 60px; }
   .dash-row { gap: 10px; padding: 11px 2px; }
-  .rank-row { gap: 6px; }
   .rank-name { max-width: 52px; }
-  .rank-2 .rank-name { display: none; }
+  .r-name-2 { display: none; }
   .hero-rank-name { max-width: 80px; }
 }
 </style>

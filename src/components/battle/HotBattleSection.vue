@@ -375,6 +375,7 @@ const handleImageError = (battleId) => {
   position: relative;
   flex-shrink: 0;
   width: 172px;
+  /* 모바일: 2.5장 보이도록 viewport 기반 — app-container 좌우 1rem(=32px) + gap 12px * 2 */
   aspect-ratio: 3 / 4.1;
   border-radius: 18px;
   overflow: hidden;
@@ -697,6 +698,8 @@ const handleImageError = (battleId) => {
 
 @media (max-width: 767px) {
   .scroll-dots { display: flex; }
+  /* 2.5장 노출: (viewport - app-container padding 32px - gap 24px) / 2.5 */
+  .hot-card { width: calc((100vw - 56px) / 2.5); }
 }
 
 @media (prefers-reduced-motion: reduce) {
