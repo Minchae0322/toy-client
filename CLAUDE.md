@@ -55,6 +55,7 @@
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
     - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용
+    - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 그리드), `DashboardBattles.vue`, `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
     - `MZLifestyle/` — `AIMemeGeneratorPromo`, `BottomNavigation`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection`
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
@@ -144,6 +145,12 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.1.1**: iOS 빌드 15, Android versionCode 12 (`chore`)
+- **배틀 카드 디자인 폴리시**: `BattleCard.vue` — glass 배지·라이브 닷·아이콘 통계·호버 줌·D-7 조건 마감 텍스트. `BattleList.vue` 섹션 레이아웃 정비 (`feat(battle)`, `fix(battle)`)
+- **핫 배틀 섹션 고도화**: `HotBattleSection.vue` — 메달(1·2·3위)·라이브 펄스·D-Day 표시. 카테고리 칩·heat meter는 정리 후 제거됨 (`feat/refactor(battle)`)
+- **배틀 리스트 섹션 디테일 폴리시**: `BattleListView.vue` 레이아웃 및 탭 UI 정비 (`feat(battle)`)
+- **대시보드 히어로 배너 캐러셀**: `DashboardBrandHero.vue` — 4슬라이드(요거픽/핫피드/캐꾸/핫아템) 자동 캐러셀. 슬라이드 아트는 실제 API 데이터(배틀 썸네일 등) 연동. `DashboardView.vue`에서 기존 인트로 블록 대체 (`feat(dashboard)`)
+- **대시보드 퀵내비 추가**: `DashboardQuickNav.vue` — 주요 메뉴(피드·배틀·캐꾸·핫아템 등) 직접 이동 그리드 타일. `DashboardView.vue`에서 중복 헤더 제거와 함께 도입 (`feat(dashboard)`)
 - **배틀 step2 탭 라벨 항시 노출**: `Step2ItemSetup.vue` — 모바일 아이템 입력 탭에 텍스트 라벨 항시 표시. ≤480px에서 아이콘 위 라벨 스택 레이아웃. 상단 안내 헤더(아이콘+제목+칩)+설명+방법 리스트로 재구성 (`feat(battle)`)
 - **배틀 생성 스텝 인디케이터 아이콘+이름 표시**: `BattleCreateHeader.vue` — 배틀 생성 진행 단계 인디케이터에 단계별 아이콘과 이름 항시 노출 (`feat(battle)`)
 - **D-day 배지 표시 조건 변경**: `BattleCard.vue`, `DashboardBattles.vue` — 마감 **7일 이하**인 **진행중** 배틀에만 D-day 배지 표시. 종료 배틀·마감 여유 있는 배틀에는 미표시 (`fix(battle)`)
