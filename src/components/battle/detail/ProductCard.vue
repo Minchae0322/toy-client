@@ -767,7 +767,7 @@ defineExpose({ setCommentSubmitting })
   left: 0;
   bottom: 0;
   width: var(--vote-fill, 0%);
-  background: var(--c-brand-soft);
+  background: color-mix(in srgb, var(--c-brand) 28%, transparent);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
 }
