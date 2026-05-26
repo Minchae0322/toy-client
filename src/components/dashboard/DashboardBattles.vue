@@ -1,19 +1,11 @@
 <template>
   <section class="dashboard-pick">
-    <!-- 헤더 (PC·모바일 통일 톤) -->
-    <div class="mpick-header">
-      <div class="mpick-header-main">
-        <router-link :to="{ name: 'BattleList' }" class="mpick-title-link">
-          <h2 class="mpick-title">
-            오늘의 <span class="mpick-accent">요거픽</span>
-            <svg class="mpick-title-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m9 18 6-6-6-6" />
-            </svg>
-          </h2>
-        </router-link>
-        <p class="mpick-sub">투표로 가리는 진짜 1픽</p>
-      </div>
-    </div>
+    <DashboardSectionHeader
+      prefix="오늘의"
+      accent="요거픽"
+      sub="투표로 가리는 진짜 1픽"
+      :to="{ name: 'BattleList' }"
+    />
 
     <!-- 본문: PC 1024+ 2열 (hero 좌 / 리스트 우), 그 이하는 세로 스택 -->
     <div class="pick-body">
@@ -156,6 +148,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { battleService } from '@/services/BattleService'
+import DashboardSectionHeader from './DashboardSectionHeader.vue'
 
 const hotBattles = ref([])
 const loading = ref(true)
@@ -232,108 +225,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 컨테이너 — PC 카드 / 모바일 플랫 */
+/* 컨테이너 — 외곽선 카드 없이 콘텐츠만 */
 .dashboard-pick {
-  background: var(--bg-base);
-  border: 1px solid var(--border-default);
-  border-radius: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
-  padding: 1.375rem;
-  margin-bottom: 1rem;
-}
-
-@media (min-width: 768px) {
-  .dashboard-pick {
-    padding: 1.625rem;
-    margin-bottom: 1.125rem;
-  }
-}
-
-/* 모바일에선 카드 외곽 제거 + 하단 구분선만 */
-@media (max-width: 767px) {
-  .dashboard-pick {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--border-default);
-    border-radius: 0;
-    box-shadow: none;
-    padding: 18px 0 20px;
-    margin-bottom: 0;
-  }
-}
-
-/* 헤더 (PC·모바일 공통) */
-.mpick-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 20px;
-  padding: 0 4px;
-}
-.mpick-header-main { flex: 1; min-width: 0; }
-.mpick-title-link {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-.mpick-title-link:active { opacity: 0.6; }
-.mpick-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  letter-spacing: -0.03em;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
   margin: 0;
 }
-.mpick-accent { color: var(--c-brand); }
-.mpick-title-arrow {
-  color: var(--c-text-400);
-  flex-shrink: 0;
-  margin-left: 2px;
-}
-.mpick-sub {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--c-text-600);
-  margin: 4px 0 0;
-  letter-spacing: -0.01em;
-}
-.mpick-more {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--c-text-400);
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
 
-.mpick-count-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  background: var(--c-brand-soft);
-  color: var(--c-brand);
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 100px;
-  letter-spacing: -0.01em;
-  flex-shrink: 0;
-  margin-bottom: 3px;
-}
-.chip-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--c-brand);
-  animation: chip-pulse 1.6s infinite;
-}
 @keyframes chip-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -349,20 +250,18 @@ onMounted(() => {
 .pick-hero {
   display: block;
   background: var(--bg-base);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-default, #F1F3F6);
   border-radius: 18px;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease;
   margin-bottom: 16px;
 }
 .pick-hero:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  border-color: var(--border-strong, #E5E7EB);
 }
-.pick-hero:active { transform: scale(0.99); }
+.pick-hero:active { transform: scale(0.995); }
 
 .hero-visual {
   position: relative;
@@ -577,14 +476,6 @@ onMounted(() => {
 .skeleton-hero {
   pointer-events: none;
   margin-bottom: 16px;
-}
-
-@media (min-width: 1280px) {
-  .mpick-title { font-size: 1.375rem; }
-}
-
-@media (max-width: 640px) {
-  .mpick-title { font-size: 1.125rem; }
 }
 
 /* 리스트 */
@@ -838,11 +729,10 @@ onMounted(() => {
 
 /* ===== 모바일 가독성 최적화 (≤ 767px) ===== */
 @media (max-width: 767px) {
-  /* 히어로: 카드 라운드 줄이고 좌우 여백 0 (배경 transparent 라 가운데 정렬) */
+  /* 히어로: 카드 라운드 줄이고 좌우 여백 0 */
   .pick-hero {
     border-radius: 14px;
     margin-bottom: 14px;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
   }
   .hero-visual { aspect-ratio: 16 / 10; }
   .hero-overlay-bottom { padding: 32px 14px 12px; }
