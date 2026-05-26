@@ -17,68 +17,90 @@
       </button>
     </div>
 
-    <!-- 배틀 리스트 -->
-    <div ref="scrollRef" class="hot-scroll" @scroll.passive="updateScrollProgress">
-      <router-link
-          v-for="(battle, index) in topBattles"
-          :key="battle.id || battle.battleId"
-          :to="{ name: 'BattleDetail', params: { id: battle.id || battle.battleId } }"
-          class="hot-card"
-          :class="{ 'is-top': index === 0 }"
+    <!-- 스크롤 래퍼 -->
+    <div class="scroll-wrapper">
+      <!-- PC 네비 화살표 -->
+      <button
+          v-if="canScrollLeft"
+          class="nav-arrow nav-arrow-left"
+          @click="scrollByCards(-1)"
+          aria-label="이전"
       >
-        <!-- 썸네일 -->
-        <div class="thumb">
-          <img
-              v-if="getOriginalThumbnail(battle) && !imageErrors.has(battle.id || battle.battleId)"
-              :src="getOriginalThumbnail(battle)"
-              :alt="battle.title"
-              loading="lazy"
-              @error="handleImageError(battle.id || battle.battleId)"
-          />
-          <div v-else class="thumb-placeholder">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
+        <ChevronRight :size="16" :stroke-width="2.6" class="arrow-flip" />
+      </button>
+
+      <div ref="scrollRef" class="hot-scroll" @scroll.passive="updateScrollState">
+        <router-link
+            v-for="(battle, index) in topBattles"
+            :key="battle.id || battle.battleId"
+            :to="{ name: 'BattleDetail', params: { id: battle.id || battle.battleId } }"
+            class="hot-card"
+            :class="{ 'is-top': index === 0 }"
+        >
+          <!-- 사진 (전체 카드) -->
+          <div class="card-photo">
+            <img
+                v-if="getOriginalThumbnail(battle) && !imageErrors.has(battle.id || battle.battleId)"
+                :src="getOriginalThumbnail(battle)"
+                :alt="battle.title"
+                loading="lazy"
+                @error="handleImageError(battle.id || battle.battleId)"
+            />
+            <div v-else class="thumb-placeholder">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+            </div>
           </div>
 
-          <!-- 순위 메달 -->
-          <div class="rank-medal" :class="getRankClass(index)">
-            <Crown v-if="index === 0" :size="11" :stroke-width="2.6" />
-            <span class="rank-num">{{ index + 1 }}</span>
+          <!-- 디자인 요소: 큰 italic 랭크 -->
+          <div class="rank-display" aria-hidden="true" :class="getRankClass(index)">
+            <Crown v-if="index === 0" :size="13" :stroke-width="2.6" class="rank-crown" />
+            <span class="rank-number">{{ String(index + 1).padStart(2, '0') }}</span>
           </div>
 
-          <!-- #1 HOT 라이브 펄스 -->
-          <span v-if="index === 0" class="hot-badge">
-            <span class="live-dot" aria-hidden="true"></span>
-            HOT
-          </span>
-
-          <!-- D-Day (≤7일 진행중) -->
-          <span v-else-if="getDdayMeta(battle)" class="dday-badge" :class="getDdayMeta(battle).urgent ? 'urgent' : ''">
-            <Flame v-if="getDdayMeta(battle).urgent" :size="10" :stroke-width="2.6" />
-            <span>{{ getDdayMeta(battle).text }}</span>
-          </span>
-        </div>
-
-        <!-- 정보 -->
-        <div class="info">
-          <h3 class="title">{{ battle.title }}</h3>
-          <div class="stats-row">
-            <span class="stat">
-              <Users :size="12" :stroke-width="2.2" class="stat-icon" />
-              <span class="stat-value">{{ formatNumber(battle.totalVotes || 0) }}</span>
+          <!-- 상단 배지 -->
+          <div class="card-top">
+            <span v-if="index === 0" class="badge-hot">
+              <span class="live-dot" aria-hidden="true"></span>
+              HOT
             </span>
-            <span class="stat-divider" aria-hidden="true"></span>
-            <span class="stat">
-              <Eye :size="12" :stroke-width="2.2" class="stat-icon" />
-              <span class="stat-value">{{ formatNumber(battle.totalViews || 0) }}</span>
+            <span v-else-if="getDdayMeta(battle)" class="badge-dday" :class="getDdayMeta(battle).urgent ? 'urgent' : ''">
+              <Flame v-if="getDdayMeta(battle).urgent" :size="10" :stroke-width="2.6" />
+              <span>{{ getDdayMeta(battle).text }}</span>
             </span>
           </div>
-        </div>
-      </router-link>
+
+          <!-- 하단 오버레이 정보 -->
+          <div class="card-bottom">
+            <h3 class="title">{{ battle.title }}</h3>
+            <div class="stats-row">
+              <span class="stat">
+                <Users :size="11" :stroke-width="2.4" class="stat-icon" />
+                <span class="stat-value">{{ formatNumber(battle.totalVotes || 0) }}</span>
+              </span>
+              <span class="stat-divider" aria-hidden="true"></span>
+              <span class="stat">
+                <Eye :size="11" :stroke-width="2.4" class="stat-icon" />
+                <span class="stat-value">{{ formatNumber(battle.totalViews || 0) }}</span>
+              </span>
+            </div>
+          </div>
+        </router-link>
+      </div>
+
+      <!-- PC 다음 -->
+      <button
+          v-if="canScrollRight"
+          class="nav-arrow nav-arrow-right"
+          @click="scrollByCards(1)"
+          aria-label="다음"
+      >
+        <ChevronRight :size="16" :stroke-width="2.6" />
+      </button>
     </div>
 
-    <!-- 모바일 스크롤 진행 인디케이터 (4개 이상일 때) -->
+    <!-- 모바일 스크롤 진행 인디케이터 -->
     <div v-if="showScrollDots" class="scroll-dots" aria-hidden="true">
       <span
           v-for="i in dotCount"
@@ -99,21 +121,19 @@ const props = defineProps({
   loading: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['battle-click', 'view-all'])
+defineEmits(['battle-click', 'view-all'])
 
 const imageErrors = reactive(new Set())
 
-// Top 5 슬라이스
 const topBattles = computed(() => props.battles.slice(0, 5))
 
-// D-Day 메타 (≤7일 진행중일 때만)
+// D-Day 메타
 const getDdayMeta = (battle) => {
   if (!battle?.endDate) return null
   const diff = new Date(battle.endDate) - new Date()
   if (diff <= 0) return null
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
   if (days > 7) return null
-  // 진행중 상태 확인
   const status = battle?.status?.title || battle?.status
   const isActive = battle?.isActive !== undefined
       ? battle.isActive
@@ -125,9 +145,11 @@ const getDdayMeta = (battle) => {
   }
 }
 
-// 스크롤 진행 인디케이터 (모바일 한정)
+// 스크롤 상태 (PC 화살표 + 모바일 도트 통합)
 const scrollRef = ref(null)
 const scrollProgress = ref(0)
+const canScrollLeft = ref(false)
+const canScrollRight = ref(false)
 
 const visibleCount = computed(() => topBattles.value.length)
 const dotCount = computed(() => Math.max(visibleCount.value, 1))
@@ -138,17 +160,28 @@ const activeDot = computed(() => {
   return Math.min(Math.max(idx, 0), dotCount.value - 1)
 })
 
-const updateScrollProgress = () => {
+const updateScrollState = () => {
   const el = scrollRef.value
   if (!el) return
   const max = el.scrollWidth - el.clientWidth
   scrollProgress.value = max > 0 ? el.scrollLeft / max : 0
+  canScrollLeft.value = el.scrollLeft > 4
+  canScrollRight.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 4
 }
 
-const handleResize = () => nextTick(updateScrollProgress)
+const scrollByCards = (direction) => {
+  const el = scrollRef.value
+  if (!el) return
+  const card = el.querySelector('.hot-card')
+  const cardWidth = card?.offsetWidth || 200
+  const gap = 12
+  el.scrollBy({ left: direction * (cardWidth + gap) * 2, behavior: 'smooth' })
+}
+
+const handleResize = () => nextTick(updateScrollState)
 
 onMounted(() => {
-  nextTick(updateScrollProgress)
+  nextTick(updateScrollState)
   window.addEventListener('resize', handleResize)
 })
 
@@ -171,9 +204,9 @@ const getOriginalThumbnail = (battle) => {
 }
 
 const getRankClass = (index) => {
-  if (index === 0) return 'first'
-  if (index === 1) return 'second'
-  if (index === 2) return 'third'
+  if (index === 0) return 'rank-first'
+  if (index === 1) return 'rank-second'
+  if (index === 2) return 'rank-third'
   return ''
 }
 
@@ -188,12 +221,10 @@ const handleImageError = (battleId) => {
 }
 
 @media (min-width: 768px) {
-  .hot-section {
-    padding: 24px 0 0;
-  }
+  .hot-section { padding: 24px 0 0; }
 }
 
-/* 헤더 */
+/* ---------- 헤더 ---------- */
 .section-header {
   display: flex;
   align-items: center;
@@ -247,31 +278,15 @@ const handleImageError = (battleId) => {
 }
 
 @media (min-width: 768px) {
-  .section-title {
-    font-size: 1.25rem;
-  }
-  .title-accent-icon {
-    width: 26px;
-    height: 26px;
-  }
-  .sub-title {
-    padding-left: 34px;
-  }
+  .section-title { font-size: 1.25rem; }
+  .title-accent-icon { width: 26px; height: 26px; }
+  .sub-title { padding-left: 34px; }
 }
 
 @media (min-width: 1280px) {
-  .section-title {
-    font-size: 1.4375rem;
-  }
-  .title-accent-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-  }
-  .sub-title {
-    font-size: 13px;
-    padding-left: 38px;
-  }
+  .section-title { font-size: 1.4375rem; }
+  .title-accent-icon { width: 30px; height: 30px; border-radius: 8px; }
+  .sub-title { font-size: 13px; padding-left: 38px; }
 }
 
 .view-all-btn {
@@ -297,7 +312,47 @@ const handleImageError = (battleId) => {
   background: var(--bg-subtle);
 }
 
-/* 스크롤 - 항상 가로 한 줄 */
+/* ---------- 스크롤 래퍼 ---------- */
+.scroll-wrapper {
+  position: relative;
+}
+
+.nav-arrow { display: none; }
+
+@media (min-width: 768px) {
+  .nav-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--header-blur-bg, rgba(255,255,255,0.92));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    color: var(--c-text-600);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  }
+
+  .nav-arrow:hover {
+    background: var(--bg-elevated);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+    color: var(--text-primary);
+    transform: translateY(-50%) scale(1.05);
+  }
+
+  .nav-arrow-left { left: -16px; }
+  .nav-arrow-right { right: -16px; }
+  .arrow-flip { transform: scaleX(-1); }
+}
+
 .hot-scroll {
   display: flex;
   gap: 12px;
@@ -306,87 +361,81 @@ const handleImageError = (battleId) => {
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 4px;
+  overscroll-behavior-x: contain;
 }
 
-.hot-scroll::-webkit-scrollbar {
-  display: none;
-}
+.hot-scroll::-webkit-scrollbar { display: none; }
 
-/* 모바일 한정: scroll-snap (PC는 자유 스크롤 유지) */
-@media (max-width: 767px) {
-  .hot-scroll {
-    scroll-snap-type: x mandatory;
-    scroll-padding-left: 4px;
-    overscroll-behavior-x: contain;
-  }
-  .hot-card {
-    scroll-snap-align: start;
-  }
-}
-
-/* 카드 */
+/* ---------- 카드 (사진 풀블리드) ---------- */
 .hot-card {
   position: relative;
   flex-shrink: 0;
-  width: 180px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: 14px;
+  width: 172px;
+  aspect-ratio: 3 / 4.1;
+  border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-              border-color 0.22s ease,
-              box-shadow 0.22s ease;
-}
-
-.hot-card:hover {
-  transform: translateY(-2px);
-  border-color: transparent;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.04);
-}
-
-.hot-card.is-top {
-  border-color: rgba(249, 115, 22, 0.35);
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.08);
-}
-
-.hot-card.is-top:hover {
-  border-color: transparent;
-  box-shadow: 0 10px 26px rgba(249, 115, 22, 0.18), 0 2px 8px rgba(15, 23, 42, 0.05);
+  background: #0A0E1A;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 12px 24px rgba(15, 23, 42, 0.12);
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  isolation: isolate;
+  scroll-snap-align: start;
 }
 
 @media (min-width: 768px) {
-  .hot-card {
-    width: 200px;
-  }
+  .hot-card { width: 192px; border-radius: 20px; }
 }
 
 @media (min-width: 1280px) {
-  .hot-card {
-    width: 220px;
+  .hot-card { width: 212px; border-radius: 22px; }
+}
+
+@media (hover: hover) {
+  .hot-card:hover {
+    transform: translateY(-6px);
+    box-shadow:
+      0 2px 4px rgba(15, 23, 42, 0.08),
+      0 22px 38px rgba(15, 23, 42, 0.18);
   }
 }
 
-/* 썸네일 4:3 */
-.thumb {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  background: var(--bg-subtle);
-  overflow: hidden;
+.hot-card.is-top {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(249, 115, 22, 0.22);
 }
 
-.thumb img {
+@media (hover: hover) {
+  .hot-card.is-top:hover {
+    box-shadow:
+      0 2px 4px rgba(15, 23, 42, 0.08),
+      0 22px 40px rgba(249, 115, 22, 0.28);
+  }
+}
+
+/* 사진 */
+.card-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.card-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hot-card:hover .thumb img {
-  transform: scale(1.03);
+@media (hover: hover) {
+  .hot-card:hover .card-photo img { transform: scale(1.06); }
 }
 
 .thumb-placeholder {
@@ -395,83 +444,98 @@ const handleImageError = (battleId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--c-text-300);
+  color: rgba(255, 255, 255, 0.4);
+  background: var(--bg-subtle, #F7F8FA);
 }
 
-/* 순위 메달 */
-.rank-medal {
+/* 사진 위 그라데이션 (상하단 가독성) */
+.card-photo::after {
+  content: '';
   position: absolute;
-  top: 8px;
-  left: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 4px 8px 4px 7px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1;
-  background: rgba(15, 18, 24, 0.62);
-  backdrop-filter: saturate(140%) blur(10px);
-  -webkit-backdrop-filter: saturate(140%) blur(10px);
-  color: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(0, 0, 0, 0.35) 0%,
+      rgba(0, 0, 0, 0) 26%,
+      rgba(0, 0, 0, 0) 48%,
+      rgba(0, 0, 0, 0.55) 78%,
+      rgba(0, 0, 0, 0.88) 100%);
+  pointer-events: none;
 }
 
-.rank-medal .rank-num {
+/* 디자인 요소: 큰 italic 랭크 숫자 */
+.rank-display {
+  position: absolute;
+  top: -6px;
+  right: 6px;
+  z-index: 1;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 0.85;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.rank-display.rank-first { color: #FACC15; }
+.rank-display.rank-second { color: #E2E8F0; }
+.rank-display.rank-third { color: #FDBA74; }
+
+.rank-crown {
+  margin-top: 14px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.rank-number {
+  font-size: 64px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.06em;
   font-variant-numeric: tabular-nums;
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
 }
 
-.rank-medal svg {
-  display: block;
+@media (min-width: 768px) {
+  .rank-number { font-size: 74px; }
 }
 
-.rank-medal.first {
-  background: var(--c-gold);
-  color: #422c0a;
-  box-shadow: 0 3px 10px rgba(234, 179, 8, 0.4),
-              inset 0 1px 0 rgba(255, 255, 255, 0.45);
+@media (min-width: 1280px) {
+  .rank-number { font-size: 84px; }
 }
 
-.rank-medal.second {
-  background: var(--c-silver);
-  color: #ffffff;
-  box-shadow: 0 3px 10px rgba(148, 163, 184, 0.4),
-              inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-
-.rank-medal.third {
-  background: var(--c-bronze);
-  color: #ffffff;
-  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.4),
-              inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-/* HOT 뱃지 (#1 전용 — 라이브 펄스) */
-.hot-badge {
+/* 상단 배지 */
+.card-top {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+
+.badge-hot {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 4px 9px 4px 7px;
+  background: var(--c-heat, #F97316);
+  border-radius: 100px;
+  color: #fff;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.4px;
-  color: #ffffff;
-  background: var(--c-heat);
-  border-radius: 999px;
   line-height: 1;
-  box-shadow: 0 3px 10px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 3px 10px rgba(249, 115, 22, 0.45);
 }
 
 .live-dot {
   width: 6px;
   height: 6px;
-  border-radius: 999px;
-  background: #ffffff;
+  border-radius: 50%;
+  background: #fff;
   box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
   animation: live-pulse 1.6s ease-out infinite;
   flex-shrink: 0;
@@ -482,59 +546,63 @@ const handleImageError = (battleId) => {
   60%, 100% { box-shadow: 0 0 0 7px rgba(255, 255, 255, 0); }
 }
 
-/* D-Day (1위 외) */
-.dday-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+.badge-dday {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 4px 8px;
+  padding: 4px 9px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1;
-  border-radius: 999px;
-  color: #ffffff;
+  border-radius: 100px;
+  color: #fff;
   background: rgba(15, 18, 24, 0.62);
-  backdrop-filter: saturate(140%) blur(10px);
-  -webkit-backdrop-filter: saturate(140%) blur(10px);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.dday-badge.urgent {
-  background: var(--c-danger);
-  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.35);
+.badge-dday.urgent {
+  background: var(--c-danger, #EF4444);
+  border-color: transparent;
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.38);
 }
 
-.dday-badge svg {
-  display: block;
-}
+.badge-dday svg { display: block; }
 
-/* 정보 */
-.info {
-  padding: 10px 11px 12px;
+/* 하단 오버레이 정보 */
+.card-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 30px 12px 12px;
+  color: #fff;
 }
 
 .title {
   margin: 0 0 8px;
   font-size: 13.5px;
   font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.35;
+  color: #fff;
+  line-height: 1.32;
+  letter-spacing: -0.025em;
+  word-break: keep-all;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: calc(1.35em * 2);
-  letter-spacing: -0.025em;
-  word-break: keep-all;
-  transition: color 0.18s ease;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }
 
-.hot-card:hover .title {
-  color: var(--c-brand);
+@media (min-width: 768px) {
+  .title { font-size: 14.5px; }
+}
+
+@media (min-width: 1280px) {
+  .title { font-size: 15.5px; }
 }
 
 .stats-row {
@@ -550,171 +618,63 @@ const handleImageError = (battleId) => {
   gap: 4px;
   font-size: 11px;
   font-weight: 700;
-  color: var(--c-text-600);
+  color: rgba(255, 255, 255, 0.92);
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .stat-icon {
   display: block;
-  color: var(--c-text-400);
+  color: rgba(255, 255, 255, 0.75);
   flex-shrink: 0;
 }
 
-.stat-value {
-  line-height: 1;
-}
+.stat-value { line-height: 1; }
 
 .stat-divider {
   width: 1px;
-  height: 10px;
-  background: var(--border-strong);
+  height: 9px;
+  background: rgba(255, 255, 255, 0.28);
   flex-shrink: 0;
 }
 
-/* 스크롤 진행 인디케이터 (모바일 한정) */
+@media (min-width: 1280px) {
+  .stat { font-size: 11.5px; }
+  .stat-icon { width: 12px; height: 12px; }
+  .stat-divider { height: 10px; }
+}
+
+/* ---------- 스크롤 도트 (모바일) ---------- */
 .scroll-dots {
   display: none;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .scroll-dot {
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: var(--c-text-300);
+  background: var(--c-text-300, #CBD5E1);
   transition: width 0.2s ease, background 0.2s ease;
 }
 
 .scroll-dot.active {
-  width: 16px;
-  background: var(--c-heat);
+  width: 18px;
+  background: var(--c-heat, #F97316);
 }
 
 @media (max-width: 767px) {
-  .scroll-dots {
-    display: flex;
-  }
-}
-
-/* 큰 화면 */
-@media (min-width: 1280px) {
-  .section-header {
-    margin-bottom: 18px;
-  }
-
-  .hot-scroll {
-    gap: 18px;
-  }
-
-  .hot-card {
-    border-radius: 16px;
-  }
-
-  .rank-medal {
-    top: 10px;
-    left: 10px;
-    padding: 5px 10px 5px 9px;
-    font-size: 12px;
-  }
-
-  .rank-medal svg {
-    width: 13px;
-    height: 13px;
-  }
-
-  .hot-badge {
-    top: 10px;
-    right: 10px;
-    padding: 5px 11px 5px 9px;
-    font-size: 11px;
-  }
-
-  .live-dot {
-    width: 7px;
-    height: 7px;
-  }
-
-  .dday-badge {
-    top: 10px;
-    right: 10px;
-    font-size: 11px;
-    padding: 5px 10px;
-  }
-
-  .info {
-    padding: 12px 14px 14px;
-  }
-
-  .title {
-    font-size: 15px;
-    margin-bottom: 10px;
-  }
-
-  .stat {
-    font-size: 12px;
-  }
-
-  .stat-icon {
-    width: 13px;
-    height: 13px;
-  }
-
-  .stat-divider {
-    height: 11px;
-  }
-}
-
-@media (min-width: 1536px) {
-  .hot-scroll {
-    gap: 22px;
-  }
-
-  .hot-card {
-    border-radius: 18px;
-  }
-
-  .rank-medal {
-    top: 12px;
-    left: 12px;
-    padding: 6px 12px 6px 10px;
-    font-size: 13px;
-  }
-
-  .hot-badge {
-    top: 12px;
-    right: 12px;
-    padding: 6px 12px 6px 10px;
-    font-size: 12px;
-  }
-
-  .dday-badge {
-    top: 12px;
-    right: 12px;
-    font-size: 11.5px;
-    padding: 6px 11px;
-  }
-
-  .info {
-    padding: 14px 16px 16px;
-  }
-
-  .title {
-    font-size: 15.5px;
-  }
-
-  .stat {
-    font-size: 12.5px;
-  }
+  .scroll-dots { display: flex; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hot-card,
-  .thumb img,
+  .card-photo img,
   .live-dot {
     animation: none;
     transition: none;
