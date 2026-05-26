@@ -19,139 +19,150 @@
       </span>
     </div>
 
-    <!-- 모바일 히어로: 1번째 요거픽 큰 카드 -->
-    <router-link
-      v-if="!loading && featuredBattle"
-      :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
-      class="pick-hero"
-    >
-      <div class="hero-visual">
-        <img v-if="featuredBattle.thumbnailDto?.fileUrl" :src="featuredBattle.thumbnailDto.fileUrl" :alt="featuredBattle.title" @error="handleImageError" />
-        <div v-else class="hero-thumb-none">Y</div>
-        <div class="hero-overlay-top">
-          <span class="hero-live">
-            <span class="hero-live-dot"></span>
-            LIVE
-          </span>
-          <span v-if="getDdayText(featuredBattle.endDate)" class="hero-dday">{{ getDdayText(featuredBattle.endDate) }}</span>
-        </div>
-        <div class="hero-overlay-bottom">
-          <h3 class="hero-title">{{ featuredBattle.title }}</h3>
-          <div class="hero-stats">
-            <span class="hero-stat"><b>{{ formatNumber(featuredBattle.totalVotes) }}</b>명 참여</span>
-            <span class="hero-stat-sep"></span>
-            <span class="hero-stat"><b>{{ formatNumber(featuredBattle.totalViews || 0) }}</b> 조회</span>
+    <!-- 본문: PC 1024+ 2열 (hero 좌 / 리스트 우), 그 이하는 세로 스택 -->
+    <div class="pick-body">
+      <!-- 히어로: 1번째 요거픽 큰 카드 -->
+      <router-link
+        v-if="!loading && featuredBattle"
+        :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
+        class="pick-hero"
+      >
+        <div class="hero-visual">
+          <img v-if="featuredBattle.thumbnailDto?.fileUrl" :src="featuredBattle.thumbnailDto.fileUrl" :alt="featuredBattle.title" @error="handleImageError" />
+          <div v-else class="hero-thumb-none">Y</div>
+          <div class="hero-overlay-top">
+            <span class="hero-live">
+              <span class="hero-live-dot"></span>
+              LIVE
+            </span>
+            <span v-if="getDdayText(featuredBattle.endDate)" class="hero-dday">{{ getDdayText(featuredBattle.endDate) }}</span>
+          </div>
+          <div class="hero-overlay-bottom">
+            <h3 class="hero-title">{{ featuredBattle.title }}</h3>
+            <div class="hero-stats">
+              <span class="hero-stat"><b>{{ formatNumber(featuredBattle.totalVotes) }}</b>명 참여</span>
+              <span class="hero-stat-sep"></span>
+              <span class="hero-stat"><b>{{ formatNumber(featuredBattle.totalViews || 0) }}</b> 조회</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="hero-vote-area" v-if="featuredBattle.topItems?.length > 0">
-        <div class="hero-gauge">
-          <div class="hero-g-bar b1" :style="{ width: formatPercent(featuredBattle.topItems[0]?.votePercentage) + '%' }"></div>
-          <div class="hero-g-bar b2" v-if="featuredBattle.topItems[1]" :style="{ width: formatPercent(featuredBattle.topItems[1]?.votePercentage) + '%' }"></div>
-        </div>
-        <div class="hero-rank-summary">
-          <div class="hero-rank-unit">
-            <span class="hero-dot d1"></span>
-            <span class="hero-name">{{ truncateName(featuredBattle.topItems[0]?.displayName, 10) }}</span>
-            <span class="hero-pct">{{ formatPercent(featuredBattle.topItems[0]?.votePercentage) }}%</span>
+        <div class="hero-vote-area" v-if="featuredBattle.topItems?.length > 0">
+          <div class="hero-gauge">
+            <div class="hero-g-bar b1" :style="{ width: formatPercent(featuredBattle.topItems[0]?.votePercentage) + '%' }"></div>
+            <div class="hero-g-bar b2" v-if="featuredBattle.topItems[1]" :style="{ width: formatPercent(featuredBattle.topItems[1]?.votePercentage) + '%' }"></div>
           </div>
-          <div class="hero-rank-unit" v-if="featuredBattle.topItems[1]">
-            <span class="hero-dot d2"></span>
-            <span class="hero-name">{{ truncateName(featuredBattle.topItems[1]?.displayName, 10) }}</span>
-            <span class="hero-pct">{{ formatPercent(featuredBattle.topItems[1]?.votePercentage) }}%</span>
+          <div class="hero-rank-summary">
+            <div class="hero-rank-unit">
+              <span class="hero-dot d1"></span>
+              <span class="hero-name">{{ truncateName(featuredBattle.topItems[0]?.displayName, 10) }}</span>
+              <span class="hero-pct">{{ formatPercent(featuredBattle.topItems[0]?.votePercentage) }}%</span>
+            </div>
+            <div class="hero-rank-unit" v-if="featuredBattle.topItems[1]">
+              <span class="hero-dot d2"></span>
+              <span class="hero-name">{{ truncateName(featuredBattle.topItems[1]?.displayName, 10) }}</span>
+              <span class="hero-pct">{{ formatPercent(featuredBattle.topItems[1]?.votePercentage) }}%</span>
+            </div>
+          </div>
+          <div class="hero-cta">
+            한 표 던지러 가기
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
           </div>
         </div>
-        <div class="hero-cta">
-          한 표 던지러 가기
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </div>
-      </div>
-    </router-link>
+      </router-link>
 
-    <!-- 로딩 -->
-    <div v-if="loading" class="dash-list">
-      <div class="pick-hero skeleton-hero">
+      <!-- 히어로 로딩 스켈레톤 -->
+      <div v-else-if="loading" class="pick-hero skeleton-hero">
         <div class="skeleton" style="width: 100%; aspect-ratio: 16/9; border-radius: 14px 14px 0 0;"></div>
         <div style="padding: 14px;">
           <div class="skeleton" style="height: 8px; width: 100%; border-radius: 10px; margin-bottom: 10px;"></div>
           <div class="skeleton" style="height: 12px; width: 70%;"></div>
         </div>
       </div>
-      <div v-for="i in 2" :key="i" class="dash-row skeleton-row">
-        <div class="dash-thumb"><div class="skeleton skeleton-thumb"></div></div>
-        <div class="dash-info">
-          <div class="info-top">
-            <div class="skeleton" style="height: 15px; width: 60%;"></div>
-            <div class="skeleton" style="height: 11px; width: 80px;"></div>
-          </div>
-          <div class="skeleton" style="height: 6px; width: 100%; border-radius: 10px; margin-top: 12px;"></div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 엠티 -->
-    <div v-else-if="hotBattles.length === 0" class="empty-state">
-      <div class="empty-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-        </svg>
-      </div>
-      <p class="empty-text">진행 중인 요거픽이 없습니다</p>
-      <router-link :to="{ name: 'BattleList' }" class="empty-cta">요거픽 둘러보기</router-link>
-    </div>
-
-    <!-- 리스트 (히어로 제외한 나머지) -->
-    <div v-else-if="restBattles.length > 0" class="dash-list">
-      <p class="rest-label">더 많은 픽</p>
-      <router-link
-        v-for="battle in restBattles"
-        :key="battle.id"
-        :to="{ name: 'BattleDetail', params: { id: battle.id } }"
-        class="dash-row"
+      <!-- 우측(또는 하단) 컬럼: 더 많은 픽 / 엠티 / 로딩 행 -->
+      <div
+        v-if="loading || hotBattles.length === 0 || restBattles.length > 0"
+        class="pick-list-col"
       >
-        <!-- 이미지 -->
-        <div class="dash-thumb">
-          <img v-if="battle.thumbnailDto?.fileUrl" :src="battle.thumbnailDto.fileUrl" :alt="battle.title" @error="handleImageError" />
-          <div v-else class="thumb-none">Y</div>
-          <span v-if="getDdayText(battle.endDate)" class="dday-mini">{{ getDdayText(battle.endDate) }}</span>
-        </div>
-
-        <!-- 정보 -->
-        <div class="dash-info">
-          <div class="info-top">
-            <h3 class="battle-ttl">{{ battle.title }}</h3>
-            <span class="stat-line">
-              <span class="stat"><b>{{ formatNumber(battle.totalVotes) }}</b> 투표</span>
-              <span class="stat-sep"></span>
-              <span class="stat"><b>{{ formatNumber(battle.totalViews || 0) }}</b> 조회</span>
-            </span>
-          </div>
-
-          <div class="dash-gauge-area" v-if="battle.topItems?.length > 0">
-            <div class="gauge-track">
-              <div class="g-bar b1" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
-              <div class="g-bar b2" v-if="battle.topItems[1]" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
-            </div>
-
-            <div class="rank-summary">
-              <div class="rank-unit">
-                <span class="dot d1"></span>
-                <span class="name">{{ truncateName(battle.topItems[0]?.displayName, 6) }}</span>
-                <span class="pct">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
+        <!-- 로딩 행 -->
+        <div v-if="loading" class="dash-list">
+          <div v-for="i in 3" :key="i" class="dash-row skeleton-row">
+            <div class="dash-thumb"><div class="skeleton skeleton-thumb"></div></div>
+            <div class="dash-info">
+              <div class="info-top">
+                <div class="skeleton" style="height: 15px; width: 60%;"></div>
+                <div class="skeleton" style="height: 11px; width: 80px;"></div>
               </div>
-              <div class="rank-unit" v-if="battle.topItems[1]">
-                <span class="dot d2"></span>
-                <span class="name">{{ truncateName(battle.topItems[1]?.displayName, 6) }}</span>
-                <span class="pct">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
-              </div>
-              <span class="etc-mini">외 {{ getEtcPercent(battle.topItems) }}%</span>
+              <div class="skeleton" style="height: 6px; width: 100%; border-radius: 10px; margin-top: 12px;"></div>
             </div>
           </div>
         </div>
-      </router-link>
+
+        <!-- 엠티 -->
+        <div v-else-if="hotBattles.length === 0" class="empty-state">
+          <div class="empty-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+          </div>
+          <p class="empty-text">진행 중인 요거픽이 없습니다</p>
+          <router-link :to="{ name: 'BattleList' }" class="empty-cta">요거픽 둘러보기</router-link>
+        </div>
+
+        <!-- 리스트 (히어로 제외한 나머지) -->
+        <div v-else-if="restBattles.length > 0" class="dash-list">
+          <p class="rest-label">더 많은 픽</p>
+          <router-link
+            v-for="battle in restBattles"
+            :key="battle.id"
+            :to="{ name: 'BattleDetail', params: { id: battle.id } }"
+            class="dash-row"
+          >
+            <!-- 이미지 -->
+            <div class="dash-thumb">
+              <img v-if="battle.thumbnailDto?.fileUrl" :src="battle.thumbnailDto.fileUrl" :alt="battle.title" @error="handleImageError" />
+              <div v-else class="thumb-none">Y</div>
+              <span v-if="getDdayText(battle.endDate)" class="dday-mini">{{ getDdayText(battle.endDate) }}</span>
+            </div>
+
+            <!-- 정보 -->
+            <div class="dash-info">
+              <div class="info-top">
+                <h3 class="battle-ttl">{{ battle.title }}</h3>
+                <span class="stat-line">
+                  <span class="stat"><b>{{ formatNumber(battle.totalVotes) }}</b> 투표</span>
+                  <span class="stat-sep"></span>
+                  <span class="stat"><b>{{ formatNumber(battle.totalViews || 0) }}</b> 조회</span>
+                </span>
+              </div>
+
+              <div class="dash-gauge-area" v-if="battle.topItems?.length > 0">
+                <div class="gauge-track">
+                  <div class="g-bar b1" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
+                  <div class="g-bar b2" v-if="battle.topItems[1]" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
+                </div>
+
+                <div class="rank-summary">
+                  <div class="rank-unit">
+                    <span class="dot d1"></span>
+                    <span class="name">{{ truncateName(battle.topItems[0]?.displayName, 6) }}</span>
+                    <span class="pct">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
+                  </div>
+                  <div class="rank-unit" v-if="battle.topItems[1]">
+                    <span class="dot d2"></span>
+                    <span class="name">{{ truncateName(battle.topItems[1]?.displayName, 6) }}</span>
+                    <span class="pct">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
+                  </div>
+                  <span class="etc-mini">외 {{ getEtcPercent(battle.topItems) }}%</span>
+                </div>
+              </div>
+            </div>
+          </router-link>
+        </div>
+      </div>
     </div>
   </section>
 </template>
@@ -331,6 +342,12 @@ onMounted(() => {
 @keyframes chip-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+/* 본문 wrapper — 모바일·태블릿은 세로 스택, PC 1024+는 2열 그리드 */
+.pick-body {
+  display: flex;
+  flex-direction: column;
 }
 
 /* ===== 히어로 카드 (1번째 요거픽) ===== */
@@ -697,13 +714,12 @@ onMounted(() => {
 }
 .empty-text { font-size: 13px; font-weight: 500; margin: 0; }
 
-/* PC: 썸네일 확대 */
+/* 태블릿(768~1023): 썸네일 확대 + 히어로 가로 레이아웃 (full-width) */
 @media (min-width: 768px) {
   .dash-thumb { width: 96px; height: 96px; border-radius: 14px; }
   .dash-row { gap: 18px; padding: 18px 14px; }
   .battle-ttl { font-size: 16px; }
 
-  /* 히어로 가로 레이아웃 */
   .pick-hero {
     display: grid;
     grid-template-columns: minmax(320px, 1.2fr) 1fr;
@@ -726,9 +742,52 @@ onMounted(() => {
   .hero-rank-unit { font-size: 14px; }
   .hero-cta { padding: 14px 18px; font-size: 15px; }
 }
+
+/* PC 1024+: hero(좌) + 더 많은 픽(우) 2열 그리드. hero 내부는 세로 스택으로 변경 */
+@media (min-width: 1024px) {
+  .pick-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* 좁아진 컬럼에 맞춰 hero는 세로 스택, 이미지 비율도 16/9로 축소 */
+  .pick-hero {
+    display: block;
+    grid-template-columns: none;
+    margin-bottom: 0;
+  }
+  .skeleton-hero { margin-bottom: 0; }
+
+  .hero-visual { aspect-ratio: 16 / 9; }
+  .hero-vote-area { padding: 18px 22px 20px; }
+  .hero-title { font-size: 18px; }
+  .hero-rank-summary { margin-bottom: 14px; }
+
+  /* 우측 리스트 컬럼: 가로 간격이 좁아진 만큼 row padding 축소 */
+  .pick-list-col .dash-row { padding: 14px 12px; gap: 14px; }
+  .pick-list-col .dash-thumb { width: 84px; height: 84px; border-radius: 12px; }
+  .pick-list-col .battle-ttl { font-size: 15px; }
+
+  /* 엣지 케이스: hero 또는 리스트 단독 렌더링 시 전체 너비 사용 */
+  .pick-body > .pick-hero:only-child {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(320px, 1.2fr) 1fr;
+  }
+  .pick-body > .pick-hero:only-child .hero-visual { aspect-ratio: 4 / 3; }
+  .pick-body > .pick-hero:only-child .hero-vote-area { padding: 24px 28px; }
+  .pick-body > .pick-list-col:only-child { grid-column: 1 / -1; }
+}
+
 @media (min-width: 1280px) {
   .dash-thumb { width: 104px; height: 104px; border-radius: 16px; }
   .dash-row { gap: 20px; padding: 20px 16px; }
+
+  /* 우측 컬럼은 카드형 외관과 별개로 컴팩트 유지 */
+  .pick-list-col .dash-thumb { width: 92px; height: 92px; }
+  .pick-list-col .dash-row { padding: 16px 14px; gap: 16px; }
 }
 
 /* 좁은 화면 */

@@ -68,12 +68,12 @@ const items = [
 
 <style scoped>
 .quick-nav {
-  margin: 0 0 1.25rem;
+  margin: 1.25rem 0 1.25rem;
 }
 
 @media (min-width: 768px) {
   .quick-nav {
-    margin: 0 0 1.5rem;
+    margin: 2rem 0 1.5rem;
   }
 }
 
@@ -82,7 +82,7 @@ const items = [
   font-weight: 700;
   color: var(--c-text-400);
   letter-spacing: 0.02em;
-  margin: 0 0 0.625rem;
+  margin: 0 0 0.75rem;
   padding-left: 2px;
   text-transform: none;
 }

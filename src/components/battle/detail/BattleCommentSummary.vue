@@ -214,6 +214,42 @@ const checkMobile = () => {
   isMobile.value = window.innerWidth <= 768
 }
 
+// 모바일 키보드 핸들링: 바텀시트가 열려있는 동안 visualViewport 로 키보드 높이를 추적해
+// --chat-kb-h CSS 변수에 반영. 오버레이의 padding-bottom 으로 받아 입력창을 키보드 위로 끌어올림.
+// iOS Capacitor 는 네이티브(AppViewController.swift)가 --chat-kb-h 를 권위있게 셋팅하므로 JS 가 덮어쓰지 않는다.
+const isCapacitorIOS = (() => {
+  if (typeof window === 'undefined') return false
+  const cap = window.Capacitor
+  if (!cap) return false
+  const platform = typeof cap.getPlatform === 'function' ? cap.getPlatform() : cap.platform
+  return platform === 'ios'
+})()
+
+const updateKeyboardHeight = () => {
+  const vv = window.visualViewport
+  if (!vv) return
+  const keyboardHeight = Math.max(0, window.innerHeight - vv.height)
+  document.documentElement.style.setProperty('--chat-kb-h', `${keyboardHeight}px`)
+}
+
+const attachKeyboardListener = () => {
+  if (isCapacitorIOS) return // 네이티브가 처리
+  const vv = window.visualViewport
+  if (!vv) return
+  vv.addEventListener('resize', updateKeyboardHeight)
+  vv.addEventListener('scroll', updateKeyboardHeight)
+  updateKeyboardHeight()
+}
+
+const detachKeyboardListener = () => {
+  if (isCapacitorIOS) return
+  const vv = window.visualViewport
+  if (!vv) return
+  vv.removeEventListener('resize', updateKeyboardHeight)
+  vv.removeEventListener('scroll', updateKeyboardHeight)
+  document.documentElement.style.setProperty('--chat-kb-h', '0px')
+}
+
 onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
@@ -221,6 +257,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+  detachKeyboardListener()
 })
 
 const commentCount = computed(() => props.commentSummary?.commentCount || 0)
@@ -242,6 +279,7 @@ const toggleInput = async () => {
   if (isMobile.value) {
     // 모바일: 바텀시트 열기
     showBottomSheet.value = true
+    attachKeyboardListener()
     nextTick(() => {
       bottomSheetInputRef.value?.focus()
     })
@@ -258,6 +296,7 @@ const toggleInput = async () => {
 
 const closeBottomSheet = () => {
   showBottomSheet.value = false
+  detachKeyboardListener()
 }
 
 const handleSubmit = async () => {
@@ -275,7 +314,10 @@ const handleSubmit = async () => {
   emit('submit-comment', inputText.value.trim())
   inputText.value = ''
   showInput.value = false
-  showBottomSheet.value = false
+  if (showBottomSheet.value) {
+    showBottomSheet.value = false
+    detachKeyboardListener()
+  }
 }
 
 // 외부에서 입력창 닫기
@@ -806,6 +848,9 @@ div.ba-avatar {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  /* 모바일 키보드가 올라오면 그 높이만큼 바텀시트를 위로 끌어올린다 */
+  padding-bottom: var(--chat-kb-h, 0px);
+  transition: padding-bottom 0.2s ease;
 }
 
 .bottomsheet {

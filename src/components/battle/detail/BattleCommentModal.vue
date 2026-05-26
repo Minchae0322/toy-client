@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
 import { battleService } from '@/services/BattleService.js'
 import { useAuth } from '@/composables/useAuth'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
@@ -135,6 +135,46 @@ const submitting = ref(false)
 
 const listRef = ref(null)
 const inputRef = ref(null)
+
+// 모바일 키보드 핸들링: 모달이 열려있는 동안 visualViewport 로 키보드 높이를 추적해
+// --chat-kb-h CSS 변수에 반영. 오버레이의 padding-bottom 으로 받아 입력창을 키보드 위로 끌어올림.
+// iOS Capacitor 는 네이티브(AppViewController.swift)가 --chat-kb-h 를 권위있게 셋팅하므로 JS 가 덮어쓰지 않는다.
+const isCapacitorIOS = (() => {
+  if (typeof window === 'undefined') return false
+  const cap = window.Capacitor
+  if (!cap) return false
+  const platform = typeof cap.getPlatform === 'function' ? cap.getPlatform() : cap.platform
+  return platform === 'ios'
+})()
+
+const updateKeyboardHeight = () => {
+  const vv = window.visualViewport
+  if (!vv) return
+  const keyboardHeight = Math.max(0, window.innerHeight - vv.height)
+  document.documentElement.style.setProperty('--chat-kb-h', `${keyboardHeight}px`)
+}
+
+const attachKeyboardListener = () => {
+  if (isCapacitorIOS) return
+  const vv = window.visualViewport
+  if (!vv) return
+  vv.addEventListener('resize', updateKeyboardHeight)
+  vv.addEventListener('scroll', updateKeyboardHeight)
+  updateKeyboardHeight()
+}
+
+const detachKeyboardListener = () => {
+  if (isCapacitorIOS) return
+  const vv = window.visualViewport
+  if (!vv) return
+  vv.removeEventListener('resize', updateKeyboardHeight)
+  vv.removeEventListener('scroll', updateKeyboardHeight)
+  document.documentElement.style.setProperty('--chat-kb-h', '0px')
+}
+
+onUnmounted(() => {
+  detachKeyboardListener()
+})
 
 const inputPlaceholder = computed(() => {
   if (!isLoggedIn.value) return '로그인 후 PICK 한마디를 남겨보세요'
@@ -360,6 +400,15 @@ watch(
   },
   { immediate: true }
 )
+
+// 모달 visible 변화에 따라 키보드 리스너 토글
+watch(
+  () => props.visible,
+  (v) => {
+    if (v) attachKeyboardListener()
+    else detachKeyboardListener()
+  }
+)
 </script>
 
 <style scoped>
@@ -371,6 +420,9 @@ watch(
   align-items: flex-end;
   justify-content: center;
   z-index: 9999;
+  /* 모바일 키보드가 올라오면 그 높이만큼 모달을 위로 끌어올린다 */
+  padding-bottom: var(--chat-kb-h, 0px);
+  transition: padding-bottom 0.2s ease;
 }
 
 @media (min-width: 768px) {
@@ -382,7 +434,8 @@ watch(
 .modal-container {
   width: 100%;
   max-width: 500px;
-  max-height: 85vh;
+  /* 키보드가 올라오면 그만큼 높이도 줄여서 헤더가 화면 밖으로 밀리지 않게 한다 */
+  max-height: calc(85vh - var(--chat-kb-h, 0px));
   background: var(--bg-elevated);
   border-radius: 20px 20px 0 0;
   display: flex;

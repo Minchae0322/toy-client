@@ -41,6 +41,14 @@ async function applyStatusBarTheme() {
     await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light })
     await StatusBar.setBackgroundColor({ color: isDark ? '#0F1218' : '#ffffff' })
   } catch {}
+  // iOS: 호스트 뷰(웹뷰 뒤에 깔린 native view) 배경을 웹 테마와 일치시킴.
+  // 시스템 다크/라이트와 앱 테마가 어긋나면 스와이프 백 시 좌측에 시스템 색(검정 등)이
+  // 비치는 문제를 막기 위해 webkit 메시지 핸들러로 native overrideUserInterfaceStyle 을 잠근다.
+  if (Capacitor.getPlatform() === 'ios') {
+    try {
+      window.webkit?.messageHandlers?.yogurtteThemeChange?.postMessage(resolvedTheme.value)
+    } catch {}
+  }
 }
 
 const isLoggingOut = ref(false)

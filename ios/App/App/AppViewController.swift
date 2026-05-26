@@ -27,6 +27,7 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
         self.webView?.allowsBackForwardNavigationGestures = false
         installWiderBackSwipeGesture()
         setupSwipeIndicator()
+        setupThemeBridge()
         hideKeyboardAccessoryBar()
         observeKeyboardForChatInput()
     }
@@ -119,6 +120,18 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         applyAdaptiveBackground()
+    }
+
+    // 웹 테마(localStorage 'yogurtte:theme' resolved 값)를 네이티브로 푸시받기 위한 브릿지.
+    // 시스템 traitCollection 만 보면 사용자가 앱 안에서 직접 라이트/다크를 골랐을 때
+    // 시스템과 어긋나서 — 스와이프 백으로 노출되는 좌측 영역이 시스템 색(예: #0F1218)으로 보이는
+    // 문제가 생긴다. JS 에서 'yogurtteThemeChange' 로 'light'|'dark'|'auto' 를 보내면
+    // overrideUserInterfaceStyle 을 그에 맞춰 잠가 host view bg 가 항상 웹과 동일하게 유지된다.
+    private func setupThemeBridge() {
+        guard let userContentController = webView?.configuration.userContentController else { return }
+        // 중복 등록 방지 — 기존에 같은 이름이 등록돼 있으면 제거 후 다시 등록
+        userContentController.removeScriptMessageHandler(forName: "yogurtteThemeChange")
+        userContentController.add(self, name: "yogurtteThemeChange")
     }
 
     // 스와이프/전환 중 native 호스트 뷰가 비쳐도 라이트/다크에 맞는 색이 깔리도록.
@@ -312,5 +325,30 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
         // 시작 위치가 좌측 에지 영역 안일 때만 추적 시작
         let start = gestureRecognizer.location(in: view).x
         return start <= backSwipeEdgeWidth
+    }
+}
+
+// MARK: - WKScriptMessageHandler
+// 웹 → 네이티브 테마 동기화. JS 는 다음 형식으로 호출:
+//   window.webkit.messageHandlers.yogurtteThemeChange.postMessage('light' | 'dark' | 'auto')
+extension AppViewController: WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController,
+                               didReceive message: WKScriptMessage) {
+        guard message.name == "yogurtteThemeChange",
+              let theme = message.body as? String else { return }
+        if #available(iOS 13.0, *) {
+            switch theme {
+            case "dark":
+                overrideUserInterfaceStyle = .dark
+            case "light":
+                overrideUserInterfaceStyle = .light
+            default:
+                overrideUserInterfaceStyle = .unspecified
+            }
+            // overrideUserInterfaceStyle 변경 시 traitCollectionDidChange 가 자동 발화되어
+            // applyAdaptiveBackground 가 재실행되지만, dynamic UIColor 가 이미 캐시된
+            // 케이스를 대비해 명시적으로 한 번 더 적용.
+            applyAdaptiveBackground()
+        }
     }
 }
