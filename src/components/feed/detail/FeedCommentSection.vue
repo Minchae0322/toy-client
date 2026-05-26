@@ -175,9 +175,12 @@
                     <span v-if="isEdited(reply)" class="edited">(수정됨)</span>
                   </div>
                   <p class="text">{{ reply.content }}</p>
-                  <div v-if="isMyComment(reply.creatorId)" class="meta">
-                    <button @click="startEdit(reply)" class="meta-btn">수정</button>
-                    <button @click="handleDelete(reply.commentId)" class="meta-btn delete">삭제</button>
+                  <div class="meta">
+                    <button @click="toggleReply(comment.commentId, reply.creatorNickname)" class="meta-btn">답글</button>
+                    <template v-if="isMyComment(reply.creatorId)">
+                      <button @click="startEdit(reply)" class="meta-btn">수정</button>
+                      <button @click="handleDelete(reply.commentId)" class="meta-btn delete">삭제</button>
+                    </template>
                   </div>
                 </template>
               </div>
@@ -288,18 +291,29 @@ const submitComment = async () => {
   }
 }
 
-const toggleReply = async (commentId) => {
+// 대댓글에서 "답글" 누르면 부모 commentId 로 입력창 열고 @대댓글작성자 멘션 자동 프리필.
+// (백엔드는 1-depth 답글만 지원하므로 nesting 없이 같은 부모 아래로 등록)
+const toggleReply = async (commentId, mentionNickname = '') => {
   if (!(await ensureLoggedIn('답글을 작성하려면 로그인이 필요합니다.'))) return
-  if (replyingTo.value === commentId) {
+  // 같은 부모 + 멘션 없음 (= 부모 댓글의 "답글" 재클릭) → 토글로 닫기
+  if (replyingTo.value === commentId && !mentionNickname) {
     cancelReply()
     return
   }
   replyingTo.value = commentId
-  replyContent.value = ''
+  replyContent.value = mentionNickname ? `@${mentionNickname} ` : ''
   // reply ref는 v-for 내부라 배열로 들어올 수 있음
   await nextTick()
   const target = Array.isArray(replyInputRef.value) ? replyInputRef.value[0] : replyInputRef.value
-  target?.focus?.()
+  if (!target) return
+  target.focus?.()
+  // 멘션 뒤로 커서 이동
+  if (mentionNickname) {
+    try {
+      const end = target.value.length
+      target.setSelectionRange(end, end)
+    } catch {}
+  }
 }
 
 const cancelReply = () => {
