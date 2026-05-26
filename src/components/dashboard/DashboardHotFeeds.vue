@@ -1,108 +1,62 @@
 <template>
-  <!-- PC 핫 피드 섹션 -->
-  <section class="content-section hot-feeds-section">
-    <div class="section-header">
-      <div class="title-with-badge">
-        <router-link :to="{ name: 'FeedHome' }" class="section-title-link">
-          <h2 class="section-title">
-            지금 뜨는 <span class="title-accent">핫-기록</span>
-            <svg class="section-title-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m9 18 6-6-6-6" />
-            </svg>
-          </h2>
-        </router-link>
-        <span class="sub-title">실시간으로 가장 많이 본 인기 리뷰</span>
-      </div>
-    </div>
+  <section class="hot-feeds-section">
+    <DashboardSectionHeader
+      prefix="지금 뜨는"
+      accent="핫-기록"
+      sub="실시간으로 가장 많이 본 인기 리뷰"
+      :to="{ name: 'FeedHome' }"
+    />
 
-    <div v-if="loading" class="dashboard-feed-scroll">
-      <div v-for="i in 3" :key="i" class="skeleton dash-card-skeleton"></div>
+    <div v-if="loading" class="hot-feed-scroll">
+      <div v-for="i in 4" :key="i" class="skeleton hot-card-skeleton"></div>
     </div>
 
     <div v-else-if="feeds.length === 0" class="empty-state">
       <div class="empty-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
         </svg>
       </div>
-      <p class="empty-text">아직 인기 피드가 없습니다</p>
+      <p class="empty-text">아직 인기 피드가 없어요</p>
     </div>
 
-    <div v-else class="dashboard-feed-scroll">
+    <div v-else class="hot-feed-scroll">
       <router-link
         v-for="(feed, index) in feeds"
         :key="feed.feedId"
         :to="{ name: 'FeedDetail', params: { id: feed.feedId } }"
-        class="dash-feed-card"
+        class="hot-feed-card"
       >
-        <div class="card-visual-wrapper">
-          <img :src="feed.hotFeedThumbnailDto?.fileUrl" :alt="feed.productName" @error="handleImageError" />
-          <div class="card-overlay">
-            <div class="overlay-top">
-              <span class="rank-num">0{{ index + 1 }}</span>
-              <span v-if="feed.isTrending" class="trending-tag">HOT</span>
-            </div>
-            <div class="overlay-bottom">
-              <span v-if="feed.feedEvaluation?.code" :class="['eval-pill', feed.feedEvaluation.code.toLowerCase()]">
-                {{ feed.feedEvaluation.description }}
-              </span>
-              <p v-if="feed.reviewSummary" class="review-main">"{{ feed.reviewSummary }}"</p>
-              <span class="product-name-sub">{{ feed.productName }}</span>
-            </div>
-          </div>
-        </div>
-      </router-link>
-    </div>
-  </section>
-
-  <!-- 모바일 핫 피드 섹션 -->
-  <section class="content-section mhot-section">
-    <div class="mhot-header">
-      <div class="mhot-header-main">
-        <router-link :to="{ name: 'FeedHome' }" class="mhot-title-link">
-          <h2 class="mhot-title">
-            지금 뜨는 <span class="mhot-accent">핫-기록</span>
-            <svg class="mhot-title-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m9 18 6-6-6-6" />
+        <div class="card-visual">
+          <img
+            v-if="feed.hotFeedThumbnailDto?.fileUrl"
+            :src="feed.hotFeedThumbnailDto.fileUrl"
+            :alt="feed.productName"
+            loading="lazy"
+            @error="handleImageError"
+          />
+          <div v-else class="no-image">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+              <rect x="3" y="3" width="18" height="18" rx="3" ry="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
             </svg>
-          </h2>
-        </router-link>
-        <p class="mhot-sub">실시간으로 가장 많이 본 인기 리뷰</p>
-      </div>
-    </div>
-
-    <div v-if="loading" class="mhot-scroll">
-      <div v-for="i in 4" :key="i" class="skeleton mhot-sk"></div>
-    </div>
-
-    <div v-else-if="feeds.length === 0" class="mhot-empty">
-      <div class="mhot-empty-content">
-        <div class="mhot-empty-icon">🔥</div>
-        <p class="mhot-empty-text">현재 집계 중인 인기 피드가 없어요</p>
-      </div>
-    </div>
-
-    <div v-else class="mhot-scroll">
-      <router-link
-        v-for="(feed, index) in feeds"
-        :key="'mhot-' + feed.feedId"
-        :to="{ name: 'FeedDetail', params: { id: feed.feedId } }"
-        class="mhot-card"
-      >
-        <div class="mhot-visual">
-          <img :src="feed.hotFeedThumbnailDto?.fileUrl" :alt="feed.productName" loading="lazy" @error="handleImageError" />
-          <div class="mhot-overlay-top">
-            <div class="mhot-rank">{{ index + 1 }}</div>
-            <span v-if="feed.isTrending" class="mhot-trending">HOT</span>
           </div>
-          <div class="mhot-overlay">
-            <div class="mhot-tag-group">
-              <span v-if="feed.feedEvaluation?.code" :class="['mhot-eval', feed.feedEvaluation.code.toLowerCase()]">
-                {{ feed.feedEvaluation.description }}
-              </span>
-            </div>
-            <h3 v-if="feed.reviewSummary" class="mhot-review">{{ feed.reviewSummary }}</h3>
-            <span class="mhot-product">{{ feed.productName }}</span>
+
+          <div class="card-overlay-top">
+            <span class="rank-num">{{ index + 1 }}</span>
+            <span v-if="feed.isTrending" class="trending-tag">HOT</span>
+          </div>
+
+          <div class="card-overlay-bottom">
+            <span
+              v-if="feed.feedEvaluation?.code"
+              :class="['eval-pill', feed.feedEvaluation.code.toLowerCase()]"
+            >
+              {{ feed.feedEvaluation.description }}
+            </span>
+            <p v-if="feed.reviewSummary" class="review-main">{{ feed.reviewSummary }}</p>
+            <span class="product-name">{{ feed.productName }}</span>
           </div>
         </div>
       </router-link>
@@ -111,6 +65,8 @@
 </template>
 
 <script setup>
+import DashboardSectionHeader from './DashboardSectionHeader.vue'
+
 defineProps({
   feeds: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false }
@@ -122,470 +78,287 @@ const handleImageError = (event) => {
 </script>
 
 <style scoped>
-/* ==================== PC 섹션 ==================== */
 .hot-feeds-section {
-  background: var(--bg-base);
-  border-radius: 16px;
-  padding: 1.375rem;
-  margin-bottom: 0.75rem;
-  border: 1px solid var(--border-default);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  width: 100%;
 }
 
-@media (min-width: 768px) {
-  .hot-feeds-section { padding: 1.625rem; }
-}
-
-.section-header {
+/* 가로 스크롤 컨테이너 — 살짝 음수 마진으로 화면 끝까지 보이게 */
+.hot-feed-scroll {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-}
-
-.title-with-badge { display: flex; flex-direction: column; gap: 4px; }
-
-.section-title-link {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-}
-.section-title-link:hover .section-title-arrow { transform: translateX(2px); }
-
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0;
-  letter-spacing: -0.03em;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-.section-title .title-accent { color: var(--c-brand-hover); }
-
-.section-title-arrow {
-  color: var(--c-text-400);
-  flex-shrink: 0;
-  margin-left: 2px;
-  transition: transform 0.18s ease;
-}
-
-@media (min-width: 1280px) {
-  .section-title { font-size: 1.375rem; }
-}
-
-.sub-title {
-  font-size: 13px;
-  color: var(--c-text-500);
-  font-weight: 400;
-}
-
-.view-all-link {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 0.375rem 0.875rem;
-  background: var(--bg-subtle);
-  border: none;
-  border-radius: 100px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--c-text-400);
-  cursor: pointer;
-  transition: all 0.18s ease;
-  font-family: inherit;
-  text-decoration: none;
-}
-.view-all-link:hover { background: var(--border-strong); color: var(--c-text-600); }
-
-.dashboard-feed-scroll {
-  display: flex;
-  gap: 16px;
+  gap: 12px;
   overflow-x: auto;
-  padding: 6px 4px 14px 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
+  padding: 2px 0 4px;
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
 }
-.dashboard-feed-scroll::-webkit-scrollbar { display: none; }
 
-.dash-feed-card {
-  flex: 0 0 160px;
-  height: 230px;
-  border-radius: 18px;
+.hot-feed-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hot-feed-scroll {
+    gap: 16px;
+    margin: 0 -32px;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hot-feed-scroll {
+    margin: 0 -40px;
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}
+
+/* 카드 — 그림자 약하게, 라운드 크게 */
+.hot-feed-card {
+  flex: 0 0 156px;
+  aspect-ratio: 3 / 4.2;
+  border-radius: 16px;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  background: var(--bg-mute, #F2F4F6);
+  transition: transform 0.2s ease;
+  isolation: isolate;
 }
 
-@media (min-width: 640px) {
-  .dash-feed-card { flex: 0 0 180px; height: 250px; }
+@media (min-width: 768px) {
+  .hot-feed-card {
+    flex: 0 0 180px;
+    border-radius: 18px;
+  }
 }
+
 @media (min-width: 1280px) {
-  .dash-feed-card { flex: 0 0 200px; height: 280px; }
+  .hot-feed-card {
+    flex: 0 0 200px;
+  }
 }
 
-.dash-feed-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+.hot-feed-card:hover {
+  transform: translateY(-2px);
 }
 
-.card-visual-wrapper {
+.hot-feed-card:active {
+  transform: scale(0.98);
+}
+
+.card-visual {
   width: 100%;
   height: 100%;
   position: relative;
 }
-.card-visual-wrapper img {
+
+.card-visual img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.4s ease;
 }
-.dash-feed-card:hover .card-visual-wrapper img { transform: scale(1.03); }
 
-.card-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.85) 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 14px;
+.hot-feed-card:hover .card-visual img {
+  transform: scale(1.04);
 }
-@media (min-width: 640px) { .card-overlay { padding: 16px; } }
 
-.overlay-top {
+.no-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-300);
+  background: var(--bg-mute, #F2F4F6);
+}
+
+/* 상단 오버레이 — 랭크 + HOT */
+.card-overlay-top {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  z-index: 2;
 }
 
 .rank-num {
-  font-size: 24px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.3);
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
   font-style: italic;
   line-height: 1;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
-@media (min-width: 640px) { .rank-num { font-size: 26px; } }
-@media (min-width: 1280px) { .rank-num { font-size: 30px; } }
+
+@media (min-width: 768px) {
+  .rank-num { font-size: 22px; }
+}
 
 .trending-tag {
-  background: rgba(251, 113, 133, 0.85);
-  backdrop-filter: blur(4px);
-  color: #ffffff;
   font-size: 10px;
-  font-weight: 700;
-  padding: 4px 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: rgba(239, 68, 68, 0.92);
+  padding: 3px 8px;
   border-radius: 100px;
-  letter-spacing: 0.3px;
+  backdrop-filter: blur(4px);
 }
 
-.overlay-bottom { color: #ffffff; }
+/* 하단 오버레이 — 평가 / 리뷰 / 제품명 */
+.card-overlay-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 36px 12px 14px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.32) 60%, transparent 100%);
+  color: #fff;
+  z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .card-overlay-bottom { padding: 40px 14px 16px; }
+}
 
 .eval-pill {
   display: inline-block;
   font-size: 10px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 6px;
   margin-bottom: 6px;
+  color: #fff;
   backdrop-filter: blur(4px);
 }
-.eval-pill.best { background: rgba(251, 191, 36, 0.85); color: #ffffff; }
-.eval-pill.good { background: rgba(34, 197, 94, 0.8); color: #ffffff; }
-.eval-pill.okay { background: rgba(139, 92, 246, 0.8); color: #ffffff; }
-.eval-pill.bad { background: rgba(239, 68, 68, 0.8); color: #ffffff; }
+
+.eval-pill.best { background: rgba(234, 179, 8, 0.95); }
+.eval-pill.good { background: rgba(22, 163, 74, 0.92); }
+.eval-pill.okay { background: rgba(147, 51, 234, 0.92); }
+.eval-pill.bad  { background: rgba(239, 68, 68, 0.92); }
 
 .review-main {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 6px;
-  line-height: 1.4;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0 0 4px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  letter-spacing: -0.02em;
 }
-@media (min-width: 640px) { .review-main { font-size: 15px; } }
-@media (min-width: 1280px) { .review-main { font-size: 16px; } }
 
-.product-name-sub {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255,255,255,0.6);
-  display: block;
+@media (min-width: 768px) {
+  .review-main { font-size: 14px; }
+}
+
+@media (min-width: 1280px) {
+  .review-main { font-size: 15px; -webkit-line-clamp: 2; }
+}
+
+.product-name {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.72);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: block;
+  letter-spacing: -0.01em;
 }
 
-.dash-card-skeleton {
-  flex: 0 0 160px;
-  height: 230px;
-  border-radius: 20px;
+@media (min-width: 768px) {
+  .product-name { font-size: 12px; }
 }
-@media (min-width: 640px) { .dash-card-skeleton { flex: 0 0 180px; height: 250px; } }
-@media (min-width: 1280px) { .dash-card-skeleton { flex: 0 0 200px; height: 280px; } }
+
+/* Skeleton */
+.hot-card-skeleton {
+  flex: 0 0 156px;
+  aspect-ratio: 3 / 4.2;
+  border-radius: 16px;
+}
+
+@media (min-width: 768px) {
+  .hot-card-skeleton { flex: 0 0 180px; border-radius: 18px; }
+}
+
+@media (min-width: 1280px) {
+  .hot-card-skeleton { flex: 0 0 200px; }
+}
 
 .skeleton {
-  background: linear-gradient(90deg, var(--border-default) 25%, #e8eaed 37%, var(--border-default) 63%);
+  background: linear-gradient(90deg, var(--border-default, #F1F3F6) 25%, #E8EAED 37%, var(--border-default, #F1F3F6) 63%);
   background-size: 400% 100%;
   animation: hf-shimmer 1.4s ease-in-out infinite;
 }
+
 @keyframes hf-shimmer {
   0% { background-position: 100% 50%; }
   100% { background-position: 0 50%; }
 }
 
+/* Empty */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 48px 16px;
-  color: var(--c-text-400);
   gap: 12px;
 }
+
 .empty-icon {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: var(--bg-mute);
+  background: var(--bg-subtle, #F7F8FA);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--c-text-400);
+  color: var(--c-text-300);
 }
+
 .empty-text {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
+  color: var(--c-text-400);
   margin: 0;
 }
 
-/* ==================== 모바일 섹션 (기본 숨김) ==================== */
-.mhot-section { display: none; }
-
-/* PC: 모바일 hover 무력화 */
 @media (hover: none) {
-  .dash-feed-card:hover { transform: none; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-  .dash-feed-card:hover .card-visual-wrapper img { transform: none; }
+  .hot-feed-card:hover {
+    transform: none;
+  }
+  .hot-feed-card:hover .card-visual img {
+    transform: none;
+  }
 }
 
-/* ==================== 모바일 (≤767px) ==================== */
 @media (max-width: 767px) {
-  /* PC 섹션 숨김 */
-  .hot-feeds-section { display: none !important; }
-
-  /* 모바일 섹션 노출 */
-  .mhot-section {
-    display: block;
-    background: var(--bg-base);
-    border: none;
-    border-bottom: 1px solid var(--border-default);
-    box-shadow: none;
-    border-radius: 0;
-    padding: 18px 0 20px;
-    margin: 0;
-  }
-
-  .mhot-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 20px;
-  }
-
-  .mhot-title-link {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-    color: inherit;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mhot-title-link:active { opacity: 0.6; }
-
-  .mhot-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    letter-spacing: -0.03em;
-    margin: 0;
-  }
-
-  .mhot-accent { color: var(--c-brand-hover); }
-
-  .mhot-title-arrow {
-    color: var(--c-text-400);
-    flex-shrink: 0;
-    margin-left: 2px;
-  }
-
-  .mhot-sub {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--c-text-600);
-    margin: 4px 0 0;
-    letter-spacing: -0.01em;
-  }
-
-  .mhot-more {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--c-text-400);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
-  }
-
-  .mhot-scroll {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .mhot-scroll::-webkit-scrollbar { display: none; }
-
-  .mhot-card {
-    flex: 0 0 160px;
-    aspect-ratio: 3 / 4.2;
-    border-radius: 14px;
-    overflow: hidden;
-    position: relative;
-    text-decoration: none;
-    background: var(--bg-mute);
-    isolation: isolate;
-  }
-
-  .mhot-visual {
-    width: 100%;
-    height: 100%;
-    position: relative;
-  }
-  .mhot-visual img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .mhot-card:hover .mhot-visual img { transform: scale(1.1); }
-
-  .mhot-overlay-top {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 2;
-  }
-
-  .mhot-rank {
-    font-size: 20px;
-    font-weight: 900;
-    color: #ffffff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    font-style: italic;
-  }
-
-  .mhot-trending {
-    padding: 4px 8px;
-    background: var(--header-blur-bg);
-    color: var(--text-primary);
-    font-size: 10px;
-    font-weight: 800;
-    border-radius: 4px;
-  }
-
-  .mhot-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 40px 14px 16px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
-    color: #ffffff;
-    z-index: 1;
-  }
-
-  .mhot-tag-group { margin-bottom: 8px; }
-
-  .mhot-eval {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    color: #ffffff;
-  }
-  .mhot-eval.best { background: var(--c-warning); }
-  .mhot-eval.good { background: var(--c-success); }
-  .mhot-eval.okay { background: var(--c-info); }
-  .mhot-eval.bad { background: var(--c-danger); }
-
-  .mhot-review {
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.4;
-    margin: 0 0 4px;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    text-overflow: ellipsis;
-    color: #ffffff;
-  }
-
-  .mhot-product {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.7);
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .mhot-sk {
-    flex: 0 0 160px;
-    aspect-ratio: 3 / 4.2;
-    border-radius: 14px;
-  }
-
-  .mhot-empty {
-    height: 200px;
-    background: var(--bg-subtle);
-    border: 1px dashed var(--border-strong);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .mhot-empty-content { text-align: center; }
-  .mhot-empty-icon { font-size: 24px; margin-bottom: 8px; }
-  .mhot-empty-text {
-    font-size: 13px;
-    color: var(--c-text-400);
-    font-weight: 500;
-    margin: 0;
+  .hot-feed-card {
+    -webkit-user-select: none;
+    user-select: none;
   }
 }
 
-@media (max-width: 640px) {
-  .mhot-title { font-size: 1.125rem; }
-  .mhot-card { flex: 0 0 145px; }
-  .mhot-review { font-size: 13px; -webkit-line-clamp: 2; }
+@media (prefers-reduced-motion: reduce) {
+  .hot-feed-card:hover,
+  .hot-feed-card:hover .card-visual img {
+    transform: none;
+  }
+  .skeleton {
+    animation: none;
+    background: var(--bg-subtle, #F7F8FA);
+  }
 }
 </style>

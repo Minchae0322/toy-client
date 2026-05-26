@@ -348,11 +348,11 @@ onBeforeUnmount(() => { stop() })
 <style scoped>
 .hero-carousel {
   position: relative;
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
-  margin: 1rem 0 1.125rem;
-  min-height: 200px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
+  margin: 0;
+  min-height: 220px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
 .hero-track {
@@ -369,7 +369,7 @@ onBeforeUnmount(() => { stop() })
   color: #fff;
   display: block;
   position: relative;
-  min-height: 200px;
+  min-height: 220px;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
 }
@@ -777,17 +777,17 @@ onBeforeUnmount(() => { stop() })
 /* 모바일 */
 @media (max-width: 767px) {
   .hero-carousel {
-    margin: 0.75rem 0 0.875rem;
+    margin: 0;
     border-radius: 16px;
-    min-height: 168px;
+    min-height: 180px;
     -webkit-user-select: none;
     user-select: none;
   }
-  .hero-slide { min-height: 168px; }
+  .hero-slide { min-height: 180px; }
   .slide-text {
     padding: 1.125rem 1.125rem 1.75rem;
     max-width: 64%;
-    min-height: 168px;
+    min-height: 180px;
     gap: 0.4375rem;
   }
   .slide-title { font-size: 1.1875rem; line-height: 1.25; }
@@ -814,11 +814,11 @@ onBeforeUnmount(() => { stop() })
 }
 
 @media (min-width: 1280px) {
-  .hero-carousel { min-height: 240px; }
-  .hero-slide { min-height: 240px; }
+  .hero-carousel { min-height: 260px; border-radius: 24px; }
+  .hero-slide { min-height: 260px; }
   .slide-text {
-    padding: 2rem 2rem 1.75rem;
-    min-height: 240px;
+    padding: 2rem 2rem 1.875rem;
+    min-height: 260px;
   }
   .slide-title { font-size: 1.875rem; }
   .slide-sub { font-size: 0.9375rem; }

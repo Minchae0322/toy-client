@@ -1,27 +1,11 @@
 <template>
-  <section class="content-section ranking-section">
-    <!-- 헤더 (PC·모바일 통일 톤) -->
-    <div class="mranking-header">
-      <div class="mranking-header-main">
-        <router-link :to="{ name: 'ProductRanking' }" class="mranking-title-link">
-          <h2 class="mranking-title">
-            실시간 <span class="mranking-accent">제품 랭킹</span>
-            <svg class="mranking-title-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m9 18 6-6-6-6" />
-            </svg>
-          </h2>
-        </router-link>
-        <div class="mranking-sub-row">
-          <p class="mranking-sub">지금 가장 주목받는 아이템</p>
-          <span class="sort-indicator mranking-sort">
-            <span class="sort-dot" style="width:10px;height:10px;background:#7c3aed;"></span>
-            <span class="sort-dot" style="width:8px;height:8px;background:#a78bfa;"></span>
-            <span class="sort-dot" style="width:6px;height:6px;background:#c4b5fd;"></span>
-            <span class="sort-label">크면 핫한 아이템</span>
-          </span>
-        </div>
-      </div>
-    </div>
+  <section class="ranking-section">
+    <DashboardSectionHeader
+      prefix="실시간"
+      accent="제품 랭킹"
+      sub="버블이 클수록 인기 있는 아이템"
+      :to="{ name: 'ProductRanking' }"
+    />
 
     <!-- 캐꾸 안내 배너 -->
     <router-link v-if="!loading && hotProducts.length > 0" :to="{ name: 'ProductRanking' }" class="dash-cgo-banner">
@@ -134,6 +118,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, defineExpose } from 'vue'
 import { productService } from '@/services/ProductService'
+import DashboardSectionHeader from './DashboardSectionHeader.vue'
 
 const emit = defineEmits(['products-loaded'])
 
@@ -460,146 +445,34 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* PC 카드 스타일 — DashboardView의 .content-section 기본을 덮어쓰면서 동일 톤 유지 */
-.content-section.ranking-section {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
-  padding: 1.375rem;
-  margin-bottom: 1rem;
+.ranking-section {
+  width: 100%;
 }
-
-@media (min-width: 768px) {
-  .content-section.ranking-section {
-    padding: 1.625rem;
-    margin-bottom: 1.125rem;
-  }
-}
-
-/* ===== 헤더 (PC·모바일 공통) ===== */
-.mranking-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 1.25rem;
-}
-.mranking-header-main { flex: 1; min-width: 0; }
-.mranking-title-link {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-.mranking-title-link:active { opacity: 0.6; }
-.mranking-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  letter-spacing: -0.03em;
-  margin: 0;
-}
-.mranking-accent { color: var(--c-brand); }
-.mranking-title-arrow {
-  color: var(--c-text-400);
-  flex-shrink: 0;
-  margin-left: 2px;
-}
-.mranking-sub-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 4px 0 8px;
-}
-.mranking-sub {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--c-text-600);
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-.mranking-more {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--c-text-400);
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
-.mranking-sort {
-  margin-top: 0;
-}
-
-@media (max-width: 640px) {
-  .mranking-title { font-size: 1.125rem; }
-}
-
-.sort-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  background: #f6f4fa;
-  border: 1px solid #eceaf0;
-  border-radius: 12px;
-  white-space: nowrap;
-}
-
-.sort-dot { border-radius: 50%; flex-shrink: 0; }
-
-.sort-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: #7c6cba;
-  margin-left: 2px;
-}
-
-.view-all-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--c-text-500);
-  text-decoration: none;
-  padding: 6px 10px;
-  border-radius: 8px;
-  transition: all 0.15s ease;
-}
-.view-all-btn:hover { color: var(--text-primary); background: var(--bg-mute); }
 
 .dash-bubble-wrapper { position: relative; }
 
-/* 캐꾸 안내 배너 */
+/* 캐꾸 안내 배너 — 톤 다운, 콘텐츠 위주 */
 .dash-cgo-banner {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  margin: 0 0 14px;
-  background: var(--c-brand-soft);
-  border: 1px solid var(--c-brand-soft);
-  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  background: var(--bg-subtle, #F7F8FA);
+  border: none;
+  border-radius: 14px;
   text-decoration: none;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease;
 }
 .dash-cgo-banner:hover {
-  background: var(--c-brand-soft);
-  border-color: var(--c-brand-soft);
+  background: var(--bg-mute, #F2F4F6);
 }
 .dash-cgo-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--c-brand);
-  color: #ffffff;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--c-brand-soft, #FAF5FF);
+  color: var(--c-brand);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -615,26 +488,26 @@ onUnmounted(() => {
 .dash-cgo-title {
   font-size: 13.5px;
   font-weight: 700;
-  color: var(--c-brand-hover);
-  letter-spacing: -0.3px;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 .dash-cgo-sub {
   font-size: 12px;
   font-weight: 500;
-  color: var(--c-brand-hover);
-  letter-spacing: -0.2px;
+  color: var(--c-text-500);
+  letter-spacing: -0.01em;
 }
 .dash-cgo-cta {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 7px 11px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--c-brand-soft);
-  border-radius: 9px;
+  padding: 7px 12px;
+  background: var(--bg-base, #FFFFFF);
+  border: none;
+  border-radius: 100px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--c-brand-hover);
+  color: var(--c-brand);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -651,9 +524,9 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   min-height: 360px;
-  background: var(--bg-subtle);
-  border-radius: 16px;
-  border: 1px solid var(--border-default);
+  background: var(--bg-subtle, #F7F8FA);
+  border-radius: 18px;
+  border: none;
   overflow: hidden;
   cursor: default;
 }
@@ -864,17 +737,4 @@ onUnmounted(() => {
   .dash-bubble:hover { transform: none; }
 }
 
-@media (max-width: 767px) {
-  .content-section.ranking-section {
-    background: var(--bg-elevated);
-    border: none;
-    border-bottom: 1px solid var(--border-default);
-    box-shadow: none;
-    border-radius: 0;
-    padding: 16px 0 20px;
-    margin: 0;
-  }
-
-  .mranking-header { margin-bottom: 16px; }
-}
 </style>
