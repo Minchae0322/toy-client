@@ -7,7 +7,65 @@
       :to="{ name: 'BattleList' }"
     />
 
-    <!-- 1픽 — 매거진 풀너비 카드 -->
+    <!-- PC: 1~5위 균등 그리드 (모바일에선 숨김) -->
+    <div v-if="!loading && topFive.length > 0" class="pc-top-grid">
+      <router-link
+        v-for="(battle, idx) in topFive"
+        :key="`pc-${battle.id}`"
+        :to="{ name: 'BattleDetail', params: { id: battle.id } }"
+        class="pc-card"
+        :class="{ 'pc-card-lead': idx === 0 }"
+      >
+        <div class="pc-cover">
+          <img
+            v-if="battle.thumbnailDto?.fileUrl"
+            :src="battle.thumbnailDto.fileUrl"
+            :alt="battle.title"
+            loading="lazy"
+            @error="handleImageError"
+          />
+          <div v-else class="pc-cover-none">Y</div>
+          <span class="pc-rank-badge" :class="{ 'is-top': idx === 0 }">{{ idx + 1 }}</span>
+          <span v-if="getDdayText(battle.endDate)" class="pc-dday">{{ getDdayText(battle.endDate) }}</span>
+        </div>
+        <div class="pc-body">
+          <h4 class="pc-title">{{ battle.title }}</h4>
+
+          <!-- 1위 카드: 1·2위 후보 vote bar 풍부하게 -->
+          <div v-if="idx === 0 && battle.topItems?.length > 0" class="pc-vs">
+            <div class="pc-vs-row">
+              <span class="pc-vs-rank">1</span>
+              <span class="pc-vs-name">{{ truncateName(battle.topItems[0]?.displayName, 14) }}</span>
+              <span class="pc-vs-pct lead">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
+            </div>
+            <div class="pc-vs-track">
+              <div class="pc-vs-fill lead" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
+            </div>
+            <div class="pc-vs-row" v-if="battle.topItems[1]">
+              <span class="pc-vs-rank runner">2</span>
+              <span class="pc-vs-name runner">{{ truncateName(battle.topItems[1]?.displayName, 14) }}</span>
+              <span class="pc-vs-pct">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
+            </div>
+            <div class="pc-vs-track" v-if="battle.topItems[1]">
+              <div class="pc-vs-fill" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
+            </div>
+            <div class="pc-vs-foot">
+              <span class="pc-votes-lead">{{ formatNumber(battle.totalVotes) }} 투표</span>
+            </div>
+          </div>
+
+          <!-- 2~5위: 간단 푸터 -->
+          <div v-else class="pc-foot">
+            <span class="pc-votes">{{ formatNumber(battle.totalVotes) }} 투표</span>
+            <span v-if="battle.topItems?.[0]" class="pc-lead">
+              {{ formatPercent(battle.topItems[0].votePercentage) }}%
+            </span>
+          </div>
+        </div>
+      </router-link>
+    </div>
+
+    <!-- 1픽 — 매거진 풀너비 카드 (모바일 전용) -->
     <router-link
       v-if="!loading && featuredBattle"
       :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
@@ -36,7 +94,7 @@
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
-            {{ formatNumber(featuredBattle.totalVotes) }}명 참여중
+            {{ formatNumber(featuredBattle.totalVotes) }} 투표
           </span>
         </div>
       </div>
@@ -78,7 +136,7 @@
       </div>
     </router-link>
 
-    <!-- 1픽 로딩 스켈레톤 -->
+    <!-- 1픽 로딩 스켈레톤 (모바일) -->
     <div v-else-if="loading" class="lead-card is-skeleton">
       <div class="skeleton lead-sk-cover"></div>
       <div class="lead-body">
@@ -86,6 +144,17 @@
         <div class="skeleton" style="height: 12px; width: 100%; border-radius: 100px; margin-bottom: 12px;"></div>
         <div class="skeleton" style="height: 12px; width: 70%; border-radius: 100px; margin-bottom: 20px;"></div>
         <div class="skeleton" style="height: 48px; width: 100%; border-radius: 12px;"></div>
+      </div>
+    </div>
+
+    <!-- PC 그리드 스켈레톤 -->
+    <div v-if="loading" class="pc-top-grid">
+      <div v-for="i in 5" :key="`pc-sk-${i}`" class="pc-card">
+        <div class="skeleton pc-cover"></div>
+        <div class="pc-body">
+          <div class="skeleton" style="height: 12px; width: 90%; border-radius: 6px; margin-bottom: 6px;"></div>
+          <div class="skeleton" style="height: 10px; width: 60%; border-radius: 6px;"></div>
+        </div>
       </div>
     </div>
 
@@ -133,7 +202,7 @@
           <div class="rest-body">
             <h4 class="rest-title">{{ battle.title }}</h4>
             <div class="rest-foot">
-              <span class="rest-votes">{{ formatNumber(battle.totalVotes) }}명 참여</span>
+              <span class="rest-votes">{{ formatNumber(battle.totalVotes) }} 투표</span>
               <span v-if="battle.topItems?.[0]" class="rest-lead">
                 1위 {{ formatPercent(battle.topItems[0].votePercentage) }}%
               </span>
@@ -155,11 +224,13 @@ const loading = ref(true)
 
 const featuredBattle = computed(() => hotBattles.value[0] || null)
 const restBattles = computed(() => hotBattles.value.slice(1, 6))
+const topFive = computed(() => hotBattles.value.slice(0, 5))
 
 const loadHotBattles = async () => {
   loading.value = true
   try {
-    const response = await battleService.getHotBattleList()
+    // 한 번 호출로 PC(5개) + 모바일(hero 1 + rest 5 = 6개) 모두 커버
+    const response = await battleService.getHotBattleList({ size: 7 })
     if (response.success) {
       hotBattles.value = response.data || []
     }
@@ -210,13 +281,6 @@ onMounted(() => {
 <style scoped>
 .dashboard-pick {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-@media (min-width: 768px) {
-  .dashboard-pick { gap: 36px; }
 }
 
 /* ================================================================
@@ -228,30 +292,271 @@ onMounted(() => {
   color: inherit;
 }
 
+/* PC에선 hero·rest 모두 숨기고 pc-top-grid만 사용
+   (selector 특이성 올려 후속 .rest-wrap/.lead-card 룰을 이김) */
+@media (min-width: 768px) {
+  .dashboard-pick > .lead-card,
+  .dashboard-pick > .rest-wrap {
+    display: none;
+  }
+}
+
+/* ================================================================
+   PC 1~5위 균등 그리드
+================================================================ */
+.pc-top-grid { display: none; }
+
+@media (min-width: 768px) {
+  .pc-top-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+}
+@media (min-width: 1280px) {
+  .pc-top-grid { gap: 18px; }
+}
+
+.pc-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.18s ease;
+  min-width: 0;
+}
+.pc-card:hover { transform: translateY(-2px); }
+.pc-card:active { transform: scale(0.98); }
+
+.pc-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-mute, #F2F4F6);
+  margin-bottom: 10px;
+  isolation: isolate;
+}
+.pc-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.pc-card:hover .pc-cover img { transform: scale(1.04); }
+
+.pc-cover-none {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: var(--c-text-400);
+  font-size: 28px;
+  background: var(--bg-mute);
+}
+
+.pc-rank-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 26, 0.78);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 8px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+  letter-spacing: -0.02em;
+}
+.pc-rank-badge.is-top {
+  background: var(--c-brand);
+}
+
+.pc-dday {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  background: rgba(10, 14, 26, 0.78);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  border-radius: 100px;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+}
+
+.pc-body {
+  padding: 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pc-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(13.5px * 1.35 * 2);
+}
+
+@media (min-width: 1280px) {
+  .pc-title {
+    font-size: 14.5px;
+    min-height: calc(14.5px * 1.35 * 2);
+  }
+}
+
+.pc-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--c-text-500, #64748B);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pc-lead {
+  color: var(--c-brand);
+  font-weight: 800;
+}
+
+/* ─ 1위 카드: 더 큰 cover + vote bar 풍부하게 ─ */
+.pc-card-lead .pc-cover {
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+}
+@media (min-width: 1280px) {
+  .pc-card-lead .pc-cover { border-radius: 16px; }
+}
+.pc-card-lead .pc-title {
+  font-size: 15px;
+  min-height: 0;
+  -webkit-line-clamp: 1;
+}
+@media (min-width: 1280px) {
+  .pc-card-lead .pc-title { font-size: 17px; }
+}
+
+.pc-vs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+.pc-vs-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.pc-vs-rank {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-brand);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.pc-vs-rank.runner { background: var(--c-text-400, #94A3B8); }
+.pc-vs-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pc-vs-name.runner {
+  font-weight: 600;
+  color: var(--c-text-500, #64748B);
+}
+.pc-vs-pct {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-text-500, #64748B);
+}
+.pc-vs-pct.lead {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--c-brand);
+}
+.pc-vs-track {
+  height: 4px;
+  background: var(--bg-subtle, #F7F8FA);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.pc-vs-fill {
+  height: 100%;
+  background: var(--c-text-300, #CBD5E1);
+  border-radius: 100px;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pc-vs-fill.lead { background: var(--c-brand); }
+.pc-vs-foot {
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+}
+.pc-votes-lead {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--c-text-500, #64748B);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
 .lead-card.is-skeleton { pointer-events: none; }
 
 .lead-cover {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: 20px;
+  aspect-ratio: 16 / 11;
+  border-radius: 18px;
   overflow: hidden;
   background: var(--bg-mute, #F2F4F6);
   isolation: isolate;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 @media (min-width: 480px) {
-  .lead-cover { aspect-ratio: 16 / 10; }
+  .lead-cover { aspect-ratio: 16 / 10; border-radius: 20px; margin-bottom: 16px; }
 }
 
-@media (min-width: 768px) {
-  .lead-cover { aspect-ratio: 16 / 9; border-radius: 24px; margin-bottom: 22px; }
-}
-
-@media (min-width: 1280px) {
-  .lead-cover { aspect-ratio: 21 / 10; border-radius: 28px; }
-}
 
 .lead-cover img {
   width: 100%;
@@ -269,9 +574,14 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   font-weight: 900;
-  color: var(--c-text-400);
-  font-size: 72px;
+  color: var(--c-text-300, #CBD5E1);
+  font-size: 40px;
   background: var(--bg-mute);
+  letter-spacing: -0.04em;
+}
+
+@media (min-width: 768px) {
+  .lead-cover-none { font-size: 56px; }
 }
 
 /* 사진 위 글래스 칩 */
@@ -330,7 +640,7 @@ onMounted(() => {
 .lead-body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 @media (min-width: 768px) {
@@ -338,7 +648,7 @@ onMounted(() => {
 }
 
 .lead-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -352,10 +662,6 @@ onMounted(() => {
 
 @media (min-width: 768px) {
   .lead-title { font-size: 26px; }
-}
-
-@media (min-width: 1280px) {
-  .lead-title { font-size: 30px; }
 }
 
 .vs-list {
@@ -453,12 +759,12 @@ onMounted(() => {
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 15px 16px;
+  padding: 12px 14px;
   background: var(--c-ink-900, #0A0E1A);
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  border-radius: 14px;
+  border-radius: 12px;
   letter-spacing: -0.01em;
   transition: background 0.15s ease;
 }
@@ -478,6 +784,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  margin-top: 24px;
 }
 
 .rest-header {
@@ -700,21 +1007,31 @@ onMounted(() => {
 
 .lead-sk-cover {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: 20px;
-  margin-bottom: 18px;
+  aspect-ratio: 16 / 11;
+  border-radius: 18px;
+  margin-bottom: 14px;
 }
 
 @media (min-width: 480px) {
-  .lead-sk-cover { aspect-ratio: 16 / 10; }
+  .lead-sk-cover { aspect-ratio: 16 / 10; border-radius: 20px; margin-bottom: 16px; }
 }
 
 @media (min-width: 768px) {
-  .lead-sk-cover { aspect-ratio: 16 / 9; border-radius: 24px; margin-bottom: 22px; }
+  .lead-sk-cover {
+    width: 280px;
+    flex-shrink: 0;
+    aspect-ratio: 1 / 1;
+    border-radius: 18px;
+    margin-bottom: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lead-sk-cover { width: 320px; border-radius: 20px; }
 }
 
 @media (min-width: 1280px) {
-  .lead-sk-cover { aspect-ratio: 21 / 10; border-radius: 28px; }
+  .lead-sk-cover { width: 360px; }
 }
 
 /* ================================================================

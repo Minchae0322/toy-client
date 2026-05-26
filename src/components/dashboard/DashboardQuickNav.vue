@@ -1,9 +1,5 @@
 <template>
   <section class="quick-nav-section" aria-label="주요 메뉴">
-    <DashboardSectionHeader
-      prefix="이런 코너는"
-      accent="어떠세요?"
-    />
     <div class="quick-nav-grid">
       <router-link
         v-for="item in items"
@@ -22,7 +18,6 @@
 
 <script setup>
 import { Flame, BarChart3, Award, Sparkles, Swords, MessagesSquare } from 'lucide-vue-next'
-import DashboardSectionHeader from './DashboardSectionHeader.vue'
 
 const items = [
   {

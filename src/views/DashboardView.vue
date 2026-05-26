@@ -7,11 +7,11 @@
         <!-- 브랜드 인트로 (yogurtte 정체성) -->
         <DashboardBrandHero />
 
-        <!-- 메인: 요거픽 (사이트의 대표 기능) -->
-        <DashboardBattles />
-
         <!-- 다른 코너 둘러보기 (탐색 진입점) -->
         <DashboardQuickNav />
+
+        <!-- 메인: 요거픽 (사이트의 대표 기능) -->
+        <DashboardBattles />
 
         <!-- 핫 피드 섹션 -->
         <DashboardHotFeeds :feeds="hotFeeds" :loading="feedsLoading" />
