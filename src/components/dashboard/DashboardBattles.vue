@@ -482,7 +482,7 @@ onMounted(() => {
 .hero-rank-pct {
   font-size: 22px;
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--c-brand);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
   flex-shrink: 0;
@@ -495,15 +495,19 @@ onMounted(() => {
 
 .hero-gauge {
   display: flex;
-  height: 8px;
-  background: var(--bg-subtle);
+  height: 10px;
+  background: var(--bg-mute);
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 16px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 .hero-g-bar { height: 100%; transition: width 0.8s ease-out; }
-.hero-g-bar.b1 { background: var(--c-brand-soft); }
-.hero-g-bar.b2 { background: var(--c-brand); border-left: 1px solid var(--bg-base); }
+.hero-g-bar.b1 { background: var(--c-brand); }
+.hero-g-bar.b2 {
+  background: var(--c-text-500);
+  box-shadow: inset 2px 0 0 var(--bg-elevated);
+}
 
 .hero-cta {
   display: flex;
@@ -645,7 +649,7 @@ onMounted(() => {
 .rank-pct {
   font-size: 13px;
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--c-brand);
   flex-shrink: 0;
 }
 .rank-left-name { flex: 1; }
@@ -663,14 +667,18 @@ onMounted(() => {
 
 .gauge-track {
   display: flex;
-  height: 6px;
-  background: var(--bg-subtle);
+  height: 7px;
+  background: var(--bg-mute);
   border-radius: 10px;
   overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 .g-bar { height: 100%; transition: width 0.8s ease-out; }
-.g-bar.b1 { background: var(--c-brand-soft); }
-.g-bar.b2 { background: var(--c-brand); }
+.g-bar.b1 { background: var(--c-brand); }
+.g-bar.b2 {
+  background: var(--c-text-500);
+  box-shadow: inset 2px 0 0 var(--bg-elevated);
+}
 
 /* 스켈레톤 */
 .skeleton {
