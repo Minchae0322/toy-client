@@ -7,93 +7,85 @@
       :to="{ name: 'BattleList' }"
     />
 
-    <!-- 히어로 (1번째 요거픽) -->
-    <article v-if="!loading && featuredBattle" class="pick-hero">
-      <router-link
-        :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
-        class="hero-cover"
-      >
+    <!-- 1픽 — 매거진 풀너비 카드 -->
+    <router-link
+      v-if="!loading && featuredBattle"
+      :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
+      class="lead-card"
+    >
+      <!-- 큰 사진 + 모든 메타 칩을 안에 -->
+      <div class="lead-cover">
         <img
           v-if="featuredBattle.thumbnailDto?.fileUrl"
           :src="featuredBattle.thumbnailDto.fileUrl"
           :alt="featuredBattle.title"
           @error="handleImageError"
         />
-        <div v-else class="hero-cover-none">Y</div>
+        <div v-else class="lead-cover-none">Y</div>
 
-        <!-- 좌상단: LIVE / D-day -->
-        <div class="cover-chip-row top-left">
-          <span class="cover-chip live"><span class="dot"></span>LIVE</span>
-          <span v-if="getDdayText(featuredBattle.endDate)" class="cover-chip">{{ getDdayText(featuredBattle.endDate) }}</span>
+        <div class="lead-chip-row lead-chip-tl">
+          <span class="lead-chip live"><span class="live-dot"></span>LIVE</span>
+          <span v-if="getDdayText(featuredBattle.endDate)" class="lead-chip">{{ getDdayText(featuredBattle.endDate) }}</span>
         </div>
 
-        <!-- 우하단: 참여자 -->
-        <div class="cover-chip-row bottom-right">
-          <span class="cover-chip glass">
+        <div class="lead-chip-row lead-chip-bl">
+          <span class="lead-chip glass">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
-            {{ formatNumber(featuredBattle.totalVotes) }} 참여
+            {{ formatNumber(featuredBattle.totalVotes) }}명 참여중
           </span>
         </div>
-      </router-link>
+      </div>
 
-      <!-- 제목 + 비교 + CTA -->
-      <div class="hero-body">
-        <router-link
-          :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
-          class="hero-title-link"
-        >
-          <h3 class="hero-title">{{ featuredBattle.title }}</h3>
-        </router-link>
+      <!-- 사진 밑 본문 -->
+      <div class="lead-body">
+        <h3 class="lead-title">{{ featuredBattle.title }}</h3>
 
-        <div class="cmp-list" v-if="featuredBattle.topItems?.length > 0">
-          <div class="cmp-item">
-            <div class="cmp-head">
-              <span class="cmp-rank">1</span>
-              <span class="cmp-name">{{ truncateName(featuredBattle.topItems[0]?.displayName, 22) }}</span>
-              <span class="cmp-pct lead">{{ formatPercent(featuredBattle.topItems[0]?.votePercentage) }}%</span>
+        <div v-if="featuredBattle.topItems?.length > 0" class="vs-list">
+          <div class="vs-row">
+            <div class="vs-row-head">
+              <span class="vs-rank">1</span>
+              <span class="vs-name">{{ truncateName(featuredBattle.topItems[0]?.displayName, 24) }}</span>
+              <span class="vs-pct lead">{{ formatPercent(featuredBattle.topItems[0]?.votePercentage) }}%</span>
             </div>
-            <div class="cmp-track">
-              <div class="cmp-fill lead" :style="{ width: formatPercent(featuredBattle.topItems[0]?.votePercentage) + '%' }"></div>
+            <div class="vs-track">
+              <div class="vs-fill lead" :style="{ width: formatPercent(featuredBattle.topItems[0]?.votePercentage) + '%' }"></div>
             </div>
           </div>
 
-          <div class="cmp-item" v-if="featuredBattle.topItems[1]">
-            <div class="cmp-head">
-              <span class="cmp-rank runner">2</span>
-              <span class="cmp-name runner">{{ truncateName(featuredBattle.topItems[1]?.displayName, 22) }}</span>
-              <span class="cmp-pct">{{ formatPercent(featuredBattle.topItems[1]?.votePercentage) }}%</span>
+          <div class="vs-row" v-if="featuredBattle.topItems[1]">
+            <div class="vs-row-head">
+              <span class="vs-rank runner">2</span>
+              <span class="vs-name runner">{{ truncateName(featuredBattle.topItems[1]?.displayName, 24) }}</span>
+              <span class="vs-pct">{{ formatPercent(featuredBattle.topItems[1]?.votePercentage) }}%</span>
             </div>
-            <div class="cmp-track">
-              <div class="cmp-fill" :style="{ width: formatPercent(featuredBattle.topItems[1]?.votePercentage) + '%' }"></div>
+            <div class="vs-track">
+              <div class="vs-fill" :style="{ width: formatPercent(featuredBattle.topItems[1]?.votePercentage) + '%' }"></div>
             </div>
           </div>
         </div>
 
-        <router-link
-          :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
-          class="hero-cta"
-        >
+        <span class="lead-cta">
           한 표 던지러 가기
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m9 18 6-6-6-6" />
           </svg>
-        </router-link>
+        </span>
       </div>
-    </article>
+    </router-link>
 
-    <!-- 히어로 로딩 스켈레톤 -->
-    <div v-else-if="loading" class="pick-hero is-skeleton">
-      <div class="skeleton hero-sk-cover"></div>
-      <div class="hero-body">
-        <div class="skeleton" style="height: 18px; width: 70%; margin-bottom: 16px; border-radius: 6px;"></div>
-        <div class="skeleton" style="height: 12px; width: 100%; border-radius: 100px; margin-bottom: 10px;"></div>
-        <div class="skeleton" style="height: 12px; width: 80%; border-radius: 100px; margin-bottom: 18px;"></div>
-        <div class="skeleton" style="height: 42px; width: 100%; border-radius: 12px;"></div>
+    <!-- 1픽 로딩 스켈레톤 -->
+    <div v-else-if="loading" class="lead-card is-skeleton">
+      <div class="skeleton lead-sk-cover"></div>
+      <div class="lead-body">
+        <div class="skeleton" style="height: 22px; width: 78%; margin-bottom: 20px; border-radius: 6px;"></div>
+        <div class="skeleton" style="height: 12px; width: 100%; border-radius: 100px; margin-bottom: 12px;"></div>
+        <div class="skeleton" style="height: 12px; width: 70%; border-radius: 100px; margin-bottom: 20px;"></div>
+        <div class="skeleton" style="height: 48px; width: 100%; border-radius: 12px;"></div>
       </div>
     </div>
 
@@ -108,36 +100,47 @@
       <router-link :to="{ name: 'BattleList' }" class="empty-cta">요거픽 둘러보기</router-link>
     </div>
 
-    <!-- 더 많은 픽 — 사진 위주 카드 그리드 -->
-    <div v-if="restBattles.length > 0" class="rest-grid">
-      <router-link
-        v-for="battle in restBattles"
-        :key="battle.id"
-        :to="{ name: 'BattleDetail', params: { id: battle.id } }"
-        class="rest-card"
-      >
-        <div class="rest-cover">
-          <img
-            v-if="battle.thumbnailDto?.fileUrl"
-            :src="battle.thumbnailDto.fileUrl"
-            :alt="battle.title"
-            loading="lazy"
-            @error="handleImageError"
-          />
-          <div v-else class="rest-cover-none">Y</div>
+    <!-- 다른 픽도 둘러보기 — 가로 스크롤 큰 사진 카드 -->
+    <div v-if="restBattles.length > 0" class="rest-wrap">
+      <div class="rest-header">
+        <span class="rest-label">다른 픽도 둘러보기</span>
+        <router-link :to="{ name: 'BattleList' }" class="rest-more">
+          전체보기
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </router-link>
+      </div>
 
-          <span v-if="getDdayText(battle.endDate)" class="rest-chip top-left">{{ getDdayText(battle.endDate) }}</span>
-
-          <span v-if="battle.topItems?.[0]" class="rest-chip glass bottom-left">
-            <span class="rest-chip-dot"></span>
-            1위 {{ formatPercent(battle.topItems[0].votePercentage) }}%
-          </span>
-        </div>
-        <div class="rest-body">
-          <h4 class="rest-title">{{ battle.title }}</h4>
-          <p class="rest-meta">{{ formatNumber(battle.totalVotes) }}명 참여</p>
-        </div>
-      </router-link>
+      <div class="rest-scroll">
+        <router-link
+          v-for="battle in restBattles"
+          :key="battle.id"
+          :to="{ name: 'BattleDetail', params: { id: battle.id } }"
+          class="rest-card"
+        >
+          <div class="rest-cover">
+            <img
+              v-if="battle.thumbnailDto?.fileUrl"
+              :src="battle.thumbnailDto.fileUrl"
+              :alt="battle.title"
+              loading="lazy"
+              @error="handleImageError"
+            />
+            <div v-else class="rest-cover-none">Y</div>
+            <span v-if="getDdayText(battle.endDate)" class="rest-dday">{{ getDdayText(battle.endDate) }}</span>
+          </div>
+          <div class="rest-body">
+            <h4 class="rest-title">{{ battle.title }}</h4>
+            <div class="rest-foot">
+              <span class="rest-votes">{{ formatNumber(battle.totalVotes) }}명 참여</span>
+              <span v-if="battle.topItems?.[0]" class="rest-lead">
+                1위 {{ formatPercent(battle.topItems[0].votePercentage) }}%
+              </span>
+            </div>
+          </div>
+        </router-link>
+      </div>
     </div>
   </section>
 </template>
@@ -151,7 +154,7 @@ const hotBattles = ref([])
 const loading = ref(true)
 
 const featuredBattle = computed(() => hotBattles.value[0] || null)
-const restBattles = computed(() => hotBattles.value.slice(1, 5))
+const restBattles = computed(() => hotBattles.value.slice(1, 6))
 
 const loadHotBattles = async () => {
   loading.value = true
@@ -190,7 +193,7 @@ const getDdayText = (endDate) => {
   return `D-${diffDays}`
 }
 
-const truncateName = (name, maxLength = 22) => {
+const truncateName = (name, maxLength = 24) => {
   if (!name) return '-'
   return name.length > maxLength ? name.slice(0, maxLength) + '…' : name
 }
@@ -213,62 +216,53 @@ onMounted(() => {
 }
 
 @media (min-width: 768px) {
-  .dashboard-pick { gap: 32px; }
+  .dashboard-pick { gap: 36px; }
 }
 
-/* ====================================================
-   히어로 — 외곽선 카드 X, 사진이 주인공
-==================================================== */
-.pick-hero {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-@media (min-width: 768px) {
-  .pick-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-    gap: 28px;
-    align-items: stretch;
-  }
-}
-
-@media (min-width: 1280px) {
-  .pick-hero { gap: 36px; }
-}
-
-/* ===== 커버 (큰 사진) ===== */
-.hero-cover {
-  position: relative;
+/* ================================================================
+   1픽 — 매거진 풀너비 카드 (외곽선 X, 사진이 주인공)
+================================================================ */
+.lead-card {
   display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.lead-card.is-skeleton { pointer-events: none; }
+
+.lead-cover {
+  position: relative;
   width: 100%;
-  aspect-ratio: 16 / 10;
-  border-radius: 18px;
+  aspect-ratio: 4 / 3;
+  border-radius: 20px;
   overflow: hidden;
   background: var(--bg-mute, #F2F4F6);
-  text-decoration: none;
   isolation: isolate;
+  margin-bottom: 18px;
+}
+
+@media (min-width: 480px) {
+  .lead-cover { aspect-ratio: 16 / 10; }
 }
 
 @media (min-width: 768px) {
-  .hero-cover { aspect-ratio: 5 / 4; border-radius: 20px; }
+  .lead-cover { aspect-ratio: 16 / 9; border-radius: 24px; margin-bottom: 22px; }
 }
 
 @media (min-width: 1280px) {
-  .hero-cover { border-radius: 24px; }
+  .lead-cover { aspect-ratio: 21 / 10; border-radius: 28px; }
 }
 
-.hero-cover img {
+.lead-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.hero-cover:hover img { transform: scale(1.03); }
+.lead-card:hover .lead-cover img { transform: scale(1.03); }
 
-.hero-cover-none {
+.lead-cover-none {
   width: 100%;
   height: 100%;
   display: flex;
@@ -276,46 +270,52 @@ onMounted(() => {
   justify-content: center;
   font-weight: 900;
   color: var(--c-text-400);
-  font-size: 64px;
+  font-size: 72px;
   background: var(--bg-mute);
 }
 
-/* 글래스 칩 */
-.cover-chip-row {
+/* 사진 위 글래스 칩 */
+.lead-chip-row {
   position: absolute;
   display: flex;
   gap: 6px;
   z-index: 2;
 }
 
-.cover-chip-row.top-left { top: 14px; left: 14px; }
-.cover-chip-row.bottom-right { bottom: 14px; right: 14px; }
+.lead-chip-tl { top: 16px; left: 16px; }
+.lead-chip-bl { bottom: 16px; left: 16px; }
 
-.cover-chip {
+@media (min-width: 768px) {
+  .lead-chip-tl { top: 20px; left: 20px; }
+  .lead-chip-bl { bottom: 20px; left: 20px; }
+}
+
+.lead-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 10px;
+  padding: 6px 11px;
   background: rgba(10, 14, 26, 0.78);
   color: #fff;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   border-radius: 100px;
   letter-spacing: 0.02em;
+  line-height: 1.2;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  line-height: 1.2;
 }
 
-.cover-chip.glass {
-  background: rgba(255, 255, 255, 0.92);
+.lead-chip.glass {
+  background: rgba(255, 255, 255, 0.94);
   color: var(--text-primary);
   font-weight: 700;
 }
 
-.cover-chip.live { background: var(--c-danger, #EF4444); }
-.cover-chip.live .dot {
-  width: 5px; height: 5px;
+.lead-chip.live { background: var(--c-danger, #EF4444); }
+.lead-chip.live .live-dot {
+  width: 5px;
+  height: 5px;
   background: #fff;
   border-radius: 50%;
   animation: chip-pulse 1.5s ease-in-out infinite;
@@ -326,39 +326,23 @@ onMounted(() => {
   50% { opacity: 0.4; }
 }
 
-@media (min-width: 768px) {
-  .cover-chip { font-size: 11.5px; padding: 5px 11px; }
-  .cover-chip-row.top-left { top: 16px; left: 16px; }
-  .cover-chip-row.bottom-right { bottom: 16px; right: 16px; }
-}
-
-/* ===== Body (제목 + 비교 + CTA) ===== */
-.hero-body {
+/* 본문 */
+.lead-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 0;
+  gap: 18px;
 }
 
 @media (min-width: 768px) {
-  .hero-body {
-    gap: 18px;
-    justify-content: center;
-  }
+  .lead-body { gap: 22px; }
 }
 
-.hero-title-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
-
-.hero-title {
-  font-size: 18px;
+.lead-title {
+  font-size: 20px;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  line-height: 1.35;
+  line-height: 1.3;
   letter-spacing: -0.03em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -367,45 +351,49 @@ onMounted(() => {
 }
 
 @media (min-width: 768px) {
-  .hero-title { font-size: 22px; line-height: 1.3; }
+  .lead-title { font-size: 26px; }
 }
 
 @media (min-width: 1280px) {
-  .hero-title { font-size: 26px; }
+  .lead-title { font-size: 30px; }
 }
 
-.cmp-list {
+.vs-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.cmp-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
+@media (min-width: 768px) {
+  .vs-list { gap: 14px; }
 }
 
-.cmp-rank {
-  width: 18px;
-  height: 18px;
+.vs-row-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 7px;
+}
+
+.vs-rank {
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: var(--c-brand);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background: var(--c-brand);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
   flex-shrink: 0;
   letter-spacing: -0.02em;
 }
 
-.cmp-rank.runner { background: var(--c-text-400, #94A3B8); }
+.vs-rank.runner { background: var(--c-text-400, #94A3B8); }
 
-.cmp-name {
-  font-size: 14px;
+.vs-name {
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -416,13 +404,13 @@ onMounted(() => {
   text-overflow: ellipsis;
 }
 
-.cmp-name.runner {
+.vs-name.runner {
   font-weight: 600;
   color: var(--c-text-500, #64748B);
 }
 
-.cmp-pct {
-  font-size: 14px;
+.vs-pct {
+  font-size: 15px;
   font-weight: 700;
   color: var(--c-text-500, #64748B);
   font-variant-numeric: tabular-nums;
@@ -430,80 +418,132 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.cmp-pct.lead {
-  font-size: 18px;
+.vs-pct.lead {
+  font-size: 20px;
   font-weight: 800;
   color: var(--c-brand);
 }
 
 @media (min-width: 768px) {
-  .cmp-name { font-size: 15px; }
-  .cmp-pct { font-size: 15px; }
-  .cmp-pct.lead { font-size: 22px; }
+  .vs-name { font-size: 16px; }
+  .vs-pct { font-size: 16px; }
+  .vs-pct.lead { font-size: 24px; }
+  .vs-rank { width: 22px; height: 22px; font-size: 12px; }
 }
 
-.cmp-track {
+.vs-track {
   height: 6px;
   background: var(--bg-subtle, #F7F8FA);
   border-radius: 100px;
   overflow: hidden;
 }
 
-.cmp-fill {
+.vs-fill {
   height: 100%;
   background: var(--c-text-300, #CBD5E1);
   border-radius: 100px;
   transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.cmp-fill.lead { background: var(--c-brand); }
+.vs-fill.lead { background: var(--c-brand); }
 
-.hero-cta {
+.lead-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 14px 16px;
+  padding: 15px 16px;
   background: var(--c-ink-900, #0A0E1A);
   color: #fff;
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 700;
-  border-radius: 12px;
+  border-radius: 14px;
   letter-spacing: -0.01em;
-  text-decoration: none;
   transition: background 0.15s ease;
-  margin-top: 2px;
 }
 
-.hero-cta:hover { background: var(--c-ink-700, #1E293B); }
-.hero-cta:active { transform: scale(0.99); }
-
-/* ====================================================
-   더 많은 픽 — 사진 위주 카드, 외곽선 없음
-==================================================== */
-.rest-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px 12px;
+.lead-card:hover .lead-cta {
+  background: var(--c-ink-700, #1E293B);
 }
 
-@media (min-width: 640px) {
-  .rest-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px 14px;
+@media (min-width: 768px) {
+  .lead-cta { padding: 17px 18px; font-size: 15.5px; }
+}
+
+/* ================================================================
+   다른 픽도 둘러보기 — 가로 스크롤 큰 사진 카드
+================================================================ */
+.rest-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rest-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rest-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 768px) {
+  .rest-label { font-size: 15.5px; }
+}
+
+.rest-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--c-text-500, #64748B);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rest-more:hover { color: var(--text-primary); }
+
+/* 가로 스크롤 */
+.rest-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px;
+  padding: 0 16px 4px;
+}
+
+.rest-scroll::-webkit-scrollbar { display: none; }
+
+@media (min-width: 768px) {
+  .rest-scroll {
+    gap: 16px;
+    margin: 0 -32px;
+    padding: 0 32px 4px;
   }
 }
 
 @media (min-width: 1024px) {
-  .rest-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 22px 18px;
+  .rest-scroll {
+    margin: 0 -40px;
+    padding: 0 40px 4px;
   }
 }
 
 .rest-card {
-  display: block;
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
   color: inherit;
   transition: transform 0.18s ease;
@@ -512,19 +552,31 @@ onMounted(() => {
 .rest-card:hover { transform: translateY(-2px); }
 .rest-card:active { transform: scale(0.98); }
 
-.rest-cover {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  background: var(--bg-mute, #F2F4F6);
-  border-radius: 14px;
-  overflow: hidden;
-  isolation: isolate;
-  margin-bottom: 10px;
+@media (min-width: 480px) {
+  .rest-card { flex: 0 0 220px; }
 }
 
 @media (min-width: 768px) {
-  .rest-cover { border-radius: 16px; }
+  .rest-card { flex: 0 0 240px; }
+}
+
+@media (min-width: 1280px) {
+  .rest-card { flex: 0 0 260px; }
+}
+
+.rest-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-mute, #F2F4F6);
+  margin-bottom: 10px;
+  isolation: isolate;
+}
+
+@media (min-width: 768px) {
+  .rest-cover { border-radius: 16px; margin-bottom: 12px; }
 }
 
 .rest-cover img {
@@ -547,79 +599,93 @@ onMounted(() => {
   font-size: 32px;
 }
 
-.rest-chip {
+.rest-dday {
   position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 9px;
-  border-radius: 100px;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-  z-index: 2;
-}
-
-.rest-chip.top-left {
   top: 10px;
   left: 10px;
+  padding: 4px 9px;
   background: rgba(10, 14, 26, 0.78);
   color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  border-radius: 100px;
+  letter-spacing: 0.02em;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-}
-
-.rest-chip.glass.bottom-left {
-  bottom: 10px;
-  left: 10px;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--c-brand);
-  font-weight: 800;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.rest-chip-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--c-brand);
+  z-index: 2;
 }
 
 .rest-body {
   padding: 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .rest-title {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 4px;
+  margin: 0;
   line-height: 1.4;
   letter-spacing: -0.02em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: calc(14.5px * 1.4 * 2);
 }
 
 @media (min-width: 768px) {
-  .rest-title { font-size: 15px; }
+  .rest-title {
+    font-size: 15.5px;
+    min-height: calc(15.5px * 1.4 * 2);
+  }
 }
 
-.rest-meta {
-  font-size: 12px;
+.rest-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--c-text-400);
-  margin: 0;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
 
-/* ====================================================
+@media (min-width: 768px) {
+  .rest-foot { font-size: 12.5px; }
+}
+
+.rest-votes {
+  white-space: nowrap;
+}
+
+.rest-lead {
+  position: relative;
+  padding-left: 9px;
+  color: var(--c-brand);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rest-lead::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translateY(-50%);
+  opacity: 0.6;
+}
+
+/* ================================================================
    Skeleton
-==================================================== */
+================================================================ */
 .skeleton {
   background: linear-gradient(90deg, var(--border-default, #F1F3F6) 25%, #E8EAED 37%, var(--border-default, #F1F3F6) 63%);
   background-size: 400% 100%;
@@ -632,21 +698,28 @@ onMounted(() => {
   100% { background-position: 0 50%; }
 }
 
-.is-skeleton { pointer-events: none; }
-
-.hero-sk-cover {
+.lead-sk-cover {
   width: 100%;
-  aspect-ratio: 16 / 10;
-  border-radius: 18px;
+  aspect-ratio: 4 / 3;
+  border-radius: 20px;
+  margin-bottom: 18px;
+}
+
+@media (min-width: 480px) {
+  .lead-sk-cover { aspect-ratio: 16 / 10; }
 }
 
 @media (min-width: 768px) {
-  .hero-sk-cover { aspect-ratio: 5 / 4; border-radius: 20px; }
+  .lead-sk-cover { aspect-ratio: 16 / 9; border-radius: 24px; margin-bottom: 22px; }
 }
 
-/* ====================================================
+@media (min-width: 1280px) {
+  .lead-sk-cover { aspect-ratio: 21 / 10; border-radius: 28px; }
+}
+
+/* ================================================================
    Empty
-==================================================== */
+================================================================ */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -687,26 +760,19 @@ onMounted(() => {
   text-decoration: none;
 }
 
-/* ====================================================
-   미디어
-==================================================== */
-@media (max-width: 480px) {
-  .hero-title { font-size: 17px; }
-  .cmp-name { font-size: 13.5px; }
-  .cmp-pct { font-size: 13.5px; }
-  .cmp-pct.lead { font-size: 17px; }
-  .hero-cta { padding: 13px 14px; font-size: 14px; }
-  .rest-title { font-size: 13.5px; }
-  .rest-meta { font-size: 11.5px; }
-}
-
+/* ================================================================
+   미디어 적응
+================================================================ */
 @media (max-width: 380px) {
-  .rest-grid { gap: 12px 10px; }
-  .rest-title { font-size: 13px; }
+  .lead-title { font-size: 18.5px; }
+  .vs-name { font-size: 13.5px; }
+  .vs-pct.lead { font-size: 18px; }
+  .lead-cta { padding: 14px; font-size: 14.5px; }
+  .rest-card { flex: 0 0 180px; }
 }
 
 @media (hover: none) {
-  .hero-cover:hover img,
+  .lead-card:hover .lead-cover img,
   .rest-card:hover,
   .rest-card:hover .rest-cover img {
     transform: none;
@@ -714,8 +780,8 @@ onMounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cover-chip.live .dot { animation: none; }
+  .lead-chip.live .live-dot { animation: none; }
   .skeleton { animation: none; background: var(--bg-subtle); }
-  .cmp-fill { transition: none; }
+  .vs-fill { transition: none; }
 }
 </style>
