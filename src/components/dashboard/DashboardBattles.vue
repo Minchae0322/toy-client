@@ -490,7 +490,7 @@ onMounted(() => {
 .hero-rank-pct.rank-pct-sub {
   font-size: 18px;
   font-weight: 700;
-  color: var(--c-text-500);
+  color: var(--c-gold);
 }
 
 .hero-gauge {
@@ -505,7 +505,7 @@ onMounted(() => {
 .hero-g-bar { height: 100%; transition: width 0.8s ease-out; }
 .hero-g-bar.b1 { background: var(--c-brand); }
 .hero-g-bar.b2 {
-  background: var(--c-text-500);
+  background: var(--c-gold);
   box-shadow: inset 2px 0 0 var(--bg-elevated);
 }
 
@@ -655,7 +655,7 @@ onMounted(() => {
 .rank-left-name { flex: 1; }
 .rank-right-pct {
   margin-left: auto;
-  color: var(--c-text-500);
+  color: var(--c-gold);
   font-weight: 700;
 }
 .rank-right-name {
@@ -676,7 +676,7 @@ onMounted(() => {
 .g-bar { height: 100%; transition: width 0.8s ease-out; }
 .g-bar.b1 { background: var(--c-brand); }
 .g-bar.b2 {
-  background: var(--c-text-500);
+  background: var(--c-gold);
   box-shadow: inset 2px 0 0 var(--bg-elevated);
 }
 
