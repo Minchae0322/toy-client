@@ -374,8 +374,8 @@ const handleImageError = (battleId) => {
 .hot-card:visited {
   position: relative;
   flex-shrink: 0;
-  width: 172px;
-  /* 모바일: 2.5장 보이도록 viewport 기반 — app-container 좌우 1rem(=32px) + gap 12px * 2 */
+  width: 152px;
+  /* 모바일: 2.7장 보이도록 viewport 기반 — app-container 좌우 1rem(=32px) + gap 12px * 2 */
   aspect-ratio: 3 / 4.1;
   border-radius: 18px;
   overflow: hidden;
@@ -396,8 +396,8 @@ const handleImageError = (battleId) => {
   .hot-card,
   .hot-card:link,
   .hot-card:visited {
-    width: 198px;
-    border-radius: 20px;
+    width: 168px;
+    border-radius: 18px;
     aspect-ratio: 3 / 4;
   }
 }
@@ -406,8 +406,8 @@ const handleImageError = (battleId) => {
   .hot-card,
   .hot-card:link,
   .hot-card:visited {
-    width: 218px;
-    border-radius: 22px;
+    width: 188px;
+    border-radius: 20px;
     aspect-ratio: 3 / 4;
   }
 }
@@ -699,7 +699,7 @@ const handleImageError = (battleId) => {
 @media (max-width: 767px) {
   .scroll-dots { display: flex; }
   /* 2.5장 노출: (viewport - app-container padding 32px - gap 24px) / 2.5 */
-  .hot-card { width: calc((100vw - 56px) / 2.5); }
+  .hot-card { width: calc((100vw - 56px) / 2.7); }
 }
 
 @media (prefers-reduced-motion: reduce) {

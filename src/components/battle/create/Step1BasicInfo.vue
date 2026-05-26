@@ -267,7 +267,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:battleForm']);
 
-const TITLE_MAX = 20;
+const TITLE_MAX = 30;
 const onTitleInput = (e) => {
   const raw = e.target.value;
   const chars = Array.from(raw);

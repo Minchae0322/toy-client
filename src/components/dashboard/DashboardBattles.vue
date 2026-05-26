@@ -417,13 +417,12 @@ onMounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: calc(13.5px * 1.35 * 2);
+  /* 1줄 제목일 때 vote 정보가 제목 바로 밑에 붙도록 min-height 제거 */
 }
 
 @media (min-width: 1280px) {
   .pc-title {
     font-size: 14.5px;
-    min-height: calc(14.5px * 1.35 * 2);
   }
 }
 
@@ -640,11 +639,12 @@ onMounted(() => {
 .lead-body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  /* title↔vs-list 는 바로 붙고, CTA 와의 간격만 .lead-cta margin 으로 띄움 */
+  gap: 6px;
 }
 
 @media (min-width: 768px) {
-  .lead-body { gap: 22px; }
+  .lead-body { gap: 8px; }
 }
 
 .lead-title {
@@ -754,6 +754,8 @@ onMounted(() => {
 .vs-fill.lead { background: var(--c-brand); }
 
 .lead-cta {
+  /* vs-list 와는 시각적 분리 — CTA 만 별도 간격 */
+  margin-top: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

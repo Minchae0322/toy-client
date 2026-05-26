@@ -4,8 +4,9 @@
       <router-link
         v-for="item in items"
         :key="item.key"
-        :to="item.to"
+        :to="item.to || '#'"
         class="quick-tile"
+        @click="handleClick(item, $event)"
       >
         <span class="tile-icon" :style="{ background: item.bg, color: item.fg }">
           <component :is="item.icon" :size="24" :stroke-width="2.2" />
@@ -13,11 +14,20 @@
         <span class="tile-title">{{ item.title }}</span>
       </router-link>
     </div>
+    <FeedbackModal :visible="showFeedback" @close="showFeedback = false" />
   </section>
 </template>
 
 <script setup>
-import { Flame, BarChart3, Award, Sparkles, Swords, MessagesSquare } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { Flame, BarChart3, Award, Sparkles, Swords, MessageSquare } from 'lucide-vue-next'
+import { useAuth } from '@/composables/useAuth'
+import { useLoginPrompt } from '@/composables/useLoginPrompt'
+import FeedbackModal from '@/components/common/FeedbackModal.vue'
+
+const { isLoggedIn } = useAuth()
+const { openLoginPrompt } = useLoginPrompt()
+const showFeedback = ref(false)
 
 const items = [
   {
@@ -59,16 +69,29 @@ const items = [
     icon: Award,
     bg: '#FEF3C7',
     fg: '#D97706',
+    requiresAuth: true,
   },
   {
-    key: 'chat',
-    title: '채팅',
-    to: { name: 'Chat' },
-    icon: MessagesSquare,
+    key: 'feedback',
+    title: '의견 보내기',
+    icon: MessageSquare,
     bg: '#FCE7F3',
     fg: '#DB2777',
+    action: 'feedback',
   },
 ]
+
+function handleClick(item, e) {
+  if (item.action === 'feedback') {
+    e.preventDefault()
+    showFeedback.value = true
+    return
+  }
+  if (item.requiresAuth && !isLoggedIn.value) {
+    e.preventDefault()
+    openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
+  }
+}
 </script>
 
 <style scoped>

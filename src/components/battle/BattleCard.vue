@@ -63,10 +63,6 @@
             </span>
           </span>
         </div>
-        <span v-if="showDeadline" class="days-left" :class="{ urgent: ddayClass === 'urgent' }">
-          <Clock :size="11" :stroke-width="2.6" class="days-left-icon" />
-          <span>{{ daysLeftText }}</span>
-        </span>
       </div>
 
       <div v-if="!hideCreator" class="card-footer">
@@ -99,7 +95,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Eye, Users, Flame, ListOrdered, Clock } from 'lucide-vue-next'
+import { Eye, Users, Flame, ListOrdered } from 'lucide-vue-next'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 
@@ -298,13 +294,6 @@ const isActive = computed(() => {
   return status === 'ACTIVE'
 })
 
-const daysLeftText = computed(() => {
-  const days = dDay.value
-  if (days === null || days < 0) return ''
-  if (days === 0) return '오늘 마감'
-  if (days === 1) return '1일 남음'
-  return `${days}일 남음`
-})
 </script>
 
 <style scoped>
