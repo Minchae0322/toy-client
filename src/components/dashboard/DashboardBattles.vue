@@ -123,11 +123,15 @@
               <span class="vote-line"><b>{{ formatNumber(battle.totalVotes) }}</b>명 참여중</span>
 
               <div class="dash-gauge-area" v-if="battle.topItems?.length > 0">
-                <div class="rank-row">
-                  <span class="rank-name rank-left-name">{{ truncateName(battle.topItems[0]?.displayName, 7) }}</span>
-                  <span class="rank-pct rank-left-pct">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
-                  <span v-if="battle.topItems[1]" class="rank-pct rank-right-pct">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
-                  <span v-if="battle.topItems[1]" class="rank-name rank-right-name">{{ truncateName(battle.topItems[1]?.displayName, 7) }}</span>
+                <div class="rank-row" :class="{ 'rank-row-single': !battle.topItems[1] }">
+                  <div class="rank-side rank-1">
+                    <span class="rank-name">{{ truncateName(battle.topItems[0]?.displayName, 7) }}</span>
+                    <span class="rank-pct">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
+                  </div>
+                  <div v-if="battle.topItems[1]" class="rank-side rank-2">
+                    <span class="rank-pct">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
+                    <span class="rank-name">{{ truncateName(battle.topItems[1]?.displayName, 7) }}</span>
+                  </div>
                 </div>
                 <div class="gauge-track">
                   <div class="g-bar b1" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
@@ -630,11 +634,18 @@ onMounted(() => {
 }
 .rank-row {
   display: flex;
+  justify-content: space-between;
   align-items: baseline;
-  gap: 6px;
+  gap: 10px;
   margin-bottom: 6px;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+}
+.rank-side {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
 }
 .rank-name {
   font-size: 12px;
@@ -644,25 +655,26 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  max-width: 80px;
+  max-width: 84px;
 }
 .rank-pct {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--c-brand);
   flex-shrink: 0;
+  line-height: 1;
 }
-.rank-left-name { flex: 1; }
-.rank-right-pct {
-  margin-left: auto;
-  color: var(--c-gold);
-  font-weight: 700;
-}
-.rank-right-name {
+.rank-2 .rank-name {
   color: var(--c-text-500);
   font-weight: 500;
-  max-width: 64px;
-  flex: 0 0 auto;
+}
+.rank-2 .rank-pct {
+  color: var(--c-text-600);
+  font-weight: 700;
+}
+.rank-row-single .rank-1 {
+  flex: 1;
+  justify-content: space-between;
 }
 
 .gauge-track {
@@ -821,9 +833,9 @@ onMounted(() => {
 @media (max-width: 400px) {
   .dash-thumb { width: 60px; height: 60px; }
   .dash-row { gap: 10px; padding: 11px 2px; }
-  .rank-row { gap: 4px; }
+  .rank-row { gap: 6px; }
   .rank-name { max-width: 52px; }
-  .rank-right-name { display: none; }
+  .rank-2 .rank-name { display: none; }
   .hero-rank-name { max-width: 80px; }
 }
 </style>
