@@ -7,9 +7,9 @@
         class="ds-title-row"
       >
         <h2 class="ds-title">
-          <span v-if="prefix">{{ prefix }}</span>
+          <span v-if="prefix" class="ds-prefix">{{ prefix }}</span>
           <span v-if="accent" class="ds-accent">{{ accent }}</span>
-          <span v-if="suffix">{{ suffix }}</span>
+          <span v-if="suffix" class="ds-suffix">{{ suffix }}</span>
         </h2>
       </component>
       <p v-if="sub" class="ds-sub">{{ sub }}</p>
@@ -38,8 +38,9 @@ defineProps({
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   padding: 0;
+  min-height: 36px;
 }
 
 .ds-header-main {
@@ -51,24 +52,41 @@ defineProps({
 }
 
 .ds-title-row {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   text-decoration: none;
   color: inherit;
   -webkit-tap-highlight-color: transparent;
+  min-width: 0;
 }
 
+/* 모든 섹션 헤더가 동일 크기·동일 무게·한 줄 — 화면 폭 따라 단계별 스케일 */
 .ds-title {
-  font-size: 1.25rem;
+  font-size: 20px;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.03em;
   line-height: 1.25;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  flex-wrap: wrap;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ds-title > span {
+  display: inline;
+}
+
+.ds-prefix,
+.ds-suffix {
+  color: inherit;
+}
+
+.ds-prefix + .ds-accent,
+.ds-accent + .ds-suffix {
+  margin-left: 5px;
 }
 
 .ds-accent {
@@ -81,6 +99,10 @@ defineProps({
   color: var(--c-text-400);
   margin: 0;
   letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .ds-arrow {
@@ -108,19 +130,19 @@ defineProps({
 }
 
 @media (min-width: 768px) {
-  .ds-header { margin-bottom: 18px; }
-  .ds-title { font-size: 1.375rem; }
+  .ds-header { margin-bottom: 20px; }
+  .ds-title { font-size: 22px; }
   .ds-sub { font-size: 13.5px; }
 }
 
 @media (min-width: 1280px) {
-  .ds-title { font-size: 1.5rem; }
+  .ds-title { font-size: 24px; }
   .ds-arrow { width: 38px; height: 38px; }
 }
 
 @media (max-width: 480px) {
   .ds-header { margin-bottom: 14px; }
-  .ds-title { font-size: 1.125rem; }
+  .ds-title { font-size: 18px; }
   .ds-sub { font-size: 12.5px; }
   .ds-arrow { width: 32px; height: 32px; }
   .ds-arrow svg { width: 14px; height: 14px; }
