@@ -551,11 +551,11 @@ defineExpose({ setCommentSubmitting })
 }
 
 .info-box {
-  padding: 14px 14px 12px;
+  padding: 14px 14px 14px;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  gap: 10px;
 }
 
 .info-content {
@@ -597,7 +597,6 @@ defineExpose({ setCommentSubmitting })
   overflow: hidden;
   flex: 1;
   min-width: 0;
-  min-height: calc(1.32em * 2);
   word-break: keep-all;
 }
 
@@ -607,16 +606,8 @@ defineExpose({ setCommentSubmitting })
 }
 
 .vote-actions {
-  padding-top: 12px;
-  margin-top: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  min-height: 92px;
-}
-
-.vote-actions.is-ended {
-  min-height: 64px;
 }
 
 /* 탭하라는 힌트 */
@@ -800,15 +791,17 @@ defineExpose({ setCommentSubmitting })
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
   background: var(--c-brand-soft);
-  border: 1px solid var(--c-brand-soft);
+  border: 1px solid color-mix(in srgb, var(--c-brand) 14%, transparent);
   overflow: hidden;
-  margin-top: 8px;
-  font-size: 13px;
+  margin-top: 10px;
+  font-size: 14px;
   line-height: 1.15;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 
 .vote-rate-bar::before {
@@ -818,7 +811,7 @@ defineExpose({ setCommentSubmitting })
   left: 0;
   bottom: 0;
   width: var(--vote-fill, 0%);
-  background: color-mix(in srgb, var(--c-brand) 28%, transparent);
+  background: color-mix(in srgb, var(--c-brand) 32%, transparent);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
 }
@@ -830,14 +823,17 @@ defineExpose({ setCommentSubmitting })
 
 .vote-rate-label {
   color: var(--c-brand);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.2px;
+  font-size: 12.5px;
 }
 
 .vote-rate-pct {
   color: var(--c-brand);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+  font-size: 14.5px;
+  letter-spacing: -0.02em;
 }
 
 /* 이미 투표함 — 선택된 상태로 식별 */
@@ -969,17 +965,17 @@ defineExpose({ setCommentSubmitting })
     font-weight: 800;
     letter-spacing: -0.028em;
     -webkit-line-clamp: 2;
-    min-height: calc(1.3em * 2);
   }
 
-  .vote-actions {
-    min-height: 64px;
-    padding-top: 8px;
+  .vote-rate-bar {
+    padding: 11px 13px;
+    margin-top: 8px;
+    font-size: 12.5px;
+    min-height: 38px;
   }
 
-  .vote-actions.is-ended {
-    min-height: 44px;
-  }
+  .vote-rate-label { font-size: 11.5px; }
+  .vote-rate-pct { font-size: 13px; }
 
   .vote-actions {
     padding-top: 5px;
