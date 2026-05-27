@@ -14,6 +14,7 @@ export const NOTIFICATION_CATEGORY = {
   LIKE: 'LIKE',
   MENTION: 'MENTION',
   CHAT: 'CHAT',
+  BATTLE: 'BATTLE',
   MARKETING: 'MARKETING',
 }
 
@@ -35,6 +36,7 @@ export const CATEGORY_META = {
   LIKE:      { label: '좋아요',    desc: '내 게시물·댓글에 좋아요가 눌렸을 때' },
   MENTION:   { label: '멘션',      desc: '누가 나를 언급했을 때' },
   CHAT:      { label: '채팅 메시지', desc: '새 채팅 메시지가 도착했을 때' },
+  BATTLE:    { label: '요거픽',     desc: '내 배틀의 새 픽·마감·결과 알림' },
   MARKETING: { label: '마케팅·이벤트', desc: '프로모션과 이벤트 안내 (기본 OFF)' },
 }
 
