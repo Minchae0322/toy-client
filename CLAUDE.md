@@ -55,7 +55,7 @@
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
     - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용
-    - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 그리드), `DashboardBattles.vue`, `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
+    - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 그리드), `DashboardBattles.vue` (요거픽 매거진 레이아웃), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
     - `MZLifestyle/` — `AIMemeGeneratorPromo`, `BottomNavigation`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection`
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
@@ -145,6 +145,11 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **대시보드 전면 리디자인 (오늘의집 톤)**: `DashboardView.vue` 대폭 리팩터링 — 각 섹션 독립 컴포넌트 분리 완료. `DashboardBattles.vue` 요거픽 섹션이 매거진 레이아웃으로 전면 재설계 (사진 위주, 투표율 바 보라+골드 보색) (`refactor/feat(dashboard)`)
+- **대시보드 공통 섹션 헤더 신설**: `DashboardSectionHeader.vue` — 모든 대시보드 섹션 헤더 공통 컴포넌트. 새 섹션 추가 시 직접 스타일링 대신 이 컴포넌트 재사용 (`feat(dashboard)`)
+- **피드 대댓글 답글 지원**: `FeedCommentSection.vue` — 대댓글에서도 답글 작성 가능, 멘션 자동 프리필 (`feat(feed)`)
+- **iOS 테마 브릿지 + PICK 한마디 모바일 키보드 가림 해소**: `AppViewController.swift` + `App.vue` 테마 API 강화, `BattleCommentModal.vue`·`BattleCommentSummary.vue` 키보드 가림 수정 (`feat`)
+- **이미지 업로드 완료 후 '업로드 중' 표시 잔존 버그 수정**: `Step2ItemSetup.vue`, `AddProductModal.vue` (`fix(battle)`)
 - **버전 1.1.1**: iOS 빌드 15, Android versionCode 12 (`chore`)
 - **배틀 카드 디자인 폴리시**: `BattleCard.vue` — glass 배지·라이브 닷·아이콘 통계·호버 줌·D-7 조건 마감 텍스트. `BattleList.vue` 섹션 레이아웃 정비 (`feat(battle)`, `fix(battle)`)
 - **핫 배틀 섹션 고도화**: `HotBattleSection.vue` — 메달(1·2·3위)·라이브 펄스·D-Day 표시. 카테고리 칩·heat meter는 정리 후 제거됨 (`feat/refactor(battle)`)
