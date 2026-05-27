@@ -11,10 +11,12 @@
       </template>
     </div>
 
-    <div :class="['rank-indicator', displayRank <= 3 ? `rank-pos-${displayRank}` : '']">{{ displayRank }}</div>
-
     <div class="img-box" :class="{ 'is-youtube': isYoutube }" @click="handleImageClick">
       <img :src="itemImage" :alt="itemName" @error="handleImageError" />
+      <!-- 디자인 요소: 사진 위 대형 italic 랭크 -->
+      <div :class="['rank-display', displayRank <= 3 ? `rank-pos-${displayRank}` : '']" aria-hidden="true">
+        <span class="rank-number">{{ String(displayRank).padStart(2, '0') }}</span>
+      </div>
       <!-- 이전 픽 뱃지 -->
       <div v-if="item.userBattleVote" class="my-pick-badge">
         {{ isWeightedVote && item.userBattleVote.rank ? `MY ${item.userBattleVote.rank}위` : 'MY PICK' }}
@@ -32,7 +34,7 @@
 
     <div class="info-box">
       <div class="info-content">
-        <p v-if="itemBrand" class="brand">{{ itemBrand }}</p>
+        <p class="brand">{{ itemBrand || ' ' }}</p>
         <div class="name-row">
           <h3 :class="['name', { unavailable: productUnavailable }]">{{ itemName }}</h3>
           <ProductStatusBadge :status="productStatus" size="sm" />
@@ -297,24 +299,28 @@ defineExpose({ setCommentSubmitting })
 <style scoped>
 .product-card-v1 {
   background: var(--bg-elevated);
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 8px 22px rgba(15, 23, 42, 0.06);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
               border-color 0.22s ease;
   position: relative;
-  border: 1px solid var(--border-default);
+  border: 1px solid transparent;
   display: flex;
   flex-direction: column;
   max-width: 100%;
+  height: 100%;
   box-sizing: border-box;
 }
 
 .product-card-v1:hover {
-  transform: translateY(-3px);
-  border-color: transparent;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+  transform: translateY(-4px);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.06),
+    0 20px 38px rgba(15, 23, 42, 0.12);
 }
 
 
@@ -408,48 +414,44 @@ defineExpose({ setCommentSubmitting })
   border-color: var(--c-brand);
 }
 
-.rank-indicator {
+/* 사진 위 대형 italic 랭크 (디자인 요소) */
+.rank-display {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 8px;
-  background: rgba(15, 18, 24, 0.62);
-  backdrop-filter: saturate(140%) blur(10px);
-  -webkit-backdrop-filter: saturate(140%) blur(10px);
-  border-radius: 100px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: #ffffff;
-  letter-spacing: -0.02em;
+  top: -6px;
+  right: 4px;
+  z-index: 5;
+  pointer-events: none;
+  line-height: 0.85;
+  color: rgba(255, 255, 255, 0.94);
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.45),
+    0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.rank-number {
+  font-size: 56px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.06em;
   font-variant-numeric: tabular-nums;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+  display: inline-block;
 }
 
-.rank-indicator.rank-pos-1 {
-  background: var(--c-gold, #EAB308);
-  color: #422c0a;
-  box-shadow: 0 3px 10px rgba(234, 179, 8, 0.38),
-              inset 0 1px 0 rgba(255, 255, 255, 0.42);
+.rank-display.rank-pos-1 {
+  color: #FACC15;
 }
 
-.rank-indicator.rank-pos-2 {
-  background: var(--c-silver, #94A3B8);
-  color: #ffffff;
-  box-shadow: 0 3px 10px rgba(148, 163, 184, 0.38),
-              inset 0 1px 0 rgba(255, 255, 255, 0.32);
+.rank-display.rank-pos-2 {
+  color: #E2E8F0;
 }
 
-.rank-indicator.rank-pos-3 {
-  background: var(--c-bronze, #D97706);
-  color: #ffffff;
-  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.38),
-              inset 0 1px 0 rgba(255, 255, 255, 0.28);
+.rank-display.rank-pos-3 {
+  color: #FDBA74;
+}
+
+@media (min-width: 1024px) {
+  .rank-number { font-size: 64px; }
 }
 
 
@@ -459,6 +461,19 @@ defineExpose({ setCommentSubmitting })
   background: var(--bg-subtle);
   overflow: hidden;
   cursor: zoom-in;
+  flex-shrink: 0;
+}
+
+/* 사진 위 살짝 어두운 상단 그라데이션 — 랭크 숫자 가독성 */
+.img-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(0, 0, 0, 0.22) 0%,
+    rgba(0, 0, 0, 0) 32%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .img-box.is-youtube {
@@ -469,11 +484,13 @@ defineExpose({ setCommentSubmitting })
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.product-card-v1:hover .img-box img {
-  transform: scale(1.03);
+@media (hover: hover) {
+  .product-card-v1:hover .img-box img {
+    transform: scale(1.05);
+  }
 }
 
 /* MY PICK 뱃지 */
@@ -537,19 +554,27 @@ defineExpose({ setCommentSubmitting })
   padding: 14px 14px 12px;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .info-content {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
 .brand {
   font-size: 11.5px;
   font-weight: 600;
   color: var(--c-text-400);
-  margin: 0 0 3px;
+  margin: 0 0 4px;
   letter-spacing: -0.01em;
+  min-height: 1.1em;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .name-row {
@@ -572,6 +597,7 @@ defineExpose({ setCommentSubmitting })
   overflow: hidden;
   flex: 1;
   min-width: 0;
+  min-height: calc(1.32em * 2);
   word-break: keep-all;
 }
 
@@ -581,7 +607,16 @@ defineExpose({ setCommentSubmitting })
 }
 
 .vote-actions {
-  padding-top: 10px;
+  padding-top: 12px;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 92px;
+}
+
+.vote-actions.is-ended {
+  min-height: 64px;
 }
 
 /* 탭하라는 힌트 */
@@ -886,18 +921,13 @@ defineExpose({ setCommentSubmitting })
     font-size: 10px;
   }
 
-  .rank-indicator {
-    top: 6px;
-    left: 6px;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 7px;
-    font-size: 11px;
-    border-radius: 100px;
+  .rank-display {
+    top: -4px;
+    right: 4px;
   }
 
-  .product-card-v1.selected .rank-indicator {
-    top: 6px;
+  .rank-number {
+    font-size: 44px;
   }
 
   .selected-rank-badge {
@@ -930,6 +960,7 @@ defineExpose({ setCommentSubmitting })
     font-size: 11px;
     margin: 0 0 3px;
     font-weight: 600;
+    min-height: 1.1em;
   }
 
   .name {
@@ -938,6 +969,16 @@ defineExpose({ setCommentSubmitting })
     font-weight: 800;
     letter-spacing: -0.028em;
     -webkit-line-clamp: 2;
+    min-height: calc(1.3em * 2);
+  }
+
+  .vote-actions {
+    min-height: 64px;
+    padding-top: 8px;
+  }
+
+  .vote-actions.is-ended {
+    min-height: 44px;
   }
 
   .vote-actions {
