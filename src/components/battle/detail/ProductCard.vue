@@ -630,11 +630,11 @@ defineExpose({ setCommentSubmitting })
 
 .rank-chip {
   flex: 1;
-  padding: 10px 0;
+  padding: 7px 0;
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   transition: all 0.18s ease;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -791,15 +791,15 @@ defineExpose({ setCommentSubmitting })
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 14px 16px;
-  border-radius: 12px;
+  padding: 9px 14px;
+  border-radius: 10px;
   background: var(--c-brand-soft);
   border: 1px solid color-mix(in srgb, var(--c-brand) 14%, transparent);
   overflow: hidden;
-  margin-top: 10px;
-  font-size: 14px;
+  margin-top: 8px;
+  font-size: 13px;
   line-height: 1.15;
-  min-height: 44px;
+  min-height: 34px;
   box-sizing: border-box;
 }
 
@@ -824,14 +824,14 @@ defineExpose({ setCommentSubmitting })
   color: var(--c-brand);
   font-weight: 700;
   letter-spacing: -0.2px;
-  font-size: 12.5px;
+  font-size: 11.5px;
 }
 
 .vote-rate-pct {
   color: var(--c-brand);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  font-size: 14.5px;
+  font-size: 13px;
   letter-spacing: -0.02em;
 }
 
@@ -967,14 +967,15 @@ defineExpose({ setCommentSubmitting })
   }
 
   .vote-rate-bar {
-    padding: 11px 13px;
-    margin-top: 8px;
-    font-size: 12.5px;
-    min-height: 38px;
+    padding: 7px 11px;
+    margin-top: 6px;
+    font-size: 11.5px;
+    min-height: 30px;
+    border-radius: 8px;
   }
 
-  .vote-rate-label { font-size: 11.5px; }
-  .vote-rate-pct { font-size: 13px; }
+  .vote-rate-label { font-size: 10.5px; }
+  .vote-rate-pct { font-size: 12px; }
 
   .vote-actions {
     padding-top: 5px;
@@ -985,8 +986,8 @@ defineExpose({ setCommentSubmitting })
   }
 
   .rank-chip {
-    padding: 6px 0;
-    font-size: 11px;
+    padding: 5px 0;
+    font-size: 10.5px;
     border-radius: 6px;
     border-width: 1px;
   }
