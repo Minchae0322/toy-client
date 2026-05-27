@@ -30,12 +30,66 @@
             </div>
           </header>
 
-          <!-- 카테고리 필터 (제목 아래) -->
-          <CommonCategoryFilter
-              :categories="categories"
-              :initial-selected="selectedCategoryId"
+          <!-- 검색 + 카테고리 탐색 -->
+          <div class="battle-search-row">
+            <div class="search-input-wrap">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input
+                  v-model="searchKeyword"
+                  type="text"
+                  class="battle-search-input"
+                  placeholder="요거픽 제목 검색"
+                  @input="handleSearchInput"
+                  @keyup.enter="applySearchNow"
+              />
+              <button
+                  v-if="searchKeyword"
+                  type="button"
+                  class="search-clear"
+                  aria-label="검색어 지우기"
+                  @click="clearSearch"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <button type="button" class="category-explore-btn" @click="categoryModalOpen = true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+              </svg>
+              카테고리 탐색
+            </button>
+          </div>
+
+          <!-- 선택된 카테고리 칩 -->
+          <div v-if="selectedCategory" class="active-category-row">
+            <span class="active-category-chip">
+              <span class="acc-label">카테고리</span>
+              <span class="acc-name">
+                {{ selectedCategory.categoryName }}<span v-if="selectedSubCategory"> · {{ selectedSubCategory.categoryName }}</span>
+              </span>
+              <button type="button" class="acc-clear" aria-label="카테고리 해제" @click="clearCategory">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </span>
+          </div>
+
+          <!-- 카테고리 탐색 모달 -->
+          <CategorySelectModal
+              v-if="categoryModalOpen"
               content-type="BATTLE"
-              @category-change="handleCategoryChange"
+              :initial-category-id="selectedCategoryId"
+              @select="handleCategoryModalSelect"
+              @close="categoryModalOpen = false"
           />
 
           <div class="section-header">
@@ -158,7 +212,7 @@ import { useCategoryCache } from '@/composables/useCategoryCache.js'
 import { useAuthStore } from '@/stores/auth.js'
 
 // Components
-import CommonCategoryFilter from '@/components/category/CommonCategoryFilter.vue'
+import CategorySelectModal from '@/components/common/CategorySelectModal.vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import HotBattleSection from '@/components/battle/HotBattleSection.vue'
 import BattleList from '@/components/battle/BattleList.vue'
@@ -211,6 +265,11 @@ const selectedSubCategory = ref(null)
 const selectedCategoryId = ref(null)
 const selectedCategoryDepth = ref(null)
 const categories = ref([])
+
+// 검색 + 카테고리 모달
+const searchKeyword = ref('')
+const categoryModalOpen = ref(false)
+let searchDebounceTimer = null
 
 // Computed
 const currentCategoryTitle = computed(() => {
@@ -289,6 +348,11 @@ const loadBattles = async (reset = false) => {
       searchCondition.categoryDepth = selectedCategoryDepth.value || selectedCategory.value.depth || 1
     }
 
+    const trimmedKeyword = searchKeyword.value.trim()
+    if (trimmedKeyword) {
+      searchCondition.keyword = trimmedKeyword
+    }
+
     const response = await battleService.getBattles(
         searchCondition,
         { page: currentPage.value, size: 20, sort: currentSortValue.value }
@@ -345,6 +409,47 @@ const updateTabCounts = async () => {
   } catch (error) {
     console.error('탭 카운트 업데이트 실패:', error)
   }
+}
+
+// 검색
+const handleSearchInput = () => {
+  clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = setTimeout(() => {
+    resetAndLoadBattles()
+  }, 350)
+}
+const applySearchNow = () => {
+  clearTimeout(searchDebounceTimer)
+  resetAndLoadBattles()
+}
+const clearSearch = () => {
+  searchKeyword.value = ''
+  applySearchNow()
+}
+
+// 카테고리 모달 선택
+const handleCategoryModalSelect = ({ category, parent, categoryDepth }) => {
+  // 모달은 단일 카테고리만 emit — parent 가 있으면 sub-category 선택, 없으면 top-level
+  if (parent) {
+    selectedCategory.value = parent
+    selectedSubCategory.value = category
+    selectedCategoryId.value = category.categoryId
+    selectedCategoryDepth.value = categoryDepth || category.depth || 2
+  } else {
+    selectedCategory.value = category
+    selectedSubCategory.value = null
+    selectedCategoryId.value = category.categoryId
+    selectedCategoryDepth.value = categoryDepth || category.depth || 1
+  }
+  categoryModalOpen.value = false
+  resetAndLoadBattles()
+}
+const clearCategory = () => {
+  selectedCategory.value = null
+  selectedSubCategory.value = null
+  selectedCategoryId.value = null
+  selectedCategoryDepth.value = null
+  resetAndLoadBattles()
 }
 
 // Event Handlers
@@ -648,23 +753,148 @@ onUnmounted(() => {
   }
 }
 
-/* 제목 아래 카테고리 필터 — 여백 살짝 */
-.battles-section :deep(.filter-container) {
-  padding: 0 0 12px;
-  border-bottom: none;
+/* 검색 + 카테고리 탐색 줄 */
+.battle-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
 }
 
-.battles-section :deep(.category-tabs-wrapper) {
-  padding: 4px 0 0;
+.search-input-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-@media (max-width: 767px) {
-  .battles-section :deep(.filter-container) {
-    padding: 0 0 10px;
+.search-input-wrap .search-icon {
+  position: absolute;
+  left: 12px;
+  width: 17px;
+  height: 17px;
+  color: var(--c-text-400);
+  pointer-events: none;
+}
+
+.battle-search-input {
+  width: 100%;
+  padding: 11px 36px 11px 36px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.battle-search-input::placeholder {
+  color: var(--c-text-400);
+}
+.battle-search-input:focus {
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 3px var(--c-brand-soft);
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--bg-mute);
+  color: var(--c-text-500);
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.search-clear:hover {
+  background: var(--border-default);
+}
+
+.category-explore-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.category-explore-btn:hover {
+  background: var(--bg-mute);
+  border-color: var(--c-text-300, #CBD5E1);
+}
+
+@media (max-width: 480px) {
+  .category-explore-btn {
+    padding: 10px 12px;
+    font-size: 12.5px;
   }
-  .battles-section :deep(.category-tabs-wrapper) {
-    padding: 2px 0 0;
-  }
+  .battle-search-input { font-size: 13.5px; padding: 10px 32px 10px 34px; }
+  .search-input-wrap .search-icon { left: 11px; width: 15px; height: 15px; }
+}
+
+/* 선택된 카테고리 칩 */
+.active-category-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.active-category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 12px;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.active-category-chip .acc-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--c-brand);
+  opacity: 0.75;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.active-category-chip .acc-name {
+  color: var(--text-primary);
+}
+
+.active-category-chip .acc-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.active-category-chip .acc-clear:hover {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .section-header {

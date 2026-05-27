@@ -942,13 +942,12 @@ onMounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: calc(14.5px * 1.4 * 2);
+  /* 1줄 제목에서 vote 정보가 바로 밑에 붙도록 min-height 제거 */
 }
 
 @media (min-width: 768px) {
   .rest-title {
     font-size: 15.5px;
-    min-height: calc(15.5px * 1.4 * 2);
   }
 }
 
