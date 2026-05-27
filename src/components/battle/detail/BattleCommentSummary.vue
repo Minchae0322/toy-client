@@ -1,20 +1,44 @@
 <template>
-  <div class="pc-card-arguments">
-    <!-- 코멘트가 있을 때 -->
+  <div class="comment-dock">
+    <!-- 코멘트가 있을 때: BEST 한 블록 안에 모든 메타·액션 통합 -->
     <template v-if="commentSummary">
-      <div class="arg-header">
-        <button type="button" class="label" @click="$emit('open-comments')">
-          <svg class="chat-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-          </svg>
-          PICK 한마디
-          <span class="cnt">{{ commentCount }}</span>
-        </button>
-        <button type="button" class="write-pill" aria-label="쓰기" @click.stop="toggleInput">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 5v14M5 12h14"/>
-          </svg>
-        </button>
+      <div class="best-block" @click="$emit('open-comments')">
+        <img
+          v-if="commentSummary.creatorProfileImageUrl && !imageLoadFailed"
+          class="bb-avatar"
+          :src="commentSummary.creatorProfileImageUrl"
+          :alt="commentSummary.creatorNickname"
+          @error="imageLoadFailed = true"
+        />
+        <div v-else class="bb-avatar bb-avatar-fallback">{{ avatarInitial }}</div>
+
+        <div class="bb-body">
+          <div class="bb-meta">
+            <span class="bb-nick">{{ commentSummary.creatorNickname }}</span>
+            <span class="bb-best-pill">BEST</span>
+            <span class="bb-likes" aria-label="공감 수">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              {{ commentSummary.likeCount }}
+            </span>
+          </div>
+          <p class="bb-text">{{ commentSummary.content }}</p>
+          <div class="bb-foot">
+            <span v-if="remainingCount > 0" class="bb-more">
+              +{{ remainingCount }}개 더보기
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </span>
+            <button type="button" class="bb-write" aria-label="한마디 남기기" @click.stop="toggleInput">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              <span>한마디</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- PC 인라인 입력창 -->
@@ -36,62 +60,20 @@
           </button>
         </div>
       </transition>
-
-      <div class="best-arg" @click="$emit('open-comments')">
-        <img
-          v-if="commentSummary.creatorProfileImageUrl && !imageLoadFailed"
-          class="ba-avatar"
-          :src="commentSummary.creatorProfileImageUrl"
-          :alt="commentSummary.creatorNickname"
-          @error="imageLoadFailed = true"
-        />
-        <div v-else class="ba-avatar">{{ avatarInitial }}</div>
-        <div class="ba-body">
-          <div class="ba-top">
-            <span class="ba-nick">{{ commentSummary.creatorNickname }}</span>
-            <span class="best-badge">BEST</span>
-            <span class="ba-likes">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-              {{ commentSummary.likeCount }}
-            </span>
-          </div>
-          <p class="ba-text">{{ commentSummary.content }}</p>
-        </div>
-      </div>
-
-      <!-- 더보기 영역은 댓글 1개일 때도 공간 reserve (visibility hidden) — 카드 간 높이 통일 -->
-      <div
-        class="view-all"
-        :class="{ 'is-placeholder': remainingCount <= 0 }"
-        @click="remainingCount > 0 && $emit('open-comments')"
-      >
-        <button :tabindex="remainingCount > 0 ? 0 : -1" :aria-hidden="remainingCount <= 0 ? 'true' : null">
-          {{ remainingCount > 0 ? `${remainingCount}개 더보기` : '더보기' }}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M6 9l6 6 6-6"/>
-            <path d="M6 4l6 6 6-6"/>
-          </svg>
-        </button>
-      </div>
     </template>
 
-    <!-- 코멘트가 없을 때 -->
+    <!-- 코멘트가 없을 때: 단 한 줄 슬림 CTA -->
     <template v-else>
-      <button type="button" class="empty-cta" @click.stop="toggleInput">
-        <span class="empty-cta-icon" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button type="button" class="empty-row" @click.stop="toggleInput">
+        <span class="empty-row-icon" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
           </svg>
         </span>
-        <span class="empty-cta-text">
-          <span class="empty-cta-title"><span class="title-prefix">첫 </span>PICK 한마디<span class="title-suffix"> 남기기</span></span>
-          <span class="empty-cta-sub">이 아이템이 왜 최고인지 알려주세요</span>
-        </span>
-        <span class="empty-cta-plus" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 5v14M5 12h14"/>
+        <span class="empty-row-text">첫 PICK 한마디 남기기</span>
+        <span class="empty-row-arrow" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
           </svg>
         </span>
       </button>
@@ -331,104 +313,227 @@ defineExpose({ closeInput })
 </script>
 
 <style scoped>
-.pc-card-arguments {
+/* ============================== */
+/* 컴팩트 통합 도크 — Toss/오늘의집 톤 */
+/* populated/empty 모두 단일 블록, 강제 stretch 제거 */
+/* ============================== */
+.comment-dock {
   border-top: 1px solid var(--border-default);
-  padding: 12px 14px 14px;
-  transition: background 0.2s ease;
-  min-height: 64px;
+  padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  flex: 1;
-  overflow: hidden;
   box-sizing: border-box;
   gap: 8px;
 }
 
-.pc-card-arguments .arg-header {
-  margin-bottom: 0;
-}
-
-/* 헤더 */
-.arg-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.arg-header .label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0;
-  border: none;
-  background: none;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary);
+/* ── BEST 한마디 블록 — 1개 카드 안에 메타·본문·액션 통합 ── */
+.best-block {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--c-warning-soft);
+  border: 1px solid var(--c-warning);
+  border-radius: 12px;
   cursor: pointer;
-  font-family: inherit;
-  letter-spacing: -0.01em;
-  transition: color 0.15s;
+  transition: filter 0.15s;
 }
 
-.arg-header .label:hover {
-  color: var(--c-brand);
+.best-block:hover {
+  filter: brightness(0.985);
 }
 
-.arg-header .chat-icon {
+img.bb-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
   flex-shrink: 0;
-  color: var(--c-brand);
 }
 
-.arg-header .cnt {
-  display: inline-flex;
+div.bb-avatar.bb-avatar-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 5px;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--c-brand);
-  background: var(--c-brand-soft);
-  border-radius: 8px;
-  margin-left: 2px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--c-warning);
 }
 
-/* 컴팩트 작성 pill — 솔리드 브랜드 chip (눈에 잘 띄게) */
-.write-pill {
+.bb-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bb-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bb-nick {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.bb-best-pill {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--c-warning);
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--c-warning);
   flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+}
+
+.bb-likes {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--c-danger);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.bb-text {
+  font-size: 12.5px;
+  color: var(--c-text-600);
+  line-height: 1.4;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  letter-spacing: -0.01em;
+  word-break: break-word;
+}
+
+.bb-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+  min-height: 22px;
+}
+
+.bb-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--c-warning);
+  letter-spacing: -0.01em;
+}
+
+.bb-write {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
   border: none;
+  border-radius: 999px;
   background: var(--c-brand);
   color: #ffffff;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.bb-write:hover {
+  background: var(--c-brand-hover);
+}
+
+.bb-write:active {
+  transform: scale(0.96);
+}
+
+/* ── 빈 상태 — 단 한줄 슬림 CTA ── */
+.empty-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--c-brand-soft);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.empty-row:hover {
+  filter: brightness(0.97);
+}
+
+.empty-row:active {
+  transform: scale(0.99);
+}
+
+.empty-row-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  font-family: inherit;
-  transition: background 0.15s, transform 0.1s;
+  background: var(--bg-elevated);
+  color: var(--c-brand);
 }
 
-.write-pill:hover {
-  background: var(--c-brand-hover);
+.empty-row-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.write-pill:active {
-  transform: scale(0.95);
+.empty-row-arrow {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-brand);
+  opacity: 0.85;
 }
 
 /* 인라인 입력창 */
 .inline-input-wrap {
   display: flex;
   gap: 12px;
-  margin-top: 12px;
-  margin-bottom: 12px;
+  margin-top: 4px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -490,250 +595,17 @@ defineExpose({ closeInput })
   transform: translateY(-8px);
 }
 
-/* BEST 변론 카드 — 노란 톤 (요거뜨 시그니처) */
-.best-arg {
-  display: flex;
-  gap: 10px;
-  padding: 10px 12px;
-  background: var(--c-warning-soft);
-  border-radius: 12px;
-  border: 1px solid var(--c-warning);
-  cursor: pointer;
-  transition: filter 0.15s;
-}
-
-.best-arg:hover {
-  filter: brightness(0.98);
-}
-
-img.ba-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  object-fit: cover;
-}
-
-div.ba-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--bg-elevated);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--c-warning);
-  flex-shrink: 0;
-}
-
-.ba-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.ba-top {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 3px;
-}
-
-.ba-nick {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.best-badge {
-  font-size: 9px;
-  font-weight: 800;
-  color: var(--c-warning);
-  background: var(--bg-elevated);
-  padding: 2px 6px;
-  border-radius: 999px;
-  letter-spacing: 0.04em;
-  border: 1px solid var(--c-warning);
-}
-
-.ba-text {
-  font-size: 12.5px;
-  color: var(--c-text-600);
-  line-height: 1.45;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  letter-spacing: -0.01em;
-}
-
-.ba-likes {
-  margin-left: auto;
-  font-size: 10px;
-  color: var(--c-danger);
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-weight: 600;
-}
-
-/* 더보기 버튼 */
-.view-all {
-  text-align: center;
-  margin-top: 8px;
-}
-
-/* 댓글 1개일 때 — 공간만 reserve, 시각/클릭 모두 비활성 */
-.view-all.is-placeholder {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.view-all button {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--c-brand);
-  cursor: pointer;
-  font-family: inherit;
-  padding: 5px 12px;
-  border-radius: 999px;
-  letter-spacing: -0.01em;
-  transition: background 0.15s;
-}
-
-.view-all button:hover {
-  background: var(--c-brand-soft);
-}
-
-/* 빈 상태 — 부드러운 브랜드 톤 CTA (따뜻한 인상) */
-.empty-cta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 12px;
-  background: var(--c-brand-soft);
-  border: 1px solid transparent;
-  border-radius: 10px;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;
-  transition: filter 0.15s, transform 0.1s;
-}
-
-.empty-cta:hover {
-  filter: brightness(0.97);
-}
-
-.empty-cta:active {
-  transform: scale(0.99);
-}
-
-.empty-cta-icon {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-elevated);
-  color: var(--c-brand);
-}
-
-.empty-cta-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.empty-cta-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-  word-break: keep-all;
-  line-height: 1.35;
-}
-
-.empty-cta-sub {
-  font-size: 10.5px;
-  font-weight: 500;
-  color: var(--c-text-500);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* write-pill 과 동일한 원형 + 아이콘으로 통일 */
-.empty-cta-plus {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--c-brand);
-  color: #ffffff;
-}
-
-/* 모바일 최적화 */
+/* ── 모바일 최적화 ── */
 @media (max-width: 480px) {
-  .pc-card-arguments {
-    padding: 10px 12px 12px;
-    min-height: 52px;
+  .comment-dock {
+    padding: 8px 10px 10px;
     gap: 6px;
   }
 
-  .pc-card-arguments .arg-header {
-    margin-bottom: 0;
-  }
-
-  .arg-header {
-    margin-bottom: 0;
-  }
-
-  .arg-header .label {
-    font-size: 11px;
-  }
-
-  .arg-header .chat-icon {
-    width: 12px;
-    height: 12px;
-  }
-
-  .arg-header .cnt {
-    font-size: 9.5px;
-    min-width: 14px;
-    height: 14px;
-    padding: 0 4px;
-  }
-
-  .write-pill {
-    width: 22px;
-    height: 22px;
-  }
-  .write-pill svg { width: 12px; height: 12px; }
-
-  /* 모바일 인라인 입력창 - 한 줄에 입력+버튼, 넘치면 스크롤 없이 맞춤 */
+  /* 인라인 입력창 — 한 줄에 입력+버튼 */
   .inline-input-wrap {
-    display: flex;
     flex-direction: row;
-    margin-bottom: 8px;
     gap: 4px;
-    width: 100%;
     max-width: 100%;
   }
 
@@ -759,92 +631,95 @@ div.ba-avatar {
     height: 14px;
   }
 
-  .best-arg {
-    padding: 8px 10px;
+  /* BEST 블록 모바일 — 더 타이트하게 */
+  .best-block {
+    grid-template-columns: 22px 1fr;
     gap: 8px;
+    padding: 8px 10px;
     border-radius: 10px;
   }
 
-  img.ba-avatar,
-  div.ba-avatar {
+  img.bb-avatar,
+  div.bb-avatar.bb-avatar-fallback {
     width: 22px;
     height: 22px;
   }
 
-  div.ba-avatar {
-    font-size: 9px;
+  div.bb-avatar.bb-avatar-fallback {
+    font-size: 10px;
   }
 
-  .ba-nick {
+  .bb-nick {
     font-size: 10.5px;
+    max-width: 64px;
   }
 
-  .best-badge {
+  .bb-best-pill {
     font-size: 8.5px;
     padding: 1.5px 5px;
   }
 
-  .ba-text {
+  .bb-text {
     font-size: 11.5px;
     line-height: 1.35;
-    -webkit-line-clamp: 2;
   }
 
-  .ba-likes {
+  .bb-likes {
     font-size: 9.5px;
   }
 
-  .ba-likes svg {
+  .bb-likes svg {
     width: 9px;
     height: 9px;
   }
 
-  .view-all {
-    margin-top: 6px;
+  .bb-foot {
+    min-height: 20px;
   }
 
-  .view-all button {
-    font-size: 10.5px;
-    padding: 4px 10px;
+  .bb-more {
+    font-size: 9.5px;
   }
 
-  /* 빈 상태 CTA — 모바일에서는 title 한 줄만 노출되므로 한 줄 높이에 맞게 컴팩트 */
-  .empty-cta {
-    padding: 11px 12px;
-    gap: 9px;
-    align-items: center;
+  .bb-write {
+    padding: 3px 8px;
+    font-size: 9.5px;
+    gap: 3px;
   }
-  .empty-cta-icon { width: 26px; height: 26px; }
-  .empty-cta-text {
-    justify-content: center;
+
+  .bb-write svg {
+    width: 11px;
+    height: 11px;
   }
-  .empty-cta-title {
-    font-size: 12px;
-    line-height: 1.3;
-    word-break: keep-all;
+
+  /* 빈 상태 단 한줄 — 모바일은 더 슬림 */
+  .empty-row {
+    padding: 9px 11px;
+    gap: 8px;
+    border-radius: 9px;
   }
-  /* 모바일은 "PICK 한마디" 만 노출 — 좌우 단어 모두 숨김 */
-  .empty-cta-title .title-prefix,
-  .empty-cta-title .title-suffix { display: none; }
-  .empty-cta-sub { display: none; }
-  .empty-cta-plus {
-    width: 22px;
-    height: 22px;
+
+  .empty-row-icon {
+    width: 20px;
+    height: 20px;
   }
-  .empty-cta-plus svg { width: 12px; height: 12px; }
+
+  .empty-row-text {
+    font-size: 11.5px;
+  }
 }
 
-/* PC 최적화 */
+/* ── PC 최적화 ── */
 @media (min-width: 768px) {
-  .pc-card-arguments {
-    padding: 14px 16px;
+  .comment-dock {
+    padding: 12px 16px 14px;
   }
 
-  .best-arg {
-    padding: 10px 12px;
+  .best-block {
+    padding: 11px 13px;
   }
 
-  .ba-text {
+  .bb-text {
     font-size: 13px;
   }
 }

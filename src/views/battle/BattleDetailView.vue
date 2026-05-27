@@ -1977,6 +1977,8 @@ export default {
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
   padding: 4px 24px 36px;
+  /* 빈 댓글 카드가 stretch 되며 공허해 보이는 현상 방지 */
+  align-items: start;
 }
 
 /* PC 디바이더 — 양쪽 페이드 라인 */
