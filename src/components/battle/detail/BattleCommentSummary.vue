@@ -26,8 +26,9 @@
           <p class="bb-text">{{ commentSummary.content }}</p>
           <div class="bb-foot">
             <span v-if="remainingCount > 0" class="bb-more">
-              +{{ remainingCount }}개 더보기
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <span class="bb-more-num">+{{ remainingCount }}</span>
+              <span class="bb-more-label">개 더보기</span>
+              <svg class="bb-more-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
             </span>
@@ -35,7 +36,7 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M12 5v14M5 12h14"/>
               </svg>
-              <span>한마디</span>
+              <span class="bb-write-label">한마디</span>
             </button>
           </div>
         </div>
@@ -444,12 +445,20 @@ div.bb-avatar.bb-avatar-fallback {
   font-weight: 700;
   color: var(--c-warning);
   letter-spacing: -0.01em;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.bb-more-num,
+.bb-more-label {
+  white-space: nowrap;
 }
 
 .bb-write {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 4px 10px;
   border: none;
@@ -461,7 +470,13 @@ div.bb-avatar.bb-avatar-fallback {
   font-weight: 800;
   letter-spacing: -0.01em;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: background 0.15s, transform 0.1s;
+}
+
+.bb-write-label {
+  white-space: nowrap;
 }
 
 .bb-write:hover {
@@ -675,21 +690,39 @@ div.bb-avatar.bb-avatar-fallback {
 
   .bb-foot {
     min-height: 20px;
+    gap: 4px;
   }
 
+  /* 좁은 폭에서 줄바꿈 방지 — "+N개 더보기"의 "개 더보기" 라벨, 한마디 텍스트 숨김 */
   .bb-more {
     font-size: 9.5px;
+    overflow: hidden;
+    flex-shrink: 1;
   }
 
+  .bb-more-label {
+    display: none;
+  }
+
+  .bb-more-num {
+    font-size: 11px;
+  }
+
+  /* 한마디 버튼은 모바일에서 원형 아이콘 칩 */
   .bb-write {
-    padding: 3px 8px;
-    font-size: 9.5px;
-    gap: 3px;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    gap: 0;
+  }
+
+  .bb-write-label {
+    display: none;
   }
 
   .bb-write svg {
-    width: 11px;
-    height: 11px;
+    width: 13px;
+    height: 13px;
   }
 
   /* 빈 상태 단 한줄 — 모바일은 더 슬림 */
