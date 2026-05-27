@@ -1975,15 +1975,27 @@ export default {
 .pc-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  padding: 0 24px 32px;
+  gap: 18px;
+  padding: 4px 24px 36px;
 }
 
-/* PC 디바이더 */
+/* PC 디바이더 — 양쪽 페이드 라인 */
 .pc-divider {
   height: 1px;
-  background: var(--border-default);
-  margin: 32px 24px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--border-default) 18%,
+    var(--border-default) 82%,
+    transparent 100%);
+  margin: 28px 80px;
+  border: 0;
+}
+
+@media (min-width: 1280px) {
+  .pc-grid {
+    gap: 20px;
+    padding: 6px 24px 40px;
+  }
 }
 
 /* ============================= */
@@ -2716,12 +2728,13 @@ export default {
 @media (max-width: 768px) {
   .pc-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    padding: 0 12px 32px;
+    gap: 12px;
+    padding: 2px 14px 32px;
   }
 
   .pc-divider {
-    margin: 24px 16px;
+    margin: 22px 24px;
+    background: var(--border-default);
   }
 
   .pc-arguments-section {
@@ -2782,12 +2795,12 @@ export default {
 @media (max-width: 480px) {
   .pc-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    padding: 0 10px 28px;
+    gap: 10px;
+    padding: 2px 12px 28px;
   }
 
   .pc-divider {
-    margin: 20px 12px;
+    margin: 18px 16px;
   }
 
   .pc-arguments-section {
