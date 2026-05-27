@@ -297,12 +297,14 @@ defineExpose({ setCommentSubmitting })
 <style scoped>
 .product-card-v1 {
   background: var(--bg-elevated);
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  transition: all 0.25s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.22s ease;
   position: relative;
-  border: 1.5px solid var(--border-default);
+  border: 1px solid var(--border-default);
   display: flex;
   flex-direction: column;
   max-width: 100%;
@@ -310,8 +312,9 @@ defineExpose({ setCommentSubmitting })
 }
 
 .product-card-v1:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  transform: translateY(-3px);
+  border-color: transparent;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
 
@@ -386,7 +389,7 @@ defineExpose({ setCommentSubmitting })
 
 /* 선택된 카드 테두리 */
 .product-card-v1.selected {
-  border-width: 3px;
+  border-width: 2px;
 }
 
 .product-card-v1.selected:has(.rank-1) {
@@ -410,35 +413,43 @@ defineExpose({ setCommentSubmitting })
   top: 10px;
   left: 10px;
   z-index: 10;
-  width: 30px;
-  height: 30px;
-  background: var(--header-blur-bg);
-  border-radius: 10px;
-  display: flex;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  background: rgba(15, 18, 24, 0.62);
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  border-radius: 100px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--c-text-600);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .rank-indicator.rank-pos-1 {
-  background: #e8a830;
-  color: #ffffff;
-  box-shadow: 0 3px 12px rgba(232, 168, 48, 0.35);
+  background: var(--c-gold, #EAB308);
+  color: #422c0a;
+  box-shadow: 0 3px 10px rgba(234, 179, 8, 0.38),
+              inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
 .rank-indicator.rank-pos-2 {
-  background: #8c9bb0;
+  background: var(--c-silver, #94A3B8);
   color: #ffffff;
-  box-shadow: 0 3px 12px rgba(140, 155, 176, 0.35);
+  box-shadow: 0 3px 10px rgba(148, 163, 184, 0.38),
+              inset 0 1px 0 rgba(255, 255, 255, 0.32);
 }
 
 .rank-indicator.rank-pos-3 {
-  background: #d4784a;
+  background: var(--c-bronze, #D97706);
   color: #ffffff;
-  box-shadow: 0 3px 12px rgba(212, 120, 74, 0.35);
+  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.38),
+              inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 
@@ -471,13 +482,14 @@ defineExpose({ setCommentSubmitting })
   top: 10px;
   right: 10px;
   z-index: 15;
-  padding: 4px 8px;
+  padding: 5px 9px;
   background: var(--c-brand);
   color: #ffffff;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.3);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  border-radius: 100px;
+  box-shadow: 0 3px 10px rgba(147, 51, 234, 0.32);
 }
 
 /* YouTube 재생 오버레이 */
@@ -522,7 +534,7 @@ defineExpose({ setCommentSubmitting })
 }
 
 .info-box {
-  padding: 12px;
+  padding: 14px 14px 12px;
   display: flex;
   flex-direction: column;
 }
@@ -533,9 +545,11 @@ defineExpose({ setCommentSubmitting })
 }
 
 .brand {
-  font-size: 11px;
+  font-size: 11.5px;
+  font-weight: 600;
   color: var(--c-text-400);
-  margin: 0 0 2px;
+  margin: 0 0 3px;
+  letter-spacing: -0.01em;
 }
 
 .name-row {
@@ -546,17 +560,19 @@ defineExpose({ setCommentSubmitting })
 }
 
 .name {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  line-height: 1.35;
+  line-height: 1.32;
+  letter-spacing: -0.028em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
   min-width: 0;
+  word-break: keep-all;
 }
 
 .name.unavailable {
@@ -565,7 +581,7 @@ defineExpose({ setCommentSubmitting })
 }
 
 .vote-actions {
-  padding-top: 6px;
+  padding-top: 10px;
 }
 
 /* 탭하라는 힌트 */
@@ -838,7 +854,7 @@ defineExpose({ setCommentSubmitting })
 /* 모바일 컴팩트 디자인 */
 @media (max-width: 480px) {
   .product-card-v1 {
-    border-radius: 10px;
+    border-radius: 12px;
     border-width: 1px;
   }
 
@@ -871,16 +887,17 @@ defineExpose({ setCommentSubmitting })
   }
 
   .rank-indicator {
-    top: 5px;
-    left: 5px;
-    width: 20px;
-    height: 20px;
-    font-size: 10px;
-    border-radius: 5px;
+    top: 6px;
+    left: 6px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    font-size: 11px;
+    border-radius: 100px;
   }
 
   .product-card-v1.selected .rank-indicator {
-    top: 5px;
+    top: 6px;
   }
 
   .selected-rank-badge {
@@ -899,23 +916,27 @@ defineExpose({ setCommentSubmitting })
   .my-pick-badge {
     top: 6px;
     right: 6px;
-    padding: 3px 6px;
-    font-size: 8px;
-    border-radius: 4px;
+    padding: 3px 7px;
+    font-size: 9px;
+    border-radius: 100px;
+    font-weight: 800;
   }
 
   .info-box {
-    padding: 10px;
+    padding: 11px 11px 10px;
   }
 
   .brand {
-    font-size: 12.5px;
+    font-size: 11px;
     margin: 0 0 3px;
+    font-weight: 600;
   }
 
   .name {
-    font-size: 16.5px;
+    font-size: 14.5px;
     line-height: 1.3;
+    font-weight: 800;
+    letter-spacing: -0.028em;
     -webkit-line-clamp: 2;
   }
 
