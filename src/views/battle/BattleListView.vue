@@ -41,8 +41,7 @@
                   v-model="searchKeyword"
                   type="text"
                   class="battle-search-input"
-                  placeholder="콜라 vs 사이다? 검색해보세요"
-                  @input="handleSearchInput"
+                  placeholder="요거픽·아이템 이름으로 검색"
                   @keyup.enter="applySearchNow"
               />
               <button
@@ -412,20 +411,27 @@ const updateTabCounts = async () => {
 }
 
 // 검색
-const handleSearchInput = () => {
-  clearTimeout(searchDebounceTimer)
-  searchDebounceTimer = setTimeout(() => {
-    resetAndLoadBattles()
-  }, 350)
-}
+// 한글 IME 조합 중에는 @input 시점에 v-model 값이 갱신되지 않아 @input + debounce 가
+// 미반영되는 문제가 있다. watch 로 바꾸면 조합 종료 후 ref 갱신을 정확히 감지한다.
+let lastSearchedKeyword = ''
 const applySearchNow = () => {
   clearTimeout(searchDebounceTimer)
+  lastSearchedKeyword = searchKeyword.value.trim()
   resetAndLoadBattles()
 }
 const clearSearch = () => {
   searchKeyword.value = ''
-  applySearchNow()
+  // watch 가 트리거되어 빈 키워드로 다시 로드함
 }
+watch(searchKeyword, (val) => {
+  const trimmed = (val || '').trim()
+  if (trimmed === lastSearchedKeyword) return
+  clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = setTimeout(() => {
+    lastSearchedKeyword = trimmed
+    resetAndLoadBattles()
+  }, 300)
+})
 
 // 카테고리 모달 선택
 const handleCategoryModalSelect = ({ category, parent, categoryDepth }) => {
