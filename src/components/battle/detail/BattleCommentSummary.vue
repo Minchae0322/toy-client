@@ -333,15 +333,20 @@ defineExpose({ closeInput })
 <style scoped>
 .pc-card-arguments {
   border-top: 1px solid var(--border-default);
-  padding: 12px 16px;
+  padding: 12px 14px 14px;
   transition: background 0.2s ease;
-  min-height: 100px;
+  min-height: 64px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   flex: 1;
   overflow: hidden;
   box-sizing: border-box;
+  gap: 8px;
+}
+
+.pc-card-arguments .arg-header {
+  margin-bottom: 0;
 }
 
 /* 헤더 */
@@ -614,10 +619,10 @@ div.ba-avatar {
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 12px;
   background: var(--c-brand-soft);
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
@@ -687,12 +692,17 @@ div.ba-avatar {
 /* 모바일 최적화 */
 @media (max-width: 480px) {
   .pc-card-arguments {
-    padding: 10px 12px;
-    min-height: 76px;
+    padding: 10px 12px 12px;
+    min-height: 52px;
+    gap: 6px;
+  }
+
+  .pc-card-arguments .arg-header {
+    margin-bottom: 0;
   }
 
   .arg-header {
-    margin-bottom: 8px;
+    margin-bottom: 0;
   }
 
   .arg-header .label {
