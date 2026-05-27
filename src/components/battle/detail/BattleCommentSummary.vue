@@ -690,7 +690,9 @@ div.bb-avatar.bb-avatar-fallback {
 
   .bb-foot {
     min-height: 20px;
-    gap: 4px;
+    gap: 6px;
+    /* 모바일에서는 두 요소를 우측에 묶어 페어처럼 정렬 (양 끝 분리 X) */
+    justify-content: flex-end;
   }
 
   /* 좁은 폭에서 줄바꿈 방지 — "+N개 더보기"의 "개 더보기" 라벨, 한마디 텍스트 숨김 */
@@ -710,6 +712,7 @@ div.bb-avatar.bb-avatar-fallback {
 
   /* 한마디 버튼은 모바일에서 원형 아이콘 칩 */
   .bb-write {
+    margin-left: 0; /* flex-end + gap 으로 정렬되므로 auto margin 제거 */
     padding: 0;
     width: 24px;
     height: 24px;
