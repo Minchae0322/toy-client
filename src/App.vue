@@ -424,7 +424,7 @@ onUnmounted(() => {
   <main :class="['main', { 'auth-page': isAuthPage }]">
     <RouterView v-slot="{ Component }">
       <KeepAlive :include="['FeedHomeView']">
-        <component :is="Component" />
+        <component :is="Component" :key="$route.query._push" />
       </KeepAlive>
     </RouterView>
   </main>

@@ -143,13 +143,18 @@ function handleClick(item, e) {
 }
 
 .tile-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.tile-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
 @media (min-width: 768px) {
@@ -157,6 +162,10 @@ function handleClick(item, e) {
     width: 60px;
     height: 60px;
     border-radius: 18px;
+  }
+  .tile-icon svg {
+    width: 24px;
+    height: 24px;
   }
 }
 
@@ -194,9 +203,13 @@ function handleClick(item, e) {
 
 @media (max-width: 380px) {
   .tile-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+  .tile-icon svg {
+    width: 20px;
+    height: 20px;
   }
   .tile-title {
     font-size: 11.5px;

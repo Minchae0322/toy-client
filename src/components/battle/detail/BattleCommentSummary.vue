@@ -24,23 +24,30 @@
             </span>
           </div>
           <p class="bb-text">{{ commentSummary.content }}</p>
-          <div class="bb-foot">
-            <span v-if="remainingCount > 0" class="bb-more">
-              <span class="bb-more-num">+{{ remainingCount }}</span>
-              <span class="bb-more-label">개 더보기</span>
-              <svg class="bb-more-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
-            </span>
-            <button type="button" class="bb-write" aria-label="한마디 남기기" @click.stop="toggleInput">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 5v14M5 12h14"/>
-              </svg>
-              <span class="bb-write-label">한마디</span>
-            </button>
-          </div>
+          <span v-if="remainingCount > 0" class="bb-more-link">
+            <span class="bb-more-num">+{{ remainingCount }}</span>
+            <span class="bb-more-label">개 더보기</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </span>
         </div>
       </div>
+
+      <!-- 쓰기 액션 — BEST 블록과 시각적으로 분리된 단독 CTA -->
+      <button type="button" class="write-row" @click.stop="toggleInput">
+        <span class="write-row-icon" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </span>
+        <span class="write-row-text">한마디 남기기</span>
+        <span class="write-row-arrow" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </span>
+      </button>
 
       <!-- PC 인라인 입력창 -->
       <transition name="slide">
@@ -428,25 +435,17 @@ div.bb-avatar.bb-avatar-fallback {
   word-break: break-word;
 }
 
-.bb-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 2px;
-  min-height: 22px;
-}
-
-.bb-more {
+/* BEST 블록 내부 — "전체 보기" 인라인 링크 */
+.bb-more-link {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+  margin-top: 2px;
   font-size: 10.5px;
   font-weight: 700;
   color: var(--c-warning);
   letter-spacing: -0.01em;
   white-space: nowrap;
-  min-width: 0;
 }
 
 .bb-more-num,
@@ -454,37 +453,52 @@ div.bb-avatar.bb-avatar-fallback {
   white-space: nowrap;
 }
 
-.bb-write {
-  margin-left: auto;
+/* ── 쓰기 액션 — 슬림한 텍스트 링크 톤 (높이 최소화) ── */
+.write-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-brand);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.write-row:hover {
+  background: var(--c-brand-soft);
+}
+
+.write-row-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border: none;
-  border-radius: 999px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   background: var(--c-brand);
   color: #ffffff;
-  font-family: inherit;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  white-space: nowrap;
   flex-shrink: 0;
-  transition: background 0.15s, transform 0.1s;
 }
 
-.bb-write-label {
-  white-space: nowrap;
+.write-row-text {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-.bb-write:hover {
-  background: var(--c-brand-hover);
-}
-
-.bb-write:active {
-  transform: scale(0.96);
+.write-row-arrow {
+  color: var(--c-brand);
+  opacity: 0.6;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* ── 빈 상태 — 단 한줄 슬림 CTA ── */
@@ -688,44 +702,34 @@ div.bb-avatar.bb-avatar-fallback {
     height: 9px;
   }
 
-  .bb-foot {
-    min-height: 20px;
-    gap: 6px;
-    /* 모바일에서는 두 요소를 우측에 묶어 페어처럼 정렬 (양 끝 분리 X) */
-    justify-content: flex-end;
+  /* BEST 내부 더보기 링크 — 모바일에서도 잘 보이도록 약간 키움 */
+  .bb-more-link {
+    font-size: 10.5px;
   }
-
-  /* 좁은 폭에서 줄바꿈 방지 — "+N개 더보기"의 "개 더보기" 라벨, 한마디 텍스트 숨김 */
-  .bb-more {
-    font-size: 9.5px;
-    overflow: hidden;
-    flex-shrink: 1;
-  }
-
-  .bb-more-label {
-    display: none;
-  }
-
   .bb-more-num {
     font-size: 11px;
   }
 
-  /* 한마디 버튼은 모바일에서 원형 아이콘 칩 */
-  .bb-write {
-    margin-left: 0; /* flex-end + gap 으로 정렬되므로 auto margin 제거 */
-    padding: 0;
-    width: 24px;
-    height: 24px;
-    gap: 0;
+  /* 쓰기 CTA 행 — 모바일에서 더 슬림 (높이 최소화) */
+  .write-row {
+    padding: 5px 8px;
+    border-radius: 7px;
+    gap: 5px;
   }
-
-  .bb-write-label {
-    display: none;
+  .write-row-icon {
+    width: 16px;
+    height: 16px;
   }
-
-  .bb-write svg {
-    width: 13px;
-    height: 13px;
+  .write-row-icon svg {
+    width: 10px;
+    height: 10px;
+  }
+  .write-row-text {
+    font-size: 11.5px;
+  }
+  .write-row-arrow svg {
+    width: 11px;
+    height: 11px;
   }
 
   /* 빈 상태 단 한줄 — 모바일은 더 슬림 */

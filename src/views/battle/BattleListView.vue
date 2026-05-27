@@ -41,7 +41,7 @@
                   v-model="searchKeyword"
                   type="text"
                   class="battle-search-input"
-                  placeholder="요거픽 제목 검색"
+                  placeholder="콜라 vs 사이다? 검색해보세요"
                   @input="handleSearchInput"
                   @keyup.enter="applySearchNow"
               />
@@ -770,32 +770,40 @@ onUnmounted(() => {
 
 .search-input-wrap .search-icon {
   position: absolute;
-  left: 12px;
-  width: 17px;
-  height: 17px;
-  color: var(--c-text-400);
+  left: 13px;
+  width: 18px;
+  height: 18px;
+  color: var(--c-brand);
   pointer-events: none;
 }
 
 .battle-search-input {
   width: 100%;
-  padding: 11px 36px 11px 36px;
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  background: var(--bg-elevated);
+  padding: 12px 36px 12px 38px;
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  background: var(--c-brand-soft);
   color: var(--text-primary);
   font-size: 14px;
+  font-weight: 500;
   font-family: inherit;
   letter-spacing: -0.01em;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .battle-search-input::placeholder {
-  color: var(--c-text-400);
+  color: var(--c-brand-hover, var(--c-brand));
+  opacity: 0.7;
+  font-weight: 500;
+}
+.battle-search-input:hover {
+  background: var(--bg-elevated);
+  border-color: var(--c-brand-soft);
 }
 .battle-search-input:focus {
+  background: var(--bg-elevated);
   border-color: var(--c-brand);
-  box-shadow: 0 0 0 3px var(--c-brand-soft);
+  box-shadow: 0 0 0 4px var(--c-brand-soft);
 }
 
 .search-clear {

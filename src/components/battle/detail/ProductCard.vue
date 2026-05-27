@@ -34,9 +34,9 @@
 
     <div class="info-box">
       <div class="info-content">
-        <p class="brand">{{ itemBrand || ' ' }}</p>
         <div class="name-row">
           <h3 :class="['name', { unavailable: productUnavailable }]">{{ itemName }}</h3>
+          <span v-if="itemBrand" class="brand-side" :title="itemBrand">{{ itemBrand }}</span>
           <ProductStatusBadge :status="productStatus" size="sm" />
         </div>
       </div>
@@ -578,9 +578,23 @@ defineExpose({ setCommentSubmitting })
 
 .name-row {
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+/* 브랜드 — 아이템명 옆 우측에 배치, 보조 톤 */
+.brand-side {
+  margin-left: auto;
+  flex-shrink: 0;
+  max-width: 45%;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--c-text-400);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .name {
@@ -951,11 +965,9 @@ defineExpose({ setCommentSubmitting })
     padding: 11px 11px 10px;
   }
 
-  .brand {
-    font-size: 11px;
-    margin: 0 0 3px;
-    font-weight: 600;
-    min-height: 1.1em;
+  .brand-side {
+    font-size: 10.5px;
+    max-width: 40%;
   }
 
   .name {

@@ -106,7 +106,12 @@ async function routeFromPushPayload(data) {
   if (!route) return
   try {
     await router.isReady()
-    await router.push(route)
+    // 푸시 탭으로 진입할 땐 동일 라우트여도 신규 데이터 반영을 위해
+    // _push 타임스탬프 쿼리를 붙여 <RouterView :key> 가 컴포넌트를 remount 하도록 함
+    const target = typeof route === 'string'
+      ? { path: route, query: { _push: String(Date.now()) } }
+      : { ...route, query: { ...(route.query || {}), _push: String(Date.now()) } }
+    await router.push(target)
   } catch (e) {
     console.warn('[FCM] 푸시 라우팅 실패:', e)
   }
