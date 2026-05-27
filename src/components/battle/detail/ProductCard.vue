@@ -32,7 +32,7 @@
 
     <div class="info-box">
       <div class="info-content">
-        <p v-if="itemBrand" class="brand">{{ itemBrand }}</p>
+        <p class="brand">{{ itemBrand || ' ' }}</p>
         <div class="name-row">
           <h3 :class="['name', { unavailable: productUnavailable }]">{{ itemName }}</h3>
           <ProductStatusBadge :status="productStatus" size="sm" />
@@ -308,6 +308,7 @@ defineExpose({ setCommentSubmitting })
   display: flex;
   flex-direction: column;
   max-width: 100%;
+  height: 100%;
   box-sizing: border-box;
 }
 
@@ -459,6 +460,7 @@ defineExpose({ setCommentSubmitting })
   background: var(--bg-subtle);
   overflow: hidden;
   cursor: zoom-in;
+  flex-shrink: 0;
 }
 
 .img-box.is-youtube {
@@ -537,19 +539,27 @@ defineExpose({ setCommentSubmitting })
   padding: 14px 14px 12px;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .info-content {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
 .brand {
   font-size: 11.5px;
   font-weight: 600;
   color: var(--c-text-400);
-  margin: 0 0 3px;
+  margin: 0 0 4px;
   letter-spacing: -0.01em;
+  min-height: 1.1em;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .name-row {
@@ -572,6 +582,7 @@ defineExpose({ setCommentSubmitting })
   overflow: hidden;
   flex: 1;
   min-width: 0;
+  min-height: calc(1.32em * 2);
   word-break: keep-all;
 }
 
@@ -581,7 +592,16 @@ defineExpose({ setCommentSubmitting })
 }
 
 .vote-actions {
-  padding-top: 10px;
+  padding-top: 12px;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 92px;
+}
+
+.vote-actions.is-ended {
+  min-height: 64px;
 }
 
 /* 탭하라는 힌트 */
@@ -930,6 +950,7 @@ defineExpose({ setCommentSubmitting })
     font-size: 11px;
     margin: 0 0 3px;
     font-weight: 600;
+    min-height: 1.1em;
   }
 
   .name {
@@ -938,6 +959,16 @@ defineExpose({ setCommentSubmitting })
     font-weight: 800;
     letter-spacing: -0.028em;
     -webkit-line-clamp: 2;
+    min-height: calc(1.3em * 2);
+  }
+
+  .vote-actions {
+    min-height: 64px;
+    padding-top: 8px;
+  }
+
+  .vote-actions.is-ended {
+    min-height: 44px;
   }
 
   .vote-actions {
