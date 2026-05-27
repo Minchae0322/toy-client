@@ -312,7 +312,6 @@ defineExpose({ setCommentSubmitting })
   display: flex;
   flex-direction: column;
   max-width: 100%;
-  height: 100%;
   box-sizing: border-box;
 }
 
