@@ -41,7 +41,7 @@
                   v-model="searchKeyword"
                   type="text"
                   class="battle-search-input"
-                  placeholder="요거픽·아이템 이름으로 검색"
+                  placeholder="요거픽·아이템 검색"
                   @keyup.enter="applySearchNow"
               />
               <button
