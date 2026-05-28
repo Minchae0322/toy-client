@@ -38,9 +38,9 @@ defineProps({
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   padding: 0;
-  min-height: 36px;
+  min-height: 34px;
 }
 
 .ds-header-main {
@@ -130,7 +130,7 @@ defineProps({
 }
 
 @media (min-width: 768px) {
-  .ds-header { margin-bottom: 20px; }
+  .ds-header { margin-bottom: 16px; }
   .ds-title { font-size: 22px; }
   .ds-sub { font-size: 13.5px; }
 }
@@ -141,7 +141,7 @@ defineProps({
 }
 
 @media (max-width: 480px) {
-  .ds-header { margin-bottom: 14px; }
+  .ds-header { margin-bottom: 11px; }
   .ds-title { font-size: 18px; }
   .ds-sub { font-size: 12.5px; }
   .ds-arrow { width: 32px; height: 32px; }

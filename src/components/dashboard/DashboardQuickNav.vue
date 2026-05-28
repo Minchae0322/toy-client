@@ -1,6 +1,6 @@
 <template>
   <section class="quick-nav-section" aria-label="주요 메뉴">
-    <div class="quick-nav-grid">
+    <div class="quick-nav-row">
       <router-link
         v-for="item in items"
         :key="item.key"
@@ -9,7 +9,7 @@
         @click="handleClick(item, $event)"
       >
         <span class="tile-icon" :style="{ background: item.bg, color: item.fg }">
-          <component :is="item.icon" :size="24" :stroke-width="2.2" />
+          <component :is="item.icon" :size="22" :stroke-width="2.2" />
         </span>
         <span class="tile-title">{{ item.title }}</span>
       </router-link>
@@ -99,22 +99,27 @@ function handleClick(item, e) {
   width: 100%;
 }
 
-.quick-nav-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px 4px;
+/* 가로 스크롤 한 줄 — 촘촘하게 배치 (PC에서는 6칸이 한 줄에 자연스럽게 맞음) */
+.quick-nav-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* 모바일 스크롤 시 가장자리에서 끊기지 않도록 */
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 }
 
-@media (min-width: 480px) {
-  .quick-nav-grid {
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px 4px;
-  }
+.quick-nav-row::-webkit-scrollbar {
+  display: none;
 }
 
-@media (min-width: 1024px) {
-  .quick-nav-grid {
-    gap: 16px 8px;
+@media (min-width: 768px) {
+  .quick-nav-row {
+    gap: 8px;
+    /* 데스크톱: 6칸 균등 분배, 스크롤 불필요 */
+    overflow-x: visible;
   }
 }
 
@@ -122,16 +127,27 @@ function handleClick(item, e) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 8px 4px;
+  gap: 6px;
+  padding: 4px 2px;
   background: transparent;
   border: none;
-  border-radius: 14px;
+  border-radius: 12px;
   text-decoration: none;
   color: inherit;
   transition: transform 0.15s ease, background 0.15s ease;
   -webkit-tap-highlight-color: transparent;
-  min-width: 0;
+  /* 한 줄에 촘촘하게 — 고정 폭으로 같은 크기 유지 */
+  flex: 0 0 auto;
+  width: 62px;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  .quick-tile {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
 }
 
 .quick-tile:hover {
@@ -143,9 +159,9 @@ function handleClick(item, e) {
 }
 
 .tile-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,9 +175,21 @@ function handleClick(item, e) {
 
 @media (min-width: 768px) {
   .tile-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 18px;
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+  }
+  .tile-icon svg {
+    width: 23px;
+    height: 23px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .tile-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
   }
   .tile-icon svg {
     width: 24px;
@@ -169,15 +197,8 @@ function handleClick(item, e) {
   }
 }
 
-@media (min-width: 1280px) {
-  .tile-icon {
-    width: 64px;
-    height: 64px;
-  }
-}
-
 .tile-title {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -197,19 +218,22 @@ function handleClick(item, e) {
 
 @media (min-width: 1280px) {
   .tile-title {
-    font-size: 14px;
+    font-size: 13.5px;
   }
 }
 
 @media (max-width: 380px) {
+  .quick-tile {
+    width: 58px;
+  }
   .tile-icon {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
   }
   .tile-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 21px;
+    height: 21px;
   }
   .tile-title {
     font-size: 11.5px;
