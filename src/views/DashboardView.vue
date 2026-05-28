@@ -116,21 +116,21 @@ onMounted(() => {
   padding: 0 16px;
   display: flex;
   flex-direction: column;
-  /* 섹션 간 충분한 여백 — 콘텐츠가 숨쉬게 */
-  gap: 40px;
+  /* 컴팩트 레이아웃 — 섹션을 촘촘하게 */
+  gap: 26px;
 }
 
 @media (min-width: 768px) {
   .dashboard-shell {
     padding: 0 32px;
-    gap: 52px;
+    gap: 34px;
   }
 }
 
 @media (min-width: 1024px) {
   .dashboard-shell {
     padding: 0 40px;
-    gap: 64px;
+    gap: 40px;
   }
 }
 
@@ -143,17 +143,27 @@ onMounted(() => {
 @media (max-width: 480px) {
   .dashboard-shell {
     padding: 0 16px;
-    gap: 32px;
+    gap: 22px;
+  }
+}
+
+/* QuickNav는 Hero 바로 아래에 더 가깝게 붙임 */
+.dashboard-shell > :nth-child(2) {
+  margin-top: -10px;
+}
+@media (max-width: 480px) {
+  .dashboard-shell > :nth-child(2) {
+    margin-top: -8px;
   }
 }
 
 /* 첫 섹션(BrandHero) 위쪽 여백 */
 .dashboard-shell > :first-child {
-  margin-top: 12px;
+  margin-top: 10px;
 }
 @media (min-width: 768px) {
   .dashboard-shell > :first-child {
-    margin-top: 20px;
+    margin-top: 16px;
   }
 }
 
