@@ -55,6 +55,7 @@
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
     - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용
+    - **`common/CategorySelectModal.vue`** — 카테고리 탐색 모달. `type` prop으로 도메인 구분(BATTLE 등). 카테고리 선택 UI 직접 구현 금지, 이 컴포넌트 재사용
     - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 그리드), `DashboardBattles.vue` (요거픽 매거진 레이아웃), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
     - `MZLifestyle/` — `AIMemeGeneratorPromo`, `BottomNavigation`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection`
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
@@ -119,6 +120,16 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 `useUserBlock` composable (`src/stores/userBlock.js` 래퍼). **Apple App Store 심사 필수 기능.**
 스펙 전체는 `docs/user-block-system.md` 참조.
 
+### 한글 검색 입력 (IME 조합 처리)
+한글 입력 시 `@input` 이벤트는 IME 조합 중 `v-model` 값이 미반영되므로, 검색 디바운스는 반드시 `watch`로 처리:
+```js
+watch(searchKeyword, (val) => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => { /* API 호출 */ }, 300)
+})
+```
+`@input` + debounce 조합은 한글 마지막 음절이 누락되는 버그가 있으므로 사용 금지. `BattleListView.vue` 참조.
+
 ---
 
 ## 빌드 / 검증
@@ -145,6 +156,12 @@ await openLoginPrompt('이 기능은 로그인 후 이용할 수 있어요')
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.1.3**: iOS 빌드 17, Android versionCode 14 (`chore`)
+- **배틀 목록 검색 + 카테고리 탐색 모달**: `BattleListView.vue` — `CommonCategoryFilter` 제거, 검색 input + 300ms watch 디바운스 자동 로드, `CategorySelectModal`(BATTLE 타입)로 카테고리 선택. 선택 카테고리는 brand-soft 칩으로 표시 (`feat(battle)`)
+- **검색 IME 한글 미반영 수정**: `BattleListView.vue` — `@input` 디바운스 → `watch` 디바운스로 전환. 한글 IME 조합 종료 후 ref 갱신을 정확히 감지 (`fix(battle)`)
+- **푸시 라우팅 강제 remount**: `fcmService.js` + `App.vue` — 동일 라우트 푸시 알림 수신 시 `_push` 타임스탬프 쿼리 파라미터 부여 + `RouterView :key` 바인딩으로 강제 remount → 최신 데이터 재fetch 보장 (`feat`)
+- **알림 설정 요거픽(배틀) 카테고리 추가**: `NotificationSettingService.js` (`feat(notification)`)
+- **버전 1.1.2**: iOS 빌드 16, Android versionCode 13 (`chore`)
 - **대시보드 전면 리디자인 (오늘의집 톤)**: `DashboardView.vue` 대폭 리팩터링 — 각 섹션 독립 컴포넌트 분리 완료. `DashboardBattles.vue` 요거픽 섹션이 매거진 레이아웃으로 전면 재설계 (사진 위주, 투표율 바 보라+골드 보색) (`refactor/feat(dashboard)`)
 - **대시보드 공통 섹션 헤더 신설**: `DashboardSectionHeader.vue` — 모든 대시보드 섹션 헤더 공통 컴포넌트. 새 섹션 추가 시 직접 스타일링 대신 이 컴포넌트 재사용 (`feat(dashboard)`)
 - **피드 대댓글 답글 지원**: `FeedCommentSection.vue` — 대댓글에서도 답글 작성 가능, 멘션 자동 프리필 (`feat(feed)`)
