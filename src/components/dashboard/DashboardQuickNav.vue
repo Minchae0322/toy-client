@@ -20,7 +20,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Flame, BarChart3, Award, Sparkles, Swords, MessageSquare } from 'lucide-vue-next'
+import { MessageSquareText, Flame, Trophy, Luggage, Award, MessageSquare } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
 import { useLoginPrompt } from '@/composables/useLoginPrompt'
 import FeedbackModal from '@/components/common/FeedbackModal.vue'
@@ -29,42 +29,43 @@ const { isLoggedIn } = useAuth()
 const { openLoginPrompt } = useLoginPrompt()
 const showFeedback = ref(false)
 
+// BottomNavigation 과 라벨·아이콘·순서를 일치시킴
 const items = [
   {
-    key: 'battle',
-    title: '요거픽',
-    to: { name: 'BattleList' },
-    icon: Swords,
-    bg: '#FAF5FF',
-    fg: '#9333EA',
-  },
-  {
     key: 'feed',
-    title: '핫 피드',
+    title: '피드',
     to: { name: 'FeedHome' },
-    icon: Flame,
-    bg: '#FFF1E6',
-    fg: '#F97316',
+    icon: MessageSquareText,
+    bg: '#EEF2FF',
+    fg: '#4F46E5',
   },
   {
     key: 'ranking',
     title: '핫 아이템',
     to: { name: 'ProductRanking' },
-    icon: BarChart3,
-    bg: '#EEF2FF',
-    fg: '#4F46E5',
+    icon: Flame,
+    bg: '#FFF1E6',
+    fg: '#F97316',
+  },
+  {
+    key: 'battle',
+    title: '요거픽',
+    to: { name: 'BattleList' },
+    icon: Trophy,
+    bg: '#FAF5FF',
+    fg: '#9333EA',
   },
   {
     key: 'carrier',
     title: '캐꾸',
     to: { name: 'Carrier' },
-    icon: Sparkles,
+    icon: Luggage,
     bg: '#ECFEFF',
     fg: '#06B6D4',
   },
   {
     key: 'collection',
-    title: '내 컬렉션',
+    title: '컬렉션',
     to: { name: 'Collection' },
     icon: Award,
     bg: '#FEF3C7',
