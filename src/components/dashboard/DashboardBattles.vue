@@ -3,9 +3,24 @@
     <DashboardSectionHeader
       prefix="오늘의"
       accent="요거픽"
-      sub="투표로 가리는 진짜 1픽"
+      sub="다 같이 한 표씩, 지금 뜨는 픽"
       :to="{ name: 'BattleList' }"
     />
+
+    <!-- 커뮤니티 펄스 바 — 지금 얼마나 많은 사람이 픽하고 있는지 -->
+    <div v-if="!loading && hotBattles.length > 0" class="pick-pulse">
+      <span class="pulse-live">
+        <span class="pulse-dot"></span>
+        LIVE
+      </span>
+      <p class="pulse-text">
+        <span>{{ pulseHeadline }}</span>
+        <template v-if="peopleCount > 0">
+          <span class="pulse-sep">·</span>
+          <span>지금까지 <strong>{{ formatNumber(peopleCount) }}명</strong>이 한 표 던졌어요</span>
+        </template>
+      </p>
+    </div>
 
     <!-- PC: 1~5위 균등 그리드 (모바일에선 숨김) -->
     <div v-if="!loading && topFive.length > 0" class="pc-top-grid">
@@ -50,13 +65,13 @@
               <div class="pc-vs-fill" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
             </div>
             <div class="pc-vs-foot">
-              <span class="pc-votes-lead">{{ formatNumber(battle.totalVotes) }} 투표</span>
+              <span class="pc-votes-lead">{{ formatNumber(peopleOf(battle)) }}명 참여 중</span>
             </div>
           </div>
 
           <!-- 2~5위: 간단 푸터 -->
           <div v-else class="pc-foot">
-            <span class="pc-votes">{{ formatNumber(battle.totalVotes) }} 투표</span>
+            <span class="pc-votes">{{ formatNumber(peopleOf(battle)) }}명 참여</span>
             <span v-if="battle.topItems?.[0]" class="pc-lead">
               {{ formatPercent(battle.topItems[0].votePercentage) }}%
             </span>
@@ -94,7 +109,7 @@
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
-            {{ formatNumber(featuredBattle.totalVotes) }} 투표
+            {{ formatNumber(peopleOf(featuredBattle)) }}명 참여
           </span>
         </div>
       </div>
@@ -102,6 +117,11 @@
       <!-- 사진 밑 본문 -->
       <div class="lead-body">
         <h3 class="lead-title">{{ featuredBattle.title }}</h3>
+
+        <span v-if="featuredBattle.topItems?.length > 0" class="lead-prompt">
+          <span class="prompt-dot"></span>
+          너의 픽은?
+        </span>
 
         <div v-if="featuredBattle.topItems?.length > 0" class="vs-list">
           <div class="vs-row">
@@ -128,7 +148,7 @@
         </div>
 
         <span class="lead-cta">
-          한 표 던지러 가기
+          나도 한 표 던지기
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m9 18 6-6-6-6" />
           </svg>
@@ -172,7 +192,7 @@
     <!-- 다른 픽도 둘러보기 — 가로 스크롤 큰 사진 카드 -->
     <div v-if="restBattles.length > 0" class="rest-wrap">
       <div class="rest-header">
-        <span class="rest-label">다른 픽도 둘러보기</span>
+        <span class="rest-label">다른 픽에도 한 표</span>
         <router-link :to="{ name: 'BattleList' }" class="rest-more">
           전체보기
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -202,7 +222,7 @@
           <div class="rest-body">
             <h4 class="rest-title">{{ battle.title }}</h4>
             <div class="rest-foot">
-              <span class="rest-votes">{{ formatNumber(battle.totalVotes) }} 투표</span>
+              <span class="rest-votes">{{ formatNumber(peopleOf(battle)) }}명 참여</span>
               <span v-if="battle.topItems?.[0]" class="rest-lead">
                 1위 {{ formatPercent(battle.topItems[0].votePercentage) }}%
               </span>
@@ -225,6 +245,22 @@ const loading = ref(true)
 const featuredBattle = computed(() => hotBattles.value[0] || null)
 const restBattles = computed(() => hotBattles.value.slice(1, 6))
 const topFive = computed(() => hotBattles.value.slice(0, 5))
+
+// ── 커뮤니티 펄스 집계 ──
+const isLive = (endDate) => {
+  if (!endDate) return true
+  return new Date(endDate) - new Date() > 0
+}
+const liveCount = computed(() => hotBattles.value.filter(b => isLive(b.endDate)).length)
+// 참여자 수 우선, 없으면 투표 수로 폴백
+const peopleCount = computed(() =>
+  hotBattles.value.reduce((sum, b) => sum + (b.totalParticipants || b.totalVotes || 0), 0)
+)
+const pulseHeadline = computed(() =>
+  liveCount.value > 0 ? `진행 중인 픽 ${liveCount.value}개` : `오늘의 픽 ${hotBattles.value.length}개`
+)
+// 카드별 "사람 수" — 참여자 우선, 없으면 투표 수
+const peopleOf = (b) => b?.totalParticipants || b?.totalVotes || 0
 
 const loadHotBattles = async () => {
   loading.value = true
@@ -281,6 +317,105 @@ onMounted(() => {
 <style scoped>
 .dashboard-pick {
   width: 100%;
+}
+
+/* ================================================================
+   커뮤니티 펄스 바 — "지금 다 같이 픽하는 중"
+================================================================ */
+.pick-pulse {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border-default, #F1F3F6);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+@media (min-width: 768px) {
+  .pick-pulse {
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+  }
+}
+
+.pulse-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 4px 9px;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--c-danger, #EF4444);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border-radius: 100px;
+  line-height: 1;
+}
+
+.pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: chip-pulse 1.5s ease-in-out infinite;
+}
+
+.pulse-text {
+  margin: 0;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--c-text-500, #64748B);
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) {
+  .pulse-text { font-size: 13.5px; }
+}
+
+.pulse-text strong {
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pulse-sep {
+  margin: 0 6px;
+  color: var(--c-text-300, #CBD5E1);
+}
+
+/* "너의 픽은?" 폴 프롬프트 (1픽 카드) */
+.lead-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--c-brand, #9333EA);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.prompt-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@media (min-width: 768px) {
+  .lead-prompt { font-size: 13.5px; }
 }
 
 /* ================================================================
