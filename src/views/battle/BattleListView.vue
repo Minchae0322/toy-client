@@ -203,6 +203,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'BattleListView' })
+
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ChevronDown, Check, Trophy } from 'lucide-vue-next'

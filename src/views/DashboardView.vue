@@ -35,6 +35,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'DashboardView' })
+
 import { ref, onMounted } from 'vue'
 import AppSidebar from '@/components/feed/AppSidebar.vue'
 import BottomNavigation from '@/components/common/BottomNavigation.vue'

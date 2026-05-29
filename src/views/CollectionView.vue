@@ -84,6 +84,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'CollectionView' })
+
 import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth.js'
 import { rewardsService } from '@/services/RewardsService.js'
