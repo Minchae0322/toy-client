@@ -46,24 +46,30 @@
         <div class="pc-body">
           <h4 class="pc-title">{{ battle.title }}</h4>
 
-          <!-- 1위 카드: 1·2위 후보 vote bar 풍부하게 -->
-          <div v-if="idx === 0 && battle.topItems?.length > 0" class="pc-vs">
-            <div class="pc-vs-row">
-              <span class="pc-vs-rank">1</span>
-              <span class="pc-vs-name">{{ truncateName(battle.topItems[0]?.displayName, 14) }}</span>
-              <span class="pc-vs-pct lead">{{ formatPercent(battle.topItems[0]?.votePercentage) }}%</span>
+          <!-- 1위 카드: 누적 막대 한 줄 + 순위별 컬러 범례 -->
+          <div v-if="idx === 0 && featuredPoll.items.length > 0" class="pc-vs">
+            <div class="poll-bar">
+              <span
+                v-for="seg in featuredPoll.items"
+                :key="seg.rank"
+                class="poll-seg"
+                :class="'seg-' + seg.rank"
+                :style="{ width: seg.pct + '%' }"
+              ></span>
+              <span
+                v-if="featuredPoll.rest >= 2"
+                class="poll-seg seg-rest"
+                :style="{ width: featuredPoll.rest + '%' }"
+              ></span>
             </div>
-            <div class="pc-vs-track">
-              <div class="pc-vs-fill lead" :style="{ width: formatPercent(battle.topItems[0]?.votePercentage) + '%' }"></div>
-            </div>
-            <div class="pc-vs-row" v-if="battle.topItems[1]">
-              <span class="pc-vs-rank runner">2</span>
-              <span class="pc-vs-name runner">{{ truncateName(battle.topItems[1]?.displayName, 14) }}</span>
-              <span class="pc-vs-pct">{{ formatPercent(battle.topItems[1]?.votePercentage) }}%</span>
-            </div>
-            <div class="pc-vs-track" v-if="battle.topItems[1]">
-              <div class="pc-vs-fill" :style="{ width: formatPercent(battle.topItems[1]?.votePercentage) + '%' }"></div>
-            </div>
+            <ul class="poll-legend">
+              <li v-for="seg in featuredPoll.items" :key="seg.rank" class="legend-row">
+                <span class="legend-dot" :class="'seg-' + seg.rank"></span>
+                <span class="legend-rank">{{ seg.rank }}위</span>
+                <span class="legend-name">{{ truncateName(seg.name, 12) }}</span>
+                <span class="legend-pct" :class="{ lead: seg.rank === 1 }">{{ seg.pct }}%</span>
+              </li>
+            </ul>
             <div class="pc-vs-foot">
               <span class="pc-votes-lead">{{ formatNumber(peopleOf(battle)) }}명 참여 중</span>
             </div>
@@ -123,28 +129,29 @@
           너의 픽은?
         </span>
 
-        <div v-if="featuredBattle.topItems?.length > 0" class="vs-list">
-          <div class="vs-row">
-            <div class="vs-row-head">
-              <span class="vs-rank">1</span>
-              <span class="vs-name">{{ truncateName(featuredBattle.topItems[0]?.displayName, 24) }}</span>
-              <span class="vs-pct lead">{{ formatPercent(featuredBattle.topItems[0]?.votePercentage) }}%</span>
-            </div>
-            <div class="vs-track">
-              <div class="vs-fill lead" :style="{ width: formatPercent(featuredBattle.topItems[0]?.votePercentage) + '%' }"></div>
-            </div>
+        <div v-if="featuredPoll.items.length > 0" class="poll">
+          <div class="poll-bar">
+            <span
+              v-for="seg in featuredPoll.items"
+              :key="seg.rank"
+              class="poll-seg"
+              :class="'seg-' + seg.rank"
+              :style="{ width: seg.pct + '%' }"
+            ></span>
+            <span
+              v-if="featuredPoll.rest >= 2"
+              class="poll-seg seg-rest"
+              :style="{ width: featuredPoll.rest + '%' }"
+            ></span>
           </div>
-
-          <div class="vs-row" v-if="featuredBattle.topItems[1]">
-            <div class="vs-row-head">
-              <span class="vs-rank runner">2</span>
-              <span class="vs-name runner">{{ truncateName(featuredBattle.topItems[1]?.displayName, 24) }}</span>
-              <span class="vs-pct">{{ formatPercent(featuredBattle.topItems[1]?.votePercentage) }}%</span>
-            </div>
-            <div class="vs-track">
-              <div class="vs-fill" :style="{ width: formatPercent(featuredBattle.topItems[1]?.votePercentage) + '%' }"></div>
-            </div>
-          </div>
+          <ul class="poll-legend">
+            <li v-for="seg in featuredPoll.items" :key="seg.rank" class="legend-row">
+              <span class="legend-dot" :class="'seg-' + seg.rank"></span>
+              <span class="legend-rank">{{ seg.rank }}위</span>
+              <span class="legend-name">{{ truncateName(seg.name, 18) }}</span>
+              <span class="legend-pct" :class="{ lead: seg.rank === 1 }">{{ seg.pct }}%</span>
+            </li>
+          </ul>
         </div>
 
         <span class="lead-cta">
@@ -261,6 +268,19 @@ const pulseHeadline = computed(() =>
 )
 // 카드별 "사람 수" — 참여자 우선, 없으면 투표 수
 const peopleOf = (b) => b?.totalParticipants || b?.totalVotes || 0
+
+// 1픽 누적 막대 세그먼트 — 순위별 득표율 + '그 외' 잔여분
+const PICK_MAX_SEGMENTS = 4
+function buildPoll(battle) {
+  const items = (battle?.topItems || []).slice(0, PICK_MAX_SEGMENTS).map((it, i) => ({
+    rank: i + 1,
+    name: it?.displayName,
+    pct: formatPercent(it?.votePercentage)
+  }))
+  const used = items.reduce((sum, it) => sum + it.pct, 0)
+  return { items, rest: Math.max(0, 100 - used) }
+}
+const featuredPoll = computed(() => buildPoll(featuredBattle.value))
 
 const loadHotBattles = async () => {
   loading.value = true
@@ -598,69 +618,17 @@ onMounted(() => {
 .pc-vs {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 2px;
+  gap: 8px;
+  margin-top: 4px;
 }
-.pc-vs-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-}
-.pc-vs-rank {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--c-brand);
-  color: #fff;
-  font-size: 9.5px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.pc-vs-rank.runner { background: var(--c-text-400, #94A3B8); }
-.pc-vs-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.pc-vs-name.runner {
-  font-weight: 600;
-  color: var(--c-text-500, #64748B);
-}
-.pc-vs-pct {
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--c-text-500, #64748B);
-}
-.pc-vs-pct.lead {
-  font-size: 13.5px;
-  font-weight: 800;
-  color: var(--c-brand);
-}
-.pc-vs-track {
-  height: 4px;
-  background: var(--bg-subtle, #F7F8FA);
-  border-radius: 100px;
-  overflow: hidden;
-  margin-bottom: 4px;
-}
-.pc-vs-fill {
-  height: 100%;
-  background: var(--c-text-300, #CBD5E1);
-  border-radius: 100px;
-  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.pc-vs-fill.lead { background: var(--c-brand); }
+/* PC 1위 카드: 누적 막대·범례 컴팩트 */
+.pc-vs .poll-bar { height: 8px; }
+.pc-vs .poll-legend { margin-top: 0; gap: 5px; }
+.pc-vs .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+.pc-vs .legend-rank { font-size: 10px; }
+.pc-vs .legend-name { font-size: 12px; }
+.pc-vs .legend-pct { font-size: 12px; }
+.pc-vs .legend-pct.lead { font-size: 13.5px; }
 .pc-vs-foot {
   display: flex;
   align-items: center;
@@ -799,94 +767,96 @@ onMounted(() => {
   .lead-title { font-size: 26px; }
 }
 
-.vs-list {
+/* ================================================================
+   누적 막대 poll — 순위별 컬러 한 줄 + 범례 (1픽 / PC 1위 공용)
+================================================================ */
+.poll {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 
-@media (min-width: 768px) {
-  .vs-list { gap: 14px; }
+.poll-bar {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  height: 10px;
+  border-radius: 100px;
+  overflow: hidden;
+  background: var(--bg-subtle, #F7F8FA);
 }
 
-.vs-row-head {
+.poll-seg {
+  height: 100%;
+  min-width: 2px;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 순위별 솔리드 컬러 (그라데이션 X) */
+.poll-seg.seg-1,
+.legend-dot.seg-1 { background: var(--c-brand, #9333EA); }
+.poll-seg.seg-2,
+.legend-dot.seg-2 { background: #3B82F6; }
+.poll-seg.seg-3,
+.legend-dot.seg-3 { background: #F97316; }
+.poll-seg.seg-4,
+.legend-dot.seg-4 { background: #16A34A; }
+.poll-seg.seg-rest,
+.legend-dot.seg-rest { background: var(--c-text-300, #CBD5E1); }
+
+.poll-legend {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-row {
   display: flex;
   align-items: center;
-  gap: 9px;
-  margin-bottom: 7px;
-}
-
-.vs-rank {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--c-brand);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 800;
-  flex-shrink: 0;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 
-.vs-rank.runner { background: var(--c-text-400, #94A3B8); }
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
 
-.vs-name {
+.legend-rank {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--c-text-500, #64748B);
+}
+
+.legend-name {
+  flex: 1;
+  min-width: 0;
   font-size: 14.5px;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
-  flex: 1;
-  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.vs-name.runner {
-  font-weight: 600;
-  color: var(--c-text-500, #64748B);
-}
-
-.vs-pct {
+.legend-pct {
+  flex-shrink: 0;
   font-size: 15px;
   font-weight: 700;
   color: var(--c-text-500, #64748B);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  flex-shrink: 0;
 }
 
-.vs-pct.lead {
-  font-size: 20px;
+.legend-pct.lead {
+  font-size: 17px;
   font-weight: 800;
-  color: var(--c-brand);
+  color: var(--c-brand, #9333EA);
 }
-
-@media (min-width: 768px) {
-  .vs-name { font-size: 16px; }
-  .vs-pct { font-size: 16px; }
-  .vs-pct.lead { font-size: 24px; }
-  .vs-rank { width: 22px; height: 22px; font-size: 12px; }
-}
-
-.vs-track {
-  height: 6px;
-  background: var(--bg-subtle, #F7F8FA);
-  border-radius: 100px;
-  overflow: hidden;
-}
-
-.vs-fill {
-  height: 100%;
-  background: var(--c-text-300, #CBD5E1);
-  border-radius: 100px;
-  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.vs-fill.lead { background: var(--c-brand); }
 
 .lead-cta {
   /* vs-list 와는 시각적 분리 — CTA 만 별도 간격 */
@@ -1218,8 +1188,8 @@ onMounted(() => {
 ================================================================ */
 @media (max-width: 380px) {
   .lead-title { font-size: 18.5px; }
-  .vs-name { font-size: 13.5px; }
-  .vs-pct.lead { font-size: 18px; }
+  .legend-name { font-size: 13.5px; }
+  .legend-pct.lead { font-size: 15px; }
   .lead-cta { padding: 14px; font-size: 14.5px; }
   .rest-card { flex: 0 0 180px; }
 }
@@ -1235,6 +1205,6 @@ onMounted(() => {
 @media (prefers-reduced-motion: reduce) {
   .lead-chip.live .live-dot { animation: none; }
   .skeleton { animation: none; background: var(--bg-subtle); }
-  .vs-fill { transition: none; }
+  .poll-seg { transition: none; }
 }
 </style>
