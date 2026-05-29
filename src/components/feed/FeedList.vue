@@ -336,7 +336,7 @@ defineExpose({ observerTarget });
 }
 
 .section-title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -350,19 +350,19 @@ defineExpose({ observerTarget });
 
 @media (min-width: 768px) {
   .section-title {
-    font-size: 1.375rem;
+    font-size: 1.1875rem;
   }
 }
 
 @media (min-width: 1280px) {
   .section-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 }
 
 @media (max-width: 480px) {
   .section-title {
-    font-size: 1.125rem;
+    font-size: 1rem;
   }
 }
 

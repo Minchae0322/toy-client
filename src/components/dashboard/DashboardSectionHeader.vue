@@ -62,7 +62,7 @@ defineProps({
 
 /* 모든 섹션 헤더가 동일 크기·동일 무게·한 줄 — 화면 폭 따라 단계별 스케일 */
 .ds-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -131,18 +131,18 @@ defineProps({
 
 @media (min-width: 768px) {
   .ds-header { margin-bottom: 16px; }
-  .ds-title { font-size: 22px; }
+  .ds-title { font-size: 19px; }
   .ds-sub { font-size: 13.5px; }
 }
 
 @media (min-width: 1280px) {
-  .ds-title { font-size: 24px; }
+  .ds-title { font-size: 20px; }
   .ds-arrow { width: 38px; height: 38px; }
 }
 
 @media (max-width: 480px) {
   .ds-header { margin-bottom: 11px; }
-  .ds-title { font-size: 18px; }
+  .ds-title { font-size: 16px; }
   .ds-sub { font-size: 12.5px; }
   .ds-arrow { width: 32px; height: 32px; }
   .ds-arrow svg { width: 14px; height: 14px; }
