@@ -1,7 +1,7 @@
 <template>
   <section class="dashboard-pick">
     <DashboardSectionHeader
-      prefix="오늘의"
+      prefix="지금 뜨는"
       accent="요거픽"
       sub="다 같이 한 표씩, 지금 뜨는 픽"
       :to="{ name: 'BattleList' }"

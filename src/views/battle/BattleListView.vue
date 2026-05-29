@@ -26,7 +26,6 @@
                 </span>
                 전체 <span class="title-accent">요거픽</span>
               </h2>
-              <span class="sub-title">사용자들이 직접 고르는 승부</span>
             </div>
           </header>
 
