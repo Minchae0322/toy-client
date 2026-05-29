@@ -46,8 +46,15 @@
         <div class="pc-body">
           <h4 class="pc-title">{{ battle.title }}</h4>
 
-          <!-- 1위 카드: 누적 막대 — 순위별 컬러 + 막대 위 이름·득표율 -->
+          <!-- 1위 카드: 막대 위 라벨 + 순위별 컬러 누적 막대 -->
           <div v-if="idx === 0 && featuredPoll.items.length > 0" class="pc-vs">
+            <div class="poll-labels">
+              <span v-for="seg in featuredPoll.items" :key="seg.rank" class="poll-label">
+                <span class="poll-label-dot" :class="'seg-' + seg.rank"></span>
+                <span class="poll-label-name">{{ truncateName(seg.name, 8) }}</span>
+                <span class="poll-label-pct" :class="{ lead: seg.rank === 1 }">{{ seg.pct }}%</span>
+              </span>
+            </div>
             <div class="poll-bar">
               <span
                 v-for="seg in featuredPoll.items"
@@ -55,10 +62,7 @@
                 class="poll-seg"
                 :class="'seg-' + seg.rank"
                 :style="{ width: seg.pct + '%' }"
-              >
-                <span v-if="seg.pct >= 22" class="seg-name">{{ truncateName(seg.name, 8) }}</span>
-                <span v-if="seg.pct >= 11" class="seg-pct">{{ seg.pct }}%</span>
-              </span>
+              ></span>
               <span
                 v-if="featuredPoll.rest >= 2"
                 class="poll-seg seg-rest"
@@ -125,6 +129,13 @@
         </span>
 
         <div v-if="featuredPoll.items.length > 0" class="poll">
+          <div class="poll-labels">
+            <span v-for="seg in featuredPoll.items" :key="seg.rank" class="poll-label">
+              <span class="poll-label-dot" :class="'seg-' + seg.rank"></span>
+              <span class="poll-label-name">{{ truncateName(seg.name, 14) }}</span>
+              <span class="poll-label-pct" :class="{ lead: seg.rank === 1 }">{{ seg.pct }}%</span>
+            </span>
+          </div>
           <div class="poll-bar">
             <span
               v-for="seg in featuredPoll.items"
@@ -132,10 +143,7 @@
               class="poll-seg"
               :class="'seg-' + seg.rank"
               :style="{ width: seg.pct + '%' }"
-            >
-              <span v-if="seg.pct >= 16" class="seg-name">{{ truncateName(seg.name, 12) }}</span>
-              <span v-if="seg.pct >= 9" class="seg-pct">{{ seg.pct }}%</span>
-            </span>
+            ></span>
             <span
               v-if="featuredPoll.rest >= 2"
               class="poll-seg seg-rest"
@@ -611,11 +619,12 @@ onMounted(() => {
   gap: 8px;
   margin-top: 4px;
 }
-/* PC 1위 카드: 누적 막대 컴팩트 */
-.pc-vs .poll-bar { height: 26px; border-radius: 9px; }
-.pc-vs .seg-name { font-size: 11px; }
-.pc-vs .seg-pct { font-size: 11px; }
-.pc-vs .poll-seg.seg-1 .seg-pct { font-size: 12px; }
+/* PC 1위 카드: 막대·라벨 컴팩트 */
+.pc-vs .poll-bar { height: 10px; }
+.pc-vs .poll-labels { gap: 4px 10px; margin-bottom: 7px; }
+.pc-vs .poll-label-name { font-size: 11.5px; }
+.pc-vs .poll-label-pct { font-size: 11.5px; }
+.pc-vs .poll-label-dot { width: 8px; height: 8px; }
 .pc-vs-foot {
   display: flex;
   align-items: center;
@@ -706,8 +715,9 @@ onMounted(() => {
 }
 
 .lead-chip.glass {
+  /* 사진 위에 항상 흰 배경 칩 → 글자는 라이트/다크 무관 고정 다크 */
   background: rgba(255, 255, 255, 0.94);
-  color: var(--text-primary);
+  color: #0A0E1A;
   font-weight: 700;
 }
 
@@ -755,59 +765,73 @@ onMounted(() => {
 }
 
 /* ================================================================
-   누적 막대 poll — 순위별 컬러 한 줄, 막대 위에 이름·득표율 (1픽 / PC 1위 공용)
+   누적 막대 poll — 막대 위 라벨 + 순위별 컬러 한 줄 (1픽 / PC 1위 공용)
 ================================================================ */
+.poll-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 9px;
+}
+
+.poll-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.poll-label-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.poll-label-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.poll-label-pct {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--c-text-500, #64748B);
+}
+
+.poll-label-pct.lead {
+  font-weight: 800;
+  color: var(--c-brand, #9333EA);
+}
+
 .poll-bar {
   display: flex;
   gap: 3px;
   width: 100%;
-  height: 34px;
-  border-radius: 12px;
+  height: 14px;
+  border-radius: 100px;
   overflow: hidden;
   background: var(--bg-subtle, #F7F8FA);
 }
 
 .poll-seg {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  min-width: 0;
   height: 100%;
-  padding: 0 8px;
-  overflow: hidden;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  min-width: 2px;
   transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.seg-name {
-  min-width: 0;
-  font-size: 12.5px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.seg-pct {
-  flex-shrink: 0;
-  font-size: 12.5px;
-  font-weight: 800;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-/* 1위 강조 */
-.poll-seg.seg-1 .seg-pct { font-size: 14px; }
-
-/* 순위별 솔리드 컬러 (그라데이션 X) — 흰 글씨 가독성 위해 충분히 진한 색 */
-.poll-seg.seg-1 { background: var(--c-brand, #9333EA); }
-.poll-seg.seg-2 { background: #3B82F6; }
-.poll-seg.seg-3 { background: #F97316; }
-.poll-seg.seg-4 { background: #16A34A; }
-.poll-seg.seg-rest { background: var(--c-text-400, #94A3B8); }
+/* 순위별 솔리드 컬러 (그라데이션 X) — 막대 세그먼트 + 라벨 점 공용 */
+.poll-seg.seg-1,
+.poll-label-dot.seg-1 { background: var(--c-brand, #9333EA); }
+.poll-seg.seg-2,
+.poll-label-dot.seg-2 { background: #3B82F6; }
+.poll-seg.seg-3,
+.poll-label-dot.seg-3 { background: #F97316; }
+.poll-seg.seg-4,
+.poll-label-dot.seg-4 { background: #16A34A; }
+.poll-seg.seg-rest { background: var(--c-text-300, #CBD5E1); }
 
 .lead-cta {
   /* vs-list 와는 시각적 분리 — CTA 만 별도 간격 */
@@ -818,17 +842,19 @@ onMounted(() => {
   gap: 4px;
   width: 100%;
   padding: 12px 14px;
-  background: var(--c-ink-900, #0A0E1A);
+  /* 브랜드 컬러 — 라이트/다크 모두 또렷하게 보이는 주요 액션 */
+  background: var(--c-brand, #9333EA);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
   border-radius: 12px;
   letter-spacing: -0.01em;
   transition: background 0.15s ease;
+  box-shadow: var(--shadow-brand, 0 4px 12px rgba(147, 51, 234, 0.28));
 }
 
 .lead-card:hover .lead-cta {
-  background: var(--c-ink-700, #1E293B);
+  background: var(--c-brand-hover, #7C3AED);
 }
 
 @media (min-width: 768px) {
@@ -1139,8 +1165,8 @@ onMounted(() => {
 ================================================================ */
 @media (max-width: 380px) {
   .lead-title { font-size: 18.5px; }
-  .poll-bar { height: 32px; }
-  .seg-name { font-size: 12px; }
+  .poll-label-name { font-size: 12.5px; }
+  .poll-label-pct { font-size: 12.5px; }
   .lead-cta { padding: 14px; font-size: 14.5px; }
   .rest-card { flex: 0 0 180px; }
 }
