@@ -922,6 +922,10 @@ onUnmounted(() => {
   .page-header .section-title { font-size: 1.25rem; }
 }
 .sub-title { font-size: 13px; font-weight: 500; color: var(--c-text-400); letter-spacing: -0.01em; }
+@media (max-width: 480px) {
+  .page-header .section-title { font-size: 1rem; }
+  .sub-title { font-size: 12.5px; }
+}
 
 /* 검색 */
 .search-box { position: relative; margin-bottom: 16px; }
@@ -1380,8 +1384,6 @@ onUnmounted(() => {
 /* 모바일 */
 @media (max-width: 640px) {
   .page-header { padding-top: 12px; margin-bottom: 0; }
-  .page-header .section-title { font-size: 1rem; }
-  .sub-title { font-size: 12px; }
   .carrier-panel {
     /* BottomNavigation(약 84px) + FAB(52px+14gap) 위로 띄워 + 버튼과 겹치지 않게 */
     position: fixed; bottom: calc(170px + env(safe-area-inset-bottom)); right: auto; left: 50%; z-index: 200;
