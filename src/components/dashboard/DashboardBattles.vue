@@ -49,10 +49,15 @@
           <!-- 1위 카드: 막대 위 라벨 + 순위별 컬러 누적 막대 -->
           <div v-if="idx === 0 && featuredPoll.items.length > 0" class="pc-vs">
             <div class="poll-labels">
-              <span v-for="seg in featuredPoll.items" :key="seg.rank" class="poll-label">
-                <span class="poll-label-dot" :class="'seg-' + seg.rank"></span>
+              <span
+                v-for="seg in featuredPoll.items"
+                :key="seg.rank"
+                class="poll-label"
+                :class="'seg-' + seg.rank"
+                :style="{ width: seg.pct + '%' }"
+              >
                 <span class="poll-label-name">{{ truncateName(seg.name, 8) }}</span>
-                <span class="poll-label-pct" :class="{ lead: seg.rank === 1 }">{{ seg.pct }}%</span>
+                <span class="poll-label-pct">{{ seg.pct }}%</span>
               </span>
             </div>
             <div class="poll-bar">
@@ -130,10 +135,15 @@
 
         <div v-if="featuredPoll.items.length > 0" class="poll">
           <div class="poll-labels">
-            <span v-for="seg in featuredPoll.items" :key="seg.rank" class="poll-label">
-              <span class="poll-label-dot" :class="'seg-' + seg.rank"></span>
+            <span
+              v-for="seg in featuredPoll.items"
+              :key="seg.rank"
+              class="poll-label"
+              :class="'seg-' + seg.rank"
+              :style="{ width: seg.pct + '%' }"
+            >
               <span class="poll-label-name">{{ truncateName(seg.name, 14) }}</span>
-              <span class="poll-label-pct" :class="{ lead: seg.rank === 1 }">{{ seg.pct }}%</span>
+              <span class="poll-label-pct">{{ seg.pct }}%</span>
             </span>
           </div>
           <div class="poll-bar">
@@ -621,10 +631,9 @@ onMounted(() => {
 }
 /* PC 1위 카드: 막대·라벨 컴팩트 */
 .pc-vs .poll-bar { height: 10px; }
-.pc-vs .poll-labels { gap: 4px 10px; margin-bottom: 7px; }
+.pc-vs .poll-labels { margin-bottom: 6px; }
 .pc-vs .poll-label-name { font-size: 11.5px; }
-.pc-vs .poll-label-pct { font-size: 11.5px; }
-.pc-vs .poll-label-dot { width: 8px; height: 8px; }
+.pc-vs .poll-label-pct { font-size: 11.5px; margin-left: 3px; }
 .pc-vs-foot {
   display: flex;
   align-items: center;
@@ -765,50 +774,47 @@ onMounted(() => {
 }
 
 /* ================================================================
-   누적 막대 poll — 막대 위 라벨 + 순위별 컬러 한 줄 (1픽 / PC 1위 공용)
+   누적 막대 poll — 한 줄 막대 + 각 세그먼트 시작점 위에 아이템명 (1픽 / PC 1위 공용)
 ================================================================ */
+/* 라벨 행: 막대와 동일한 폭 비율로 셀을 나눠 각 세그먼트 시작점에 정렬 */
 .poll-labels {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin-bottom: 9px;
+  width: 100%;
+  margin-bottom: 7px;
 }
 
 .poll-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  /* width 는 인라인 스타일로 세그먼트와 동일하게 지정 → 텍스트가 시작점에서 시작 */
+  min-width: 0;
+  padding-right: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 
-.poll-label-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
 .poll-label-name {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .poll-label-pct {
-  font-size: 13.5px;
+  margin-left: 4px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--c-text-500, #64748B);
 }
 
-.poll-label-pct.lead {
-  font-weight: 800;
-  color: var(--c-brand, #9333EA);
-}
+/* 라벨 이름을 세그먼트 컬러로 — 점 없이 색으로 매칭 */
+.poll-label.seg-1 .poll-label-name { color: var(--c-brand, #9333EA); }
+.poll-label.seg-2 .poll-label-name { color: #3B82F6; }
+.poll-label.seg-3 .poll-label-name { color: #F97316; }
+.poll-label.seg-4 .poll-label-name { color: #16A34A; }
 
 .poll-bar {
   display: flex;
-  gap: 3px;
   width: 100%;
   height: 14px;
   border-radius: 100px;
@@ -822,15 +828,11 @@ onMounted(() => {
   transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* 순위별 솔리드 컬러 (그라데이션 X) — 막대 세그먼트 + 라벨 점 공용 */
-.poll-seg.seg-1,
-.poll-label-dot.seg-1 { background: var(--c-brand, #9333EA); }
-.poll-seg.seg-2,
-.poll-label-dot.seg-2 { background: #3B82F6; }
-.poll-seg.seg-3,
-.poll-label-dot.seg-3 { background: #F97316; }
-.poll-seg.seg-4,
-.poll-label-dot.seg-4 { background: #16A34A; }
+/* 순위별 솔리드 컬러 (그라데이션 X) */
+.poll-seg.seg-1 { background: var(--c-brand, #9333EA); }
+.poll-seg.seg-2 { background: #3B82F6; }
+.poll-seg.seg-3 { background: #F97316; }
+.poll-seg.seg-4 { background: #16A34A; }
 .poll-seg.seg-rest { background: var(--c-text-300, #CBD5E1); }
 
 .lead-cta {
