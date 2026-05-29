@@ -128,11 +128,6 @@
       <div class="lead-body">
         <h3 class="lead-title">{{ featuredBattle.title }}</h3>
 
-        <span v-if="featuredBattle.topItems?.length > 0" class="lead-prompt">
-          <span class="prompt-dot"></span>
-          너의 픽은?
-        </span>
-
         <div v-if="featuredPoll.items.length > 0" class="poll">
           <div class="poll-labels">
             <span
@@ -420,30 +415,6 @@ onMounted(() => {
 .pulse-sep {
   margin: 0 6px;
   color: var(--c-text-300, #CBD5E1);
-}
-
-/* "너의 픽은?" 폴 프롬프트 (1픽 카드) */
-.lead-prompt {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: var(--c-brand, #9333EA);
-  letter-spacing: -0.01em;
-  line-height: 1;
-}
-
-.prompt-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-@media (min-width: 768px) {
-  .lead-prompt { font-size: 13.5px; }
 }
 
 /* ================================================================
