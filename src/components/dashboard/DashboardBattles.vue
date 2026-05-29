@@ -46,7 +46,7 @@
         <div class="pc-body">
           <h4 class="pc-title">{{ battle.title }}</h4>
 
-          <!-- 1위 카드: 누적 막대 한 줄 + 순위별 컬러 범례 -->
+          <!-- 1위 카드: 누적 막대 — 순위별 컬러 + 막대 위 이름·득표율 -->
           <div v-if="idx === 0 && featuredPoll.items.length > 0" class="pc-vs">
             <div class="poll-bar">
               <span
@@ -55,21 +55,16 @@
                 class="poll-seg"
                 :class="'seg-' + seg.rank"
                 :style="{ width: seg.pct + '%' }"
-              ></span>
+              >
+                <span v-if="seg.pct >= 22" class="seg-name">{{ truncateName(seg.name, 8) }}</span>
+                <span v-if="seg.pct >= 11" class="seg-pct">{{ seg.pct }}%</span>
+              </span>
               <span
                 v-if="featuredPoll.rest >= 2"
                 class="poll-seg seg-rest"
                 :style="{ width: featuredPoll.rest + '%' }"
               ></span>
             </div>
-            <ul class="poll-legend">
-              <li v-for="seg in featuredPoll.items" :key="seg.rank" class="legend-row">
-                <span class="legend-dot" :class="'seg-' + seg.rank"></span>
-                <span class="legend-rank">{{ seg.rank }}위</span>
-                <span class="legend-name">{{ truncateName(seg.name, 12) }}</span>
-                <span class="legend-pct" :class="{ lead: seg.rank === 1 }">{{ seg.pct }}%</span>
-              </li>
-            </ul>
             <div class="pc-vs-foot">
               <span class="pc-votes-lead">{{ formatNumber(peopleOf(battle)) }}명 참여 중</span>
             </div>
@@ -137,21 +132,16 @@
               class="poll-seg"
               :class="'seg-' + seg.rank"
               :style="{ width: seg.pct + '%' }"
-            ></span>
+            >
+              <span v-if="seg.pct >= 16" class="seg-name">{{ truncateName(seg.name, 12) }}</span>
+              <span v-if="seg.pct >= 9" class="seg-pct">{{ seg.pct }}%</span>
+            </span>
             <span
               v-if="featuredPoll.rest >= 2"
               class="poll-seg seg-rest"
               :style="{ width: featuredPoll.rest + '%' }"
             ></span>
           </div>
-          <ul class="poll-legend">
-            <li v-for="seg in featuredPoll.items" :key="seg.rank" class="legend-row">
-              <span class="legend-dot" :class="'seg-' + seg.rank"></span>
-              <span class="legend-rank">{{ seg.rank }}위</span>
-              <span class="legend-name">{{ truncateName(seg.name, 18) }}</span>
-              <span class="legend-pct" :class="{ lead: seg.rank === 1 }">{{ seg.pct }}%</span>
-            </li>
-          </ul>
         </div>
 
         <span class="lead-cta">
@@ -347,11 +337,11 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 10px 13px;
-  background: var(--surface, #fff);
+  background: var(--bg-elevated, #fff);
   border: 1px solid var(--border-default, #F1F3F6);
   border-radius: 12px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.04));
 }
 
 @media (min-width: 768px) {
@@ -621,14 +611,11 @@ onMounted(() => {
   gap: 8px;
   margin-top: 4px;
 }
-/* PC 1위 카드: 누적 막대·범례 컴팩트 */
-.pc-vs .poll-bar { height: 8px; }
-.pc-vs .poll-legend { margin-top: 0; gap: 5px; }
-.pc-vs .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
-.pc-vs .legend-rank { font-size: 10px; }
-.pc-vs .legend-name { font-size: 12px; }
-.pc-vs .legend-pct { font-size: 12px; }
-.pc-vs .legend-pct.lead { font-size: 13.5px; }
+/* PC 1위 카드: 누적 막대 컴팩트 */
+.pc-vs .poll-bar { height: 26px; border-radius: 9px; }
+.pc-vs .seg-name { font-size: 11px; }
+.pc-vs .seg-pct { font-size: 11px; }
+.pc-vs .poll-seg.seg-1 .seg-pct { font-size: 12px; }
 .pc-vs-foot {
   display: flex;
   align-items: center;
@@ -768,95 +755,59 @@ onMounted(() => {
 }
 
 /* ================================================================
-   누적 막대 poll — 순위별 컬러 한 줄 + 범례 (1픽 / PC 1위 공용)
+   누적 막대 poll — 순위별 컬러 한 줄, 막대 위에 이름·득표율 (1픽 / PC 1위 공용)
 ================================================================ */
-.poll {
-  display: flex;
-  flex-direction: column;
-}
-
 .poll-bar {
   display: flex;
-  gap: 2px;
+  gap: 3px;
   width: 100%;
-  height: 10px;
-  border-radius: 100px;
+  height: 34px;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--bg-subtle, #F7F8FA);
 }
 
 .poll-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
   height: 100%;
-  min-width: 2px;
+  padding: 0 8px;
+  overflow: hidden;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
   transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* 순위별 솔리드 컬러 (그라데이션 X) */
-.poll-seg.seg-1,
-.legend-dot.seg-1 { background: var(--c-brand, #9333EA); }
-.poll-seg.seg-2,
-.legend-dot.seg-2 { background: #3B82F6; }
-.poll-seg.seg-3,
-.legend-dot.seg-3 { background: #F97316; }
-.poll-seg.seg-4,
-.legend-dot.seg-4 { background: #16A34A; }
-.poll-seg.seg-rest,
-.legend-dot.seg-rest { background: var(--c-text-300, #CBD5E1); }
-
-.poll-legend {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.legend-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-}
-
-.legend-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.legend-rank {
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--c-text-500, #64748B);
-}
-
-.legend-name {
-  flex: 1;
+.seg-name {
   min-width: 0;
-  font-size: 14.5px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.legend-pct {
+.seg-pct {
   flex-shrink: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--c-text-500, #64748B);
+  font-size: 12.5px;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.legend-pct.lead {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--c-brand, #9333EA);
-}
+/* 1위 강조 */
+.poll-seg.seg-1 .seg-pct { font-size: 14px; }
+
+/* 순위별 솔리드 컬러 (그라데이션 X) — 흰 글씨 가독성 위해 충분히 진한 색 */
+.poll-seg.seg-1 { background: var(--c-brand, #9333EA); }
+.poll-seg.seg-2 { background: #3B82F6; }
+.poll-seg.seg-3 { background: #F97316; }
+.poll-seg.seg-4 { background: #16A34A; }
+.poll-seg.seg-rest { background: var(--c-text-400, #94A3B8); }
 
 .lead-cta {
   /* vs-list 와는 시각적 분리 — CTA 만 별도 간격 */
@@ -1188,8 +1139,8 @@ onMounted(() => {
 ================================================================ */
 @media (max-width: 380px) {
   .lead-title { font-size: 18.5px; }
-  .legend-name { font-size: 13.5px; }
-  .legend-pct.lead { font-size: 15px; }
+  .poll-bar { height: 32px; }
+  .seg-name { font-size: 12px; }
   .lead-cta { padding: 14px; font-size: 14.5px; }
   .rest-card { flex: 0 0 180px; }
 }
