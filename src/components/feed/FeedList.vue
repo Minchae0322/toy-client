@@ -332,18 +332,16 @@ defineExpose({ observerTarget });
 .title-with-badge {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding-left: 0.75rem;
-  border-left: 3px solid var(--c-text-400);
+  gap: 4px;
 }
 
 .section-title {
-  font-size: 1.0625rem;
-  font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
 }
 
 .section-title .title-accent {
@@ -352,21 +350,27 @@ defineExpose({ observerTarget });
 
 @media (min-width: 768px) {
   .section-title {
-    font-size: 1.125rem;
+    font-size: 1.1875rem;
   }
 }
 
 @media (min-width: 1280px) {
   .section-title {
-    font-size: 1.3125rem;
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 1rem;
   }
 }
 
 .sub-title {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--c-text-400);
-  letter-spacing: -0.1px;
+  letter-spacing: -0.01em;
 }
 
 /* 뷰 모드 스위처 — Toss 스타일 pill toggle */
@@ -957,11 +961,6 @@ defineExpose({ observerTarget });
 
   .feed-header {
     margin-bottom: 12px;
-  }
-
-  /* 다른 메뉴(대시보드/배틀/핫 아이템)와 모바일 제목 크기 통일 */
-  .section-title {
-    font-size: 1.125rem;
   }
 
   /* 모바일 Empty State */
