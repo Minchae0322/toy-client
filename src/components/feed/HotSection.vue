@@ -187,12 +187,12 @@ onUnmounted(() => {
 }
 
 .section-title {
-  font-size: 1.0625rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
 }
 
 .section-title .title-accent {
@@ -201,20 +201,27 @@ onUnmounted(() => {
 
 @media (min-width: 768px) {
   .section-title {
-    font-size: 1.125rem;
+    font-size: 1.375rem;
   }
 }
 
 @media (min-width: 1280px) {
   .section-title {
-    font-size: 1.3125rem;
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 1.125rem;
   }
 }
 
 .sub-title {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--c-text-400);
+  letter-spacing: -0.01em;
   padding-left: 0;
 }
 
