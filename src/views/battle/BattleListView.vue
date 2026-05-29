@@ -694,12 +694,12 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 1.1875rem;
+  font-size: 1.125rem;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.03em;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .title-accent-icon {
@@ -721,7 +721,7 @@ onUnmounted(() => {
 
 @media (min-width: 768px) {
   .section-title {
-    font-size: 1.25rem;
+    font-size: 1.1875rem;
   }
   .title-accent-icon {
     width: 26px;
@@ -731,7 +731,7 @@ onUnmounted(() => {
 
 @media (min-width: 1280px) {
   .section-title {
-    font-size: 1.4375rem;
+    font-size: 1.25rem;
   }
   .title-accent-icon {
     width: 30px;
@@ -740,8 +740,14 @@ onUnmounted(() => {
   }
 }
 
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 1rem;
+  }
+}
+
 .sub-title {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--c-text-400);
   letter-spacing: -0.02em;
@@ -756,8 +762,13 @@ onUnmounted(() => {
 
 @media (min-width: 1280px) {
   .sub-title {
-    font-size: 13px;
     padding-left: 38px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sub-title {
+    font-size: 12.5px;
   }
 }
 
