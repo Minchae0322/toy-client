@@ -56,7 +56,8 @@
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
     - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용
     - **`common/CategorySelectModal.vue`** — 카테고리 탐색 모달. `type` prop으로 도메인 구분(BATTLE 등). 카테고리 선택 UI 직접 구현 금지, 이 컴포넌트 재사용
-    - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 그리드), `DashboardBattles.vue` (요거픽 매거진 레이아웃), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
+    - **`common/ReportModal.vue`** — 신고하기 모달 (`<Teleport to="body">`). 피드·배틀·댓글 등 콘텐츠 신고 UI 직접 구현 금지, 이 컴포넌트 재사용
+    - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 **가로 스크롤 한 줄** — 히어로 아래 밀착 배치), `DashboardBattles.vue` (요거픽 매거진 레이아웃), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
     - `MZLifestyle/` — `AIMemeGeneratorPromo`, `BottomNavigation`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection`
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
@@ -156,6 +157,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **대시보드 컴팩트 레이아웃**: `DashboardQuickNav.vue` — 그리드 → 가로 스크롤 한 줄로 전환, 아이콘·간격 컴팩트화. `DashboardView.vue` 섹션 여백 40~64px → 26~40px 축소, 퀵내비 히어로 아래 밀착. `DashboardSectionHeader.vue` 하단 여백 축소 (`feat(dashboard)`)
 - **버전 1.1.3**: iOS 빌드 17, Android versionCode 14 (`chore`)
 - **배틀 목록 검색 + 카테고리 탐색 모달**: `BattleListView.vue` — `CommonCategoryFilter` 제거, 검색 input + 300ms watch 디바운스 자동 로드, `CategorySelectModal`(BATTLE 타입)로 카테고리 선택. 선택 카테고리는 brand-soft 칩으로 표시 (`feat(battle)`)
 - **검색 IME 한글 미반영 수정**: `BattleListView.vue` — `@input` 디바운스 → `watch` 디바운스로 전환. 한글 IME 조합 종료 후 ref 갱신을 정확히 감지 (`fix(battle)`)
