@@ -276,6 +276,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'ProductRankingView' })
+
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppSidebar from '@/components/feed/AppSidebar.vue'

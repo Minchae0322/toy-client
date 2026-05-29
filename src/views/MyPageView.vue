@@ -203,6 +203,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'MyPageView' })
+
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {

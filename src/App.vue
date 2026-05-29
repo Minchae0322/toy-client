@@ -24,6 +24,17 @@ import {SplashScreen} from '@capacitor/splash-screen'
 import {App as CapApp} from '@capacitor/app'
 import {StatusBar, Style} from '@capacitor/status-bar'
 
+// 뒤로가기 시 이전 화면을 메모리에 유지해 깜빡임(remount→refetch) 없이 즉시 복원.
+// '뒤로 돌아가는 대상'인 목록/홈 화면만 포함 — 상세(:id)·param 화면은 stale 위험으로 제외.
+const keepAliveViews = [
+  'DashboardView',
+  'FeedHomeView',
+  'BattleListView',
+  'ProductRankingView',
+  'CollectionView',
+  'MyPageView',
+]
+
 const route = useRoute()
 const router = useRouter()
 const {user, isLoggedIn, isAdmin, logout, userId} = useAuth()
@@ -423,7 +434,7 @@ onUnmounted(() => {
   <!-- 메인 컨텐츠 -->
   <main :class="['main', { 'auth-page': isAuthPage }]">
     <RouterView v-slot="{ Component }">
-      <KeepAlive :include="['FeedHomeView']">
+      <KeepAlive :include="keepAliveViews">
         <component :is="Component" :key="$route.query._push" />
       </KeepAlive>
     </RouterView>
