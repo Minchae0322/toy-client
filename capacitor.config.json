@@ -29,6 +29,12 @@
     "StatusBar": {
       "style": "LIGHT",
       "backgroundColor": "#ffffff"
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": true,
+      "directUpdate": false,
+      "resetWhenUpdate": false,
+      "defaultChannel": "production"
     }
   }
 }
