@@ -131,6 +131,13 @@ watch(searchKeyword, (val) => {
 ```
 `@input` + debounce 조합은 한글 마지막 음절이 누락되는 버그가 있으므로 사용 금지. `BattleListView.vue` 참조.
 
+### KeepAlive 대상 뷰 — defineOptions 필수
+`App.vue`는 주요 목록·홈 화면을 `<KeepAlive :include="keepAliveViews">`로 감싸 뒤로가기 시 즉시 복원한다. **KeepAlive 대상 뷰는 반드시 `defineOptions({ name: '컴포넌트명' })`를 선언해야** include 매칭이 동작한다.
+
+현재 KeepAlive 대상: `DashboardView`, `MyPageView`, `CollectionView`, `BattleListView`, `ProductRankingView`
+
+새 뷰를 KeepAlive에 추가할 때는 `App.vue`의 `keepAliveViews` 배열과 뷰 파일 양쪽에 이름을 일치시킨다.
+
 ---
 
 ## 빌드 / 검증
@@ -157,6 +164,11 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.1.4**: iOS 빌드 18, Android versionCode 15 (`chore`)
+- **KeepAlive로 뒤로가기 깜빡임 제거**: `App.vue` — 주요 화면(DashboardView·MyPageView·CollectionView·BattleListView·ProductRankingView)을 `<KeepAlive>`로 감싸 뒤로가기 시 즉시 복원. 각 뷰에 `defineOptions({ name })` 추가 (`feat(nav)`)
+- **섹션 헤더 글자 크기 통일**: `DashboardSectionHeader.vue`·`FeedList.vue`·`HotSection.vue`·`ProductRankingView.vue` — 전 섹션 헤더 스타일 한 단계 축소하여 일관화 (`style`)
+- **DashboardBattles.vue 투표율 누적 막대 리디자인**: 요거픽 1픽 투표율을 누적 막대 한 줄 + 순위별 컬러로 표시, 막대 위 라벨(아이템명·퍼센트) 정렬 (`feat/fix(dashboard)`)
+- **DashboardQuickNav 퀵메뉴 BottomNavigation 일치**: 라벨·아이콘·순서를 하단 네비게이션과 동일하게 정렬 (`refactor(dashboard)`)
 - **대시보드 컴팩트 레이아웃**: `DashboardQuickNav.vue` — 그리드 → 가로 스크롤 한 줄로 전환, 아이콘·간격 컴팩트화. `DashboardView.vue` 섹션 여백 40~64px → 26~40px 축소, 퀵내비 히어로 아래 밀착. `DashboardSectionHeader.vue` 하단 여백 축소 (`feat(dashboard)`)
 - **버전 1.1.3**: iOS 빌드 17, Android versionCode 14 (`chore`)
 - **배틀 목록 검색 + 카테고리 탐색 모달**: `BattleListView.vue` — `CommonCategoryFilter` 제거, 검색 input + 300ms watch 디바운스 자동 로드, `CategorySelectModal`(BATTLE 타입)로 카테고리 선택. 선택 카테고리는 brand-soft 칩으로 표시 (`feat(battle)`)
