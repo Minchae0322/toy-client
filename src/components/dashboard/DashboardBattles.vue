@@ -332,9 +332,7 @@ const handleImageError = (event) => {
   event.target.style.display = 'none'
 }
 
-onMounted(() => {
-  loadHotBattles()
-})
+onMounted(loadHotBattles)
 </script>
 
 <style scoped>

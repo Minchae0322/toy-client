@@ -74,9 +74,7 @@ const onProductsLoaded = (products) => {
   hotProducts.value = products
 }
 
-onMounted(() => {
-  loadHotFeeds()
-})
+onMounted(loadHotFeeds)
 </script>
 
 <style scoped>

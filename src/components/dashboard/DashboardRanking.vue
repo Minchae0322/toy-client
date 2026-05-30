@@ -428,9 +428,7 @@ const handleImageError = (event) => {
 
 defineExpose({ hotProducts })
 
-onMounted(() => {
-  loadHotProducts()
-})
+onMounted(loadHotProducts)
 
 onUnmounted(() => {
   if (bubbleResizeObserver) {
