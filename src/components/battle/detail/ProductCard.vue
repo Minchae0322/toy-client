@@ -492,11 +492,11 @@ defineExpose({ setCommentSubmitting })
   }
 }
 
-/* MY PICK 뱃지 */
+/* MY PICK 뱃지 — 좌측상단 (랭크 숫자와 충돌 피함) */
 .my-pick-badge {
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: 10px;
   z-index: 15;
   padding: 5px 9px;
   background: var(--c-brand);
@@ -954,7 +954,7 @@ defineExpose({ setCommentSubmitting })
 
   .my-pick-badge {
     top: 6px;
-    right: 6px;
+    left: 6px;
     padding: 3px 7px;
     font-size: 9px;
     border-radius: 100px;

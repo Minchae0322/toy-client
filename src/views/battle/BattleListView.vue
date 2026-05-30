@@ -99,21 +99,7 @@
                   :class="{ active: activeTab === tab.id }"
                   @click="activeTab = tab.id"
               >
-                <svg v-if="tab.id === 'ongoing'" class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="9"/>
-                  <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-                </svg>
-                <svg v-else-if="tab.id === 'ended'" class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="9"/>
-                  <line x1="8" y1="12" x2="16" y2="12"/>
-                </svg>
-                <svg v-else-if="tab.id === 'my'" class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="9"/>
-                  <circle cx="12" cy="10" r="2.5"/>
-                  <path d="M7.5 19c.5-3.5 2.5-5 4.5-5s4 1.5 4.5 5"/>
-                </svg>
                 <span class="chip-label">{{ tab.label }}</span>
-                <span v-if="tab.count" class="chip-count">{{ formatCount(tab.count) }}</span>
               </button>
             </div>
 
@@ -226,7 +212,7 @@ const { allCategories: cachedCategories, loadAllCategories } = useCategoryCache(
 const allTabs = ref([
   { id: 'ongoing', label: '진행중', count: 0 },
   { id: 'ended', label: '종료됨', count: 0 },
-  { id: 'my', label: '내 요거픽', count: 0, requiresAuth: true }
+  { id: 'my', label: 'MY', count: 0, requiresAuth: true }
 ])
 
 // 로그인 상태에 따라 탭 필터링
@@ -286,14 +272,6 @@ const filteredBattles = computed(() => battles.value)
 const activeBattleCount = computed(() => {
   return tabs.value.find(tab => tab.id === 'ongoing')?.count || 0
 })
-
-// Utils
-const formatCount = (num) => {
-  if (!num) return '0'
-  if (num >= 10000) return `${Math.floor(num / 10000)}만`
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
-  return num.toString()
-}
 
 // API Methods
 const loadCategories = async () => {
@@ -375,39 +353,6 @@ const loadBattles = async (reset = false) => {
     console.error('배틀 목록 로드 실패:', error)
   } finally {
     loading.value = false
-  }
-}
-
-const updateTabCounts = async () => {
-  try {
-    const ongoingResponse = await battleService.getBattles(
-        { isActive: true },
-        { page: 0, size: 1 }
-    )
-    if (ongoingResponse.success && ongoingResponse.data.totalElements !== undefined) {
-      allTabs.value[0].count = ongoingResponse.data.totalElements
-    }
-
-    const endedResponse = await battleService.getBattles(
-        { isActive: false },
-        { page: 0, size: 1 }
-    )
-    if (endedResponse.success && endedResponse.data.totalElements !== undefined) {
-      allTabs.value[1].count = endedResponse.data.totalElements
-    }
-
-    // 로그인한 경우에만 내 배틀 카운트 조회
-    if (authStore.isAuthenticated && authStore.userId) {
-      const myResponse = await battleService.getBattles(
-          { creatorId: authStore.userId },
-          { page: 0, size: 1 }
-      )
-      if (myResponse.success && myResponse.data.totalElements !== undefined) {
-        allTabs.value[2].count = myResponse.data.totalElements
-      }
-    }
-  } catch (error) {
-    console.error('탭 카운트 업데이트 실패:', error)
   }
 }
 
@@ -539,7 +484,6 @@ let observer = null
 onMounted(async () => {
   await Promise.all([
     loadCategories(),
-    updateTabCounts(),
     loadHotBattles(),
     loadBattles(true)
   ])
@@ -976,24 +920,6 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25);
 }
 
-.chip-count {
-  font-size: 11px;
-  font-weight: 700;
-  opacity: 0.5;
-  margin-left: 2px;
-}
-
-.filter-chip.active .chip-count {
-  opacity: 1;
-  color: var(--c-text-400);
-}
-
-.chip-icon {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-}
-
 /* 액션 그룹 */
 .header-actions {
   display: flex;
@@ -1183,14 +1109,8 @@ onUnmounted(() => {
 }
 
 @media (max-width: 640px) {
-  .chip-label {
-    display: none;
-  }
   .filter-chip {
-    padding: 0.375rem 0.5rem;
-  }
-  .chip-count {
-    font-size: 0.625rem;
+    padding: 0.375rem 0.625rem;
   }
   .create-battle-btn span {
     display: none;

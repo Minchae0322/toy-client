@@ -1,7 +1,7 @@
 {
   "name": "client",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.6",
   "type": "module",
   "scripts": {
     "dev": "vite --mode development",
@@ -16,7 +16,8 @@
     "cap:sync": "npm run build:prod && npx cap sync",
     "cap:android": "npm run build:prod && npx cap sync android && npx cap open android",
     "cap:ios": "npm run build:prod && npx cap sync ios && npx cap open ios",
-    "ota:deploy": "npm run build:prod && npx @capgo/cli@latest bundle upload --channel production"
+    "ota:bump": "npm version patch --no-git-tag-version",
+    "ota:deploy": "npm run ota:bump && npm run build:prod && npx @capgo/cli@latest bundle upload --channel production"
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "^7.5.0",

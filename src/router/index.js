@@ -109,7 +109,7 @@ const routes = [
     path: '/feed/create',
     name: 'FeedCreate',
     component: FeedCreateView,
-    meta: { requiresAuth: true, title: '인증 올리기' }
+    meta: { requiresAuth: true, title: '피드 올리기' }
   },
   {
     path: '/feed/:id',

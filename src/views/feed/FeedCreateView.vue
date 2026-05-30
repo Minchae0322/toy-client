@@ -8,7 +8,7 @@
         </svg>
       </button>
       <div class="header-center">
-        <h1 class="header-title">인증 올리기</h1>
+        <h1 class="header-title">피드 올리기</h1>
         <div class="progress-dots">
           <span class="progress-dot" :class="{ filled: selectedPhotos.length > 0 }"></span>
           <span class="progress-dot" :class="{ filled: formData.review.trim() }"></span>
@@ -281,7 +281,7 @@
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
             <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
           </svg>
-          <span>{{ isSubmitting ? '업로드 중...' : '인증 올리기' }}</span>
+          <span>{{ isSubmitting ? '업로드 중...' : '피드 올리기' }}</span>
         </button>
       </div>
     </div>
