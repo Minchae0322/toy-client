@@ -42,7 +42,7 @@
         <!-- Product Grid -->
         <div class="pc-grid">
           <ProductCard
-              v-for="(item, index) in sortedItems"
+              v-for="(item, index) in displayedItems"
               :key="item.id"
               :ref="el => setProductCardRef(item.id, el)"
               :item="item"
@@ -58,6 +58,28 @@
               @submit-comment="handleInlineComment"
               @play-youtube="playYoutube"
           />
+        </div>
+
+        <!-- 더 보기 / 접기 -->
+        <div v-if="sortedItems.length > itemsDisplayLimit" class="items-toggle-wrap">
+          <button
+              type="button"
+              class="items-toggle-btn"
+              @click="itemsExpanded = !itemsExpanded"
+          >
+            <template v-if="!itemsExpanded">
+              <span>아이템 {{ hiddenItemsCount }}개 더 보기</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </template>
+            <template v-else>
+              <span>접기</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="18 15 12 9 6 15"/>
+              </svg>
+            </template>
+          </button>
         </div>
 
         <!-- PC 디바이더 -->
@@ -506,7 +528,10 @@ export default {
       // 우승자 셀러브레이션 모달 (종료된 배틀, 세션당 1회)
       showWinnerModal: false,
       showConfetti: false,
-      confettiPieces: []
+      confettiPieces: [],
+      // 아이템 점진적 노출 — 16개 초과면 '더 보기'로 펼침
+      itemsExpanded: false,
+      itemsDisplayLimit: 16
     }
   },
   computed: {
@@ -599,6 +624,14 @@ export default {
             const scoreB = this.calculateItemScore(b)
             return scoreB - scoreA
           })
+    },
+    displayedItems() {
+      // 아이템 많을 때 첫 화면 길이 제한 — 펼치면 전체 노출
+      if (this.itemsExpanded) return this.sortedItems
+      return this.sortedItems.slice(0, this.itemsDisplayLimit)
+    },
+    hiddenItemsCount() {
+      return Math.max(0, this.sortedItems.length - this.itemsDisplayLimit)
     },
     totalScore() {
       return this.sortedItems.reduce((sum, item) => {
@@ -1980,6 +2013,33 @@ export default {
   /* 빈 댓글 카드가 stretch 되며 공허해 보이는 현상 방지 */
   align-items: start;
 }
+
+/* 아이템 점진 노출 토글 — 16개 초과 시 노출 */
+.items-toggle-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 18px 0 4px;
+}
+.items-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 100px;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.items-toggle-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong, var(--c-text-300));
+}
+.items-toggle-btn:active { transform: scale(0.98); }
 
 /* PC 디바이더 — 양쪽 페이드 라인 */
 .pc-divider {
