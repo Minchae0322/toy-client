@@ -75,6 +75,50 @@
                   </div>
                 </label>
 
+                <!-- 이벤트 배틀(예: 21번) 전용 — 인스타 ID 1개만 받음 (모든 아이템에 동일 적용) -->
+                <div v-if="isEventBattle && pendingImages.length > 0" class="event-id-block">
+                  <label class="event-id-label">
+                    인스타 아이디 <span class="event-id-req">*</span>
+                    <span class="hint-anchor">
+                      <button
+                        type="button"
+                        class="hint-trigger"
+                        :aria-expanded="showEventHint ? 'true' : 'false'"
+                        :aria-label="showEventHint ? '안내 닫기' : '이벤트 응모 안내 보기'"
+                        @click="toggleEventHint($event)"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="12" y1="16" x2="12" y2="12"/>
+                          <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                      </button>
+                      <Transition name="hint-pop">
+                        <p v-if="showEventHint" class="event-id-hint" role="tooltip">
+                          <svg class="hint-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                          </svg>
+                          <span class="hint-body">
+                            <strong class="hint-title">비공개 · 운영자만 확인</strong>
+                            <span class="hint-desc">이벤트 추첨/안내 외 용도로는 절대 사용되지 않으며, 다른 사용자에게 노출되지 않아요.</span>
+                          </span>
+                        </p>
+                      </Transition>
+                    </span>
+                  </label>
+                  <input
+                    v-model="eventInstagramId"
+                    type="text"
+                    placeholder="@yogurtte"
+                    class="event-id-input"
+                    maxlength="50"
+                    autocapitalize="off"
+                    autocorrect="off"
+                    spellcheck="false"
+                  />
+                </div>
+
                 <!-- 대기 이미지 목록 -->
                 <div v-if="pendingImages.length > 0" class="pending-images">
                   <div class="pending-header">
@@ -90,7 +134,7 @@
                   </div>
                   <div class="pending-grid">
                     <div
-                      v-for="img in pendingImages"
+                      v-for="(img, idx) in pendingImages"
                       :key="img.id"
                       class="pending-card"
                       :class="{ 'is-failed': img.failed }"
@@ -136,58 +180,14 @@
                             <p v-if="img.errorName" class="input-error">아이템명을 입력하세요</p>
                           </div>
                           <div class="field">
-                            <template v-if="isEventBattle">
-                              <label class="field-label">
-                                인스타 아이디 <span class="req-mark" aria-label="필수">*</span>
-                                <span class="hint-anchor">
-                                  <button
-                                    type="button"
-                                    class="hint-trigger"
-                                    :aria-expanded="openHintImageId === img.id ? 'true' : 'false'"
-                                    :aria-label="openHintImageId === img.id ? '안내 닫기' : '이벤트 응모 안내 보기'"
-                                    @click="toggleEventHint(img.id, $event)"
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                      <circle cx="12" cy="12" r="10"/>
-                                      <line x1="12" y1="16" x2="12" y2="12"/>
-                                      <line x1="12" y1="8" x2="12.01" y2="8"/>
-                                    </svg>
-                                  </button>
-                                  <Transition name="hint-pop">
-                                    <p v-if="openHintImageId === img.id" class="event-id-hint" role="tooltip">
-                                      <svg class="hint-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                      </svg>
-                                      <span class="hint-body">
-                                        <strong class="hint-title">비공개 · 운영자만 확인</strong>
-                                        <span class="hint-desc">이벤트 추첨/안내 외 용도로는 절대 사용되지 않으며, 다른 사용자에게 노출되지 않아요.</span>
-                                      </span>
-                                    </p>
-                                  </Transition>
-                                </span>
-                              </label>
-                              <input
-                                v-model="img.eventId"
-                                type="text"
-                                placeholder="@yogurtte"
-                                class="card-input small"
-                                maxlength="50"
-                                autocapitalize="off"
-                                autocorrect="off"
-                                spellcheck="false"
-                              />
-                            </template>
-                            <template v-else>
-                              <label class="field-label">추가 설명 <span class="opt-mark">(선택)</span></label>
-                              <input
-                                v-model="img.customBrand"
-                                type="text"
-                                placeholder="브랜드명 등"
-                                class="card-input small"
-                                maxlength="20"
-                              />
-                            </template>
+                            <label class="field-label">추가 설명 <span class="opt-mark">(선택)</span></label>
+                            <input
+                              v-model="img.customBrand"
+                              type="text"
+                              placeholder="브랜드명 등"
+                              class="card-input small"
+                              maxlength="20"
+                            />
                           </div>
                         </div>
                         <button
@@ -364,10 +364,16 @@ const emit = defineEmits(['close', 'submit-image', 'select-product', 'submit-you
 
 const { open } = useConfirmDialog()
 
-// 이벤트 배틀(현재 battleId=21) — '추가 설명' 자리를 '인스타 아이디' 로 교체하고
-// 백엔드에는 customBrand 가 아닌 eventId 필드로 전송
+// 이벤트 배틀(현재 battleId=21) — pending-header 위에 단일 인스타 ID 입력칸 노출.
+// 모든 아이템 추가 요청에 동일한 eventId 로 동봉됨.
 const EVENT_BATTLE_IDS = new Set([21])
 const isEventBattle = computed(() => EVENT_BATTLE_IDS.has(Number(props.battleId)))
+const eventInstagramId = ref('')
+const showEventHint = ref(false)
+function toggleEventHint(e) {
+  e?.stopPropagation()
+  showEventHint.value = !showEventHint.value
+}
 
 const tabs = [
   {
@@ -409,7 +415,6 @@ function makeImageEntry(file, previewUrl) {
     previewUrl,
     customName: '',
     customBrand: '',
-    eventId: '', // 이벤트 배틀일 때만 사용 (인스타 아이디)
     uploading: true,
     uploadedUrl: null,
     failed: false,
@@ -418,17 +423,12 @@ function makeImageEntry(file, previewUrl) {
   }
 }
 
-// 이벤트 안내 말풍선 — 한 번에 하나만 열림. 외부 클릭으로 닫힘.
-const openHintImageId = ref(null)
-function toggleEventHint(imgId, e) {
-  e?.stopPropagation()
-  openHintImageId.value = openHintImageId.value === imgId ? null : imgId
-}
+// 이벤트 안내 말풍선 — (구) per-image 토글, 현재는 사용 안 함
 function handleDocumentClickForHint(e) {
-  if (openHintImageId.value === null) return
+  if (!showEventHint.value) return
   // 트리거나 안내 박스 내부 클릭은 무시 — 그 외는 닫기
   if (e.target.closest && (e.target.closest('.hint-trigger') || e.target.closest('.event-id-hint'))) return
-  openHintImageId.value = null
+  showEventHint.value = false
 }
 
 const canAddSingle = (img) => {
@@ -578,14 +578,14 @@ const addSingleImage = (id) => {
   entry.errorName = false
   if (!canAddSingle(entry)) return
   entry.submitting = true
+  // 이벤트 배틀에서는 모달 단일 인스타 ID 를 모든 아이템 요청에 동일하게 적용
+  const eventId = isEventBattle.value ? (eventInstagramId.value.trim() || null) : null
   emit('submit-image', {
     id: entry.id,
     customName: entry.customName.trim(),
-    // 이벤트 배틀이면 customBrand 자리에는 입력 자체가 없음 → null
-    customBrand: isEventBattle.value ? null : (entry.customBrand.trim() || null),
+    customBrand: entry.customBrand.trim() || null,
     customImageUrl: entry.uploadedUrl,
-    // 이벤트 배틀일 때만 eventId 동봉 (백엔드는 battleId=21 일 때만 처리)
-    eventId: isEventBattle.value ? (entry.eventId.trim() || null) : null
+    eventId
   })
 }
 
@@ -968,6 +968,49 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
 }
 
 /* ===== 대기 이미지 목록 ===== */
+/* 이벤트 배틀(예: 21번) 전용 — 인스타 ID 단일 입력칸 */
+.event-id-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: var(--c-brand-soft);
+  border: 1px solid var(--c-brand);
+  border-radius: 12px;
+}
+.event-id-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--c-brand);
+  letter-spacing: -0.01em;
+}
+.event-id-req {
+  color: var(--c-danger);
+  font-weight: 800;
+}
+.event-id-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  box-sizing: border-box;
+}
+.event-id-input::placeholder { color: var(--c-text-400); }
+.event-id-input:focus {
+  outline: none;
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.15);
+}
+
 .pending-images {
   background: var(--bg-elevated);
   border-radius: 12px;

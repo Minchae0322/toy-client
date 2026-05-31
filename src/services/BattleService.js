@@ -234,20 +234,19 @@ class BattleService extends BaseApiService {
     }
 
     const requestData = {
-      items: itemsData.items.map(item => {
-        const mapped = {
-          itemType: item.itemType,
-          productId: item.productId || null,
-          customName: item.customName?.trim() || null,
-          customBrand: item.customBrand?.trim() || null,
-          customImageUrl: item.customImageUrl?.trim() || null,
-          contentUrl: item.contentUrl?.trim() || null
-        }
-        // 이벤트 응모 (예: battleId=21) — eventId 가 있을 때만 동봉.
-        // 서버는 매칭되는 이벤트 배틀에서만 저장하고, 응답에선 노출하지 않음.
-        if (item.eventId) mapped.eventId = String(item.eventId).trim()
-        return mapped
-      })
+      items: itemsData.items.map(item => ({
+        itemType: item.itemType,
+        productId: item.productId || null,
+        customName: item.customName?.trim() || null,
+        customBrand: item.customBrand?.trim() || null,
+        customImageUrl: item.customImageUrl?.trim() || null,
+        contentUrl: item.contentUrl?.trim() || null
+      }))
+    }
+    // 이벤트 응모 (예: battleId=21) — eventId 는 body 최상위 필드.
+    // 서버는 매칭되는 이벤트 배틀에서만 저장하고 응답엔 노출하지 않음.
+    if (itemsData.eventId) {
+      requestData.eventId = String(itemsData.eventId).trim()
     }
 
     console.log('📤 [BATTLE_SERVICE] 아이템 추가 요청:', requestData)

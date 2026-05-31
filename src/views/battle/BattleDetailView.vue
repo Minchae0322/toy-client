@@ -1044,11 +1044,12 @@ export default {
           customBrand: data.customBrand || null,
           customImageUrl: data.customImageUrl
         }
-        // 이벤트 배틀(예: 21번)에서만 eventId 동봉 — 백엔드는 battleId 매칭 시에만 저장
-        if (data.eventId) {
-          item.eventId = data.eventId
-        }
         const itemData = { items: [item] }
+        // 이벤트 배틀(예: 21번) — eventId 는 body 최상위 필드로 동봉.
+        // 백엔드는 매칭되는 이벤트 배틀일 때만 저장하고 응답에선 노출하지 않음.
+        if (data.eventId) {
+          itemData.eventId = data.eventId
+        }
         const response = await battleService.addBattleItems(this.battleId, itemData)
         if (response.success) {
           showExpGrant(response.data, { mode: 'burst-only' })
