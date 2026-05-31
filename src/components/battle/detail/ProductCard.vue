@@ -595,10 +595,9 @@ defineExpose({ setCommentSubmitting })
   flex-wrap: wrap;
 }
 
-/* 브랜드 — 아이템명 옆 우측에 배치, 보조 톤 */
+/* 브랜드 — 아이템명 바로 옆에 붙는 보조 정보 */
 .brand-side {
-  margin-left: auto;
-  flex-shrink: 0;
+  flex-shrink: 1;
   max-width: 45%;
   font-size: 11.5px;
   font-weight: 600;
@@ -620,7 +619,8 @@ defineExpose({ setCommentSubmitting })
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  flex: 1;
+  /* flex: 1 제거 — 자기 텍스트 폭만 차지해서 brand 가 옆에 붙도록 */
+  flex: 0 1 auto;
   min-width: 0;
   word-break: keep-all;
 }
