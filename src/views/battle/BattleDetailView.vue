@@ -296,6 +296,7 @@
       <AddProductModal
           v-if="showAddModal"
           ref="addModalRef"
+          :battle-id="battleId"
           @close="closeAddModal"
           @submit-image="submitImageItem"
           @select-product="submitSelectedProduct"
@@ -1037,14 +1038,17 @@ export default {
     // 모달에서 이미지 1장 추가 — 모달은 닫지 않음 (여러 장 연달아 추가 가능)
     async submitImageItem(data) {
       try {
-        const itemData = {
-          items: [{
-            itemType: 'CUSTOM',
-            customName: data.customName,
-            customBrand: data.customBrand || null,
-            customImageUrl: data.customImageUrl
-          }]
+        const item = {
+          itemType: 'CUSTOM',
+          customName: data.customName,
+          customBrand: data.customBrand || null,
+          customImageUrl: data.customImageUrl
         }
+        // 이벤트 배틀(예: 21번)에서만 eventId 동봉 — 백엔드는 battleId 매칭 시에만 저장
+        if (data.eventId) {
+          item.eventId = data.eventId
+        }
+        const itemData = { items: [item] }
         const response = await battleService.addBattleItems(this.battleId, itemData)
         if (response.success) {
           showExpGrant(response.data, { mode: 'burst-only' })

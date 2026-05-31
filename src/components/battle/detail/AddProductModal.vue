@@ -122,22 +122,72 @@
                         </button>
                       </div>
                       <div class="pending-card-inputs">
-                        <input
-                          v-model="img.customName"
-                          type="text"
-                          placeholder="아이템명 (필수)"
-                          class="card-input"
-                          :class="{ 'has-error': img.errorName }"
-                          maxlength="30"
-                        />
-                        <p v-if="img.errorName" class="input-error">아이템명을 입력하세요</p>
-                        <input
-                          v-model="img.customBrand"
-                          type="text"
-                          placeholder="추가 설명 (선택)"
-                          class="card-input small"
-                          maxlength="20"
-                        />
+                        <div class="fields-column">
+                          <div class="field">
+                            <label class="field-label">아이템명 <span class="req-mark" aria-label="필수">*</span></label>
+                            <input
+                              v-model="img.customName"
+                              type="text"
+                              placeholder="예: 우베라떼"
+                              class="card-input"
+                              :class="{ 'has-error': img.errorName }"
+                              maxlength="30"
+                            />
+                            <p v-if="img.errorName" class="input-error">아이템명을 입력하세요</p>
+                          </div>
+                          <div class="field">
+                            <template v-if="isEventBattle">
+                              <label class="field-label">
+                                인스타 아이디 <span class="req-mark" aria-label="필수">*</span>
+                                <button
+                                  type="button"
+                                  class="hint-trigger"
+                                  :aria-expanded="img.showEventHint ? 'true' : 'false'"
+                                  :aria-label="img.showEventHint ? '안내 닫기' : '이벤트 응모 안내 보기'"
+                                  @click="img.showEventHint = !img.showEventHint"
+                                >
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                  </svg>
+                                </button>
+                              </label>
+                              <input
+                                v-model="img.eventId"
+                                type="text"
+                                placeholder="@yogurtte"
+                                class="card-input small"
+                                maxlength="50"
+                                autocapitalize="off"
+                                autocorrect="off"
+                                spellcheck="false"
+                              />
+                              <Transition name="hint-slide">
+                                <p v-if="img.showEventHint" class="event-id-hint">
+                                  <svg class="hint-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                  </svg>
+                                  <span class="hint-body">
+                                    <strong class="hint-title">비공개 · 운영자만 확인</strong>
+                                    <span class="hint-desc">이벤트 추첨/안내 외 용도로는 절대 사용되지 않으며, 다른 사용자에게 노출되지 않아요.</span>
+                                  </span>
+                                </p>
+                              </Transition>
+                            </template>
+                            <template v-else>
+                              <label class="field-label">추가 설명 <span class="opt-mark">(선택)</span></label>
+                              <input
+                                v-model="img.customBrand"
+                                type="text"
+                                placeholder="브랜드명 등"
+                                class="card-input small"
+                                maxlength="20"
+                              />
+                            </template>
+                          </div>
+                        </div>
                         <button
                           type="button"
                           class="card-add-btn"
@@ -302,9 +352,20 @@ import { productService } from '@/services/ProductService.js'
 import { fileService } from '@/services/FileService.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
+const props = defineProps({
+  battleId: {
+    type: [String, Number],
+    default: null
+  }
+})
 const emit = defineEmits(['close', 'submit-image', 'select-product', 'submit-youtube'])
 
 const { open } = useConfirmDialog()
+
+// 이벤트 배틀(현재 battleId=21) — '추가 설명' 자리를 '인스타 아이디' 로 교체하고
+// 백엔드에는 customBrand 가 아닌 eventId 필드로 전송
+const EVENT_BATTLE_IDS = new Set([21])
+const isEventBattle = computed(() => EVENT_BATTLE_IDS.has(Number(props.battleId)))
 
 const tabs = [
   {
@@ -346,6 +407,8 @@ function makeImageEntry(file, previewUrl) {
     previewUrl,
     customName: '',
     customBrand: '',
+    eventId: '', // 이벤트 배틀일 때만 사용 (인스타 아이디)
+    showEventHint: false, // 이벤트 안내 펼침 토글
     uploading: true,
     uploadedUrl: null,
     failed: false,
@@ -504,8 +567,11 @@ const addSingleImage = (id) => {
   emit('submit-image', {
     id: entry.id,
     customName: entry.customName.trim(),
-    customBrand: entry.customBrand.trim() || null,
-    customImageUrl: entry.uploadedUrl
+    // 이벤트 배틀이면 customBrand 자리에는 입력 자체가 없음 → null
+    customBrand: isEventBattle.value ? null : (entry.customBrand.trim() || null),
+    customImageUrl: entry.uploadedUrl,
+    // 이벤트 배틀일 때만 eventId 동봉 (백엔드는 battleId=21 일 때만 처리)
+    eventId: isEventBattle.value ? (entry.eventId.trim() || null) : null
   })
 }
 
@@ -1037,24 +1103,56 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
   flex: 1;
   min-width: 0;
   padding: 8px 10px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  gap: 5px 8px;
-  align-items: center;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
 }
 
-.pending-card-inputs .card-input { grid-column: 1 / 2; }
-.pending-card-inputs .card-input.small { grid-column: 1 / 2; }
-.pending-card-inputs .input-error { grid-column: 1 / -1; }
+.fields-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.field-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--c-text-500);
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.req-mark {
+  color: var(--c-danger);
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.opt-mark {
+  color: var(--c-text-400);
+  font-size: 10px;
+  font-weight: 500;
+}
+
 .pending-card-inputs .card-add-btn {
-  grid-column: 2 / 3;
-  grid-row: 1 / span 2;
-  margin-top: 0;
-  align-self: stretch;
+  margin-top: 18px; /* 라벨 위 공간만큼 내려서 첫 input 과 정렬 */
+  align-self: flex-start; /* stretch 해제 → 본연의 높이 유지 */
   width: auto;
-  padding: 0 12px;
+  padding: 8px 14px;
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .card-input {
@@ -1098,6 +1196,81 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
   font-size: 11px;
   font-weight: 600;
   color: var(--c-danger);
+}
+
+/* 라벨 옆 ⓘ 안내 토글 버튼 */
+.hint-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-text-400);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s, color 0.15s;
+}
+.hint-trigger:hover,
+.hint-trigger[aria-expanded="true"] {
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+}
+
+/* 안내 박스 슬라이드 인/아웃 */
+.hint-slide-enter-active,
+.hint-slide-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease, max-height 0.22s ease;
+  overflow: hidden;
+}
+.hint-slide-enter-from,
+.hint-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+  max-height: 0;
+}
+.hint-slide-enter-to,
+.hint-slide-leave-from {
+  opacity: 1;
+  max-height: 200px;
+}
+
+/* 이벤트 응모(인스타 ID) 안내 — 잠금 아이콘 + 비공개 톤 */
+.event-id-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+  border-radius: 8px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+.event-id-hint .hint-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.event-id-hint .hint-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.event-id-hint .hint-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.event-id-hint .hint-desc {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--c-brand);
+  opacity: 0.85;
 }
 
 .card-add-btn {
@@ -1507,7 +1680,7 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
 }
 
 /* ===== Mobile ===== */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .modal-header { padding: 18px 20px 10px; }
   .modal-body { padding: 0 20px 20px; }
   .tab-btn { padding: 9px 8px; font-size: 12px; gap: 6px; }
@@ -1515,5 +1688,89 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
   .drop-zone { padding: 28px 18px; }
   .youtube-input { padding: 12px 14px; font-size: 13px; }
   .add-btn { padding: 12px 18px; font-size: 13px; }
+
+  /* 모바일 — 카드 = block 레이아웃, 이미지는 float 으로 좌측 상단에 두고
+     이미지 높이까지는 옆에서 내용이 흐르다가 아래는 전체 폭 사용 → 빈 공간 제거 */
+  .modal-body { padding: 0 12px 16px; }
+  .input-panel { padding: 12px; }
+
+  .pending-card {
+    display: block;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--bg-elevated);
+    border-color: var(--border-default);
+  }
+
+  /* 이미지 — float 으로 좌측 상단, 텍스트가 옆/아래로 흐르게 */
+  .pending-card-image {
+    float: left;
+    width: 100px;
+    height: 100px;
+    margin: 0 14px 10px 0;
+    border-radius: 10px;
+  }
+
+  /* 인풋 패널: block 으로 변경 → 자연 흐름. 끝에 clearfix 로 float 해제 */
+  .pending-card-inputs {
+    display: block;
+    padding: 0;
+  }
+  .pending-card-inputs::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+
+  .fields-column { gap: 10px; }
+  .field { gap: 5px; }
+
+  .field-label {
+    font-size: 11px;
+    color: var(--c-text-600);
+    font-weight: 700;
+  }
+  .req-mark { font-size: 11.5px; }
+  .opt-mark { font-size: 10.5px; }
+
+  .card-input {
+    padding: 9px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+    border-color: var(--border-default);
+  }
+  .card-input.small {
+    padding: 9px 12px;
+    font-size: 12.5px;
+  }
+  .card-input::placeholder { font-size: 12.5px; }
+
+  /* 추가 버튼 — fields 아래 풀너비 CTA, 시각 비중 살림 */
+  .pending-card-inputs .card-add-btn {
+    margin-top: 6px;
+    align-self: stretch;
+    width: 100%;
+    padding: 11px;
+    font-size: 13px;
+    font-weight: 800;
+    border-radius: 8px;
+    min-width: 0;
+    box-shadow: 0 1px 2px rgba(147, 51, 234, 0.18);
+  }
+  .card-add-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .event-id-hint {
+    margin-top: 4px;
+    padding: 9px 11px;
+    gap: 7px;
+    line-height: 1.45;
+    border-radius: 8px;
+  }
+  .event-id-hint .hint-icon { width: 12px; height: 12px; }
+  .event-id-hint .hint-title { font-size: 11px; }
+  .event-id-hint .hint-desc { font-size: 10.5px; }
 }
 </style>
