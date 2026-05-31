@@ -15,7 +15,7 @@
       <img :src="itemImage" :alt="itemName" @error="handleImageError" />
       <!-- 디자인 요소: 사진 위 대형 italic 랭크 -->
       <div :class="['rank-display', displayRank <= 3 ? `rank-pos-${displayRank}` : '']" aria-hidden="true">
-        <span class="rank-number">{{ String(displayRank).padStart(2, '0') }}</span>
+        <span class="rank-number">{{ displayRank }}<span class="rank-suffix">위</span></span>
       </div>
       <!-- 이전 픽 뱃지 -->
       <div v-if="item.userBattleVote" class="my-pick-badge">
@@ -413,27 +413,39 @@ defineExpose({ setCommentSubmitting })
   border-color: var(--c-brand);
 }
 
-/* 사진 위 대형 italic 랭크 (디자인 요소) */
+/* 사진 위 italic 랭크 — 이미지 안쪽 우측 상단, 잘림 없음 */
 .rank-display {
   position: absolute;
-  top: -6px;
-  right: 4px;
+  top: 8px;
+  right: 14px;
   z-index: 5;
   pointer-events: none;
-  line-height: 0.85;
+  line-height: 1;
   color: rgba(255, 255, 255, 0.94);
   text-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.45),
+    0 2px 10px rgba(0, 0, 0, 0.5),
     0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 .rank-number {
-  font-size: 56px;
+  font-size: 32px;
   font-weight: 900;
   font-style: italic;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.05em;
   font-variant-numeric: tabular-nums;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+/* "위" 접미사 — 숫자 옆 살짝 작게, 같은 italic 톤 */
+.rank-suffix {
+  font-size: 0.5em;
+  font-weight: 800;
+  font-style: italic;
+  margin-left: 0;
+  letter-spacing: -0.02em;
+  opacity: 0.95;
   display: inline-block;
 }
 
@@ -450,7 +462,7 @@ defineExpose({ setCommentSubmitting })
 }
 
 @media (min-width: 1024px) {
-  .rank-number { font-size: 64px; }
+  .rank-number { font-size: 38px; }
 }
 
 
@@ -931,12 +943,12 @@ defineExpose({ setCommentSubmitting })
   }
 
   .rank-display {
-    top: -4px;
-    right: 4px;
+    top: 6px;
+    right: 12px;
   }
 
   .rank-number {
-    font-size: 44px;
+    font-size: 24px;
   }
 
   .selected-rank-badge {

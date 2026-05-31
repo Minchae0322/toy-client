@@ -56,7 +56,7 @@
           <!-- 디자인 요소: 큰 italic 랭크 -->
           <div class="rank-display" aria-hidden="true" :class="getRankClass(index)">
             <Crown v-if="index === 0" :size="13" :stroke-width="2.6" class="rank-crown" />
-            <span class="rank-number">{{ String(index + 1).padStart(2, '0') }}</span>
+            <span class="rank-number">{{ index + 1 }}<span class="rank-suffix">위</span></span>
           </div>
 
           <!-- 상단 배지 -->
@@ -479,20 +479,20 @@ const handleImageError = (battleId) => {
   pointer-events: none;
 }
 
-/* 디자인 요소: 큰 italic 랭크 숫자 */
+/* 디자인 요소: italic 랭크 (X위) — 이미지 안쪽, 잘림 없음 */
 .rank-display {
   position: absolute;
-  top: -6px;
-  right: 6px;
+  top: 8px;
+  right: 14px;
   z-index: 1;
   pointer-events: none;
   display: inline-flex;
   align-items: flex-start;
   gap: 2px;
-  line-height: 0.85;
-  color: rgba(255, 255, 255, 0.92);
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.94);
   text-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.4),
+    0 2px 10px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
@@ -501,25 +501,37 @@ const handleImageError = (battleId) => {
 .rank-display.rank-third { color: #FDBA74; }
 
 .rank-crown {
-  margin-top: 14px;
+  margin-top: 6px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
 .rank-number {
-  font-size: 64px;
+  font-size: 32px;
   font-weight: 900;
   font-style: italic;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.05em;
   font-variant-numeric: tabular-nums;
   font-family: 'SUIT', 'Noto Sans KR', sans-serif;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.rank-suffix {
+  font-size: 0.5em;
+  font-weight: 800;
+  font-style: italic;
+  margin-left: 0;
+  letter-spacing: -0.02em;
+  opacity: 0.95;
+  display: inline-block;
 }
 
 @media (min-width: 768px) {
-  .rank-number { font-size: 74px; }
+  .rank-number { font-size: 36px; }
 }
 
 @media (min-width: 1280px) {
-  .rank-number { font-size: 84px; }
+  .rank-number { font-size: 40px; }
 }
 
 /* 상단 배지 */
