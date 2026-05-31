@@ -35,6 +35,7 @@
 
 - **프레임워크**: Vue 3.5 (Composition API `<script setup>`) + Vite 6.x + Pinia 3.x + Vue Router 4.x
 - **모바일 앱**: Capacitor 7.x (iOS / Android) + `@capgo/capacitor-social-login` (Apple/Google 소셜 로그인) — `npm run cap:ios`, `npm run cap:android`
+- **OTA 배포**: `@capgo/capacitor-updater@7.45.10` — `npm run ota:deploy`로 웹 변경분을 스토어 심사 없이 즉시 배포. `src/capacitor/bootstrap.js`에서 `notifyAppReady()` 호출 필수 (누락 시 60초 후 자동 롤백)
 - **UI 라이브러리**: Tailwind 4.x (유틸), `lucide-vue-next` (아이콘), `@heroicons/vue`
 - **HTTP**: Axios (`src/api/client.js` + 인터셉터 `src/api/interceptors.js`)
 - **실시간**: STOMP + SockJS (`src/services/webSocketService.js`)
@@ -131,12 +132,10 @@ watch(searchKeyword, (val) => {
 ```
 `@input` + debounce 조합은 한글 마지막 음절이 누락되는 버그가 있으므로 사용 금지. `BattleListView.vue` 참조.
 
-### KeepAlive 대상 뷰 — defineOptions 필수
-`App.vue`는 주요 목록·홈 화면을 `<KeepAlive :include="keepAliveViews">`로 감싸 뒤로가기 시 즉시 복원한다. **KeepAlive 대상 뷰는 반드시 `defineOptions({ name: '컴포넌트명' })`를 선언해야** include 매칭이 동작한다.
+### KeepAlive — 현재 미사용
+`App.vue`에서 KeepAlive를 **전면 제거**함 (refactor: 2026-05-30). 뷰 진입 시 항상 fresh fetch 수행. `defineOptions({ name })` 선언은 더이상 KeepAlive 목적으로 불필요하다.
 
-현재 KeepAlive 대상: `DashboardView`, `MyPageView`, `CollectionView`, `BattleListView`, `ProductRankingView`
-
-새 뷰를 KeepAlive에 추가할 때는 `App.vue`의 `keepAliveViews` 배열과 뷰 파일 양쪽에 이름을 일치시킨다.
+> 과거 대상: `DashboardView`, `MyPageView`, `CollectionView`, `BattleListView`, `ProductRankingView` — 현재는 모두 매번 재마운트.
 
 ---
 
@@ -144,6 +143,7 @@ watch(searchKeyword, (val) => {
 
 - `npm run build` → Vite 빌드 (문법·import 오류 검증)
 - UI 변경 시 `npm run dev`로 브라우저에서 실제 인터랙션 확인 필요 (타입/빌드만으로는 UX 검증 불가)
+- `npm run ota:deploy` → **Capgo OTA 배포** (patch 버전 bump → production 빌드 → capgo bundle upload). 웹 레이어(JS/CSS/HTML) 변경분을 스토어 심사 없이 즉시 전체 사용자에 반영. **플러그인 추가·네이티브 코드 변경은 반드시 스토어 업데이트 필요.**
 
 ---
 
@@ -164,8 +164,13 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.1.5**: iOS 빌드 19, Android versionCode 16 (`chore`)
+- **배틀 아이템 16개 초과 더보기 토글**: `BattleDetailView.vue` — pc-grid가 상위 16개(`displayedItems`) 기준 렌더, 17개 이상이면 '아이템 N개 더 보기' / '접기' 토글 노출. `sortedItems`는 그대로 — 통계/PICK 한마디 정합성 유지 (`feat(battle)`)
+- **KeepAlive 전면 제거**: `App.vue` — `<KeepAlive>` 제거, 뷰 진입 시 항상 fresh fetch. `DashboardBattles`, `DashboardRanking`, `DashboardView`의 `defineOptions` 관련 KeepAlive 코드도 정리 (`refactor`)
+- **Capgo Live Updates OTA 셋업**: `@capgo/capacitor-updater@7.45.10` 설치. `src/capacitor/bootstrap.js`에 `notifyAppReady()` 호출 추가 (없으면 60초 후 자동 롤백). `npm run ota:deploy`로 웹 변경분 OTA 즉시 배포 가능. 플러그인 첫 탑재이므로 스토어 1회 업데이트 필요, 이후엔 OTA만으로 전체 사용자 반영 (`feat(ota)`)
+- **배틀·피드 카피·뱃지 위치 정리**: `ProductCard.vue`, `BattleListView.vue` 불필요 코드 제거, `BattleListView` 섹션 중복 정리 (`feat(battle/feed)`)
 - **버전 1.1.4**: iOS 빌드 18, Android versionCode 15 (`chore`)
-- **KeepAlive로 뒤로가기 깜빡임 제거**: `App.vue` — 주요 화면(DashboardView·MyPageView·CollectionView·BattleListView·ProductRankingView)을 `<KeepAlive>`로 감싸 뒤로가기 시 즉시 복원. 각 뷰에 `defineOptions({ name })` 추가 (`feat(nav)`)
+- **KeepAlive로 뒤로가기 깜빡임 제거**: `App.vue` — 주요 화면(DashboardView·MyPageView·CollectionView·BattleListView·ProductRankingView)을 `<KeepAlive>`로 감싸 뒤로가기 시 즉시 복원. 각 뷰에 `defineOptions({ name })` 추가 (`feat(nav)`) **→ 이후 refactor로 제거됨 (버전 1.1.5)**
 - **섹션 헤더 글자 크기 통일**: `DashboardSectionHeader.vue`·`FeedList.vue`·`HotSection.vue`·`ProductRankingView.vue` — 전 섹션 헤더 스타일 한 단계 축소하여 일관화 (`style`)
 - **DashboardBattles.vue 투표율 누적 막대 리디자인**: 요거픽 1픽 투표율을 누적 막대 한 줄 + 순위별 컬러로 표시, 막대 위 라벨(아이템명·퍼센트) 정렬 (`feat/fix(dashboard)`)
 - **DashboardQuickNav 퀵메뉴 BottomNavigation 일치**: 라벨·아이콘·순서를 하단 네비게이션과 동일하게 정렬 (`refactor(dashboard)`)
