@@ -98,6 +98,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { buildShareUrl } from '@/config/env.js'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -114,7 +115,10 @@ const { open } = useConfirmDialog()
 const copied = ref(false)
 const linkInput = ref(null)
 
-const shareUrl = computed(() => props.url || window.location.href)
+// 네이티브 앱의 WebView host(app.yogurtte.com) 가 외부에 그대로 노출되면
+// 카카오/SMS/X 등에서 받는 사람이 열 때 동작이 어색함. 공개 웹 URL 로 정규화.
+// 사용 측에서 props.url 을 명시한 경우엔 그대로 사용한다.
+const shareUrl = computed(() => props.url || buildShareUrl())
 const canNativeShare = computed(() => !!navigator.share)
 
 const close = () => {

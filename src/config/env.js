@@ -95,6 +95,35 @@ export const API_URLS = {
 }
 
 /**
+ * 외부 공유용 공개 웹 URL 베이스
+ * - 네이티브 앱(WebView)에서는 hostname 이 'app.yogurtte.com' 인데, 카카오·X 등으로
+ *   공유한 링크를 받은 외부 사용자는 PWA/웹사이트에서 접근해야 하므로
+ *   별도의 공개 도메인을 사용해야 한다.
+ * - VITE_PUBLIC_WEB_URL 환경변수가 있으면 그걸 사용, 없으면 기본값.
+ */
+export const PUBLIC_WEB_URL =
+  import.meta.env.VITE_PUBLIC_WEB_URL || 'https://yogurtte.com'
+
+/**
+ * 현재 경로(path) 또는 임의 경로를 공개 공유 URL 로 변환.
+ *
+ * @param {string} [path] - '/battles/123' 형태. 생략 시 window.location.pathname + search
+ * @returns {string} 'https://app.yogurtte.com/battles/123?...'
+ */
+export const buildShareUrl = (path) => {
+  const base = PUBLIC_WEB_URL.replace(/\/+$/, '')
+  let p
+  if (typeof path === 'string' && path) {
+    p = path.startsWith('/') ? path : `/${path}`
+  } else if (typeof window !== 'undefined' && window.location) {
+    p = `${window.location.pathname || '/'}${window.location.search || ''}`
+  } else {
+    p = '/'
+  }
+  return `${base}${p}`
+}
+
+/**
  * 환경 정보 로깅 (개발 환경에서만)
  */
 if (isDevelopment) {
