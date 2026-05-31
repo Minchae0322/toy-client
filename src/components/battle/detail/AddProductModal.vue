@@ -139,19 +139,33 @@
                             <template v-if="isEventBattle">
                               <label class="field-label">
                                 인스타 아이디 <span class="req-mark" aria-label="필수">*</span>
-                                <button
-                                  type="button"
-                                  class="hint-trigger"
-                                  :aria-expanded="img.showEventHint ? 'true' : 'false'"
-                                  :aria-label="img.showEventHint ? '안내 닫기' : '이벤트 응모 안내 보기'"
-                                  @click="img.showEventHint = !img.showEventHint"
-                                >
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="16" x2="12" y2="12"/>
-                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
-                                  </svg>
-                                </button>
+                                <span class="hint-anchor">
+                                  <button
+                                    type="button"
+                                    class="hint-trigger"
+                                    :aria-expanded="openHintImageId === img.id ? 'true' : 'false'"
+                                    :aria-label="openHintImageId === img.id ? '안내 닫기' : '이벤트 응모 안내 보기'"
+                                    @click="toggleEventHint(img.id, $event)"
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                      <circle cx="12" cy="12" r="10"/>
+                                      <line x1="12" y1="16" x2="12" y2="12"/>
+                                      <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                    </svg>
+                                  </button>
+                                  <Transition name="hint-pop">
+                                    <p v-if="openHintImageId === img.id" class="event-id-hint" role="tooltip">
+                                      <svg class="hint-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                      </svg>
+                                      <span class="hint-body">
+                                        <strong class="hint-title">비공개 · 운영자만 확인</strong>
+                                        <span class="hint-desc">이벤트 추첨/안내 외 용도로는 절대 사용되지 않으며, 다른 사용자에게 노출되지 않아요.</span>
+                                      </span>
+                                    </p>
+                                  </Transition>
+                                </span>
                               </label>
                               <input
                                 v-model="img.eventId"
@@ -163,18 +177,6 @@
                                 autocorrect="off"
                                 spellcheck="false"
                               />
-                              <Transition name="hint-slide">
-                                <p v-if="img.showEventHint" class="event-id-hint">
-                                  <svg class="hint-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                  </svg>
-                                  <span class="hint-body">
-                                    <strong class="hint-title">비공개 · 운영자만 확인</strong>
-                                    <span class="hint-desc">이벤트 추첨/안내 외 용도로는 절대 사용되지 않으며, 다른 사용자에게 노출되지 않아요.</span>
-                                  </span>
-                                </p>
-                              </Transition>
                             </template>
                             <template v-else>
                               <label class="field-label">추가 설명 <span class="opt-mark">(선택)</span></label>
@@ -408,13 +410,25 @@ function makeImageEntry(file, previewUrl) {
     customName: '',
     customBrand: '',
     eventId: '', // 이벤트 배틀일 때만 사용 (인스타 아이디)
-    showEventHint: false, // 이벤트 안내 펼침 토글
     uploading: true,
     uploadedUrl: null,
     failed: false,
     submitting: false,
     errorName: false
   }
+}
+
+// 이벤트 안내 말풍선 — 한 번에 하나만 열림. 외부 클릭으로 닫힘.
+const openHintImageId = ref(null)
+function toggleEventHint(imgId, e) {
+  e?.stopPropagation()
+  openHintImageId.value = openHintImageId.value === imgId ? null : imgId
+}
+function handleDocumentClickForHint(e) {
+  if (openHintImageId.value === null) return
+  // 트리거나 안내 박스 내부 클릭은 무시 — 그 외는 닫기
+  if (e.target.closest && (e.target.closest('.hint-trigger') || e.target.closest('.event-id-hint'))) return
+  openHintImageId.value = null
 }
 
 const canAddSingle = (img) => {
@@ -726,7 +740,11 @@ onBeforeUnmount(() => {
     if (img.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(img.previewUrl)
   })
   if (searchTimeout) clearTimeout(searchTimeout)
+  document.removeEventListener('click', handleDocumentClickForHint)
 })
+
+// 이벤트 안내 외부 클릭 감지 — 모달이 마운트되어 있는 동안 항상 활성
+document.addEventListener('click', handleDocumentClickForHint)
 
 defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDone })
 </script>
@@ -1007,7 +1025,8 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
   background: var(--bg-subtle);
   border: 1px solid var(--border-strong);
   border-radius: 10px;
-  overflow: hidden;
+  /* overflow visible — 말풍선이 카드 위로 떠오를 수 있어야 함.
+     이미지 클립은 .pending-card-image 자체의 overflow:hidden 으로 처리됨. */
   transition: all 0.2s;
 }
 
@@ -1198,7 +1217,13 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
   color: var(--c-danger);
 }
 
-/* 라벨 옆 ⓘ 안내 토글 버튼 */
+/* 라벨 옆 ⓘ 트리거 + 말풍선 앵커 */
+.hint-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .hint-trigger {
   display: inline-flex;
   align-items: center;
@@ -1220,37 +1245,41 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
   color: var(--c-brand);
 }
 
-/* 안내 박스 슬라이드 인/아웃 */
-.hint-slide-enter-active,
-.hint-slide-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease, max-height 0.22s ease;
-  overflow: hidden;
-}
-.hint-slide-enter-from,
-.hint-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-  max-height: 0;
-}
-.hint-slide-enter-to,
-.hint-slide-leave-from {
-  opacity: 1;
-  max-height: 200px;
-}
-
-/* 이벤트 응모(인스타 ID) 안내 — 잠금 아이콘 + 비공개 톤 */
+/* 말풍선 팝오버 — 트리거 위쪽으로 떠오름 */
 .event-id-hint {
+  position: absolute;
+  bottom: calc(100% + 8px); /* 트리거 위 8px */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 60px));
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin: 4px 0 0;
+  margin: 0;
   padding: 10px 12px;
-  background: var(--c-brand-soft);
-  color: var(--c-brand);
-  border-radius: 8px;
+  background: var(--text-primary); /* 짙은 배경 (반전 톤) */
+  color: var(--bg-elevated);
+  border-radius: 10px;
   line-height: 1.45;
   letter-spacing: -0.01em;
+  box-shadow: 0 8px 20px rgba(10, 14, 26, 0.18);
+  pointer-events: auto;
 }
+
+/* 말풍선 아래쪽 화살표 (트리거 쪽으로 향함) */
+.event-id-hint::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--text-primary);
+  border-bottom: 0;
+}
+
 .event-id-hint .hint-icon {
   flex-shrink: 0;
   margin-top: 1px;
@@ -1258,19 +1287,34 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
 .event-id-hint .hint-body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 .event-id-hint .hint-title {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
 .event-id-hint .hint-desc {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
-  color: var(--c-brand);
-  opacity: 0.85;
+  opacity: 0.82;
+}
+
+/* 팝오버 인/아웃 — 트리거 위에서 살짝 떠오름 */
+.hint-pop-enter-active,
+.hint-pop-leave-active {
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+.hint-pop-enter-from,
+.hint-pop-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(4px);
+}
+.hint-pop-enter-to,
+.hint-pop-leave-from {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .card-add-btn {
@@ -1763,14 +1807,12 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
   }
 
   .event-id-hint {
-    margin-top: 4px;
     padding: 9px 11px;
     gap: 7px;
-    line-height: 1.45;
-    border-radius: 8px;
+    max-width: min(260px, calc(100vw - 48px));
   }
   .event-id-hint .hint-icon { width: 12px; height: 12px; }
-  .event-id-hint .hint-title { font-size: 11px; }
+  .event-id-hint .hint-title { font-size: 11.5px; }
   .event-id-hint .hint-desc { font-size: 10.5px; }
 }
 </style>
