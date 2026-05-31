@@ -91,9 +91,11 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import * as authUtils from '@/utils/auth.js'
 import { signInWithApple, signInWithGoogle, LoginError } from '@/services/nativeAuth.js'
+import { useConsentGate } from '@/composables/useConsentGate.js'
 
 const router = useRouter()
 const { login } = useAuth()
+const { setPendingRedirect, parseConsentFlag } = useConsentGate()
 
 const loading = ref(true)
 const error = ref(false)
@@ -272,6 +274,7 @@ const handleOAuthCallback = async () => {
     }
 
     let accessToken, refreshToken, nativeUser
+    let consentRequired = false
     if (isNative) {
       // 네이티브 SDK 호출 (Apple/Google)
       const fn = provider.value === 'apple' ? signInWithApple : signInWithGoogle
@@ -279,9 +282,11 @@ const handleOAuthCallback = async () => {
       accessToken = res.accessToken
       refreshToken = res.refreshToken
       nativeUser = res.user
+      consentRequired = parseConsentFlag(res.consentRequired)
     } else {
       accessToken = urlParams.get('token')
       refreshToken = urlParams.get('refreshToken')
+      consentRequired = parseConsentFlag(urlParams.get('consentRequired'))
       if (!accessToken) {
         throw new LoginError(
           'ERR-O-101',
@@ -354,16 +359,20 @@ const handleOAuthCallback = async () => {
     const redirectPath = sessionStorage.getItem('oauth_redirect') || '/feed'
     sessionStorage.removeItem('oauth_redirect')
     sessionStorage.removeItem('oauth_provider')
-    redirectTarget.value = redirectPath
+
+    // 약관 동의 필요 — /consent 로 보내고 원래 경로는 따로 보관
+    const finalPath = consentRequired ? '/consent' : redirectPath
+    if (consentRequired) setPendingRedirect(redirectPath)
+    redirectTarget.value = finalPath
 
     // 바로 이동
     loading.value = false
     await new Promise(r => setTimeout(r, 300))
 
     try {
-      await router.push(redirectPath)
+      await router.push(finalPath)
     } catch (routerError) {
-      window.location.href = redirectPath
+      window.location.href = finalPath
     }
 
   } catch (err) {

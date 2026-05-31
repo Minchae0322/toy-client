@@ -106,11 +106,30 @@ const refreshTokenViaBackend = async () => {
 
     // 응답 body에서 새 AccessToken 추출
     const newAccessToken = response.data?.accessToken
+    const consentRequired = response.data?.consentRequired === true
 
     if (newAccessToken) {
       authUtils.setAccessToken(newAccessToken)
 
       console.log('✅ [Interceptor] 토큰 갱신 성공')
+
+      // 약관 버전 갱신 시 백엔드가 consentRequired=true 로 응답.
+      // 현재 라우트가 /consent 가 아니면 동의 화면으로 유도.
+      if (consentRequired) {
+        try {
+          const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+          if (currentPath !== '/consent') {
+            console.log('🔔 [Interceptor] 약관 재동의 필요 — /consent 로 라우팅')
+            // 비동기 라우터 임포트 — 순환 의존 방지
+            const { default: router } = await import('@/router/index.js')
+            const next = router.currentRoute.value.fullPath
+            router.push({ path: '/consent', query: { redirect: next } }).catch(() => {})
+          }
+        } catch (e) {
+          console.warn('⚠️ [Interceptor] 동의 라우팅 실패:', e)
+        }
+      }
+
       return newAccessToken
     }
 

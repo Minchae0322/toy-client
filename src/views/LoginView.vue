@@ -144,9 +144,16 @@ const handleLogin = async (formData) => {
   loginError.value = ''
   try {
     const response = await authService.login(formData)
-    const { accessToken, refreshToken, user } = response.data
+    const { accessToken, refreshToken, user, consentRequired } = response.data
     await login({ accessToken, refreshToken }, user)
-    router.push(redirectPath.value)
+    // 약관 동의 필요 — /consent 로 우선 라우팅, 동의 완료 후 redirectPath 로 이동
+    if (consentRequired === true) {
+      const { useConsentGate } = await import('@/composables/useConsentGate.js')
+      useConsentGate().setPendingRedirect(redirectPath.value)
+      router.push('/consent')
+    } else {
+      router.push(redirectPath.value)
+    }
   } catch (error) {
     const { code, text } = classifyEmailLoginError(error)
     loginError.value = `${text} [${code}]`

@@ -113,6 +113,14 @@ class AuthService extends BaseApiService {
   }
 
   /**
+   * 개인정보 처리방침 동의 제출 — 서버가 현재 시행 버전을 자동 기록
+   * POST /user/privacy-policy/consent
+   */
+  async submitPrivacyPolicyConsent() {
+    return await this.post('/user/privacy-policy/consent', {})
+  }
+
+  /**
    * 토큰 검증
    */
   async verifyToken() {
@@ -418,7 +426,9 @@ export function useAuth() {
         return {
           success: true,
           user: response.data.user || authUtils.getCurrentUser(),
-          message: response.message
+          message: response.message,
+          // 약관 동의 필요 여부 — 호출 측에서 /consent 라우팅 분기에 사용
+          consentRequired: response.data?.consentRequired === true,
         }
       } else {
         throw new Error(response.message || '로그인에 실패했습니다')

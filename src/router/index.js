@@ -6,6 +6,7 @@ import { useConfirmDialog } from '@/composables/useConfirmDialog'
 // Views import (기존 구조 유지)
 import LoginView from '@/views/LoginView.vue'
 import OAuthCallback from '@/views/OAuth2Callback.vue'
+import ConsentView from '@/views/ConsentView.vue'
 import CategoryAdminView from '@/views/CategoryAdminView.vue'
 
 // Chat Views import
@@ -288,6 +289,14 @@ const routes = [
     name: 'OAuthCallback',
     component: OAuthCallback,
     meta: { requiresAuth: false, public: true }
+  },
+  {
+    path: '/consent',
+    name: 'Consent',
+    component: ConsentView,
+    // 토큰은 발급된 상태(로그인 직후) — 미동의 사용자만 보는 화면이라
+    // requiresAuth 는 켜되 사용자가 직접 진입은 막지 않음 (가드는 별도 처리 안 함)
+    meta: { requiresAuth: true }
   },
   {
     path: '/sell/step2',

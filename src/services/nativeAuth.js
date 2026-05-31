@@ -200,7 +200,12 @@ async function postToBackend(provider, body) {
     )
   }
   const user = data.user || buildUserFromPayload(decodeJwtPayload(accessToken))
-  return { accessToken, user, refreshToken: data.refreshToken || accessToken }
+  return {
+    accessToken,
+    user,
+    refreshToken: data.refreshToken || accessToken,
+    consentRequired: data.consentRequired === true,
+  }
 }
 
 export async function signInWithApple() {
