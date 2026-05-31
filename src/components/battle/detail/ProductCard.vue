@@ -948,7 +948,7 @@ defineExpose({ setCommentSubmitting })
   }
 
   .rank-number {
-    font-size: 24px;
+    font-size: 30px;
   }
 
   .selected-rank-badge {
