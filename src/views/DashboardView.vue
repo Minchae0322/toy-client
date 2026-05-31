@@ -92,6 +92,28 @@ onMounted(loadHotFeeds)
   display: flex;
   max-width: 100%;
   overflow-x: clip;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-container {
+    padding: 0 3rem;
+    max-width: 1920px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container {
+    padding: 0 4rem;
+  }
 }
 
 .main-content {
@@ -108,12 +130,11 @@ onMounted(loadHotFeeds)
   }
 }
 
-/* 콘텐츠 컨테이너: 가운데 정렬 + 일관된 좌우 여백 */
+/* 콘텐츠 컨테이너: 가운데 정렬 — 좌우 여백은 .app-container가 처리 */
 .dashboard-shell {
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 0 16px;
   display: flex;
   flex-direction: column;
   /* 컴팩트 레이아웃 — 섹션을 촘촘하게 */
@@ -122,27 +143,18 @@ onMounted(loadHotFeeds)
 
 @media (min-width: 768px) {
   .dashboard-shell {
-    padding: 0 32px;
     gap: 34px;
   }
 }
 
 @media (min-width: 1024px) {
   .dashboard-shell {
-    padding: 0 40px;
     gap: 40px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .dashboard-shell {
-    padding: 0 48px;
   }
 }
 
 @media (max-width: 480px) {
   .dashboard-shell {
-    padding: 0 16px;
     gap: 22px;
   }
 }
