@@ -283,11 +283,27 @@
             <!-- YouTube 탭 -->
             <div v-if="activeTab === 'youtube'" class="input-panel">
               <div class="youtube-input-section">
+                <!-- 네이티브 앱 — YouTube 열어서 영상 찾고 공유→링크 복사 후 복귀하면 자동 입력 -->
+                <button
+                  v-if="isNative"
+                  type="button"
+                  class="youtube-open-btn"
+                  @click="openYoutubeForSelection"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                  </svg>
+                  YouTube 에서 영상 찾기
+                </button>
+                <p v-if="isNative" class="youtube-open-hint">
+                  YouTube 열기 → 원하는 영상 <strong>공유 → 링크 복사</strong> → 앱으로 돌아오면 자동 입력돼요.
+                </p>
+
                 <div class="input-row">
                   <input
                     v-model="youtubeUrl"
                     type="text"
-                    placeholder="YouTube 링크를 붙여넣으세요"
+                    placeholder="또는 YouTube 링크 직접 붙여넣기"
                     class="youtube-input"
                     @input="handleYoutubeInput"
                     @keyup.enter="submitYoutubeItem"
@@ -675,6 +691,46 @@ const youtubeUrl = ref('')
 const youtubePreview = ref(null)
 const submittingYoutube = ref(false)
 
+// 네이티브 앱 여부 — YouTube 열기 버튼 + 자동 클립보드 감지 활성
+import { Capacitor } from '@capacitor/core'
+const isNative = Capacitor.isNativePlatform()
+const youtubeBrowserOpened = ref(false)
+
+// YouTube 앱/웹 열기 (Capacitor Browser, 가능하면 외부 시스템 브라우저 사용)
+async function openYoutubeForSelection() {
+  try {
+    const { Browser } = await import('@capacitor/browser')
+    youtubeBrowserOpened.value = true
+    await Browser.open({ url: 'https://m.youtube.com', presentationStyle: 'popover' })
+  } catch (e) {
+    console.warn('[Youtube] Browser open 실패, 폴백:', e)
+    try { window.open('https://m.youtube.com', '_blank') } catch {}
+    youtubeBrowserOpened.value = true
+  }
+}
+
+// 사용자가 YouTube 에서 영상 공유→링크 복사 후 앱으로 복귀하면
+// 클립보드의 YouTube URL 을 자동으로 input 에 채워주고 미리보기 띄움.
+async function tryAutoFillFromClipboard() {
+  if (!youtubeBrowserOpened.value) return
+  if (activeTab.value !== 'youtube') return
+  try {
+    if (!navigator.clipboard?.readText) return
+    const text = (await navigator.clipboard.readText())?.trim()
+    if (!text) return
+    const id = extractYoutubeId(text)
+    if (!id) return
+    // 이미 같은 영상 미리보기 중이면 스킵
+    if (youtubePreview.value?.videoId === id) return
+    youtubeUrl.value = text
+    handleYoutubeInput()
+  } catch {
+    // 권한 거부/사파리 정책 등 — 조용히 실패
+  } finally {
+    youtubeBrowserOpened.value = false
+  }
+}
+
 const isYoutubeValid = computed(() => {
   return youtubePreview.value && youtubePreview.value.customName?.trim().length > 0
 })
@@ -735,12 +791,31 @@ watch(activeTab, async (newTab) => {
   }
 })
 
+// 앱 백그라운드→포그라운드 복귀 시 (YouTube 에서 돌아옴) 클립보드 자동 확인
+let capAppListenerHandle = null
+async function setupYoutubeReturnListener() {
+  if (!isNative) return
+  try {
+    const { App: CapApp } = await import('@capacitor/app')
+    capAppListenerHandle = await CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) tryAutoFillFromClipboard()
+    })
+  } catch {}
+}
+setupYoutubeReturnListener()
+
+// 데스크탑/PWA 폴백: window focus 도 동일 처리
+const handleWindowFocus = () => tryAutoFillFromClipboard()
+window.addEventListener('focus', handleWindowFocus)
+
 onBeforeUnmount(() => {
   pendingImages.value.forEach(img => {
     if (img.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(img.previewUrl)
   })
   if (searchTimeout) clearTimeout(searchTimeout)
   document.removeEventListener('click', handleDocumentClickForHint)
+  window.removeEventListener('focus', handleWindowFocus)
+  try { capAppListenerHandle?.remove() } catch {}
 })
 
 // 이벤트 안내 외부 클릭 감지 — 모달이 마운트되어 있는 동안 항상 활성
@@ -1569,6 +1644,45 @@ defineExpose({ markItemSuccess, markItemFailure, markProductDone, markYoutubeDon
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+/* 네이티브 앱 — YouTube 앱/웹 바로 열기 버튼 */
+.youtube-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 16px;
+  background: #FF0000; /* YouTube red */
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 2px 6px rgba(255, 0, 0, 0.2);
+}
+.youtube-open-btn:hover { background: #CC0000; }
+.youtube-open-btn:active { transform: scale(0.99); }
+.youtube-open-btn svg { flex-shrink: 0; }
+
+.youtube-open-hint {
+  margin: -6px 0 0;
+  padding: 10px 12px;
+  background: var(--bg-subtle);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--c-text-500);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+.youtube-open-hint strong {
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .input-row {
