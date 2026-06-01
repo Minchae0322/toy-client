@@ -122,6 +122,14 @@ onMounted(loadHotFeeds)
   min-height: 100vh;
   /* 모바일: 하단 BottomNavigation(60px) + 여유 + iOS 홈 인디케이터 회피 */
   padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  /* PC — 사이드바와 시각적 분리를 위한 좌측 여백 (다른 메뉴 페이지와 통일) */
+  padding-left: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    padding-left: 0;
+  }
 }
 
 @media (min-width: 768px) {

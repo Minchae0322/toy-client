@@ -1,5 +1,26 @@
 <template>
   <div class="consent-wrap">
+    <!-- 약관 전문 시트 (전문 보기 클릭 시 ConsentView 위에 오버레이로 표시) -->
+    <Teleport to="body">
+      <Transition name="legal-sheet">
+        <div v-if="legalSheet" class="legal-sheet-overlay" @click.self="legalSheet = null">
+          <div class="legal-sheet">
+            <header class="legal-sheet-head">
+              <h2>{{ legalSheet === 'privacy' ? '개인정보처리방침' : '서비스 이용약관' }}</h2>
+              <button type="button" class="legal-sheet-close" aria-label="닫기" @click="legalSheet = null">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </header>
+            <div class="legal-sheet-body">
+              <component :is="legalComponent" />
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <div class="consent-card">
       <header class="head">
         <span class="head-badge" aria-hidden="true">
@@ -21,7 +42,7 @@
               <span class="row-title"><span class="req">[필수]</span> 개인정보 수집·이용에 동의합니다</span>
               <span class="row-meta">이메일, 소셜 식별자, 닉네임 · 회원 식별·서비스 제공 · 탈퇴 시까지 보유</span>
             </span>
-            <a class="row-detail" :href="privacyUrl" target="_blank" rel="noopener noreferrer">전문 보기</a>
+            <button type="button" class="row-detail" @click.prevent="openLegal('privacy')">전문 보기</button>
           </label>
         </li>
         <li>
@@ -32,7 +53,7 @@
               <span class="row-title"><span class="req">[필수]</span> 서비스 이용약관에 동의합니다</span>
               <span class="row-meta">서비스 이용 규칙 · 권리 및 책임</span>
             </span>
-            <a class="row-detail" :href="termsUrl" target="_blank" rel="noopener noreferrer">전문 보기</a>
+            <button type="button" class="row-detail" @click.prevent="openLegal('terms')">전문 보기</button>
           </label>
         </li>
       </ul>
@@ -61,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authService } from '@/services/AuthService.js'
 import { useAuth } from '@/composables/useAuth.js'
@@ -72,13 +93,22 @@ const route = useRoute()
 const { logout } = useAuth()
 const { consumePendingRedirect } = useConsentGate()
 
-const privacyUrl = '/privacy-policy'
-const termsUrl = '/terms-of-service'
-
 const agreePrivacy = ref(false)
 const agreeTerms = ref(false)
 const submitting = ref(false)
 const errorMsg = ref('')
+
+// 약관 전문 시트 — 'privacy' | 'terms' | null
+const legalSheet = ref(null)
+const PrivacyPolicyView = defineAsyncComponent(() => import('@/views/PrivacyPolicyView.vue'))
+const TermsOfServiceView = defineAsyncComponent(() => import('@/views/TermsOfServiceView.vue'))
+const legalComponent = computed(() =>
+  legalSheet.value === 'privacy' ? PrivacyPolicyView :
+  legalSheet.value === 'terms' ? TermsOfServiceView : null
+)
+function openLegal(type) {
+  legalSheet.value = type
+}
 
 const canSubmit = computed(() => agreePrivacy.value && agreeTerms.value)
 
@@ -190,15 +220,21 @@ async function cancel() {
 .req { color: var(--c-brand); margin-right: 2px; }
 .row-meta { font-size: 11.5px; color: var(--c-text-500); letter-spacing: -0.01em; line-height: 1.4; }
 .row-detail {
+  border: none;
+  background: transparent;
+  padding: 4px 6px;
+  font-family: inherit;
   font-size: 11.5px;
   color: var(--c-text-500);
   text-decoration: underline;
   text-underline-offset: 2px;
+  cursor: pointer;
   flex-shrink: 0;
   align-self: center;
   white-space: nowrap;
 }
 .row-detail:hover { color: var(--c-brand); }
+.row-detail:active { transform: scale(0.97); }
 
 .refuse-note {
   margin: 0 0 18px;
@@ -279,5 +315,100 @@ async function cancel() {
   .head h1 { font-size: 17px; }
   .row { grid-template-columns: 20px 1fr; padding: 10px 12px; }
   .row-detail { grid-column: 2 / 3; align-self: flex-start; margin-top: 2px; }
+}
+
+/* ───── 약관 전문 시트 (consent 위에 풀스크린 오버레이) ───── */
+.legal-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 26, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9000;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.legal-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  background: var(--bg-elevated);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(10, 14, 26, 0.25);
+}
+.legal-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.legal-sheet-head h2 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.legal-sheet-close {
+  width: 32px; height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--bg-mute);
+  color: var(--c-text-600);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.legal-sheet-close:hover { background: var(--border-default); }
+.legal-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* 약관 컴포넌트 안의 .legal-page 패딩 보정 — 시트 안에선 모달 패딩만 */
+.legal-sheet-body :deep(.legal-page) {
+  min-height: auto;
+  padding: 20px 22px 32px;
+  background: transparent;
+}
+.legal-sheet-body :deep(.legal-container) {
+  max-width: 100%;
+}
+
+/* 시트 인/아웃 트랜지션 */
+.legal-sheet-enter-active,
+.legal-sheet-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.legal-sheet-enter-active .legal-sheet,
+.legal-sheet-leave-active .legal-sheet {
+  transition: transform 0.22s ease;
+}
+.legal-sheet-enter-from,
+.legal-sheet-leave-to {
+  opacity: 0;
+}
+.legal-sheet-enter-from .legal-sheet,
+.legal-sheet-leave-to .legal-sheet {
+  transform: translateY(20px);
+}
+
+@media (max-width: 480px) {
+  .legal-sheet-overlay { padding: 0; }
+  .legal-sheet { border-radius: 0; height: 100%; }
+  .legal-sheet-head { padding: 12px 14px; padding-top: calc(12px + env(safe-area-inset-top)); }
 }
 </style>

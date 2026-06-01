@@ -2603,11 +2603,12 @@ export default {
   font-size: 13px;
   font-weight: 500;
   color: var(--c-text-600);
-  line-height: 1.4;
+  line-height: 1.5;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* 전문 표시 — 줄바꿈 허용, 한국어 단어 보존 */
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .pc-arg-card .arg-footer {
