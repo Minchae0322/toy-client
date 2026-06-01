@@ -43,7 +43,7 @@
 - **날짜 유틸**: `date-fns 4.x`
 - **주요 디렉토리**:
   - `src/views/` — 라우트 단위 페이지
-    - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView` 등
+    - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView`, `ConsentView` 등
     - 서브폴더:
       - `admin/` — `CollectionAdminView`
       - `battle/` — `BattleListView`, `BattleDetailView`, `BattleCreateView`
@@ -55,7 +55,7 @@
     - `feed/` (+ `detail/` 서브폴더), `battle/` (+ `create/`, `detail/` 서브폴더), `collection/`, `identity/`, `chat/` (+ `detail/` 서브폴더), `notification/`, `product/` (+ `create/`, `detail/` 서브폴더)
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
-    - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용
+    - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용. 공유 링크는 내부적으로 `buildShareUrl()` (`src/config/env.js`)을 통해 `yogurtte.com` 공개 도메인으로 정규화됨 — 직접 `window.location` 사용 금지
     - **`common/CategorySelectModal.vue`** — 카테고리 탐색 모달. `type` prop으로 도메인 구분(BATTLE 등). 카테고리 선택 UI 직접 구현 금지, 이 컴포넌트 재사용
     - **`common/ReportModal.vue`** — 신고하기 모달 (`<Teleport to="body">`). 피드·배틀·댓글 등 콘텐츠 신고 UI 직접 구현 금지, 이 컴포넌트 재사용
     - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 **가로 스크롤 한 줄** — 히어로 아래 밀착 배치), `DashboardBattles.vue` (요거픽 매거진 레이아웃), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
@@ -75,9 +75,10 @@
     - `useProduct`, `useCategoryCache`, `useUserBlock`, `useConfirmDialog`, `useLoginPrompt`, `useExpToast`
     - `useChatDetailMode` — 모바일 채팅 디테일 진입 시 전역 헤더 숨기기용 모듈 스코프 공유 상태 (`isChatDetailOpen`). `App.vue`와 `ChatApp.vue`에서 같이 사용
     - `useNotificationPanelMode` — 알림 패널 열림 시 모바일 FAB(글쓰기) 겹침 방지용 모듈 스코프 공유 상태 (`isNotificationPanelOpen`). `NotificationDropdown.vue`와 `BottomNavigation.vue`에서 사용
+    - `useConsentGate` — 개인정보 처리방침 동의 게이트. 로그인/OAuth 콜백/토큰 재발급 응답의 `consentRequired` 플래그가 `true`면 `/consent` 화면으로 라우팅. `setPendingRedirect` / `consumePendingRedirect`로 동의 완료 후 원래 목적지 복원
   - `src/router/` — 라우터 설정 + `guards/authGuard.js`
   - `src/capacitor/` — Capacitor 네이티브 브릿지 코드
-  - `src/config/` — 환경 설정 (`env.js`, `ads.js`)
+  - `src/config/` — 환경 설정 (`env.js`, `ads.js`). `env.js`는 MSA 서비스 URL(`API_URLS`), 환경 식별자(`ENV`), 공유 URL 빌더(`buildShareUrl`, `PUBLIC_WEB_URL`) 중앙 관리. 공유 링크 생성 시 반드시 `buildShareUrl()` 사용
   - `src/data/` — mock 데이터 (`levelSystemData.js`)
   - `src/utils/` — 헬퍼 (`auth.js`, `categoryIcon.js`, `collectionIcons.js`, `chatUtils.js`, `youtubeEmbed.js`, `defaultAvatar.js`)
   - `src/assets/` — 정적 자산 (폰트 등)
@@ -164,6 +165,11 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **개인정보처리방침 동의 게이트**: `useConsentGate.js` 신설 + `ConsentView.vue` 추가 + `/consent` 라우트. 로그인·OAuth·토큰 재발급 응답에서 `consentRequired: true` 수신 시 `interceptors.js`가 자동으로 `/consent`로 라우팅. 동의 완료 후 원래 목적지로 복원 (`feat(auth)`)
+- **개인정보처리방침 + 이용약관 v1.0**: `PrivacyPolicyView.vue`, `TermsOfServiceView.vue` 전면 갱신 — 시행일 2026-06-01 (`feat(legal)`)
+- **공유 링크 공개 도메인 정규화**: `ShareModal.vue` + `src/config/env.js` 신설 — 공유 URL을 `yogurtte.com` 도메인 기준으로 생성. `VITE_PUBLIC_WEB_URL` env var 또는 기본값 사용. 공유 링크 생성 시 `buildShareUrl()` 직접 호출 가능 (`fix(share)`)
+- **이벤트 배틀(id=21) 인스타 ID 입력 모달**: `AddProductModal.vue` — 이벤트 배틀 전용 인스타 ID 입력 블록을 모달 상단 단일 영역으로 통합. `BattleService.js` `addBattleItems` 매퍼에 `eventId` 필드 추가 (`feat(battle)`)
+- **ProductCard 랭크 표기 개선**: `ProductCard.vue`, `HotBattleSection.vue` — '01' → '1위' 형식 + 폰트 크기 조정 (`feat(battle)`)
 - **버전 1.1.5**: iOS 빌드 19, Android versionCode 16 (`chore`)
 - **배틀 아이템 16개 초과 더보기 토글**: `BattleDetailView.vue` — pc-grid가 상위 16개(`displayedItems`) 기준 렌더, 17개 이상이면 '아이템 N개 더 보기' / '접기' 토글 노출. `sortedItems`는 그대로 — 통계/PICK 한마디 정합성 유지 (`feat(battle)`)
 - **KeepAlive 전면 제거**: `App.vue` — `<KeepAlive>` 제거, 뷰 진입 시 항상 fresh fetch. `DashboardBattles`, `DashboardRanking`, `DashboardView`의 `defineOptions` 관련 KeepAlive 코드도 정리 (`refactor`)
