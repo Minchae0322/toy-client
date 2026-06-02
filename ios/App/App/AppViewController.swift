@@ -19,21 +19,43 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
     private let indicatorSize: CGFloat = 44
     private let indicatorHiddenX: CGFloat = -56
 
+    // 스와이프 백 시 webView 뒤에 깔아 '이전 화면'을 실제로 보여주는 스냅샷 레이어.
+    // webView 가 오른쪽으로 밀리면 이 뷰가 좌측에서 드러나 네이티브 push/pop 느낌을 낸다.
+    private var previousPageSnapshotView: UIImageView?
+    // backForwardList 깊이(backList.count)별 페이지 스냅샷 캐시
+    private var pageSnapshots: [Int: UIImage] = [:]
+    private let maxSnapshotCache = 12
+    // 같은 webView 의 url KVO 를 등록했는지 추적 (deinit 안전 제거용)
+    private var isObservingURL = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyAdaptiveBackground()
         // 네이티브 WKWebView 엣지 제스처는 비활성. 커스텀 pan 하나가 chevron + 페이지 슬라이드 + goBack 까지 단독 처리.
         // 둘 다 켜면 같은 스와이프에 둘 다 commit 되어 두 페이지 뒤로 점프(검은 화면 / "이상한 화면으로 순간이동")가 발생함.
+        // webView 가 밀릴 때 좌측에 드러나는 영역은 previousPageSnapshotView(이전 페이지 캡처)가 채운다 — 검정 배경 노출 방지.
         self.webView?.allowsBackForwardNavigationGestures = false
+        setupPreviousPageSnapshotView()
         installWiderBackSwipeGesture()
         setupSwipeIndicator()
         setupThemeBridge()
         hideKeyboardAccessoryBar()
         observeKeyboardForChatInput()
+        observeNavigationForSnapshots()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // 초기 진입(홈 등) 페이지도 스냅샷으로 확보 — 첫 뒤로가기 대상이 될 수 있음
+        scheduleSnapshotCapture()
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
+        if isObservingURL {
+            webView?.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
+        }
+        NSObject.cancelPreviousPerformRequests(withTarget: self)
     }
 
     // 채팅 입력창을 키보드 위에 붙이기 위해 키보드 높이를 CSS 변수(--chat-kb-h)로 푸시.
@@ -202,10 +224,12 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
         switch gesture.state {
         case .began:
             swipeStartLocation = gesture.location(in: view)
+            preparePreviousSnapshotForSwipe()
 
         case .changed:
             updateSwipeIndicator(translation: translation)
             updateWebViewOffset(translation: translation)
+            updatePreviousSnapshotParallax(translation: translation)
 
         case .ended, .cancelled:
             let isFromLeftEdge = swipeStartLocation.x <= backSwipeEdgeWidth
@@ -251,13 +275,17 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
         animateIndicatorOut(success: true, completion: nil)
         let width = view.bounds.width
         UIView.animate(withDuration: 0.22, delay: 0, options: [.curveEaseOut], animations: {
+            // webView 는 우측 밖으로, 뒤에 깔린 이전 페이지 스냅샷은 제자리로 들어옴
             webView.transform = CGAffineTransform(translationX: width, y: 0)
+            self.previousPageSnapshotView?.transform = .identity
         }, completion: { _ in
-            // 페이지를 우측으로 완전히 밀어낸 직후 goBack — 새 페이지는 즉시 identity 위치에 들어옴.
-            // 한 runloop 띄워서 transform 리셋 → 잔상/플리커 방지.
+            // 페이지를 우측으로 완전히 밀어낸 직후 goBack — 새(=이전) 페이지는 즉시 identity 위치에 들어옴.
             webView.goBack()
-            DispatchQueue.main.async {
-                webView.transform = .identity
+            webView.transform = .identity
+            // goBack 후 webView 가 이전 페이지를 다시 그릴 때까지 스냅샷을 잠깐 유지해
+            // 흰/검은 플래시를 방지한다. 같은 화면이라 겹쳐 보여도 위화감 없음.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                self.hidePreviousSnapshot()
             }
         })
     }
@@ -265,8 +293,13 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
     private func cancelBack() {
         guard let webView = self.webView else { return }
         animateIndicatorOut(success: false, completion: nil)
+        let startOffset = -view.bounds.width * 0.25
         UIView.animate(withDuration: 0.22, delay: 0, options: [.curveEaseOut], animations: {
             webView.transform = .identity
+            // 스냅샷은 다시 좌측 패럴럭스 시작 위치로 물러남
+            self.previousPageSnapshotView?.transform = CGAffineTransform(translationX: startOffset, y: 0)
+        }, completion: { _ in
+            self.hidePreviousSnapshot()
         })
     }
 
@@ -307,6 +340,104 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
             indicator.frame.origin.x = self.indicatorHiddenX
             completion?()
         })
+    }
+
+    // MARK: - 이전 페이지 스냅샷 (스와이프 백 시 좌측에 실제 이전 화면 표시)
+
+    // webView 바로 아래에 풀스크린 이미지뷰를 깔아둔다. webView 가 우측으로 밀리면
+    // 좌측에서 이 스냅샷이 드러나 '이전 화면이 따라 들어오는' 네이티브 느낌이 난다.
+    private func setupPreviousPageSnapshotView() {
+        guard let webView = self.webView else { return }
+        let iv = UIImageView(frame: view.bounds)
+        iv.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.isUserInteractionEnabled = false
+        iv.isHidden = true
+        iv.backgroundColor = view.backgroundColor
+        view.insertSubview(iv, belowSubview: webView)
+        previousPageSnapshotView = iv
+    }
+
+    // url 변경(풀 내비게이션 + SPA pushState 모두 KVO 발화)을 감지해 현재 페이지를 스냅샷.
+    // Capacitor 의 navigationDelegate 를 건드리지 않으므로 안전하다.
+    private func observeNavigationForSnapshots() {
+        guard let webView = self.webView, !isObservingURL else { return }
+        webView.addObserver(self, forKeyPath: #keyPath(WKWebView.url), options: [.new], context: nil)
+        isObservingURL = true
+    }
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?,
+                              change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == #keyPath(WKWebView.url) {
+            scheduleSnapshotCapture()
+        } else {
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+        }
+    }
+
+    // 렌더가 안정될 시간을 두고(0.35s) 디바운스 캡처
+    private func scheduleSnapshotCapture() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self,
+                                               selector: #selector(captureCurrentPageSnapshot),
+                                               object: nil)
+        perform(#selector(captureCurrentPageSnapshot), with: nil, afterDelay: 0.35)
+    }
+
+    @objc private func captureCurrentPageSnapshot() {
+        guard let webView = self.webView, webView.bounds.width > 0 else { return }
+        // 스와이프로 webView 가 변형된 상태에서는 캡처 금지 (기울어진 화면 저장 방지)
+        guard webView.transform.isIdentity else { return }
+        let depth = webView.backForwardList.backList.count
+        let config = WKSnapshotConfiguration()
+        config.rect = webView.bounds
+        webView.takeSnapshot(with: config) { [weak self] image, _ in
+            guard let self = self, let image = image else { return }
+            self.pageSnapshots[depth] = image
+            self.trimSnapshotCache(currentDepth: depth)
+        }
+    }
+
+    private func trimSnapshotCache(currentDepth: Int) {
+        guard pageSnapshots.count > maxSnapshotCache else { return }
+        for key in pageSnapshots.keys where key < currentDepth - maxSnapshotCache {
+            pageSnapshots.removeValue(forKey: key)
+        }
+    }
+
+    // 스와이프 시작 시 '돌아갈 페이지'(현재 깊이 - 1)의 스냅샷을 webView 뒤에 세팅
+    private func preparePreviousSnapshotForSwipe() {
+        guard let webView = self.webView, let snap = previousPageSnapshotView else { return }
+        let targetDepth = webView.backForwardList.backList.count - 1
+        snap.image = targetDepth >= 0 ? pageSnapshots[targetDepth] : nil
+        // 스냅샷이 없으면 최소한 테마 배경색으로라도 깔아 '검정 플래시'를 막는다
+        snap.backgroundColor = view.backgroundColor
+        snap.frame = view.bounds
+        view.insertSubview(snap, belowSubview: webView)
+        // 네이티브 push/pop 처럼 좌측 -25% 에서 시작
+        snap.transform = CGAffineTransform(translationX: -view.bounds.width * 0.25, y: 0)
+        snap.isHidden = false
+    }
+
+    // 손가락 진행도에 맞춰 이전 페이지가 -25% → 0 으로 따라 들어오는 패럴럭스
+    private func updatePreviousSnapshotParallax(translation: CGPoint) {
+        guard let snap = previousPageSnapshotView else { return }
+        let isFromLeftEdge = swipeStartLocation.x <= backSwipeEdgeWidth
+        let width = view.bounds.width
+        if !isFromLeftEdge || translation.x <= 0 || width <= 0 {
+            snap.transform = CGAffineTransform(translationX: -width * 0.25, y: 0)
+            return
+        }
+        let progress = min(1.0, max(0, translation.x / width))
+        let startOffset = -width * 0.25
+        snap.transform = CGAffineTransform(translationX: startOffset * (1 - progress), y: 0)
+    }
+
+    private func hidePreviousSnapshot() {
+        guard let snap = previousPageSnapshotView else { return }
+        snap.isHidden = true
+        snap.image = nil
+        snap.transform = .identity
     }
 
     // 세로 스크롤 등 WKWebView 자체 제스처와 충돌 안 나도록 동시 인식 허용
