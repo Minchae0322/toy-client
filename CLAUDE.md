@@ -165,6 +165,10 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **배틀 YouTube 탭 자동 클립보드 입력**: `AddProductModal.vue` — YouTube 탭에 "YouTube에서 영상 찾기" 버튼 추가. Capacitor Browser로 `m.youtube.com` 오픈 후 앱 복귀 시(`App.appStateChange` / `window.focus`) 클립보드를 읽어 YouTube URL이면 자동 채움. **네이티브(iOS/Android)에서만 버튼 노출**, 데스크탑/PWA도 `window.focus` 시 동일 시도. `youtubeBrowserOpened` 플래그로 사용자가 명시적으로 열었을 때만 동작 (무관한 클립보드 침범 방지) (`feat(battle)`)
+- **ConsentView 약관 전문 시트화**: `ConsentView.vue` — "전문 보기" 링크가 잘못된 라우트(`/privacy-policy`, `/terms-of-service`)로 새 창 열기 시도하던 버그 수정. `/privacy` / `/terms`로 정정하고, 네이티브에서도 동의 상태 보존되도록 풀스크린 시트(`<Teleport>` + `<Transition>`)로 전환. `PrivacyPolicyView` / `TermsOfServiceView`를 lazy import해 재사용 (`fix`)
+- **배틀 댓글 전문 표시**: `BattleDetailView.vue` — 더보기 후 `.arg-text`에 남아 있던 `white-space: nowrap + ellipsis` 잘림 제거 → `pre-wrap + word-break`로 전문 표시 (`fix(battle)`)
+- **대시보드 PC 사이드바 간격 통일**: `DashboardView.vue` — `main-content`에 `padding-left:1.5rem` 추가, 피드 등 다른 페이지와 좌측 여백 일치 (`fix(dashboard)`)
 - **개인정보처리방침 동의 게이트**: `useConsentGate.js` 신설 + `ConsentView.vue` 추가 + `/consent` 라우트. 로그인·OAuth·토큰 재발급 응답에서 `consentRequired: true` 수신 시 `interceptors.js`가 자동으로 `/consent`로 라우팅. 동의 완료 후 원래 목적지로 복원 (`feat(auth)`)
 - **개인정보처리방침 + 이용약관 v1.0**: `PrivacyPolicyView.vue`, `TermsOfServiceView.vue` 전면 갱신 — 시행일 2026-06-01 (`feat(legal)`)
 - **공유 링크 공개 도메인 정규화**: `ShareModal.vue` + `src/config/env.js` 신설 — 공유 URL을 `yogurtte.com` 도메인 기준으로 생성. `VITE_PUBLIC_WEB_URL` env var 또는 기본값 사용. 공유 링크 생성 시 `buildShareUrl()` 직접 호출 가능 (`fix(share)`)
