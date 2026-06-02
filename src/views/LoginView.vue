@@ -146,13 +146,22 @@ const handleLogin = async (formData) => {
     const response = await authService.login(formData)
     const { accessToken, refreshToken, user, consentRequired } = response.data
     await login({ accessToken, refreshToken }, user)
-    // 약관 동의 필요 — /consent 로 우선 라우팅, 동의 완료 후 redirectPath 로 이동
+
+    // 회원가입 직후 첫 로그인이면 닉네임 설정 온보딩(/welcome)을 1회 거친다.
+    // 가입 시 저장해둔 이메일과 방금 로그인한 이메일이 일치할 때만.
+    const pendingEmail = localStorage.getItem('pending_nickname_setup')
+    const needsNicknameSetup = !!pendingEmail && pendingEmail === formData.email
+    const finalDest = needsNicknameSetup
+      ? `/welcome?redirect=${encodeURIComponent(redirectPath.value)}`
+      : redirectPath.value
+
+    // 약관 동의 필요 — /consent 로 우선 라우팅, 동의 완료 후 목적지(/welcome 또는 redirectPath)로 이동
     if (consentRequired === true) {
       const { useConsentGate } = await import('@/composables/useConsentGate.js')
-      useConsentGate().setPendingRedirect(redirectPath.value)
+      useConsentGate().setPendingRedirect(finalDest)
       router.push('/consent')
     } else {
-      router.push(redirectPath.value)
+      router.push(finalDest)
     }
   } catch (error) {
     const { code, text } = classifyEmailLoginError(error)
@@ -168,6 +177,8 @@ const handleRegister = async (formData) => {
   registerError.value = ''
   try {
     await authService.signup(formData)
+    // 첫 로그인 시 닉네임 설정 온보딩(/welcome)을 띄우기 위해 가입 이메일을 표시해둔다.
+    try { localStorage.setItem('pending_nickname_setup', formData.email) } catch {}
     // 회원가입 성공 알림
     await open({
       type: 'alert',

@@ -7,6 +7,7 @@ import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import LoginView from '@/views/LoginView.vue'
 import OAuthCallback from '@/views/OAuth2Callback.vue'
 import ConsentView from '@/views/ConsentView.vue'
+import WelcomeView from '@/views/WelcomeView.vue'
 import CategoryAdminView from '@/views/CategoryAdminView.vue'
 
 // Chat Views import
@@ -297,6 +298,13 @@ const routes = [
     // 토큰은 발급된 상태(로그인 직후) — 미동의 사용자만 보는 화면이라
     // requiresAuth 는 켜되 사용자가 직접 진입은 막지 않음 (가드는 별도 처리 안 함)
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/welcome',
+    name: 'Welcome',
+    component: WelcomeView,
+    // 회원가입 직후 첫 로그인 시 1회 노출되는 닉네임 설정 온보딩 (건너뛰기 가능)
+    meta: { requiresAuth: true, title: '닉네임 설정' }
   },
   {
     path: '/sell/step2',
