@@ -43,7 +43,7 @@
 - **날짜 유틸**: `date-fns 4.x`
 - **주요 디렉토리**:
   - `src/views/` — 라우트 단위 페이지
-    - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView`, `ConsentView` 등
+    - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `WelcomeView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView`, `ConsentView` 등
     - 서브폴더:
       - `admin/` — `CollectionAdminView`
       - `battle/` — `BattleListView`, `BattleDetailView`, `BattleCreateView`
@@ -165,6 +165,8 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **iOS 스와이프 백 이전 페이지 스냅샷 표시**: `AppViewController.swift` — 스와이프 백 제스처 중 좌측에 이전 페이지 스냅샷을 오버레이로 표시하여 검정 화면 완전 제거 (`fix(ios)`)
+- **회원가입 후 닉네임 설정 온보딩(/welcome)**: `WelcomeView.vue` 신설 + `/welcome` 라우트. 회원가입 직후 첫 로그인 시 닉네임 설정 화면 표시 — 아바타 이니셜 미리보기, 2~20자 유효성 검사, "나중에 할게요" 스킵 지원. `LoginView.vue`에서 신규 가입 플래그 감지 후 `/welcome`으로 라우팅 (`feat(auth)`)
 - **배틀 YouTube 탭 자동 클립보드 입력**: `AddProductModal.vue` — YouTube 탭에 "YouTube에서 영상 찾기" 버튼 추가. Capacitor Browser로 `m.youtube.com` 오픈 후 앱 복귀 시(`App.appStateChange` / `window.focus`) 클립보드를 읽어 YouTube URL이면 자동 채움. **네이티브(iOS/Android)에서만 버튼 노출**, 데스크탑/PWA도 `window.focus` 시 동일 시도. `youtubeBrowserOpened` 플래그로 사용자가 명시적으로 열었을 때만 동작 (무관한 클립보드 침범 방지) (`feat(battle)`)
 - **ConsentView 약관 전문 시트화**: `ConsentView.vue` — "전문 보기" 링크가 잘못된 라우트(`/privacy-policy`, `/terms-of-service`)로 새 창 열기 시도하던 버그 수정. `/privacy` / `/terms`로 정정하고, 네이티브에서도 동의 상태 보존되도록 풀스크린 시트(`<Teleport>` + `<Transition>`)로 전환. `PrivacyPolicyView` / `TermsOfServiceView`를 lazy import해 재사용 (`fix`)
 - **배틀 댓글 전문 표시**: `BattleDetailView.vue` — 더보기 후 `.arg-text`에 남아 있던 `white-space: nowrap + ellipsis` 잘림 제거 → `pre-wrap + word-break`로 전문 표시 (`fix(battle)`)
