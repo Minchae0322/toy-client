@@ -900,12 +900,19 @@ export default {
     },
 
     // SWIPE 배틀 진행도(완료/총개수) — getNext size=1 로 가볍게 조회
+    // 미진행 카드가 남아 있고 사용자가 명시적으로 결과를 보러 온 게 아니면 스와이프 화면으로 자동 이동
     async fetchSwipeProgress() {
       try {
         const res = await swipeBattleService.getNext(this.battleId, 1)
         if (res?.success && res.data) {
           this.swipeCompletedCount = res.data.completedCount || 0
           this.swipeTotalCount = res.data.totalCount || 0
+
+          const remaining = this.swipeTotalCount - this.swipeCompletedCount
+          const fromSwipeResult = this.$route.query.from === 'swipe'
+          if (remaining > 0 && this.canVote && !fromSwipeResult) {
+            this.$router.replace({ name: 'SwipeBattle', params: { id: this.battleId } })
+          }
         }
       } catch (e) {
         // 진행도 조회 실패는 silent — FAB 는 카운트 없이 표시

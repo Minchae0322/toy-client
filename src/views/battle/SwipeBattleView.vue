@@ -258,7 +258,8 @@ const busy = ref(false)
 const leavingId = ref(null)
 const leavingVerdict = ref(null)
 
-const deckCards = computed(() => queue.value.slice(0, 3))
+// 한 번에 한 장씩만 — 뒷 카드 peek 없이 깔끔하게
+const deckCards = computed(() => queue.value.slice(0, 1))
 const allDone = computed(() => {
   if (initialLoading.value) return false
   if (queue.value.length > 0) return false
@@ -533,11 +534,14 @@ function onPointerCancel() {
 }
 
 function cardStyle(idx, card) {
+  // 톱 카드(idx=0)가 항상 위로 — z-index 역순 부여 (뒤 카드일수록 낮게)
+  const zIndex = 10 - idx
   if (idx === 0) {
-    if (leavingId.value === card.id) return {}
+    if (leavingId.value === card.id) return { zIndex }
     const { dx, dy } = drag.value
     const rot = (dx / 16).toFixed(2)
     return {
+      zIndex,
       transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`,
       transition: drag.value.active ? 'none' : 'transform 0.24s cubic-bezier(0.2, 0.9, 0.2, 1)'
     }
@@ -545,6 +549,7 @@ function cardStyle(idx, card) {
   const scale = 1 - idx * 0.04
   const offsetY = idx * 10
   return {
+    zIndex,
     transform: `translateY(${offsetY}px) scale(${scale})`,
     opacity: idx === 2 ? 0.55 : 0.85
   }
@@ -593,9 +598,9 @@ function goBack() {
   if (window.history.length > 1) router.back()
   else router.push({ name: 'BattleList' })
 }
-// 결과(순위) = BattleDetail 페이지에서 랭킹 + 댓글까지 보여주는 통합 페이지
+// 결과(순위) = BattleDetail 페이지. 미진행 카드가 남아 있어도 결과 화면이 보이도록 from=swipe 플래그
 function goResult() {
-  router.push({ name: 'BattleDetail', params: { id: battleId.value } })
+  router.push({ name: 'BattleDetail', params: { id: battleId.value }, query: { from: 'swipe' } })
 }
 
 // ───────── 내 아이템 추가 ─────────

@@ -1,4 +1,5 @@
 <template>
+  <Teleport to="body">
   <nav class="bottom-nav">
     <!-- 플로팅 등록 버튼 (알약 위 우측) — 알림 패널 열려 있을 땐 가림 -->
     <div v-if="!isMoreMenuOpen && !isOnCarrier && !isNotificationPanelOpen" class="fab-wrap">
@@ -176,6 +177,7 @@
     <!-- 의견 보내기 모달 -->
     <FeedbackModal :visible="showFeedback" @close="showFeedback = false" />
   </nav>
+  </Teleport>
 </template>
 
 <script setup>
