@@ -196,17 +196,17 @@
         @submit-youtube="onAddYoutubeItem"
       />
 
-      <!-- 액션 — PICK 좌, PICK ×3 중앙, PASS 우 (스와이프 방향과 일관) -->
+      <!-- 액션 — PASS 좌, PICK ×3 중앙, PICK 우 (Tinder 표준과 일치) -->
       <div class="actions">
         <button
-          class="act-btn act-pick"
+          class="act-btn act-pass"
           :disabled="busy"
-          @click="actNow('PICK')"
+          @click="actNow('PASS')"
         >
           <span class="act-circle">
-            <Heart :size="20" :stroke-width="2.6" />
+            <X :size="20" :stroke-width="2.8" />
           </span>
-          <span class="act-label">PICK</span>
+          <span class="act-label">PASS</span>
           <span class="act-hint">← 왼쪽</span>
         </button>
         <button
@@ -221,14 +221,14 @@
           <span class="act-hint">↑ 위로</span>
         </button>
         <button
-          class="act-btn act-pass"
+          class="act-btn act-pick"
           :disabled="busy"
-          @click="actNow('PASS')"
+          @click="actNow('PICK')"
         >
           <span class="act-circle">
-            <X :size="20" :stroke-width="2.8" />
+            <Heart :size="20" :stroke-width="2.6" />
           </span>
-          <span class="act-label">PASS</span>
+          <span class="act-label">PICK</span>
           <span class="act-hint">오른쪽 →</span>
         </button>
       </div>
@@ -266,8 +266,8 @@ const restartMode = ref(false)
 const leavingId = ref(null)
 const leavingVerdict = ref(null)
 
-// 한 번에 한 장씩만 — 뒷 카드 peek 없이 깔끔하게
-const deckCards = computed(() => queue.value.slice(0, 1))
+// 톱 카드 + 다음 한 장 peek — 넘길 때 다음 아이템이 살짝 비쳐 보이도록
+const deckCards = computed(() => queue.value.slice(0, 2))
 const allDone = computed(() => {
   if (initialLoading.value) return false
   if (queue.value.length > 0) return false
@@ -531,11 +531,11 @@ function onPointerUp(e) {
 
   if (dy <= TOP_THRESHOLD_Y && Math.abs(dy) > Math.abs(dx)) {
     actNow('STRONG_PICK')
-  } else if (dx <= -SIDE_THRESHOLD_X) {
-    // 왼쪽으로 스와이프 = PICK
-    actNow('PICK')
   } else if (dx >= SIDE_THRESHOLD_X) {
-    // 오른쪽으로 스와이프 = PASS
+    // 오른쪽으로 스와이프 = PICK (Tinder 표준)
+    actNow('PICK')
+  } else if (dx <= -SIDE_THRESHOLD_X) {
+    // 왼쪽으로 스와이프 = PASS (Tinder 표준)
     actNow('PASS')
   }
   drag.value.dx = 0
@@ -583,16 +583,16 @@ function stampOpacity(verdict) {
     return Math.min(1, Math.abs(dy) / 120)
   }
   if (verdict === 'PICK') {
-    // 왼쪽으로 스와이프 = PICK (dx 음수)
-    if (dx >= 0) return 0
-    if (Math.abs(dy) > Math.abs(dx) && dy < 0) return 0
-    return Math.min(1, Math.abs(dx) / 120)
-  }
-  if (verdict === 'PASS') {
-    // 오른쪽으로 스와이프 = PASS (dx 양수)
+    // 오른쪽으로 스와이프 = PICK (Tinder 표준, dx 양수)
     if (dx <= 0) return 0
     if (Math.abs(dy) > Math.abs(dx) && dy < 0) return 0
     return Math.min(1, dx / 120)
+  }
+  if (verdict === 'PASS') {
+    // 왼쪽으로 스와이프 = PASS (Tinder 표준, dx 음수)
+    if (dx >= 0) return 0
+    if (Math.abs(dy) > Math.abs(dx) && dy < 0) return 0
+    return Math.min(1, Math.abs(dx) / 120)
   }
   return 0
 }
@@ -602,10 +602,10 @@ function stampTransform(verdict) {
   const o = stampOpacity(verdict)
   const scale = 0.8 + 0.4 * o // 0.8 ~ 1.2
   if (verdict === 'STRONG_PICK') return `translateX(-50%) rotate(-4deg) scale(${scale})`
-  // PICK = 좌측 스와이프 → 좌측 표시, 좌향 기울기
-  if (verdict === 'PICK') return `rotate(-10deg) scale(${scale})`
-  // PASS = 우측 스와이프 → 우측 표시, 우향 기울기
-  if (verdict === 'PASS') return `rotate(10deg) scale(${scale})`
+  // PICK = 우측 스와이프 → 우측 표시, 우향 기울기
+  if (verdict === 'PICK') return `rotate(10deg) scale(${scale})`
+  // PASS = 좌측 스와이프 → 좌측 표시, 좌향 기울기
+  if (verdict === 'PASS') return `rotate(-10deg) scale(${scale})`
   return ''
 }
 
@@ -1254,10 +1254,10 @@ onBeforeUnmount(() => {})
     0 14px 32px rgba(245, 158, 11, 0.5),
     0 2px 6px rgba(180, 83, 9, 0.4);
 }
-/* 왼쪽으로 스와이프 = PICK → 좌측에 표시 */
+/* 오른쪽으로 스와이프 = PICK → 우측에 표시 (Tinder 표준) */
 .stamp-pick {
   top: 50%;
-  left: 22px;
+  right: 22px;
   margin-top: -26px;
   background: #10B981;
   box-shadow:
@@ -1265,10 +1265,10 @@ onBeforeUnmount(() => {})
     0 14px 32px rgba(16, 185, 129, 0.5),
     0 2px 6px rgba(4, 120, 87, 0.4);
 }
-/* 오른쪽으로 스와이프 = PASS → 우측에 표시 */
+/* 왼쪽으로 스와이프 = PASS → 좌측에 표시 (Tinder 표준) */
 .stamp-pass {
   top: 50%;
-  right: 22px;
+  left: 22px;
   margin-top: -26px;
   background: #EF4444;
   box-shadow:
@@ -1283,12 +1283,12 @@ onBeforeUnmount(() => {})
 .card.leaving-pick { animation: leavePick 0.32s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
 .card.leaving-strong_pick { animation: leaveStrong 0.36s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
 @keyframes leavePass {
-  /* PASS = 우측 스와이프 → 오른쪽으로 사라짐 */
-  to { transform: translateX(180%) rotate(28deg); opacity: 0; }
+  /* PASS = 좌측 스와이프 → 왼쪽으로 사라짐 (Tinder 표준) */
+  to { transform: translateX(-180%) rotate(-28deg); opacity: 0; }
 }
 @keyframes leavePick {
-  /* PICK = 좌측 스와이프 → 왼쪽으로 사라짐 */
-  to { transform: translateX(-180%) rotate(-28deg); opacity: 0; }
+  /* PICK = 우측 스와이프 → 오른쪽으로 사라짐 (Tinder 표준) */
+  to { transform: translateX(180%) rotate(28deg); opacity: 0; }
 }
 @keyframes leaveStrong {
   to { transform: translateY(-180%) rotate(0) scale(0.7); opacity: 0; }
