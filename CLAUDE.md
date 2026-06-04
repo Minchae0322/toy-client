@@ -58,8 +58,11 @@
     - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용. 공유 링크는 내부적으로 `buildShareUrl()` (`src/config/env.js`)을 통해 `yogurtte.com` 공개 도메인으로 정규화됨 — 직접 `window.location` 사용 금지
     - **`common/CategorySelectModal.vue`** — 카테고리 탐색 모달. `type` prop으로 도메인 구분(BATTLE 등). 카테고리 선택 UI 직접 구현 금지, 이 컴포넌트 재사용
     - **`common/ReportModal.vue`** — 신고하기 모달 (`<Teleport to="body">`). 피드·배틀·댓글 등 콘텐츠 신고 UI 직접 구현 금지, 이 컴포넌트 재사용
+    - **`common/BottomNavigation.vue`** — 전역 하단 네비게이션 바 (피드·배틀·캐꾸·핫아템·마이). 실제로 대부분 뷰가 이 경로로 import. `MZLifestyle/BottomNavigation.vue`는 레거시로 `HomeView.vue`에서만 사용 중 — 새 뷰에서는 `common/` 경로 사용
+    - **`common/FeedbackModal.vue`** — 익명 의견·버그 제보 모달 (`<Teleport to="body">`). `BottomNavigation`·`AppSidebar`·`DashboardQuickNav` 내부에 내장됨
+    - **`common/AdSlot.vue`** — Google AdSense 슬롯 래퍼. `BottomNavigation` 하단에 배치
     - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 **가로 스크롤 한 줄** — 히어로 아래 밀착 배치), `DashboardBattles.vue` (요거픽 매거진 레이아웃), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
-    - `MZLifestyle/` — `AIMemeGeneratorPromo`, `BottomNavigation`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection`
+    - `MZLifestyle/` — `AIMemeGeneratorPromo`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection` (레거시 `BottomNavigation.vue` 포함 — `HomeView.vue` 전용)
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
     - `AuthService`, `FeedService`, `BattleService`, `ProductService`, `ProductReviewService`, `ChatService`, `NotificationService`, `NotificationSettingService`, `RewardsService`, `CarrierService`, `UserService`, `FeedbackService`, `FileService`, `DashboardService`, `CategoryService`
