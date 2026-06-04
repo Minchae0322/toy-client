@@ -16,12 +16,20 @@
       </div>
     </nav>
 
-    <div v-if="isWeightedVote || showDetails" class="badge-wrapper">
-      <span v-if="showDetails" class="pill category-pill">{{ categoryName }}</span>
-      <span v-if="isWeightedVote" class="pill weighted-pill">
-        <span class="pulse-dot"></span> 순위 투표
+    <div v-if="showDetails" class="badge-wrapper">
+      <span class="pill category-pill">{{ categoryName }}</span>
+      <span v-if="voteTypeInfo" class="pill vote-type-pill" :class="voteTypeInfo.cls">
+        <svg v-if="voteTypeInfo.key === 'SINGLE'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="9 12 11.5 14.5 16 9.5"/>
+        </svg>
+        <span v-else-if="voteTypeInfo.key === 'MULTIPLE'" class="pulse-dot"></span>
+        <svg v-else-if="voteTypeInfo.key === 'SWIPE'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="7.5" y="5.5" width="11" height="14" rx="2" transform="rotate(10 13 12.5)" opacity="0.55"/>
+          <rect x="5" y="5" width="11" height="14" rx="2"/>
+        </svg>
+        {{ voteTypeInfo.label }}
       </span>
-      <span v-if="permissionType && showDetails" class="pill permission-pill">
+      <span v-if="permissionType" class="pill permission-pill">
         <svg class="permission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
@@ -62,19 +70,39 @@
       <UserBadgeInline v-if="primaryBadgeId" :badge-id="primaryBadgeId" size="xs" />
     </div>
 
-    <!-- 접힌 상태: 단일 시간 pill -->
-    <div v-if="!showDetails" class="time-pill">
-      <span class="time-pill-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="9"/>
-          <polyline points="12 7 12 12 15 14"/>
-        </svg>
-      </span>
-      <span class="time-pill-label">남은 시간</span>
-      <span class="time-pill-value">
-        <span class="live-dot" aria-hidden="true"></span>
-        {{ formattedDaysLeft }}
-      </span>
+    <!-- 접힌 상태: 시간 pill + 투표 방식 pill (한 줄) -->
+    <div v-if="!showDetails" class="info-row">
+      <div class="time-pill">
+        <span class="time-pill-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <polyline points="12 7 12 12 15 14"/>
+          </svg>
+        </span>
+        <span class="time-pill-label">남은 시간</span>
+        <span class="time-pill-value">
+          <span class="live-dot" aria-hidden="true"></span>
+          {{ formattedDaysLeft }}
+        </span>
+      </div>
+      <div v-if="voteTypeInfo" class="vote-type-pill-lg" :class="voteTypeInfo.cls">
+        <span class="vote-type-icon">
+          <svg v-if="voteTypeInfo.key === 'SINGLE'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="9 12 11.5 14.5 16 9.5"/>
+          </svg>
+          <svg v-else-if="voteTypeInfo.key === 'MULTIPLE'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="8" y="6" width="8" height="14" rx="1"/>
+            <rect x="1" y="10" width="6" height="10" rx="1"/>
+            <rect x="17" y="13" width="6" height="7" rx="1"/>
+          </svg>
+          <svg v-else-if="voteTypeInfo.key === 'SWIPE'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="7.5" y="5.5" width="11" height="14" rx="2" transform="rotate(10 13 12.5)" opacity="0.55"/>
+            <rect x="5" y="5" width="11" height="14" rx="2"/>
+          </svg>
+        </span>
+        <span class="vote-type-label">투표 방식</span>
+        <span class="vote-type-value">{{ voteTypeInfo.label }}</span>
+      </div>
     </div>
 
     <!-- 펼친 상태: 3-col stats-dashboard (원래 디자인) -->
@@ -223,6 +251,15 @@ const permissionType = computed(() => {
   if (code === 'CREATOR_ONLY' && props.isCreator) return null
   return type
 })
+
+// 배틀 투표 방식 — 항상 뱃지로 표시 (SINGLE / MULTIPLE / SWIPE)
+const voteTypeInfo = computed(() => {
+  const raw = props.battle?.voteType?.title || props.battle?.voteType
+  if (raw === 'SINGLE') return { key: 'SINGLE', label: '1인 1표', cls: 'vote-single' }
+  if (raw === 'MULTIPLE') return { key: 'MULTIPLE', label: '순위 투표', cls: 'vote-multiple' }
+  if (raw === 'SWIPE') return { key: 'SWIPE', label: '스와이프', cls: 'vote-swipe' }
+  return null
+})
 </script>
 
 <style scoped>
@@ -332,9 +369,18 @@ const permissionType = computed(() => {
   color: var(--c-info);
 }
 
-.weighted-pill {
+/* 투표 방식 뱃지 — SINGLE/MULTIPLE/SWIPE 별 색상 (category-pill 와 톤 분리) */
+.vote-type-pill.vote-single {
+  background: var(--c-success-soft);
+  color: var(--c-success);
+}
+.vote-type-pill.vote-multiple {
   background: var(--c-heat-soft);
   color: var(--c-heat);
+}
+.vote-type-pill.vote-swipe {
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .permission-pill {
@@ -519,18 +565,93 @@ const permissionType = computed(() => {
   box-shadow: none;
 }
 
-/* 접힌 상태: 시간 단독 pill */
-.time-pill {
+/* 접힌 상태: 시간 pill + 투표 방식 pill 인라인 (같은 높이) */
+.info-row {
   display: flex;
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px auto 0;
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* 시간 pill */
+.time-pill {
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  width: fit-content;
-  margin: 18px auto 0;
   padding: 9px 18px 9px 9px;
   background: var(--c-info-soft);
   border: 1px solid var(--c-info-soft);
   border-radius: 999px;
 }
+
+/* vote-type-pill-lg — time-pill 와 동일 사이즈/구조 (아이콘 원형 + 라벨 + 값) */
+.vote-type-pill-lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px 9px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.vote-type-pill-lg .vote-type-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.vote-type-pill-lg .vote-type-icon svg {
+  width: 15px;
+  height: 15px;
+}
+.vote-type-pill-lg .vote-type-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-400);
+  letter-spacing: -0.1px;
+}
+.vote-type-pill-lg .vote-type-value {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* 타입별 컬러 */
+.vote-type-pill-lg.vote-single {
+  background: var(--c-success-soft);
+  border-color: var(--c-success-soft);
+}
+.vote-type-pill-lg.vote-single .vote-type-icon {
+  background: var(--c-success-soft);
+  color: var(--c-success);
+}
+.vote-type-pill-lg.vote-single .vote-type-value { color: var(--c-success); }
+
+.vote-type-pill-lg.vote-multiple {
+  background: var(--c-heat-soft);
+  border-color: var(--c-heat-soft);
+}
+.vote-type-pill-lg.vote-multiple .vote-type-icon {
+  background: var(--c-heat-soft);
+  color: var(--c-heat);
+}
+.vote-type-pill-lg.vote-multiple .vote-type-value { color: var(--c-heat); }
+
+.vote-type-pill-lg.vote-swipe {
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand-soft);
+}
+.vote-type-pill-lg.vote-swipe .vote-type-icon {
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+}
+.vote-type-pill-lg.vote-swipe .vote-type-value { color: var(--c-brand); }
 
 .time-pill-icon {
   display: inline-flex;
@@ -883,8 +1004,11 @@ const permissionType = computed(() => {
   }
 
   /* 접힌 상태 시간 pill: 모바일 사이즈 다운 */
-  .time-pill {
+  .info-row {
     margin-top: 14px;
+    gap: 6px;
+  }
+  .time-pill {
     gap: 8px;
     padding: 7px 14px 7px 7px;
   }
@@ -906,6 +1030,26 @@ const permissionType = computed(() => {
   .time-pill .live-dot {
     width: 5px;
     height: 5px;
+  }
+
+  /* vote-type-pill-lg 도 같은 비율로 축소 */
+  .vote-type-pill-lg {
+    gap: 8px;
+    padding: 7px 14px 7px 7px;
+  }
+  .vote-type-pill-lg .vote-type-icon {
+    width: 26px;
+    height: 26px;
+  }
+  .vote-type-pill-lg .vote-type-icon svg {
+    width: 13px;
+    height: 13px;
+  }
+  .vote-type-pill-lg .vote-type-label {
+    font-size: 11px;
+  }
+  .vote-type-pill-lg .vote-type-value {
+    font-size: 14px;
   }
 }
 

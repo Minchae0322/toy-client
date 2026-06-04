@@ -43,7 +43,22 @@
 
       <!-- Vote Actions -->
       <div class="vote-actions" :class="{ 'is-ended': !canVote }">
-        <template v-if="isWeightedVote">
+        <!-- SWIPE 배틀 — PICK 지수 (rankingScore) 카드 -->
+        <template v-if="isSwipeBattle">
+          <div class="pick-score">
+            <span class="pick-score-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M13 2L4.09 12.97c-.34.41-.05 1.03.48 1.03H10v8l9-13H13V2z"/>
+              </svg>
+            </span>
+            <div class="pick-score-meta">
+              <span class="pick-score-label">PICK 지수</span>
+              <span class="pick-score-sub">스와이프 점수 합산</span>
+            </div>
+            <span class="pick-score-value">{{ rankingScore }}</span>
+          </div>
+        </template>
+        <template v-else-if="isWeightedVote">
           <div v-if="canVote" class="vote-hint">
             <span>탭하여 순위 투표</span>
           </div>
@@ -147,6 +162,10 @@ const props = defineProps({
     type: Boolean,
     required: true
   },
+  isSwipeBattle: {
+    type: Boolean,
+    default: false
+  },
   canVote: {
     type: Boolean,
     required: true
@@ -174,6 +193,20 @@ const voteFillWidth = computed(() => {
   const v = Number(props.percentage)
   if (!Number.isFinite(v)) return '0%'
   return Math.max(0, Math.min(100, v)) + '%'
+})
+
+// SWIPE 배틀 — 서버가 내려주는 rankingScore 하나로 표시
+const rankingScore = computed(() => {
+  const raw = props.item.rankingScore
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : 0
+})
+
+// SWIPE 점수 바 채움 — percentage(상대 비율) 우선, 없으면 score 자체 클램프
+const swipeFillWidth = computed(() => {
+  const p = Number(props.percentage)
+  if (Number.isFinite(p) && p > 0) return Math.max(0, Math.min(100, p)) + '%'
+  return Math.min(100, rankingScore.value) + '%'
 })
 
 const productStatus = computed(() => {
@@ -808,6 +841,81 @@ defineExpose({ setCommentSubmitting })
   font-variant-numeric: tabular-nums;
   opacity: 0.92;
   letter-spacing: -0.2px;
+}
+
+/* ───── SWIPE 배틀 — PICK 지수 카드 (아이콘 + 라벨/서브 + 큰 점수) ───── */
+.pick-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.pick-score:hover {
+  border-color: color-mix(in srgb, var(--c-brand) 32%, var(--border-default));
+  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.08);
+}
+.pick-score-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.pick-score-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.pick-score-meta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+.pick-score-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.pick-score-sub {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--c-text-400);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.pick-score-value {
+  flex-shrink: 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--c-brand);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+@media (max-width: 480px) {
+  .pick-score {
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 10px;
+  }
+  .pick-score-icon { width: 30px; height: 30px; }
+  .pick-score-icon svg { width: 15px; height: 15px; }
+  .pick-score-label { font-size: 11px; }
+  .pick-score-sub { font-size: 9.5px; }
+  .pick-score-value { font-size: 22px; }
 }
 
 /* 가중치 투표 모드용 투표율 바 */

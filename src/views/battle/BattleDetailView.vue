@@ -27,9 +27,9 @@
       />
 
       <main class="content-wrapper">
-        <!-- Vote Selection Bar -->
+        <!-- Vote Selection Bar (SWIPE 아닐 때만) -->
         <VoteSelectionBar
-            v-if="canVote && hasSelectedItems"
+            v-if="!isSwipeBattle && canVote && hasSelectedItems"
             :selected-ranks="selectedRanks"
             :is-weighted-vote="isWeightedVote"
             :sorted-items="sortedItems"
@@ -50,6 +50,7 @@
               :display-rank="item.rank || (index + 1)"
               :product-rank="getProductRank(item.id)"
               :is-weighted-vote="isWeightedVote"
+              :is-swipe-battle="isSwipeBattle"
               :can-vote="canVote"
               :submitting="submitting"
               :percentage="getPercentage(item)"
@@ -292,6 +293,23 @@
         </span>
       </button>
 
+      <!-- 스와이프 배틀 — 우측 하단 FAB (관리 위 또는 같은 자리) -->
+      <Teleport to="body">
+        <router-link
+            v-if="isSwipeBattle && canVote && battle"
+            :to="{ name: 'SwipeBattle', params: { id: battleId } }"
+            class="swipe-fab"
+            :class="{ 'has-creator-fab': isCreator || isAdmin }"
+        >
+          <span class="swipe-fab-pulse" aria-hidden="true"></span>
+          <Sparkles :size="16" :stroke-width="2.6" />
+          <span class="swipe-fab-title">{{ swipeAllDone ? '다시 픽하기' : '픽하기' }}</span>
+          <span v-if="swipeTotalCount > 0 && !swipeAllDone" class="swipe-fab-count">
+            {{ swipeRemaining }}/{{ swipeTotalCount }}
+          </span>
+        </router-link>
+      </Teleport>
+
       <!-- Add Product Modal -->
       <AddProductModal
           v-if="showAddModal"
@@ -455,6 +473,7 @@
 
 <script>
 import { battleService } from '@/services/BattleService.js'
+import { swipeBattleService } from '@/services/SwipeBattleService.js'
 import { getUserId, getCurrentUser } from '@/utils/auth.js'
 import { normalizeYoutubeEmbedUrl } from '@/utils/youtubeEmbed.js'
 import { Capacitor } from '@capacitor/core'
@@ -469,7 +488,7 @@ import ProductCard from '@/components/battle/detail/ProductCard.vue'
 import AddProductModal from '@/components/battle/detail/AddProductModal.vue'
 import BattleCommentModal from '@/components/battle/detail/BattleCommentModal.vue'
 import BattleCreatorPanel from '@/components/battle/detail/BattleCreatorPanel.vue'
-import { Trophy, Crown, Award, Medal, Heart } from 'lucide-vue-next'
+import { Trophy, Crown, Award, Medal, Heart, Layers, ChevronRight, Sparkles } from 'lucide-vue-next'
 
 export default {
   name: 'BattleDetail',
@@ -532,13 +551,26 @@ export default {
       confettiPieces: [],
       // 아이템 점진적 노출 — 16개 초과면 '더 보기'로 펼침
       itemsExpanded: false,
-      itemsDisplayLimit: 16
+      itemsDisplayLimit: 16,
+      // 스와이프 배틀 진행도 (FAB 배지에 표시)
+      swipeCompletedCount: 0,
+      swipeTotalCount: 0
     }
   },
   computed: {
     isWeightedVote() {
       const voteType = this.battle?.voteType?.title || this.battle?.voteType
       return voteType === 'MULTIPLE'
+    },
+    isSwipeBattle() {
+      const voteType = this.battle?.voteType?.title || this.battle?.voteType
+      return voteType === 'SWIPE'
+    },
+    swipeRemaining() {
+      return Math.max(0, this.swipeTotalCount - this.swipeCompletedCount)
+    },
+    swipeAllDone() {
+      return this.swipeTotalCount > 0 && this.swipeRemaining === 0
     },
     isCreator() {
       if (!this.battle) return false
@@ -847,11 +879,15 @@ export default {
 
         if (response.success && response.data) {
           this.battle = response.data
+          // SWIPE 배틀도 디테일 페이지는 동일하게 보여줌 (랭킹/댓글 등).
+          // 다만 사용자가 직접 스와이프 하려면 별도 /swipe 경로로 이동
           this.checkUserVote()
           // 종료된 배틀이면 우승자 컨페티 1회 트리거 (세션 가드)
           this.maybeTriggerWinnerConfetti()
           // 전체 PICK 한마디 로드 (getAllComments API 사용)
           this.loadAllComments(true)
+          // SWIPE 배틀이면 진행도(남/총) 동기화 — FAB 배지용
+          if (this.isSwipeBattle) this.fetchSwipeProgress()
         } else {
           throw new Error(response.message || '배틀 정보를 불러올 수 없습니다.')
         }
@@ -860,6 +896,19 @@ export default {
         this.error = err.message || '배틀 정보를 불러오는데 실패했습니다.'
       } finally {
         this.loading = false
+      }
+    },
+
+    // SWIPE 배틀 진행도(완료/총개수) — getNext size=1 로 가볍게 조회
+    async fetchSwipeProgress() {
+      try {
+        const res = await swipeBattleService.getNext(this.battleId, 1)
+        if (res?.success && res.data) {
+          this.swipeCompletedCount = res.data.completedCount || 0
+          this.swipeTotalCount = res.data.totalCount || 0
+        }
+      } catch (e) {
+        // 진행도 조회 실패는 silent — FAB 는 카운트 없이 표시
       }
     },
 
@@ -1624,6 +1673,101 @@ export default {
 .content-wrapper {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* ─────────── 스와이프 배틀 FAB — 골드 톤 (순위 보기 버튼과 동일 컬러 시스템) + 펄스 ─────────── */
+.swipe-fab {
+  position: fixed;
+  right: 16px;
+  /* 바텀네비 바로 위에 붙도록 — 모바일 시인성 우선 */
+  bottom: calc(58px + env(safe-area-inset-bottom));
+  z-index: 200;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 18px;
+  background: #FBBF24;
+  border: none;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #78350F;
+  cursor: pointer;
+  box-shadow:
+    0 4px 12px rgba(251, 191, 36, 0.45),
+    0 12px 26px rgba(245, 158, 11, 0.35);
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.18s ease,
+              background 0.15s ease;
+  animation: swipeFabIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  white-space: nowrap;
+}
+@keyframes swipeFabIn {
+  0% { transform: translateY(12px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.swipe-fab:hover {
+  background: #F59E0B;
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 16px rgba(251, 191, 36, 0.55),
+    0 18px 34px rgba(245, 158, 11, 0.4);
+}
+.swipe-fab:active { transform: scale(0.97); }
+
+/* 펄스 링 — 골드 톤, 시선 유도 무한 반복 */
+.swipe-fab-pulse {
+  position: absolute;
+  inset: -2px;
+  border-radius: 999px;
+  background: #FBBF24;
+  opacity: 0.4;
+  z-index: -1;
+  animation: swipeFabPulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  pointer-events: none;
+}
+@keyframes swipeFabPulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  70% { transform: scale(1.18); opacity: 0; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+
+/* 생성자/관리자 — 관리 FAB(56px 정도) 위로 올림 */
+.swipe-fab.has-creator-fab {
+  bottom: calc(130px + env(safe-area-inset-bottom));
+}
+
+.swipe-fab-title {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: #78350F;
+}
+.swipe-fab-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  background: rgba(120, 53, 15, 0.92);
+  color: #FEF3C7;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  margin-left: 1px;
+}
+
+/* PC — BottomNav 없으므로 화면 하단에 더 가깝게 */
+@media (min-width: 768px) {
+  .swipe-fab {
+    right: 28px;
+    bottom: calc(28px + env(safe-area-inset-bottom));
+    padding: 14px 20px;
+  }
+  .swipe-fab.has-creator-fab {
+    bottom: calc(108px + env(safe-area-inset-bottom));
+  }
+  .swipe-fab-title { font-size: 14.5px; }
 }
 
 /* ============================= */

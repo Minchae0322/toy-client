@@ -370,6 +370,7 @@
 import { computed, ref, watch } from 'vue'
 import { battleService } from '@/services/BattleService.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { isAuthenticated } from '@/utils/auth.js'
 import BattleEditModal from '@/components/battle/detail/BattleEditModal.vue'
 
 const props = defineProps({
@@ -399,7 +400,10 @@ const permissionType = computed(() => {
 
 const supportsApproval = computed(() => permissionType.value === 'PUBLIC_APPROVAL')
 
-const visible = computed(() => (props.isCreator || props.isAdmin) && !!props.battle)
+// 로그인 안 한 경우엔 절대 노출 X (생성자/관리자 판정도 토큰 기반이어야 의미 있음)
+const visible = computed(() =>
+  isAuthenticated() && (props.isCreator || props.isAdmin) && !!props.battle
+)
 
 const roleLabel = computed(() => (props.isCreator ? '생성자' : props.isAdmin ? '관리자' : ''))
 

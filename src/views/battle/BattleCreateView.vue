@@ -149,6 +149,12 @@ const voteTypes = [
     iconType: 'vote-multiple',
     title: '순위 투표 (최대 3표)',
     desc: '1~3개 아이템에 순위를 매겨 투표할 수 있어요'
+  },
+  {
+    value: 'SWIPE',
+    iconType: 'vote-swipe',
+    title: '스와이프 (PPICKK / PICK / PASS)',
+    desc: '한 장씩 넘기며 평가 — 빠르고 재밌어요 (위:PPICKK, 우:PICK, 좌:PASS)'
   }
 ];
 

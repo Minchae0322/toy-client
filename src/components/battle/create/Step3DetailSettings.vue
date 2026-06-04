@@ -55,9 +55,19 @@
                   <rect x="17" y="13" width="6" height="7" rx="1"></rect>
                   <text x="20" y="18" text-anchor="middle" fill="currentColor" stroke="none" font-size="6" font-weight="700">3</text>
                 </svg>
+                <!-- 스와이프: 카드 스택 + 화살표 -->
+                <svg v-else-if="type.iconType === 'vote-swipe'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- 뒤 카드 (살짝 기울어진) -->
+                  <rect x="7.5" y="5.5" width="11" height="14" rx="2" transform="rotate(10 13 12.5)" opacity="0.5"></rect>
+                  <!-- 앞 카드 -->
+                  <rect x="5" y="5" width="11" height="14" rx="2"></rect>
+                  <!-- 좌우 스와이프 화살표 -->
+                  <path d="M20 12h2" />
+                  <path d="M3 12H1" />
+                </svg>
               </div>
               <div class="visual-badge">
-                {{ type.iconType === 'vote-single' ? '1표' : '1~3위' }}
+                {{ type.iconType === 'vote-single' ? '1표' : type.iconType === 'vote-multiple' ? '1~3위' : '스와이프' }}
               </div>
             </div>
             <div class="option-content">
@@ -68,7 +78,7 @@
         </div>
 
         <!-- 점수 계산 설명 -->
-        <div class="score-info" :class="battleForm.voteType === 'MULTIPLE' ? 'multiple' : 'single'">
+        <div class="score-info" :class="battleForm.voteType === 'MULTIPLE' ? 'multiple' : battleForm.voteType === 'SWIPE' ? 'swipe' : 'single'">
           <div class="score-header">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
@@ -82,6 +92,20 @@
               <div class="score-item">
                 <span class="score-badge">1표</span>
                 <span class="score-text">= 1점</span>
+              </div>
+            </template>
+            <template v-else-if="battleForm.voteType === 'SWIPE'">
+              <div class="score-item">
+                <span class="score-badge first">PPICKK</span>
+                <span class="score-text">= 3점</span>
+              </div>
+              <div class="score-item">
+                <span class="score-badge second">PICK</span>
+                <span class="score-text">= 1점</span>
+              </div>
+              <div class="score-item">
+                <span class="score-badge third">PASS</span>
+                <span class="score-text">= 0점</span>
               </div>
             </template>
             <template v-else>
@@ -352,6 +376,11 @@ const descriptionCharCount = computed(() => {
   background: var(--bg-subtle);
 }
 
+.vote-option.selected.vote-swipe {
+  border-color: var(--c-brand);
+  background: var(--c-brand-soft);
+}
+
 .option-radio {
   width: 22px;
   height: 22px;
@@ -372,6 +401,10 @@ const descriptionCharCount = computed(() => {
   border-color: var(--c-warning);
 }
 
+.vote-option.selected.vote-swipe .option-radio {
+  border-color: var(--c-brand);
+}
+
 .radio-dot {
   width: 10px;
   height: 10px;
@@ -386,6 +419,10 @@ const descriptionCharCount = computed(() => {
 
 .vote-option.selected.vote-multiple .radio-dot {
   background: var(--c-warning);
+}
+
+.vote-option.selected.vote-swipe .radio-dot {
+  background: var(--c-brand);
 }
 
 .option-visual {
@@ -411,6 +448,11 @@ const descriptionCharCount = computed(() => {
   color: var(--c-warning);
 }
 
+.option-visual.vote-swipe {
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+}
+
 .vote-option.selected .option-visual.vote-single {
   background: var(--c-info-soft);
   color: var(--c-info);
@@ -419,6 +461,11 @@ const descriptionCharCount = computed(() => {
 .vote-option.selected .option-visual.vote-multiple {
   background: var(--c-warning-soft);
   color: var(--c-bronze);
+}
+
+.vote-option.selected .option-visual.vote-swipe {
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
 }
 
 .visual-icon {

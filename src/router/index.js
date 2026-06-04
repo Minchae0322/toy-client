@@ -210,6 +210,20 @@ const routes = [
     props: true,
     meta: { requiresAuth: false, public: true, title: '배틀 상세', description: '배틀 상세 정보와 투표 현황을 확인하세요.' }
   },
+  {
+    path: '/battles/:id/swipe',
+    name: 'SwipeBattle',
+    component: () => import('@/views/battle/SwipeBattleView.vue'),
+    props: true,
+    meta: { requiresAuth: false, public: true, title: '스와이프 배틀' }
+  },
+  {
+    path: '/battles/:id/swipe/result',
+    name: 'SwipeBattleResult',
+    component: () => import('@/views/battle/SwipeBattleResultView.vue'),
+    props: true,
+    meta: { requiresAuth: false, public: true, title: '스와이프 배틀 결과' }
+  },
 
   // ==================== ⭐ 관리자 페이지 라우트 ====================
   {

@@ -36,12 +36,13 @@ const {isChatDetailOpen} = useChatDetailMode()
 const {resolved: resolvedTheme} = useTheme()
 
 // 테마에 맞춰 네이티브 StatusBar 적용
-// light: 흰 배경 + 검은 아이콘(Style.Light) / dark: #0F1218 배경 + 흰 아이콘(Style.Dark)
+// Capacitor: Style.Dark = 검은 아이콘(라이트 배경용) / Style.Light = 흰 아이콘(다크 배경용)
+// → light 테마: Style.Dark / dark 테마: Style.Light
 async function applyStatusBarTheme() {
   if (!Capacitor.isNativePlatform()) return
   const isDark = resolvedTheme.value === 'dark'
   try {
-    await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light })
+    await StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark })
     await StatusBar.setBackgroundColor({ color: isDark ? '#0F1218' : '#ffffff' })
   } catch {}
   // iOS: 호스트 뷰(웹뷰 뒤에 깔린 native view) 배경을 웹 테마와 일치시킴.
@@ -67,6 +68,9 @@ const isAuthPage = computed(() =>
 )
 
 const isChatRoute = computed(() => route.path.startsWith('/chat'))
+
+// 스와이프 배틀 진행 화면 — 풀스크린 UI 라 글로벌 헤더/푸터 숨김
+const isSwipeRoute = computed(() => /^\/battles\/[^/]+\/swipe/.test(route.path))
 
 // ===== 채팅 미확인 메시지 =====
 const hasUnreadChat = ref(false)
@@ -333,7 +337,7 @@ onUnmounted(() => {
   </transition>
 
   <!-- 헤더 -->
-  <header v-if="!isAuthPage" class="header" :class="{ 'hide-on-mobile-chat-detail': isChatDetailOpen }">
+  <header v-if="!isAuthPage && !isSwipeRoute" class="header" :class="{ 'hide-on-mobile-chat-detail': isChatDetailOpen }">
     <div class="header-content">
       <!-- 로고 -->
       <RouterLink to="/" class="logo">
@@ -436,7 +440,7 @@ onUnmounted(() => {
   </main>
 
   <!-- 푸터 -->
-  <footer v-if="!isAuthPage" class="site-footer" :class="{ 'hide-on-mobile-chat': isChatRoute }">
+  <footer v-if="!isAuthPage && !isSwipeRoute" class="site-footer" :class="{ 'hide-on-mobile-chat': isChatRoute }">
     <div class="footer-inner">
       <div class="footer-top">
         <RouterLink to="/" class="footer-logo">요거뜨</RouterLink>
