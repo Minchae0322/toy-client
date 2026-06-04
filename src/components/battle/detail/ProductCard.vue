@@ -195,8 +195,18 @@ const voteFillWidth = computed(() => {
   return Math.max(0, Math.min(100, v)) + '%'
 })
 
-// SWIPE 배틀 — 서버가 내려주는 rankingScore 하나로 표시
+// SWIPE 배틀 — swipeStats 기반 PICK 지수 (PICK ×3 + PICK ×1)
+// 서버가 score 를 이미 내려주면 그대로, 없으면 client 에서 합산
 const rankingScore = computed(() => {
+  const s = props.item.swipeStats
+  if (s) {
+    const score = Number(s.score)
+    if (Number.isFinite(score)) return score
+    const sp = Number(s.strongPickCount) || 0
+    const p = Number(s.pickCount) || 0
+    return sp * 3 + p
+  }
+  // 폴백: rankingScore 필드
   const raw = props.item.rankingScore
   const n = Number(raw)
   return Number.isFinite(n) ? n : 0

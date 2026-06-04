@@ -75,10 +75,16 @@
       </div>
       <h2>모두 골랐어요!</h2>
       <p>{{ totalCount }}개의 아이템을 평가했어요</p>
-      <button class="primary-btn" @click="goResult">
-        <Trophy :size="16" :stroke-width="2.4" />
-        결과 순위 보기
-      </button>
+      <div class="done-actions">
+        <button class="primary-btn" @click="goResult">
+          <Trophy :size="16" :stroke-width="2.4" />
+          결과 순위 보기
+        </button>
+        <button class="ghost-btn" @click="restartSwipe">
+          <RotateCcw :size="15" :stroke-width="2.4" />
+          다시 스와이프
+        </button>
+      </div>
     </div>
 
     <!-- 메인 -->
@@ -138,7 +144,7 @@
         <div class="stamp-layer" aria-hidden="true">
           <div class="stamp stamp-strong" :style="{ opacity: stampOpacity('STRONG_PICK'), transform: stampTransform('STRONG_PICK') }">
             <Flame :size="26" :stroke-width="2.8" />
-            <span>PPICKK!</span>
+            <span>PICK ×3</span>
           </div>
           <!-- 왼쪽으로 스와이프 = PICK (좌측에 표시) -->
           <div class="stamp stamp-pick" :style="{ opacity: stampOpacity('PICK'), transform: stampTransform('PICK') }">
@@ -190,17 +196,17 @@
         @submit-youtube="onAddYoutubeItem"
       />
 
-      <!-- 액션 — PASS 좌, PPICKK 중앙, PICK 우 (스와이프 방향과 일관) -->
+      <!-- 액션 — PICK 좌, PICK ×3 중앙, PASS 우 (스와이프 방향과 일관) -->
       <div class="actions">
         <button
-          class="act-btn act-pass"
+          class="act-btn act-pick"
           :disabled="busy"
-          @click="actNow('PASS')"
+          @click="actNow('PICK')"
         >
           <span class="act-circle">
-            <X :size="20" :stroke-width="2.8" />
+            <Heart :size="20" :stroke-width="2.6" />
           </span>
-          <span class="act-label">PASS</span>
+          <span class="act-label">PICK</span>
           <span class="act-hint">← 왼쪽</span>
         </button>
         <button
@@ -211,18 +217,18 @@
           <span class="act-circle">
             <Flame :size="22" :stroke-width="2.6" />
           </span>
-          <span class="act-label">PPICKK</span>
+          <span class="act-label">PICK ×3</span>
           <span class="act-hint">↑ 위로</span>
         </button>
         <button
-          class="act-btn act-pick"
+          class="act-btn act-pass"
           :disabled="busy"
-          @click="actNow('PICK')"
+          @click="actNow('PASS')"
         >
           <span class="act-circle">
-            <Heart :size="20" :stroke-width="2.6" />
+            <X :size="20" :stroke-width="2.8" />
           </span>
-          <span class="act-label">PICK</span>
+          <span class="act-label">PASS</span>
           <span class="act-hint">오른쪽 →</span>
         </button>
       </div>
@@ -233,7 +239,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronLeft, Flame, Heart, X, PartyPopper, Trophy, Tag, Clock, Users, Layers, Plus } from 'lucide-vue-next'
+import { ChevronLeft, Flame, Heart, X, PartyPopper, Trophy, Tag, Clock, Users, Layers, Plus, RotateCcw } from 'lucide-vue-next'
 import { battleService } from '@/services/BattleService.js'
 import { swipeBattleService } from '@/services/SwipeBattleService.js'
 import { normalizeYoutubeEmbedUrl } from '@/utils/youtubeEmbed.js'
@@ -255,6 +261,8 @@ const totalCount = ref(0)
 const initialLoading = ref(true)
 const fetchingMore = ref(false)
 const busy = ref(false)
+// 다시 스와이프 세션 — true 면 백엔드 completedCount(누적값)을 화면 진행도로 덮어쓰지 않고 로컬 카운트만 사용
+const restartMode = ref(false)
 const leavingId = ref(null)
 const leavingVerdict = ref(null)
 
@@ -419,7 +427,8 @@ async function loadInitial() {
 async function fetchMoreIfNeeded() {
   if (fetchingMore.value) return
   if (queue.value.length > 3) return
-  if (totalCount.value && completedCount.value >= totalCount.value) return
+  // restartMode 일 땐 백엔드 completedCount === totalCount 라도 카드 폴백을 받으므로 가드 X
+  if (!restartMode.value && totalCount.value && completedCount.value >= totalCount.value) return
   fetchingMore.value = true
   try {
     const res = await swipeBattleService.getNext(battleId.value, 10)
@@ -428,7 +437,10 @@ async function fetchMoreIfNeeded() {
       const known = new Set(queue.value.map(c => c.id))
       const fresh = items.filter(c => !known.has(c.id))
       queue.value.push(...fresh)
-      completedCount.value = res.data.completedCount || completedCount.value
+      // restartMode 에서는 누적 completedCount 가 totalCount 와 같으므로 덮어쓰면 진행도 망가짐
+      if (!restartMode.value) {
+        completedCount.value = res.data.completedCount || completedCount.value
+      }
       totalCount.value = res.data.totalCount || totalCount.value
     }
   } catch (e) {
@@ -453,7 +465,10 @@ async function commitVerdict(item, verdict) {
   swipeBattleService.submit(battleId.value, item.id, verdict)
     .then((res) => {
       if (res?.data) {
-        completedCount.value = res.data.completedCount ?? completedCount.value
+        // restartMode 에서는 백엔드 누적 카운트로 덮어쓰지 않음 — 로컬 세션 진행도 유지
+        if (!restartMode.value) {
+          completedCount.value = res.data.completedCount ?? completedCount.value
+        }
         totalCount.value = res.data.totalCount ?? totalCount.value
       }
     })
@@ -516,11 +531,11 @@ function onPointerUp(e) {
 
   if (dy <= TOP_THRESHOLD_Y && Math.abs(dy) > Math.abs(dx)) {
     actNow('STRONG_PICK')
-  } else if (dx >= SIDE_THRESHOLD_X) {
-    // 오른쪽으로 스와이프 = PICK (버튼도 우측)
-    actNow('PICK')
   } else if (dx <= -SIDE_THRESHOLD_X) {
-    // 왼쪽으로 스와이프 = PASS (버튼도 좌측)
+    // 왼쪽으로 스와이프 = PICK
+    actNow('PICK')
+  } else if (dx >= SIDE_THRESHOLD_X) {
+    // 오른쪽으로 스와이프 = PASS
     actNow('PASS')
   }
   drag.value.dx = 0
@@ -568,16 +583,16 @@ function stampOpacity(verdict) {
     return Math.min(1, Math.abs(dy) / 120)
   }
   if (verdict === 'PICK') {
-    // 오른쪽으로 스와이프 = PICK (dx 양수)
-    if (dx <= 0) return 0
-    if (Math.abs(dy) > Math.abs(dx) && dy < 0) return 0
-    return Math.min(1, dx / 120)
-  }
-  if (verdict === 'PASS') {
-    // 왼쪽으로 스와이프 = PASS (dx 음수)
+    // 왼쪽으로 스와이프 = PICK (dx 음수)
     if (dx >= 0) return 0
     if (Math.abs(dy) > Math.abs(dx) && dy < 0) return 0
     return Math.min(1, Math.abs(dx) / 120)
+  }
+  if (verdict === 'PASS') {
+    // 오른쪽으로 스와이프 = PASS (dx 양수)
+    if (dx <= 0) return 0
+    if (Math.abs(dy) > Math.abs(dx) && dy < 0) return 0
+    return Math.min(1, dx / 120)
   }
   return 0
 }
@@ -587,10 +602,10 @@ function stampTransform(verdict) {
   const o = stampOpacity(verdict)
   const scale = 0.8 + 0.4 * o // 0.8 ~ 1.2
   if (verdict === 'STRONG_PICK') return `translateX(-50%) rotate(-4deg) scale(${scale})`
-  // PICK = 우측 스와이프 → 우측 상단, 우향 기울기
-  if (verdict === 'PICK') return `rotate(10deg) scale(${scale})`
-  // PASS = 좌측 스와이프 → 좌측 상단, 좌향 기울기
-  if (verdict === 'PASS') return `rotate(-10deg) scale(${scale})`
+  // PICK = 좌측 스와이프 → 좌측 표시, 좌향 기울기
+  if (verdict === 'PICK') return `rotate(-10deg) scale(${scale})`
+  // PASS = 우측 스와이프 → 우측 표시, 우향 기울기
+  if (verdict === 'PASS') return `rotate(10deg) scale(${scale})`
   return ''
 }
 
@@ -601,6 +616,14 @@ function goBack() {
 // 결과(순위) = BattleDetail 페이지. 미진행 카드가 남아 있어도 결과 화면이 보이도록 from=swipe 플래그
 function goResult() {
   router.push({ name: 'BattleDetail', params: { id: battleId.value }, query: { from: 'swipe' } })
+}
+
+// 다시 스와이프 — 백엔드 데이터는 그대로(upsert 되니까 verdict 만 갱신됨), 화면 진행도만 로컬에서 0으로 리셋
+async function restartSwipe() {
+  restartMode.value = true
+  completedCount.value = 0
+  queue.value = []
+  await fetchMoreIfNeeded()
 }
 
 // ───────── 내 아이템 추가 ─────────
@@ -973,6 +996,36 @@ onBeforeUnmount(() => {})
 .primary-btn:hover { transform: translateY(-1px); background: var(--c-brand-hover); box-shadow: 0 12px 28px rgba(147, 51, 234, 0.35); }
 .primary-btn:active { transform: scale(0.98); }
 
+/* 다시 스와이프 — 보조 액션, 약하게 */
+.done-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--c-text-600);
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s;
+}
+.ghost-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+.ghost-btn:active { transform: scale(0.97); }
+
 /* ─────────── Main ─────────── */
 .swipe-main {
   flex: 1;
@@ -1168,53 +1221,60 @@ onBeforeUnmount(() => {})
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 5;
+  /* 카드 inline z-index(10) 보다 높게 — 사진 위에 노출 보장 */
+  z-index: 50;
 }
+/* 모던 솔리드 pill — 흰 텍스트 + 컬러 글로우, 사진 위에서 즉시 인지 */
 .stamp {
   position: absolute;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  border-width: 4px;
-  border-style: solid;
-  border-radius: 14px;
-  font-size: 22px;
+  gap: 8px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 999px;
+  font-size: 18px;
   font-weight: 900;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  color: #ffffff;
   pointer-events: none;
-  transition: opacity 0.1s linear, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.1s linear, transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
   white-space: nowrap;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
+.stamp svg { flex-shrink: 0; }
+
 .stamp-strong {
-  top: 32px;
+  top: 44px;
   left: 50%;
-  color: #FBBF24;
-  border-color: #FBBF24;
-  background: rgba(255, 251, 235, 0.94);
-  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
+  background: #F59E0B;
+  box-shadow:
+    0 0 0 4px rgba(245, 158, 11, 0.22),
+    0 14px 32px rgba(245, 158, 11, 0.5),
+    0 2px 6px rgba(180, 83, 9, 0.4);
 }
-/* 오른쪽으로 스와이프 = PICK → 우측에 표시 */
+/* 왼쪽으로 스와이프 = PICK → 좌측에 표시 */
 .stamp-pick {
   top: 50%;
-  right: 24px;
-  margin-top: -24px;
-  color: #10B981;
-  border-color: #10B981;
-  background: rgba(236, 253, 245, 0.94);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+  left: 22px;
+  margin-top: -26px;
+  background: #10B981;
+  box-shadow:
+    0 0 0 4px rgba(16, 185, 129, 0.22),
+    0 14px 32px rgba(16, 185, 129, 0.5),
+    0 2px 6px rgba(4, 120, 87, 0.4);
 }
-/* 왼쪽으로 스와이프 = PASS → 좌측에 표시 */
+/* 오른쪽으로 스와이프 = PASS → 우측에 표시 */
 .stamp-pass {
   top: 50%;
-  left: 24px;
-  margin-top: -24px;
-  color: #EF4444;
-  border-color: #EF4444;
-  background: rgba(254, 242, 242, 0.94);
-  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+  right: 22px;
+  margin-top: -26px;
+  background: #EF4444;
+  box-shadow:
+    0 0 0 4px rgba(239, 68, 68, 0.22),
+    0 14px 32px rgba(239, 68, 68, 0.5),
+    0 2px 6px rgba(153, 27, 27, 0.4);
 }
 
 /* ─────────── Leaving Animations ─────────── */
@@ -1223,12 +1283,12 @@ onBeforeUnmount(() => {})
 .card.leaving-pick { animation: leavePick 0.32s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
 .card.leaving-strong_pick { animation: leaveStrong 0.36s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
 @keyframes leavePass {
-  /* 왼쪽으로 사라짐 */
-  to { transform: translateX(-180%) rotate(-28deg); opacity: 0; }
+  /* PASS = 우측 스와이프 → 오른쪽으로 사라짐 */
+  to { transform: translateX(180%) rotate(28deg); opacity: 0; }
 }
 @keyframes leavePick {
-  /* 오른쪽으로 사라짐 */
-  to { transform: translateX(180%) rotate(28deg); opacity: 0; }
+  /* PICK = 좌측 스와이프 → 왼쪽으로 사라짐 */
+  to { transform: translateX(-180%) rotate(-28deg); opacity: 0; }
 }
 @keyframes leaveStrong {
   to { transform: translateY(-180%) rotate(0) scale(0.7); opacity: 0; }

@@ -153,8 +153,8 @@ const voteTypes = [
   {
     value: 'SWIPE',
     iconType: 'vote-swipe',
-    title: '스와이프 (PPICKK / PICK / PASS)',
-    desc: '한 장씩 넘기며 평가 — 빠르고 재밌어요 (위:PPICKK, 우:PICK, 좌:PASS)'
+    title: '스와이프 (PICK ×3 / PICK / PASS)',
+    desc: '한 장씩 넘기며 평가 — 빠르고 재밌어요 (위:PICK ×3, 우:PICK, 좌:PASS)'
   }
 ];
 

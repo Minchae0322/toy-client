@@ -96,7 +96,7 @@
             </template>
             <template v-else-if="battleForm.voteType === 'SWIPE'">
               <div class="score-item">
-                <span class="score-badge first">PPICKK</span>
+                <span class="score-badge first">PICK ×3</span>
                 <span class="score-text">= 3점</span>
               </div>
               <div class="score-item">
