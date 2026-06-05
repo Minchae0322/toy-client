@@ -279,13 +279,29 @@ class AppViewController: CAPBridgeViewController, UIGestureRecognizerDelegate {
             webView.transform = CGAffineTransform(translationX: width, y: 0)
             self.previousPageSnapshotView?.transform = .identity
         }, completion: { _ in
-            // 페이지를 우측으로 완전히 밀어낸 직후 goBack — 새(=이전) 페이지는 즉시 identity 위치에 들어옴.
+            // ── 플리커 방지 핵심 ──
+            // goBack() 은 비동기라 WKWebView 가 이전 페이지를 다시 그리는 데 한두 프레임 걸린다.
+            // 이때 webView.transform 을 바로 identity 로 되돌리면, '떠나려던(현재) 페이지'를
+            // 표시한 채로 화면 위치(0)에 와서 한순간 깜빡인다.
+            // → 스냅샷(이전 페이지 캡처)을 webView '위'로 올려 그 순간을 가린 뒤,
+            //   webView 가 이전 페이지를 다 그릴 시간을 두고 페이드아웃으로 부드럽게 걷어낸다.
+            if let snap = self.previousPageSnapshotView {
+                snap.transform = .identity
+                snap.frame = self.view.bounds
+                self.view.bringSubviewToFront(snap)
+            }
             webView.goBack()
             webView.transform = .identity
-            // goBack 후 webView 가 이전 페이지를 다시 그릴 때까지 스냅샷을 잠깐 유지해
-            // 흰/검은 플래시를 방지한다. 같은 화면이라 겹쳐 보여도 위화감 없음.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                self.hidePreviousSnapshot()
+            // 이전 페이지 렌더가 안정될 시간을 준 뒤 스냅샷을 페이드아웃하며 제거.
+            // 같은 화면이라 겹쳐 보여도 위화감 없음 → 검정/흰 플래시 및 '현재 페이지 깜빡'을 모두 차단.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
+                guard let snap = self.previousPageSnapshotView else { return }
+                UIView.animate(withDuration: 0.12, delay: 0, options: [.curveEaseOut], animations: {
+                    snap.alpha = 0
+                }, completion: { _ in
+                    self.hidePreviousSnapshot()
+                    snap.alpha = 1
+                })
             }
         })
     }
