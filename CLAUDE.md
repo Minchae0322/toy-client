@@ -46,7 +46,7 @@
     - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `WelcomeView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView`, `ConsentView` 등
     - 서브폴더:
       - `admin/` — `CollectionAdminView`
-      - `battle/` — `BattleListView`, `BattleDetailView`, `BattleCreateView`
+      - `battle/` — `BattleListView`, `BattleDetailView`, `BattleCreateView`, `SwipeBattleView`, `SwipeBattleResultView`
       - `carrier/` — `CarrierView` + `constants.js` (레이아웃·컬러·스킨 상수) + 자체 `components/` (CarrierCanvas, CarrierItemList, MobileStickerTray, ShareModal, SkinCarousel, StickerPackPanel)
       - `category/` — `CategoryListView`
       - `feed/` — `FeedHomeView`, `FeedCreateView`, `FeedDetailView`
@@ -65,9 +65,10 @@
     - `MZLifestyle/` — `AIMemeGeneratorPromo`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection` (레거시 `BottomNavigation.vue` 포함 — `HomeView.vue` 전용)
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
-    - `AuthService`, `FeedService`, `BattleService`, `ProductService`, `ProductReviewService`, `ChatService`, `NotificationService`, `NotificationSettingService`, `RewardsService`, `CarrierService`, `UserService`, `FeedbackService`, `FileService`, `DashboardService`, `CategoryService`
+    - `AuthService`, `FeedService`, `BattleService`, `ProductService`, `ProductReviewService`, `ChatService`, `NotificationService`, `NotificationSettingService`, `RewardsService`, `CarrierService`, `UserService`, `FeedbackService`, `FileService`, `DashboardService`, `CategoryService`, `SwipeBattleService`
     - **`RewardsService.js`는 실 API 호출용** — mock 스위치(`USE_MOCK`)는 `src/api/rewardsApi.js`에 있음 (별개)
     - `presenceService.js` — presence 비콘 전용. 앱 백그라운드/탭 비활성/종료 시 `POST /api/connection/offline`으로 오프라인 통보. **Index.js export 제외** (직접 import)
+    - `SwipeBattleService.js` — 스와이프 배틀 전용 API 클라이언트 (`BaseApiService` 확장). `getNext(battleId)` / `submit(battleId, itemId, verdict)` / `getResult(battleId)`. `verdict`는 `SWIPE_VERDICT` 상수 사용 (`STRONG_PICK` / `PICK` / `PASS`). **Index.js export 제외** (직접 import)
     - `BaseApiService.js` — Fetch API 기반 공통 기반 클래스 (401 자동 갱신). Axios `interceptors.js`와 별개
     - `apiService.js` — Auth/Chat 서버 통합 API 서비스 (Fetch 기반, `BaseApiService` 확장)
     - `nativeAuth.js` — 네이티브 빌드(iOS/Android) Apple/Google 소셜 로그인 처리. 오류 코드 체계: `ERR-A1xx`~`ERR-G3xx`
@@ -168,6 +169,9 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.1.6**: iOS 빌드 20, Android versionCode 17 (`chore`)
+- **배틀 SWIPE 투표 방식 전체 통합**: `SwipeBattleView.vue` + `SwipeBattleResultView.vue` 신설 + `SwipeBattleService.js` 추가. 배틀 생성 Step3에서 `VoteType.SWIPE` 선택 가능. `BattleDetailView.vue` — SWIPE 타입 배틀에 미참여 상태면 자동으로 `/battles/:id/swipe`로 진입. 스와이프 방향: 오른쪽=PICK/STRONG_PICK, 왼쪽=PASS (Tinder 표준). 모든 카드 완료 후 결과 화면(`SwipeBattleResultView`) 이동 + 재시작 지원. `BottomNavigation`은 `<Teleport to="body">`로 스와이프 UI 위에 오버레이 (`feat(battle)`)
+- **스와이프 UX 보강**: 단일 카드 렌더(다음 카드 peek 표시), 미진행 SWIPE 배틀 자동 스와이프 화면 진입, 라벨·방향·완료 후 재시작·스탬프 리디자인 (`fix/feat(battle)`)
 - **iOS 스와이프 백 이전 페이지 스냅샷 표시**: `AppViewController.swift` — 스와이프 백 제스처 중 좌측에 이전 페이지 스냅샷을 오버레이로 표시하여 검정 화면 완전 제거 (`fix(ios)`)
 - **회원가입 후 닉네임 설정 온보딩(/welcome)**: `WelcomeView.vue` 신설 + `/welcome` 라우트. 회원가입 직후 첫 로그인 시 닉네임 설정 화면 표시 — 아바타 이니셜 미리보기, 2~20자 유효성 검사, "나중에 할게요" 스킵 지원. `LoginView.vue`에서 신규 가입 플래그 감지 후 `/welcome`으로 라우팅 (`feat(auth)`)
 - **배틀 YouTube 탭 자동 클립보드 입력**: `AddProductModal.vue` — YouTube 탭에 "YouTube에서 영상 찾기" 버튼 추가. Capacitor Browser로 `m.youtube.com` 오픈 후 앱 복귀 시(`App.appStateChange` / `window.focus`) 클립보드를 읽어 YouTube URL이면 자동 채움. **네이티브(iOS/Android)에서만 버튼 노출**, 데스크탑/PWA도 `window.focus` 시 동일 시도. `youtubeBrowserOpened` 플래그로 사용자가 명시적으로 열었을 때만 동작 (무관한 클립보드 침범 방지) (`feat(battle)`)
