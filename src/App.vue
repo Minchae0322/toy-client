@@ -61,7 +61,14 @@ const wsConnected = computed(() => wsStatus.value === 'connected')
 const wsConnecting = computed(() => wsStatus.value === 'connecting')
 let unsubscribeWsStatus = null
 
-const showAppSplash = ref(Capacitor.isNativePlatform() && isLoggedIn.value)
+// 인앱 스플래시는 '콜드 스타트 1회'만. 네이티브 스와이프 백 등으로 문서가 다시 로드돼
+// App.vue 가 remount 되어도 다시 뜨지 않도록 sessionStorage 로 가드한다 (앱 세션당 1회).
+// sessionStorage 는 webview 리로드/같은 오리진 내비게이션에는 유지되고, 앱 종료 시에만 비워짐.
+const SPLASH_SHOWN_KEY = 'yogurtte:splashShown'
+const splashAlreadyShown = (() => {
+  try { return sessionStorage.getItem(SPLASH_SHOWN_KEY) === '1' } catch { return false }
+})()
+const showAppSplash = ref(Capacitor.isNativePlatform() && isLoggedIn.value && !splashAlreadyShown)
 
 const isAuthPage = computed(() =>
     ['/login', '/register', '/oauth/callback'].includes(route.path)
@@ -185,6 +192,7 @@ const goToCollection = async () => {
 
 function hideAppSplash() {
   showAppSplash.value = false
+  try { sessionStorage.setItem(SPLASH_SHOWN_KEY, '1') } catch {}
   if (Capacitor.isNativePlatform()) {
     SplashScreen.hide().catch(() => {})
   }
