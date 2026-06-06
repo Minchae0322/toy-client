@@ -61,6 +61,7 @@
     - **`common/BottomNavigation.vue`** — 전역 하단 네비게이션 바 (피드·배틀·캐꾸·핫아템·마이). 실제로 대부분 뷰가 이 경로로 import. `MZLifestyle/BottomNavigation.vue`는 레거시로 `HomeView.vue`에서만 사용 중 — 새 뷰에서는 `common/` 경로 사용
     - **`common/FeedbackModal.vue`** — 익명 의견·버그 제보 모달 (`<Teleport to="body">`). `BottomNavigation`·`AppSidebar`·`DashboardQuickNav` 내부에 내장됨
     - **`common/AdSlot.vue`** — Google AdSense 슬롯 래퍼. `BottomNavigation` 하단에 배치
+    - **`common/CategoryChipSelector.vue`** — 인라인 카테고리 칩 셀렉터 (1뎁스 칩 + "더보기" → `CategorySelectModal` 연동). `contentType` prop으로 도메인 구분
     - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 **가로 스크롤 한 줄** — 히어로 아래 밀착 배치), `DashboardBattles.vue` (요거픽 매거진 레이아웃), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
     - `MZLifestyle/` — `AIMemeGeneratorPromo`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection` (레거시 `BottomNavigation.vue` 포함 — `HomeView.vue` 전용)
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
@@ -169,6 +170,9 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **버전 1.1.7**: iOS 빌드 21, Android versionCode 18 (`chore`)
+- **iOS 스와이프 백 네이티브 제스처로 전환**: `AppViewController.swift` — 커스텀 스냅샷 오버레이 방식(350줄)을 완전 제거하고 iOS 네이티브 `allowsBackForwardNavigationGestures`로 전환. 표준 전환 애니메이션(현재 화면이 오른쪽으로 밀려나며 이전 화면이 드러남)으로 단순화 (`fix(ios)`)
+- **인앱 스플래시 콜드스타트 1회 제한**: `App.vue` — `sessionStorage` 가드(`yogurtte:splashShown`)로 앱 세션당 스플래시 1회만 노출. 네이티브 스와이프 백 등으로 App.vue가 remount돼도 재등장 방지 (`fix(ios)`)
 - **버전 1.1.6**: iOS 빌드 20, Android versionCode 17 (`chore`)
 - **배틀 SWIPE 투표 방식 전체 통합**: `SwipeBattleView.vue` + `SwipeBattleResultView.vue` 신설 + `SwipeBattleService.js` 추가. 배틀 생성 Step3에서 `VoteType.SWIPE` 선택 가능. `BattleDetailView.vue` — SWIPE 타입 배틀에 미참여 상태면 자동으로 `/battles/:id/swipe`로 진입. 스와이프 방향: 오른쪽=PICK/STRONG_PICK, 왼쪽=PASS (Tinder 표준). 모든 카드 완료 후 결과 화면(`SwipeBattleResultView`) 이동 + 재시작 지원. `BottomNavigation`은 `<Teleport to="body">`로 스와이프 UI 위에 오버레이 (`feat(battle)`)
 - **스와이프 UX 보강**: 단일 카드 렌더(다음 카드 peek 표시), 미진행 SWIPE 배틀 자동 스와이프 화면 진입, 라벨·방향·완료 후 재시작·스탬프 리디자인 (`fix/feat(battle)`)
