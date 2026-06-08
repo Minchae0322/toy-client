@@ -29,6 +29,11 @@ class WebSocketService {
     this.maxReconnectAttempts = 5
     this.reconnectDelay = 1000
 
+    // 이 소켓 세션을 인증한 토큰과 그 토큰에서 추출한 userId.
+    // 모든 개인 큐 구독 경로는 sessionUserId 기준으로 만들어 세션 신원과 일치시킨다.
+    this.sessionToken = null
+    this.sessionUserId = null
+
     this.topics = {
       chatRoomPrefix: '/topic/chatroom',
       userDevicePrefix: '/user',
@@ -70,6 +75,21 @@ class WebSocketService {
 
   getCurrentUserId() {
     return authUtils.getUserId()
+  }
+
+  // 토큰(JWT)에서 직접 userId 추출 — 소켓을 인증한 신원과 구독 경로의 신원을 일치시키기 위함.
+  // user_info(localStorage) 는 토큰과 별개 시점에 갱신되어 계정 전환 시 drift 가능하므로
+  // 개인 큐 구독 경로는 반드시 "소켓을 인증한 그 토큰"의 userId 로 만든다.
+  getTokenUserId(token) {
+    const payload = authUtils.parseJwtToken(token)
+    return payload?.userId ?? payload?.sub ?? null
+  }
+
+  // 현재 저장된 토큰이 이 소켓 세션을 인증한 토큰과 다른 유저인지 확인
+  isStaleSession() {
+    if (!this.sessionUserId) return false
+    const currentId = this.getTokenUserId(this.getAuthToken())
+    return currentId != null && String(currentId) !== String(this.sessionUserId)
   }
 
   // ==================== 연결 상태 관리 ====================
@@ -166,6 +186,12 @@ class WebSocketService {
         return
       }
 
+      // 이 세션의 신원을 "지금 인증에 쓰는 토큰"으로 고정.
+      // 구독 경로(subscribeToEssentialTopics)와 X-User-Id 모두 이 값을 사용한다.
+      const sessionUserId = this.getTokenUserId(token)
+      this.sessionToken = token
+      this.sessionUserId = sessionUserId
+
       this.connecting = true
       this.updateConnectionState('connecting')
 
@@ -188,12 +214,16 @@ class WebSocketService {
         connectHeaders: {
           'Authorization': `Bearer ${token}`,
           'X-Device-Id': this.getDeviceId(),
-          'X-User-Id': String(this.getCurrentUserId() || '')
+          // user_info 가 아닌 토큰에서 뽑은 userId 사용 — 세션 신원과 항상 일치
+          'X-User-Id': String(sessionUserId || '')
         },
         debug: (str) => {
           if (ENV.DEV) console.log('🔌 [STOMP]', str)
         },
-        reconnectDelay: this.reconnectDelay,
+        // STOMP 내장 자동 재연결 비활성화 — 끊긴 client 가 옛 connectHeaders(이전 유저 JWT)를
+        // 그대로 재사용해 재연결하면 계정 전환 후 세션 신원이 고착된다.
+        // 재연결은 attemptReconnect()/모니터링이 connect() 를 새로 호출해 항상 최신 토큰으로 처리.
+        reconnectDelay: 0,
         heartbeatIncoming: 10000,
         heartbeatOutgoing: 10000,
 
@@ -263,7 +293,15 @@ class WebSocketService {
   }
 
   async ensureConnection() {
-    if (this.isConnected()) return
+    // 살아있는 소켓이라도 그 사이 계정이 바뀌었으면(현재 토큰의 userId ≠ 세션 userId)
+    // 옛 신원으로 붙어있는 것이므로 강제로 재연결한다.
+    if (this.isConnected()) {
+      if (this.isStaleSession()) {
+        console.warn('⚠️ [WebSocket] 세션 신원 불일치 감지 → 재연결')
+        return this.reconnect()
+      }
+      return
+    }
     if (this.connecting) return this.waitForConnection(() => {}, () => {})
     return this.connect()
   }
@@ -271,7 +309,10 @@ class WebSocketService {
   // ==================== 필수 토픽 구독 ====================
 
   async subscribeToEssentialTopics() {
-    const userId = this.getCurrentUserId()
+    // 반드시 소켓을 인증한 토큰의 userId(sessionUserId)로 구독.
+    // getCurrentUserId()(user_info) 를 쓰면 계정 전환 직후 세션(토큰)과 경로가 어긋나
+    // 서버가 INVALID_DESTINATION("잘못된 채팅방 주소") 로 거부한다.
+    const userId = this.sessionUserId ?? this.getTokenUserId(this.getAuthToken())
     const deviceId = this.getDeviceId()
 
     if (!userId || !deviceId) {
@@ -402,7 +443,7 @@ class WebSocketService {
     const message = {
       roomId: roomId,
       actionType: messageData.messageType || messageData.actionType || 'TEXT',
-      actorUserId: this.getCurrentUserId(),
+      actorUserId: this.sessionUserId ?? this.getCurrentUserId(),
       messageContent: messageData.content || messageData.messageContent,
       additionalData: messageData.additionalData || {},
       ...(messageData.fileUrl && { fileUrl: messageData.fileUrl }),
@@ -450,7 +491,7 @@ class WebSocketService {
       destination: this.destinations.sendTyping,
       body: JSON.stringify({
         roomId: roomId,
-        userId: this.getCurrentUserId(),
+        userId: this.sessionUserId ?? this.getCurrentUserId(),
         isTyping: isTyping,
         timestamp: new Date().toISOString()
       })
@@ -512,6 +553,10 @@ class WebSocketService {
       this.client = null
     }
 
+    // 세션 신원 초기화 — 다음 connect() 가 최신 토큰으로 다시 고정한다.
+    this.sessionToken = null
+    this.sessionUserId = null
+
     this.updateConnectionState('disconnected')
     console.log('✅ [WebSocket] 연결 해제 완료')
   }
@@ -547,6 +592,8 @@ class WebSocketService {
       topics: this.topics,
       destinations: this.destinations,
       userId: this.getCurrentUserId(),
+      sessionUserId: this.sessionUserId,
+      staleSession: this.isStaleSession(),
       deviceId: this.getDeviceId(),
       deviceType: this.getDeviceType()
     }
@@ -556,6 +603,13 @@ class WebSocketService {
     setInterval(() => {
       const was = this.connectionState.connected
       const now = this.isConnected()
+
+      // 살아있는 소켓이지만 계정이 바뀐 경우 backstop 으로 재연결
+      if (now && this.isStaleSession()) {
+        console.warn('⚠️ [WebSocket] 모니터링: 세션 신원 불일치 → 재연결')
+        this.reconnect().catch(() => {})
+        return
+      }
 
       if (was && !now) {
         this.updateConnectionState('disconnected')
