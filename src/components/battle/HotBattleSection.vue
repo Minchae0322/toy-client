@@ -77,7 +77,7 @@
             <div class="stats-row">
               <span class="stat">
                 <Users :size="11" :stroke-width="2.4" class="stat-icon" />
-                <span class="stat-value">{{ formatNumber(battle.totalVotes || 0) }}</span>
+                <span class="stat-value">{{ formatNumber(participationCount(battle)) }}</span>
               </span>
               <span class="stat-divider" aria-hidden="true"></span>
               <span class="stat">
@@ -194,6 +194,13 @@ const formatNumber = (num) => {
   if (num >= 10000) return `${Math.floor(num / 10000)}만`
   if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
   return num.toLocaleString()
+}
+
+// 배틀 타입별 참여 신호 — vote: totalVotes, SWIPE: totalSwipes
+const participationCount = (battle) => {
+  const vt = battle?.voteType?.title || battle?.voteType
+  if (vt === 'SWIPE') return battle?.totalSwipes || battle?.totalParticipants || 0
+  return battle?.totalVotes || battle?.totalParticipants || 0
 }
 
 const getOriginalThumbnail = (battle) => {

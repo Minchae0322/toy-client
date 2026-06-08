@@ -158,7 +158,7 @@
         </div>
 
         <span class="lead-cta">
-          나도 한 표 던지기
+          지금 바로 보기
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m9 18 6-6-6-6" />
           </svg>
@@ -262,15 +262,20 @@ const isLive = (endDate) => {
   return new Date(endDate) - new Date() > 0
 }
 const liveCount = computed(() => hotBattles.value.filter(b => isLive(b.endDate)).length)
-// 참여자 수 우선, 없으면 투표 수로 폴백
+// SWIPE 배틀이면 totalSwipes, 일반 배틀이면 totalVotes 로 신호 선택
+const voteTypeOf = (b) => b?.voteType?.title || b?.voteType
+const engagementOf = (b) =>
+  voteTypeOf(b) === 'SWIPE' ? (b?.totalSwipes || 0) : (b?.totalVotes || 0)
+
+// 참여자 수 우선, 없으면 배틀 타입에 맞는 engagement 로 폴백
 const peopleCount = computed(() =>
-  hotBattles.value.reduce((sum, b) => sum + (b.totalParticipants || b.totalVotes || 0), 0)
+  hotBattles.value.reduce((sum, b) => sum + (b.totalParticipants || engagementOf(b)), 0)
 )
 const pulseHeadline = computed(() =>
   liveCount.value > 0 ? `진행 중인 픽 ${liveCount.value}개` : `오늘의 픽 ${hotBattles.value.length}개`
 )
-// 카드별 "사람 수" — 참여자 우선, 없으면 투표 수
-const peopleOf = (b) => b?.totalParticipants || b?.totalVotes || 0
+// 카드별 "사람 수" — 참여자 우선, 없으면 배틀 타입에 맞는 engagement
+const peopleOf = (b) => b?.totalParticipants || engagementOf(b)
 
 // 1픽 누적 막대 세그먼트 — 순위별 득표율 + '그 외' 잔여분
 const PICK_MAX_SEGMENTS = 4

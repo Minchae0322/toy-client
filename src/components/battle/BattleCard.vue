@@ -26,9 +26,13 @@
           <span class="status-dot" aria-hidden="true"></span>
           <span class="status-text">{{ statusText }}</span>
         </span>
-        <span v-if="battle.voteType === 'MULTIPLE'" class="vote-type-badge">
+        <span v-if="voteTypeKey === 'MULTIPLE'" class="vote-type-badge">
           <ListOrdered :size="11" :stroke-width="2.6" />
           <span>순위</span>
+        </span>
+        <span v-else-if="voteTypeKey === 'SWIPE'" class="vote-type-badge swipe">
+          <Layers :size="11" :stroke-width="2.6" />
+          <span>스와이프</span>
         </span>
         <span v-if="isNew" class="new-badge" aria-label="새 배틀">NEW</span>
       </div>
@@ -50,8 +54,8 @@
           <span class="stat">
             <Users :size="13" :stroke-width="2.2" class="stat-icon" />
             <span class="stat-text">
-              <strong>{{ formatNumber(battle.totalVotes) }}</strong>
-              <span class="stat-label">투표</span>
+              <strong>{{ formatNumber(engagementCount) }}</strong>
+              <span class="stat-label">{{ engagementLabel }}</span>
             </span>
           </span>
           <span class="stat-divider" aria-hidden="true"></span>
@@ -95,7 +99,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Eye, Users, Flame, ListOrdered } from 'lucide-vue-next'
+import { Eye, Users, Flame, ListOrdered, Layers } from 'lucide-vue-next'
 import UserLevelTag from '@/components/identity/UserLevelTag.vue'
 import UserBadgeInline from '@/components/identity/UserBadgeInline.vue'
 
@@ -133,6 +137,18 @@ const formatNumber = (num) => {
   if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
   return num.toString()
 }
+
+// 배틀 투표 타입 — SWIPE / MULTIPLE / SINGLE 등. 응답에 따라 객체 또는 문자열
+const voteTypeKey = computed(() => props.battle?.voteType?.title || props.battle?.voteType)
+
+// SWIPE 면 totalSwipes 우선, 그 외엔 totalVotes 사용 (라벨도 함께)
+const engagementCount = computed(() => {
+  if (voteTypeKey.value === 'SWIPE') {
+    return props.battle?.totalSwipes ?? props.battle?.totalVotes ?? 0
+  }
+  return props.battle?.totalVotes ?? 0
+})
+const engagementLabel = computed(() => (voteTypeKey.value === 'SWIPE' ? '스와이프' : '투표'))
 
 const thumbnailUrl = computed(() => {
   if (imageError.value) return null
