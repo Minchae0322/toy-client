@@ -38,7 +38,7 @@
 - **OTA 배포**: `@capgo/capacitor-updater@7.45.10` — `npm run ota:deploy`로 웹 변경분을 스토어 심사 없이 즉시 배포. `src/capacitor/bootstrap.js`에서 `notifyAppReady()` 호출 필수 (누락 시 60초 후 자동 롤백)
 - **UI 라이브러리**: Tailwind 4.x (유틸), `lucide-vue-next` (아이콘), `@heroicons/vue`
 - **HTTP**: Axios (`src/api/client.js` + 인터셉터 `src/api/interceptors.js`)
-- **실시간**: STOMP + SockJS (`src/services/webSocketService.js`)
+- **실시간**: STOMP + SockJS (`src/services/webSocketService.js`) — STOMP 내장 자동 재연결 비활성화(`reconnectDelay: 0`). 개인 큐 구독 경로·메시지 발신자 ID는 반드시 `sessionUserId`(소켓 인증 JWT 기준) 사용, `getCurrentUserId()`(localStorage 기반) 혼용 금지 — 계정 전환 직후 두 값이 달라져 `INVALID_DESTINATION` 발생
 - **푸시 알림**: Firebase FCM 11.x (`src/services/fcmService.js`, `src/services/pushNotificationService.js`)
 - **날짜 유틸**: `date-fns 4.x`
 - **주요 디렉토리**:
@@ -62,7 +62,8 @@
     - **`common/FeedbackModal.vue`** — 익명 의견·버그 제보 모달 (`<Teleport to="body">`). `BottomNavigation`·`AppSidebar`·`DashboardQuickNav` 내부에 내장됨
     - **`common/AdSlot.vue`** — Google AdSense 슬롯 래퍼. `BottomNavigation` 하단에 배치
     - **`common/CategoryChipSelector.vue`** — 인라인 카테고리 칩 셀렉터 (1뎁스 칩 + "더보기" → `CategorySelectModal` 연동). `contentType` prop으로 도메인 구분
-    - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 **가로 스크롤 한 줄** — 히어로 아래 밀착 배치), `DashboardBattles.vue` (요거픽 매거진 레이아웃), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
+    - **battle/ 루트 주요**: `BattleCard.vue`, `BattleList.vue`, `BattleTabs.vue`, `HotBattleSection.vue` — **SWIPE 배틀 분기 패턴**: `battle.voteType === 'SWIPE'`이면 참여수는 `battle.totalSwipes` 사용, `totalVotes` 아님. 배지·라우팅도 SWIPE 전용 처리 필요(`/battles/:id/swipe`). 새 배틀 표시 컴포넌트 추가 시 반드시 `voteType` 분기 적용
+    - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 **가로 스크롤 한 줄** — 히어로 아래 밀착 배치), `DashboardBattles.vue` (요거픽 매거진 레이아웃 — SWIPE/일반 voteType 분기), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
     - `MZLifestyle/` — `AIMemeGeneratorPromo`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection` (레거시 `BottomNavigation.vue` 포함 — `HomeView.vue` 전용)
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
