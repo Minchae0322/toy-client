@@ -170,6 +170,8 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **대시보드·요거픽 SWIPE 배틀 분기**: `DashboardBattles.vue` 등 — `voteType` / `totalSwipes` 대응으로 SWIPE 배틀 전용 렌더링 분기 처리 (`feat(battle)`)
+- **STOMP 구독 경로 userId 불일치 수정**: `webSocketService.js` — 같은 기기에서 계정 전환 시 STOMP 구독 경로에 이전 userId가 남아 있던 버그 수정 (`fix(ws)`)
 - **버전 1.1.7**: iOS 빌드 21, Android versionCode 18 (`chore`)
 - **iOS 스와이프 백 네이티브 제스처로 전환**: `AppViewController.swift` — 커스텀 스냅샷 오버레이 방식(350줄)을 완전 제거하고 iOS 네이티브 `allowsBackForwardNavigationGestures`로 전환. 표준 전환 애니메이션(현재 화면이 오른쪽으로 밀려나며 이전 화면이 드러남)으로 단순화 (`fix(ios)`)
 - **인앱 스플래시 콜드스타트 1회 제한**: `App.vue` — `sessionStorage` 가드(`yogurtte:splashShown`)로 앱 세션당 스플래시 1회만 노출. 네이티브 스와이프 백 등으로 App.vue가 remount돼도 재등장 방지 (`fix(ios)`)
