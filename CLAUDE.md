@@ -54,6 +54,8 @@
   - `src/components/` — 도메인별 재사용 컴포넌트
     - `feed/` (+ `detail/` 서브폴더), `battle/` (+ `create/`, `detail/` 서브폴더), `collection/`, `identity/`, `chat/` (+ `detail/` 서브폴더), `notification/`, `product/` (+ `create/`, `detail/` 서브폴더)
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
+    - **AppHeader 주의**: `layout/AppHeader.vue`가 전역 헤더. `battle/AppHeader.vue`(단순 타이틀 헤더)·`feed/AppHeader.vue`(검색 박스 포함)는 해당 도메인 전용 로컬 헤더 — 전역 헤더와 혼동 금지
+    - **`exp/ExpFeedback.vue`** — `<Teleport to="body">` 기반 EXP 획득 버스트 애니메이션 레이어 (`useExpToast` composable과 연동). 직접 mount 금지, `useExpToast`로만 트리거
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
     - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용. 공유 링크는 내부적으로 `buildShareUrl()` (`src/config/env.js`)을 통해 `yogurtte.com` 공개 도메인으로 정규화됨 — 직접 `window.location` 사용 금지
     - **`common/CategorySelectModal.vue`** — 카테고리 탐색 모달. `type` prop으로 도메인 구분(BATTLE 등). 카테고리 선택 UI 직접 구현 금지, 이 컴포넌트 재사용
