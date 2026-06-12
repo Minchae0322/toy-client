@@ -54,14 +54,14 @@
   - `src/components/` — 도메인별 재사용 컴포넌트
     - `feed/` (+ `detail/` 서브폴더), `battle/` (+ `create/`, `detail/` 서브폴더), `collection/`, `identity/`, `chat/` (+ `detail/` 서브폴더), `notification/`, `product/` (+ `create/`, `detail/` 서브폴더)
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
-    - **AppHeader 주의**: `layout/AppHeader.vue`가 전역 헤더. `battle/AppHeader.vue`(단순 타이틀 헤더)·`feed/AppHeader.vue`(검색 박스 포함)는 해당 도메인 전용 로컬 헤더 — 전역 헤더와 혼동 금지
+    - **AppHeader 주의**: `layout/AppHeader.vue`가 전역 헤더. `battle/AppHeader.vue`(단순 타이틀 헤더)·`feed/AppHeader.vue`(검색 박스 포함)는 해당 도메인 전용 로컬 헤더 — 전역 헤더와 혼동 금지. `layout/`에는 전역 헤더 외 `AdminMenu.vue`(관리자 드롭다운)·`UserMenu.vue`(유저 메뉴 드롭다운)도 포함
     - **`exp/ExpFeedback.vue`** — `<Teleport to="body">` 기반 EXP 획득 버스트 애니메이션 레이어 (`useExpToast` composable과 연동). 직접 mount 금지, `useExpToast`로만 트리거
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
     - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용. 공유 링크는 내부적으로 `buildShareUrl()` (`src/config/env.js`)을 통해 `yogurtte.com` 공개 도메인으로 정규화됨 — 직접 `window.location` 사용 금지
     - **`common/CategorySelectModal.vue`** — 카테고리 탐색 모달. `type` prop으로 도메인 구분(BATTLE 등). 카테고리 선택 UI 직접 구현 금지, 이 컴포넌트 재사용
     - **`common/ReportModal.vue`** — 신고하기 모달 (`<Teleport to="body">`). 피드·배틀·댓글 등 콘텐츠 신고 UI 직접 구현 금지, 이 컴포넌트 재사용
     - **`common/BottomNavigation.vue`** — 전역 하단 네비게이션 바 (피드·배틀·캐꾸·핫아템·마이). 실제로 대부분 뷰가 이 경로로 import. `MZLifestyle/BottomNavigation.vue`는 레거시로 `HomeView.vue`에서만 사용 중 — 새 뷰에서는 `common/` 경로 사용
-    - **`common/FeedbackModal.vue`** — 익명 의견·버그 제보 모달 (`<Teleport to="body">`). `BottomNavigation`·`AppSidebar`·`DashboardQuickNav` 내부에 내장됨
+    - **`common/FeedbackModal.vue`** — 익명 의견·버그 제보 모달 (`<Teleport to="body">`). `BottomNavigation`·`feed/AppSidebar.vue`·`DashboardQuickNav` 내부에 내장됨
     - **`common/AdSlot.vue`** — Google AdSense 슬롯 래퍼. `BottomNavigation` 하단에 배치
     - **`common/CategoryChipSelector.vue`** — 인라인 카테고리 칩 셀렉터 (1뎁스 칩 + "더보기" → `CategorySelectModal` 연동). `contentType` prop으로 도메인 구분
     - **battle/ 루트 주요**: `BattleCard.vue`, `BattleList.vue`, `BattleTabs.vue`, `HotBattleSection.vue` — **SWIPE 배틀 분기 패턴**: `battle.voteType === 'SWIPE'`이면 참여수는 `battle.totalSwipes` 사용, `totalVotes` 아님. 배지·라우팅도 SWIPE 전용 처리 필요(`/battles/:id/swipe`). 새 배틀 표시 컴포넌트 추가 시 반드시 `voteType` 분기 적용
