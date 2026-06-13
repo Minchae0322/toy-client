@@ -173,8 +173,9 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
-- **대시보드·요거픽 SWIPE 배틀 분기**: `DashboardBattles.vue` 등 — `voteType` / `totalSwipes` 대응으로 SWIPE 배틀 전용 렌더링 분기 처리 (`feat(battle)`)
+- **CLAUDE.md 구조 문서 개선**: layout 컴포넌트 목록 추가, `AppHeader` 혼동 방지 주의사항·`ExpFeedback` 설명, STOMP `sessionUserId` 패턴·SWIPE 배틀 분기 패턴 명시 (`docs`)
 - **STOMP 구독 경로 userId 불일치 수정**: `webSocketService.js` — 같은 기기에서 계정 전환 시 STOMP 구독 경로에 이전 userId가 남아 있던 버그 수정 (`fix(ws)`)
+- **대시보드·요거픽 SWIPE 배틀 분기**: `DashboardBattles.vue` 등 — `voteType` / `totalSwipes` 대응으로 SWIPE 배틀 전용 렌더링 분기 처리 (`feat(battle)`)
 - **버전 1.1.7**: iOS 빌드 21, Android versionCode 18 (`chore`)
 - **OTA 번들 1.1.31 배포**: Capgo OTA로 웹 변경분(스와이프 백 관련 패치) 전체 사용자 즉시 반영 (`chore`)
 - **iOS 스와이프 백 네이티브 제스처로 전환**: `AppViewController.swift` — 커스텀 스냅샷 오버레이 방식(350줄)을 완전 제거하고 iOS 네이티브 `allowsBackForwardNavigationGestures`로 전환. 표준 전환 애니메이션(현재 화면이 오른쪽으로 밀려나며 이전 화면이 드러남)으로 단순화 (`fix(ios)`)
