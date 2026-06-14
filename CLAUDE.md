@@ -173,6 +173,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-14)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인 (`docs`)
 - **CLAUDE.md 구조 문서 개선**: layout 컴포넌트 목록 추가, `AppHeader` 혼동 방지 주의사항·`ExpFeedback` 설명, STOMP `sessionUserId` 패턴·SWIPE 배틀 분기 패턴 명시 (`docs`)
 - **STOMP 구독 경로 userId 불일치 수정**: `webSocketService.js` — 같은 기기에서 계정 전환 시 STOMP 구독 경로에 이전 userId가 남아 있던 버그 수정 (`fix(ws)`)
 - **대시보드·요거픽 SWIPE 배틀 분기**: `DashboardBattles.vue` 등 — `voteType` / `totalSwipes` 대응으로 SWIPE 배틀 전용 렌더링 분기 처리 (`feat(battle)`)
