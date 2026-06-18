@@ -312,7 +312,13 @@ class WebSocketService {
       }
       return
     }
-    if (this.connecting) return this.waitForConnection(() => {}, () => {})
+    // 여기까지 왔다는 건 "지금 붙어야 함"이라는 강한 신호(채팅 진입/메시지 전송 등).
+    // 백오프 대기 중이어도 취소하고 즉시 연결을 시도한다.
+    this.resetReconnect()
+    // 이미 연결 진행 중이면 그 시도가 끝날 때까지 실제로 기다린다(awaitable).
+    if (this.connecting) {
+      return new Promise((resolve, reject) => this.waitForConnection(resolve, reject))
+    }
     return this.connect()
   }
 

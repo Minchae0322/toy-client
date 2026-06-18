@@ -313,7 +313,12 @@ const initializeChatRoom = async () => {
 
   try {
     loading.value = true
-    if (!webSocketService.isConnected()) await webSocketService.connect()
+    // 채팅 진입 시 소켓이 안 붙어 있으면 즉시 연결 시도(백오프 대기 무시).
+    // ensureConnection 은 stale 세션도 처리하고 연결 완료까지 await.
+    if (!webSocketService.isConnected()) {
+      connectionState.value = { connected: false, connecting: true, status: 'connecting', error: null }
+      await webSocketService.ensureConnection()
+    }
     connectionState.value = { connected: true, connecting: false, status: 'connected', error: null }
     await webSocketService.subscribeToChatRoom(roomId, handleNewMessage)
 
@@ -489,7 +494,7 @@ const reconnectWebSocket = async () => {
   showRoomMenu.value = false
   connectionState.value.connecting = true
   try {
-    await webSocketService.connect()
+    await webSocketService.ensureConnection()
     await webSocketService.subscribeToChatRoom(actualRoomId.value, handleNewMessage)
     connectionState.value = { connected: true, connecting: false, status: 'connected', error: null }
   } catch (e) {
