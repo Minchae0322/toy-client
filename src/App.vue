@@ -212,6 +212,9 @@ async function runSplashFlow() {
 function ensureWsConnected() {
   if (!isLoggedIn.value) return
   if (webSocketService.isConnected()) return
+  // 포그라운드 복귀/탭 활성화는 "지금 붙어야 함" 신호 — 백오프 리셋 후 즉시 재연결.
+  // 실패해도 모니터링/백오프 체인이 이어서 무한 재시도한다.
+  webSocketService.resetReconnect()
   webSocketService.connect().catch(e => console.warn('[WS] 연결 실패:', e))
 }
 

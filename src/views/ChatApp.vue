@@ -127,8 +127,9 @@ const initializeWebSocket = async () => {
     connectionState.value.connecting = true
     connectionState.value.status = 'connecting'
 
+    // 채팅 진입 시 소켓이 안 붙어 있으면 즉시 연결 시도(백오프 대기 무시 + stale 세션 처리).
     if (!webSocketService.isConnected()) {
-      await webSocketService.connect()
+      await webSocketService.ensureConnection()
     }
 
     setupGlobalMessageHandlers()

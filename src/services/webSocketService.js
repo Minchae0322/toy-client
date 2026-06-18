@@ -25,9 +25,16 @@ class WebSocketService {
       status: 'disconnected',
       error: null
     }
+    // 재연결 정책 (Slack/Discord/WhatsApp 류 표준)
+    //  - 절대 영구 포기하지 않는다: 상한(capped) 지수 백오프 + 지터(jitter)로 무한 재시도
+    //  - shouldConnect: "연결돼 있어야 하는가"(사용자 인텐트). 로그아웃/백그라운드 disconnect 시 false
+    //    → 의도적으로 끊은 동안에는 자동 재연결하지 않는다
+    this.shouldConnect = false
+    this.reconnecting = false           // 재연결 타이머 예약 중 가드 (중복 타이머 방지)
+    this.reconnectTimer = null
     this.reconnectAttempts = 0
-    this.maxReconnectAttempts = 5
-    this.reconnectDelay = 1000
+    this.baseReconnectDelay = 1000      // 첫 백오프 1s
+    this.maxReconnectDelay = 30000      // 상한 30s — 이 이상 길어지지 않음
 
     // 이 소켓 세션을 인증한 토큰과 그 토큰에서 추출한 userId.
     // 모든 개인 큐 구독 경로는 sessionUserId 기준으로 만들어 세션 신원과 일치시킨다.
@@ -192,6 +199,9 @@ class WebSocketService {
       this.sessionToken = token
       this.sessionUserId = sessionUserId
 
+      // 연결 인텐트 ON — 이후 끊기면 자동 재연결 대상이 된다
+      this.shouldConnect = true
+
       this.connecting = true
       this.updateConnectionState('connecting')
 
@@ -302,7 +312,13 @@ class WebSocketService {
       }
       return
     }
-    if (this.connecting) return this.waitForConnection(() => {}, () => {})
+    // 여기까지 왔다는 건 "지금 붙어야 함"이라는 강한 신호(채팅 진입/메시지 전송 등).
+    // 백오프 대기 중이어도 취소하고 즉시 연결을 시도한다.
+    this.resetReconnect()
+    // 이미 연결 진행 중이면 그 시도가 끝날 때까지 실제로 기다린다(awaitable).
+    if (this.connecting) {
+      return new Promise((resolve, reject) => this.waitForConnection(resolve, reject))
+    }
     return this.connect()
   }
 
@@ -507,22 +523,53 @@ class WebSocketService {
 
   // ==================== 재연결 ====================
 
+  // 상한 지수 백오프 + 지터로 무한 재시도 (영구 포기 없음).
+  // 유명 메신저(Slack/Discord/WhatsApp)와 동일하게, 끊긴 동안에는 계속 붙으려 시도하되
+  // 백오프 상한(30s)과 jitter 로 서버 thundering-herd 를 피한다.
   attemptReconnect() {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('❌ [WebSocket] 최대 재연결 횟수 초과')
-      return
-    }
+    if (!this.shouldConnect) return        // 의도적으로 끊은 상태면 재연결하지 않음
+    if (this.reconnecting) return          // 이미 타이머 예약됨
+    if (this.isConnected() || this.connecting) return
 
+    this.reconnecting = true
     this.reconnectAttempts++
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
 
-    console.log(`🔄 [WebSocket] ${delay}ms 후 재연결 (${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
+    // equal jitter: cap/2 + random(0, cap/2) → 0ms 폭주 방지 + 분산
+    const cap = Math.min(
+      this.maxReconnectDelay,
+      this.baseReconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
+    )
+    const delay = Math.round(cap / 2 + Math.random() * (cap / 2))
 
-    setTimeout(() => {
-      if (!this.isConnected()) {
-        this.connect().catch(() => this.attemptReconnect())
-      }
+    console.log(`🔄 [WebSocket] ${delay}ms 후 재연결 시도 (#${this.reconnectAttempts})`)
+
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnecting = false
+      this.reconnectTimer = null
+      if (!this.shouldConnect || this.isConnected() || this.connecting) return
+      this.connect().catch(() => this.attemptReconnect())
     }, delay)
+  }
+
+  // 백오프 상태 초기화 (예약된 타이머 취소 + 횟수 리셋)
+  resetReconnect() {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+    this.reconnecting = false
+    this.reconnectAttempts = 0
+  }
+
+  // 네트워크 복구/포그라운드 복귀 등 "지금 당장 붙어야 하는" 신호에서 호출.
+  // 백오프를 리셋하고 즉시 재연결 — 긴 백오프 대기 중이어도 곧장 시도한다.
+  kickReconnect() {
+    if (!this.shouldConnect) return
+    if (this.isConnected()) return
+    this.resetReconnect()
+    if (!this.connecting) {
+      this.connect().catch(() => this.attemptReconnect())
+    }
   }
 
   restoreSubscriptions() {
@@ -539,6 +586,10 @@ class WebSocketService {
   // ==================== 연결 해제 ====================
 
   disconnect() {
+    // 의도적 종료 — 자동 재연결 중단 + 예약된 백오프 타이머 취소
+    this.shouldConnect = false
+    this.resetReconnect()
+
     this.connecting = false
     this.connected = false
 
@@ -601,7 +652,6 @@ class WebSocketService {
 
   startConnectionMonitoring() {
     setInterval(() => {
-      const was = this.connectionState.connected
       const now = this.isConnected()
 
       // 살아있는 소켓이지만 계정이 바뀐 경우 backstop 으로 재연결
@@ -611,11 +661,11 @@ class WebSocketService {
         return
       }
 
-      if (was && !now) {
-        this.updateConnectionState('disconnected')
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-          this.attemptReconnect()
-        }
+      // 연결돼 있어야 하는데(shouldConnect) 안 붙어 있으면 — 최초 연결 실패 케이스 포함 —
+      // 계속 되살린다. attemptReconnect 내부 가드가 중복/백오프를 관리.
+      if (this.shouldConnect && !now && !this.connecting && !this.reconnecting) {
+        if (this.connectionState.connected) this.updateConnectionState('disconnected')
+        this.attemptReconnect()
       }
     }, 5000)
   }
@@ -627,6 +677,16 @@ webSocketService.startConnectionMonitoring()
 if (typeof window !== 'undefined') {
   window.webSocketService = webSocketService
   window.debugWebSocket = () => console.log(webSocketService.getDebugInfo())
+
+  // 네트워크 복구 시 즉시 재연결 (모바일 셀룰러↔Wi-Fi 전환, 터널 진입/탈출 등).
+  // shouldConnect 가 true(=연결돼 있어야 함)일 때만 동작 → 백그라운드/로그아웃 중엔 무시.
+  window.addEventListener('online', () => {
+    console.log('🌐 [WebSocket] 네트워크 복구 감지 → 즉시 재연결')
+    webSocketService.kickReconnect()
+  })
+  window.addEventListener('offline', () => {
+    console.log('🌐 [WebSocket] 네트워크 끊김 감지')
+  })
 }
 
 export default webSocketService
