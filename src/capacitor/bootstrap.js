@@ -14,9 +14,9 @@ export async function initCapacitor(router) {
 
   try {
     // index.html 인라인 스크립트가 페인트 전에 data-theme 을 세팅함 — 그 값으로 초기 StatusBar 결정
-    // Style.Dark = 검은 아이콘(라이트 배경용) / Style.Light = 흰 아이콘(다크 배경용)
+    // Style enum 은 "배경 스타일" 기준 — Style.Light = 라이트 배경(검은 아이콘) / Style.Dark = 다크 배경(흰 아이콘)
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-    await StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark })
+    await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light })
     if (Capacitor.getPlatform() === 'android') {
       await StatusBar.setBackgroundColor({ color: isDark ? '#0F1218' : '#ffffff' })
     }

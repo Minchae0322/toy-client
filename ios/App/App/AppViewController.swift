@@ -121,21 +121,30 @@ class AppViewController: CAPBridgeViewController {
     }
 
     // 스와이프/전환 중 native 호스트 뷰가 비쳐도 라이트/다크에 맞는 색이 깔리도록.
-    // 웹의 --bg-base 와 동일 — 라이트 #FFFFFF, 다크 #0F1218
+    // 웹의 --bg-base 와 동일 — 라이트 #FFFFFF, 다크 #0F1218.
+    //
+    // dynamic UIColor 는 WKWebView 내부 transition snapshot 레이어가 trait 를
+    // 즉시 다시 해석 안 해줘서, 가끔 좌측에 시스템 색(검정) 이 노출되는 케이스가 있다.
+    // → 현재 시점의 trait 로 즉시 resolve 한 고정 색을 UIView + CALayer + window 까지
+    //    모두 명시적으로 깔아 어떤 internal layer 가 비쳐도 같은 색이 보장되게 한다.
     private func applyAdaptiveBackground() {
-        let bg: UIColor
+        let isDark: Bool
         if #available(iOS 13.0, *) {
-            bg = UIColor { traits in
-                traits.userInterfaceStyle == .dark
-                    ? UIColor(red: 15/255, green: 18/255, blue: 24/255, alpha: 1)
-                    : UIColor.white
-            }
+            isDark = traitCollection.userInterfaceStyle == .dark
         } else {
-            bg = UIColor.white
+            isDark = false
         }
+        let bg: UIColor = isDark
+            ? UIColor(red: 15/255, green: 18/255, blue: 24/255, alpha: 1)
+            : .white
         view.backgroundColor = bg
+        view.layer.backgroundColor = bg.cgColor
         webView?.backgroundColor = bg
+        webView?.layer.backgroundColor = bg.cgColor
         webView?.scrollView.backgroundColor = bg
+        webView?.scrollView.layer.backgroundColor = bg.cgColor
+        // 호스트 윈도우까지 — WKWebView 내장 swipe back 이 노출하는 영역이 윈도우 레벨일 수 있음
+        view.window?.backgroundColor = bg
     }
 }
 

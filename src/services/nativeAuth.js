@@ -242,9 +242,12 @@ export async function signInWithGoogle() {
   await ensureInitialized()
   let result
   try {
+    // scopes는 넘기지 않는다. 플러그인이 email/profile/openid를 기본 포함하며,
+    // Android 측은 scopes 키가 있기만 해도 MainActivity 확장(ModifiedMainActivityForSocialLoginPlugin)을 요구해
+    // "You CANNOT use scopes without modifying the main activity" 에러를 던진다.
     result = await SocialLogin.login({
       provider: 'google',
-      options: { scopes: ['profile', 'email'] },
+      options: {},
     })
   } catch (e) {
     if (isCancelLike(e?.message, e?.code)) {

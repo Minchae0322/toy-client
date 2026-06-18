@@ -71,9 +71,9 @@
 
     <div class="social-area">
       <div class="divider"><span>또는 간편 로그인</span></div>
-      <div class="social-grid">
-        <!-- Apple은 네이티브에서만 표시 (App Store 가이드라인 4.8) -->
-        <button v-if="isNative" type="button" class="social-btn apple" @click="$emit('social-login', 'apple')">
+      <div class="social-grid" :class="{ 'two-col': isNative && !isIOS }">
+        <!-- Apple Sign-In 은 iOS 전용 (App Store 가이드라인 4.8). Android 노출 X -->
+        <button v-if="isIOS" type="button" class="social-btn apple" @click="$emit('social-login', 'apple')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12-1.103.42-2.31 1.05-3.097.85-.99 2.27-1.7 3.114-1.553zM21.36 17.04c-.595 1.36-.86 1.96-1.62 3.16-1.06 1.67-2.55 3.74-4.4 3.76-1.65.02-2.07-1.07-4.31-1.06-2.24.01-2.7 1.08-4.36 1.06-1.85-.02-3.27-1.9-4.32-3.56C-.6 16.83-.92 9.06 2.97 5.59c1.27-1.13 2.97-1.78 4.7-1.78 1.92 0 3.13 1.05 4.71 1.05 1.54 0 2.47-1.05 4.7-1.05 1.55 0 3.2.84 4.36 2.3-3.84 2.1-3.21 7.58.92 8.93z"/>
           </svg>
@@ -106,6 +106,8 @@ import { Capacitor } from '@capacitor/core'
 
 const REMEMBERED_EMAIL_KEY = 'login_remembered_email'
 const isNative = Capacitor.isNativePlatform()
+// Apple Sign-In 은 iOS 전용 (App Store 가이드라인 4.8). Android 에서는 노출하지 않음.
+const isIOS = isNative && Capacitor.getPlatform() === 'ios'
 
 const props = defineProps({
   sessionExpired: Boolean,
@@ -305,6 +307,9 @@ input.error { border-color: var(--c-danger); background: var(--c-danger-soft); }
 .social-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .social-grid:has(.social-btn.apple) { grid-template-columns: 1fr; gap: 10px; }
 .social-grid:has(.social-btn.apple) .social-btn { padding: 13px 12px; font-size: 14px; }
+/* Android — 버튼 2개(Google, Naver) 라 2 컬럼 */
+.social-grid.two-col { grid-template-columns: 1fr 1fr; gap: 10px; }
+.social-grid.two-col .social-btn { padding: 13px 12px; font-size: 14px; }
 .social-btn {
   display: flex;
   align-items: center;

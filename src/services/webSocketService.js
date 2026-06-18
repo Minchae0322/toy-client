@@ -41,6 +41,13 @@ class WebSocketService {
     this.sessionToken = null
     this.sessionUserId = null
 
+    // 동시 연결/대기 정리용 — disconnect 시 모두 reject 시켜 promise hanging 방지
+    this.pendingConnectPromises = []
+    // startConnectionMonitoring 의 setInterval handle (HMR / 정리용)
+    this.monitorIntervalId = null
+    // connect() 의 timeout handle — 모든 종료 경로에서 clear 위해 인스턴스 레벨에 보관
+    this.connectTimeoutId = null
+
     this.topics = {
       chatRoomPrefix: '/topic/chatroom',
       userDevicePrefix: '/user',
@@ -238,6 +245,7 @@ class WebSocketService {
         heartbeatOutgoing: 10000,
 
         onConnect: () => {
+          this.clearConnectTimeout()
           console.log('✅ [WebSocket] 연결 성공')
           this.connected = true
           this.connecting = false
@@ -245,61 +253,137 @@ class WebSocketService {
           this.updateConnectionState('connected')
           this.subscribeToEssentialTopics()
           this.restoreSubscriptions()
+          this.resolvePendingConnects()
           resolve()
         },
 
         onStompError: (frame) => {
+          this.clearConnectTimeout()
           console.error('❌ [WebSocket] STOMP 에러:', frame)
           this.connected = false
           this.connecting = false
-          this.updateConnectionState('error', frame.body || 'STOMP Error')
-          reject(new Error(frame.body || 'STOMP Error'))
+          const body = frame?.body || ''
+          this.updateConnectionState('error', body || 'STOMP Error')
+          // 인증 실패(만료된 토큰) → 자동 재연결 중단. 토큰 갱신은 상위(interceptor) 에서
+          if (this.isAuthError(body) || this.isAuthError(frame?.headers?.message)) {
+            console.warn('🔐 [WebSocket] 인증 실패 — 자동 재연결 중단. 새 토큰 받은 후 다시 connect() 호출 필요')
+            this.shouldConnect = false
+            this.resetReconnect()
+          }
+          const err = new Error(body || 'STOMP Error')
+          this.rejectPendingConnects(err)
+          reject(err)
         },
 
         onWebSocketError: (error) => {
+          this.clearConnectTimeout()
           console.error('❌ [WebSocket] 연결 에러:', error)
           this.connected = false
           this.connecting = false
-          this.updateConnectionState('error', error.message)
-          reject(error)
+          const err = error instanceof Error
+            ? error
+            : new Error(error?.message || String(error) || 'WebSocket Error')
+          this.updateConnectionState('error', err.message)
+          this.rejectPendingConnects(err)
+          reject(err)
         },
 
         onWebSocketClose: (event) => {
-          console.log('🔌 [WebSocket] 연결 종료:', event.code)
+          this.clearConnectTimeout()
+          console.log('🔌 [WebSocket] 연결 종료:', event?.code)
           this.connected = false
           this.connecting = false
           this.updateConnectionState('disconnected')
-          if (event.code !== 1000) this.attemptReconnect()
+          // 정상 종료(1000) 또는 의도적 disconnect 가 아니면 재연결
+          if (event?.code !== 1000 && this.shouldConnect) this.attemptReconnect()
         }
       })
 
-      const timeout = setTimeout(() => {
+      this.connectTimeoutId = setTimeout(() => {
         if (this.connecting) {
           this.connecting = false
           this.updateConnectionState('error', '연결 시간 초과')
           try { this.client.deactivate() } catch (e) { /* ignore */ }
-          reject(new Error('연결 시간 초과'))
+          const err = new Error('연결 시간 초과')
+          this.rejectPendingConnects(err)
+          reject(err)
         }
+        this.connectTimeoutId = null
       }, 20000)
-
-      const originalOnConnect = this.client.onConnect
-      this.client.onConnect = (frame) => {
-        clearTimeout(timeout)
-        originalOnConnect(frame)
-      }
 
       this.client.activate()
     })
   }
 
   waitForConnection(resolve, reject) {
-    const check = () => {
-      if (this.isConnected()) resolve()
-      else if (!this.connecting) reject(new Error('연결 실패'))
-      else setTimeout(check, 100)
+    // poll 핸들 + 전체 timeout 핸들을 둘 다 추적해 어느 한쪽이 끝나면 다른 쪽 취소.
+    // settled 가드로 resolve/reject 중복 호출 방지 (이전 구현은 timeout 후에도 poll 이 계속 돌았음).
+    let settled = false
+    let pollHandle = null
+    let timeoutHandle = null
+
+    const cleanup = () => {
+      if (pollHandle) { clearTimeout(pollHandle); pollHandle = null }
+      if (timeoutHandle) { clearTimeout(timeoutHandle); timeoutHandle = null }
+      this.pendingConnectPromises = this.pendingConnectPromises.filter(p => p.token !== token)
     }
-    setTimeout(() => { if (this.connecting) reject(new Error('연결 시간 초과')) }, 20000)
+    const doResolve = () => {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve()
+    }
+    const doReject = (err) => {
+      if (settled) return
+      settled = true
+      cleanup()
+      reject(err)
+    }
+    const token = { reject: doReject }
+
+    const check = () => {
+      if (settled) return
+      if (this.isConnected()) doResolve()
+      else if (!this.connecting) doReject(new Error('연결 실패'))
+      else pollHandle = setTimeout(check, 100)
+    }
+    timeoutHandle = setTimeout(() => {
+      if (!settled && this.connecting) doReject(new Error('연결 시간 초과'))
+    }, 20000)
+    // disconnect() 호출 시 일괄 reject 가능하도록 pending list 에 등록
+    this.pendingConnectPromises.push(token)
     check()
+  }
+
+  // STOMP ERROR frame body / header.message 에서 인증 실패 시그널 판별
+  // 서버가 401/403 을 STOMP ERROR frame 으로 변환해 보내는 경우 본문에 키워드가 있음
+  isAuthError(text) {
+    if (!text) return false
+    const t = String(text).toLowerCase()
+    return t.includes('unauthorized') || t.includes('401') ||
+      t.includes('forbidden') || t.includes('403') ||
+      t.includes('jwt') || t.includes('expired') ||
+      t.includes('invalid token') || t.includes('authentication')
+  }
+
+  clearConnectTimeout() {
+    if (this.connectTimeoutId) {
+      clearTimeout(this.connectTimeoutId)
+      this.connectTimeoutId = null
+    }
+  }
+
+  // 연결 성공 시: 대기 중인 waitForConnection 들이 다음 poll tick 에서 자연스럽게 resolve 됨.
+  // 별도 호출 안 해도 되지만 즉시 끝내려면 cleanup 해도 무방
+  resolvePendingConnects() {
+    // no-op — poll 이 알아서 isConnected() 보고 resolve
+  }
+
+  // disconnect 등으로 강제 종료 시: 모든 대기 promise 를 즉시 reject
+  rejectPendingConnects(err) {
+    const list = this.pendingConnectPromises
+    this.pendingConnectPromises = []
+    list.forEach(p => { try { p.reject(err) } catch (e) { /* ignore */ } })
   }
 
   async ensureConnection() {
@@ -476,11 +560,20 @@ class WebSocketService {
 
     console.log(`📤 [WebSocket] 메시지 전송:`, message)
 
-    this.client.publish({
-      destination: this.destinations.sendMessage,
-      headers: headers,
-      body: JSON.stringify(message)
-    })
+    // ensureConnection 통과해도 publish 직전 race 로 client 가 null 될 수 있음
+    if (!this.client || !this.client.connected) {
+      throw new Error('메시지 전송 실패: 연결 끊김')
+    }
+    try {
+      this.client.publish({
+        destination: this.destinations.sendMessage,
+        headers: headers,
+        body: JSON.stringify(message)
+      })
+    } catch (e) {
+      console.error('❌ [WebSocket] publish 실패:', e)
+      throw e
+    }
   }
 
   // ==================== 채팅방 나가기 ====================
@@ -572,6 +665,19 @@ class WebSocketService {
     }
   }
 
+  // 토큰 갱신 직후 호출 — 인증 실패(STOMP ERROR)로 자동 재연결 중단된 상태를 회복.
+  // 정상 연결 상태면 no-op (기존 세션 재사용). 끊겨 있으면 새 토큰으로 다시 connect.
+  onTokenRefreshed() {
+    if (this.isConnected()) return
+    // 토큰이 있으면 이제 연결돼야 한다는 의도로 간주
+    if (!this.getAuthToken()) return
+    this.shouldConnect = true
+    this.resetReconnect()
+    if (!this.connecting) {
+      this.connect().catch(() => this.attemptReconnect())
+    }
+  }
+
   restoreSubscriptions() {
     this.subscriptions.forEach((_, key) => {
       if (key.startsWith('chatroom-')) {
@@ -589,6 +695,7 @@ class WebSocketService {
     // 의도적 종료 — 자동 재연결 중단 + 예약된 백오프 타이머 취소
     this.shouldConnect = false
     this.resetReconnect()
+    this.clearConnectTimeout()
 
     this.connecting = false
     this.connected = false
@@ -603,6 +710,9 @@ class WebSocketService {
       try { this.client.deactivate() } catch (e) { /* ignore */ }
       this.client = null
     }
+
+    // connecting 중에 disconnect 호출됐을 때 hanging 되지 않도록 pending promise 정리
+    this.rejectPendingConnects(new Error('연결이 해제되었습니다'))
 
     // 세션 신원 초기화 — 다음 connect() 가 최신 토큰으로 다시 고정한다.
     this.sessionToken = null
@@ -651,7 +761,9 @@ class WebSocketService {
   }
 
   startConnectionMonitoring() {
-    setInterval(() => {
+    // 이미 모니터링 중이면 중복 실행 방지 (HMR / 테스트 환경에서 누적되는 사고 차단)
+    if (this.monitorIntervalId) return
+    this.monitorIntervalId = setInterval(() => {
       const now = this.isConnected()
 
       // 살아있는 소켓이지만 계정이 바뀐 경우 backstop 으로 재연결
@@ -668,6 +780,13 @@ class WebSocketService {
         this.attemptReconnect()
       }
     }, 5000)
+  }
+
+  stopConnectionMonitoring() {
+    if (this.monitorIntervalId) {
+      clearInterval(this.monitorIntervalId)
+      this.monitorIntervalId = null
+    }
   }
 }
 

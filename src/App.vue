@@ -36,13 +36,14 @@ const {isChatDetailOpen} = useChatDetailMode()
 const {resolved: resolvedTheme} = useTheme()
 
 // 테마에 맞춰 네이티브 StatusBar 적용
-// Capacitor: Style.Dark = 검은 아이콘(라이트 배경용) / Style.Light = 흰 아이콘(다크 배경용)
-// → light 테마: Style.Dark / dark 테마: Style.Light
+// Capacitor Style 은 "배경 스타일" 기준 — 이름이 직관과 반대:
+//   Style.Light = 라이트 배경 (검은 아이콘) / Style.Dark = 다크 배경 (흰 아이콘)
+// → light 테마: Style.Light / dark 테마: Style.Dark
 async function applyStatusBarTheme() {
   if (!Capacitor.isNativePlatform()) return
   const isDark = resolvedTheme.value === 'dark'
   try {
-    await StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark })
+    await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light })
     await StatusBar.setBackgroundColor({ color: isDark ? '#0F1218' : '#ffffff' })
   } catch {}
   // iOS: 호스트 뷰(웹뷰 뒤에 깔린 native view) 배경을 웹 테마와 일치시킴.

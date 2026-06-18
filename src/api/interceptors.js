@@ -9,6 +9,22 @@ import axios from 'axios'
 import { apiClient, authClient } from './client.js'
 import * as authUtils from '@/utils/auth.js'
 
+// 토큰 갱신 직후 WebSocket 도 함께 살린다.
+// 인증 만료로 STOMP ERROR 받아 WS 가 자동 재연결 중단된 케이스에서, HTTP 토큰 갱신이
+// 성공하면 새 토큰으로 WS 도 다시 붙어야 채팅/알림이 끊김 없이 이어진다.
+// 동적 임포트 — webSocketService 로딩 실패가 토큰 갱신 자체를 막지 않도록 안전하게 처리
+const notifyWebSocketTokenRefreshed = () => {
+  import('@/services/webSocketService.js')
+    .then(({ webSocketService }) => {
+      try { webSocketService.onTokenRefreshed?.() } catch (e) {
+        console.warn('⚠️ [Interceptor] WS onTokenRefreshed 호출 실패:', e)
+      }
+    })
+    .catch((e) => {
+      console.warn('⚠️ [Interceptor] webSocketService 로드 실패:', e)
+    })
+}
+
 // 🔥 무한루프 방지를 위한 상태 관리
 let isRefreshing = false
 let failedRequestsQueue = []
@@ -110,6 +126,8 @@ const refreshTokenViaBackend = async () => {
 
     if (newAccessToken) {
       authUtils.setAccessToken(newAccessToken)
+      // WS 가 인증 만료로 끊겨있었다면 새 토큰으로 다시 붙음 — 채팅·알림 자동 복구
+      notifyWebSocketTokenRefreshed()
 
       console.log('✅ [Interceptor] 토큰 갱신 성공')
 
