@@ -38,7 +38,7 @@
 - **OTA 배포**: `@capgo/capacitor-updater@7.45.10` — `npm run ota:deploy`로 웹 변경분을 스토어 심사 없이 즉시 배포. `src/capacitor/bootstrap.js`에서 `notifyAppReady()` 호출 필수 (누락 시 60초 후 자동 롤백)
 - **UI 라이브러리**: Tailwind 4.x (유틸), `lucide-vue-next` (아이콘), `@heroicons/vue`
 - **HTTP**: Axios (`src/api/client.js` + 인터셉터 `src/api/interceptors.js`)
-- **실시간**: STOMP + SockJS (`src/services/webSocketService.js`) — STOMP 내장 자동 재연결 비활성화(`reconnectDelay: 0`). 개인 큐 구독 경로·메시지 발신자 ID는 반드시 `sessionUserId`(소켓 인증 JWT 기준) 사용, `getCurrentUserId()`(localStorage 기반) 혼용 금지 — 계정 전환 직후 두 값이 달라져 `INVALID_DESTINATION` 발생
+- **실시간**: STOMP + SockJS (`src/services/webSocketService.js`) — STOMP 내장 자동 재연결 비활성화(`reconnectDelay: 0`), 서비스 자체가 capped exponential backoff + jitter 무한 재시도로 관리. `shouldConnect` 인텐트 플래그로 의도적 disconnect(로그아웃/백그라운드) 시엔 재연결 안 함. 채팅 진입 등 강한 신호에는 `ensureConnection()` 호출로 즉시 연결·await 지원. 토큰 갱신 후 `onTokenRefreshed()` 호출 필수(인터셉터에서 자동 처리). 개인 큐 구독 경로·메시지 발신자 ID는 반드시 `sessionUserId`(소켓 인증 JWT 기준) 사용, `getCurrentUserId()`(localStorage 기반) 혼용 금지 — 계정 전환 직후 두 값이 달라져 `INVALID_DESTINATION` 발생
 - **푸시 알림**: Firebase FCM 11.x (`src/services/fcmService.js`, `src/services/pushNotificationService.js`)
 - **날짜 유틸**: `date-fns 4.x`
 - **주요 디렉토리**:
@@ -173,6 +173,11 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-19)**: 구조·버전·파일 목록 정확성 검증 완료 — STOMP 재연결 메커니즘 변경 반영, 신규 WS API(`ensureConnection`, `onTokenRefreshed`) 명시 (`docs`)
+- **버전 1.1.8**: iOS 빌드 22, Android versionCode 19 (`chore`)
+- **네이티브 안정화 패치**: `App.vue`·`bootstrap.js` StatusBar Style enum 정정(다크모드 시계·아이콘 가시성 수정), `AppViewController.swift` swipe back 전환 중 검정 플래시 차단, `LoginForm.vue` Apple Sign-In iOS 전용 한정(Android 노출 제거·소셜 그리드 2컬럼), `nativeAuth.js` Google login scopes 제거(Android 에러 차단), `interceptors.js` 토큰 갱신 후 `webSocketService.onTokenRefreshed()` 자동 호출로 WS 자동 복구 (`fix`)
+- **채팅 진입 시 소켓 즉시 연결**: `ChatDetailView`·`ChatApp` 진입 시 `webSocketService.ensureConnection()` 사용 — 미연결이면 백오프 대기 리셋 후 즉시 연결, 완료까지 await. `ensureConnection` 진행 중이면 실제로 대기 가능(awaitable) (`feat(chat)`)
+- **WebSocket 무한 재연결 개선**: 재연결 5회 후 영구 포기 제거 → capped exponential backoff + jitter 무한 재시도. `shouldConnect` 인텐트 플래그·`pendingConnectPromises` hanging promise 일괄 reject·connect timeout 인스턴스 추적·STOMP 인증 실패 시 폭주 차단 등 신뢰성 전반 강화 (`fix(ws)`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-18)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-17)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-16)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
