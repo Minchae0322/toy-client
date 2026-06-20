@@ -173,6 +173,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-20)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-19)**: 구조·버전·파일 목록 정확성 검증 완료 — STOMP 재연결 메커니즘 변경 반영, 신규 WS API(`ensureConnection`, `onTokenRefreshed`) 명시 (`docs`)
 - **버전 1.1.8**: iOS 빌드 22, Android versionCode 19 (`chore`)
 - **네이티브 안정화 패치**: `App.vue`·`bootstrap.js` StatusBar Style enum 정정(다크모드 시계·아이콘 가시성 수정), `AppViewController.swift` swipe back 전환 중 검정 플래시 차단, `LoginForm.vue` Apple Sign-In iOS 전용 한정(Android 노출 제거·소셜 그리드 2컬럼), `nativeAuth.js` Google login scopes 제거(Android 에러 차단), `interceptors.js` 토큰 갱신 후 `webSocketService.onTokenRefreshed()` 자동 호출로 WS 자동 복구 (`fix`)
