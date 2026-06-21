@@ -401,7 +401,7 @@ class FeedService extends BaseApiService {
       userInfo: this.normalizeUserInfo(feed.userInfo),
       product: this.normalizeProduct(feed.product),
       subCategoryDetail: this.normalizeSubCategoryDetail(feed.subCategoryDetail),
-      attachmentFiles: feed.attachmentFiles || [],
+      attachmentFiles: (feed.attachmentFiles || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
       hashtags: feed.hashtags || [],
       feedEvaluation: this.normalizeFeedEvaluation(feed.feedEvaluation),
       likeCount: feed.likeCount || 0,
