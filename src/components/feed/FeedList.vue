@@ -500,32 +500,34 @@ defineExpose({ observerTarget });
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-/* 평가 뱃지 - 그리드 뷰와 동일한 파스텔 스타일 */
+/* 평가 뱃지 — 대시보드 톤 (컬러 도트 + 흰 텍스트, 배경 X) */
 .list-eval-badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
-  border-radius: 100px;
-  font-size: 10px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  color: #fff;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  box-shadow: none;
 }
 
 .list-eval-badge .eval-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.28);
 }
 
-.eval-best { background-color: var(--c-warning-soft); color: var(--c-warning); }
-.eval-best .eval-dot { background-color: var(--c-warning); }
-.eval-good { background-color: var(--c-success-soft); color: var(--c-success); }
-.eval-good .eval-dot { background-color: var(--c-success); }
-.eval-okay { background-color: var(--c-brand-soft); color: var(--c-brand); }
-.eval-okay .eval-dot { background-color: var(--c-brand); }
-.eval-bad { background-color: var(--c-danger-soft); color: var(--c-danger); }
-.eval-bad .eval-dot { background-color: var(--c-danger); }
+.eval-best .eval-dot { background-color: #FACC15; }
+.eval-good .eval-dot { background-color: #4ADE80; }
+.eval-okay .eval-dot { background-color: #C084FC; }
+.eval-bad  .eval-dot { background-color: #F87171; }
 
 /* 급상승 뱃지 */
 .list-trend-badge {
@@ -1031,8 +1033,8 @@ defineExpose({ observerTarget });
   }
 
   .list-badges-top { top: 6px; left: 6px; gap: 3px; }
-  .list-eval-badge { padding: 2.5px 6px; font-size: 9px; gap: 3px; }
-  .list-eval-badge .eval-dot { width: 4px; height: 4px; }
+  .list-eval-badge { padding: 0; font-size: 10px; gap: 4px; }
+  .list-eval-badge .eval-dot { width: 5px; height: 5px; }
   .list-trend-badge { padding: 3px 6px; font-size: 8px; }
   .list-price-overlay { bottom: 6px; right: 6px; font-size: 10px; padding: 2px 6px; }
   .list-new-badge { top: 6px; right: 6px; padding: 3px 7px; font-size: 9.5px; }

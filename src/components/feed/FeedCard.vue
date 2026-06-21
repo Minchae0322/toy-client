@@ -236,22 +236,26 @@ const formatDate = (date) => feedUtils.formatDate(date);
   display: flex; align-items: center; gap: 4px;
 }
 .evaluation-badge {
-  display: flex; align-items: center; gap: 5px;
-  padding: 5px 10px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
   font-size: 11px; font-weight: 700;
-  letter-spacing: -0.2px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  color: #fff;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  box-shadow: none;
 }
-.eval-dot { width: 5px; height: 5px; border-radius: 50%; }
+.eval-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.28);
+}
 
-.eb-best { background-color: var(--c-warning-soft); color: var(--c-warning); }
-.eb-best .eval-dot { background-color: var(--c-warning); }
-.eb-good { background-color: var(--c-success-soft); color: var(--c-success); }
-.eb-good .eval-dot { background-color: var(--c-success); }
-.eb-okay { background-color: var(--c-brand-soft); color: var(--c-brand); }
-.eb-okay .eval-dot { background-color: var(--c-brand); }
-.eval-bad { background-color: var(--c-danger-soft); color: var(--c-danger); }
-.eval-bad .eval-dot { background-color: var(--c-danger); }
+.eb-best .eval-dot { background-color: #FACC15; }
+.eb-good .eval-dot { background-color: #4ADE80; }
+.eb-okay .eval-dot { background-color: #C084FC; }
+.eval-bad .eval-dot { background-color: #F87171; }
 
 .trend-badge {
   display: flex; align-items: center; gap: 3px;
@@ -392,7 +396,8 @@ const formatDate = (date) => feedUtils.formatDate(date);
   .post-card:hover .post-image { transform: none; }
 
   .image-badges-top { top: 8px; left: 8px; }
-  .evaluation-badge { padding: 4px 8px; font-size: 10px; }
+  .evaluation-badge { padding: 0; font-size: 10px; gap: 4px; }
+  .evaluation-badge .eval-dot { width: 5px; height: 5px; }
   .trend-badge { padding: 4px 7px; font-size: 10px; }
   .new-badge { top: 8px; right: 8px; padding: 3px 8px; font-size: 9.5px; }
 

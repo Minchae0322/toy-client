@@ -60,6 +60,7 @@
 
               <div class="overlay-bottom">
                 <span v-if="feed.feedEvaluation?.code" :class="['eval-pill', feed.feedEvaluation.code.toLowerCase()]">
+                  <span class="eval-dot"></span>
                   {{ feed.feedEvaluation.description }}
                 </span>
                 <p v-if="feed.reviewSummary" class="review-main">"{{ feed.reviewSummary }}"</p>
@@ -418,34 +419,29 @@ onUnmounted(() => {
 }
 
 .eval-pill {
-  display: inline-block;
-  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
+  color: #fff;
   margin-bottom: 6px;
-  backdrop-filter: blur(4px);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-.eval-pill.best {
-  background: rgba(251, 191, 36, 0.85);
-  color: #ffffff;
+.eval-pill .eval-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.28);
 }
 
-.eval-pill.good {
-  background: rgba(34, 197, 94, 0.8);
-  color: #ffffff;
-}
-
-.eval-pill.okay {
-  background: rgba(139, 92, 246, 0.8);
-  color: #ffffff;
-}
-
-.eval-pill.bad {
-  background: rgba(239, 68, 68, 0.8);
-  color: #ffffff;
-}
+.eval-pill.best .eval-dot { background: #FACC15; }
+.eval-pill.good .eval-dot { background: #4ADE80; }
+.eval-pill.okay .eval-dot { background: #C084FC; }
+.eval-pill.bad  .eval-dot { background: #F87171; }
 
 .review-main {
   font-size: 13px;

@@ -358,18 +358,24 @@ const handleSendMessage = () => {
 }
 .breadcrumb-arrow { margin: 0 2px; color: var(--c-text-300); }
 
-/* 뱃지 */
+/* 뱃지 — 컬러 도트 + 다크 텍스트 (배경 X, 흰 본문 위) */
 .eval-badge {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 12px; border-radius: 100px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
   font-size: 12px; font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
-.eval-badge.best { background-color: rgba(254,243,199,0.92); color: var(--c-warning); }
-.eval-badge.good { background-color: rgba(220,252,231,0.92); color: var(--c-success); }
-.eval-badge.okay { background-color: rgba(243,232,255,0.92); color: var(--c-brand); }
-.eval-badge.bad { background-color: rgba(254,226,226,0.92); color: var(--c-danger); }
 
-.eval-dot { width: 6px; height: 6px; border-radius: 50%; background-color: currentColor; opacity: 0.6; }
+.eval-dot { width: 6px; height: 6px; border-radius: 50%; opacity: 1; }
+
+.eval-badge.best .eval-dot { background-color: #FACC15; }
+.eval-badge.good .eval-dot { background-color: #4ADE80; }
+.eval-badge.okay .eval-dot { background-color: #C084FC; }
+.eval-badge.bad  .eval-dot { background-color: #F87171; }
 
 .trend-badge {
   display: inline-flex; align-items: center; gap: 4px;
