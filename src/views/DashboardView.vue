@@ -10,11 +10,11 @@
         <!-- 다른 코너 둘러보기 (탐색 진입점) -->
         <DashboardQuickNav />
 
-        <!-- 메인: 요거픽 (사이트의 대표 기능) -->
-        <DashboardBattles />
+        <!-- 최신 피드 (매번 새로운 콘텐츠) -->
+        <DashboardHotFeeds :feeds="latestFeeds" :loading="feedsLoading" />
 
-        <!-- 핫 피드 섹션 -->
-        <DashboardHotFeeds :feeds="hotFeeds" :loading="feedsLoading" />
+        <!-- 요거픽 (사이트의 대표 기능) -->
+        <DashboardBattles />
 
         <!-- 실시간 제품 랭킹 섹션 (버블 차트) -->
         <DashboardRanking @products-loaded="onProductsLoaded" />
@@ -51,17 +51,17 @@ import { feedService } from '@/services/FeedService'
 
 const isDev = import.meta.env.DEV
 
-const hotFeeds = ref([])
+const latestFeeds = ref([])
 const hotProducts = ref([])
 
 const feedsLoading = ref(true)
 
-const loadHotFeeds = async () => {
+const loadLatestFeeds = async () => {
   feedsLoading.value = true
   try {
-    const response = await feedService.getHotFeeds({ size: 5, sort: 'hotScore,desc' })
+    const response = await feedService.getFeeds({}, { size: 8, sort: 'createdAt,DESC' })
     if (response.success) {
-      hotFeeds.value = response.data?.content || response.data || []
+      latestFeeds.value = response.data?.content || response.data || []
     }
   } catch (error) {
     console.error('피드 로드 실패:', error)
@@ -74,7 +74,7 @@ const onProductsLoaded = (products) => {
   hotProducts.value = products
 }
 
-onMounted(loadHotFeeds)
+onMounted(loadLatestFeeds)
 </script>
 
 <style scoped>

@@ -1,9 +1,9 @@
 <template>
   <section class="hot-feeds-section">
     <DashboardSectionHeader
-      prefix="지금 뜨는"
-      accent="핫-기록"
-      sub="실시간으로 가장 많이 본 인기 리뷰"
+      prefix="방금 올라온"
+      accent="새 리뷰"
+      sub="따끈따끈한 최신 피드"
       :to="{ name: 'FeedHome' }"
     />
 
@@ -17,21 +17,21 @@
           <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
         </svg>
       </div>
-      <p class="empty-text">아직 인기 피드가 없어요</p>
+      <p class="empty-text">아직 올라온 피드가 없어요</p>
     </div>
 
     <div v-else class="hot-feed-scroll">
       <router-link
-        v-for="(feed, index) in feeds"
+        v-for="feed in feeds"
         :key="feed.feedId"
         :to="{ name: 'FeedDetail', params: { id: feed.feedId } }"
         class="hot-feed-card"
       >
         <div class="card-visual">
           <img
-            v-if="feed.hotFeedThumbnailDto?.fileUrl"
-            :src="feed.hotFeedThumbnailDto.fileUrl"
-            :alt="feed.productName"
+            v-if="getThumbnail(feed)"
+            :src="getThumbnail(feed)"
+            :alt="getProductName(feed)"
             loading="lazy"
             @error="handleImageError"
           />
@@ -43,11 +43,6 @@
             </svg>
           </div>
 
-          <div class="card-overlay-top">
-            <span class="rank-num">{{ index + 1 }}</span>
-            <span v-if="feed.isTrending" class="trending-tag">HOT</span>
-          </div>
-
           <div class="card-overlay-bottom">
             <span
               v-if="feed.feedEvaluation?.code"
@@ -55,8 +50,8 @@
             >
               {{ feed.feedEvaluation.description }}
             </span>
-            <p v-if="feed.reviewSummary" class="review-main">{{ feed.reviewSummary }}</p>
-            <span class="product-name">{{ feed.productName }}</span>
+            <p v-if="getReviewText(feed)" class="review-main">{{ getReviewText(feed) }}</p>
+            <span class="product-name">{{ getProductName(feed) }}</span>
           </div>
         </div>
       </router-link>
@@ -71,6 +66,21 @@ defineProps({
   feeds: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false }
 })
+
+const getThumbnail = (feed) => {
+  return feed.thumbnailUrl?.fileUrl
+    || feed.hotFeedThumbnailDto?.fileUrl
+    || feed.attachmentFiles?.[0]?.fileUrl
+    || ''
+}
+
+const getProductName = (feed) => {
+  return feed.productNameCustom || feed.product?.name || feed.productName || ''
+}
+
+const getReviewText = (feed) => {
+  return feed.reviewSummary || feed.review || ''
+}
 
 const handleImageError = (event) => {
   event.target.style.display = 'none'
