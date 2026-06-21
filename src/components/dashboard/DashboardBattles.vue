@@ -91,9 +91,9 @@
     </div>
 
     <!-- 모바일: 1~6위 균등 2열 그리드 -->
-    <div v-if="!loading && topSix.length > 0" class="mobile-grid">
+    <div v-if="!loading && topFour.length > 0" class="mobile-grid">
       <router-link
-        v-for="(battle, idx) in topSix"
+        v-for="(battle, idx) in topFour"
         :key="`m-${battle.id}`"
         :to="{ name: 'BattleDetail', params: { id: battle.id } }"
         class="m-card"
@@ -124,7 +124,7 @@
 
     <!-- 모바일 그리드 스켈레톤 -->
     <div v-else-if="loading" class="mobile-grid">
-      <div v-for="i in 6" :key="`m-sk-${i}`" class="m-card">
+      <div v-for="i in 4" :key="`m-sk-${i}`" class="m-card">
         <div class="skeleton m-cover"></div>
         <div class="m-body">
           <div class="skeleton" style="height: 12px; width: 90%; border-radius: 6px; margin-bottom: 6px;"></div>
@@ -168,7 +168,7 @@ const loading = ref(true)
 
 const featuredBattle = computed(() => hotBattles.value[0] || null)
 const topFive = computed(() => hotBattles.value.slice(0, 5))
-const topSix = computed(() => hotBattles.value.slice(0, 6))
+const topFour = computed(() => hotBattles.value.slice(0, 4))
 
 // ── 커뮤니티 펄스 집계 ──
 const isLive = (endDate) => {
