@@ -173,6 +173,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-21)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-20)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-19)**: 구조·버전·파일 목록 정확성 검증 완료 — STOMP 재연결 메커니즘 변경 반영, 신규 WS API(`ensureConnection`, `onTokenRefreshed`) 명시 (`docs`)
 - **버전 1.1.8**: iOS 빌드 22, Android versionCode 19 (`chore`)
