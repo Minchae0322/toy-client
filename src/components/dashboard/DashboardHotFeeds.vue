@@ -245,20 +245,22 @@ const handleImageError = (event) => {
   backdrop-filter: blur(4px);
 }
 
-/* 하단 오버레이 — 평가 / 리뷰 / 제품명 */
+/* 하단 오버레이 — 평가 / 리뷰 / 제품명 (backdrop blur 글래스 띠) */
 .card-overlay-bottom {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 36px 12px 14px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.32) 60%, transparent 100%);
+  padding: 14px 14px 14px;
+  background: rgba(10, 14, 26, 0.32);
+  backdrop-filter: blur(18px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
   color: #fff;
   z-index: 1;
 }
 
 @media (min-width: 768px) {
-  .card-overlay-bottom { padding: 40px 14px 16px; }
+  .card-overlay-bottom { padding: 16px; }
 }
 
 .eval-pill {
@@ -278,37 +280,39 @@ const handleImageError = (event) => {
 .eval-pill.bad  { background: rgba(239, 68, 68, 0.92); }
 
 .review-main {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   line-height: 1.35;
   margin: 0 0 4px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
-@media (min-width: 768px) {
-  .review-main { font-size: 14px; }
+@media (max-width: 767px) {
+  .review-main { font-size: 16px; }
 }
 
 @media (min-width: 1280px) {
-  .review-main { font-size: 15px; -webkit-line-clamp: 2; }
+  .review-main { font-size: 16px; }
 }
 
 .product-name {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
   letter-spacing: -0.01em;
+  font-weight: 500;
 }
 
 @media (min-width: 768px) {
-  .product-name { font-size: 12px; }
+  .product-name { font-size: 12.5px; }
 }
 
 /* Skeleton */
