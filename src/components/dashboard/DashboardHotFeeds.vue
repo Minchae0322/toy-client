@@ -245,44 +245,52 @@ const handleImageError = (event) => {
   backdrop-filter: blur(4px);
 }
 
-/* 하단 오버레이 — 평가 / 리뷰 / 제품명 (backdrop blur 글래스 띠) */
+/* 하단 오버레이 — 부드러운 다크 fade 그라데이션 */
 .card-overlay-bottom {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 14px 14px 14px;
-  background: rgba(10, 14, 26, 0.32);
-  backdrop-filter: blur(18px) saturate(1.6);
-  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  padding: 56px 14px 14px;
+  background: linear-gradient(to top,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.62) 38%,
+    rgba(0, 0, 0, 0.2) 75%,
+    transparent 100%
+  );
   color: #fff;
   z-index: 1;
 }
 
 @media (min-width: 768px) {
-  .card-overlay-bottom { padding: 16px; }
+  .card-overlay-bottom { padding: 60px 16px 16px; }
 }
 
 .eval-pill {
   display: inline-flex;
   align-items: center;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 100px;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
   margin-bottom: 6px;
   letter-spacing: -0.01em;
-  background: rgba(255, 255, 255, 0.94);
-  color: #0A0E1A;
-  backdrop-filter: blur(10px) saturate(1.4);
-  -webkit-backdrop-filter: blur(10px) saturate(1.4);
   line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-.eval-pill.best { color: #B45309; }
-.eval-pill.good { color: #15803D; }
-.eval-pill.okay { color: #7E22CE; }
-.eval-pill.bad  { color: #B91C1C; }
+.eval-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.28);
+}
+
+.eval-pill.best::before { background: #FACC15; }
+.eval-pill.good::before { background: #4ADE80; }
+.eval-pill.okay::before { background: #C084FC; }
+.eval-pill.bad::before  { background: #F87171; }
 
 .review-main {
   font-size: 15px;
