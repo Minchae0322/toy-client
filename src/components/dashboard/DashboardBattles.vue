@@ -90,90 +90,46 @@
       </router-link>
     </div>
 
-    <!-- 1픽 — 매거진 풀너비 카드 (모바일 전용) -->
-    <router-link
-      v-if="!loading && featuredBattle"
-      :to="{ name: 'BattleDetail', params: { id: featuredBattle.id } }"
-      class="lead-card"
-    >
-      <!-- 큰 사진 + 모든 메타 칩을 안에 -->
-      <div class="lead-cover">
-        <img
-          v-if="featuredBattle.thumbnailDto?.fileUrl"
-          :src="featuredBattle.thumbnailDto.fileUrl"
-          :alt="featuredBattle.title"
-          @error="handleImageError"
-        />
-        <div v-else class="lead-cover-none">Y</div>
-
-        <div class="lead-chip-row lead-chip-tl">
-          <span class="lead-chip live"><span class="live-dot"></span>LIVE</span>
-          <span v-if="getDdayText(featuredBattle.endDate)" class="lead-chip">{{ getDdayText(featuredBattle.endDate) }}</span>
+    <!-- 모바일: 1~6위 균등 2열 그리드 -->
+    <div v-if="!loading && topSix.length > 0" class="mobile-grid">
+      <router-link
+        v-for="(battle, idx) in topSix"
+        :key="`m-${battle.id}`"
+        :to="{ name: 'BattleDetail', params: { id: battle.id } }"
+        class="m-card"
+      >
+        <div class="m-cover">
+          <img
+            v-if="battle.thumbnailDto?.fileUrl"
+            :src="battle.thumbnailDto.fileUrl"
+            :alt="battle.title"
+            loading="lazy"
+            @error="handleImageError"
+          />
+          <div v-else class="m-cover-none">Y</div>
+          <span class="m-rank-badge" :class="{ 'is-top': idx === 0 }">{{ idx + 1 }}</span>
+          <span v-if="getDdayText(battle.endDate)" class="m-dday">{{ getDdayText(battle.endDate) }}</span>
         </div>
-
-        <div class="lead-chip-row lead-chip-bl">
-          <span class="lead-chip glass">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            {{ formatNumber(peopleOf(featuredBattle)) }}명 참여
-          </span>
-        </div>
-      </div>
-
-      <!-- 사진 밑 본문 -->
-      <div class="lead-body">
-        <h3 class="lead-title">{{ featuredBattle.title }}</h3>
-
-        <div v-if="featuredPoll.items.length > 0" class="poll">
-          <div class="poll-labels">
-            <span
-              v-for="seg in featuredPoll.items"
-              :key="seg.rank"
-              class="poll-label"
-              :class="'seg-' + seg.rank"
-              :style="{ width: seg.pct + '%' }"
-            >
-              <span class="poll-label-name">{{ truncateName(seg.name, 14) }}</span>
-              <span class="poll-label-pct">{{ seg.pct }}%</span>
+        <div class="m-body">
+          <h4 class="m-title">{{ battle.title }}</h4>
+          <div class="m-foot">
+            <span class="m-votes">{{ formatNumber(peopleOf(battle)) }}명</span>
+            <span v-if="battle.topItems?.[0]" class="m-lead">
+              {{ formatPercent(battle.topItems[0].votePercentage) }}%
             </span>
           </div>
-          <div class="poll-bar">
-            <span
-              v-for="seg in featuredPoll.items"
-              :key="seg.rank"
-              class="poll-seg"
-              :class="'seg-' + seg.rank"
-              :style="{ width: seg.pct + '%' }"
-            ></span>
-            <span
-              v-if="featuredPoll.rest >= 2"
-              class="poll-seg seg-rest"
-              :style="{ width: featuredPoll.rest + '%' }"
-            ></span>
-          </div>
         </div>
+      </router-link>
+    </div>
 
-        <span class="lead-cta">
-          지금 바로 보기
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </span>
-      </div>
-    </router-link>
-
-    <!-- 1픽 로딩 스켈레톤 (모바일) -->
-    <div v-else-if="loading" class="lead-card is-skeleton">
-      <div class="skeleton lead-sk-cover"></div>
-      <div class="lead-body">
-        <div class="skeleton" style="height: 22px; width: 78%; margin-bottom: 20px; border-radius: 6px;"></div>
-        <div class="skeleton" style="height: 12px; width: 100%; border-radius: 100px; margin-bottom: 12px;"></div>
-        <div class="skeleton" style="height: 12px; width: 70%; border-radius: 100px; margin-bottom: 20px;"></div>
-        <div class="skeleton" style="height: 48px; width: 100%; border-radius: 12px;"></div>
+    <!-- 모바일 그리드 스켈레톤 -->
+    <div v-else-if="loading" class="mobile-grid">
+      <div v-for="i in 6" :key="`m-sk-${i}`" class="m-card">
+        <div class="skeleton m-cover"></div>
+        <div class="m-body">
+          <div class="skeleton" style="height: 12px; width: 90%; border-radius: 6px; margin-bottom: 6px;"></div>
+          <div class="skeleton" style="height: 10px; width: 60%; border-radius: 6px;"></div>
+        </div>
       </div>
     </div>
 
@@ -199,48 +155,6 @@
       <router-link :to="{ name: 'BattleList' }" class="empty-cta">요거픽 둘러보기</router-link>
     </div>
 
-    <!-- 다른 픽도 둘러보기 — 가로 스크롤 큰 사진 카드 -->
-    <div v-if="restBattles.length > 0" class="rest-wrap">
-      <div class="rest-header">
-        <span class="rest-label">다른 픽에도 한 표</span>
-        <router-link :to="{ name: 'BattleList' }" class="rest-more">
-          전체보기
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </router-link>
-      </div>
-
-      <div class="rest-scroll">
-        <router-link
-          v-for="battle in restBattles"
-          :key="battle.id"
-          :to="{ name: 'BattleDetail', params: { id: battle.id } }"
-          class="rest-card"
-        >
-          <div class="rest-cover">
-            <img
-              v-if="battle.thumbnailDto?.fileUrl"
-              :src="battle.thumbnailDto.fileUrl"
-              :alt="battle.title"
-              loading="lazy"
-              @error="handleImageError"
-            />
-            <div v-else class="rest-cover-none">Y</div>
-            <span v-if="getDdayText(battle.endDate)" class="rest-dday">{{ getDdayText(battle.endDate) }}</span>
-          </div>
-          <div class="rest-body">
-            <h4 class="rest-title">{{ battle.title }}</h4>
-            <div class="rest-foot">
-              <span class="rest-votes">{{ formatNumber(peopleOf(battle)) }}명 참여</span>
-              <span v-if="battle.topItems?.[0]" class="rest-lead">
-                1위 {{ formatPercent(battle.topItems[0].votePercentage) }}%
-              </span>
-            </div>
-          </div>
-        </router-link>
-      </div>
-    </div>
   </section>
 </template>
 
@@ -253,8 +167,8 @@ const hotBattles = ref([])
 const loading = ref(true)
 
 const featuredBattle = computed(() => hotBattles.value[0] || null)
-const restBattles = computed(() => hotBattles.value.slice(1, 6))
 const topFive = computed(() => hotBattles.value.slice(0, 5))
+const topSix = computed(() => hotBattles.value.slice(0, 6))
 
 // ── 커뮤니티 펄스 집계 ──
 const isLive = (endDate) => {
@@ -421,21 +335,132 @@ onMounted(loadHotBattles)
 }
 
 /* ================================================================
-   1픽 — 매거진 풀너비 카드 (외곽선 X, 사진이 주인공)
+   모바일: 1~6위 균등 2열 그리드
 ================================================================ */
-.lead-card {
-  display: block;
-  text-decoration: none;
-  color: inherit;
+.mobile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
 }
 
-/* PC에선 hero·rest 모두 숨기고 pc-top-grid만 사용
-   (selector 특이성 올려 후속 .rest-wrap/.lead-card 룰을 이김) */
+@media (min-width: 480px) {
+  .mobile-grid { gap: 16px; }
+}
+
 @media (min-width: 768px) {
-  .dashboard-pick > .lead-card,
-  .dashboard-pick > .rest-wrap {
-    display: none;
-  }
+  .mobile-grid { display: none; }
+}
+
+.m-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.18s ease;
+  min-width: 0;
+}
+.m-card:active { transform: scale(0.98); }
+
+.m-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-mute, #F2F4F6);
+  margin-bottom: 8px;
+  isolation: isolate;
+}
+.m-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.m-cover-none {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: var(--c-text-400);
+  font-size: 28px;
+  background: var(--bg-mute);
+}
+
+.m-rank-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 26, 0.78);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 8px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+  letter-spacing: -0.02em;
+}
+.m-rank-badge.is-top { background: var(--c-brand); }
+
+.m-dday {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  background: rgba(10, 14, 26, 0.78);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 100px;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+}
+
+.m-body {
+  padding: 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.m-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.m-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--c-text-500, #64748B);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.m-lead {
+  color: var(--c-brand);
+  font-weight: 800;
 }
 
 /* ================================================================
@@ -621,134 +646,13 @@ onMounted(loadHotBattles)
   letter-spacing: -0.01em;
 }
 
-.lead-card.is-skeleton { pointer-events: none; }
-
-.lead-cover {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: 18px;
-  overflow: hidden;
-  background: var(--bg-mute, #F2F4F6);
-  isolation: isolate;
-  margin-bottom: 12px;
-}
-
-@media (min-width: 480px) {
-  .lead-cover { aspect-ratio: 16 / 11; border-radius: 20px; margin-bottom: 14px; }
-}
-
-
-.lead-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.lead-card:hover .lead-cover img { transform: scale(1.03); }
-
-.lead-cover-none {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  color: var(--c-text-300, #CBD5E1);
-  font-size: 40px;
-  background: var(--bg-mute);
-  letter-spacing: -0.04em;
-}
-
-@media (min-width: 768px) {
-  .lead-cover-none { font-size: 56px; }
-}
-
-/* 사진 위 글래스 칩 */
-.lead-chip-row {
-  position: absolute;
-  display: flex;
-  gap: 6px;
-  z-index: 2;
-}
-
-.lead-chip-tl { top: 16px; left: 16px; }
-.lead-chip-bl { bottom: 16px; left: 16px; }
-
-@media (min-width: 768px) {
-  .lead-chip-tl { top: 20px; left: 20px; }
-  .lead-chip-bl { bottom: 20px; left: 20px; }
-}
-
-.lead-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 11px;
-  background: rgba(10, 14, 26, 0.78);
-  color: #fff;
-  font-size: 11.5px;
-  font-weight: 800;
-  border-radius: 100px;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.lead-chip.glass {
-  /* 사진 위에 항상 흰 배경 칩 → 글자는 라이트/다크 무관 고정 다크 */
-  background: rgba(255, 255, 255, 0.94);
-  color: #0A0E1A;
-  font-weight: 700;
-}
-
-.lead-chip.live { background: var(--c-danger, #EF4444); }
-.lead-chip.live .live-dot {
-  width: 5px;
-  height: 5px;
-  background: #fff;
-  border-radius: 50%;
-  animation: chip-pulse 1.5s ease-in-out infinite;
-}
-
 @keyframes chip-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
 
-/* 본문 */
-.lead-body {
-  display: flex;
-  flex-direction: column;
-  /* title↔vs-list 는 바로 붙고, CTA 와의 간격만 .lead-cta margin 으로 띄움 */
-  gap: 6px;
-}
-
-@media (min-width: 768px) {
-  .lead-body { gap: 8px; }
-}
-
-.lead-title {
-  font-size: 16.5px;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.3;
-  letter-spacing: -0.03em;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-@media (min-width: 768px) {
-  .lead-title { font-size: 26px; }
-}
-
 /* ================================================================
-   누적 막대 poll — 한 줄 막대 + 각 세그먼트 시작점 위에 아이템명 (1픽 / PC 1위 공용)
+   누적 막대 poll — PC 1위 카드 전용
 ================================================================ */
 /* 라벨 행: 막대와 동일한 폭 비율로 셀을 나눠 각 세그먼트 시작점에 정렬 */
 .poll-labels {
@@ -809,246 +713,6 @@ onMounted(loadHotBattles)
 .poll-seg.seg-4 { background: #16A34A; }
 .poll-seg.seg-rest { background: var(--c-text-300, #CBD5E1); }
 
-.lead-cta {
-  /* vs-list 와는 시각적 분리 — CTA 만 별도 간격 */
-  margin-top: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 100%;
-  padding: 10px 14px;
-  /* 브랜드 컬러 — 라이트/다크 모두 또렷하게 보이는 주요 액션 */
-  background: var(--c-brand, #9333EA);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: 12px;
-  letter-spacing: -0.01em;
-  transition: background 0.15s ease;
-  box-shadow: var(--shadow-brand, 0 4px 12px rgba(147, 51, 234, 0.28));
-}
-
-.lead-card:hover .lead-cta {
-  background: var(--c-brand-hover, #7C3AED);
-}
-
-@media (min-width: 768px) {
-  .lead-cta { padding: 17px 18px; font-size: 15.5px; }
-}
-
-/* ================================================================
-   다른 픽도 둘러보기 — 가로 스크롤 큰 사진 카드
-================================================================ */
-.rest-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 24px;
-}
-
-.rest-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.rest-label {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-}
-
-@media (min-width: 768px) {
-  .rest-label { font-size: 15.5px; }
-}
-
-.rest-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--c-text-500, #64748B);
-  text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.rest-more:hover { color: var(--text-primary); }
-
-/* 가로 스크롤 */
-.rest-scroll {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-  margin: 0 -16px;
-  padding: 0 16px 4px;
-}
-
-.rest-scroll::-webkit-scrollbar { display: none; }
-
-@media (min-width: 768px) {
-  .rest-scroll {
-    gap: 16px;
-    margin: 0 -32px;
-    padding: 0 32px 4px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .rest-scroll {
-    margin: 0 -40px;
-    padding: 0 40px 4px;
-  }
-}
-
-.rest-card {
-  flex: 0 0 200px;
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-  color: inherit;
-  transition: transform 0.18s ease;
-}
-
-.rest-card:hover { transform: translateY(-2px); }
-.rest-card:active { transform: scale(0.98); }
-
-@media (min-width: 480px) {
-  .rest-card { flex: 0 0 220px; }
-}
-
-@media (min-width: 768px) {
-  .rest-card { flex: 0 0 240px; }
-}
-
-@media (min-width: 1280px) {
-  .rest-card { flex: 0 0 260px; }
-}
-
-.rest-cover {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--bg-mute, #F2F4F6);
-  margin-bottom: 10px;
-  isolation: isolate;
-}
-
-@media (min-width: 768px) {
-  .rest-cover { border-radius: 16px; margin-bottom: 12px; }
-}
-
-.rest-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.rest-card:hover .rest-cover img { transform: scale(1.04); }
-
-.rest-cover-none {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  color: var(--c-text-400);
-  font-size: 32px;
-}
-
-.rest-dday {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  padding: 4px 9px;
-  background: rgba(10, 14, 26, 0.78);
-  color: #fff;
-  font-size: 10.5px;
-  font-weight: 800;
-  border-radius: 100px;
-  letter-spacing: 0.02em;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 2;
-}
-
-.rest-body {
-  padding: 0 2px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.rest-title {
-  font-size: 14.5px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.4;
-  letter-spacing: -0.02em;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  /* 1줄 제목에서 vote 정보가 바로 밑에 붙도록 min-height 제거 */
-}
-
-@media (min-width: 768px) {
-  .rest-title {
-    font-size: 15.5px;
-  }
-}
-
-.rest-foot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--c-text-400);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-@media (min-width: 768px) {
-  .rest-foot { font-size: 12.5px; }
-}
-
-.rest-votes {
-  white-space: nowrap;
-}
-
-.rest-lead {
-  position: relative;
-  padding-left: 9px;
-  color: var(--c-brand);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.rest-lead::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: currentColor;
-  transform: translateY(-50%);
-  opacity: 0.6;
-}
-
 /* ================================================================
    Skeleton
 ================================================================ */
@@ -1062,35 +726,6 @@ onMounted(loadHotBattles)
 @keyframes pick-shimmer {
   0% { background-position: 100% 50%; }
   100% { background-position: 0 50%; }
-}
-
-.lead-sk-cover {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: 18px;
-  margin-bottom: 12px;
-}
-
-@media (min-width: 480px) {
-  .lead-sk-cover { aspect-ratio: 16 / 11; border-radius: 20px; margin-bottom: 14px; }
-}
-
-@media (min-width: 768px) {
-  .lead-sk-cover {
-    width: 280px;
-    flex-shrink: 0;
-    aspect-ratio: 1 / 1;
-    border-radius: 18px;
-    margin-bottom: 0;
-  }
-}
-
-@media (min-width: 1024px) {
-  .lead-sk-cover { width: 320px; border-radius: 20px; }
-}
-
-@media (min-width: 1280px) {
-  .lead-sk-cover { width: 360px; }
 }
 
 /* ================================================================
@@ -1139,24 +774,8 @@ onMounted(loadHotBattles)
 /* ================================================================
    미디어 적응
 ================================================================ */
-@media (max-width: 380px) {
-  .lead-title { font-size: 18.5px; }
-  .poll-label-name { font-size: 12.5px; }
-  .poll-label-pct { font-size: 12.5px; }
-  .lead-cta { padding: 14px; font-size: 14.5px; }
-  .rest-card { flex: 0 0 180px; }
-}
-
-@media (hover: none) {
-  .lead-card:hover .lead-cover img,
-  .rest-card:hover,
-  .rest-card:hover .rest-cover img {
-    transform: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .lead-chip.live .live-dot { animation: none; }
+  .pulse-dot { animation: none; }
   .skeleton { animation: none; background: var(--bg-subtle); }
   .poll-seg { transition: none; }
 }

@@ -8,7 +8,7 @@
     />
 
     <div v-if="loading" class="hot-feed-scroll">
-      <div v-for="i in 4" :key="i" class="skeleton hot-card-skeleton"></div>
+      <div v-for="i in 6" :key="i" class="skeleton hot-card-skeleton"></div>
     </div>
 
     <div v-else-if="feeds.length === 0" class="empty-state">
@@ -127,6 +127,18 @@ const handleImageError = (event) => {
   }
 }
 
+/* 모바일: 2열 그리드 (가로 스크롤 X) */
+@media (max-width: 767px) {
+  .hot-feed-scroll {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+  }
+}
+
 /* 카드 — 그림자 약하게, 라운드 크게 */
 .hot-feed-card {
   flex: 0 0 156px;
@@ -139,6 +151,14 @@ const handleImageError = (event) => {
   background: var(--bg-mute, #F2F4F6);
   transition: transform 0.2s ease;
   isolation: isolate;
+}
+
+@media (max-width: 767px) {
+  .hot-feed-card {
+    flex: none;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+  }
 }
 
 @media (min-width: 768px) {
@@ -296,6 +316,10 @@ const handleImageError = (event) => {
   flex: 0 0 156px;
   aspect-ratio: 3 / 4.2;
   border-radius: 16px;
+}
+
+@media (max-width: 767px) {
+  .hot-card-skeleton { flex: none; width: 100%; aspect-ratio: 4 / 5; }
 }
 
 @media (min-width: 768px) {
