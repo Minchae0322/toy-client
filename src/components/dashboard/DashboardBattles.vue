@@ -112,12 +112,12 @@
         </div>
         <div class="m-body">
           <h4 class="m-title">{{ battle.title }}</h4>
-          <div class="m-foot">
-            <span class="m-votes">{{ formatNumber(peopleOf(battle)) }}명</span>
-            <span v-if="battle.topItems?.[0]" class="m-lead">
-              {{ formatPercent(battle.topItems[0].votePercentage) }}%
-            </span>
+          <div v-if="battle.topItems?.[0]" class="m-pick">
+            <span class="m-pick-rank">1위</span>
+            <span class="m-pick-name">{{ truncateName(battle.topItems[0].displayName, 8) }}</span>
+            <span class="m-pick-pct">{{ formatPercent(battle.topItems[0].votePercentage) }}%</span>
           </div>
+          <span class="m-votes">{{ formatNumber(peopleOf(battle)) }}명 참여</span>
         </div>
       </router-link>
     </div>
@@ -446,21 +446,50 @@ onMounted(loadHotBattles)
   overflow: hidden;
 }
 
-.m-foot {
+.m-pick {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  font-size: 11.5px;
-  color: var(--c-text-500, #64748B);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
   letter-spacing: -0.01em;
+  min-width: 0;
 }
 
-.m-lead {
-  color: var(--c-brand);
+.m-pick-rank {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  background: var(--c-brand);
+  color: #fff;
+  font-size: 10px;
   font-weight: 800;
+  border-radius: 4px;
+  letter-spacing: 0;
+  align-self: center;
+}
+
+.m-pick-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-pick-pct {
+  flex-shrink: 0;
+  font-weight: 800;
+  color: var(--c-brand);
+  font-variant-numeric: tabular-nums;
+}
+
+.m-votes {
+  font-size: 11px;
+  color: var(--c-text-500, #64748B);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 /* ================================================================

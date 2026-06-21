@@ -8,7 +8,7 @@
     />
 
     <div v-if="loading" class="hot-feed-scroll">
-      <div v-for="i in 6" :key="i" class="skeleton hot-card-skeleton"></div>
+      <div v-for="i in 4" :key="i" class="skeleton hot-card-skeleton"></div>
     </div>
 
     <div v-else-if="feeds.length === 0" class="empty-state">

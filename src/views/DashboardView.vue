@@ -59,7 +59,7 @@ const feedsLoading = ref(true)
 const loadLatestFeeds = async () => {
   feedsLoading.value = true
   try {
-    const response = await feedService.getFeedsWithCursor({ size: 6, isActive: true })
+    const response = await feedService.getFeedsWithCursor({ size: 4, isActive: true })
     if (response.success && response.data) {
       latestFeeds.value = response.data.feeds || []
     }
