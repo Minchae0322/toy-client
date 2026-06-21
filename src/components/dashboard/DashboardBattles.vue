@@ -446,7 +446,7 @@ onMounted(loadHotBattles)
 @media (min-width: 768px) {
   .pc-top-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr;
     gap: 14px;
     align-items: start;
   }
@@ -580,21 +580,21 @@ onMounted(loadHotBattles)
   font-weight: 800;
 }
 
-/* ─ 1위 카드: 더 큰 cover + vote bar 풍부하게 ─ */
+/* ─ 1위 카드: 살짝 큰 cover + vote bar 풍부하게 (다른 카드와 균형 유지) ─ */
 .pc-card-lead .pc-cover {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 4 / 3;
   border-radius: 14px;
 }
 @media (min-width: 1280px) {
   .pc-card-lead .pc-cover { border-radius: 16px; }
 }
 .pc-card-lead .pc-title {
-  font-size: 15px;
+  font-size: 14px;
   min-height: 0;
   -webkit-line-clamp: 1;
 }
 @media (min-width: 1280px) {
-  .pc-card-lead .pc-title { font-size: 17px; }
+  .pc-card-lead .pc-title { font-size: 15px; }
 }
 
 .pc-vs {
@@ -626,16 +626,16 @@ onMounted(loadHotBattles)
 .lead-cover {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 11;
+  aspect-ratio: 4 / 3;
   border-radius: 18px;
   overflow: hidden;
   background: var(--bg-mute, #F2F4F6);
   isolation: isolate;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 @media (min-width: 480px) {
-  .lead-cover { aspect-ratio: 16 / 10; border-radius: 20px; margin-bottom: 16px; }
+  .lead-cover { aspect-ratio: 16 / 11; border-radius: 20px; margin-bottom: 14px; }
 }
 
 
@@ -731,7 +731,7 @@ onMounted(loadHotBattles)
 }
 
 .lead-title {
-  font-size: 18px;
+  font-size: 16.5px;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -811,13 +811,13 @@ onMounted(loadHotBattles)
 
 .lead-cta {
   /* vs-list 와는 시각적 분리 — CTA 만 별도 간격 */
-  margin-top: 10px;
+  margin-top: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 14px;
   /* 브랜드 컬러 — 라이트/다크 모두 또렷하게 보이는 주요 액션 */
   background: var(--c-brand, #9333EA);
   color: #fff;
@@ -1066,13 +1066,13 @@ onMounted(loadHotBattles)
 
 .lead-sk-cover {
   width: 100%;
-  aspect-ratio: 16 / 11;
+  aspect-ratio: 4 / 3;
   border-radius: 18px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 @media (min-width: 480px) {
-  .lead-sk-cover { aspect-ratio: 16 / 10; border-radius: 20px; margin-bottom: 16px; }
+  .lead-sk-cover { aspect-ratio: 16 / 11; border-radius: 20px; margin-bottom: 14px; }
 }
 
 @media (min-width: 768px) {
