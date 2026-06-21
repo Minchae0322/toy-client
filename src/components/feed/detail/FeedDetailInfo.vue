@@ -315,7 +315,7 @@ const formatPrice = (price) => {
 
 const getEvaluationLabel = (ev) => {
   const code = typeof ev === 'string' ? ev : ev?.code
-  return { 'BEST': '강력추천', 'GOOD': '추천', 'OKAY': '보통', 'BAD': '별로' }[code] || '평가 정보'
+  return { 'BEST': '강추', 'GOOD': '추천', 'OKAY': '괜찮음', 'BAD': '비추천' }[code] || '평가 정보'
 }
 
 const getEvaluationClass = (ev) => {
