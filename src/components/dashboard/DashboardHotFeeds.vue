@@ -264,20 +264,25 @@ const handleImageError = (event) => {
 }
 
 .eval-pill {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 6px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 100px;
   margin-bottom: 6px;
-  color: #fff;
-  backdrop-filter: blur(4px);
+  letter-spacing: -0.01em;
+  background: rgba(255, 255, 255, 0.94);
+  color: #0A0E1A;
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  line-height: 1.2;
 }
 
-.eval-pill.best { background: rgba(234, 179, 8, 0.95); }
-.eval-pill.good { background: rgba(22, 163, 74, 0.92); }
-.eval-pill.okay { background: rgba(147, 51, 234, 0.92); }
-.eval-pill.bad  { background: rgba(239, 68, 68, 0.92); }
+.eval-pill.best { color: #B45309; }
+.eval-pill.good { color: #15803D; }
+.eval-pill.okay { color: #7E22CE; }
+.eval-pill.bad  { color: #B91C1C; }
 
 .review-main {
   font-size: 15px;
