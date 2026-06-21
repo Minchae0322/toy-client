@@ -303,24 +303,24 @@ const handleImageError = (event) => {
 .eval-pill.bad::before  { background: #F87171; }
 
 .review-main {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
   line-height: 1.35;
   margin: 0 0 4px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
-@media (max-width: 767px) {
-  .review-main { font-size: 16px; }
+@media (min-width: 768px) {
+  .review-main { font-size: 14px; }
 }
 
 @media (min-width: 1280px) {
-  .review-main { font-size: 16px; }
+  .review-main { font-size: 15px; }
 }
 
 .product-name {
