@@ -45,10 +45,10 @@
 
           <div class="card-overlay-bottom">
             <span
-              v-if="feed.feedEvaluation?.code"
-              :class="['eval-pill', feed.feedEvaluation.code.toLowerCase()]"
+              v-if="getEvalCode(feed)"
+              :class="['eval-pill', getEvalCode(feed).toLowerCase()]"
             >
-              {{ feed.feedEvaluation.description }}
+              {{ getEvalLabel(feed) }}
             </span>
             <p v-if="getReviewText(feed)" class="review-main">{{ getReviewText(feed) }}</p>
             <span class="product-name">{{ getProductName(feed) }}</span>
@@ -81,6 +81,16 @@ const getProductName = (feed) => {
 const getReviewText = (feed) => {
   return feed.reviewSummary || feed.review || ''
 }
+
+const EVAL_LABELS = { BEST: '강추', GOOD: '추천', OKAY: '괜찮음', BAD: '비추천' }
+
+const getEvalCode = (feed) => {
+  const ev = feed.feedEvaluation
+  if (!ev) return ''
+  return typeof ev === 'string' ? ev : (ev.code || '')
+}
+
+const getEvalLabel = (feed) => EVAL_LABELS[getEvalCode(feed)] || ''
 
 const handleImageError = (event) => {
   event.target.style.display = 'none'
