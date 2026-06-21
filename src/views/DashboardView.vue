@@ -59,9 +59,9 @@ const feedsLoading = ref(true)
 const loadLatestFeeds = async () => {
   feedsLoading.value = true
   try {
-    const response = await feedService.getFeeds({}, { size: 8, sort: 'createdAt,DESC' })
-    if (response.success) {
-      latestFeeds.value = response.data?.content || response.data || []
+    const response = await feedService.getFeedsWithCursor({ size: 8, isActive: true })
+    if (response.success && response.data) {
+      latestFeeds.value = response.data.feeds || []
     }
   } catch (error) {
     console.error('피드 로드 실패:', error)
