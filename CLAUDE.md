@@ -65,7 +65,7 @@
     - **`common/AdSlot.vue`** — Google AdSense 슬롯 래퍼. `BottomNavigation` 하단에 배치
     - **`common/CategoryChipSelector.vue`** — 인라인 카테고리 칩 셀렉터 (1뎁스 칩 + "더보기" → `CategorySelectModal` 연동). `contentType` prop으로 도메인 구분
     - **battle/ 루트 주요**: `BattleCard.vue`, `BattleList.vue`, `BattleTabs.vue`, `HotBattleSection.vue` — **SWIPE 배틀 분기 패턴**: `battle.voteType === 'SWIPE'`이면 참여수는 `battle.totalSwipes` 사용, `totalVotes` 아님. 배지·라우팅도 SWIPE 전용 처리 필요(`/battles/:id/swipe`). 새 배틀 표시 컴포넌트 추가 시 반드시 `voteType` 분기 적용
-    - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 **가로 스크롤 한 줄** — 히어로 아래 밀착 배치), `DashboardBattles.vue` (요거픽 매거진 레이아웃 — SWIPE/일반 voteType 분기), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardHotFeeds.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
+    - `dashboard/` 주요: `DashboardBrandHero.vue` (4슬라이드 히어로 캐러셀 — 요거픽/핫피드/캐꾸/핫아템), `DashboardQuickNav.vue` (주요 메뉴 퀵내비 **가로 스크롤 한 줄** — 히어로 아래 밀착 배치), `DashboardHotFeeds.vue` (**최신 피드** 섹션 — `/feeds/scroll` cursor 기반 API, 모바일 6개·균등 2열 그리드. 요거픽 위에 배치됨), `DashboardBattles.vue` (요거픽 섹션 — SWIPE/일반 voteType 분기, 모바일 4개·균등 2열 그리드), `DashboardSectionHeader.vue` (공통 섹션 헤더 컴포넌트 — 새 섹션 추가 시 재사용), `DashboardTrendBanner.vue`, `DashboardRanking.vue`, `DashboardYogurtBom.vue`
     - `MZLifestyle/` — `AIMemeGeneratorPromo`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection` (레거시 `BottomNavigation.vue` 포함 — `HomeView.vue` 전용)
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
@@ -173,7 +173,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
-- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-22)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-22)**: `DashboardHotFeeds.vue` 최신 피드 전환(핫→최신순, `/feeds/scroll` cursor API, 요거픽 위 배치) 및 `DashboardBattles.vue` 모바일 2열 그리드 정보 반영 (`docs`)
 - **버전 1.1.9**: iOS 빌드 23, Android versionCode 20 (`chore`)
 - **대시보드 피드 카드 평가 뱃지 디자인 통일**: 피드 카드 평가 딱지를 흰 글래스 + 컬러 텍스트 미니멀 톤으로 통일, 블러 제거 + 컬러 도트 미니멀 스타일 적용. normalize된 문자열 코드 지원, 작성·목록·상세 명칭 통일 (`feat/fix(dashboard/feed)`)
 - **대시보드 모바일 요거픽·피드 2열 그리드 통일**: 모바일에서 요거픽 4개·피드 6개로 제한, 균등 2열 그리드로 통일. 최신 피드를 요거픽 위로 배치, 호출을 `/feeds/scroll`(cursor 기반)로 전환 (`feat/fix(dashboard)`)
