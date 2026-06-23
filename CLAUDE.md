@@ -173,6 +173,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-23)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-22)**: `DashboardHotFeeds.vue` 최신 피드 전환(핫→최신순, `/feeds/scroll` cursor API, 요거픽 위 배치) 및 `DashboardBattles.vue` 모바일 2열 그리드 정보 반영 (`docs`)
 - **버전 1.1.9**: iOS 빌드 23, Android versionCode 20 (`chore`)
 - **대시보드 피드 카드 평가 뱃지 디자인 통일**: 피드 카드 평가 딱지를 흰 글래스 + 컬러 텍스트 미니멀 톤으로 통일, 블러 제거 + 컬러 도트 미니멀 스타일 적용. normalize된 문자열 코드 지원, 작성·목록·상세 명칭 통일 (`feat/fix(dashboard/feed)`)
