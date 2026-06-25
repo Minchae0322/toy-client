@@ -173,6 +173,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-25)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-24)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-23)**: `DashboardHotFeeds.vue` 최신 피드 수 6→4 수정, `DashboardBattles.vue` 1위 아이템명 라벨 추가 반영, 누락 커밋 이력 추가 (`docs`)
 - **피드 카드 리뷰 폰트 크기 복원**: `DashboardHotFeeds.vue` — backdrop-blur 글래스 실험 이후 리뷰 폰트를 원래 크기(13/14/15px)로 복원 (`fix(dashboard)`)
