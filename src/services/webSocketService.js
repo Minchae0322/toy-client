@@ -2,7 +2,8 @@
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import * as authUtils from '@/utils/auth.js'
-import { ENV } from '@/config/env.js'
+import { STORAGE_KEYS } from '@/utils/auth.js'
+import { ENV, API_URLS } from '@/config/env.js'
 
 class WebSocketService {
   constructor() {
@@ -47,6 +48,15 @@ class WebSocketService {
     this.monitorIntervalId = null
     // connect() 의 timeout handle — 모든 종료 경로에서 clear 위해 인스턴스 레벨에 보관
     this.connectTimeoutId = null
+
+    // ── 자동 회복 / 진단 ────────────────────────────────────────────────
+    // everConnected: 이 세션에서 단 한 번이라도 STOMP onConnect 가 불렸는지.
+    //   false 상태로 누적 실패가 쌓이면 "한 번도 못 붙은 단말" → 자동 회복 트리거.
+    this.everConnected = false
+    // 텔레메트리 1회 전송 가드 (사용자 단말 영구 실패 케이스 분석용)
+    this.diagnosticsSent = false
+    // 영구 실패 콜백 — 외부에서 HTTP 폴링 fallback 등으로 전환 가능
+    this.permanentFailureCalled = false
 
     this.topics = {
       chatRoomPrefix: '/topic/chatroom',
@@ -221,10 +231,11 @@ class WebSocketService {
 
       // JSONP transport 차단 — 서버 chat-service 가 application/javascript Content-Type 으로 응답할 때
       // Spring 이 LinkedHashMap 직렬화 못 해서 HttpMessageNotWritableException 워닝 발생.
-      // websocket 우선, fallback 은 xhr 계열만 허용.
-      const socket = new SockJS(socketUrl, null, {
-        transports: ['websocket', 'xhr-streaming', 'xhr-polling']
-      })
+      // 시도 횟수에 따라 transport 조합을 회전 — WS 가 막힌 단말(회사망/WebView/CloudFront 미설정 등)
+      // 에서도 xhr 계열로 떨어져서 자동 회복 가능.
+      const transports = this.getTransportsForAttempt(this.reconnectAttempts)
+      console.log('🔌 [WebSocket] Transports:', transports)
+      const socket = new SockJS(socketUrl, null, { transports })
 
       this.client = new Client({
         webSocketFactory: () => socket,
@@ -235,7 +246,9 @@ class WebSocketService {
           'X-User-Id': String(sessionUserId || '')
         },
         debug: (str) => {
-          if (ENV.DEV) console.log('🔌 [STOMP]', str)
+          // prod 환경에서도 운영 진단이 필요한 사용자만 toggle 가능:
+          //   localStorage.setItem('ws-debug', '1') 후 재접속
+          if (ENV.DEV || this.isDebugEnabled()) console.log('🔌 [STOMP]', str)
         },
         // STOMP 내장 자동 재연결 비활성화 — 끊긴 client 가 옛 connectHeaders(이전 유저 JWT)를
         // 그대로 재사용해 재연결하면 계정 전환 후 세션 신원이 고착된다.
@@ -250,6 +263,9 @@ class WebSocketService {
           this.connected = true
           this.connecting = false
           this.reconnectAttempts = 0
+          // 한 번이라도 붙은 단말은 회복 로직 트리거 대상에서 제외 (사이드 이펙트 0)
+          this.everConnected = true
+          this.permanentFailureCalled = false
           this.updateConnectionState('connected')
           this.subscribeToEssentialTopics()
           this.restoreSubscriptions()
@@ -616,6 +632,77 @@ class WebSocketService {
 
   // ==================== 재연결 ====================
 
+  // ── 사이드 이펙트 가드 ────────────────────────────────────────────────
+  // 모든 자동 회복은 "이 세션에서 한 번도 STOMP onConnect 가 불리지 않은 단말"에만 적용.
+  // 즉 평상시 잘 붙던 사용자에겐 트리거 자체가 안 됨.
+  isDebugEnabled() {
+    try { return localStorage.getItem('ws-debug') === '1' } catch { return false }
+  }
+
+  // SockJS transport 조합 — 5회 안에는 기존과 동일(잘 되는 사용자는 영향 0).
+  // 10회 넘게 실패한 단말만 xhr 계열 우선/강제로 떨어트려 회복 시도.
+  getTransportsForAttempt(attempt) {
+    if (attempt < 5) return ['websocket', 'xhr-streaming', 'xhr-polling']
+    if (attempt < 10) return ['xhr-streaming', 'xhr-polling', 'websocket']
+    return ['xhr-polling']
+  }
+
+  // best-effort 텔레메트리 — endpoint 없어도 무해(에러 swallow), 1회만 보냄.
+  // 트리거 조건: 한 번도 못 붙은 단말 + 임계 attempt 도달.
+  sendDiagnosticsOnce(lastError) {
+    if (this.diagnosticsSent) return
+    if (this.everConnected) return
+    this.diagnosticsSent = true
+    try {
+      const payload = {
+        type: 'ws-fail',
+        userId: this.sessionUserId ?? this.getCurrentUserId() ?? null,
+        deviceId: this.getDeviceId(),
+        ua: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        online: typeof navigator !== 'undefined' ? navigator.onLine : null,
+        wsURL: this.wsURL,
+        attempts: this.reconnectAttempts,
+        lastError: lastError ? String(lastError).slice(0, 500) : null,
+        ts: new Date().toISOString()
+      }
+      const url = `${API_URLS.AUTH}/diagnostics/ws-fail`
+      // keepalive: 페이지 닫혀도 전송 보장. 4xx/5xx/네트워크 에러 모두 무시.
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(() => {})
+      console.log('🛰️ [WebSocket] 진단 텔레메트리 발신 시도(best-effort)')
+    } catch { /* never throw */ }
+  }
+
+  // deviceId 1회 리셋 — 서버에 stale 등록된 단말 우회.
+  // localStorage 마커로 영구 1회 제한 → 무한 리셋·다중 디바이스 생성 방지.
+  tryDeviceIdResetOnce() {
+    if (this.everConnected) return false
+    try {
+      if (localStorage.getItem('ws-device-reset') === '1') return false
+      console.warn('🔧 [WebSocket] deviceId 1회 자동 리셋 — stale 단말 등록 우회 시도')
+      localStorage.removeItem(STORAGE_KEYS.DEVICE_ID)
+      localStorage.setItem('ws-device-reset', '1')
+      // 다음 connect() 가 getDeviceId() 새로 호출하면서 새 ID 생성·저장됨
+      return true
+    } catch { return false }
+  }
+
+  // 영구 실패 진입 — 외부에서 HTTP 폴링 fallback 등으로 전환 가능.
+  // 1회만 호출, everConnected 가 true 되면 다시 사용 가능.
+  notifyPermanentFailureOnce(error) {
+    if (this.permanentFailureCalled || this.everConnected) return
+    this.permanentFailureCalled = true
+    console.error('💀 [WebSocket] 영구 실패 모드 진입 — fallback 가능')
+    const handler = this.globalHandlers.get('permanent-failure')
+    if (typeof handler === 'function') {
+      try { handler({ error, attempts: this.reconnectAttempts }) } catch { /* ignore */ }
+    }
+  }
+
   // 상한 지수 백오프 + 지터로 무한 재시도 (영구 포기 없음).
   // 유명 메신저(Slack/Discord/WhatsApp)와 동일하게, 끊긴 동안에는 계속 붙으려 시도하되
   // 백오프 상한(30s)과 jitter 로 서버 thundering-herd 를 피한다.
@@ -626,6 +713,22 @@ class WebSocketService {
 
     this.reconnecting = true
     this.reconnectAttempts++
+
+    // ── 자동 회복: "한 번도 못 붙은 단말"만 트리거 (정상 사용자 영향 0) ──
+    if (!this.everConnected) {
+      if (this.reconnectAttempts === 3) {
+        // attempt 3: deviceId stale 의심 → 1회 리셋
+        this.tryDeviceIdResetOnce()
+      }
+      if (this.reconnectAttempts === 5) {
+        // attempt 5: 진단 데이터 1회 전송 (best-effort)
+        this.sendDiagnosticsOnce(this.connectionState?.error)
+      }
+      if (this.reconnectAttempts >= 15) {
+        // attempt 15: HTTP 폴링 fallback 등 외부 전환 신호
+        this.notifyPermanentFailureOnce(this.connectionState?.error)
+      }
+    }
 
     // equal jitter: cap/2 + random(0, cap/2) → 0ms 폭주 방지 + 분산
     const cap = Math.min(
