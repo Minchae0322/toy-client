@@ -38,7 +38,7 @@
 - **OTA 배포**: `@capgo/capacitor-updater@7.45.10` — `npm run ota:deploy`로 웹 변경분을 스토어 심사 없이 즉시 배포. `src/capacitor/bootstrap.js`에서 `notifyAppReady()` 호출 필수 (누락 시 60초 후 자동 롤백)
 - **UI 라이브러리**: Tailwind 4.x (유틸), `lucide-vue-next` (아이콘), `@heroicons/vue`
 - **HTTP**: Axios (`src/api/client.js` + 인터셉터 `src/api/interceptors.js`)
-- **실시간**: STOMP + SockJS (`src/services/webSocketService.js`) — STOMP 내장 자동 재연결 비활성화(`reconnectDelay: 0`), 서비스 자체가 capped exponential backoff + jitter 무한 재시도로 관리. `shouldConnect` 인텐트 플래그로 의도적 disconnect(로그아웃/백그라운드) 시엔 재연결 안 함. 채팅 진입 등 강한 신호에는 `ensureConnection()` 호출로 즉시 연결·await 지원. 토큰 갱신 후 `onTokenRefreshed()` 호출 필수(인터셉터에서 자동 처리). 개인 큐 구독 경로·메시지 발신자 ID는 반드시 `sessionUserId`(소켓 인증 JWT 기준) 사용, `getCurrentUserId()`(localStorage 기반) 혼용 금지 — 계정 전환 직후 두 값이 달라져 `INVALID_DESTINATION` 발생
+- **실시간**: STOMP + SockJS (`src/services/webSocketService.js`) — STOMP 내장 자동 재연결 비활성화(`reconnectDelay: 0`), 서비스 자체가 capped exponential backoff + jitter 무한 재시도로 관리. `shouldConnect` 인텐트 플래그로 의도적 disconnect(로그아웃/백그라운드) 시엔 재연결 안 함. 채팅 진입 등 강한 신호에는 `ensureConnection()` 호출로 즉시 연결·await 지원. 토큰 갱신 후 `onTokenRefreshed()` 호출 필수(인터셉터에서 자동 처리). 개인 큐 구독 경로·메시지 발신자 ID는 반드시 `sessionUserId`(소켓 인증 JWT 기준) 사용, `getCurrentUserId()`(localStorage 기반) 혼용 금지 — 계정 전환 직후 두 값이 달라져 `INVALID_DESTINATION` 발생. **한 번도 연결된 적 없는 단말 자동 회복**: `everConnected` 가드로 묶인 단계별 복구 — attempts 3에 deviceId 1회 리셋(localStorage 마커로 영구 제한), attempts 5에 `/diagnostics/ws-fail` 진단 페이로드 best-effort POST, attempts 5~9에서 xhr-streaming/polling 우선·10+에서 polling 강제로 SockJS transport 회전, attempts 15+에서 `onPermanentFailure` 글로벌 콜백 호출(HTTP 폴링 fallback 등 외부 전환 지점). `localStorage 'ws-debug'=1`로 prod에서 STOMP debug 강제 토글 가능
 - **푸시 알림**: Firebase FCM 11.x (`src/services/fcmService.js`, `src/services/pushNotificationService.js`)
 - **날짜 유틸**: `date-fns 4.x`
 - **주요 디렉토리**:
@@ -173,6 +173,8 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-01, 2회차)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인. `webSocketService.js` `everConnected` 가드·단계별 transport 회전·`onPermanentFailure` 콜백 등 최신 WS 자동 회복 로직 반영 (`docs`)
+- **WebSocket 한 번도 못 붙은 단말 자동 회복 + best-effort 텔레메트리**: `webSocketService.js` — `everConnected` 가드로 정상 단말 영향 없이 미연결 단말 전용 복구. attempts 3에 deviceId 1회 리셋, attempts 5에 `/diagnostics/ws-fail` 진단 POST, attempts 5~9 xhr-streaming/polling 우선·10+ polling 강제 SockJS transport 회전, attempts 15+ `onPermanentFailure` 콜백 호출. `localStorage 'ws-debug'=1`로 prod STOMP debug 강제 토글 (`feat(ws)`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-01)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 커밋은 CLAUDE.md 자동 업데이트 전용, 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-30)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 커밋은 CLAUDE.md 자동 업데이트 전용, 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-06-29, 2회차)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 7일 커밋은 CLAUDE.md 자동 업데이트 전용, 코드 변경 없음 (`docs`)
