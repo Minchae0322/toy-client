@@ -173,6 +173,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-03)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 7일 코드 변경은 `webSocketService.js` WS 자동 회복 신기능(2026-07-02 이미 반영) 외 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-02)**: `webSocketService.js` 자동 회복·텔레메트리·transport 회전 신기능 반영 (`docs`)
 - **WebSocket 한 번도 못 붙은 단말 자동 회복 + best-effort 텔레메트리**: `webSocketService.js` — `everConnected` 가드 기반 회복 전략 추가. attempts 3에 deviceId 1회 자동 리셋, attempts 5에 `/diagnostics/ws-fail` 텔레메트리, attempts 5~9는 xhr 우선·10+는 polling 강제로 SockJS transport 회전, attempts 15+에서 permanent-failure 콜백. prod에서 `localStorage.setItem('ws-debug', '1')`로 STOMP 디버그 토글 가능 (`feat(ws)`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-01)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 커밋은 CLAUDE.md 자동 업데이트 전용, 코드 변경 없음 (`docs`)
