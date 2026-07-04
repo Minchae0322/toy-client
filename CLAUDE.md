@@ -173,6 +173,10 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-04, 2회차)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-04)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-03, 2회차)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-03)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 7일 코드 변경은 `webSocketService.js` WS 자동 회복 신기능(2026-07-02 이미 반영) 외 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-02)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경은 WebSocket 자동 회복 기능(2026-07-01, 2회차에 반영) 이후 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-01, 2회차)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인. `webSocketService.js` `everConnected` 가드·단계별 transport 회전·`onPermanentFailure` 콜백 등 최신 WS 자동 회복 로직 반영 (`docs`)
 - **WebSocket 한 번도 못 붙은 단말 자동 회복 + best-effort 텔레메트리**: `webSocketService.js` — `everConnected` 가드로 정상 단말 영향 없이 미연결 단말 전용 복구. attempts 3에 deviceId 1회 리셋, attempts 5에 `/diagnostics/ws-fail` 진단 POST, attempts 5~9 xhr-streaming/polling 우선·10+ polling 강제 SockJS transport 회전, attempts 15+ `onPermanentFailure` 콜백 호출. `localStorage 'ws-debug'=1`로 prod STOMP debug 강제 토글 (`feat(ws)`)
