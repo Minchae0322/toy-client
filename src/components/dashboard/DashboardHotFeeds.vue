@@ -8,7 +8,7 @@
     />
 
     <div v-if="loading" class="hot-feed-scroll">
-      <div v-for="i in 4" :key="i" class="skeleton hot-card-skeleton"></div>
+      <div v-for="i in 5" :key="i" class="skeleton hot-card-skeleton"></div>
     </div>
 
     <div v-else-if="feeds.length === 0" class="empty-state">
@@ -137,7 +137,7 @@ const handleImageError = (event) => {
   }
 }
 
-/* 모바일: 2열 그리드 (가로 스크롤 X) */
+/* 모바일: 2열 그리드 (가로 스크롤 X) — 홀수번째 5번은 숨김 (2×2 유지) */
 @media (max-width: 767px) {
   .hot-feed-scroll {
     display: grid;
@@ -146,6 +146,10 @@ const handleImageError = (event) => {
     overflow: visible;
     margin: 0;
     padding: 0;
+  }
+
+  .hot-feed-scroll > :nth-child(n+5) {
+    display: none;
   }
 }
 
