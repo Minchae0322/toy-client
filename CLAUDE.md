@@ -153,6 +153,14 @@ watch(searchKeyword, (val) => {
 - `npm run build` → Vite 빌드 (문법·import 오류 검증)
 - UI 변경 시 `npm run dev`로 브라우저에서 실제 인터랙션 확인 필요 (타입/빌드만으로는 UX 검증 불가)
 - `npm run ota:deploy` → **Capgo OTA 배포** (patch 버전 bump → production 빌드 → capgo bundle upload). 웹 레이어(JS/CSS/HTML) 변경분을 스토어 심사 없이 즉시 전체 사용자에 반영. **플러그인 추가·네이티브 코드 변경은 반드시 스토어 업데이트 필요.**
+- **로컬 개발 환경 설정**: `.env.development`에는 개발 서버 주소가 없음(보안상 공개 레포 제외). 원격 개발 서버에 연결하려면 프로젝트 루트에 `.env.development.local`(git 미추적)을 직접 생성하고 아래 변수를 채워야 함:
+  ```
+  VITE_WS_URL=http://<DEV_SERVER_HOST>/api/chat/ws
+  VITE_AUTH_BASE_URL=http://<DEV_SERVER_HOST>/api/auth
+  VITE_CONTENT_BASE_URL=http://<DEV_SERVER_HOST>/api/content
+  VITE_USER_BASE_URL=http://<DEV_SERVER_HOST>/api
+  VITE_CHAT_BASE_URL=http://<DEV_SERVER_HOST>/api/chat
+  ```
 
 ---
 
@@ -173,6 +181,9 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-18)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. `.env.development` 보안 정책 변경 반영 (`docs`)
+- **개발 서버 IP 레포에서 제거**: `.env.development`에서 실제 서버 주소 삭제 → `.env.development.local`(git 미추적)로 이동. 신규 개발자는 `.env.development.local`을 직접 생성 필요. 빌드/검증 섹션에 설정 방법 추가 (`chore`)
+- **포트폴리오용 README 작성**: auth 레포 이전(`toy-user`)에 맞춰 링크도 갱신 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-17, 2회차)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-17)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-16)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
