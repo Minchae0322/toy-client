@@ -181,6 +181,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-19)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-07-18)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. `.env.development` 보안 정책 변경 반영 (`docs`)
 - **개발 서버 IP 레포에서 제거**: `.env.development`에서 실제 서버 주소 삭제 → `.env.development.local`(git 미추적)로 이동. 신규 개발자는 `.env.development.local`을 직접 생성 필요. 빌드/검증 섹션에 설정 방법 추가 (`chore`)
 - **포트폴리오용 README 작성**: auth 레포 이전(`toy-user`)에 맞춰 링크도 갱신 (`docs`)
