@@ -181,6 +181,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-08-18)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-08-17, 2회차)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-08-17)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경: WebSocket URL CloudFront 전환(아래 항목) (`docs`)
 - **웹소켓 CloudFront 경유로 전환**: `.env.production`의 `VITE_WS_URL`을 `https://ws-yogurtte.com/api/chat/ws` → `https://yogurtte.com/api/chat/ws`로 변경. `ws-yogurtte.com` 인증서 만료로 인한 우회 조치 (`config`)
