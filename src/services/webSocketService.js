@@ -71,6 +71,16 @@ class WebSocketService {
       sendTyping: '/app/chat/typing',
       ping: '/app/ping'
     }
+
+    // ── 전송 확인 & stop-and-wait 전송 큐 ────────────────────────────────
+    // 서버 접수 ack(/topic/user/{id}/ack)가 오기 전에는 다음 메시지를 publish 하지 않는다.
+    // 같은 발신자의 연속 메시지가 서버 스레드풀에서 역전되는 것을 원천 차단 —
+    // 동시에 서버에 떠 있는 "내 메시지"가 항상 1개가 되기 때문.
+    // UI 는 큐와 무관하게 즉시 말풍선을 그리므로(낙관적 렌더링) 사용자 체감 지연은 없다.
+    this.sendQueue = []            // 발신 대기: { roomId, message, clientMessageId, resolve, reject }
+    this.sendingInFlight = false   // 접수 ack 대기 중인 전송 존재 여부
+    this.pendingAcks = new Map()   // clientMessageId → { item, timer }
+    this.ackTimeoutMs = 10000      // ack 유실 대비 — 초과 시 실패 처리 후 큐 계속 진행
   }
 
   // ==================== 토픽 헬퍼 메서드 ====================
@@ -445,6 +455,7 @@ class WebSocketService {
 
       await this.subscribeToTopic('system', this.topics.systemNotification)
       await this.subscribeToTopic('online-users', this.topics.onlineUsers)
+      await this.subscribeToAckChannels(userId)
 
       console.log('✅ [WebSocket] 필수 토픽 구독 완료')
     } catch (error) {
@@ -486,6 +497,58 @@ class WebSocketService {
 
     this.subscriptions.set(`topic-${name}`, subscription)
     console.log(`✅ [WebSocket] ${name} 구독: ${destination}`)
+  }
+
+  // ==================== 접수 ack / 실패 채널 ====================
+
+  // 서버의 전송 확인 계층: 접수 ack(발행 큐 진입) → 에코(파이프라인 완주) → SEND_FAILURE(발행 실패)
+  // ack 는 전송 큐의 다음 메시지 발사 트리거, 에코·실패는 말풍선 상태 확정용.
+  async subscribeToAckChannels(userId) {
+    const ackSub = this.client.subscribe(`/topic/user/${userId}/ack`, (message) => {
+      try {
+        const data = JSON.parse(message.body)
+        this.handleSendAck(data)
+        const handler = this.globalHandlers.get('message-ack')
+        if (handler) handler(data)
+      } catch (e) {
+        console.error('❌ [ack] 파싱 에러:', e)
+      }
+    })
+    this.subscriptions.set('topic-message-ack', ackSub)
+
+    const errSub = this.client.subscribe(`/topic/user/${userId}/errors`, (message) => {
+      try {
+        const data = JSON.parse(message.body)
+        this.handleSendError(data)
+        const handler = this.globalHandlers.get('message-error')
+        if (handler) handler(data)
+      } catch (e) {
+        console.error('❌ [errors] 파싱 에러:', e)
+      }
+    })
+    this.subscriptions.set('topic-message-error', errSub)
+  }
+
+  handleSendAck(data) {
+    const pending = this.pendingAcks.get(data?.clientMessageId)
+    if (!pending) return
+    clearTimeout(pending.timer)
+    this.pendingAcks.delete(data.clientMessageId)
+    pending.item.resolve(data)   // SendResult { messageId, sentAt, clientMessageId }
+    this.sendingInFlight = false
+    this.pumpSendQueue()
+  }
+
+  handleSendError(data) {
+    // 접수 ack 이전에 온 실패(발행 즉시 실패)면 대기 중인 전송을 실패 처리하고 큐를 진행.
+    // ack 이후에 온 실패(늦은 발행 실패)는 여기 매칭이 없고, 뷰가 'message-error' 핸들러로 처리.
+    const pending = this.pendingAcks.get(data?.clientMessageId)
+    if (!pending) return
+    clearTimeout(pending.timer)
+    this.pendingAcks.delete(data.clientMessageId)
+    pending.item.reject(new Error(data?.reason || 'SEND_FAILURE'))
+    this.sendingInFlight = false
+    this.pumpSendQueue()
   }
 
   handleQueueMessage(queueType, data) {
@@ -553,11 +616,26 @@ class WebSocketService {
 
   // ==================== 메시지 전송 ====================
 
+  // 말풍선 매칭 키 — 서버가 접수 ack·에코·SEND_FAILURE 에 그대로 반사해 돌려준다
+  generateClientMessageId() {
+    try {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+    } catch { /* ignore */ }
+    return `cmid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  }
+
+  /**
+   * 메시지 전송 — stop-and-wait 큐 경유.
+   * 반환 promise 는 서버 접수 ack(SendResult) 로 resolve, 실패/타임아웃으로 reject.
+   * "접수"이지 최종 확정이 아니다 — 확정은 에코(채팅방 브로드캐스트)가 담당.
+   */
   async sendMessage(roomId, messageData) {
     await this.ensureConnection()
 
+    const clientMessageId = messageData.clientMessageId || this.generateClientMessageId()
     const message = {
       roomId: roomId,
+      clientMessageId: clientMessageId,
       actionType: messageData.messageType || messageData.actionType || 'TEXT',
       actorUserId: this.sessionUserId ?? this.getCurrentUserId(),
       messageContent: messageData.content || messageData.messageContent,
@@ -572,24 +650,60 @@ class WebSocketService {
       forwardCount: messageData.forwardCount || 0
     }
 
-    const headers = { 'Chat-Room-Id': roomId }
+    return new Promise((resolve, reject) => {
+      this.sendQueue.push({ roomId, message, clientMessageId, resolve, reject })
+      this.pumpSendQueue()
+    })
+  }
 
-    console.log(`📤 [WebSocket] 메시지 전송:`, message)
+  // 큐 헤드를 publish 하고 접수 ack 를 기다린다. ack/실패/타임아웃이 다음 발사를 트리거.
+  pumpSendQueue() {
+    if (this.sendingInFlight) return
+    const item = this.sendQueue.shift()
+    if (!item) return
 
-    // ensureConnection 통과해도 publish 직전 race 로 client 가 null 될 수 있음
+    // ensureConnection 통과해도 publish 직전 race 로 client 가 끊길 수 있음
     if (!this.client || !this.client.connected) {
-      throw new Error('메시지 전송 실패: 연결 끊김')
+      item.reject(new Error('메시지 전송 실패: 연결 끊김'))
+      this.pumpSendQueue()
+      return
     }
+
+    console.log(`📤 [WebSocket] 메시지 전송:`, item.message)
     try {
       this.client.publish({
         destination: this.destinations.sendMessage,
-        headers: headers,
-        body: JSON.stringify(message)
+        headers: { 'Chat-Room-Id': item.roomId },
+        body: JSON.stringify(item.message)
       })
     } catch (e) {
       console.error('❌ [WebSocket] publish 실패:', e)
-      throw e
+      item.reject(e)
+      this.pumpSendQueue()
+      return
     }
+
+    this.sendingInFlight = true
+    const timer = setTimeout(() => {
+      this.pendingAcks.delete(item.clientMessageId)
+      this.sendingInFlight = false
+      item.reject(new Error('접수 응답 시간 초과'))
+      this.pumpSendQueue()
+    }, this.ackTimeoutMs)
+    this.pendingAcks.set(item.clientMessageId, { item, timer })
+  }
+
+  // 연결 해제 등으로 큐/대기 전송을 일괄 실패 처리
+  flushSendQueue(err) {
+    this.pendingAcks.forEach(({ item, timer }) => {
+      clearTimeout(timer)
+      try { item.reject(err) } catch { /* ignore */ }
+    })
+    this.pendingAcks.clear()
+    const queued = this.sendQueue
+    this.sendQueue = []
+    queued.forEach(item => { try { item.reject(err) } catch { /* ignore */ } })
+    this.sendingInFlight = false
   }
 
   // ==================== 채팅방 나가기 ====================
@@ -816,6 +930,8 @@ class WebSocketService {
 
     // connecting 중에 disconnect 호출됐을 때 hanging 되지 않도록 pending promise 정리
     this.rejectPendingConnects(new Error('연결이 해제되었습니다'))
+    // 전송 큐/접수 대기도 일괄 실패 처리 — 뷰가 FAILED + 재전송 버튼으로 복구 경로 제공
+    this.flushSendQueue(new Error('연결이 해제되었습니다'))
 
     // 세션 신원 초기화 — 다음 connect() 가 최신 토큰으로 다시 고정한다.
     this.sessionToken = null

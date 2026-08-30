@@ -368,8 +368,12 @@ const sendMessage = async () => {
   const content = newMessage.value.trim()
   newMessage.value = ''
 
+  // 말풍선 상태 머신의 매칭 키 — 접수 ack·에코·SEND_FAILURE 가 이 값을 그대로 반사해 온다
+  const clientMessageId = webSocketService.generateClientMessageId()
   const tempMsg = {
-    messageId: `temp-${Date.now()}`,
+    messageId: `temp-${clientMessageId}`,
+    clientMessageId,
+    seq: null,
     senderId: currentUserId.value,
     senderName: '나',
     content,
@@ -387,24 +391,70 @@ const sendMessage = async () => {
   scrollToBottom('smooth')
 
   try {
-    await webSocketService.sendMessage(actualRoomId.value, { content, type: 'TEXT', replyToMessageId: tempMsg.replyToMessageId })
-    const idx = messages.value.findIndex(m => m.messageId === tempMsg.messageId)
-    if (idx !== -1) messages.value[idx].status = 'SENT'
+    // 접수 ack(SendResult)까지 대기 — 전송 큐(stop-and-wait)가 순서를 보장한다.
+    // SENT 는 "서버가 접수"이지 최종 확정이 아니고, 확정(seq 부여)은 에코가 갱신한다.
+    const ack = await webSocketService.sendMessage(actualRoomId.value, {
+      content, type: 'TEXT', clientMessageId, replyToMessageId: tempMsg.replyToMessageId
+    })
+    const idx = messages.value.findIndex(m => m.clientMessageId === clientMessageId)
+    if (idx !== -1) {
+      messages.value[idx].status = 'SENT'
+      if (ack?.messageId) messages.value[idx].messageId = ack.messageId
+    }
     emit('new-message', tempMsg)
   } catch {
-    const idx = messages.value.findIndex(m => m.messageId === tempMsg.messageId)
+    const idx = messages.value.findIndex(m => m.clientMessageId === clientMessageId)
     if (idx !== -1) messages.value[idx].status = 'FAILED'
   }
 }
 
+// seq(방 내 순서 정본) 자리에 삽입. 배달이 순간적으로 꼬여도 화면에서 복구된다.
+// seq 없는 메시지(내 임시 말풍선, seq 도입 전 데이터)는 항상 현재 위치 뒤를 유지.
+const insertBySeq = (list, msg) => {
+  if (msg.seq == null) {
+    list.push(msg)
+    return
+  }
+  let i = list.length
+  while (i > 0) {
+    const prev = list[i - 1]
+    if (prev.seq == null || prev.seq <= msg.seq) break
+    i--
+  }
+  list.splice(i, 0, msg)
+}
+
 const handleNewMessage = (msg) => {
-  if (msg.senderId === currentUserId.value) return
-  if (messages.value.find(m => m.messageId === msg.messageId)) return
+  const data = chatService.transformMessageResponse(msg)
+
+  // 내 메시지의 에코 — clientMessageId 로 임시 말풍선을 확정본으로 교체 (서버 messageId·seq 반영)
+  if (data.senderId === currentUserId.value) {
+    const idx = data.clientMessageId
+      ? messages.value.findIndex(m => m.clientMessageId === data.clientMessageId)
+      : -1
+    if (idx !== -1) {
+      messages.value[idx] = { ...messages.value[idx], ...data, status: 'SENT' }
+    }
+    // 매칭 없는 내 메시지(다른 디바이스에서 보낸 것)는 아래 일반 경로로 추가
+    else if (!messages.value.find(m => m.messageId === data.messageId)) {
+      insertBySeq(messages.value, data)
+    }
+    return
+  }
+
+  if (messages.value.find(m => m.messageId === data.messageId)) return
   const wasAtBottom = isAtBottom()
-  messages.value.push(chatService.transformMessageResponse(msg))
+  insertBySeq(messages.value, data)
   // 이미 아래에 있던 경우에만 자동 스크롤 (위쪽을 읽고 있는데 점프하면 어색)
   nextTick(() => { if (wasAtBottom) scrollToBottom('smooth') })
   emit('new-message', msg)
+}
+
+// 접수 ack 이후에 도착한 발행 실패(SEND_FAILURE) — 이미 SENT 로 표시된 말풍선을 FAILED 로 되돌린다
+const handleSendFailure = (data) => {
+  if (!data?.clientMessageId) return
+  const idx = messages.value.findIndex(m => m.clientMessageId === data.clientMessageId)
+  if (idx !== -1) messages.value[idx].status = 'FAILED'
 }
 
 const retryMessage = async (msg) => {
@@ -584,6 +634,7 @@ const getSampleMessages = () => [
 // Lifecycle
 onMounted(() => {
   currentUserId.value = getCurrentUserId()
+  webSocketService.onMessage('message-error', handleSendFailure)
   initializeChatRoom()
 
   if (window.visualViewport) {
@@ -594,6 +645,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  webSocketService.offMessage('message-error')
   if (typingTimer.value) clearTimeout(typingTimer.value)
   const roomId = actualRoomId.value
   if (roomId) webSocketService.leaveChatRoom?.(roomId)

@@ -422,7 +422,8 @@ class ChatService extends BaseApiService {
   transformMessageResponse(backendMessage) {
     return {
       messageId: backendMessage.messageId || backendMessage.id,
-      roomId: backendMessage.roomId,
+      // WS 에코 페이로드는 chatRoomId, 히스토리 API 는 roomId
+      roomId: backendMessage.roomId || backendMessage.chatRoomId,
       senderId: backendMessage.senderId,
       senderName: backendMessage.senderName || `사용자${backendMessage.senderId}`,
       content: backendMessage.content,
@@ -431,7 +432,12 @@ class ChatService extends BaseApiService {
       status: 'SENT',
       isRead: backendMessage.isRead || false,
       replyTo: backendMessage.replyTo,
-      metadata: backendMessage.metadata
+      metadata: backendMessage.metadata,
+      // 방 내 순서 정본 (Kafka 파티션 offset) — 표시 순서는 createdAt 이 아니라 이 값 기준.
+      // seq 도입 이전 메시지·Direct 경로는 null
+      seq: backendMessage.seq ?? null,
+      // 발신자 본인의 에코 매칭 키 — 임시 말풍선을 확정본으로 교체할 때 사용
+      clientMessageId: backendMessage.clientMessageId ?? null
     }
   }
 
