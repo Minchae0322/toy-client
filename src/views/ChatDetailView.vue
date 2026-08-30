@@ -428,10 +428,17 @@ const handleNewMessage = (msg) => {
   const data = chatService.transformMessageResponse(msg)
 
   // 내 메시지의 에코 — clientMessageId 로 임시 말풍선을 확정본으로 교체 (서버 messageId·seq 반영)
-  if (data.senderId === currentUserId.value) {
-    const idx = data.clientMessageId
+  // senderId 는 서버(number)·JWT(string) 타입이 어긋날 수 있어 문자열로 비교
+  if (String(data.senderId) === String(currentUserId.value)) {
+    let idx = data.clientMessageId
       ? messages.value.findIndex(m => m.clientMessageId === data.clientMessageId)
       : -1
+    // 구버전 서버 호환 — 에코에 clientMessageId 가 없으면(서버가 아직 반사 미지원)
+    // 같은 내용의 미확정 임시 말풍선에 폴백 매칭해 중복 말풍선·유령 FAILED 를 막는다
+    if (idx === -1 && !data.clientMessageId) {
+      idx = messages.value.findIndex(m =>
+        m.clientMessageId && String(m.messageId).startsWith('temp-') && m.content === data.content)
+    }
     if (idx !== -1) {
       messages.value[idx] = { ...messages.value[idx], ...data, status: 'SENT' }
     }
