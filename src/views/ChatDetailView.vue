@@ -440,6 +440,15 @@ const handleNewMessage = (msg) => {
         m.clientMessageId && String(m.messageId).startsWith('temp-') && m.content === data.content)
     }
     if (idx !== -1) {
+      // 에코 도착 = 접수는 당연히 완료 — 암묵적 ack 로 전송 큐를 즉시 전진시킨다.
+      // ack 를 안 보내는 구버전 서버에서 큐가 메시지당 타임아웃(10s)으로만 전진하던 것을
+      // 에코 속도로 단축. ack 가 이미 처리됐으면 내부에서 no-op.
+      const tempCmid = messages.value[idx].clientMessageId
+      if (tempCmid) {
+        webSocketService.handleSendAck({
+          clientMessageId: tempCmid, messageId: data.messageId, sentAt: data.createdAt
+        })
+      }
       messages.value[idx] = { ...messages.value[idx], ...data, status: 'SENT' }
     }
     // 매칭 없는 내 메시지(다른 디바이스에서 보낸 것)는 아래 일반 경로로 추가
