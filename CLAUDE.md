@@ -181,6 +181,8 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-01)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경: OTA 번들 1.1.40 배포(아래 항목) (`docs`)
+- **OTA 번들 1.1.40 배포**: Capgo OTA로 웹 변경분 전체 사용자 즉시 반영. `public/images/img_5.png` 이미지 자산 추가 (`chore`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-08-31)**: 채팅 전송 상태머신 신규 패턴 반영 — stop-and-wait 큐, ack 구독, seq 정렬, 에코 폴백 매칭 (`docs`)
 - **채팅 전송 상태머신 완성**: `webSocketService.js` stop-and-wait 전송 큐 신설(ack 전 다음 publish 차단), `/ack`·`/errors` 구독 추가. `ChatDetailView.vue` 말풍선 키를 clientMessageId로 전환 — SENDING→SENT(ack)→에코 확정본 교체·FAILED 처리. `ChatService.js` seq·clientMessageId·chatRoomId 매핑 추가. 수신 정렬 `insertBySeq`로 전환 (`feat(chat)`)
 - **에코 폴백 매칭**: 구버전 서버(clientMessageId 미반사)와 연결 시 에코를 암묵적 ack로 처리, 중복 말풍선 방지 폴백 포함 (`fix(chat)`)
