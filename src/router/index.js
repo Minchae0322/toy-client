@@ -263,6 +263,16 @@ const routes = [
     }
   },
   {
+    path: '/admin/schedulers',
+    name: 'SchedulerAdmin',
+    component: () => import('@/views/admin/SchedulerAdminView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: '스케줄러 관리'
+    }
+  },
+  {
     path: '/admin/collection',
     name: 'CollectionAdmin',
     component: () => import('@/views/admin/CollectionAdminView.vue'),

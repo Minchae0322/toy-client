@@ -18,6 +18,9 @@
         <router-link to="/admin/analytics" class="admin-link">
           📈 통계 분석
         </router-link>
+        <router-link :to="{ name: 'SchedulerAdmin' }" class="admin-link">
+          스케줄러 관리
+        </router-link>
       </div>
     </div>
   </div>
