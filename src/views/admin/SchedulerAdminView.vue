@@ -4,7 +4,7 @@
       <header class="page-header">
         <div class="header-left">
           <h2>스케줄러 수동 실행</h2>
-          <p class="header-desc">cron을 기다리지 않고 같은 작업을 지금 돌리고, 소요 시간을 확인합니다</p>
+          <p class="header-desc">전체 재계산과 cron 작업을 지금 돌리고, 소요 시간을 확인합니다</p>
         </div>
         <div class="header-right">
           <span class="admin-badge">관리자</span>
@@ -15,7 +15,8 @@
         <Info :size="16" class="notice-icon" />
         <div>
           <p>동기 실행입니다. 버튼을 누르면 작업이 끝날 때까지 <strong>실행 중</strong>으로 표시되고, 다른 작업은 잠깁니다.</p>
-          <p>정각 작업 직후 15분(전체 재계산은 1시간) 안에는 ShedLock에 걸려 본문이 건너뛰어집니다. 그 경우 소요 시간이 수 ms로 나옵니다.</p>
+          <p>핫스코어는 참여가 생길 때 행 단위로 바로 갱신되므로 정기 배치가 없습니다. <strong>전체 재계산</strong>은 시간 상수를 바꾼 뒤에만 한 번 돌립니다.</p>
+          <p>트렌딩·마감 알림은 cron 직후 ShedLock에 걸려 본문이 건너뛰어질 수 있습니다. 그 경우 소요 시간이 수 ms로 나옵니다.</p>
         </div>
       </div>
 
@@ -104,12 +105,9 @@ import { schedulerAdminService } from '@/services/SchedulerAdminService.js'
 
 // 서버의 작업 키에 붙이는 표시용 메타. 서버에만 있는 키는 키 그대로 노출한다.
 const JOB_META = {
-  'feed-hot-score.time-weight': { label: '피드 핫스코어 · 시간 가중치', cron: '매 정각', what: '최근 1시간 활동(updated_at)이 있는 피드의 hot_score 재계산' },
-  'feed-hot-score.full': { label: '피드 핫스코어 · 전체 재계산', cron: '매일 03:00', what: '최근 30일 작성 피드 전부 hot_score 재계산 + decay 지수 갱신' },
-  'battle-hot-score.time-weight': { label: '배틀 핫스코어 · 시간 가중치', cron: '매 정각', what: '최근 활동 배틀의 hot_score 재계산' },
-  'battle-hot-score.full': { label: '배틀 핫스코어 · 전체 재계산', cron: '매일 02:00', what: '배틀 전체 hot_score 재계산' },
-  'product-popularity.time-weight': { label: '제품 인기도 · 시간 가중치', cron: '매시 30분', what: '최근 활동 제품의 인기도 재계산' },
-  'product-popularity.full': { label: '제품 인기도 · 전체 재계산', cron: '매일 01:00', what: '제품 전체 인기도 재계산' },
+  'feed-hot-score.recalculate': { label: '피드 핫스코어 · 전체 재계산', cron: '수동 (상수 변경 후)', what: '시간 상수(14일)를 바꾼 뒤 저장된 hot_score를 새 기준으로 다시 씀. 평상시 점수는 좋아요·댓글·조회 시 행 단위로 갱신' },
+  'battle-hot-score.recalculate': { label: '배틀 핫스코어 · 전체 재계산', cron: '수동 (상수 변경 후)', what: '시간 상수(30일)를 바꾼 뒤 진행 중 배틀의 hot_score를 다시 씀' },
+  'product-popularity.recalculate': { label: '제품 인기도 · 전체 재계산', cron: '수동 (상수 변경 후)', what: '시간 상수(30일)를 바꾼 뒤 승인 제품의 popularity_score를 다시 씀' },
   'feed-trending': { label: '피드 트렌딩 스냅샷', cron: '매일 00:15', what: '전체 피드 view_count 스냅샷 + is_trending 마킹/해제' },
   'battle-deadline.d7': { label: '배틀 마감 D-7 알림', cron: '매 정각', what: '7일 뒤 마감 배틀 참여자에게 알림' },
   'battle-deadline.end': { label: '배틀 종료 알림', cron: '매 분', what: '방금 마감된 배틀 참여자에게 알림' }
