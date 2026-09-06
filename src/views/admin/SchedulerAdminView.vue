@@ -3,8 +3,8 @@
     <main class="main-content">
       <header class="page-header">
         <div class="header-left">
-          <h2>스케줄러 수동 실행</h2>
-          <p class="header-desc">전체 재계산과 cron 작업을 지금 돌리고, 소요 시간을 확인합니다</p>
+          <h2>핫 스코어 관리</h2>
+          <p class="header-desc">시간 상수를 바꾸고 전체 재계산을 돌립니다. 평상시 점수는 참여가 생길 때 행 단위로 자동 갱신됩니다</p>
         </div>
         <div class="header-right">
           <span class="admin-badge">관리자</span>
@@ -14,11 +14,87 @@
       <div class="notice">
         <Info :size="16" class="notice-icon" />
         <div>
-          <p>동기 실행입니다. 버튼을 누르면 작업이 끝날 때까지 <strong>실행 중</strong>으로 표시되고, 다른 작업은 잠깁니다.</p>
-          <p>핫스코어는 참여가 생길 때 행 단위로 바로 갱신되므로 정기 배치가 없습니다. <strong>전체 재계산</strong>은 시간 상수를 바꾼 뒤에만 한 번 돌립니다.</p>
-          <p>트렌딩·마감 알림은 cron 직후 ShedLock에 걸려 본문이 건너뛰어질 수 있습니다. 그 경우 소요 시간이 수 ms로 나옵니다.</p>
+          <p>점수 = log10(참여도) + 기준시각 ÷ <strong>시간 상수</strong>. 상수는 "참여도 10배 = 이 시간"이라는 뜻입니다. 14일이면 하루 전 글이 오늘 글을 이기려면 참여도가 약 1.2배, 14일 전 글은 10배 필요합니다.</p>
+          <p>상수를 바꾸면 저장된 점수의 기준이 달라지므로 <strong>저장과 동시에 그 도메인 전체를 다시 계산</strong>합니다. 동기 실행이라 끝날 때까지 실행 중으로 표시되고 다른 버튼은 잠깁니다.</p>
         </div>
       </div>
+
+      <section class="block">
+        <h3>시간 상수</h3>
+        <div v-if="configLoading" class="loading-state"><div class="spinner"></div><p>불러오는 중...</p></div>
+        <div v-else-if="configError" class="empty-state">
+          <p>{{ configError }}</p>
+          <button class="secondary-btn" @click="loadConfig">다시 시도</button>
+        </div>
+        <table v-else class="data-table">
+          <thead>
+            <tr>
+              <th class="col-name">도메인</th>
+              <th>현재</th>
+              <th>새 값 (일)</th>
+              <th class="col-result">마지막 변경</th>
+              <th class="col-actions">적용</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="c in config" :key="c.domain" :class="{ running: runningKey === 'config:' + c.domain }">
+              <td class="col-name">
+                <div class="name-cell">
+                  <strong>{{ DOMAIN_META[c.domain]?.label || c.domain }}</strong>
+                  <span class="desc">{{ DOMAIN_META[c.domain]?.hint || '' }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="num">{{ formatDays(c.days) }}</span>
+                <span class="sub">{{ c.timeDivisorSeconds.toLocaleString() }}초</span>
+                <span v-if="c.overridden" class="tag">변경됨 (기본 {{ formatDays(c.defaultSeconds / 86400) }})</span>
+              </td>
+              <td>
+                <input
+                  v-model.number="draftDays[c.domain]"
+                  type="number"
+                  min="0.05"
+                  step="0.5"
+                  class="days-input"
+                  :disabled="runningKey !== null"
+                  @keyup.enter="applyDivisor(c)"
+                />
+              </td>
+              <td class="col-result">
+                <template v-if="runningKey === 'config:' + c.domain">
+                  <span class="result running-text"><Loader2 :size="14" class="spin" /> 저장 후 재계산 중 · {{ runningSeconds }}초</span>
+                </template>
+                <template v-else-if="lastResult['config:' + c.domain]">
+                  <span class="result" :class="lastResult['config:' + c.domain].ok ? 'ok' : 'fail'">
+                    <CheckCircle2 v-if="lastResult['config:' + c.domain].ok" :size="14" />
+                    <XCircle v-else :size="14" />
+                    <span class="num">{{ formatMs(lastResult['config:' + c.domain].elapsedMs) }}</span>
+                    <span v-if="lastResult['config:' + c.domain].recalculated != null" class="at">{{ lastResult['config:' + c.domain].recalculated.toLocaleString() }}건</span>
+                    <span class="at">{{ lastResult['config:' + c.domain].at }}</span>
+                  </span>
+                  <span v-if="!lastResult['config:' + c.domain].ok" class="err">{{ lastResult['config:' + c.domain].error }}</span>
+                </template>
+                <span v-else class="muted">-</span>
+              </td>
+              <td class="col-actions">
+                <button
+                  class="primary-btn run-btn"
+                  :disabled="runningKey !== null || !isChanged(c)"
+                  @click="applyDivisor(c)"
+                >
+                  <Loader2 v-if="runningKey === 'config:' + c.domain" :size="14" class="spin" />
+                  <Save v-else :size="14" />
+                  {{ runningKey === 'config:' + c.domain ? '실행 중' : '저장 후 재계산' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="block">
+        <h3>전체 재계산만</h3>
+        <p class="block-desc">상수는 그대로 두고 저장된 점수만 지금 상수로 다시 씁니다. 배포 직후 한 번, 그 외엔 쓸 일이 없습니다.</p>
 
       <div v-if="listLoading" class="loading-state"><div class="spinner"></div><p>작업 목록 불러오는 중...</p></div>
 
@@ -31,7 +107,6 @@
         <thead>
           <tr>
             <th class="col-name">작업</th>
-            <th>주기</th>
             <th>하는 일</th>
             <th class="col-result">마지막 실행</th>
             <th class="col-actions">실행</th>
@@ -45,7 +120,6 @@
                 <span class="desc">{{ job.key }}</span>
               </div>
             </td>
-            <td class="cron">{{ job.cron }}</td>
             <td class="what">{{ job.what }}</td>
             <td class="col-result">
               <template v-if="runningKey === job.key">
@@ -78,6 +152,7 @@
           </tr>
         </tbody>
       </table>
+      </section>
 
       <section v-if="history.length" class="history">
         <h3>실행 기록 <span class="count">{{ history.length }}</span></h3>
@@ -100,22 +175,30 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { Play, Loader2, CheckCircle2, XCircle, Info } from 'lucide-vue-next'
+import { Play, Loader2, CheckCircle2, XCircle, Info, Save } from 'lucide-vue-next'
 import { schedulerAdminService } from '@/services/SchedulerAdminService.js'
 
 // 서버의 작업 키에 붙이는 표시용 메타. 서버에만 있는 키는 키 그대로 노출한다.
 const JOB_META = {
-  'feed-hot-score.recalculate': { label: '피드 핫스코어 · 전체 재계산', cron: '수동 (상수 변경 후)', what: '시간 상수(14일)를 바꾼 뒤 저장된 hot_score를 새 기준으로 다시 씀. 평상시 점수는 좋아요·댓글·조회 시 행 단위로 갱신' },
-  'battle-hot-score.recalculate': { label: '배틀 핫스코어 · 전체 재계산', cron: '수동 (상수 변경 후)', what: '시간 상수(30일)를 바꾼 뒤 진행 중 배틀의 hot_score를 다시 씀' },
-  'product-popularity.recalculate': { label: '제품 인기도 · 전체 재계산', cron: '수동 (상수 변경 후)', what: '시간 상수(30일)를 바꾼 뒤 승인 제품의 popularity_score를 다시 씀' },
-  'feed-trending': { label: '피드 트렌딩 스냅샷', cron: '매일 00:15', what: '전체 피드 view_count 스냅샷 + is_trending 마킹/해제' },
-  'battle-deadline.d7': { label: '배틀 마감 D-7 알림', cron: '매 정각', what: '7일 뒤 마감 배틀 참여자에게 알림' },
-  'battle-deadline.end': { label: '배틀 종료 알림', cron: '매 분', what: '방금 마감된 배틀 참여자에게 알림' }
+  'feed-hot-score.recalculate': { label: '피드 핫스코어 · 전체 재계산', what: '저장된 hot_score를 지금 상수로 다시 씀. 배포 직후 옛 점수를 새 척도로 바꿀 때' },
+  'battle-hot-score.recalculate': { label: '배틀 핫스코어 · 전체 재계산', what: '진행 중 배틀의 hot_score를 지금 상수로 다시 씀' },
+  'product-popularity.recalculate': { label: '제품 인기도 · 전체 재계산', what: '승인 제품의 popularity_score를 지금 상수로 다시 씀' }
+}
+
+const DOMAIN_META = {
+  feed: { label: '피드', hint: '작성 시각 기준' },
+  battle: { label: '배틀', hint: '시작일 기준' },
+  product: { label: '제품', hint: '마지막 참여 시각 기준' }
 }
 
 const jobs = ref([])
 const listLoading = ref(false)
 const listError = ref('')
+
+const config = ref([])
+const configLoading = ref(false)
+const configError = ref('')
+const draftDays = ref({})
 
 const runningKey = ref(null)
 const runningSeconds = ref(0)
@@ -145,12 +228,68 @@ function formatMs(ms) {
   return `${(ms / 1000).toFixed(1)}s`
 }
 
+function formatDays(days) {
+  if (days == null) return '-'
+  const d = Number(days)
+  return Number.isInteger(d) ? `${d}일` : `${d.toFixed(2)}일`
+}
+
+function isChanged(c) {
+  const v = Number(draftDays.value[c.domain])
+  return Number.isFinite(v) && v > 0 && Math.abs(v * 86400 - c.timeDivisorSeconds) >= 1
+}
+
+async function loadConfig() {
+  configLoading.value = true
+  configError.value = ''
+  try {
+    config.value = await schedulerAdminService.getHotScoreConfig()
+    const draft = {}
+    for (const c of config.value) draft[c.domain] = Math.round(c.days * 100) / 100
+    draftDays.value = draft
+  } catch (e) {
+    configError.value = e.message || '시간 상수를 불러오지 못했습니다'
+  } finally {
+    configLoading.value = false
+  }
+}
+
+async function applyDivisor(c) {
+  if (runningKey.value || !isChanged(c)) return
+  const days = Number(draftDays.value[c.domain])
+  const seconds = Math.round(days * 86400)
+  const key = 'config:' + c.domain
+  const label = `${DOMAIN_META[c.domain]?.label || c.domain} 상수 ${formatDays(days)}`
+  runningKey.value = key
+  runningSeconds.value = 0
+  tickTimer = setInterval(() => { runningSeconds.value += 1 }, 1000)
+
+  const at = nowLabel()
+  try {
+    const result = await schedulerAdminService.updateHotScoreDivisor(c.domain, seconds)
+    const entry = { ok: true, elapsedMs: result?.elapsedMs ?? null, recalculated: result?.recalculated ?? null, at }
+    lastResult.value = { ...lastResult.value, [key]: entry }
+    history.value.unshift({ id: ++seq, label, ...entry })
+    showToast(`${label} 적용 · ${entry.recalculated?.toLocaleString?.() ?? '-'}건 재계산 · ${formatMs(entry.elapsedMs)}`)
+    await loadConfig()
+  } catch (e) {
+    const entry = { ok: false, error: e.message || '적용 실패', at }
+    lastResult.value = { ...lastResult.value, [key]: entry }
+    history.value.unshift({ id: ++seq, label, ...entry })
+    showToast(`${label} 실패: ${entry.error}`, 'error')
+  } finally {
+    clearInterval(tickTimer)
+    tickTimer = null
+    runningKey.value = null
+  }
+}
+
 async function loadJobs() {
   listLoading.value = true
   listError.value = ''
   try {
     const keys = await schedulerAdminService.listJobs()
-    jobs.value = keys.map((key) => ({ key, ...(JOB_META[key] || { label: key, cron: '-', what: '-' }) }))
+    jobs.value = keys.map((key) => ({ key, ...(JOB_META[key] || { label: key, what: '-' }) }))
   } catch (e) {
     listError.value = e.message || '작업 목록을 불러오지 못했습니다'
   } finally {
@@ -183,7 +322,7 @@ async function runJob(job) {
   }
 }
 
-onMounted(loadJobs)
+onMounted(() => { loadConfig(); loadJobs() })
 onBeforeUnmount(() => {
   if (tickTimer) clearInterval(tickTimer)
   if (toastTimer) clearTimeout(toastTimer)
@@ -242,6 +381,15 @@ onBeforeUnmount(() => {
 
 .loading-state, .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--c-text-400); font-size: 14px; background: var(--bg-elevated); border-radius: 12px; }
 .spinner { width: 28px; height: 28px; border: 3px solid var(--border-strong); border-top-color: var(--c-brand-hover); border-radius: 50%; animation: spin 0.6s linear infinite; margin-bottom: 12px; }
+
+  .block { margin-bottom: 28px; }
+.block h3 { font-size: 15px; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; }
+.block-desc { font-size: 12.5px; color: var(--c-text-500); margin: -4px 0 10px; }
+.sub { display: block; font-size: 11.5px; color: var(--c-text-400); font-variant-numeric: tabular-nums; }
+.tag { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: var(--c-brand-hover); background: var(--c-brand-soft); padding: 2px 8px; border-radius: 999px; }
+.days-input { width: 110px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 13px; font-weight: 700; font-family: inherit; color: var(--text-primary); background: var(--bg-elevated); font-variant-numeric: tabular-nums; }
+.days-input:focus { outline: none; border-color: var(--c-brand-hover); }
+.days-input:disabled { color: var(--c-text-300); }
 
 .history { margin-top: 28px; }
 .history h3 { font-size: 15px; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
