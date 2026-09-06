@@ -1,49 +1,33 @@
 // services/SchedulerAdminService.js
-// 핫 스코어 전체 재계산·시간 상수 관리 (ADMIN 전용) — content-service /admin/schedulers · /admin/hot-score
+// 핫 스코어 관리 (ADMIN 전용) — content-service /admin/hot-score
+//   GET  /admin/hot-score                      도메인별 시간 상수 현황
+//   PUT  /admin/hot-score/{domain}             상수 변경 + 그 도메인 전체 재계산
+//   POST /admin/hot-score/{domain}/recalculate 전체 재계산만
 import { BaseApiService } from './BaseApiService.js'
 import { getServiceUrl } from '@/config/env.js'
 
 class SchedulerAdminService extends BaseApiService {
   constructor() {
-    super(getServiceUrl('CONTENT'), 'SCHEDULER_ADMIN')
+    super(getServiceUrl('CONTENT'), 'HOT_SCORE_ADMIN')
   }
 
-  /**
-   * 수동 실행 가능한 작업 키 목록
-   * GET /admin/schedulers → string[]
-   */
-  async listJobs() {
-    const res = await this.get('/admin/schedulers')
-    return Array.isArray(res.data) ? res.data : []
-  }
-
-  /**
-   * 작업 즉시 실행 (동기). 완료될 때까지 응답이 오지 않는다.
-   * POST /admin/schedulers/{job} → { job, startedAt, elapsedMs }
-   */
-  async run(job) {
-    if (!job) throw new Error('작업 키가 필요합니다.')
-    const res = await this.post(`/admin/schedulers/${encodeURIComponent(job)}`)
-    return res.data
-  }
-
-  /**
-   * 도메인별 핫 스코어 시간 상수 현재값
-   * GET /admin/hot-score → [{ domain, timeDivisorSeconds, days, defaultSeconds, overridden }]
-   */
+  /** → [{ domain, timeDivisorSeconds, defaultSeconds, overridden, days }] */
   async getHotScoreConfig() {
     const res = await this.get('/admin/hot-score')
     return Array.isArray(res.data) ? res.data : []
   }
 
-  /**
-   * 시간 상수 변경 + 그 도메인 전체 재계산 (동기, 끝나야 응답)
-   * PUT /admin/hot-score/{domain} { timeDivisorSeconds }
-   * → { domain, timeDivisorSeconds, days, recalculated, startedAt, elapsedMs }
-   */
+  /** 동기 실행. 재계산이 끝나야 응답 → { domain, timeDivisorSeconds, recalculated, elapsedMs, days } */
   async updateHotScoreDivisor(domain, timeDivisorSeconds) {
     if (!domain) throw new Error('도메인이 필요합니다.')
     const res = await this.put(`/admin/hot-score/${encodeURIComponent(domain)}`, { timeDivisorSeconds })
+    return res.data
+  }
+
+  /** 동기 실행 → { domain, timeDivisorSeconds, recalculated, elapsedMs, days } */
+  async recalculate(domain) {
+    if (!domain) throw new Error('도메인이 필요합니다.')
+    const res = await this.post(`/admin/hot-score/${encodeURIComponent(domain)}/recalculate`)
     return res.data
   }
 }

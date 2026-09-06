@@ -96,57 +96,45 @@
         <h3>전체 재계산만</h3>
         <p class="block-desc">상수는 그대로 두고 저장된 점수만 지금 상수로 다시 씁니다. 배포 직후 한 번, 그 외엔 쓸 일이 없습니다.</p>
 
-      <div v-if="listLoading" class="loading-state"><div class="spinner"></div><p>작업 목록 불러오는 중...</p></div>
-
-      <div v-else-if="listError" class="empty-state">
-        <p>{{ listError }}</p>
-        <button class="secondary-btn" @click="loadJobs">다시 시도</button>
-      </div>
-
-      <table v-else class="data-table">
+      <table v-if="config.length" class="data-table">
         <thead>
           <tr>
-            <th class="col-name">작업</th>
+            <th class="col-name">도메인</th>
             <th>하는 일</th>
             <th class="col-result">마지막 실행</th>
             <th class="col-actions">실행</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="job in jobs" :key="job.key" :class="{ running: runningKey === job.key }">
+          <tr v-for="c in config" :key="c.domain" :class="{ running: runningKey === 'recalc:' + c.domain }">
             <td class="col-name">
               <div class="name-cell">
-                <strong>{{ job.label }}</strong>
-                <span class="desc">{{ job.key }}</span>
+                <strong>{{ DOMAIN_META[c.domain]?.label || c.domain }}</strong>
+                <span class="desc">현재 상수 {{ formatDays(c.days) }}</span>
               </div>
             </td>
-            <td class="what">{{ job.what }}</td>
+            <td class="what">{{ DOMAIN_META[c.domain]?.what || '-' }}</td>
             <td class="col-result">
-              <template v-if="runningKey === job.key">
-                <span class="result running-text">
-                  <Loader2 :size="14" class="spin" /> 실행 중 · {{ runningSeconds }}초
-                </span>
+              <template v-if="runningKey === 'recalc:' + c.domain">
+                <span class="result running-text"><Loader2 :size="14" class="spin" /> 실행 중 · {{ runningSeconds }}초</span>
               </template>
-              <template v-else-if="lastResult[job.key]">
-                <span class="result" :class="lastResult[job.key].ok ? 'ok' : 'fail'">
-                  <CheckCircle2 v-if="lastResult[job.key].ok" :size="14" />
+              <template v-else-if="lastResult['recalc:' + c.domain]">
+                <span class="result" :class="lastResult['recalc:' + c.domain].ok ? 'ok' : 'fail'">
+                  <CheckCircle2 v-if="lastResult['recalc:' + c.domain].ok" :size="14" />
                   <XCircle v-else :size="14" />
-                  <span class="num">{{ formatMs(lastResult[job.key].elapsedMs) }}</span>
-                  <span class="at">{{ lastResult[job.key].at }}</span>
+                  <span class="num">{{ formatMs(lastResult['recalc:' + c.domain].elapsedMs) }}</span>
+                  <span v-if="lastResult['recalc:' + c.domain].recalculated != null" class="at">{{ lastResult['recalc:' + c.domain].recalculated.toLocaleString() }}건</span>
+                  <span class="at">{{ lastResult['recalc:' + c.domain].at }}</span>
                 </span>
-                <span v-if="!lastResult[job.key].ok" class="err">{{ lastResult[job.key].error }}</span>
+                <span v-if="!lastResult['recalc:' + c.domain].ok" class="err">{{ lastResult['recalc:' + c.domain].error }}</span>
               </template>
               <span v-else class="muted">-</span>
             </td>
             <td class="col-actions">
-              <button
-                class="primary-btn run-btn"
-                :disabled="runningKey !== null"
-                @click="runJob(job)"
-              >
-                <Loader2 v-if="runningKey === job.key" :size="14" class="spin" />
+              <button class="primary-btn run-btn" :disabled="runningKey !== null" @click="runRecalculate(c)">
+                <Loader2 v-if="runningKey === 'recalc:' + c.domain" :size="14" class="spin" />
                 <Play v-else :size="14" />
-                {{ runningKey === job.key ? '실행 중' : '실행' }}
+                {{ runningKey === 'recalc:' + c.domain ? '실행 중' : '실행' }}
               </button>
             </td>
           </tr>
@@ -179,21 +167,11 @@ import { Play, Loader2, CheckCircle2, XCircle, Info, Save } from 'lucide-vue-nex
 import { schedulerAdminService } from '@/services/SchedulerAdminService.js'
 
 // 서버의 작업 키에 붙이는 표시용 메타. 서버에만 있는 키는 키 그대로 노출한다.
-const JOB_META = {
-  'feed-hot-score.recalculate': { label: '피드 핫스코어 · 전체 재계산', what: '저장된 hot_score를 지금 상수로 다시 씀. 배포 직후 옛 점수를 새 척도로 바꿀 때' },
-  'battle-hot-score.recalculate': { label: '배틀 핫스코어 · 전체 재계산', what: '진행 중 배틀의 hot_score를 지금 상수로 다시 씀' },
-  'product-popularity.recalculate': { label: '제품 인기도 · 전체 재계산', what: '승인 제품의 popularity_score를 지금 상수로 다시 씀' }
-}
-
 const DOMAIN_META = {
-  feed: { label: '피드', hint: '작성 시각 기준' },
-  battle: { label: '배틀', hint: '시작일 기준' },
-  product: { label: '제품', hint: '마지막 참여 시각 기준' }
+  feed: { label: '피드', hint: '작성 시각 기준', what: '저장된 hot_score를 지금 상수로 다시 씀. 배포 직후 옛 점수를 새 척도로 바꿀 때' },
+  battle: { label: '배틀', hint: '시작일 기준', what: '진행 중 배틀의 hot_score를 지금 상수로 다시 씀' },
+  product: { label: '제품', hint: '마지막 참여 시각 기준', what: '승인 제품의 popularity_score를 지금 상수로 다시 씀' }
 }
-
-const jobs = ref([])
-const listLoading = ref(false)
-const listError = ref('')
 
 const config = ref([])
 const configLoading = ref(false)
@@ -284,37 +262,26 @@ async function applyDivisor(c) {
   }
 }
 
-async function loadJobs() {
-  listLoading.value = true
-  listError.value = ''
-  try {
-    const keys = await schedulerAdminService.listJobs()
-    jobs.value = keys.map((key) => ({ key, ...(JOB_META[key] || { label: key, what: '-' }) }))
-  } catch (e) {
-    listError.value = e.message || '작업 목록을 불러오지 못했습니다'
-  } finally {
-    listLoading.value = false
-  }
-}
-
-async function runJob(job) {
+async function runRecalculate(c) {
   if (runningKey.value) return
-  runningKey.value = job.key
+  const key = 'recalc:' + c.domain
+  const label = `${DOMAIN_META[c.domain]?.label || c.domain} 전체 재계산`
+  runningKey.value = key
   runningSeconds.value = 0
   tickTimer = setInterval(() => { runningSeconds.value += 1 }, 1000)
 
   const at = nowLabel()
   try {
-    const result = await schedulerAdminService.run(job.key)
-    const entry = { ok: true, elapsedMs: result?.elapsedMs ?? null, at }
-    lastResult.value = { ...lastResult.value, [job.key]: entry }
-    history.value.unshift({ id: ++seq, label: job.label, ...entry })
-    showToast(`${job.label} 완료 · ${formatMs(entry.elapsedMs)}`)
+    const result = await schedulerAdminService.recalculate(c.domain)
+    const entry = { ok: true, elapsedMs: result?.elapsedMs ?? null, recalculated: result?.recalculated ?? null, at }
+    lastResult.value = { ...lastResult.value, [key]: entry }
+    history.value.unshift({ id: ++seq, label, ...entry })
+    showToast(`${label} 완료 · ${entry.recalculated?.toLocaleString?.() ?? '-'}건 · ${formatMs(entry.elapsedMs)}`)
   } catch (e) {
     const entry = { ok: false, error: e.message || '실행 실패', at }
-    lastResult.value = { ...lastResult.value, [job.key]: entry }
-    history.value.unshift({ id: ++seq, label: job.label, ...entry })
-    showToast(`${job.label} 실패: ${entry.error}`, 'error')
+    lastResult.value = { ...lastResult.value, [key]: entry }
+    history.value.unshift({ id: ++seq, label, ...entry })
+    showToast(`${label} 실패: ${entry.error}`, 'error')
   } finally {
     clearInterval(tickTimer)
     tickTimer = null
@@ -322,7 +289,7 @@ async function runJob(job) {
   }
 }
 
-onMounted(() => { loadConfig(); loadJobs() })
+onMounted(loadConfig)
 onBeforeUnmount(() => {
   if (tickTimer) clearInterval(tickTimer)
   if (toastTimer) clearTimeout(toastTimer)
