@@ -45,7 +45,7 @@
   - `src/views/` — 라우트 단위 페이지
     - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `WelcomeView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView`, `ConsentView` 등
     - 서브폴더:
-      - `admin/` — `CollectionAdminView`
+      - `admin/` — `CollectionAdminView`, `SchedulerAdminView`
       - `battle/` — `BattleListView`, `BattleDetailView`, `BattleCreateView`, `SwipeBattleView`, `SwipeBattleResultView`
       - `carrier/` — `CarrierView` + `constants.js` (레이아웃·컬러·스킨 상수) + 자체 `components/` (CarrierCanvas, CarrierItemList, MobileStickerTray, ShareModal, SkinCarousel, StickerPackPanel)
       - `category/` — `CategoryListView`
@@ -69,7 +69,7 @@
     - `MZLifestyle/` — `AIMemeGeneratorPromo`, `MBTIRecommendationBanner`, `MZHeader`, `NavigationTabs`, `QuickActions`, `TrendingFoodsSection`, `TrendingMemesSection` (레거시 `BottomNavigation.vue` 포함 — `HomeView.vue` 전용)
     - 루트 레벨 홈/랜딩 컴포넌트: `NavigationTabs.vue`, `QuickActions.vue`, `TrendingFoods.vue`, `TrendingMemes.vue`, `HeyBread.vue`, `MemeGeneratorPromo.vue`
   - `src/services/` — 도메인별 서비스 클래스 (`Index.js`로 일괄 export)
-    - `AuthService`, `FeedService`, `BattleService`, `ProductService`, `ProductReviewService`, `ChatService`, `NotificationService`, `NotificationSettingService`, `RewardsService`, `CarrierService`, `UserService`, `FeedbackService`, `FileService`, `DashboardService`, `CategoryService`, `SwipeBattleService`
+    - `AuthService`, `FeedService`, `BattleService`, `ProductService`, `ProductReviewService`, `ChatService`, `NotificationService`, `NotificationSettingService`, `RewardsService`, `CarrierService`, `UserService`, `FeedbackService`, `FileService`, `DashboardService`, `CategoryService`, `SwipeBattleService`, `SchedulerAdminService`
     - **`RewardsService.js`는 실 API 호출용** — mock 스위치(`USE_MOCK`)는 `src/api/rewardsApi.js`에 있음 (별개)
     - `presenceService.js` — presence 비콘 전용. 앱 백그라운드/탭 비활성/종료 시 `POST /api/connection/offline`으로 오프라인 통보. **Index.js export 제외** (직접 import)
     - `SwipeBattleService.js` — 스와이프 배틀 전용 API 클라이언트 (`BaseApiService` 확장). `getNext(battleId)` / `submit(battleId, itemId, verdict)` / `getResult(battleId)`. `verdict`는 `SWIPE_VERDICT` 상수 사용 (`STRONG_PICK` / `PICK` / `PASS`). **Index.js export 제외** (직접 import)
@@ -181,6 +181,8 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-06)**: `admin/SchedulerAdminView` 및 `SchedulerAdminService` 신규 추가 반영 (`docs`)
+- **관리자 스케줄러 수동 실행 페이지 추가**: `src/views/admin/SchedulerAdminView.vue` 신설(`/admin/schedulers`). 핫스코어 전체 재계산 등 스케줄러 수동 실행·실행 중 로딩 표시·소요 시간·실행 기록 지원. `SchedulerAdminService.js` 추가, `AdminMenu.vue` 메뉴 항목 추가, 라우터에 `/admin/schedulers` 등록 (`feat(admin)`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-05)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-04, 2회차)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-04)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
