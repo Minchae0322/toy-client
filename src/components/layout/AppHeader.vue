@@ -32,12 +32,8 @@
         <template v-else>
           <RouterLink to="/" class="nav-link">홈</RouterLink>
 
-          <!-- 🎯 관리자 메뉴 -->
-          <div v-if="isAdmin" class="admin-menu">
-            <RouterLink to="/admin/category" class="nav-link admin-link">
-              🛠️ 관리자
-            </RouterLink>
-          </div>
+          <!-- 관리자 메뉴 (드롭다운) -->
+          <AdminMenu v-if="isAdmin" />
 
           <!-- 알림 드롭다운 -->
           <NotificationDropdown />
@@ -94,6 +90,7 @@ import { webSocketService } from '@/services/webSocketService.js'
 import * as authUtils from '@/utils/auth.js'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import NotificationDropdown from '@/components/notification/NotificationDropdown.vue'
+import AdminMenu from '@/components/layout/AdminMenu.vue'
 
 const { open } = useConfirmDialog()
 const router = useRouter()
@@ -397,30 +394,6 @@ onUnmounted(() => {
   color: white;
 }
 
-.admin-menu {
-  display: flex;
-  gap: 10px;
-  padding: 0 15px;
-  border-left: 2px solid var(--border-strong);
-  border-right: 2px solid var(--border-strong);
-}
-
-.admin-link {
-  background: linear-gradient(135deg, var(--c-heat), #f39c12);
-  color: white !important;
-  font-weight: 600;
-  border-radius: 8px;
-  padding: 8px 12px;
-  text-decoration: none;
-  transition: all 0.3s;
-}
-
-.admin-link:hover {
-  background: linear-gradient(135deg, #e55a2b, #e67e22);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
-}
-
 .user-menu {
   display: flex;
   align-items: center;
@@ -637,10 +610,6 @@ onUnmounted(() => {
   }
 
   .connection-status .status-text {
-    display: none;
-  }
-
-  .admin-menu {
     display: none;
   }
 

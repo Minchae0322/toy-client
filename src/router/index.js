@@ -229,8 +229,8 @@ const routes = [
   {
     path: '/admin',
     name: 'AdminDashboard',
-    redirect: '/admin/products',
-    meta: { requiresAuth: true, requiresAdmin: true }
+    component: () => import('@/views/admin/AdminDashboardView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, title: '관리자' }
   },
   {
     path: '/admin/products',
