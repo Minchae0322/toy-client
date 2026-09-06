@@ -653,10 +653,12 @@ class FeedService extends BaseApiService {
     if (validated.isActive !== undefined && validated.isActive !== null) {
       validated.isActive = Boolean(validated.isActive)
     }
-    if (validated.cursor && isNaN(parseInt(validated.cursor))) {
+    // 커서는 서버가 내려준 nextCursor를 해석하지 않고 그대로 되돌려 보내는 값이다.
+    // /feeds/scroll은 "<createdAt>_<feedId>" 문자열 커서라 parseInt로 숫자화하면 앞자리만 남아 깨진다.
+    if (validated.cursor === undefined || validated.cursor === null || validated.cursor === '') {
       delete validated.cursor
-    } else if (validated.cursor) {
-      validated.cursor = parseInt(validated.cursor)
+    } else {
+      validated.cursor = String(validated.cursor)
     }
     if (validated.size && isNaN(parseInt(validated.size))) {
       delete validated.size
