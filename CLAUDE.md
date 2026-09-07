@@ -45,7 +45,7 @@
   - `src/views/` — 라우트 단위 페이지
     - 루트: `HomeView`, `MyPageView`, `DashboardView`, `CollectionView`, `UserFeedListView`, `FollowListView`, `ChatApp`/`ChatDetailView`/`ChatRoomView`, `SettingsView`, `AccountSettingsView`, `NotificationSettingsView`, `BlockedUsersView`, `ReviewWritePageView`, `PrivacyPolicyView`, `TermsOfServiceView`, `SupportView`, `LoginView`, `WelcomeView`, `AboutView`, `OAuth2Callback`, `CategoryAdminView`, `NotFoundView`, `ConsentView` 등
     - 서브폴더:
-      - `admin/` — `CollectionAdminView`, `SchedulerAdminView`
+      - `admin/` — `AdminDashboardView` (관리자 홈 — `/admin`, 핫스코어 관리 포함), `CollectionAdminView`, `SchedulerAdminView` (스케줄러 수동 실행 — `/admin/schedulers`)
       - `battle/` — `BattleListView`, `BattleDetailView`, `BattleCreateView`, `SwipeBattleView`, `SwipeBattleResultView`
       - `carrier/` — `CarrierView` + `constants.js` (레이아웃·컬러·스킨 상수) + 자체 `components/` (CarrierCanvas, CarrierItemList, MobileStickerTray, ShareModal, SkinCarousel, StickerPackPanel)
       - `category/` — `CategoryListView`
@@ -54,7 +54,7 @@
   - `src/components/` — 도메인별 재사용 컴포넌트
     - `feed/` (+ `detail/` 서브폴더), `battle/` (+ `create/`, `detail/` 서브폴더), `collection/`, `identity/`, `chat/` (+ `detail/` 서브폴더), `notification/`, `product/` (+ `create/`, `detail/` 서브폴더)
     - `common/`, `layout/`, `login/`, `dashboard/`, `exp/`, `icons/`, `category/`, `userFeed/`, `MZLifestyle/`
-    - **AppHeader 주의**: `layout/AppHeader.vue`가 전역 헤더. `battle/AppHeader.vue`(단순 타이틀 헤더)·`feed/AppHeader.vue`(검색 박스 포함)는 해당 도메인 전용 로컬 헤더 — 전역 헤더와 혼동 금지. `layout/`에는 전역 헤더 외 `AdminMenu.vue`(관리자 드롭다운)·`UserMenu.vue`(유저 메뉴 드롭다운)도 포함
+    - **AppHeader 주의**: `layout/AppHeader.vue`가 전역 헤더. `battle/AppHeader.vue`(단순 타이틀 헤더)·`feed/AppHeader.vue`(검색 박스 포함)는 해당 도메인 전용 로컬 헤더 — 전역 헤더와 혼동 금지. `layout/`에는 전역 헤더 외 `AdminMenu.vue`(관리자 드롭다운)·`UserMenu.vue`(유저 메뉴 드롭다운)·`adminMenuItems.js`(관리자 메뉴 정의 중앙 관리)도 포함
     - **`exp/ExpFeedback.vue`** — `<Teleport to="body">` 기반 EXP 획득 버스트 애니메이션 레이어 (`useExpToast` composable과 연동). 직접 mount 금지, `useExpToast`로만 트리거
     - identity 주요: `UserLevelTag`, `UserBadgeInline`, `UserIdentity`, `YogurtTierArt`
     - **`common/ShareModal.vue`** — 전역 공유 모달 (카카오·트위터·페이스북·네이티브 공유·링크 복사). 공유 UI 직접 구현 금지, 이 컴포넌트 재사용. 공유 링크는 내부적으로 `buildShareUrl()` (`src/config/env.js`)을 통해 `yogurtte.com` 공개 도메인으로 정규화됨 — 직접 `window.location` 사용 금지
@@ -181,6 +181,10 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-07)**: 관리자 홈(`AdminDashboardView`) 신규 추가 반영, `adminMenuItems.js` 메뉴 정의 중앙화, 피드 커서 불투명 문자열 전달 수정 반영 (`docs`)
+- **피드 커서 불투명 문자열 전달 수정**: `/feeds/scroll` 키셋 커서(`"<createdAt>_<feedId>"`)가 `parseInt`로 잘리던 문제 수정 — 커서를 숫자가 아닌 문자열로 전달 (`fix(feed)`)
+- **관리자 홈 + 헤더 관리자 드롭다운 메뉴 중앙화**: `AdminDashboardView.vue` 신설 (`/admin`). 관리자 메뉴 정의를 `adminMenuItems.js` 한 곳으로 통합, 이모지·그라데이션 제거 (`feat(admin)`)
+- **핫 스코어 관리 페이지**: `AdminDashboardView.vue` — 단일 API(`/admin/hot-score`)로 도메인별 시간 상수(일) 편집·저장 후 전체 재계산, 재계산 전용 버튼 지원 (`feat(admin)`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-06)**: `admin/SchedulerAdminView` 및 `SchedulerAdminService` 신규 추가 반영 (`docs`)
 - **관리자 스케줄러 수동 실행 페이지 추가**: `src/views/admin/SchedulerAdminView.vue` 신설(`/admin/schedulers`). 핫스코어 전체 재계산 등 스케줄러 수동 실행·실행 중 로딩 표시·소요 시간·실행 기록 지원. `SchedulerAdminService.js` 추가, `AdminMenu.vue` 메뉴 항목 추가, 라우터에 `/admin/schedulers` 등록 (`feat(admin)`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-05)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
