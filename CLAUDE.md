@@ -182,6 +182,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-08)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-07)**: 관리자 홈(`AdminDashboardView`) 신규 + `adminMenuItems.js` 공유 메뉴 정의 + `SchedulerAdminService` 핫 스코어 API 전환 + 피드 커서 버그 수정 반영 (`docs`)
 - **관리자 홈(/admin) + 공유 메뉴 정의**: `AdminDashboardView.vue` 신설(관리자 메뉴 카드 그리드). `adminMenuItems.js` 신설 — 헤더 드롭다운(`AdminMenu.vue`)과 관리자 홈이 메뉴 항목을 공유. 새 관리 화면 추가 시 `adminMenuItems.js` 한 곳에만 추가 (`feat(admin)`)
 - **핫 스코어 관리 페이지 개편**: `SchedulerAdminService.js` — 범용 `listJobs()`/`run()` 대신 핫 스코어 전용 API(`getHotScoreConfig`, `updateHotScoreDivisor`, `recalculate`)로 교체. 도메인별 시간 상수 편집 + 저장 후 즉시 재계산 지원. `SchedulerAdminView.vue` UI도 단일 API 기반으로 정리 (`refactor(admin)`)
