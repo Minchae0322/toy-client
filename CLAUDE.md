@@ -181,6 +181,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-08)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-07)**: 관리자 홈(`AdminDashboardView`) 신규 추가 반영, `adminMenuItems.js` 메뉴 정의 중앙화, 피드 커서 불투명 문자열 전달 수정 반영 (`docs`)
 - **피드 커서 불투명 문자열 전달 수정**: `/feeds/scroll` 키셋 커서(`"<createdAt>_<feedId>"`)가 `parseInt`로 잘리던 문제 수정 — 커서를 숫자가 아닌 문자열로 전달 (`fix(feed)`)
 - **관리자 홈 + 헤더 관리자 드롭다운 메뉴 중앙화**: `AdminDashboardView.vue` 신설 (`/admin`). 관리자 메뉴 정의를 `adminMenuItems.js` 한 곳으로 통합, 이모지·그라데이션 제거 (`feat(admin)`)
