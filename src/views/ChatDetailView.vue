@@ -335,6 +335,7 @@ const initializeChatRoom = async () => {
     } catch { roomInfo.value.title = '채팅' }
 
     await fetchMessages()
+    watchReconnect()
   } catch (error) {
     console.error('[ChatDetail] 채팅방 초기화 실패:', error)
     connectionState.value = { connected: false, connecting: false, status: 'error', error: error.message }
@@ -373,7 +374,7 @@ const sendMessage = async () => {
   const tempMsg = {
     messageId: `temp-${clientMessageId}`,
     clientMessageId,
-    seq: null,
+    offset: null,
     senderId: currentUserId.value,
     senderName: '나',
     content,
@@ -392,7 +393,7 @@ const sendMessage = async () => {
 
   try {
     // 접수 ack(SendResult)까지 대기 — 전송 큐(stop-and-wait)가 순서를 보장한다.
-    // SENT 는 "서버가 접수"이지 최종 확정이 아니고, 확정(seq 부여)은 에코가 갱신한다.
+    // SENT 는 "Kafka 에 접수"이지 최종 확정이 아니고, 확정(정본 createdAt·offset 반영)은 에코가 갱신한다.
     const ack = await webSocketService.sendMessage(actualRoomId.value, {
       content, type: 'TEXT', clientMessageId, replyToMessageId: tempMsg.replyToMessageId
     })
@@ -408,17 +409,102 @@ const sendMessage = async () => {
   }
 }
 
-// seq(방 내 순서 정본) 자리에 삽입. 배달이 순간적으로 꼬여도 화면에서 복구된다.
-// seq 없는 메시지(내 임시 말풍선, seq 도입 전 데이터)는 항상 현재 위치 뒤를 유지.
-const insertBySeq = (list, msg) => {
-  if (msg.seq == null) {
+// ── 재접속 빈 구간 복구 ─────────────────────────────────────────────
+// 끊겨 있던 동안 지나간 메시지는 relay 가 다시 보내 주지 않는다 (relay 는 파드별 그룹이라
+// 재구독해도 과거 offset 을 재전송하지 않음). 재연결 직후 히스토리를 최신 페이지부터 거꾸로
+// 읽어 화면에 없는 것만 (createdAt, offset) 자리에 끼워 넣고, 이미 있는 메시지와 겹치는 순간 멈춘다.
+// 실시간(재접속 파드 relay)과 히스토리(REST) 두 경로가 섞여도 같은 키 하나로 최종 순서가 정해진다.
+const MISSED_PAGE_SIZE = 20
+const MISSED_MAX_PAGES = 10          // 200건 넘게 비었으면 그 이상은 위로 스크롤 시 일반 페이징이 담당
+let missedFetchInFlight = false
+let wsConnectedBefore = false        // false→true 전이(재접속)만 잡기 위한 직전 상태
+let offConnectionChange = null
+
+// 화면에 없는 메시지 하나를 병합한다. 내 메시지의 에코가 끊김 중 유실된 경우
+// (임시 말풍선이 SENDING/SENT 로 남음) clientMessageId 로 확정본으로 교체한다.
+const mergeMissed = (data) => {
+  if (messages.value.some(m => m.messageId === data.messageId)) return false
+  if (data.clientMessageId) {
+    const idx = messages.value.findIndex(m => m.clientMessageId === data.clientMessageId)
+    if (idx !== -1) {
+      messages.value[idx] = { ...messages.value[idx], ...data, status: 'SENT' }
+      return false
+    }
+  }
+  insertByOrder(messages.value, data)
+  return true
+}
+
+const fetchMissedMessages = async () => {
+  const roomId = actualRoomId.value
+  if (!roomId || missedFetchInFlight || messages.value.length === 0) return
+  missedFetchInFlight = true
+  try {
+    const wasAtBottom = isAtBottom()
+    let lastMessageId = null
+    let added = 0
+    for (let page = 0; page < MISSED_MAX_PAGES; page++) {
+      const res = await chatService.getChatMessages(roomId, { size: MISSED_PAGE_SIZE, lastMessageId })
+      const batch = (res.data || []).map(m => chatService.transformMessageResponse(m))   // 최신 → 과거
+      if (batch.length === 0) break
+      let overlapped = false
+      for (const m of batch) {
+        if (mergeMissed(m)) added++
+        else overlapped = true
+      }
+      // 기존 메시지와 겹쳤거나 마지막 페이지면 빈 구간은 다 메운 것
+      if (overlapped || batch.length < MISSED_PAGE_SIZE) break
+      lastMessageId = batch[batch.length - 1].messageId
+    }
+    if (added > 0) {
+      console.log(`[ChatDetail] 재접속 빈 구간 복구: ${added}건`)
+      nextTick(() => { if (wasAtBottom) scrollToBottom('smooth') })
+    }
+  } catch (e) {
+    console.error('[ChatDetail] 재접속 빈 구간 복구 실패:', e)
+  } finally {
+    missedFetchInFlight = false
+  }
+}
+
+// 연결이 끊겼다 다시 붙는 전이에서만 빈 구간을 조회한다. 최초 연결은 initializeChatRoom 의
+// fetchMessages 가 전체를 읽으므로 제외. 자동 재연결(attemptReconnect)과 수동 재연결 모두
+// onConnect → updateConnectionState('connected') 를 거치므로 한 지점에서 잡힌다.
+const watchReconnect = () => {
+  if (offConnectionChange) return
+  wsConnectedBefore = webSocketService.isConnected()
+  offConnectionChange = webSocketService.onConnectionChange((connected) => {
+    const reconnected = connected && !wsConnectedBefore
+    wsConnectedBefore = connected
+    if (reconnected) fetchMissedMessages()
+  })
+}
+
+// ── 방 내 순서 정본 자리에 삽입 ─────────────────────────────────────
+// 키는 (createdAt, offset, messageId). createdAt 은 Kafka 브로커가 offset 을 부여하며 찍은 LogAppendTime(ms),
+// offset 은 같은 ms 동점 처리 — 같은 ms 안에서는 offset 이 곧 도착 순서라 relay 가 배달한 순서와 정확히 같다.
+// 서버 히스토리 정렬(sentAt DESC, offset DESC, messageId DESC)과 동일한 규칙이라 새로고침 전후가 같다.
+// 한 파드 안에서는 도착 순서가 곧 이 순서라 사실상 append 이고, 재접속으로 파드가 바뀌거나
+// 히스토리(REST)와 실시간이 겹치는 경계에서만 실제로 끼워 넣는다.
+// offset 없는 메시지(내 임시 말풍선, Kafka 도입 전 데이터, Direct 경로)는 키가 없어 현재 위치 뒤를 유지하고,
+// 뒤에 오는 메시지는 그 앞으로 넘어가지 않는다 (임시 말풍선이 앵커 역할).
+const hasOrderKey = (m) => m.offset != null && m.createdAt != null
+const compareOrder = (a, b) => {
+  const ta = new Date(a.createdAt).getTime()
+  const tb = new Date(b.createdAt).getTime()
+  if (ta !== tb) return ta - tb
+  if (a.offset !== b.offset) return a.offset - b.offset
+  return String(a.messageId).localeCompare(String(b.messageId))
+}
+const insertByOrder = (list, msg) => {
+  if (!hasOrderKey(msg)) {
     list.push(msg)
     return
   }
   let i = list.length
   while (i > 0) {
     const prev = list[i - 1]
-    if (prev.seq == null || prev.seq <= msg.seq) break
+    if (!hasOrderKey(prev) || compareOrder(prev, msg) <= 0) break
     i--
   }
   list.splice(i, 0, msg)
@@ -427,7 +513,7 @@ const insertBySeq = (list, msg) => {
 const handleNewMessage = (msg) => {
   const data = chatService.transformMessageResponse(msg)
 
-  // 내 메시지의 에코 — clientMessageId 로 임시 말풍선을 확정본으로 교체 (서버 messageId·seq 반영)
+  // 내 메시지의 에코 — clientMessageId 로 임시 말풍선을 확정본으로 교체 (서버 messageId·createdAt·offset 반영)
   // senderId 는 서버(number)·JWT(string) 타입이 어긋날 수 있어 문자열로 비교
   if (String(data.senderId) === String(currentUserId.value)) {
     let idx = data.clientMessageId
@@ -453,14 +539,14 @@ const handleNewMessage = (msg) => {
     }
     // 매칭 없는 내 메시지(다른 디바이스에서 보낸 것)는 아래 일반 경로로 추가
     else if (!messages.value.find(m => m.messageId === data.messageId)) {
-      insertBySeq(messages.value, data)
+      insertByOrder(messages.value, data)
     }
     return
   }
 
   if (messages.value.find(m => m.messageId === data.messageId)) return
   const wasAtBottom = isAtBottom()
-  insertBySeq(messages.value, data)
+  insertByOrder(messages.value, data)
   // 이미 아래에 있던 경우에만 자동 스크롤 (위쪽을 읽고 있는데 점프하면 어색)
   nextTick(() => { if (wasAtBottom) scrollToBottom('smooth') })
   emit('new-message', msg)
@@ -662,6 +748,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   webSocketService.offMessage('message-error')
+  if (offConnectionChange) { offConnectionChange(); offConnectionChange = null }
   if (typingTimer.value) clearTimeout(typingTimer.value)
   const roomId = actualRoomId.value
   if (roomId) webSocketService.leaveChatRoom?.(roomId)

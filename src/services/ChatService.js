@@ -433,9 +433,10 @@ class ChatService extends BaseApiService {
       isRead: backendMessage.isRead || false,
       replyTo: backendMessage.replyTo,
       metadata: backendMessage.metadata,
-      // 방 내 순서 정본 (Kafka 파티션 offset) — 표시 순서는 createdAt 이 아니라 이 값 기준.
-      // seq 도입 이전 메시지·Direct 경로는 null
-      seq: backendMessage.seq ?? null,
+      // 방 내 순서 정본은 createdAt(=서버 sentAt, Kafka LogAppendTime ms). 같은 ms 동점은 offset(파티션 offset).
+      // 히스토리 API 의 sentAt 과 WS 에코의 createdAt 이 같은 값이라 두 경로를 같은 키로 합친다.
+      // offset 은 Kafka 를 거친 메시지에만 있다 — 구 데이터·Direct 경로는 null (그땐 도착 순서 유지)
+      offset: backendMessage.offset ?? null,
       // 발신자 본인의 에코 매칭 키 — 임시 말풍선을 확정본으로 교체할 때 사용
       clientMessageId: backendMessage.clientMessageId ?? null
     }
