@@ -182,6 +182,7 @@ watch(searchKeyword, (val) => {
 
 ## 주요 변경사항 (최근 이력)
 
+- **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-19)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-18)**: 채팅 메시지 정렬 기준 변경(seq→offset) 및 재접속 빈 구간 복구 패턴 반영 (`docs`)
 - **채팅 메시지 정렬 기준 변경 + 재접속 빈 구간 복구**: `ChatDetailView.vue` + `ChatService.js` — 서버 정렬 정본이 `offset seq` → `Kafka LogAppendTime(sentAt) + 동점 offset`으로 바뀜에 따라 `insertBySeq` → `insertByOrder`((createdAt, offset, messageId) 복합 정렬)로 전환. `transformMessageResponse`에서 `seq` → `offset` 매핑. 재연결 전이 시 최신부터 역순으로 히스토리를 읽어 화면에 없는 메시지만 병합(최대 10페이지). 끊김 중 유실된 내 에코는 clientMessageId로 확정본 교체 (`feat(chat)`)
 - **CLAUDE.md 프로젝트 구조 자동 업데이트 (2026-09-17)**: 구조·버전·파일 목록 정확성 검증 완료 — 실제 코드베이스와 완전 일치 확인, 신규 구조 변경 없음. 최근 코드 변경 없음 (`docs`)
