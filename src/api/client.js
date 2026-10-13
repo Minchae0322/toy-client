@@ -5,8 +5,8 @@ import axios from 'axios'
 const getAuthBaseUrl = () => {
   const envUrl = import.meta.env.VITE_AUTH_BASE_URL
   if (envUrl) return envUrl  // env에 이미 전체 경로 포함 (e.g. /api/auth)
-  // 개발 서버에서는 프록시 사용, 프로덕션에서는 직접 요청
-  return import.meta.env.DEV ? '/api' : 'http://54.180.89.70:8081/api'
+  // 개발 서버에서는 프록시 사용, 프로덕션에서는 공개 도메인으로 직접 요청
+  return import.meta.env.DEV ? '/api' : 'https://yogurtte.com/api/auth'
 }
 
 /**

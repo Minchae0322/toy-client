@@ -70,8 +70,8 @@
 | 환경 | URL | 비고 |
 |------|-----|------|
 | **Local** | `localhost:5173` | 각 서비스 개별 포트 (8081-8084) |
-| **Development** | `54.180.89.70` | AWS EC2, 개별 포트 |
-| **Production** | `54.180.89.70` | Nginx 리버스 프록시, 경로 기반 라우팅 |
+| **Development** | `<DEV_SERVER_HOST>` | AWS EC2, 개별 포트 — 실제 주소는 `.env.development.local`(git 미추적) 참조 |
+| **Production** | `yogurtte.com` | CloudFront + Nginx 리버스 프록시, 경로 기반 라우팅 |
 
 ### 2.2 테스트 브라우저
 

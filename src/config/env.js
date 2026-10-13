@@ -49,19 +49,15 @@ const DEFAULT_URLS = {
     CHAT: 'http://localhost:8084',
     WS: 'http://localhost:8084/api/ws',
   },
-  development: {
-    AUTH: 'http://54.180.89.70:8081',
-    CONTENT: 'http://54.180.89.70:8082',
-    USER: 'http://54.180.89.70:8083',
-    CHAT: 'http://54.180.89.70:8084',
-    WS: 'http://54.180.89.70:8084/api/ws',
-  },
+  // development 기본값 없음 — 원격 개발 서버 주소는 공개 레포에 두지 않는다.
+  // `.env.development.local`(git 미추적)에 VITE_*_BASE_URL 을 채워야 하며,
+  // 없으면 아래 local 기본값으로 폴백된다 (CLAUDE.md "로컬 개발 환경 설정" 참조).
   production: {
-    AUTH: 'http://54.180.89.70/auth',
-    CONTENT: 'http://54.180.89.70/content',
-    USER: 'http://54.180.89.70',
-    CHAT: 'http://54.180.89.70/chat',
-    WS: 'http://54.180.89.70/api/ws',
+    AUTH: 'https://yogurtte.com/api/auth',
+    CONTENT: 'https://yogurtte.com/api/content',
+    USER: 'https://yogurtte.com/api',
+    CHAT: 'https://yogurtte.com/api/chat',
+    WS: 'https://yogurtte.com/api/chat/ws',
   },
 }
 
